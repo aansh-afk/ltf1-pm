@@ -1,0 +1,35 @@
+{
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react-hooks/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "react-refresh"],
+  "rules": {
+    "react-refresh/only-export-components": [
+      "warn",
+      { "allowConstantExport": true }
+    ],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "no-restricted-properties": [
+      "error",
+      {
+        "object": "style",
+        "property": "borderRadius",
+        "message": "BRUTALIST PROTOCOL VIOLATION: border-radius is forbidden. All elements must have sharp corners."
+      }
+    ],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "JSXAttribute[name.name='className'][value.value=/rounded/]",
+        "message": "BRUTALIST PROTOCOL VIOLATION: Tailwind rounded classes are forbidden. Use border-radius: 0."
+      },
+      {
+        "selector": "TemplateLiteral:has(TemplateElement[value.raw=/rounded/])",
+        "message": "BRUTALIST PROTOCOL VIOLATION: Tailwind rounded classes are forbidden. Use border-radius: 0."
+      }
+    ]
+  }
+}

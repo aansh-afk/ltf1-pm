@@ -1,71 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  /* BRUTALIST PROTOCOL: ABSOLUTE LAW - NO BORDER RADIUS */
   * {
-    @apply border-border;
+    border-radius: 0 !important;
+    @apply font-mono;
+  }
+  
+  html {
+    @apply bg-event-horizon text-cathode-white;
+    font-family: 'IBM Plex Mono', monospace;
   }
   
   body {
-    @apply bg-base-100 text-base-content;
+    @apply bg-event-horizon text-cathode-white;
     font-feature-settings: "rlig" 1, "calt" 1;
+    line-height: 1.5;
   }
 
+  /* SCROLL SNAP BEHAVIOR */
+  .snap-y {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+  }
+
+  .snap-start {
+    scroll-snap-align: start;
+  }
+
+  .snap-center {
+    scroll-snap-align: center;
+  }
+
+  /* BRUTAL SCROLLBAR */
   ::-webkit-scrollbar {
-    @apply w-2 h-2;
+    @apply w-8px h-8px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-base-200;
+    @apply bg-carbon-plate;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-base-300 rounded-full;
+    @apply bg-basalt-border;
+    border-radius: 0 !important;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary;
+    @apply bg-cathode-white;
+  }
+
+  /* BRUTAL SELECTION */
+  ::selection {
+    @apply bg-glitch-flare text-event-horizon;
+  }
+
+  /* BRUTAL FOCUS STATES */
+  :focus {
+    outline: 2px solid #00FFFF;
+    outline-offset: 2px;
+    border-radius: 0 !important;
   }
 }
 
 @layer components {
-  .glass-effect {
-    @apply backdrop-blur-md bg-opacity-30;
+  /* BRUTAL GLASS EFFECT */
+  .brutal-glass {
+    @apply bg-carbon-plate/90 backdrop-blur-sm border-2 border-basalt-border;
   }
 
-  .gradient-border {
-    @apply relative;
-    background-clip: padding-box;
-    border: 2px solid transparent;
+  /* BRUTAL CARD */
+  .brutal-card {
+    @apply bg-carbon-plate border-2 border-basalt-border shadow-brutal;
+    border-radius: 0 !important;
   }
 
-  .gradient-border::before {
-    @apply absolute inset-0 rounded-lg;
-    content: "";
-    background: linear-gradient(135deg, #AD2831, #640D14);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-    -webkit-mask-composite: xor;
-    padding: 2px;
-    z-index: -1;
+  /* BRUTAL BUTTON */
+  .brutal-btn {
+    @apply bg-event-horizon text-cathode-white border-2 border-basalt-border shadow-brutal;
+    @apply hover:shadow-brutal-hover hover:translate-x-[2px] hover:translate-y-[2px];
+    @apply transition-all duration-200 ease-brutal-out;
+    @apply px-24px py-16px font-semibold uppercase tracking-wider;
+    border-radius: 0 !important;
   }
 
-  .hover-lift {
-    @apply transition-transform duration-200 ease-out;
+  /* BRUTAL INPUT */
+  .brutal-input {
+    @apply bg-event-horizon text-cathode-white border-2 border-basalt-border;
+    @apply focus:border-[#00FFFF] focus:shadow-brutal;
+    @apply px-16px py-8px;
+    border-radius: 0 !important;
   }
 
-  .hover-lift:hover {
-    @apply -translate-y-1;
+  /* GLITCH GRADIENT TEXT */
+  .glitch-text {
+    @apply bg-glitch-flare bg-clip-text text-transparent font-bold;
   }
 
-  .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base-100;
+  /* BRUTAL HOVER LIFT */
+  .brutal-hover {
+    @apply transition-all duration-200 ease-brutal-out;
+    @apply hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-hover;
+  }
+
+  /* BRUTAL BORDER */
+  .brutal-border {
+    @apply border-2 border-basalt-border;
+    border-radius: 0 !important;
+  }
+
+  /* BRUTAL DIVIDER */
+  .brutal-divider {
+    @apply h-[2px] bg-basalt-border my-24px;
+  }
+
+  /* GLOWING BORDERS */
+  .glow-border-cyan {
+    box-shadow: 0 0 20px 2px rgba(0, 255, 255, 0.5),
+                inset 0 0 20px 2px rgba(0, 255, 255, 0.2);
+  }
+
+  .glow-border-magenta {
+    box-shadow: 0 0 20px 2px rgba(255, 0, 255, 0.5),
+                inset 0 0 20px 2px rgba(255, 0, 255, 0.2);
+  }
+
+  .glow-border-yellow {
+    box-shadow: 0 0 20px 2px rgba(255, 255, 0, 0.5),
+                inset 0 0 20px 2px rgba(255, 255, 0, 0.2);
+  }
+
+  .glow-border-mixed {
+    box-shadow: 0 0 20px 2px rgba(0, 255, 255, 0.5),
+                0 0 40px 4px rgba(255, 0, 255, 0.3),
+                0 0 60px 6px rgba(255, 255, 0, 0.2);
   }
 }
 
 @layer utilities {
+  /* ANIMATION DELAYS */
   .animation-delay-200 {
     animation-delay: 200ms;
   }
@@ -74,11 +151,413 @@
     animation-delay: 400ms;
   }
 
-  .text-gradient {
-    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  /* BRUTAL GRID SPACING */
+  .grid-8 {
+    display: grid;
+    gap: 8px;
   }
 
+  .grid-16 {
+    display: grid;
+    gap: 16px;
+  }
+
+  .grid-24 {
+    display: grid;
+    gap: 24px;
+  }
+
+  /* MOBILE SAFE AREA */
   .mobile-safe-pb {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  /* BRUTAL TEXT STYLES */
+  .text-brutal-xs {
+    @apply text-xs uppercase tracking-wider;
+  }
+
+  .text-brutal-sm {
+    @apply text-sm uppercase tracking-wider;
+  }
+
+  .text-brutal-lg {
+    @apply text-lg font-bold uppercase tracking-wider;
+  }
+
+  .text-brutal-xl {
+    @apply text-xl font-bold uppercase tracking-wider;
+  }
+
+  .text-brutal-2xl {
+    @apply text-2xl font-bold uppercase tracking-wider;
+  }
+
+  /* BRUTAL ANIMATIONS */
+  @keyframes brutal-fade {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes glitch {
+    0% { text-shadow: 2px 2px 0 #00FFFF, -2px -2px 0 #FF00FF; }
+    25% { text-shadow: -2px 2px 0 #00FFFF, 2px -2px 0 #FF00FF; }
+    50% { text-shadow: 2px -2px 0 #00FFFF, -2px 2px 0 #FF00FF; }
+    75% { text-shadow: -2px -2px 0 #00FFFF, 2px 2px 0 #FF00FF; }
+    100% { text-shadow: 2px 2px 0 #00FFFF, -2px -2px 0 #FF00FF; }
+  }
+
+  @keyframes brutal-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% { 
+      box-shadow: 0 0 20px 5px rgba(0, 255, 255, 0.5),
+                  0 0 40px 10px rgba(255, 0, 255, 0.3),
+                  0 0 60px 15px rgba(255, 255, 0, 0.2);
+    }
+    50% { 
+      box-shadow: 0 0 30px 10px rgba(0, 255, 255, 0.8),
+                  0 0 60px 20px rgba(255, 0, 255, 0.5),
+                  0 0 90px 30px rgba(255, 255, 0, 0.3);
+    }
+  }
+
+  .animate-brutal-fade {
+    animation: brutal-fade 0.3s ease-out;
+  }
+
+  .animate-glitch {
+    animation: glitch 0.5s infinite;
+  }
+
+  .animate-brutal-pulse {
+    animation: brutal-pulse 2s ease-in-out infinite;
+  }
+
+  .animate-glow-pulse {
+    animation: glow-pulse 3s ease-in-out infinite;
+  }
+}
+
+/* BRUTAL BADGE */
+.brutal-badge {
+  @apply inline-flex items-center px-8px py-2px text-brutal-xs font-bold uppercase tracking-wider;
+  @apply bg-carbon-plate border-2 border-basalt-border;
+  border-radius: 0 !important;
+}
+
+.brutal-badge-error {
+  @apply bg-brutal-error text-event-horizon border-brutal-error;
+}
+
+.brutal-badge-success {
+  @apply bg-brutal-success text-event-horizon border-brutal-success;
+}
+
+.brutal-badge-info {
+  @apply bg-brutal-info text-event-horizon border-brutal-info;
+}
+
+.brutal-badge-warning {
+  @apply bg-brutal-warning text-event-horizon border-brutal-warning;
+}
+
+/* BRUTAL AVATAR */
+.brutal-avatar {
+  @apply relative overflow-hidden border-2 border-basalt-border;
+  border-radius: 0 !important;
+}
+
+.brutal-avatar-sm {
+  @apply w-32px h-32px;
+}
+
+.brutal-avatar-md {
+  @apply w-48px h-48px;
+}
+
+.brutal-avatar-lg {
+  @apply w-64px h-64px;
+}
+
+/* BRUTAL PROGRESS */
+.brutal-progress {
+  @apply relative h-24px bg-carbon-plate border-2 border-basalt-border overflow-hidden;
+  border-radius: 0 !important;
+}
+
+.brutal-progress-bar {
+  @apply h-full bg-glitch-flare transition-all duration-200 ease-brutal;
+  border-radius: 0 !important;
+}
+
+/* BRUTAL TABLE */
+.brutal-table {
+  @apply w-full border-2 border-basalt-border;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.brutal-table th {
+  @apply bg-carbon-plate text-cathode-white font-bold uppercase tracking-wider;
+  @apply px-16px py-16px text-left border-b-2 border-basalt-border;
+}
+
+.brutal-table td {
+  @apply px-16px py-16px border-b-2 border-basalt-border;
+}
+
+.brutal-table tr:last-child td {
+  @apply border-b-0;
+}
+
+.brutal-table tr:hover {
+  @apply bg-carbon-plate/50;
+}
+
+/* BRUTAL TOOLTIP */
+.brutal-tooltip {
+  @apply absolute z-50 px-16px py-8px bg-event-horizon text-cathode-white;
+  @apply border-2 border-basalt-border shadow-brutal text-brutal-xs;
+  border-radius: 0 !important;
+}
+
+/* BRUTAL FORM CONTROLS */
+.brutal-select {
+  @apply bg-event-horizon text-cathode-white border-2 border-basalt-border;
+  @apply focus:border-brutal-info focus:shadow-brutal;
+  @apply px-16px py-8px appearance-none cursor-pointer;
+  border-radius: 0 !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23F5F5F5' stroke-linecap='square' stroke-linejoin='miter' stroke-width='2' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  background-size: 20px;
+  padding-right: 40px;
+}
+
+.brutal-checkbox {
+  @apply appearance-none w-24px h-24px bg-event-horizon border-2 border-basalt-border;
+  @apply checked:bg-brutal-info checked:border-brutal-info relative cursor-pointer;
+  border-radius: 0 !important;
+}
+
+.brutal-checkbox:checked::after {
+  content: '✓';
+  @apply absolute inset-0 flex items-center justify-center text-event-horizon font-bold;
+}
+
+.brutal-radio {
+  @apply appearance-none w-24px h-24px bg-event-horizon border-2 border-basalt-border;
+  @apply checked:bg-brutal-info checked:border-brutal-info relative cursor-pointer;
+  border-radius: 0 !important;
+}
+
+.brutal-radio:checked::after {
+  content: '';
+  @apply absolute inset-[6px] bg-event-horizon;
+  border-radius: 0 !important;
+}
+
+/* BRUTAL LOADING */
+.brutal-loading {
+  @apply inline-block w-48px h-48px relative;
+}
+
+.brutal-loading::after {
+  content: '';
+  @apply absolute inset-0 border-4 border-basalt-border;
+  @apply border-t-brutal-info animate-spin;
+  animation: brutalSpin 1s linear infinite;
+  border-radius: 0 !important;
+}
+
+@keyframes brutalSpin {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg); }
+  50% { transform: rotate(180deg); }
+  75% { transform: rotate(270deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* OVERRIDE ANY REMAINING ROUNDED CORNERS */
+* {
+  border-radius: 0 !important;
+}
+
+/* SCROLL SNAP BEHAVIOR */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* Account for sticky nav */
+}
+
+/* Ensure proper container constraints */
+.container {
+  max-width: 1280px;
+  width: 100%;
+}
+
+/* Scroll snap sections */
+.snap-y {
+  scroll-snap-type: y mandatory;
+}
+
+.snap-start {
+  scroll-snap-align: start;
+  scroll-snap-stop: always; /* Force pause at each section */
+}
+
+/* BRUTAL FOOTER REVEAL ANIMATION */
+.brutal-footer-container {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  /* Ensure smooth transitions */
+  will-change: transform;
+}
+
+/* Remove sticky behavior that was causing issues */
+.brutal-footer-content {
+  position: relative;
+  z-index: 2;
+  /* Prevent content from being cut off */
+  min-height: 100vh;
+  overflow: visible;
+}
+
+/* Ensure halftone overlay doesn't block interaction */
+.halftone-overlay {
+  pointer-events: none !important;
+  will-change: opacity;
+  isolation: isolate;
+}
+
+.halftone-overlay * {
+  pointer-events: none !important;
+}
+
+/* HALFTONE OVERLAY STYLES - removed duplicate, handled in component */
+
+.halftone-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* GLITCH EFFECTS FOR FOOTER */
+@keyframes footerGlitch {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-1px); }
+  80% { transform: translateX(1px); }
+  100% { transform: translateX(0); }
+}
+
+.footer-glitch {
+  animation: footerGlitch 0.3s infinite;
+}
+
+/* BRUTAL FOOTER SPECIFIC STYLES */
+.brutal-footer-content {
+  background: #000000;
+  color: #F5F5F5;
+  overflow: hidden;
+}
+
+/* CONTAINER CONSTRAINTS */
+.container {
+  max-width: 1280px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.brutal-footer-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #00FFFF, #FF00FF, #FFFF00);
+  animation: glitchLine 2s linear infinite;
+}
+
+@keyframes glitchLine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* BRUTAL ICON BUTTON */
+.brutal-icon-btn {
+  @apply inline-flex items-center justify-center;
+  @apply w-56px h-56px;
+  @apply bg-carbon-plate border-2 border-basalt-border;
+  @apply text-cathode-white;
+  @apply transition-all duration-200 ease-brutal;
+  @apply hover:border-[#00FFFF] hover:shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px];
+  border-radius: 0 !important;
+}
+
+.brutal-icon-btn:hover {
+  @apply text-[#00FFFF];
+  box-shadow: 
+    5px 5px 0px #000000,
+    0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+@keyframes halftoneReveal {
+  0% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% { 
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+
+@keyframes brutalGlitchText {
+  0% { 
+    text-shadow: 
+      2px 2px 0 #00FFFF, 
+      -2px -2px 0 #FF00FF,
+      0 0 10px rgba(0, 255, 255, 0.5);
+  }
+  25% { 
+    text-shadow: 
+      -2px 2px 0 #00FFFF, 
+      2px -2px 0 #FF00FF,
+      0 0 10px rgba(255, 0, 255, 0.5);
+  }
+  50% { 
+    text-shadow: 
+      2px -2px 0 #00FFFF, 
+      -2px 2px 0 #FF00FF,
+      0 0 10px rgba(255, 255, 0, 0.5);
+  }
+  75% { 
+    text-shadow: 
+      -2px -2px 0 #00FFFF, 
+      2px 2px 0 #FF00FF,
+      0 0 10px rgba(0, 255, 255, 0.5);
+  }
+  100% { 
+    text-shadow: 
+      2px 2px 0 #00FFFF, 
+      -2px -2px 0 #FF00FF,
+      0 0 10px rgba(255, 0, 255, 0.5);
+  }
+}
+
+.animate-glitch {
+  animation: brutalGlitchText 0.8s infinite;
+}
+
+/* Halftone pattern background */
+.halftone-pattern {
+  background-image: radial-gradient(circle, #F5F5F5 2px, transparent 2px);
+  background-size: 16px 16px;
 }

@@ -5,13 +5,27 @@
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "import": "./index.ts",
+      "require": "./index.ts"
+    },
+    "./convex": {
+      "types": "./convex.ts",
+      "import": "./convex.ts",
+      "require": "./convex.ts"
+    }
+  },
   "scripts": {
-    "dev": "convex dev",
+    "dev": "echo 'Convex is running from root directory'",
     "deploy": "convex deploy",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "convex": "^1.13.0"
+    "convex": "^1.13.0",
+    "@clerk/nextjs": "^4.29.0",
+    "svix": "^1.15.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

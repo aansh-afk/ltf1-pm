@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
-import { api } from '@ltf1/backend'
+import { api } from '../../../lib/convex'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 

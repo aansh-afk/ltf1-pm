@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { HiOutlineUsers, HiOutlineFolder } from 'react-icons/hi'
 import { formatDistanceToNow } from 'date-fns'
+import clsx from 'clsx'
+import BrutalBadge from '../../ui/BrutalBadge'
 
 interface WorkspaceCardProps {
   workspace: any
@@ -9,54 +10,83 @@ interface WorkspaceCardProps {
 }
 
 export default function WorkspaceCard({ workspace, index }: WorkspaceCardProps) {
-  const roleColors = {
-    owner: 'badge-primary',
-    admin: 'badge-secondary',
-    member: 'badge-accent',
-    viewer: 'badge-ghost',
+  const roleVariants = {
+    owner: 'error' as const,
+    admin: 'warning' as const,
+    member: 'info' as const,
+    viewer: 'default' as const,
+  }
+
+  const roleBorders = {
+    owner: 'border-brutal-error',
+    admin: 'border-brutal-warning',
+    member: 'border-brutal-info',
+    viewer: 'border-basalt-border',
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.1 }}
+    <Link 
+      to={`/workspace/${workspace._id}/projects`}
+      className={clsx(
+        'block bg-carbon-plate border-2 shadow-brutal',
+        'hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px]',
+        'transition-all duration-200 ease-brutal-out',
+        'relative overflow-hidden',
+        roleBorders[workspace.role as keyof typeof roleBorders]
+      )}
+      style={{ 
+        borderRadius: '0 !important',
+        animationDelay: `${index * 100}ms`
+      }}
     >
-      <Link 
-        to={`/workspace/${workspace._id}/projects`}
-        className="card bg-base-200 shadow-xl hover-lift gradient-border block"
-      >
-        <div className="card-body">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h3 className="card-title text-xl mb-2">{workspace.name}</h3>
-              {workspace.description && (
-                <p className="text-sm text-base-content/70 mb-4">
-                  {workspace.description}
-                </p>
-              )}
-            </div>
-            <div className={`badge ${roleColors[workspace.role as keyof typeof roleColors]}`}>
-              {workspace.role}
-            </div>
+      {/* Role indicator bar */}
+      <div 
+        className={clsx(
+          'absolute top-0 left-0 h-full w-2px',
+          workspace.role === 'owner' && 'bg-brutal-error',
+          workspace.role === 'admin' && 'bg-brutal-warning',
+          workspace.role === 'member' && 'bg-brutal-info',
+          workspace.role === 'viewer' && 'bg-basalt-border'
+        )}
+      />
+      
+      <div className="p-32px">
+        <div className="flex items-start justify-between gap-16px mb-24px">
+          <div className="flex-1">
+            <h3 className="text-xl font-bold uppercase tracking-wider text-cathode-white mb-16px">
+              {workspace.name}
+            </h3>
+            {workspace.description && (
+              <p className="text-sm font-mono text-cathode-white/70 line-clamp-2">
+                {workspace.description}
+              </p>
+            )}
           </div>
+          <BrutalBadge variant={roleVariants[workspace.role as keyof typeof roleVariants]}>
+            {workspace.role}
+          </BrutalBadge>
+        </div>
 
-          <div className="flex items-center gap-6 text-sm text-base-content/60">
-            <div className="flex items-center gap-1">
-              <HiOutlineUsers className="w-4 h-4" />
-              <span>{workspace.memberCount} members</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <HiOutlineFolder className="w-4 h-4" />
-              <span>{workspace.projectCount || 0} projects</span>
-            </div>
+        <div className="flex items-center gap-24px text-xs font-mono uppercase tracking-wider text-cathode-white/60 pb-16px border-b-2 border-basalt-border">
+          <div className="flex items-center gap-8px">
+            <HiOutlineUsers className="w-16px h-16px" />
+            <span>{workspace.memberCount} MEMBERS</span>
           </div>
-
-          <div className="mt-4 text-xs text-base-content/50">
-            Created {formatDistanceToNow(new Date(workspace.createdAt))} ago
+          <div className="flex items-center gap-8px">
+            <HiOutlineFolder className="w-16px h-16px" />
+            <span>{workspace.projectCount || 0} PROJECTS</span>
           </div>
         </div>
-      </Link>
-    </motion.div>
+
+        <div className="mt-16px text-xs font-mono uppercase tracking-wider text-cathode-white/50">
+          CREATED {formatDistanceToNow(new Date(workspace.createdAt)).toUpperCase()} AGO
+        </div>
+
+        {/* Active indicator */}
+        {workspace.isActive && (
+          <div className="absolute top-16px right-16px w-8px h-8px bg-brutal-success animate-brutal-pulse" />
+        )}
+      </div>
+    </Link>
   )
 }
