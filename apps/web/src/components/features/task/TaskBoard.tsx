@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from 'convex/react'
-import { api } from '@ltf1/backend'
+import { api } from '../../../lib/convex'
 import { motion } from 'framer-motion'
 import { HiOutlinePlus } from 'react-icons/hi'
 import TaskCard from './TaskCard'
@@ -14,11 +14,11 @@ interface TaskBoardProps {
 }
 
 const columns = [
-  { id: 'backlog', title: 'Backlog', color: 'border-base-300' },
-  { id: 'todo', title: 'To Do', color: 'border-info' },
-  { id: 'in_progress', title: 'In Progress', color: 'border-warning' },
-  { id: 'in_review', title: 'In Review', color: 'border-secondary' },
-  { id: 'done', title: 'Done', color: 'border-success' },
+  { id: 'backlog', title: 'BACKLOG', color: 'border-basalt-border' },
+  { id: 'todo', title: 'TO DO', color: 'border-brutal-info' },
+  { id: 'in_progress', title: 'IN PROGRESS', color: 'border-brutal-warning' },
+  { id: 'in_review', title: 'IN REVIEW', color: 'border-brutal-error' },
+  { id: 'done', title: 'DONE', color: 'border-brutal-success' },
 ]
 
 export default function TaskBoard({ tasks, projectId, onTaskUpdate }: TaskBoardProps) {
@@ -82,7 +82,7 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate }: TaskBoardP
         {columns.map((column) => (
           <div
             key={column.id}
-            className={`flex flex-col bg-base-200 rounded-lg border-t-4 ${column.color} overflow-hidden`}
+            className={`flex flex-col bg-carbon-plate border-2 border-basalt-border border-t-8 ${column.color} shadow-brutal`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, column.id)}
           >
@@ -110,7 +110,7 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate }: TaskBoardP
               
               <button
                 onClick={() => openCreateModal(column.id)}
-                className="w-full p-2 border-2 border-dashed border-base-300 rounded-lg text-base-content/50 hover:text-base-content hover:border-base-content/50 transition-colors flex items-center justify-center gap-2"
+                className="w-full p-16px border-2 border-dashed border-basalt-border text-cathode-white/50 hover:text-cathode-white hover:border-brutal-info transition-colors flex items-center justify-center gap-8px uppercase text-brutal-sm font-semibold"
               >
                 <HiOutlinePlus className="w-4 h-4" />
                 <span className="text-sm">Add Task</span>

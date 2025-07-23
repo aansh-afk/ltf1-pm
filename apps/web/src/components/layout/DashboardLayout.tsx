@@ -10,17 +10,18 @@ import {
   HiOutlineCalendar,
   HiOutlineCog,
   HiOutlineMenuAlt2,
-  HiOutlineX
+  HiOutlineX,
+  HiOutlineTerminal
 } from 'react-icons/hi'
 import clsx from 'clsx'
 
 const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: HiOutlineHome },
-  { path: '/workspaces', label: 'Workspaces', icon: HiOutlineBriefcase },
-  { path: '/workspace/current/projects', label: 'Projects', icon: HiOutlineFolder },
-  { path: '/workspace/current/tasks', label: 'Tasks', icon: HiOutlineClipboardList },
-  { path: '/workspace/current/meetings', label: 'Meetings', icon: HiOutlineCalendar },
-  { path: '/settings', label: 'Settings', icon: HiOutlineCog },
+  { path: '/dashboard', label: 'DASHBOARD', icon: HiOutlineHome },
+  { path: '/workspaces', label: 'WORKSPACES', icon: HiOutlineBriefcase },
+  { path: '/workspace/current/projects', label: 'PROJECTS', icon: HiOutlineFolder },
+  { path: '/workspace/current/tasks', label: 'TASKS', icon: HiOutlineClipboardList },
+  { path: '/workspace/current/meetings', label: 'MEETINGS', icon: HiOutlineCalendar },
+  { path: '/settings', label: 'SETTINGS', icon: HiOutlineCog },
 ]
 
 export default function DashboardLayout() {
@@ -28,32 +29,38 @@ export default function DashboardLayout() {
   const location = useLocation()
 
   return (
-    <div className="flex h-screen bg-base-100">
+    <div className="flex h-screen bg-event-horizon">
+      {/* MOBILE OVERLAY */}
       <div className={clsx(
         'fixed inset-0 z-40 lg:hidden',
         sidebarOpen ? 'block' : 'hidden'
       )}>
         <div 
-          className="absolute inset-0 bg-black bg-opacity-50"
+          className="absolute inset-0 bg-event-horizon/90"
           onClick={() => setSidebarOpen(false)}
         />
       </div>
 
+      {/* BRUTAL SIDEBAR */}
       <aside className={clsx(
-        'fixed inset-y-0 left-0 z-50 w-64 bg-base-200 transform transition-transform duration-300 lg:relative lg:translate-x-0',
+        'fixed inset-y-0 left-0 z-50 w-256px bg-carbon-plate border-r-2 border-basalt-border transform transition-transform duration-200 ease-brutal-out lg:relative lg:translate-x-0',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       )}>
-        <div className="flex items-center justify-between h-16 px-6 border-b border-base-300">
-          <h1 className="text-2xl font-bold text-gradient">LTF1</h1>
+        {/* SIDEBAR HEADER */}
+        <div className="h-64px px-24px border-b-2 border-basalt-border flex items-center justify-between">
+          <h1 className="text-2xl font-bold">
+            <span className="text-cathode-white">LTF1</span>
+          </h1>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden"
+            className="lg:hidden brutal-hover"
           >
-            <HiOutlineX className="w-6 h-6" />
+            <HiOutlineX className="w-24px h-24px text-cathode-white" />
           </button>
         </div>
 
-        <nav className="mt-6">
+        {/* NAV ITEMS */}
+        <nav className="py-24px">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = location.pathname === item.path
@@ -63,61 +70,106 @@ export default function DashboardLayout() {
                 key={item.path}
                 to={item.path}
                 className={clsx(
-                  'flex items-center px-6 py-3 text-sm font-medium transition-colors',
+                  'flex items-center px-24px py-16px text-brutal-sm font-semibold transition-all duration-200 ease-brutal-out',
                   isActive
-                    ? 'text-primary bg-base-300 border-r-2 border-primary'
-                    : 'text-base-content hover:text-primary hover:bg-base-300'
+                    ? 'bg-event-horizon text-[#00FFFF] border-l-4 border-[#00FFFF] shadow-brutal-sm'
+                    : 'text-cathode-white hover:bg-event-horizon/50 hover:text-cathode-white hover:translate-x-8px'
                 )}
               >
-                <Icon className="w-5 h-5 mr-3" />
+                <Icon className="w-24px h-24px mr-16px" />
                 {item.label}
               </Link>
             )
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-base-300">
-          <div className="flex items-center">
-            <UserButton afterSignOutUrl="/" />
-            <span className="ml-3 text-sm font-medium">Account</span>
+        {/* TERMINAL COMMAND */}
+        <div className="px-24px py-16px">
+          <div className="brutal-card p-16px">
+            <div className="flex items-center gap-8px mb-8px">
+              <HiOutlineTerminal className="w-16px h-16px text-[#00FFFF]" />
+              <span className="text-brutal-xs">QUICK CMD</span>
+            </div>
+            <input 
+              type="text" 
+              placeholder="$ TYPE COMMAND..."
+              className="brutal-input w-full text-xs"
+            />
+          </div>
+        </div>
+
+        {/* USER SECTION */}
+        <div className="absolute bottom-0 left-0 right-0 p-24px border-t-2 border-basalt-border">
+          <div className="flex items-center gap-16px">
+            <div className="border-2 border-basalt-border p-2">
+              <UserButton afterSignOutUrl="/" />
+            </div>
+            <div>
+              <p className="text-brutal-xs">USER ACCOUNT</p>
+              <p className="text-brutal-xs text-[#00FFFF]">ACTIVE</p>
+            </div>
           </div>
         </div>
       </aside>
 
+      {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-base-200 border-b border-base-300 flex items-center px-6">
+        {/* BRUTAL HEADER */}
+        <header className="h-64px bg-carbon-plate border-b-2 border-basalt-border flex items-center px-24px">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden mr-4"
+            className="lg:hidden mr-16px brutal-hover"
           >
-            <HiOutlineMenuAlt2 className="w-6 h-6" />
+            <HiOutlineMenuAlt2 className="w-24px h-24px" />
           </button>
           
           <div className="flex-1">
-            <h2 className="text-lg font-semibold">
-              {navItems.find(item => item.path === location.pathname)?.label || 'Dashboard'}
+            <h2 className="text-brutal-lg">
+              {navItems.find(item => item.path === location.pathname)?.label || 'DASHBOARD'}
             </h2>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <button className="btn btn-sm btn-ghost">
-              Quick Add
+          <div className="flex items-center gap-16px">
+            <button className="brutal-btn">
+              + QUICK ADD
             </button>
+            <div className="text-brutal-xs">
+              <span className="text-[#00FFFF]">STATUS:</span> OPERATIONAL
+            </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        {/* MAIN CONTENT AREA */}
+        <main className="flex-1 overflow-y-auto bg-event-horizon">
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             className="h-full"
           >
             <Outlet />
           </motion.div>
         </main>
+
+        {/* BRUTAL STATUS BAR */}
+        <footer className="h-32px bg-carbon-plate border-t-2 border-basalt-border flex items-center px-24px">
+          <div className="flex items-center gap-24px text-brutal-xs">
+            <span>
+              <span className="text-[#FFFF00]">MEM:</span> 128MB
+            </span>
+            <span>
+              <span className="text-[#00FFFF]">CPU:</span> 12%
+            </span>
+            <span>
+              <span className="text-[#FF00FF]">TASKS:</span> 42
+            </span>
+            <span className="ml-auto">
+              <span className="text-[#00FF00]">SYSTEM:</span> NOMINAL
+            </span>
+          </div>
+        </footer>
       </div>
     </div>
   )

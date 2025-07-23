@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useQuery } from 'convex/react'
-import { api } from '@ltf1/backend'
+import { api } from '../lib/convex'
 import { HiOutlinePlus, HiOutlineBriefcase } from 'react-icons/hi'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import EmptyState from '@/components/common/EmptyState'
 import CreateWorkspaceModal from '@/components/features/workspace/CreateWorkspaceModal'
 import WorkspaceCard from '@/components/features/workspace/WorkspaceCard'
+import { BrutalButton } from '@/components/ui'
 
 export default function WorkspacesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -16,21 +17,21 @@ export default function WorkspacesPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-24px">
+      <div className="flex items-center justify-between mb-32px">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Workspaces</h1>
-          <p className="text-base-content/70">
-            Manage your workspaces and collaborate with your team
+          <h1 className="text-4xl font-bold mb-8px uppercase">WORKSPACES</h1>
+          <p className="text-brutal-sm text-cathode-white/70 uppercase">
+            MANAGE YOUR WORKSPACES AND COLLABORATE WITH YOUR TEAM
           </p>
         </div>
-        <button
+        <BrutalButton
           onClick={() => setShowCreateModal(true)}
-          className="btn btn-primary"
+          variant="glitch"
         >
-          <HiOutlinePlus className="w-5 h-5 mr-2" />
-          New Workspace
-        </button>
+          <HiOutlinePlus className="w-24px h-24px mr-8px" />
+          NEW WORKSPACE
+        </BrutalButton>
       </div>
 
       {workspaces.length === 0 ? (
@@ -44,7 +45,7 @@ export default function WorkspacesPage() {
           }}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-24px">
           {workspaces.map((workspace: any, index: number) => (
             <WorkspaceCard
               key={workspace._id}

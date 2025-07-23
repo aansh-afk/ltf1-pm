@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { HiOutlineClipboardList, HiOutlineUser, HiOutlineClock } from 'react-icons/hi'
+import { HiOutlineClipboardList, HiOutlineUser } from 'react-icons/hi'
 import { formatDistanceToNow } from 'date-fns'
+import clsx from 'clsx'
+import BrutalBadge from '../../ui/BrutalBadge'
+import BrutalProgress from '../../ui/BrutalProgress'
 
 interface ProjectCardProps {
   project: any
@@ -10,84 +12,111 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project, workspaceId, index }: ProjectCardProps) {
-  const statusColors = {
-    planning: 'badge-info',
-    active: 'badge-success',
-    on_hold: 'badge-warning',
-    completed: 'badge-accent',
-    archived: 'badge-ghost',
+  const statusVariants = {
+    planning: 'info' as const,
+    active: 'success' as const,
+    on_hold: 'warning' as const,
+    completed: 'info' as const,
+    archived: 'default' as const,
   }
 
-  const completionPercentage = project.taskStats.total > 0
+  const statusBorders = {
+    planning: 'border-brutal-info',
+    active: 'border-brutal-success',
+    on_hold: 'border-brutal-warning',
+    completed: 'border-basalt-border',
+    archived: 'border-basalt-border opacity-50',
+  }
+
+  const completionPercentage = project.taskStats?.total > 0
     ? Math.round((project.taskStats.completed / project.taskStats.total) * 100)
     : 0
 
+  // Generate ASCII icon based on project name first letter
+  const getProjectIcon = () => {
+    const firstLetter = project.name?.[0]?.toUpperCase() || '?'
+    return `[${firstLetter}]`
+  }
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.1 }}
+    <Link 
+      to={`/workspace/${workspaceId}/project/${project._id}`}
+      className={clsx(
+        'block bg-carbon-plate border-2 shadow-brutal',
+        'hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px]',
+        'transition-all duration-200 ease-brutal-out',
+        'relative overflow-hidden animate-brutal-fade',
+        statusBorders[project.status as keyof typeof statusBorders]
+      )}
+      style={{ 
+        borderRadius: '0 !important',
+        animationDelay: `${index * 100}ms`
+      }}
     >
-      <Link 
-        to={`/workspace/${workspaceId}/project/${project._id}`}
-        className="card bg-base-200 shadow-xl hover-lift block"
-      >
-        <div className="card-body">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
-                style={{ backgroundColor: project.metadata?.color + '20', color: project.metadata?.color }}
-              >
-                {project.metadata?.icon}
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold">{project.name}</h3>
-                <p className="text-sm text-base-content/60">{project.key}</p>
-              </div>
+      <div className="p-32px">
+        <div className="flex items-start justify-between mb-24px">
+          <div className="flex items-center gap-16px">
+            <div className="w-48px h-48px border-2 border-basalt-border flex items-center justify-center bg-event-horizon">
+              <span className="text-xl font-bold text-cathode-white font-mono">
+                {getProjectIcon()}
+              </span>
             </div>
-            <div className={`badge ${statusColors[project.status as keyof typeof statusColors]}`}>
-              {project.status}
+            <div>
+              <h3 className="text-lg font-bold uppercase tracking-wider text-cathode-white">
+                {project.name}
+              </h3>
+              <p className="text-xs font-mono uppercase tracking-wider text-cathode-white/60">
+                {project.key}
+              </p>
             </div>
           </div>
-
-          {project.description && (
-            <p className="text-sm text-base-content/70 mb-4 line-clamp-2">
-              {project.description}
-            </p>
-          )}
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-base-content/60">Progress</span>
-              <span className="font-medium">{completionPercentage}%</span>
-            </div>
-            <div className="w-full bg-base-300 rounded-full h-2">
-              <div 
-                className="bg-primary h-2 rounded-full transition-all duration-500"
-                style={{ width: `${completionPercentage}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 mt-4 text-sm text-base-content/60">
-            <div className="flex items-center gap-1">
-              <HiOutlineClipboardList className="w-4 h-4" />
-              <span>{project.taskStats.total} tasks</span>
-            </div>
-            {project.lead && (
-              <div className="flex items-center gap-1">
-                <HiOutlineUser className="w-4 h-4" />
-                <span>{project.lead.name}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-4 text-xs text-base-content/50">
-            Updated {formatDistanceToNow(new Date(project.updatedAt))} ago
-          </div>
+          <BrutalBadge variant={statusVariants[project.status as keyof typeof statusVariants]}>
+            {project.status.toUpperCase().replace('_', ' ')}
+          </BrutalBadge>
         </div>
-      </Link>
-    </motion.div>
+
+        {project.description && (
+          <p className="text-sm font-mono text-cathode-white/70 mb-24px line-clamp-2">
+            {project.description}
+          </p>
+        )}
+
+        <div className="space-y-16px mb-24px">
+          <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider">
+            <span className="text-cathode-white/60">PROGRESS</span>
+            <span className="font-bold text-cathode-white">{completionPercentage}%</span>
+          </div>
+          <BrutalProgress 
+            value={project.taskStats?.completed || 0} 
+            max={project.taskStats?.total || 100}
+            variant={completionPercentage === 100 ? 'glitch' : 'default'}
+          />
+        </div>
+
+        <div className="flex items-center gap-24px text-xs font-mono uppercase tracking-wider text-cathode-white/60 border-t-2 border-basalt-border pt-16px">
+          <div className="flex items-center gap-8px">
+            <HiOutlineClipboardList className="w-16px h-16px" />
+            <span>{project.taskStats?.total || 0} TASKS</span>
+          </div>
+          {project.lead && (
+            <div className="flex items-center gap-8px">
+              <HiOutlineUser className="w-16px h-16px" />
+              <span>{project.lead.name}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-16px text-xs font-mono uppercase tracking-wider text-cathode-white/50">
+          UPDATED {formatDistanceToNow(new Date(project.updatedAt)).toUpperCase()} AGO
+        </div>
+
+        {/* Sprint indicator */}
+        {project.activeSprint && (
+          <div className="absolute top-0 right-0 px-8px py-2px bg-brutal-info text-event-horizon text-xs font-bold uppercase">
+            SPRINT ACTIVE
+          </div>
+        )}
+      </div>
+    </Link>
   )
 }

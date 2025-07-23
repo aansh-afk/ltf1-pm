@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useMutation } from 'convex/react'
-import { api } from '@ltf1/backend'
+import { api } from '../../../lib/convex'
 import toast from 'react-hot-toast'
-import { motion, AnimatePresence } from 'framer-motion'
+import BrutalModal from '../../ui/BrutalModal'
+import BrutalInput from '../../ui/BrutalInput'
+import BrutalButton from '../../ui/BrutalButton'
 
 interface CreateWorkspaceModalProps {
   isOpen: boolean
@@ -21,7 +23,18 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: Cre
     e.preventDefault()
     
     if (!name.trim()) {
-      toast.error('Workspace name is required')
+      toast.error('WORKSPACE NAME REQUIRED', {
+        style: {
+          background: '#FF0000',
+          color: '#000000',
+          border: '2px solid #000000',
+          borderRadius: '0',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+        },
+      })
       return
     }
 
@@ -33,91 +46,99 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: Cre
         description: description.trim() || undefined,
       })
       
-      toast.success('Workspace created successfully!')
+      toast.success('WORKSPACE CREATED', {
+        style: {
+          background: '#00FF00',
+          color: '#000000',
+          border: '2px solid #000000',
+          borderRadius: '0',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+        },
+      })
       setName('')
       setDescription('')
       onSuccess?.()
       onClose()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create workspace')
+      toast.error(`ERROR: ${error.message || 'CREATION FAILED'}`.toUpperCase(), {
+        style: {
+          background: '#FF0000',
+          color: '#000000',
+          border: '2px solid #000000',
+          borderRadius: '0',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+        },
+      })
     } finally {
       setIsCreating(false)
     }
   }
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50"
-            onClick={onClose}
+    <BrutalModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="CREATE NEW WORKSPACE"
+      size="md"
+    >
+      <form onSubmit={handleSubmit} className="space-y-24px">
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider mb-8px text-cathode-white">
+            WORKSPACE NAME *
+          </label>
+          <BrutalInput
+            type="text"
+            placeholder="ENTER WORKSPACE NAME"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoFocus
+            disabled={isCreating}
+            className="w-full"
           />
-          
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider mb-8px text-cathode-white">
+            DESCRIPTION (OPTIONAL)
+          </label>
+          <textarea
+            placeholder="DESCRIBE THIS WORKSPACE..."
+            className="w-full bg-event-horizon text-cathode-white border-2 border-basalt-border 
+                     focus:border-brutal-info focus:shadow-brutal px-16px py-8px
+                     disabled:opacity-50 disabled:cursor-not-allowed
+                     placeholder:text-cathode-white/50 font-mono text-sm uppercase"
+            style={{ borderRadius: '0 !important' }}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={4}
+            disabled={isCreating}
+          />
+        </div>
+
+        <div className="border-t-2 border-basalt-border pt-24px flex justify-end gap-16px">
+          <BrutalButton
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            disabled={isCreating}
           >
-            <div className="card bg-base-200 w-full max-w-md shadow-xl">
-              <form onSubmit={handleSubmit} className="card-body">
-                <h2 className="card-title text-2xl mb-4">Create New Workspace</h2>
-                
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Workspace Name</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="My Awesome Team"
-                    className="input input-bordered focus-ring"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    autoFocus
-                    disabled={isCreating}
-                  />
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Description (optional)</span>
-                  </label>
-                  <textarea
-                    placeholder="What's this workspace for?"
-                    className="textarea textarea-bordered focus-ring"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                    disabled={isCreating}
-                  />
-                </div>
-
-                <div className="card-actions justify-end mt-6">
-                  <button 
-                    type="button" 
-                    className="btn btn-ghost"
-                    onClick={onClose}
-                    disabled={isCreating}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    className={`btn btn-primary ${isCreating ? 'loading' : ''}`}
-                    disabled={isCreating}
-                  >
-                    {isCreating ? 'Creating...' : 'Create Workspace'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            CANCEL
+          </BrutalButton>
+          <BrutalButton
+            type="submit"
+            disabled={isCreating || !name.trim()}
+            loading={isCreating}
+          >
+            {isCreating ? 'CREATING...' : 'CREATE WORKSPACE'}
+          </BrutalButton>
+        </div>
+      </form>
+    </BrutalModal>
   )
 }

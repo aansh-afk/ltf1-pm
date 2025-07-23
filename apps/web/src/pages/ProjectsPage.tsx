@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery } from 'convex/react'
-import { api } from '@ltf1/backend'
+import { api } from '../lib/convex'
 import { HiOutlinePlus, HiOutlineFolder } from 'react-icons/hi'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import EmptyState from '@/components/common/EmptyState'

@@ -7,37 +7,94 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: '#AD2831',
-          dark: '#800E13',
+        // BRUTALIST COLOR PROTOCOL
+        'event-horizon': '#000000',
+        'carbon-plate': '#0A0A0A',
+        'cathode-white': '#F5F5F5',
+        'basalt-border': '#333333',
+        // Status colors following Brutalist protocol
+        'brutal-error': '#FF0000',
+        'brutal-success': '#FFFF00',
+        'brutal-info': '#00FFFF',
+        'brutal-warning': '#FF00FF',
+      },
+      backgroundImage: {
+        'glitch-flare': 'linear-gradient(90deg, #00FFFF, #FF00FF, #FFFF00)',
+      },
+      fontFamily: {
+        'mono': ['IBM Plex Mono', 'monospace'],
+      },
+      spacing: {
+        // 8px grid system
+        '2px': '2px',
+        '8px': '8px',
+        '16px': '16px',
+        '24px': '24px',
+        '32px': '32px',
+        '40px': '40px',
+        '48px': '48px',
+        '56px': '56px',
+        '64px': '64px',
+        '72px': '72px',
+        '80px': '80px',
+      },
+      boxShadow: {
+        'brutal': '5px 5px 0px #000000',
+        'brutal-sm': '3px 3px 0px #000000',
+        'brutal-lg': '8px 8px 0px #000000',
+        'brutal-hover': '8px 8px 0px #000000',
+      },
+      transitionTimingFunction: {
+        'brutal': 'linear',
+        'brutal-out': 'cubic-bezier(0, 0, 0.2, 1)',
+        'brutal-step': 'steps(4)',
+      },
+      animation: {
+        'brutal-fade': 'brutalFade 0.3s linear',
+        'glitch': 'glitch 0.5s infinite linear',
+        'brutal-pulse': 'brutalPulse 1s infinite steps(2)',
+        'brutal-slide': 'brutalSlide 0.2s linear',
+      },
+      keyframes: {
+        brutalFade: {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
-        secondary: {
-          DEFAULT: '#640D14',
-          dark: '#38040E',
+        glitch: {
+          '0%': { textShadow: '2px 2px 0 #00FFFF, -2px -2px 0 #FF00FF' },
+          '25%': { textShadow: '-2px 2px 0 #00FFFF, 2px -2px 0 #FF00FF' },
+          '50%': { textShadow: '2px -2px 0 #00FFFF, -2px 2px 0 #FF00FF' },
+          '75%': { textShadow: '-2px -2px 0 #00FFFF, 2px 2px 0 #FF00FF' },
+          '100%': { textShadow: '2px 2px 0 #00FFFF, -2px -2px 0 #FF00FF' },
         },
-        background: {
-          DEFAULT: '#250902',
-          light: '#38040E',
+        brutalPulse: {
+          '0%, 50%': { opacity: '1' },
+          '51%, 100%': { opacity: '0.5' },
         },
+        brutalSlide: {
+          '0%': { transform: 'translateX(-8px)' },
+          '100%': { transform: 'translateX(0)' },
+        },
+      },
+      borderRadius: {
+        'none': '0',
+        DEFAULT: '0',
+        'sm': '0',
+        'md': '0',
+        'lg': '0',
+        'xl': '0',
+        '2xl': '0',
+        '3xl': '0',
+        'full': '0',
+      },
+      borderWidth: {
+        DEFAULT: '2px',
+        '0': '0',
+        '2': '2px',
+        '4': '4px',
+        '8': '8px',
       },
     },
   },
-  plugins: [require('daisyui')],
-  daisyui: {
-    themes: [
-      {
-        ltf1dark: {
-          "primary": "#AD2831",
-          "secondary": "#640D14",
-          "accent": "#800E13",
-          "neutral": "#38040E",
-          "base-100": "#250902",
-          "info": "#2196F3",
-          "success": "#4CAF50",
-          "warning": "#FB8C00",
-          "error": "#FF5252",
-        },
-      },
-    ],
-  },
+  plugins: [],
 }

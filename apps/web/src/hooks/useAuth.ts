@@ -1,6 +1,6 @@
 import { useUser } from '@clerk/clerk-react'
 import { useMutation, useQuery } from 'convex/react'
-import { api } from '@ltf1/backend'
+import { api } from '../lib/convex'
 import { useEffect } from 'react'
 
 export function useAuth() {
