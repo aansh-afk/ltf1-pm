@@ -14,19 +14,28 @@ import {
   HiOutlineTerminal
 } from 'react-icons/hi'
 import clsx from 'clsx'
-
-const navItems = [
-  { path: '/dashboard', label: 'DASHBOARD', icon: HiOutlineHome },
-  { path: '/workspaces', label: 'WORKSPACES', icon: HiOutlineBriefcase },
-  { path: '/workspace/current/projects', label: 'PROJECTS', icon: HiOutlineFolder },
-  { path: '/workspace/current/tasks', label: 'TASKS', icon: HiOutlineClipboardList },
-  { path: '/workspace/current/meetings', label: 'MEETINGS', icon: HiOutlineCalendar },
-  { path: '/settings', label: 'SETTINGS', icon: HiOutlineCog },
-]
+import { useCurrentWorkspace } from '../../hooks/useCurrentWorkspace'
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
+  const { currentWorkspaceId } = useCurrentWorkspace()
+
+  // Build navigation items dynamically based on workspace context
+  const navItems = [
+    { path: '/dashboard', label: 'DASHBOARD', icon: HiOutlineHome },
+    { path: '/workspaces', label: 'WORKSPACES', icon: HiOutlineBriefcase },
+    ...(currentWorkspaceId ? [
+      { path: `/workspace/${currentWorkspaceId}/projects`, label: 'PROJECTS', icon: HiOutlineFolder },
+      { path: `/workspace/${currentWorkspaceId}/tasks`, label: 'TASKS', icon: HiOutlineClipboardList },
+      { path: `/workspace/${currentWorkspaceId}/meetings`, label: 'MEETINGS', icon: HiOutlineCalendar },
+    ] : [
+      { path: '/workspace/current/projects', label: 'PROJECTS', icon: HiOutlineFolder },
+      { path: '/workspace/current/tasks', label: 'TASKS', icon: HiOutlineClipboardList },
+      { path: '/workspace/current/meetings', label: 'MEETINGS', icon: HiOutlineCalendar },
+    ]),
+    { path: '/settings', label: 'SETTINGS', icon: HiOutlineCog },
+  ]
 
   return (
     <div className="flex h-screen bg-event-horizon">

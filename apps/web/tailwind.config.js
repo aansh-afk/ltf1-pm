@@ -12,11 +12,14 @@ export default {
         'carbon-plate': '#0A0A0A',
         'cathode-white': '#F5F5F5',
         'basalt-border': '#333333',
+        'primary-brutalist': '#FFFF00',
         // Status colors following Brutalist protocol
         'brutal-error': '#FF0000',
-        'brutal-success': '#FFFF00',
+        'brutal-success': '#00FF00',
         'brutal-info': '#00FFFF',
         'brutal-warning': '#FF00FF',
+        'warning-brutalist': '#FF00FF',
+        'success-brutalist': '#00FF00',
       },
       backgroundImage: {
         'glitch-flare': 'linear-gradient(90deg, #00FFFF, #FF00FF, #FFFF00)',
@@ -37,12 +40,21 @@ export default {
         '64px': '64px',
         '72px': '72px',
         '80px': '80px',
+        '240px': '240px',
       },
       boxShadow: {
         'brutal': '5px 5px 0px #000000',
         'brutal-sm': '3px 3px 0px #000000',
         'brutal-lg': '8px 8px 0px #000000',
         'brutal-hover': '8px 8px 0px #000000',
+      },
+      fontSize: {
+        'brutal-xs': ['0.75rem', { lineHeight: '1.2' }],
+        'brutal-sm': ['0.875rem', { lineHeight: '1.2' }],
+        'brutal-md': ['1rem', { lineHeight: '1.4' }],
+        'brutal-lg': ['1.25rem', { lineHeight: '1.4' }],
+        'brutal-xl': ['1.5rem', { lineHeight: '1.4' }],
+        'brutal-2xl': ['2rem', { lineHeight: '1.2' }],
       },
       transitionTimingFunction: {
         'brutal': 'linear',

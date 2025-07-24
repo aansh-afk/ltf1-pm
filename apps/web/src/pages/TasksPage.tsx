@@ -1,20 +1,20 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../lib/convex'
 import { HiOutlineViewBoards, HiOutlineViewList, HiOutlineFilter } from 'react-icons/hi'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import EmptyState from '@/components/common/EmptyState'
 import TaskBoard from '@/components/features/task/TaskBoard'
+import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
 
 export default function TasksPage() {
-  const { workspaceId } = useParams()
+  const { currentWorkspaceId, isLoading: workspaceLoading } = useCurrentWorkspace()
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [viewMode, setViewMode] = useState<'board' | 'list'>('board')
   
   const projects = useQuery(
     api.projects.queries.getWorkspaceProjects,
-    workspaceId ? { workspaceId: workspaceId as any } : 'skip'
+    currentWorkspaceId ? { workspaceId: currentWorkspaceId as any } : 'skip'
   )
 
   const tasks = useQuery(
@@ -22,7 +22,11 @@ export default function TasksPage() {
     selectedProjectId ? { projectId: selectedProjectId as any } : 'skip'
   )
 
-  if (!workspaceId) {
+  if (workspaceLoading) {
+    return <LoadingSpinner size="lg" />
+  }
+
+  if (!currentWorkspaceId) {
     return (
       <div className="p-6">
         <EmptyState

@@ -1,25 +1,30 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../auth/permissions";
+import { internal } from "../_generated/api";
 
 export const createWorkspace = mutation({
   args: {
     name: v.string(),
     description: v.optional(v.string()),
   },
+  returns: v.id("workspaces"),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new Error("Unauthorized");
     }
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
+    // Ensure user exists (creates if not found)
+    const user: any = await ctx.runMutation(internal.auth.users.ensureUserExists, {
+      clerkId: identity.subject,
+      email: identity.email || "unknown@example.com", 
+      name: identity.name || identity.email?.split('@')[0] || "Unknown User",
+      avatarUrl: identity.pictureUrl,
+    });
 
     if (!user) {
-      throw new Error("User not found");
+      throw new Error("Failed to create user");
     }
 
     const now = Date.now();
@@ -38,7 +43,7 @@ export const createWorkspace = mutation({
       throw new Error("Workspace slug already exists");
     }
 
-    const workspaceId = await ctx.db.insert("workspaces", {
+    const workspaceId: any = await ctx.db.insert("workspaces", {
       name: args.name,
       slug,
       description: args.description,

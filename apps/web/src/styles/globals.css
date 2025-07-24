@@ -11,6 +11,30 @@
     @apply font-mono;
   }
   
+  :root {
+    /* Accessibility Settings */
+    --font-scale: 1;
+    --line-height: 1.4;
+    --letter-spacing: normal;
+    --focus-width: 2px;
+  }
+  
+  /* High contrast accessibility mode */
+  [data-accessibility="high-contrast"] {
+    --basalt-border: #000000;
+    --carbon-plate: #000000;
+    --event-horizon: #000000;
+    --primary-brutalist: #FFFF00;
+    --focus-width: 4px;
+  }
+  
+  /* Reduced motion */
+  .reduce-motion * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
   html {
     @apply bg-event-horizon text-cathode-white;
     font-family: 'IBM Plex Mono', monospace;
@@ -19,7 +43,9 @@
   body {
     @apply bg-event-horizon text-cathode-white;
     font-feature-settings: "rlig" 1, "calt" 1;
-    line-height: 1.5;
+    line-height: calc(1.5 * var(--line-height));
+    letter-spacing: var(--letter-spacing);
+    font-size: calc(1rem * var(--font-scale));
   }
 
   /* SCROLL SNAP BEHAVIOR */
@@ -61,9 +87,18 @@
 
   /* BRUTAL FOCUS STATES */
   :focus {
-    outline: 2px solid #00FFFF;
+    outline: var(--focus-width) solid #00FFFF;
     outline-offset: 2px;
     border-radius: 0 !important;
+  }
+  
+  /* Letter spacing values */
+  [style*="--letter-spacing: wide"] {
+    letter-spacing: 0.1em !important;
+  }
+  
+  [style*="--letter-spacing: extra-wide"] {
+    letter-spacing: 0.2em !important;
   }
 }
 

@@ -16,8 +16,24 @@ export default defineSchema({
         slack: v.boolean(),
       })),
       defaultWorkspaceId: v.optional(v.id("workspaces")),
+      accessibility: v.optional(v.object({
+        fontScale: v.optional(v.number()),       // 0.5 to 1.5
+        lineHeight: v.optional(v.number()),      // 1.2 to 1.8
+        letterSpacing: v.optional(v.string()),   // normal, wide, extra-wide
+        reducedMotion: v.optional(v.boolean()),
+        highContrast: v.optional(v.boolean()),
+        focusWidth: v.optional(v.number()),      // 2, 4, 6
+      })),
+      defaults: v.optional(v.object({
+        projectView: v.optional(v.string()),     // kanban, list, table
+        taskPriority: v.optional(v.string()),    // low, medium, high, urgent
+        taskType: v.optional(v.string()),        // task, feature, bug, improvement, epic
+        autoAssignSelf: v.optional(v.boolean()),
+      })),
     })),
     githubUsername: v.optional(v.string()),
+    githubTokenValidated: v.optional(v.boolean()),
+    bio: v.optional(v.string()),
     lastSeenAt: v.number(),
     createdAt: v.number(),
     updatedAt: v.number(),
