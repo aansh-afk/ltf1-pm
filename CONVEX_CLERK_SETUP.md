@@ -44,7 +44,22 @@ In Clerk Dashboard:
    - **Publishable key**: `pk_test_...`
    - **Secret key**: `sk_test_...`
 
-### Step 3: Configure Webhook
+### Step 3: Create JWT Template (CRITICAL!)
+1. Go to **JWT Templates** in Clerk Dashboard
+2. Click **New template**
+3. Configure:
+   - **Name**: `convex` (MUST match exactly - this is what's referenced in auth.config.ts)
+   - **Claims**: Add the following custom claims:
+   ```json
+   {
+     "sub": "{{user.id}}",
+     "email": "{{user.primary_email_address}}",
+     "org_ids": "{{user.organization_memberships.map(om => om.organization.id)}}"
+   }
+   ```
+4. Click **Save**
+
+### Step 4: Configure Webhook
 1. Go to **Webhooks** (left sidebar)
 2. Click **Add Endpoint**
 3. Configure:
@@ -66,6 +81,7 @@ VITE_CONVEX_URL=https://your-project.convex.cloud
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_your-key-here
 CLERK_SECRET_KEY=sk_test_your-secret-here
 CLERK_WEBHOOK_SECRET=whsec_your-webhook-secret
+CLERK_DOMAIN=your-domain.clerk.accounts.dev
 
 # Optional for future features
 GITHUB_WEBHOOK_SECRET=
@@ -106,6 +122,11 @@ pnpm dev
 
 ## Troubleshooting
 
+### "No JWT template exists with name: convex"
+- Go to Clerk Dashboard → JWT Templates
+- Ensure you have a template named exactly "convex"
+- The template must include the custom claims shown above
+
 ### "Convex not configured"
 - Make sure `convex.json` exists in `packages/backend/`
 - Check that `VITE_CONVEX_URL` is set correctly
@@ -119,10 +140,16 @@ pnpm dev
 - Verify webhook secret is set
 - Look at Clerk webhook logs for errors
 
+### "workspace/current" routing issues
+- The app automatically resolves "current" to your active workspace
+- If you have no workspaces, create one first
+- The workspace ID is stored in local state
+
 ## Next Steps
 
 Once setup is complete:
 1. ✅ Users can sign up/in
 2. ✅ Users are synced to Convex
 3. ✅ Real-time data sync works
-4. 🚀 Ready to build features!
+4. ✅ Workspace routing works
+5. 🚀 Ready to build features!

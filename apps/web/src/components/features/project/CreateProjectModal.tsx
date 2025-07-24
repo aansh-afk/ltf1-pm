@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../lib/convex'
 import toast from 'react-hot-toast'
-import { motion, AnimatePresence } from 'framer-motion'
+import BrutalModal from '../../ui/BrutalModal'
 
 interface CreateProjectModalProps {
   isOpen: boolean
@@ -73,111 +73,123 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
   }
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50"
-            onClick={onClose}
+    <BrutalModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Create New Project"
+      size="lg"
+    >
+      <form onSubmit={handleSubmit} className="space-y-24px">
+        {/* PROJECT NAME & KEY */}
+        <div className="grid grid-cols-3 gap-16px">
+          <div className="col-span-2">
+            <label className="block text-brutal-sm mb-8px">
+              PROJECT NAME
+            </label>
+            <input
+              type="text"
+              placeholder="MY AWESOME PROJECT"
+              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                       font-mono text-brutal-md uppercase placeholder:text-neutral-600
+                       focus:border-primary-brutalist focus:outline-none transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+              value={name}
+              onChange={(e) => handleNameChange(e.target.value)}
+              autoFocus
+              disabled={isCreating}
+            />
+          </div>
+
+          <div>
+            <label className="block text-brutal-sm mb-8px">
+              KEY
+            </label>
+            <input
+              type="text"
+              placeholder="MAP"
+              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                       font-mono text-brutal-md uppercase placeholder:text-neutral-600
+                       focus:border-primary-brutalist focus:outline-none transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+              value={key}
+              onChange={(e) => setKey(e.target.value.toUpperCase())}
+              maxLength={5}
+              disabled={isCreating}
+            />
+          </div>
+        </div>
+
+        {/* DESCRIPTION */}
+        <div>
+          <label className="block text-brutal-sm mb-8px">
+            DESCRIPTION (OPTIONAL)
+          </label>
+          <textarea
+            placeholder="WHAT'S THIS PROJECT ABOUT?"
+            className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                     font-mono text-brutal-md placeholder:text-neutral-600
+                     focus:border-primary-brutalist focus:outline-none transition-colors
+                     disabled:opacity-50 disabled:cursor-not-allowed resize-none"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            disabled={isCreating}
           />
-          
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        </div>
+
+        {/* WORKFLOW TYPE */}
+        <div>
+          <label className="block text-brutal-sm mb-8px">
+            WORKFLOW TYPE
+          </label>
+          <select
+            className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                     font-mono text-brutal-md uppercase
+                     focus:border-primary-brutalist focus:outline-none transition-colors
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+            value={workflowType}
+            onChange={(e) => setWorkflowType(e.target.value as any)}
+            disabled={isCreating}
           >
-            <div className="card bg-base-200 w-full max-w-lg shadow-xl">
-              <form onSubmit={handleSubmit} className="card-body">
-                <h2 className="card-title text-2xl mb-4">Create New Project</h2>
-                
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="form-control col-span-2">
-                    <label className="label">
-                      <span className="label-text">Project Name</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="My Awesome Project"
-                      className="input input-bordered focus-ring"
-                      value={name}
-                      onChange={(e) => handleNameChange(e.target.value)}
-                      autoFocus
-                      disabled={isCreating}
-                    />
-                  </div>
+            <option value="kanban">KANBAN (CONTINUOUS FLOW)</option>
+            <option value="scrum">SCRUM (SPRINT-BASED)</option>
+            <option value="hybrid">HYBRID (MIX OF BOTH)</option>
+          </select>
+        </div>
 
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Key</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="MAP"
-                      className="input input-bordered focus-ring uppercase"
-                      value={key}
-                      onChange={(e) => setKey(e.target.value.toUpperCase())}
-                      maxLength={5}
-                      disabled={isCreating}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Description (optional)</span>
-                  </label>
-                  <textarea
-                    placeholder="What's this project about?"
-                    className="textarea textarea-bordered focus-ring"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                    disabled={isCreating}
-                  />
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Workflow Type</span>
-                  </label>
-                  <select
-                    className="select select-bordered focus-ring"
-                    value={workflowType}
-                    onChange={(e) => setWorkflowType(e.target.value as any)}
-                    disabled={isCreating}
-                  >
-                    <option value="kanban">Kanban (Continuous flow)</option>
-                    <option value="scrum">Scrum (Sprint-based)</option>
-                    <option value="hybrid">Hybrid (Mix of both)</option>
-                  </select>
-                </div>
-
-                <div className="card-actions justify-end mt-6">
-                  <button 
-                    type="button" 
-                    className="btn btn-ghost"
-                    onClick={onClose}
-                    disabled={isCreating}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    className={`btn btn-primary ${isCreating ? 'loading' : ''}`}
-                    disabled={isCreating}
-                  >
-                    {isCreating ? 'Creating...' : 'Create Project'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+        {/* ACTIONS */}
+        <div className="flex justify-end gap-16px pt-24px border-t-2 border-basalt-border">
+          <button 
+            type="button" 
+            className="px-24px py-12px bg-transparent border-2 border-basalt-border 
+                     font-mono text-brutal-md uppercase tracking-wider
+                     hover:bg-basalt-border transition-colors
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={onClose}
+            disabled={isCreating}
+          >
+            CANCEL
+          </button>
+          <button 
+            type="submit" 
+            className="px-24px py-12px bg-primary-brutalist border-2 border-basalt-border 
+                     font-mono text-brutal-md uppercase tracking-wider text-event-horizon
+                     hover:bg-yellow-400 transition-colors shadow-brutal-sm
+                     disabled:opacity-50 disabled:cursor-not-allowed
+                     flex items-center gap-8px"
+            disabled={isCreating}
+          >
+            {isCreating ? (
+              <>
+                <div className="w-16px h-16px border-2 border-event-horizon border-t-transparent rounded-full animate-spin" />
+                CREATING...
+              </>
+            ) : (
+              'CREATE PROJECT'
+            )}
+          </button>
+        </div>
+      </form>
+    </BrutalModal>
   )
 }

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../lib/convex'
 import toast from 'react-hot-toast'
-import { motion, AnimatePresence } from 'framer-motion'
+import BrutalModal from '../../ui/BrutalModal'
 
 interface CreateTaskModalProps {
   isOpen: boolean
@@ -71,166 +71,189 @@ export default function CreateTaskModal({
   }
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50"
-            onClick={onClose}
+    <BrutalModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Create New Task"
+      size="xl"
+    >
+      <form onSubmit={handleSubmit} className="space-y-24px">
+        {/* TITLE */}
+        <div>
+          <label className="block text-brutal-sm mb-8px">
+            TITLE
+          </label>
+          <input
+            type="text"
+            placeholder="TASK TITLE"
+            className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                     font-mono text-brutal-md uppercase placeholder:text-neutral-600
+                     focus:border-primary-brutalist focus:outline-none transition-colors
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            autoFocus
+            disabled={isCreating}
           />
-          
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        </div>
+
+        {/* DESCRIPTION */}
+        <div>
+          <label className="block text-brutal-sm mb-8px">
+            DESCRIPTION (OPTIONAL)
+          </label>
+          <textarea
+            placeholder="ADD A DESCRIPTION..."
+            className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                     font-mono text-brutal-md placeholder:text-neutral-600
+                     focus:border-primary-brutalist focus:outline-none transition-colors
+                     disabled:opacity-50 disabled:cursor-not-allowed resize-none"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={4}
+            disabled={isCreating}
+          />
+        </div>
+
+        {/* TYPE & PRIORITY */}
+        <div className="grid grid-cols-2 gap-16px">
+          <div>
+            <label className="block text-brutal-sm mb-8px">
+              TYPE
+            </label>
+            <select
+              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                       font-mono text-brutal-md uppercase
+                       focus:border-primary-brutalist focus:outline-none transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+              value={type}
+              onChange={(e) => setType(e.target.value as any)}
+              disabled={isCreating}
+            >
+              <option value="task">📋 TASK</option>
+              <option value="feature">✨ FEATURE</option>
+              <option value="bug">🐛 BUG</option>
+              <option value="improvement">💡 IMPROVEMENT</option>
+              <option value="epic">🎯 EPIC</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-brutal-sm mb-8px">
+              PRIORITY
+            </label>
+            <select
+              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                       font-mono text-brutal-md uppercase
+                       focus:border-primary-brutalist focus:outline-none transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as any)}
+              disabled={isCreating}
+            >
+              <option value="low">LOW</option>
+              <option value="medium">MEDIUM</option>
+              <option value="high">HIGH</option>
+              <option value="urgent">URGENT</option>
+            </select>
+          </div>
+        </div>
+
+        {/* ASSIGNEE & ESTIMATE */}
+        <div className="grid grid-cols-2 gap-16px">
+          <div>
+            <label className="block text-brutal-sm mb-8px">
+              ASSIGNEE (OPTIONAL)
+            </label>
+            <select
+              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                       font-mono text-brutal-md uppercase
+                       focus:border-primary-brutalist focus:outline-none transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+              value={assigneeId}
+              onChange={(e) => setAssigneeId(e.target.value)}
+              disabled={isCreating}
+            >
+              <option value="">UNASSIGNED</option>
+              {project?.members?.map((member: any) => (
+                <option key={member._id} value={member._id}>
+                  {member.name.toUpperCase()}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-brutal-sm mb-8px">
+              ESTIMATE (HOURS)
+            </label>
+            <input
+              type="number"
+              placeholder="0"
+              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                       font-mono text-brutal-md placeholder:text-neutral-600
+                       focus:border-primary-brutalist focus:outline-none transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+              value={estimateHours}
+              onChange={(e) => setEstimateHours(e.target.value)}
+              min="0"
+              step="0.5"
+              disabled={isCreating}
+            />
+          </div>
+        </div>
+
+        {/* LABELS */}
+        <div>
+          <label className="block text-brutal-sm mb-8px">
+            LABELS (COMMA-SEPARATED)
+          </label>
+          <input
+            type="text"
+            placeholder="FRONTEND, URGENT, REFACTOR"
+            className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                     font-mono text-brutal-md uppercase placeholder:text-neutral-600
+                     focus:border-primary-brutalist focus:outline-none transition-colors
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+            value={labels}
+            onChange={(e) => setLabels(e.target.value)}
+            disabled={isCreating}
+          />
+        </div>
+
+        {/* ACTIONS */}
+        <div className="flex justify-end gap-16px pt-24px border-t-2 border-basalt-border">
+          <button 
+            type="button" 
+            className="px-24px py-12px bg-transparent border-2 border-basalt-border 
+                     font-mono text-brutal-md uppercase tracking-wider
+                     hover:bg-basalt-border transition-colors
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={onClose}
+            disabled={isCreating}
           >
-            <div className="card bg-base-200 w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
-              <form onSubmit={handleSubmit} className="card-body">
-                <h2 className="card-title text-2xl mb-4">Create New Task</h2>
-                
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Title</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Task title"
-                    className="input input-bordered focus-ring"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    autoFocus
-                    disabled={isCreating}
-                  />
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Description (optional)</span>
-                  </label>
-                  <textarea
-                    placeholder="Add a description..."
-                    className="textarea textarea-bordered focus-ring"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={4}
-                    disabled={isCreating}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Type</span>
-                    </label>
-                    <select
-                      className="select select-bordered focus-ring"
-                      value={type}
-                      onChange={(e) => setType(e.target.value as any)}
-                      disabled={isCreating}
-                    >
-                      <option value="task">📋 Task</option>
-                      <option value="feature">✨ Feature</option>
-                      <option value="bug">🐛 Bug</option>
-                      <option value="improvement">💡 Improvement</option>
-                      <option value="epic">🎯 Epic</option>
-                    </select>
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Priority</span>
-                    </label>
-                    <select
-                      className="select select-bordered focus-ring"
-                      value={priority}
-                      onChange={(e) => setPriority(e.target.value as any)}
-                      disabled={isCreating}
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="urgent">Urgent</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Assignee (optional)</span>
-                    </label>
-                    <select
-                      className="select select-bordered focus-ring"
-                      value={assigneeId}
-                      onChange={(e) => setAssigneeId(e.target.value)}
-                      disabled={isCreating}
-                    >
-                      <option value="">Unassigned</option>
-                      {project?.members?.map((member: any) => (
-                        <option key={member._id} value={member._id}>
-                          {member.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Estimate (hours)</span>
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="0"
-                      className="input input-bordered focus-ring"
-                      value={estimateHours}
-                      onChange={(e) => setEstimateHours(e.target.value)}
-                      min="0"
-                      step="0.5"
-                      disabled={isCreating}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Labels (comma-separated)</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="frontend, urgent, refactor"
-                    className="input input-bordered focus-ring"
-                    value={labels}
-                    onChange={(e) => setLabels(e.target.value)}
-                    disabled={isCreating}
-                  />
-                </div>
-
-                <div className="card-actions justify-end mt-6">
-                  <button 
-                    type="button" 
-                    className="btn btn-ghost"
-                    onClick={onClose}
-                    disabled={isCreating}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    className={`btn btn-primary ${isCreating ? 'loading' : ''}`}
-                    disabled={isCreating}
-                  >
-                    {isCreating ? 'Creating...' : 'Create Task'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            CANCEL
+          </button>
+          <button 
+            type="submit" 
+            className="px-24px py-12px bg-primary-brutalist border-2 border-basalt-border 
+                     font-mono text-brutal-md uppercase tracking-wider text-event-horizon
+                     hover:bg-yellow-400 transition-colors shadow-brutal-sm
+                     disabled:opacity-50 disabled:cursor-not-allowed
+                     flex items-center gap-8px"
+            disabled={isCreating}
+          >
+            {isCreating ? (
+              <>
+                <div className="w-16px h-16px border-2 border-event-horizon border-t-transparent rounded-full animate-spin" />
+                CREATING...
+              </>
+            ) : (
+              'CREATE TASK'
+            )}
+          </button>
+        </div>
+      </form>
+    </BrutalModal>
   )
 }
