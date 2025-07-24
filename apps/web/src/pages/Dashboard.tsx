@@ -1,5 +1,5 @@
 import { useQuery } from 'convex/react'
-import { api } from '../lib/convex'
+import { api } from '../../../../convex/_generated/api'
 import { motion } from 'framer-motion'
 import { 
   HiOutlineBriefcase, 

@@ -138,15 +138,7 @@ export default defineSchema({
       points: v.optional(v.number()),
       hours: v.optional(v.number()),
     })),
-    timeTracked: v.optional(v.object({
-      totalMinutes: v.number(),
-      sessions: v.array(v.object({
-        userId: v.id("users"),
-        startTime: v.number(),
-        endTime: v.number(),
-        description: v.optional(v.string()),
-      })),
-    })),
+    timeTracked: v.optional(v.number()), // Total milliseconds tracked
     git: v.optional(v.object({
       branch: v.optional(v.string()),
       commits: v.array(v.string()),
@@ -261,6 +253,21 @@ export default defineSchema({
     .index("by_entity", ["entityType", "entityId"])
     .index("by_created", ["createdAt"]),
 
+  timeEntries: defineTable({
+    taskId: v.id("tasks"),
+    userId: v.string(), // Clerk user ID
+    startTime: v.number(),
+    endTime: v.optional(v.number()),
+    duration: v.optional(v.number()), // In milliseconds
+    description: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_task", ["taskId"])
+    .index("by_user", ["userId"])
+    .index("by_task_and_user", ["taskId", "userId"])
+    .index("by_start_time", ["startTime"]),
+
   aiTasks: defineTable({
     workspaceId: v.id("workspaces"),
     userId: v.id("users"),
@@ -281,4 +288,16 @@ export default defineSchema({
     .index("by_workspace", ["workspaceId"])
     .index("by_user", ["userId"])
     .index("by_status", ["status"]),
+
+  filterPresets: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.id("users"),
+    name: v.string(),
+    filters: v.any(), // Store the TaskFilters object
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_user", ["userId"])
+    .index("by_workspace_user", ["workspaceId", "userId"]),
 });

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from 'convex/react'
-import { api } from '../../../lib/convex'
+import { api } from '../../../../../../convex/_generated/api'
 import { motion } from 'framer-motion'
 import { HiOutlinePlus } from 'react-icons/hi'
 import TaskCard from './TaskCard'

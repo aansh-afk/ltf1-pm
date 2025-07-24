@@ -6,9 +6,12 @@ import DashboardLayout from './components/layout/DashboardLayout'
 import LandingPage from './pages/LandingPage'
 import Dashboard from './pages/Dashboard'
 import WorkspacesPage from './pages/WorkspacesPage'
+import WorkspaceManagementPage from './pages/WorkspaceManagementPage'
 import ProjectsPage from './pages/ProjectsPage'
 import TasksPage from './pages/TasksPage'
 import MeetingsPage from './pages/MeetingsPage'
+import SprintPage from './pages/SprintPage'
+import WorkspaceSettingsPage from './pages/WorkspaceSettingsPage'
 import SettingsPage from './pages/SettingsPage'
 import { useEnsureUser } from './hooks/useEnsureUser'
 
@@ -52,20 +55,36 @@ function AppContent() {
           </div>
         } />
 
-        <Route element={
-          <SignedIn>
-            <DashboardLayout />
-          </SignedIn>
+        <Route path="/" element={
+          <>
+            <SignedIn>
+              <DashboardLayout />
+            </SignedIn>
+            <SignedOut>
+              <Navigate to="/sign-in" replace />
+            </SignedOut>
+          </>
         }>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/workspaces" element={<WorkspacesPage />} />
-          <Route path="/workspace/:workspaceId/projects" element={<ProjectsPage />} />
-          <Route path="/workspace/:workspaceId/tasks" element={<TasksPage />} />
-          <Route path="/workspace/:workspaceId/meetings" element={<MeetingsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="workspaces" element={<WorkspacesPage />} />
+          <Route path="workspace/:workspaceId" element={<WorkspaceManagementPage />} />
+          <Route path="projects" element={<ProjectsPage />} />
+          <Route path="tasks" element={<TasksPage />} />
+          <Route path="meetings" element={<MeetingsPage />} />
+          <Route path="sprints" element={<SprintPage />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={
+          <>
+            <SignedIn>
+              <Navigate to="/dashboard" replace />
+            </SignedIn>
+            <SignedOut>
+              <Navigate to="/" replace />
+            </SignedOut>
+          </>
+        } />
       </Routes>
       
       <Toaster

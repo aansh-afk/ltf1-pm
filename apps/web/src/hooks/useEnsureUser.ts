@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useQuery, useMutation } from 'convex/react'
-import { api } from '../lib/convex'
+import { api } from '../../../../convex/_generated/api'
 import { useAuth } from '@clerk/clerk-react'
 
 export function useEnsureUser() {
