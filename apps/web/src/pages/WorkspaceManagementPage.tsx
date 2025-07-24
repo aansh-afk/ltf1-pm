@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import {
@@ -216,6 +216,8 @@ function OverviewTab({ workspace, projects, members }: any) {
 
 // Projects Tab Component
 function ProjectsTab({ workspaceId, projects }: any) {
+  const navigate = useNavigate()
+  
   return (
     <div className="p-32px">
       <div className="flex items-center justify-between mb-32px">
@@ -230,7 +232,12 @@ function ProjectsTab({ workspaceId, projects }: any) {
             <p className="text-brutal-sm text-cathode-white/70 mb-16px">{project.description}</p>
             <div className="flex items-center justify-between">
               <span className="text-brutal-xs text-cathode-white/60">STATUS: {project.status}</span>
-              <button className="brutal-btn-sm">MANAGE</button>
+              <button 
+                onClick={() => navigate(`/workspace/${workspaceId}/project/${project._id}`)}
+                className="brutal-btn-sm"
+              >
+                MANAGE
+              </button>
             </div>
           </div>
         ))}

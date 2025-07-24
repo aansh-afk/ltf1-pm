@@ -10,14 +10,15 @@ import {
   HiOutlineBell, 
   HiOutlineBriefcase,
   HiOutlineCode,
-  HiOutlineExclamation
+  HiOutlineExclamation,
+  HiOutlineTerminal
 } from 'react-icons/hi'
 import BrutalToggle from '../components/ui/BrutalToggle'
 import BrutalSlider from '../components/ui/BrutalSlider'
 import SettingsSection from '../components/features/settings/SettingsSection'
 import { useSettingsState } from '../hooks/useSettingsState'
 
-type SettingsTab = 'profile' | 'accessibility' | 'notifications' | 'workspace' | 'github'
+type SettingsTab = 'profile' | 'accessibility' | 'notifications' | 'workspace' | 'github' | 'shortcuts'
 
 const TABS: { id: SettingsTab; label: string; icon: React.ComponentType<any> }[] = [
   { id: 'profile', label: 'PROFILE', icon: HiOutlineUser },
@@ -25,6 +26,7 @@ const TABS: { id: SettingsTab; label: string; icon: React.ComponentType<any> }[]
   { id: 'notifications', label: 'NOTIFICATIONS', icon: HiOutlineBell },
   { id: 'workspace', label: 'WORKSPACE', icon: HiOutlineBriefcase },
   { id: 'github', label: 'GITHUB', icon: HiOutlineCode },
+  { id: 'shortcuts', label: 'SHORTCUTS', icon: HiOutlineTerminal },
 ]
 
 export default function SettingsPage() {
@@ -794,6 +796,125 @@ export default function SettingsPage() {
                   <div>✓ FULL CONTROL OF PRIVATE REPOSITORIES</div>
                   <div>✓ READ ACCESS TO ORGANIZATION MEMBERSHIP</div>
                   <div>✓ WEBHOOK MANAGEMENT</div>
+                </div>
+              </SettingsSection>
+            </>
+          )}
+          {/* SHORTCUTS TAB */}
+          {activeTab === 'shortcuts' && (
+            <>
+              <SettingsSection
+                title="Keyboard Shortcuts"
+                description="Master LTF1 with these keyboard shortcuts. Press keys without modifiers unless specified."
+              >
+                <div className="space-y-24px">
+                  {/* Global Shortcuts */}
+                  <div className="brutal-card p-24px">
+                    <h3 className="text-brutal-md font-bold uppercase mb-16px">GLOBAL</h3>
+                    <div className="space-y-8px font-mono text-brutal-sm">
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>COMMAND PALETTE</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">⌘K</kbd>
+                      </div>
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>SEARCH</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">/</kbd>
+                      </div>
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>NEW TASK</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">⌘N</kbd>
+                      </div>
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>TOGGLE SIDEBAR</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">⌘B</kbd>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Task Board Shortcuts */}
+                  <div className="brutal-card p-24px">
+                    <h3 className="text-brutal-md font-bold uppercase mb-16px">TASK BOARD</h3>
+                    <div className="space-y-8px font-mono text-brutal-sm">
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>NEW TASK</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">N</kbd>
+                      </div>
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>MY TASKS TOGGLE</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">M</kbd>
+                      </div>
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>START/STOP TIMER</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">T</kbd>
+                      </div>
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>MARK AS BLOCKED</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">B</kbd>
+                      </div>
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>SWITCH TO COLUMN 1-5</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">1-5</kbd>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Navigation Shortcuts */}
+                  <div className="brutal-card p-24px">
+                    <h3 className="text-brutal-md font-bold uppercase mb-16px">NAVIGATION</h3>
+                    <div className="space-y-8px font-mono text-brutal-sm">
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>GO TO DASHBOARD</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">G D</kbd>
+                      </div>
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>GO TO PROJECTS</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">G P</kbd>
+                      </div>
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>GO TO TASKS</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">G T</kbd>
+                      </div>
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>GO TO SETTINGS</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">G S</kbd>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Developer Shortcuts */}
+                  <div className="brutal-card p-24px">
+                    <h3 className="text-brutal-md font-bold uppercase mb-16px">DEVELOPER</h3>
+                    <div className="space-y-8px font-mono text-brutal-sm">
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>CREATE BRANCH FROM TASK</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">⌘⇧B</kbd>
+                      </div>
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>CREATE PR</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">⌘⇧P</kbd>
+                      </div>
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>COPY TASK NUMBER</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">⌘⇧C</kbd>
+                      </div>
+                      <div className="flex justify-between p-8px hover:bg-basalt-border/20">
+                        <span>SWITCH CONTEXT</span>
+                        <kbd className="px-8px py-4px bg-carbon-plate border-2 border-basalt-border text-brutal-xs">⌘⇧S</kbd>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </SettingsSection>
+              
+              <SettingsSection
+                title="Pro Tips"
+                description="Level up your keyboard game"
+              >
+                <div className="space-y-8px text-brutal-sm">
+                  <div>• SHORTCUTS WORK WHEN NOT TYPING IN INPUT FIELDS</div>
+                  <div>• USE VIM MOTIONS (J/K) IN LIST VIEWS</div>
+                  <div>• PRESS ? TO SHOW CONTEXT-SPECIFIC HELP</div>
+                  <div>• ESCAPE CLOSES MODALS AND CANCELS OPERATIONS</div>
                 </div>
               </SettingsSection>
             </>
