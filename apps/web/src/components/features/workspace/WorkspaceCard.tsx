@@ -26,7 +26,7 @@ export default function WorkspaceCard({ workspace, index }: WorkspaceCardProps) 
 
   return (
     <Link 
-      to={`/workspace/${workspace._id}/projects`}
+      to={`/workspace/${workspace._id}`}
       className={clsx(
         'block bg-carbon-plate border-2 shadow-brutal',
         'hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px]',

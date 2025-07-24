@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from 'convex/react'
-import { api } from '../lib/convex'
+import { api } from '../../../../convex/_generated/api'
 import { HiOutlinePlus, HiOutlineBriefcase } from 'react-icons/hi'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import EmptyState from '@/components/common/EmptyState'

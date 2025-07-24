@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from 'convex/react'
-import { api } from '../../../lib/convex'
+import { api } from '../../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
 import BrutalModal from '../../ui/BrutalModal'
 import BrutalInput from '../../ui/BrutalInput'

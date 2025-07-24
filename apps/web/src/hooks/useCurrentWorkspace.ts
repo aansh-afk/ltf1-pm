@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
-import { api } from '../lib/convex'
+import { api } from '../../../../convex/_generated/api'
 import { create } from 'zustand'
 
 interface WorkspaceState {

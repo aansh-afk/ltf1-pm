@@ -54,7 +54,7 @@ export const getUserWorkspaces = query({
   },
 });
 
-export const getWorkspace = query({
+export const getWorkspaceById = query({
   args: { workspaceId: v.id("workspaces") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();

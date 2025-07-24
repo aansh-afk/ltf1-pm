@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
-import { api } from '../../../lib/convex'
+import { api } from '../../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
 import BrutalModal from '../../ui/BrutalModal'
 
@@ -9,6 +9,7 @@ interface CreateTaskModalProps {
   onClose: () => void
   projectId: string
   defaultStatus?: string
+  defaultDueDate?: string
   onSuccess?: () => void
 }
 
@@ -17,6 +18,7 @@ export default function CreateTaskModal({
   onClose, 
   projectId, 
   defaultStatus = 'backlog',
+  defaultDueDate,
   onSuccess 
 }: CreateTaskModalProps) {
   const [title, setTitle] = useState('')
@@ -26,6 +28,8 @@ export default function CreateTaskModal({
   const [assigneeId, setAssigneeId] = useState<string>('')
   const [labels, setLabels] = useState<string>('')
   const [estimateHours, setEstimateHours] = useState<string>('')
+  const [startDate, setStartDate] = useState<string>('')
+  const [dueDate, setDueDate] = useState<string>(defaultDueDate || '')
   const [isCreating, setIsCreating] = useState(false)
 
   const createTask = useMutation(api.tasks.mutations.createTask)
@@ -51,6 +55,8 @@ export default function CreateTaskModal({
         assigneeId: assigneeId || undefined,
         labels: labels ? labels.split(',').map(l => l.trim()).filter(Boolean) : undefined,
         estimate: estimateHours ? { hours: parseFloat(estimateHours) } : undefined,
+        startDate: startDate || undefined,
+        dueDate: dueDate || undefined,
       })
       
       toast.success('Task created successfully!')
@@ -61,6 +67,8 @@ export default function CreateTaskModal({
       setAssigneeId('')
       setLabels('')
       setEstimateHours('')
+      setStartDate('')
+      setDueDate('')
       onSuccess?.()
       onClose()
     } catch (error: any) {
@@ -156,6 +164,41 @@ export default function CreateTaskModal({
               <option value="high">HIGH</option>
               <option value="urgent">URGENT</option>
             </select>
+          </div>
+        </div>
+
+        {/* DATES */}
+        <div className="grid grid-cols-2 gap-16px">
+          <div>
+            <label className="block text-brutal-sm mb-8px">
+              START DATE (OPTIONAL)
+            </label>
+            <input
+              type="date"
+              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                       font-mono text-brutal-md
+                       focus:border-primary-brutalist focus:outline-none transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              disabled={isCreating}
+            />
+          </div>
+
+          <div>
+            <label className="block text-brutal-sm mb-8px">
+              DUE DATE (OPTIONAL)
+            </label>
+            <input
+              type="date"
+              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                       font-mono text-brutal-md
+                       focus:border-primary-brutalist focus:outline-none transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              disabled={isCreating}
+            />
           </div>
         </div>
 

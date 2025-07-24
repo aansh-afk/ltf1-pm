@@ -11,29 +11,23 @@ import {
   HiOutlineCog,
   HiOutlineMenuAlt2,
   HiOutlineX,
-  HiOutlineTerminal
+  HiOutlineTerminal,
+  HiOutlinePlay
 } from 'react-icons/hi'
 import clsx from 'clsx'
-import { useCurrentWorkspace } from '../../hooks/useCurrentWorkspace'
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
-  const { currentWorkspaceId } = useCurrentWorkspace()
 
-  // Build navigation items dynamically based on workspace context
+  // Simplified navigation without workspace dependencies
   const navItems = [
     { path: '/dashboard', label: 'DASHBOARD', icon: HiOutlineHome },
     { path: '/workspaces', label: 'WORKSPACES', icon: HiOutlineBriefcase },
-    ...(currentWorkspaceId ? [
-      { path: `/workspace/${currentWorkspaceId}/projects`, label: 'PROJECTS', icon: HiOutlineFolder },
-      { path: `/workspace/${currentWorkspaceId}/tasks`, label: 'TASKS', icon: HiOutlineClipboardList },
-      { path: `/workspace/${currentWorkspaceId}/meetings`, label: 'MEETINGS', icon: HiOutlineCalendar },
-    ] : [
-      { path: '/workspace/current/projects', label: 'PROJECTS', icon: HiOutlineFolder },
-      { path: '/workspace/current/tasks', label: 'TASKS', icon: HiOutlineClipboardList },
-      { path: '/workspace/current/meetings', label: 'MEETINGS', icon: HiOutlineCalendar },
-    ]),
+    { path: '/projects', label: 'PROJECTS', icon: HiOutlineFolder },
+    { path: '/tasks', label: 'TASKS', icon: HiOutlineClipboardList },
+    { path: '/sprints', label: 'SPRINTS', icon: HiOutlinePlay },
+    { path: '/meetings', label: 'MEETINGS', icon: HiOutlineCalendar },
     { path: '/settings', label: 'SETTINGS', icon: HiOutlineCog },
   ]
 
@@ -124,16 +118,16 @@ export default function DashboardLayout() {
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* BRUTAL HEADER */}
-        <header className="h-64px bg-carbon-plate border-b-2 border-basalt-border flex items-center px-24px">
+        <header className="h-64px bg-carbon-plate border-b-2 border-basalt-border flex items-center px-24px gap-16px">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden mr-16px brutal-hover"
+            className="lg:hidden brutal-hover"
           >
             <HiOutlineMenuAlt2 className="w-24px h-24px" />
           </button>
           
-          <div className="flex-1">
-            <h2 className="text-brutal-lg">
+          <div className="flex-1 flex items-center justify-center">
+            <h2 className="text-brutal-md uppercase">
               {navItems.find(item => item.path === location.pathname)?.label || 'DASHBOARD'}
             </h2>
           </div>

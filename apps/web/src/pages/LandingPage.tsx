@@ -34,10 +34,8 @@ export default function LandingPage() {
           className="max-w-5xl w-full"
         >
           <div className="text-center mb-48px">
-            <h1 className="text-6xl md:text-8xl font-bold mb-24px leading-none">
-              PROJECT MANAGEMENT
-              <br />
-              FOR{' '}
+            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-bold mb-24px leading-tight">
+              PROJECT MANAGEMENT FOR{' '}
               <span className="glitch-text">DEVELOPERS</span>
             </h1>
             <div className="brutal-divider max-w-xs mx-auto"></div>

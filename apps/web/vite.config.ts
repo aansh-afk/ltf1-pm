@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@ltf1/backend': path.resolve(__dirname, '../../packages/backend'),
-      'convex/_generated': path.resolve(__dirname, '../../convex/_generated'),
+      '@convex': path.resolve(__dirname, '../../convex'),
     },
   },
   optimizeDeps: {
