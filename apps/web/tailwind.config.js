@@ -41,6 +41,7 @@ export default {
         '72px': '72px',
         '80px': '80px',
         '240px': '240px',
+        '256px': '256px',
       },
       boxShadow: {
         'brutal': '5px 5px 0px #000000',

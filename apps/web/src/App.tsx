@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import WorkspacesPage from './pages/WorkspacesPage'
 import WorkspaceManagementPage from './pages/WorkspaceManagementPage'
 import ProjectsPage from './pages/ProjectsPage'
+import ProjectManagementPage from './pages/ProjectManagementPage'
 import TasksPage from './pages/TasksPage'
 import MeetingsPage from './pages/MeetingsPage'
 import SprintPage from './pages/SprintPage'
@@ -68,6 +69,7 @@ function AppContent() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="workspaces" element={<WorkspacesPage />} />
           <Route path="workspace/:workspaceId" element={<WorkspaceManagementPage />} />
+          <Route path="workspace/:workspaceId/project/:projectId" element={<ProjectManagementPage />} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="tasks" element={<TasksPage />} />
           <Route path="meetings" element={<MeetingsPage />} />
