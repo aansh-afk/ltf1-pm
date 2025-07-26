@@ -131,7 +131,7 @@ export default function ProjectManagementPage() {
   
   // Get current user from Convex
   const currentUser = useQuery(
-    api.users.queries.getCurrentUser,
+    api.auth.users.getCurrentUser,
     clerkUser ? {} : 'skip'
   )
   
