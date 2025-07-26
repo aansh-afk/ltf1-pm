@@ -53,8 +53,8 @@ export default function CreateSprintModal({
         projectId: projectId as any,
         name: name.trim(),
         goal: goal.trim() || undefined,
-        startDate: start,
-        endDate: end,
+        startDate: startDate,
+        endDate: endDate,
       })
       
       toast.success('Sprint created successfully')
