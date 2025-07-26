@@ -45,6 +45,7 @@ import TaskFilters from '@/components/features/task/TaskFilters'
 import type { TaskFilters as TaskFiltersType } from '@/components/features/task/TaskFilters'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
+import { formatDistanceToNow } from 'date-fns'
 
 type TabType = 'overview' | 'tasks' | 'team' | 'github' | 'meetings' | 'docs' | 'logs' | 'settings'
 
@@ -72,6 +73,7 @@ export default function ProjectManagementPage() {
   const [selectedTask, setSelectedTask] = useState<any>(null)
   const [quickFilter, setQuickFilter] = useState<string | null>(null)
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [selectedSprintId, setSelectedSprintId] = useState<string | null>('all')
   const [taskFilters, setTaskFilters] = useState<TaskFiltersType>({
     search: '',
     status: [],
@@ -146,6 +148,12 @@ export default function ProjectManagementPage() {
   // Get current sprint for this project
   const activeSprint = useQuery(
     api.sprints.queries.getCurrentSprint,
+    projectId ? { projectId: projectId as any } : 'skip'
+  )
+  
+  // Get all sprints for this project
+  const allSprints = useQuery(
+    api.sprints.queries.getProjectSprints,
     projectId ? { projectId: projectId as any } : 'skip'
   )
 
@@ -478,6 +486,14 @@ export default function ProjectManagementPage() {
     // Apply filters
     let filteredTasks = tasks || []
     
+    // Filter by selected sprint
+    if (selectedSprintId && selectedSprintId !== 'all') {
+      filteredTasks = filteredTasks.filter((t: any) => t.sprintId === selectedSprintId)
+    } else if (selectedSprintId === null) {
+      // Show only tasks without a sprint (backlog)
+      filteredTasks = filteredTasks.filter((t: any) => !t.sprintId)
+    }
+    
     // Apply advanced filters first
     if (taskFilters.search) {
       const searchLower = taskFilters.search.toLowerCase()
@@ -637,6 +653,21 @@ export default function ProjectManagementPage() {
               <HiOutlinePlus className="w-16px h-16px" />
               NEW TASK
             </button>
+            
+            {/* Sprint Selector */}
+            <select
+              value={selectedSprintId || 'all'}
+              onChange={(e) => setSelectedSprintId(e.target.value === 'all' ? 'all' : e.target.value === 'backlog' ? null : e.target.value)}
+              className="px-16px py-8px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-sm uppercase focus:border-primary-brutalist focus:outline-none transition-colors"
+            >
+              <option value="all">ALL TASKS</option>
+              <option value="backlog">BACKLOG (NO SPRINT)</option>
+              {allSprints?.map((sprint) => (
+                <option key={sprint._id} value={sprint._id}>
+                  {sprint.name} {sprint.status === 'active' ? '(ACTIVE)' : sprint.status === 'completed' ? '(COMPLETED)' : ''}
+                </option>
+              ))}
+            </select>
             
             <div className="flex items-center gap-8px">
               <button 
@@ -923,25 +954,44 @@ export default function ProjectManagementPage() {
 
   const renderTeamTab = () => {
     const members = project?.members || []
+    const allTasks = tasks || []
     
-    // Mock data for demonstration - replace with real data
-    const memberStats = members.map((member: any) => ({
-      ...member,
-      tasksAssigned: 12,
-      tasksCompleted: 8,
-      tasksInProgress: 3,
-      tasksBlocked: 1,
-      pullRequests: 5,
-      commits: 28,
-      hoursTracked: 32.5,
-      productivity: 85,
-      lastActive: '2 hours ago'
-    }))
+    // Calculate real stats for each member
+    const memberStats = members.map((member: any) => {
+      const memberTasks = allTasks.filter((task: any) => 
+        task.assigneeId === member._id || 
+        (task.assigneeIds && task.assigneeIds.includes(member._id))
+      )
+      
+      return {
+        ...member,
+        tasksAssigned: memberTasks.length,
+        tasksCompleted: memberTasks.filter((t: any) => t.status === 'done').length,
+        tasksInProgress: memberTasks.filter((t: any) => t.status === 'in_progress').length,
+        tasksBlocked: memberTasks.filter((t: any) => t.status === 'blocked' || t.isBlocked).length,
+        tasksTodo: memberTasks.filter((t: any) => t.status === 'todo' || t.status === 'backlog').length,
+        tasksInReview: memberTasks.filter((t: any) => t.status === 'in_review').length,
+        pullRequests: 0, // TODO: Integrate with GitHub
+        commits: 0, // TODO: Integrate with GitHub
+        hoursTracked: memberTasks.reduce((sum: number, t: any) => sum + (t.timeTracked || 0), 0) / 3600000, // Convert ms to hours
+        productivity: memberTasks.length > 0 ? Math.round((memberTasks.filter((t: any) => t.status === 'done').length / memberTasks.length) * 100) : 0,
+        lastActive: member.lastSeenAt ? formatDistanceToNow(new Date(member.lastSeenAt), { addSuffix: true }) : 'Unknown'
+      }
+    })
 
     const workloadData = {
-      labels: members.map((m: any) => m.name?.split(' ')[0] || 'Unknown'),
-      values: [8, 12, 6, 15, 9, 11, 7],
-      max: 20
+      labels: memberStats.map((m: any) => m.name?.split(' ')[0] || 'Unknown'),
+      values: memberStats.map((m: any) => m.tasksAssigned),
+      max: Math.max(20, ...memberStats.map((m: any) => m.tasksAssigned))
+    }
+    
+    // Calculate team totals
+    const teamTotals = {
+      totalTasks: memberStats.reduce((sum, m) => sum + m.tasksAssigned, 0),
+      completedTasks: memberStats.reduce((sum, m) => sum + m.tasksCompleted, 0),
+      inProgressTasks: memberStats.reduce((sum, m) => sum + m.tasksInProgress, 0),
+      hoursTracked: memberStats.reduce((sum, m) => sum + m.hoursTracked, 0),
+      avgProductivity: memberStats.length > 0 ? Math.round(memberStats.reduce((sum, m) => sum + m.productivity, 0) / memberStats.length) : 0
     }
 
     return (
@@ -962,7 +1012,7 @@ export default function ProjectManagementPage() {
               <HiOutlineClipboardList className="w-20px h-20px text-brutal-info" />
               <span className="font-mono text-brutal-xs text-primary-brutalist/60">ACTIVE TASKS</span>
             </div>
-            <div className="text-brutal-2xl font-bold">47</div>
+            <div className="text-brutal-2xl font-bold">{teamTotals.totalTasks}</div>
             <div className="font-mono text-brutal-xs text-primary-brutalist/60">ACROSS TEAM</div>
           </div>
           
@@ -971,8 +1021,8 @@ export default function ProjectManagementPage() {
               <HiOutlineClock className="w-20px h-20px text-brutal-warning" />
               <span className="font-mono text-brutal-xs text-primary-brutalist/60">HOURS TRACKED</span>
             </div>
-            <div className="text-brutal-2xl font-bold">186</div>
-            <div className="font-mono text-brutal-xs text-primary-brutalist/60">THIS WEEK</div>
+            <div className="text-brutal-2xl font-bold">{Math.round(teamTotals.hoursTracked)}</div>
+            <div className="font-mono text-brutal-xs text-primary-brutalist/60">TOTAL HOURS</div>
           </div>
           
           <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
@@ -980,8 +1030,8 @@ export default function ProjectManagementPage() {
               <HiOutlineChartBar className="w-20px h-20px text-brutal-success" />
               <span className="font-mono text-brutal-xs text-primary-brutalist/60">PRODUCTIVITY</span>
             </div>
-            <div className="text-brutal-2xl font-bold">92%</div>
-            <div className="font-mono text-brutal-xs text-primary-brutalist/60">AVG VELOCITY</div>
+            <div className="text-brutal-2xl font-bold">{teamTotals.avgProductivity}%</div>
+            <div className="font-mono text-brutal-xs text-primary-brutalist/60">AVG COMPLETION</div>
           </div>
         </div>
 
@@ -1095,8 +1145,19 @@ export default function ProjectManagementPage() {
               </div>
 
               <div className="flex items-center gap-8px mt-16px">
-                <button className="brutal-btn-sm flex-1">VIEW TASKS</button>
-                <button className="brutal-btn-sm bg-basalt-border border-basalt-border">REASSIGN</button>
+                <button 
+                  onClick={() => {
+                    setActiveTab('tasks')
+                    setTaskFilters(prev => ({
+                      ...prev,
+                      assigneeIds: [member._id]
+                    }))
+                  }}
+                  className="brutal-btn-sm flex-1"
+                >
+                  VIEW TASKS
+                </button>
+                <button className="brutal-btn-sm bg-basalt-border border-basalt-border">ASSIGN TASK</button>
               </div>
             </div>
           ))}
@@ -1191,12 +1252,19 @@ export default function ProjectManagementPage() {
   }
 
   const renderGitHubTab = () => {
-    // Mock data for demonstration - replace with real GitHub API data
-    const repository = project?.repository || {
-      provider: 'github',
-      url: 'https://github.com/org/project',
-      defaultBranch: 'main'
+    // Check if project has repository configured
+    if (!project?.repository) {
+      return (
+        <div className="bg-carbon-plate border-2 border-basalt-border p-48px text-center">
+          <HiOutlineCode className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
+          <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO REPOSITORY CONNECTED</h3>
+          <p className="text-cathode-white/60 mb-24px">Connect a GitHub repository to enable code tracking and PR management</p>
+          <button className="brutal-btn">CONNECT REPOSITORY</button>
+        </div>
+      )
     }
+    
+    const repository = project.repository
 
     const pullRequests = [
       {
