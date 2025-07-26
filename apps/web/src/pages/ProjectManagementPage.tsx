@@ -39,6 +39,7 @@ import EditTaskModal from '@/components/features/task/EditTaskModal'
 import TaskBoard from '@/components/features/task/TaskBoard'
 import TaskList from '@/components/features/task/TaskList'
 import SprintBoard from '@/components/features/sprint/SprintBoard'
+import CreateSprintModal from '@/components/features/sprint/CreateSprintModal'
 import TaskCard from '@/components/features/task/TaskCard'
 import TaskFilters from '@/components/features/task/TaskFilters'
 import type { TaskFilters as TaskFiltersType } from '@/components/features/task/TaskFilters'
@@ -67,6 +68,7 @@ export default function ProjectManagementPage() {
   const [currentContext, setCurrentContext] = useState<string | null>(null)
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false)
   const [showEditTaskModal, setShowEditTaskModal] = useState(false)
+  const [showCreateSprintModal, setShowCreateSprintModal] = useState(false)
   const [selectedTask, setSelectedTask] = useState<any>(null)
   const [quickFilter, setQuickFilter] = useState<string | null>(null)
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
@@ -823,6 +825,7 @@ export default function ProjectManagementPage() {
         {taskView === 'list' && (
           <TaskList 
             tasks={filteredTasks}
+            projectId={projectId as string}
             onTaskEdit={handleEditTask}
             onTaskDelete={handleDeleteTask}
             onTaskDuplicate={handleDuplicateTask}
@@ -833,7 +836,12 @@ export default function ProjectManagementPage() {
           <div className="bg-carbon-plate border-2 border-basalt-border p-48px text-center">
             <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO ACTIVE SPRINT</h3>
             <p className="text-cathode-white/60 mb-24px">Create a sprint to start organizing your tasks</p>
-            <button className="brutal-btn">CREATE NEW SPRINT</button>
+            <button 
+              onClick={() => setShowCreateSprintModal(true)}
+              className="brutal-btn"
+            >
+              CREATE NEW SPRINT
+            </button>
           </div>
         )}
 
@@ -1710,6 +1718,19 @@ export default function ProjectManagementPage() {
         filters={taskFilters}
         onFiltersChange={setTaskFilters}
         workspaceId={workspaceId}
+      />
+    )}
+    
+    {/* Create Sprint Modal */}
+    {projectId && (
+      <CreateSprintModal
+        isOpen={showCreateSprintModal}
+        onClose={() => setShowCreateSprintModal(false)}
+        projectId={projectId}
+        onSuccess={() => {
+          setShowCreateSprintModal(false)
+          // Sprint will automatically refresh via Convex reactivity
+        }}
       />
     )}
   </>

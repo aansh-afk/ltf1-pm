@@ -19,7 +19,10 @@ import CreateTaskModal from './CreateTaskModal'
 interface TaskListProps {
   tasks: any[]
   projectId: string
-  onTaskUpdate: () => void
+  onTaskUpdate?: () => void
+  onTaskEdit?: (task: any) => void
+  onTaskDelete?: (task: any) => void
+  onTaskDuplicate?: (task: any) => void
 }
 
 const statusConfig = {
@@ -46,7 +49,7 @@ const typeConfig = {
   epic: { label: 'EPIC', color: 'bg-[#FF00FF]' }
 }
 
-export default function TaskList({ tasks, projectId, onTaskUpdate }: TaskListProps) {
+export default function TaskList({ tasks, projectId, onTaskUpdate, onTaskEdit, onTaskDelete, onTaskDuplicate }: TaskListProps) {
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set())
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set())
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
