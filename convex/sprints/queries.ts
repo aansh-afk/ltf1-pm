@@ -119,15 +119,25 @@ export const getCurrentSprint = query({
     // Get assignee information
     const tasksWithAssignees = await Promise.all(
       tasks.map(async (task) => {
-        let assigneeName = null;
-        if (task.assigneeId) {
+        let assigneeNames: string[] = [];
+        // Get all assignees
+        if (task.assigneeIds && task.assigneeIds.length > 0) {
+          const assignees = await Promise.all(
+            task.assigneeIds.map(id => ctx.db.get(id))
+          );
+          assigneeNames = assignees
+            .filter(Boolean)
+            .map(a => a!.name);
+        } else if (task.assigneeId) {
+          // Fallback to old assigneeId for backward compatibility
           const assignee = await ctx.db.get(task.assigneeId);
-          assigneeName = assignee?.name || null;
+          if (assignee) assigneeNames = [assignee.name];
         }
         return {
           ...task,
           key: `${project.key}-${task.number}`,
-          assigneeName,
+          assigneeNames,
+          assigneeName: assigneeNames[0] || null, // Keep for backward compatibility
         };
       })
     );
@@ -205,15 +215,25 @@ export const getSprintById = query({
 
     const tasksWithAssignees = await Promise.all(
       tasks.map(async (task) => {
-        let assigneeName = null;
-        if (task.assigneeId) {
+        let assigneeNames: string[] = [];
+        // Get all assignees
+        if (task.assigneeIds && task.assigneeIds.length > 0) {
+          const assignees = await Promise.all(
+            task.assigneeIds.map(id => ctx.db.get(id))
+          );
+          assigneeNames = assignees
+            .filter(Boolean)
+            .map(a => a!.name);
+        } else if (task.assigneeId) {
+          // Fallback to old assigneeId for backward compatibility
           const assignee = await ctx.db.get(task.assigneeId);
-          assigneeName = assignee?.name || null;
+          if (assignee) assigneeNames = [assignee.name];
         }
         return {
           ...task,
           key: `${project.key}-${task.number}`,
-          assigneeName,
+          assigneeNames,
+          assigneeName: assigneeNames[0] || null, // Keep for backward compatibility
         };
       })
     );
@@ -280,15 +300,25 @@ export const getBacklogTasks = query({
 
     const tasksWithAssignees = await Promise.all(
       tasks.map(async (task) => {
-        let assigneeName = null;
-        if (task.assigneeId) {
+        let assigneeNames: string[] = [];
+        // Get all assignees
+        if (task.assigneeIds && task.assigneeIds.length > 0) {
+          const assignees = await Promise.all(
+            task.assigneeIds.map(id => ctx.db.get(id))
+          );
+          assigneeNames = assignees
+            .filter(Boolean)
+            .map(a => a!.name);
+        } else if (task.assigneeId) {
+          // Fallback to old assigneeId for backward compatibility
           const assignee = await ctx.db.get(task.assigneeId);
-          assigneeName = assignee?.name || null;
+          if (assignee) assigneeNames = [assignee.name];
         }
         return {
           ...task,
           key: `${project.key}-${task.number}`,
-          assigneeName,
+          assigneeNames,
+          assigneeName: assigneeNames[0] || null, // Keep for backward compatibility
         };
       })
     );

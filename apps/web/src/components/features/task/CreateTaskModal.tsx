@@ -3,6 +3,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
 import BrutalModal from '../../ui/BrutalModal'
+import MultiSelect from '../../ui/MultiSelect'
 
 interface CreateTaskModalProps {
   isOpen: boolean
@@ -25,7 +26,7 @@ export default function CreateTaskModal({
   const [description, setDescription] = useState('')
   const [type, setType] = useState<'feature' | 'bug' | 'improvement' | 'task' | 'epic'>('task')
   const [priority, setPriority] = useState<'urgent' | 'high' | 'medium' | 'low'>('medium')
-  const [assigneeId, setAssigneeId] = useState<string>('')
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([])
   const [labels, setLabels] = useState<string>('')
   const [estimateHours, setEstimateHours] = useState<string>('')
   const [startDate, setStartDate] = useState<string>('')
@@ -52,11 +53,11 @@ export default function CreateTaskModal({
         description: description.trim() || undefined,
         type,
         priority,
-        assigneeId: assigneeId || undefined,
+        assigneeIds: assigneeIds.length > 0 ? assigneeIds : undefined,
         labels: labels ? labels.split(',').map(l => l.trim()).filter(Boolean) : undefined,
         estimate: estimateHours ? { hours: parseFloat(estimateHours) } : undefined,
-        startDate: startDate || undefined,
-        dueDate: dueDate || undefined,
+        startDate: startDate ? new Date(startDate).getTime() : undefined,
+        dueDate: dueDate ? new Date(dueDate).getTime() : undefined,
       })
       
       toast.success('Task created successfully!')
@@ -64,7 +65,7 @@ export default function CreateTaskModal({
       setDescription('')
       setType('task')
       setPriority('medium')
-      setAssigneeId('')
+      setAssigneeIds([])
       setLabels('')
       setEstimateHours('')
       setStartDate('')
@@ -206,24 +207,19 @@ export default function CreateTaskModal({
         <div className="grid grid-cols-2 gap-16px">
           <div>
             <label className="block text-brutal-sm mb-8px">
-              ASSIGNEE (OPTIONAL)
+              ASSIGNEES (OPTIONAL)
             </label>
-            <select
-              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
-                       font-mono text-brutal-md uppercase
-                       focus:border-primary-brutalist focus:outline-none transition-colors
-                       disabled:opacity-50 disabled:cursor-not-allowed"
-              value={assigneeId}
-              onChange={(e) => setAssigneeId(e.target.value)}
+            <MultiSelect
+              options={project?.members?.map((member: any) => ({
+                value: member._id,
+                label: member.name.toUpperCase(),
+                avatarUrl: member.avatarUrl
+              })) || []}
+              value={assigneeIds}
+              onChange={setAssigneeIds}
+              placeholder="SELECT ASSIGNEES"
               disabled={isCreating}
-            >
-              <option value="">UNASSIGNED</option>
-              {project?.members?.map((member: any) => (
-                <option key={member._id} value={member._id}>
-                  {member.name.toUpperCase()}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div>

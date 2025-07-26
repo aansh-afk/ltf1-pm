@@ -115,9 +115,11 @@ export default function TaskList({ tasks, projectId, onTaskUpdate }: TaskListPro
         compareValue = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
         break
       case 'assignee':
-        if (!a.assignee?.name) return 1
-        if (!b.assignee?.name) return -1
-        compareValue = a.assignee.name.localeCompare(b.assignee.name)
+        const aName = a.assignees?.[0]?.name || ''
+        const bName = b.assignees?.[0]?.name || ''
+        if (!aName) return 1
+        if (!bName) return -1
+        compareValue = aName.localeCompare(bName)
         break
     }
     
@@ -245,12 +247,25 @@ export default function TaskList({ tasks, projectId, onTaskUpdate }: TaskListPro
                 </div>
                 
                 <div className="col-span-2">
-                  {task.assignee ? (
-                    <div className="flex items-center gap-8px">
-                      <div className="w-24px h-24px bg-primary-brutalist border border-basalt-border flex items-center justify-center">
-                        <HiOutlineUser className="w-16px h-16px text-event-horizon" />
-                      </div>
-                      <span className="text-brutal-xs">{task.assignee.name}</span>
+                  {task.assignees && task.assignees.length > 0 ? (
+                    <div className="flex items-center gap-4px flex-wrap">
+                      {task.assignees.slice(0, 2).map((assignee: any, index: number) => (
+                        <div key={assignee._id} className="flex items-center gap-4px">
+                          <div className="w-20px h-20px bg-primary-brutalist border border-basalt-border flex items-center justify-center">
+                            <span className="text-event-horizon text-[10px] font-bold">
+                              {assignee.name.charAt(0)}
+                            </span>
+                          </div>
+                          {index === 0 && task.assignees.length === 1 && (
+                            <span className="text-brutal-xs">{assignee.name}</span>
+                          )}
+                        </div>
+                      ))}
+                      {task.assignees.length > 2 && (
+                        <span className="text-brutal-xs text-neutral-400">
+                          +{task.assignees.length - 2}
+                        </span>
+                      )}
                     </div>
                   ) : (
                     <span className="text-brutal-xs text-neutral-500">UNASSIGNED</span>
@@ -327,11 +342,14 @@ export default function TaskList({ tasks, projectId, onTaskUpdate }: TaskListPro
       </div>
 
       {/* Create Task Modal */}
-      <CreateTaskModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        projectId={projectId as any}
-      />
+      {projectId && (
+        <CreateTaskModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          projectId={projectId as any}
+          onSuccess={onTaskUpdate}
+        />
+      )}
     </div>
   )
 }

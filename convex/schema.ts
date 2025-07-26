@@ -128,7 +128,8 @@ export default defineSchema({
     ),
     priority: v.union(v.literal("urgent"), v.literal("high"), v.literal("medium"), v.literal("low")),
     type: v.union(v.literal("feature"), v.literal("bug"), v.literal("improvement"), v.literal("task"), v.literal("epic")),
-    assigneeId: v.optional(v.id("users")),
+    assigneeIds: v.optional(v.array(v.id("users"))),
+    assigneeId: v.optional(v.id("users")), // Deprecated - kept for migration
     reporterId: v.id("users"),
     labels: v.array(v.string()),
     dueDate: v.optional(v.number()),
@@ -151,7 +152,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_project", ["projectId"])
-    .index("by_assignee", ["assigneeId"])
+    .index("by_assignee", ["assigneeId"]) // Deprecated - kept for migration
     .index("by_reporter", ["reporterId"])
     .index("by_status", ["status"])
     .index("by_sprint", ["sprintId"])

@@ -104,7 +104,12 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate }: TaskBoardP
                   onDragStart={(e) => handleDragStart(e, task)}
                   className="cursor-move"
                 >
-                  <TaskCard task={task} />
+                  <TaskCard 
+                    task={task}
+                    onEdit={() => onTaskEdit?.(task)}
+                    onDelete={() => onTaskDelete?.(task)}
+                    onDuplicate={() => onTaskDuplicate?.(task)}
+                  />
                 </motion.div>
               ))}
               
