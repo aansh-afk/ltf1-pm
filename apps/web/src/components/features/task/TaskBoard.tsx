@@ -60,7 +60,6 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
       })
       
       onTaskUpdate?.()
-      toast.success('Task moved successfully')
     } catch (error) {
       toast.error('Failed to move task')
     }

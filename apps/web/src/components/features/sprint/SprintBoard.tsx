@@ -114,7 +114,6 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
   const handleRemoveFromSprint = async (taskId: any) => {
     try {
       await removeTaskFromSprint({ taskId })
-      toast.success('Task removed from sprint')
     } catch (error: any) {
       toast.error(error.message || 'Failed to remove task')
     }
