@@ -11,6 +11,9 @@ interface TaskBoardProps {
   tasks: any[]
   projectId: string
   onTaskUpdate?: () => void
+  onTaskEdit?: (task: any) => void
+  onTaskDelete?: (task: any) => void
+  onTaskDuplicate?: (task: any) => void
 }
 
 const columns = [
@@ -21,7 +24,7 @@ const columns = [
   { id: 'done', title: 'DONE', color: 'border-brutal-success' },
 ]
 
-export default function TaskBoard({ tasks, projectId, onTaskUpdate }: TaskBoardProps) {
+export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, onTaskDelete, onTaskDuplicate }: TaskBoardProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createStatus, setCreateStatus] = useState<string>('backlog')
   const [draggedTask, setDraggedTask] = useState<any>(null)
