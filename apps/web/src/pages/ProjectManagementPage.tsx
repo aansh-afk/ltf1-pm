@@ -140,6 +140,12 @@ export default function ProjectManagementPage() {
     api.tasks.queries.getProjectTasks,
     projectId ? { projectId: projectId as any } : 'skip'
   )
+  
+  // Get current sprint for this project
+  const activeSprint = useQuery(
+    api.sprints.queries.getCurrentSprint,
+    projectId ? { projectId: projectId as any } : 'skip'
+  )
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -466,7 +472,6 @@ export default function ProjectManagementPage() {
   )
 
   const renderTasksTab = () => {
-    const activeSprint = project?.activeSprint
 
     // Apply filters
     let filteredTasks = tasks || []
@@ -797,6 +802,7 @@ export default function ProjectManagementPage() {
         {taskView === 'sprint' && activeSprint && (
           <SprintBoard 
             sprint={activeSprint} 
+            projectId={projectId as string}
             tasks={filteredTasks.filter((t: any) => t.sprintId === activeSprint._id)}
             onTaskEdit={handleEditTask}
             onTaskDelete={handleDeleteTask}
@@ -807,6 +813,7 @@ export default function ProjectManagementPage() {
         {taskView === 'kanban' && (
           <TaskBoard 
             tasks={filteredTasks}
+            projectId={projectId as string}
             onTaskEdit={handleEditTask}
             onTaskDelete={handleDeleteTask}
             onTaskDuplicate={handleDuplicateTask}
