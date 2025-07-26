@@ -20,6 +20,7 @@ import type * as comments_mutations from "../comments/mutations.js";
 import type * as filterPresets_mutations from "../filterPresets/mutations.js";
 import type * as filterPresets_queries from "../filterPresets/queries.js";
 import type * as http from "../http.js";
+import type * as migrations_migrateToMultipleAssignees from "../migrations/migrateToMultipleAssignees.js";
 import type * as projects_mutations from "../projects/mutations.js";
 import type * as projects_queries from "../projects/queries.js";
 import type * as sprints_mutations from "../sprints/mutations.js";
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   "filterPresets/mutations": typeof filterPresets_mutations;
   "filterPresets/queries": typeof filterPresets_queries;
   http: typeof http;
+  "migrations/migrateToMultipleAssignees": typeof migrations_migrateToMultipleAssignees;
   "projects/mutations": typeof projects_mutations;
   "projects/queries": typeof projects_queries;
   "sprints/mutations": typeof sprints_mutations;

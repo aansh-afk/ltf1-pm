@@ -56,16 +56,20 @@ export const createComment = mutation({
       createdAt: now,
     });
 
-    if (task.assigneeId && task.assigneeId !== user._id) {
-      await ctx.db.insert("notifications", {
-        userId: task.assigneeId,
-        type: "comment.added",
-        title: "New Comment",
-        message: `${user.name} commented on "${task.title}"`,
-        data: { taskId: args.taskId, commentId },
-        read: false,
-        createdAt: now,
-      });
+    // Notify all assignees about the comment
+    const assigneeIds = task.assigneeIds || (task.assigneeId ? [task.assigneeId] : []);
+    for (const assigneeId of assigneeIds) {
+      if (assigneeId !== user._id) {
+        await ctx.db.insert("notifications", {
+          userId: assigneeId,
+          type: "comment.added",
+          title: "New Comment",
+          message: `${user.name} commented on "${task.title}"`,
+          data: { taskId: args.taskId, commentId },
+          read: false,
+          createdAt: now,
+        });
+      }
     }
 
     return commentId;

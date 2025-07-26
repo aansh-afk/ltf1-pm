@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
+import { useUser } from '@clerk/clerk-react'
 import {
   HiOutlineHome,
   HiOutlineClipboardList,
@@ -33,7 +34,16 @@ import {
   HiOutlineChat
 } from 'react-icons/hi'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
+import CreateTaskModal from '@/components/features/task/CreateTaskModal'
+import EditTaskModal from '@/components/features/task/EditTaskModal'
+import TaskBoard from '@/components/features/task/TaskBoard'
+import TaskList from '@/components/features/task/TaskList'
+import SprintBoard from '@/components/features/sprint/SprintBoard'
+import TaskCard from '@/components/features/task/TaskCard'
+import TaskFilters from '@/components/features/task/TaskFilters'
+import type { TaskFilters as TaskFiltersType } from '@/components/features/task/TaskFilters'
 import clsx from 'clsx'
+import toast from 'react-hot-toast'
 
 type TabType = 'overview' | 'tasks' | 'team' | 'github' | 'meetings' | 'docs' | 'logs' | 'settings'
 
@@ -50,14 +60,79 @@ type TaskViewType = 'sprint' | 'kanban' | 'list'
 export default function ProjectManagementPage() {
   const { workspaceId, projectId } = useParams()
   const navigate = useNavigate()
+  const { user: clerkUser } = useUser()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [taskView, setTaskView] = useState<TaskViewType>('sprint')
   const [showMyTasks, setShowMyTasks] = useState(false)
   const [currentContext, setCurrentContext] = useState<string | null>(null)
+  const [showCreateTaskModal, setShowCreateTaskModal] = useState(false)
+  const [showEditTaskModal, setShowEditTaskModal] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<any>(null)
+  const [quickFilter, setQuickFilter] = useState<string | null>(null)
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [taskFilters, setTaskFilters] = useState<TaskFiltersType>({
+    search: '',
+    status: [],
+    priority: [],
+    type: [],
+    assigneeIds: [],
+    labels: [],
+    dueDateRange: { start: null, end: null },
+    createdDateRange: { start: null, end: null },
+    hasTimeTracked: null,
+    isOverdue: null
+  })
+
+  // Move mutations to top level to follow React hooks rules
+  const deleteTask = useMutation(api.tasks.mutations.deleteTask)
+  const createTask = useMutation(api.tasks.mutations.createTask)
+
+  // Move task handlers to top level
+  const handleEditTask = (task: any) => {
+    setSelectedTask(task)
+    setShowEditTaskModal(true)
+  }
+
+  const handleDeleteTask = async (task: any) => {
+    if (confirm(`Delete task "${task.title}"?`)) {
+      try {
+        await deleteTask({ taskId: task._id })
+        toast.success('Task deleted')
+      } catch (error) {
+        toast.error('Failed to delete task')
+      }
+    }
+  }
+
+  const handleDuplicateTask = async (task: any) => {
+    try {
+      await createTask({
+        projectId: task.projectId,
+        title: `${task.title} (Copy)`,
+        description: task.description,
+        type: task.type,
+        priority: task.priority,
+        assigneeId: task.assigneeId,
+        labels: task.labels,
+        estimate: task.estimate,
+        startDate: task.startDate,
+        dueDate: task.dueDate,
+      })
+      toast.success('Task duplicated')
+    } catch (error) {
+      toast.error('Failed to duplicate task')
+    }
+  }
 
   const project = useQuery(
     api.projects.queries.getProject,
     projectId ? { projectId: projectId as any } : 'skip'
+  )
+  
+  // Get current user from Convex
+  const currentUser = useQuery(
+    api.users.queries.getCurrentUser,
+    clerkUser ? {} : 'skip'
   )
   
   // Query tasks for this project - moved here to follow hooks rules
@@ -77,8 +152,7 @@ export default function ProjectManagementPage() {
       switch (e.key.toLowerCase()) {
         case 'n':
           if (activeTab === 'tasks') {
-            // TODO: Open new task modal
-            console.log('New task shortcut')
+            setShowCreateTaskModal(true)
           }
           break
         case 'm':
@@ -120,7 +194,7 @@ export default function ProjectManagementPage() {
 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [activeTab, showMyTasks])
+  }, [activeTab, showMyTasks, setShowCreateTaskModal])
 
   const tabs = [
     { id: 'overview', label: 'OVERVIEW', icon: <HiOutlineHome className="w-16px h-16px" /> },
@@ -394,13 +468,107 @@ export default function ProjectManagementPage() {
   const renderTasksTab = () => {
     const activeSprint = project?.activeSprint
 
+    // Apply filters
+    let filteredTasks = tasks || []
+    
+    // Apply advanced filters first
+    if (taskFilters.search) {
+      const searchLower = taskFilters.search.toLowerCase()
+      filteredTasks = filteredTasks.filter((t: any) => 
+        t.title?.toLowerCase().includes(searchLower) ||
+        t.description?.toLowerCase().includes(searchLower) ||
+        t.key?.toLowerCase().includes(searchLower)
+      )
+    }
+    
+    if (taskFilters.status.length > 0) {
+      filteredTasks = filteredTasks.filter((t: any) => taskFilters.status.includes(t.status))
+    }
+    
+    if (taskFilters.priority.length > 0) {
+      filteredTasks = filteredTasks.filter((t: any) => taskFilters.priority.includes(t.priority))
+    }
+    
+    if (taskFilters.type.length > 0) {
+      filteredTasks = filteredTasks.filter((t: any) => taskFilters.type.includes(t.type))
+    }
+    
+    if (taskFilters.assigneeIds.length > 0) {
+      filteredTasks = filteredTasks.filter((t: any) => 
+        t.assigneeId && taskFilters.assigneeIds.includes(t.assigneeId) ||
+        (t.assigneeIds && t.assigneeIds.some((id: string) => taskFilters.assigneeIds.includes(id)))
+      )
+    }
+    
+    if (taskFilters.labels.length > 0) {
+      filteredTasks = filteredTasks.filter((t: any) => 
+        t.labels && t.labels.some((label: string) => taskFilters.labels.includes(label))
+      )
+    }
+    
+    if (taskFilters.dueDateRange.start || taskFilters.dueDateRange.end) {
+      filteredTasks = filteredTasks.filter((t: any) => {
+        if (!t.dueDate) return false
+        const dueDate = new Date(t.dueDate)
+        if (taskFilters.dueDateRange.start && dueDate < new Date(taskFilters.dueDateRange.start)) return false
+        if (taskFilters.dueDateRange.end && dueDate > new Date(taskFilters.dueDateRange.end)) return false
+        return true
+      })
+    }
+    
+    if (taskFilters.hasTimeTracked !== null) {
+      filteredTasks = filteredTasks.filter((t: any) => 
+        taskFilters.hasTimeTracked ? (t.timeTracked && t.timeTracked > 0) : (!t.timeTracked || t.timeTracked === 0)
+      )
+    }
+    
+    if (taskFilters.isOverdue !== null && taskFilters.isOverdue) {
+      filteredTasks = filteredTasks.filter((t: any) => 
+        t.dueDate && new Date(t.dueDate) < new Date()
+      )
+    }
+    
+    // Apply quick filters on top of advanced filters
+    if (quickFilter) {
+      switch (quickFilter) {
+        case 'my-tasks':
+          filteredTasks = filteredTasks.filter((t: any) => 
+            t.assigneeId === currentUser?._id ||
+            (t.assigneeIds && t.assigneeIds.includes(currentUser?._id))
+          )
+          break
+        case 'unassigned':
+          filteredTasks = filteredTasks.filter((t: any) => !t.assigneeId && (!t.assigneeIds || t.assigneeIds.length === 0))
+          break
+        case 'due-soon':
+          const threeDaysFromNow = new Date()
+          threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
+          filteredTasks = filteredTasks.filter((t: any) => 
+            t.dueDate && new Date(t.dueDate) <= threeDaysFromNow
+          )
+          break
+        case 'overdue':
+          filteredTasks = filteredTasks.filter((t: any) => 
+            t.dueDate && new Date(t.dueDate) < new Date()
+          )
+          break
+        case 'high-priority':
+          filteredTasks = filteredTasks.filter((t: any) => 
+            t.priority === 'urgent' || t.priority === 'high'
+          )
+          break
+      }
+    }
+
+    // Task handlers are now defined at the component level
+
     // Mock task columns data - replace with real data
     const taskColumns = {
-      backlog: tasks?.filter((t: any) => t.status === 'backlog') || [],
-      todo: tasks?.filter((t: any) => t.status === 'todo') || [],
-      in_progress: tasks?.filter((t: any) => t.status === 'in_progress') || [],
-      review: tasks?.filter((t: any) => t.status === 'review') || [],
-      done: tasks?.filter((t: any) => t.status === 'done') || []
+      backlog: filteredTasks?.filter((t: any) => t.status === 'backlog') || [],
+      todo: filteredTasks?.filter((t: any) => t.status === 'todo') || [],
+      in_progress: filteredTasks?.filter((t: any) => t.status === 'in_progress') || [],
+      review: filteredTasks?.filter((t: any) => t.status === 'review') || [],
+      done: filteredTasks?.filter((t: any) => t.status === 'done') || []
     }
 
     const sprintProgress = activeSprint ? {
@@ -415,18 +583,130 @@ export default function ProjectManagementPage() {
 
     return (
       <div className="space-y-24px">
+        {/* Filter Info Bar */}
+        {(quickFilter || taskFilters.search || taskFilters.status.length > 0 || taskFilters.priority.length > 0 ||
+         taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
+         taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== null ||
+         taskFilters.isOverdue !== null) && (
+          <div className="bg-carbon-plate border-2 border-basalt-border p-12px flex items-center justify-between">
+            <div className="font-mono text-brutal-sm">
+              SHOWING <span className="font-bold text-primary-brutalist">{filteredTasks.length}</span> OF <span className="font-bold">{tasks?.length || 0}</span> TASKS
+              {quickFilter && (
+                <span className="ml-16px text-cathode-white/60">
+                  QUICK: <span className="text-primary-brutalist">{quickFilter.replace('-', ' ').toUpperCase()}</span>
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => {
+                setQuickFilter(null)
+                setTaskFilters({
+                  search: '',
+                  status: [],
+                  priority: [],
+                  type: [],
+                  assigneeIds: [],
+                  labels: [],
+                  dueDateRange: { start: null, end: null },
+                  createdDateRange: { start: null, end: null },
+                  hasTimeTracked: null,
+                  isOverdue: null
+                })
+              }}
+              className="text-xs font-mono uppercase text-brutal-error hover:underline"
+            >
+              CLEAR ALL FILTERS
+            </button>
+          </div>
+        )}
+        
         {/* Header Controls */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-16px">
-            <button className="brutal-btn flex items-center gap-8px">
+            <button 
+              onClick={() => setShowCreateTaskModal(true)}
+              className="brutal-btn flex items-center gap-8px"
+            >
               <HiOutlinePlus className="w-16px h-16px" />
               NEW TASK
             </button>
             
-            <button className="brutal-btn-secondary flex items-center gap-8px">
-              <HiOutlineFilter className="w-16px h-16px" />
-              QUICK FILTERS
-            </button>
+            <div className="flex items-center gap-8px">
+              <button 
+                onClick={() => setQuickFilter(quickFilter === 'my-tasks' ? null : 'my-tasks')}
+                className={clsx(
+                  "brutal-btn-secondary text-xs",
+                  quickFilter === 'my-tasks' && "bg-primary-brutalist text-event-horizon border-primary-brutalist"
+                )}
+              >
+                MY TASKS
+              </button>
+              <button 
+                onClick={() => setQuickFilter(quickFilter === 'unassigned' ? null : 'unassigned')}
+                className={clsx(
+                  "brutal-btn-secondary text-xs",
+                  quickFilter === 'unassigned' && "bg-primary-brutalist text-event-horizon border-primary-brutalist"
+                )}
+              >
+                UNASSIGNED
+              </button>
+              <button 
+                onClick={() => setQuickFilter(quickFilter === 'due-soon' ? null : 'due-soon')}
+                className={clsx(
+                  "brutal-btn-secondary text-xs",
+                  quickFilter === 'due-soon' && "bg-primary-brutalist text-event-horizon border-primary-brutalist"
+                )}
+              >
+                DUE SOON
+              </button>
+              <button 
+                onClick={() => setQuickFilter(quickFilter === 'overdue' ? null : 'overdue')}
+                className={clsx(
+                  "brutal-btn-secondary text-xs text-brutal-error",
+                  quickFilter === 'overdue' && "bg-brutal-error text-event-horizon border-brutal-error"
+                )}
+              >
+                OVERDUE
+              </button>
+              <button 
+                onClick={() => setQuickFilter(quickFilter === 'high-priority' ? null : 'high-priority')}
+                className={clsx(
+                  "brutal-btn-secondary text-xs",
+                  quickFilter === 'high-priority' && "bg-primary-brutalist text-event-horizon border-primary-brutalist"
+                )}
+              >
+                HIGH PRIORITY
+              </button>
+              <div className="h-24px w-1px bg-basalt-border mx-8px" />
+              <button 
+                onClick={() => {
+                  // Preset: In Progress tasks
+                  setTaskFilters(prev => ({
+                    ...prev,
+                    status: ['in_progress', 'in_review']
+                  }))
+                  setQuickFilter(null)
+                }}
+                className="brutal-btn-secondary text-xs"
+                title="Show tasks in progress or review"
+              >
+                IN PROGRESS
+              </button>
+              <button 
+                onClick={() => {
+                  // Preset: Blocked tasks
+                  setTaskFilters(prev => ({
+                    ...prev,
+                    status: ['blocked']
+                  }))
+                  setQuickFilter(null)
+                }}
+                className="brutal-btn-secondary text-xs text-brutal-error"
+                title="Show blocked tasks"
+              >
+                BLOCKED
+              </button>
+            </div>
             
             <div className="flex items-center bg-carbon-plate border-2 border-basalt-border">
               <button 
@@ -459,14 +739,25 @@ export default function ProjectManagementPage() {
             </div>
             
             <button 
-              onClick={() => setShowMyTasks(!showMyTasks)}
+              onClick={() => setShowAdvancedFilters(true)}
               className={clsx(
                 "brutal-btn-secondary flex items-center gap-8px",
-                showMyTasks && "bg-primary-brutalist text-event-horizon border-primary-brutalist"
+                (taskFilters.search || taskFilters.status.length > 0 || taskFilters.priority.length > 0 ||
+                 taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
+                 taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== null ||
+                 taskFilters.isOverdue !== null) && "bg-primary-brutalist text-event-horizon border-primary-brutalist"
               )}
             >
-              <HiOutlineUser className="w-16px h-16px" />
-              MY TASKS
+              <HiOutlineFilter className="w-16px h-16px" />
+              ADVANCED FILTERS
+              {(taskFilters.search || taskFilters.status.length > 0 || taskFilters.priority.length > 0 ||
+               taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
+               taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== null ||
+               taskFilters.isOverdue !== null) && (
+                <span className="ml-4px px-6px py-2px bg-event-horizon text-primary-brutalist text-xs font-bold rounded-none">
+                  ACTIVE
+                </span>
+              )}
             </button>
           </div>
           
@@ -502,57 +793,40 @@ export default function ProjectManagementPage() {
           </div>
         )}
 
-        {/* Task Board */}
-        {taskView === 'sprint' && (
-          <div className="bg-carbon-plate border-2 border-basalt-border">
-            {/* Sprint Header */}
-            {activeSprint && (
-              <div className="p-16px border-b-2 border-basalt-border flex items-center justify-between">
-                <h3 className="font-mono text-brutal-sm uppercase">
-                  SPRINT {activeSprint.number}: {activeSprint.name} ({sprintProgress?.daysLeft} DAYS LEFT)
-                </h3>
-                <div className="flex items-center gap-8px">
-                  <button className="text-brutal-xs font-mono uppercase text-primary-brutalist/60 hover:text-primary-brutalist">
-                    COLLAPSE
-                  </button>
-                  <button className="text-brutal-xs font-mono uppercase text-brutal-success hover:text-brutal-success/80">
-                    COMPLETE SPRINT
-                  </button>
-                </div>
-              </div>
-            )}
-            
-            {/* Task Columns */}
-            <div className="flex divide-x-2 divide-basalt-border">
-              {Object.entries({
-                backlog: { label: 'BACKLOG', color: 'text-primary-brutalist/60' },
-                todo: { label: 'TODO', color: 'text-primary-brutalist' },
-                in_progress: { label: 'IN PROGRESS', color: 'text-brutal-info' },
-                review: { label: 'REVIEW', color: 'text-brutal-warning' },
-                done: { label: 'DONE', color: 'text-brutal-success' }
-              }).map(([status, config]) => (
-                <div key={status} className="flex-1 min-w-256px">
-                  <div className="p-16px border-b-2 border-basalt-border">
-                    <h4 className={clsx("font-mono text-brutal-sm uppercase", config.color)}>
-                      {config.label} ({taskColumns[status as keyof typeof taskColumns].length})
-                    </h4>
-                  </div>
-                  <div className="p-16px space-y-12px min-h-400px">
-                    {taskColumns[status as keyof typeof taskColumns].map((task: any) => (
-                      <TaskCard key={task._id} task={task} onContextSwitch={setCurrentContext} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Backlog Section */}
-            <div className="border-t-2 border-basalt-border p-16px">
-              <button className="font-mono text-brutal-sm uppercase text-primary-brutalist/60 hover:text-primary-brutalist flex items-center gap-8px">
-                BACKLOG (NO SPRINT) - 23 TASKS
-                <HiOutlineArrowRight className="w-16px h-16px" />
-              </button>
-            </div>
+        {/* Task View */}
+        {taskView === 'sprint' && activeSprint && (
+          <SprintBoard 
+            sprint={activeSprint} 
+            tasks={filteredTasks.filter((t: any) => t.sprintId === activeSprint._id)}
+            onTaskEdit={handleEditTask}
+            onTaskDelete={handleDeleteTask}
+            onTaskDuplicate={handleDuplicateTask}
+          />
+        )}
+        
+        {taskView === 'kanban' && (
+          <TaskBoard 
+            tasks={filteredTasks}
+            onTaskEdit={handleEditTask}
+            onTaskDelete={handleDeleteTask}
+            onTaskDuplicate={handleDuplicateTask}
+          />
+        )}
+        
+        {taskView === 'list' && (
+          <TaskList 
+            tasks={filteredTasks}
+            onTaskEdit={handleEditTask}
+            onTaskDelete={handleDeleteTask}
+            onTaskDuplicate={handleDuplicateTask}
+          />
+        )}
+        
+        {taskView === 'sprint' && !activeSprint && (
+          <div className="bg-carbon-plate border-2 border-basalt-border p-48px text-center">
+            <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO ACTIVE SPRINT</h3>
+            <p className="text-cathode-white/60 mb-24px">Create a sprint to start organizing your tasks</p>
+            <button className="brutal-btn">CREATE NEW SPRINT</button>
           </div>
         )}
 
@@ -591,8 +865,8 @@ export default function ProjectManagementPage() {
     )
   }
 
-  // Task Card Component
-  const TaskCard = ({ task, onContextSwitch }: any) => {
+  // Remove the inline TaskCard component (we're using the imported one now)
+  const InlineTaskCard = ({ task, onContextSwitch }: any) => {
     return (
       <div className="bg-event-horizon border-2 border-basalt-border p-12px hover:border-primary-brutalist hover:shadow-brutal-sm transition-all cursor-move">
         <div className="flex items-start justify-between mb-8px">
@@ -1292,9 +1566,10 @@ export default function ProjectManagementPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Project Header */}
-      <div className="bg-carbon-plate border-b-2 border-basalt-border px-32px py-16px">
+    <>
+      <div className="min-h-screen">
+        {/* Project Header */}
+        <div className="bg-carbon-plate border-b-2 border-basalt-border px-32px py-16px">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-16px">
             <button 
@@ -1390,5 +1665,46 @@ export default function ProjectManagementPage() {
         {renderTabContent()}
       </div>
     </div>
+    
+    {/* Create Task Modal - Rendered outside main container for proper positioning */}
+    {projectId && (
+      <CreateTaskModal
+        isOpen={showCreateTaskModal}
+        onClose={() => setShowCreateTaskModal(false)}
+        projectId={projectId}
+        onSuccess={() => {
+          // Tasks will automatically refresh via Convex reactivity
+        }}
+      />
+    )}
+    
+    {/* Edit Task Modal */}
+    {selectedTask && (
+      <EditTaskModal
+        isOpen={showEditTaskModal}
+        onClose={() => {
+          setShowEditTaskModal(false)
+          setSelectedTask(null)
+        }}
+        task={selectedTask}
+        onDelete={async () => {
+          await handleDeleteTask(selectedTask)
+          setShowEditTaskModal(false)
+          setSelectedTask(null)
+        }}
+      />
+    )}
+    
+    {/* Advanced Filters Panel */}
+    {workspaceId && (
+      <TaskFilters
+        isOpen={showAdvancedFilters}
+        onClose={() => setShowAdvancedFilters(false)}
+        filters={taskFilters}
+        onFiltersChange={setTaskFilters}
+        workspaceId={workspaceId}
+      />
+    )}
+  </>
   )
 }

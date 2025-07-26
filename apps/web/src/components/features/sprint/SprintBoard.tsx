@@ -7,14 +7,23 @@ import {
   HiOutlineX,
   HiOutlineClock,
   HiOutlineUser,
-  HiOutlineFlag
+  HiOutlineFlag,
+  HiOutlineDotsVertical,
+  HiOutlinePencil,
+  HiOutlineTrash,
+  HiOutlineDuplicate
 } from 'react-icons/hi'
+import TaskCard from '../task/TaskCard'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 
 interface SprintBoardProps {
   sprint: any
-  projectId: string
+  projectId?: string
+  tasks?: any[]
+  onTaskEdit?: (task: any) => void
+  onTaskDelete?: (task: any) => void
+  onTaskDuplicate?: (task: any) => void
 }
 
 const columns = [
@@ -39,7 +48,7 @@ const typeIcons = {
   epic: '🎯'
 }
 
-export default function SprintBoard({ sprint, projectId }: SprintBoardProps) {
+export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTaskDelete, onTaskDuplicate }: SprintBoardProps) {
   const [tasksByStatus, setTasksByStatus] = useState(() => {
     const grouped: Record<string, any[]> = {
       todo: [],
@@ -48,7 +57,8 @@ export default function SprintBoard({ sprint, projectId }: SprintBoardProps) {
       done: []
     }
 
-    sprint.tasks.forEach((task: any) => {
+    const sprintTasks = tasks || sprint.tasks || []
+    sprintTasks.forEach((task: any) => {
       if (task.status === 'backlog') {
         grouped.todo.push(task)
       } else if (grouped[task.status]) {
@@ -192,12 +202,28 @@ export default function SprintBoard({ sprint, projectId }: SprintBoardProps) {
                                 </span>
                                 <span>{typeIcons[task.type]}</span>
                               </div>
-                              <button
-                                onClick={() => handleRemoveFromSprint(task._id)}
-                                className="p-4px hover:bg-event-horizon/20 transition-colors"
-                              >
-                                <HiOutlineX className="w-12px h-12px" />
-                              </button>
+                              <div className="flex items-center gap-4px">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    onTaskEdit?.(task)
+                                  }}
+                                  className="p-4px hover:bg-event-horizon/20 transition-colors"
+                                  title="Edit"
+                                >
+                                  <HiOutlinePencil className="w-12px h-12px" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleRemoveFromSprint(task._id)
+                                  }}
+                                  className="p-4px hover:bg-event-horizon/20 transition-colors"
+                                  title="Remove from sprint"
+                                >
+                                  <HiOutlineX className="w-12px h-12px" />
+                                </button>
+                              </div>
                             </div>
 
                             {/* Task Title */}

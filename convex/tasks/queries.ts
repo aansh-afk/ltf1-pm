@@ -55,9 +55,13 @@ export const getProjectTasks = query({
     }
 
     if (args.assigneeId) {
-      filteredTasks = filteredTasks.filter(task => 
-        task.assigneeId === args.assigneeId
-      );
+      filteredTasks = filteredTasks.filter(task => {
+        // Support both old assigneeId and new assigneeIds
+        if (task.assigneeIds && task.assigneeIds.length > 0) {
+          return task.assigneeIds.includes(args.assigneeId!);
+        }
+        return task.assigneeId === args.assigneeId;
+      });
     }
 
     if (args.labels && args.labels.length > 0) {
@@ -68,7 +72,19 @@ export const getProjectTasks = query({
 
     const tasksWithDetails = await Promise.all(
       filteredTasks.map(async (task) => {
-        const assignee = task.assigneeId ? await ctx.db.get(task.assigneeId) : null;
+        // Get all assignees
+        let assignees: any[] = [];
+        if (task.assigneeIds && task.assigneeIds.length > 0) {
+          assignees = await Promise.all(
+            task.assigneeIds.map(id => ctx.db.get(id))
+          );
+          assignees = assignees.filter(Boolean);
+        } else if (task.assigneeId) {
+          // Fallback to old assigneeId for backward compatibility
+          const assignee = await ctx.db.get(task.assigneeId);
+          if (assignee) assignees = [assignee];
+        }
+        
         const reporter = await ctx.db.get(task.reporterId);
 
         const subtasks = await ctx.db
@@ -83,7 +99,8 @@ export const getProjectTasks = query({
 
         return {
           ...task,
-          assignee,
+          assignees,
+          assignee: assignees[0] || null, // Keep for backward compatibility
           reporter,
           subtaskCount: subtasks.length,
           commentCount: comments.length,
@@ -133,7 +150,19 @@ export const getTask = query({
       throw new Error("Access denied");
     }
 
-    const assignee = task.assigneeId ? await ctx.db.get(task.assigneeId) : null;
+    // Get all assignees
+    let assignees: any[] = [];
+    if (task.assigneeIds && task.assigneeIds.length > 0) {
+      assignees = await Promise.all(
+        task.assigneeIds.map(id => ctx.db.get(id))
+      );
+      assignees = assignees.filter(Boolean);
+    } else if (task.assigneeId) {
+      // Fallback to old assigneeId for backward compatibility
+      const assignee = await ctx.db.get(task.assigneeId);
+      if (assignee) assignees = [assignee];
+    }
+    
     const reporter = await ctx.db.get(task.reporterId);
 
     const subtasks = await ctx.db
@@ -175,7 +204,8 @@ export const getTask = query({
     return {
       ...task,
       project,
-      assignee,
+      assignees,
+      assignee: assignees[0] || null, // Keep for backward compatibility
       reporter,
       subtasks,
       comments: commentsWithUsers,
@@ -205,10 +235,23 @@ export const getMyTasks = query({
       return [];
     }
 
-    let tasks = await ctx.db
+    // Get all tasks - we'll need to filter manually since assigneeIds is an array
+    let allTasks = await ctx.db
       .query("tasks")
-      .withIndex("by_assignee", (q) => q.eq("assigneeId", user._id))
       .collect();
+    
+    // Filter tasks where user is an assignee
+    let tasks = allTasks.filter(task => {
+      // Check new assigneeIds array
+      if (task.assigneeIds && task.assigneeIds.includes(user._id)) {
+        return true;
+      }
+      // Fallback to old assigneeId for backward compatibility
+      if (task.assigneeId === user._id) {
+        return true;
+      }
+      return false;
+    });
 
     if (args.status && args.status.length > 0) {
       tasks = tasks.filter(task => args.status!.includes(task.status));
@@ -382,10 +425,23 @@ export const getFilteredTasks = query({
     // Apply assignee filter
     if (args.assigneeIds && args.assigneeIds.length > 0) {
       filteredTasks = filteredTasks.filter(task => {
+        // Check for unassigned tasks
         if (args.assigneeIds!.includes('unassigned')) {
-          return !task.assigneeId || args.assigneeIds!.includes(task.assigneeId);
+          const hasNoAssignees = (!task.assigneeIds || task.assigneeIds.length === 0) && !task.assigneeId;
+          if (hasNoAssignees) return true;
         }
-        return task.assigneeId && args.assigneeIds!.includes(task.assigneeId);
+        
+        // Check new assigneeIds array
+        if (task.assigneeIds && task.assigneeIds.length > 0) {
+          return task.assigneeIds.some(id => args.assigneeIds!.includes(id));
+        }
+        
+        // Fallback to old assigneeId for backward compatibility
+        if (task.assigneeId && args.assigneeIds!.includes(task.assigneeId)) {
+          return true;
+        }
+        
+        return false;
       });
     }
 
@@ -459,7 +515,19 @@ export const getFilteredTasks = query({
 
     const tasksWithDetails = await Promise.all(
       filteredTasks.map(async (task) => {
-        const assignee = task.assigneeId ? await ctx.db.get(task.assigneeId) : null;
+        // Get all assignees
+        let assignees: any[] = [];
+        if (task.assigneeIds && task.assigneeIds.length > 0) {
+          assignees = await Promise.all(
+            task.assigneeIds.map(id => ctx.db.get(id))
+          );
+          assignees = assignees.filter(Boolean);
+        } else if (task.assigneeId) {
+          // Fallback to old assigneeId for backward compatibility
+          const assignee = await ctx.db.get(task.assigneeId);
+          if (assignee) assignees = [assignee];
+        }
+        
         const reporter = await ctx.db.get(task.reporterId);
 
         const subtasks = await ctx.db
@@ -474,7 +542,8 @@ export const getFilteredTasks = query({
 
         return {
           ...task,
-          assignee,
+          assignees,
+          assignee: assignees[0] || null, // Keep for backward compatibility
           reporter,
           subtaskCount: subtasks.length,
           commentCount: comments.length,

@@ -1,4 +1,5 @@
 import { ReactNode, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import clsx from 'clsx'
 import { HiOutlineX } from 'react-icons/hi'
@@ -42,7 +43,7 @@ export default function BrutalModal({
     xl: 'max-w-[1200px]',
   }
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
         <>
@@ -56,19 +57,39 @@ export default function BrutalModal({
             onClick={onClose}
           />
 
-          {/* MODAL */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className={clsx(
-              'fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50',
-              'w-[calc(100vw-48px)]',
-              sizes[size]
-            )}
+          {/* MODAL CONTAINER - handles positioning */}
+          <div
+            className="fixed z-50"
+            style={{ 
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '24px',
+              pointerEvents: 'none'
+            }}
           >
-            <div className="bg-carbon-plate border-4 border-basalt-border shadow-brutal-lg">
+            {/* MODAL CONTENT - handles animation */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className={clsx(
+                'relative',
+                'w-full',
+                sizes[size]
+              )}
+              style={{ 
+                pointerEvents: 'auto',
+                maxHeight: 'calc(100vh - 48px)',
+                overflow: 'auto'
+              }}
+            >
+              <div className="bg-carbon-plate border-4 border-basalt-border shadow-brutal-lg">
               {/* HEADER */}
               {(title || showCloseButton) && (
                 <div className="px-24px py-16px border-b-2 border-basalt-border flex items-center justify-between">
@@ -91,9 +112,17 @@ export default function BrutalModal({
                 {children}
               </div>
             </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
   )
+
+  // Render the modal at the document root using portal
+  if (typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body)
+  }
+
+  return modalContent
 }

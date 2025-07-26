@@ -9,8 +9,9 @@ export const createTask = mutation({
     description: v.optional(v.string()),
     type: v.union(v.literal("feature"), v.literal("bug"), v.literal("improvement"), v.literal("task"), v.literal("epic")),
     priority: v.optional(v.union(v.literal("urgent"), v.literal("high"), v.literal("medium"), v.literal("low"))),
-    assigneeId: v.optional(v.id("users")),
+    assigneeIds: v.optional(v.array(v.id("users"))),
     labels: v.optional(v.array(v.string())),
+    startDate: v.optional(v.number()),
     dueDate: v.optional(v.number()),
     estimate: v.optional(v.object({
       points: v.optional(v.number()),
@@ -57,9 +58,11 @@ export const createTask = mutation({
       status: "backlog",
       priority: args.priority || "medium",
       type: args.type,
-      assigneeId: args.assigneeId,
+      assigneeIds: args.assigneeIds || [],
+      assigneeId: undefined, // Deprecated field
       reporterId: user._id,
       labels: args.labels || [],
+      startDate: args.startDate,
       dueDate: args.dueDate,
       estimate: args.estimate,
       position: tasks.length,
@@ -81,16 +84,21 @@ export const createTask = mutation({
       createdAt: now,
     });
 
-    if (args.assigneeId && args.assigneeId !== user._id) {
-      await ctx.db.insert("notifications", {
-        userId: args.assigneeId,
-        type: "task.assigned",
-        title: "New Task Assigned",
-        message: `You've been assigned to "${args.title}"`,
-        data: { taskId, projectId: args.projectId },
-        read: false,
-        createdAt: now,
-      });
+    // Send notifications to all assignees
+    if (args.assigneeIds && args.assigneeIds.length > 0) {
+      for (const assigneeId of args.assigneeIds) {
+        if (assigneeId !== user._id) {
+          await ctx.db.insert("notifications", {
+            userId: assigneeId,
+            type: "task.assigned",
+            title: "New Task Assigned",
+            message: `You've been assigned to "${args.title}"`,
+            data: { taskId, projectId: args.projectId },
+            read: false,
+            createdAt: now,
+          });
+        }
+      }
     }
 
     return taskId;
@@ -111,8 +119,9 @@ export const updateTask = mutation({
       v.literal("cancelled")
     )),
     priority: v.optional(v.union(v.literal("urgent"), v.literal("high"), v.literal("medium"), v.literal("low"))),
-    assigneeId: v.optional(v.id("users")),
+    assigneeIds: v.optional(v.array(v.id("users"))),
     labels: v.optional(v.array(v.string())),
+    startDate: v.optional(v.number()),
     dueDate: v.optional(v.number()),
     estimate: v.optional(v.object({
       points: v.optional(v.number()),
@@ -162,33 +171,81 @@ export const updateTask = mutation({
       }
     }
     if (args.priority !== undefined) updates.priority = args.priority;
-    if (args.assigneeId !== undefined) updates.assigneeId = args.assigneeId;
+    if (args.assigneeIds !== undefined) {
+      updates.assigneeIds = args.assigneeIds;
+      updates.assigneeId = undefined; // Clear deprecated field
+    }
     if (args.labels !== undefined) updates.labels = args.labels;
+    if (args.startDate !== undefined) updates.startDate = args.startDate;
     if (args.dueDate !== undefined) updates.dueDate = args.dueDate;
     if (args.estimate !== undefined) updates.estimate = args.estimate;
 
     await ctx.db.patch(args.taskId, updates);
 
+    // Create more detailed activity metadata
+    const activityMetadata: any = { ...updates };
+    
+    // Track assignee changes specifically
+    if (args.assigneeIds !== undefined) {
+      const previousAssigneeIds = task.assigneeIds || [];
+      const newAssigneeIds = args.assigneeIds || [];
+      
+      const added = newAssigneeIds.filter(id => !previousAssigneeIds.includes(id));
+      const removed = previousAssigneeIds.filter(id => !newAssigneeIds.includes(id));
+      
+      if (added.length > 0 || removed.length > 0) {
+        activityMetadata.assigneesChanged = {
+          added: added.length,
+          removed: removed.length,
+          total: newAssigneeIds.length
+        };
+      }
+    }
+    
     await ctx.db.insert("activities", {
       workspaceId: project.workspaceId,
       userId: user._id,
       entityType: "task",
       entityId: args.taskId,
       action: "task.updated",
-      metadata: updates,
+      metadata: activityMetadata,
       createdAt: Date.now(),
     });
 
-    if (args.assigneeId && args.assigneeId !== task.assigneeId && args.assigneeId !== user._id) {
-      await ctx.db.insert("notifications", {
-        userId: args.assigneeId,
-        type: "task.assigned",
-        title: "Task Assigned",
-        message: `You've been assigned to "${task.title}"`,
-        data: { taskId: args.taskId, projectId: task.projectId },
-        read: false,
-        createdAt: Date.now(),
-      });
+    // Send notifications to newly assigned users
+    if (args.assigneeIds !== undefined) {
+      const previousAssignees = new Set(task.assigneeIds || []);
+      const newAssignees = new Set(args.assigneeIds);
+      
+      // Find users who are newly assigned
+      for (const assigneeId of newAssignees) {
+        if (!previousAssignees.has(assigneeId) && assigneeId !== user._id) {
+          await ctx.db.insert("notifications", {
+            userId: assigneeId,
+            type: "task.assigned",
+            title: "Task Assigned",
+            message: `You've been assigned to "${task.title}"`,
+            data: { taskId: args.taskId, projectId: task.projectId },
+            read: false,
+            createdAt: Date.now(),
+          });
+        }
+      }
+      
+      // Optionally notify users who were unassigned
+      for (const assigneeId of previousAssignees) {
+        if (!newAssignees.has(assigneeId) && assigneeId !== user._id) {
+          await ctx.db.insert("notifications", {
+            userId: assigneeId,
+            type: "task.unassigned",
+            title: "Task Unassigned",
+            message: `You've been unassigned from "${task.title}"`,
+            data: { taskId: args.taskId, projectId: task.projectId },
+            read: false,
+            createdAt: Date.now(),
+          });
+        }
+      }
     }
 
     return args.taskId;
