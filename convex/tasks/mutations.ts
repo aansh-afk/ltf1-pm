@@ -1,6 +1,7 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { canAccessTask, getTaskProject, requirePermission } from "../auth/permissions";
+import { internal } from "../_generated/api";
 
 export const createTask = mutation({
   args: {
@@ -71,8 +72,17 @@ export const createTask = mutation({
     });
 
     // Log task creation activity
-    await ctx.runMutation("activities/mutations:logTaskCreated", {
-      taskId: taskId
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "task_created",
+      projectId: args.projectId,
+      workspaceId: project.workspaceId,
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "task",
+      targetId: taskId,
+      targetName: args.title,
+      description: `created task "${args.title}"`,
+      metadata: undefined
     });
 
     // Send notifications to all assignees
@@ -195,15 +205,34 @@ export const updateTask = mutation({
     
     // Log specific activity based on what was changed
     if (args.status !== undefined && task.status !== args.status) {
-      await ctx.runMutation("activities/mutations:logTaskStatusChanged", {
-        taskId: args.taskId,
-        oldStatus: task.status,
-        newStatus: args.status
+      await ctx.runMutation(internal.activities.mutations.logActivity, {
+        type: "task_status_changed",
+        projectId: task.projectId,
+        workspaceId: project.workspaceId,
+        actorId: user._id,
+        actorName: user.name || user.email,
+        targetType: "task",
+        targetId: args.taskId,
+        targetName: task.title,
+        description: `changed status of "${task.title}" from ${task.status} to ${args.status}`,
+        metadata: {
+          oldValue: task.status,
+          newValue: args.status
+        }
       });
       
       if (args.status === "done") {
-        await ctx.runMutation("activities/mutations:logTaskCompleted", {
-          taskId: args.taskId
+        await ctx.runMutation(internal.activities.mutations.logActivity, {
+          type: "task_completed",
+          projectId: task.projectId,
+          workspaceId: project.workspaceId,
+          actorId: user._id,
+          actorName: user.name || user.email,
+          targetType: "task",
+          targetId: args.taskId,
+          targetName: task.title,
+          description: `completed task "${task.title}"`,
+          metadata: undefined
         });
       }
     }
@@ -218,10 +247,20 @@ export const updateTask = mutation({
       for (const assigneeId of added) {
         const assignee = await ctx.db.get(assigneeId);
         if (assignee) {
-          await ctx.runMutation("activities/mutations:logTaskAssigned", {
-            taskId: args.taskId,
-            assignedToId: assigneeId,
-            assignedToName: assignee.name || assignee.email
+          await ctx.runMutation(internal.activities.mutations.logActivity, {
+            type: "task_assigned",
+            projectId: task.projectId,
+            workspaceId: project.workspaceId,
+            actorId: user._id,
+            actorName: user.name || user.email,
+            targetType: "task",
+            targetId: args.taskId,
+            targetName: task.title,
+            description: `assigned "${task.title}" to ${assignee.name || assignee.email}`,
+            metadata: {
+              assignedTo: assigneeId,
+              assignedToName: assignee.name || assignee.email
+            }
           });
         }
       }

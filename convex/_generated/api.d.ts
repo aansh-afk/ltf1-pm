@@ -15,6 +15,8 @@ import type {
 } from "convex/server";
 import type * as activities_mutations from "../activities/mutations.js";
 import type * as activities_queries from "../activities/queries.js";
+import type * as admin_clearOldActivities from "../admin/clearOldActivities.js";
+import type * as admin_migrationStatus from "../admin/migrationStatus.js";
 import type * as auth_permissions from "../auth/permissions.js";
 import type * as auth_users from "../auth/users.js";
 import type * as clerk from "../clerk.js";
@@ -26,6 +28,7 @@ import type * as filterPresets_queries from "../filterPresets/queries.js";
 import type * as http from "../http.js";
 import type * as meetings_mutations from "../meetings/mutations.js";
 import type * as meetings_queries from "../meetings/queries.js";
+import type * as migrations_clearOldActivities from "../migrations/clearOldActivities.js";
 import type * as migrations_migrateToMultipleAssignees from "../migrations/migrateToMultipleAssignees.js";
 import type * as projects_mutations from "../projects/mutations.js";
 import type * as projects_queries from "../projects/queries.js";
@@ -48,6 +51,8 @@ import type * as workspaces_queries from "../workspaces/queries.js";
 declare const fullApi: ApiFromModules<{
   "activities/mutations": typeof activities_mutations;
   "activities/queries": typeof activities_queries;
+  "admin/clearOldActivities": typeof admin_clearOldActivities;
+  "admin/migrationStatus": typeof admin_migrationStatus;
   "auth/permissions": typeof auth_permissions;
   "auth/users": typeof auth_users;
   clerk: typeof clerk;
@@ -59,6 +64,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   "meetings/mutations": typeof meetings_mutations;
   "meetings/queries": typeof meetings_queries;
+  "migrations/clearOldActivities": typeof migrations_clearOldActivities;
   "migrations/migrateToMultipleAssignees": typeof migrations_migrateToMultipleAssignees;
   "projects/mutations": typeof projects_mutations;
   "projects/queries": typeof projects_queries;

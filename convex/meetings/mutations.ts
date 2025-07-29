@@ -1,6 +1,7 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../auth/permissions";
+import { internal } from "../_generated/api";
 
 export const createMeeting = mutation({
   args: {
@@ -80,19 +81,23 @@ export const createMeeting = mutation({
       updatedAt: now,
     });
 
-    // Create activity log
-    await ctx.db.insert("activities", {
+    // Log meeting scheduled activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "meeting_scheduled",
+      projectId: args.projectId,
       workspaceId: args.workspaceId,
-      userId: user._id,
-      entityType: "meeting",
-      entityId: meetingId,
-      action: "meeting.created",
-      metadata: { 
-        title: args.title, 
-        type: args.type,
-        attendeeCount: args.attendeeIds.length 
-      },
-      createdAt: now,
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "meeting",
+      targetId: meetingId,
+      targetName: args.title,
+      description: `scheduled meeting "${args.title}"`,
+      metadata: {
+        extra: { 
+          type: args.type,
+          attendeeCount: args.attendeeIds.length 
+        }
+      }
     });
 
     return meetingId;
@@ -144,14 +149,20 @@ export const updateMeeting = mutation({
 
     await ctx.db.patch(args.meetingId, updates);
 
-    await ctx.db.insert("activities", {
+    // Log meeting updated activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "meeting_scheduled",
+      projectId: meeting.projectId,
       workspaceId: meeting.workspaceId,
-      userId: user._id,
-      entityType: "meeting",
-      entityId: args.meetingId,
-      action: "meeting.updated",
-      metadata: { title: meeting.title, updates },
-      createdAt: Date.now(),
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "meeting",
+      targetId: args.meetingId,
+      targetName: meeting.title,
+      description: `updated meeting "${meeting.title}"`,
+      metadata: {
+        extra: { updates }
+      }
     });
 
     return args.meetingId;
@@ -194,14 +205,20 @@ export const respondToMeeting = mutation({
       updatedAt: Date.now(),
     });
 
-    await ctx.db.insert("activities", {
+    // Log meeting response activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "meeting_scheduled",
+      projectId: meeting.projectId,
       workspaceId: meeting.workspaceId,
-      userId: user._id,
-      entityType: "meeting",
-      entityId: args.meetingId,
-      action: "meeting.response",
-      metadata: { title: meeting.title, status: args.status },
-      createdAt: Date.now(),
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "meeting",
+      targetId: args.meetingId,
+      targetName: meeting.title,
+      description: `${args.status} meeting "${meeting.title}"`,
+      metadata: {
+        extra: { responseStatus: args.status }
+      }
     });
 
     return args.meetingId;
@@ -367,14 +384,18 @@ export const deleteMeeting = mutation({
 
     await ctx.db.delete(args.meetingId);
 
-    await ctx.db.insert("activities", {
+    // Log meeting cancelled activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "meeting_cancelled",
+      projectId: meeting.projectId,
       workspaceId: meeting.workspaceId,
-      userId: user._id,
-      entityType: "meeting",
-      entityId: args.meetingId,
-      action: "meeting.deleted",
-      metadata: { title: meeting.title },
-      createdAt: Date.now(),
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "meeting",
+      targetId: args.meetingId,
+      targetName: meeting.title,
+      description: `cancelled meeting "${meeting.title}"`,
+      metadata: undefined
     });
 
     return args.meetingId;

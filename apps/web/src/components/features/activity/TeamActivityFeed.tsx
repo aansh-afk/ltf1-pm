@@ -202,22 +202,26 @@ export default function TeamActivityFeed({
   const activities = useQuery(
     projectId ? api.activities.queries.getRecentTeamActivity : api.activities.queries.getWorkspaceActivities,
     projectId 
-      ? { projectId: projectId as any, hours: timeFilter }
+      ? { 
+          projectId: projectId as any, 
+          limit,
+          timeRangeHours: timeFilter,
+          types: typeFilter || undefined
+        }
       : workspaceId 
-        ? { workspaceId: workspaceId as any, limit }
+        ? { 
+            workspaceId: workspaceId as any, 
+            limit,
+            timeRangeHours: timeFilter,
+            types: typeFilter || undefined
+          }
         : 'skip'
   )
 
-  // Filter activities by type if filter is selected
+  // Activities are already filtered by the backend, so just return them
   const filteredActivities = useMemo(() => {
-    if (!activities) return []
-    
-    if (typeFilter && typeFilter.length > 0) {
-      return activities.filter(activity => typeFilter.includes(activity.type))
-    }
-    
-    return activities
-  }, [activities, typeFilter])
+    return activities || []
+  }, [activities])
 
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp)
@@ -312,11 +316,12 @@ export default function TeamActivityFeed({
       <div className="space-y-8px font-mono text-brutal-sm max-h-400px overflow-y-auto">
         {filteredActivities.length > 0 ? (
           filteredActivities.map((activity, index) => {
-            const config = activityTypeConfig[activity.type as keyof typeof activityTypeConfig] || {
+            const activityType = (activity as any).type
+            const config = activityTypeConfig[activityType as keyof typeof activityTypeConfig] || {
               icon: HiOutlineTerminal,
               color: 'text-primary-brutalist',
               bgColor: 'bg-primary-brutalist/20',
-              label: activity.type.replace(/_/g, ' ').toUpperCase()
+              label: activityType ? activityType.replace(/_/g, ' ').toUpperCase() : 'ACTIVITY'
             }
             
             const Icon = config.icon
@@ -327,7 +332,7 @@ export default function TeamActivityFeed({
                 className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors border-l-2 border-transparent hover:border-primary-brutalist/30"
               >
                 <span className="text-brutal-xs text-primary-brutalist/60 min-w-40px">
-                  {formatTime(activity.timestamp)}
+                  {formatTime((activity as any).timestamp || Date.now())}
                 </span>
                 
                 <div className={clsx(
@@ -338,9 +343,9 @@ export default function TeamActivityFeed({
                 </div>
                 
                 <div className="flex items-center gap-8px flex-1 min-w-0">
-                  {activity.actor && (
+                  {(activity as any).actor && (
                     <UserDisplay 
-                      userId={activity.actorId}
+                      userId={(activity as any).actorId || (activity as any).actor._id}
                       size="xs"
                       showName={false}
                       showStatus={false}
@@ -349,25 +354,25 @@ export default function TeamActivityFeed({
                   )}
                   
                   <span className="text-primary-brutalist font-semibold truncate">
-                    {activity.actor?.name || activity.actorName || 'UNKNOWN USER'}
+                    {(activity as any).actor?.name || (activity as any).actorName || 'UNKNOWN USER'}
                   </span>
                   
                   <span className="text-primary-brutalist/80 truncate flex-1">
                     {formatDescription(activity)}
                   </span>
                   
-                  {activity.project && projectId !== activity.projectId && (
+                  {(activity as any).project && projectId !== (activity as any).projectId && (
                     <span className="text-brutal-xs text-primary-brutalist/40 bg-basalt-border px-4px py-1px uppercase">
-                      {activity.project.key}
+                      {(activity as any).project.key}
                     </span>
                   )}
                 </div>
 
                 {/* Show metadata for status changes, assignments, etc. */}
-                {(activity.metadata?.oldValue || activity.metadata?.newValue) && (
+                {((activity as any).metadata?.oldValue || (activity as any).metadata?.newValue) && (
                   <div className="text-brutal-xs text-primary-brutalist/60">
-                    {activity.metadata.oldValue && activity.metadata.newValue && (
-                      <span>{activity.metadata.oldValue} → {activity.metadata.newValue}</span>
+                    {(activity as any).metadata.oldValue && (activity as any).metadata.newValue && (
+                      <span>{(activity as any).metadata.oldValue} → {(activity as any).metadata.newValue}</span>
                     )}
                   </div>
                 )}

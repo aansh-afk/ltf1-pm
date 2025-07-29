@@ -18,6 +18,7 @@ import {
   HiOutlineUserGroup
 } from 'react-icons/hi'
 import clsx from 'clsx'
+import { useResourceMonitor } from '../../hooks/useResourceMonitor'
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile sidebar
@@ -29,6 +30,9 @@ export default function DashboardLayout() {
   const [isHovered, setIsHovered] = useState(false)
   const location = useLocation()
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // Real-time resource monitoring
+  const { stats, formatMemory } = useResourceMonitor()
 
   // Save collapsed state to localStorage
   useEffect(() => {
@@ -261,18 +265,75 @@ export default function DashboardLayout() {
 
         {/* BRUTAL STATUS BAR */}
         <footer className="h-32px bg-carbon-plate border-t-2 border-basalt-border flex items-center px-24px">
-          <div className="flex items-center gap-24px text-brutal-xs">
-            <span>
-              <span className="text-[#FFFF00]">MEM:</span> 128MB
+          <div className="flex items-center gap-24px text-brutal-xs font-mono">
+            <span className="transition-all duration-200">
+              <span className="text-[#FFFF00]">MEM:</span>{' '}
+              <span className={clsx(
+                "transition-colors duration-300",
+                stats.memory.percentage && stats.memory.percentage > 75 ? "text-[#FF6B6B]" : "text-cathode-white"
+              )}>
+                {formatMemory(stats.memory.used)}
+              </span>
+              {stats.memory.percentage && (
+                <span className={clsx(
+                  "ml-4px transition-colors duration-300",
+                  stats.memory.percentage > 75 ? "text-[#FF6B6B]/80" : "text-cathode-white/60"
+                )}>
+                  ({stats.memory.percentage}%)
+                </span>
+              )}
             </span>
-            <span>
-              <span className="text-[#00FFFF]">CPU:</span> 12%
+            
+            <span className="transition-all duration-200">
+              <span className="text-[#00FFFF]">CPU:</span>{' '}
+              <span className={clsx(
+                "transition-colors duration-300",
+                stats.cpu.usage > 70 ? "text-[#FF6B6B]" : 
+                stats.cpu.usage > 40 ? "text-[#FFFF00]" : "text-cathode-white"
+              )}>
+                {stats.cpu.usage}%
+              </span>
+              {stats.cpu.trend !== 'stable' && (
+                <span className={clsx(
+                  "ml-4px transition-all duration-300",
+                  stats.cpu.trend === 'increasing' ? "text-[#FF6B6B] animate-pulse" : "text-[#4ECDC4]"
+                )}>
+                  {stats.cpu.trend === 'increasing' ? '↗' : '↘'}
+                </span>
+              )}
             </span>
-            <span>
-              <span className="text-[#FF00FF]">TASKS:</span> 42
+            
+            <span className="transition-all duration-200">
+              <span className="text-[#FF00FF]">TASKS:</span>{' '}
+              <span className="text-cathode-white">{stats.tasks.total}</span>
+              <span className="text-cathode-white/60 ml-4px">
+                ({stats.tasks.active} active)
+              </span>
             </span>
-            <span className="ml-auto">
-              <span className="text-[#00FF00]">SYSTEM:</span> NOMINAL
+            
+            <span className="ml-auto transition-all duration-300">
+              <span className={clsx(
+                "transition-colors duration-500",
+                stats.system.status === 'NOMINAL' ? "text-[#00FF00]" :
+                stats.system.status === 'DEGRADED' ? "text-[#FFFF00]" : "text-[#FF6B6B]"
+              )}>
+                SYSTEM:
+              </span>
+              <span className={clsx(
+                "ml-4px transition-all duration-500",
+                stats.system.status === 'NOMINAL' ? "text-[#00FF00]" :
+                stats.system.status === 'DEGRADED' ? "text-[#FFFF00] animate-pulse" : "text-[#FF6B6B] animate-pulse"
+              )}>
+                {stats.system.status}
+              </span>
+              {stats.system.errors > 0 && (
+                <span className="text-[#FF6B6B] ml-4px animate-bounce">
+                  ({stats.system.errors} ERR)
+                </span>
+              )}
+              <span className="text-cathode-white/40 ml-4px text-brutal-xs">
+                ↻ {Math.floor(stats.system.uptime / 60)}m
+              </span>
             </span>
           </div>
         </footer>
