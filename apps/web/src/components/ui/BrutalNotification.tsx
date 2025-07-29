@@ -88,7 +88,12 @@ export default function BrutalNotification({
 
 // NOTIFICATION MANAGER
 export function showNotification(props: BrutalNotificationProps) {
-  // This would integrate with your toast library
-  // For now, it's a placeholder
-  console.log('Show notification:', props)
+  // Implementation placeholder - would need proper toast integration
+  // For now, using browser notification
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(props.title, {
+      body: props.message,
+      icon: '/favicon.ico'
+    })
+  }
 }

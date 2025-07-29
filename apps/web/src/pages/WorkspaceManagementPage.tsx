@@ -19,6 +19,7 @@ import {
   HiOutlineX
 } from 'react-icons/hi'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
+import CreateProjectModal from '@/components/features/project/CreateProjectModal'
 import clsx from 'clsx'
 
 interface WorkspaceTab {
@@ -217,12 +218,18 @@ function OverviewTab({ workspace, projects, members }: any) {
 // Projects Tab Component
 function ProjectsTab({ workspaceId, projects }: any) {
   const navigate = useNavigate()
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   
   return (
     <div className="p-32px">
       <div className="flex items-center justify-between mb-32px">
         <h1 className="text-brutal-xl font-bold uppercase">PROJECTS</h1>
-        <button className="brutal-btn">+ NEW PROJECT</button>
+        <button 
+          className="brutal-btn"
+          onClick={() => setIsCreateModalOpen(true)}
+        >
+          + NEW PROJECT
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-24px">
@@ -242,6 +249,12 @@ function ProjectsTab({ workspaceId, projects }: any) {
           </div>
         ))}
       </div>
+
+      <CreateProjectModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        workspaceId={workspaceId}
+      />
     </div>
   )
 }

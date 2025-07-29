@@ -1,6 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
-import { hasPermission } from "../auth/permissions";
+import { hasPermission, hasProjectPermission } from "../auth/permissions";
 
 export const getWorkspaceProjects = query({
   args: { workspaceId: v.id("workspaces") },
@@ -109,15 +109,17 @@ export const getProject = query({
       .filter((q) => q.eq(q.field("status"), "active"))
       .first();
 
-    const members = await ctx.db
-      .query("workspaceMembers")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", project.workspaceId))
+    // Get project team members (not workspace members!)
+    const projectMembers = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_project", (q) => q.eq("projectId", project._id))
+      .filter((q) => q.eq(q.field("status"), "active"))
       .collect();
 
     const memberUsers = await Promise.all(
-      members.map(async (member) => {
+      projectMembers.map(async (member) => {
         const user = await ctx.db.get(member.userId);
-        return user;
+        return user ? { ...user, projectRole: member.role, joinedAt: member.joinedAt } : null;
       })
     );
 
@@ -173,5 +175,195 @@ export const getProjectsByStatus = query({
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
       .filter((q) => q.eq(q.field("status"), args.status))
       .collect();
+  },
+});
+
+// Project Team Management Queries
+
+export const getProjectTeamMembers = query({
+  args: { projectId: v.id("projects") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      return [];
+    }
+
+    const hasAccess = await hasProjectPermission(
+      ctx.db,
+      user._id,
+      args.projectId,
+      "project.team.view"
+    );
+
+    if (!hasAccess) {
+      return [];
+    }
+
+    const projectMembers = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .filter((q) => q.eq(q.field("status"), "active"))
+      .collect();
+
+    const membersWithDetails = await Promise.all(
+      projectMembers.map(async (member) => {
+        const user = await ctx.db.get(member.userId);
+        return {
+          ...member,
+          user,
+        };
+      })
+    );
+
+    return membersWithDetails.filter(m => m.user);
+  },
+});
+
+export const getProjectByInviteCode = query({
+  args: { inviteCode: v.string() },
+  handler: async (ctx, args) => {
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_invite_code", (q) => q.eq("inviteCode", args.inviteCode))
+      .first();
+
+    if (!project) {
+      return null;
+    }
+
+    // Get workspace info
+    const workspace = await ctx.db.get(project.workspaceId);
+    
+    // Get project lead info
+    const lead = project.leadId ? await ctx.db.get(project.leadId) : null;
+
+    // Get member count
+    const memberCount = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_project", (q) => q.eq("projectId", project._id))
+      .filter((q) => q.eq(q.field("status"), "active"))
+      .collect();
+
+    return {
+      _id: project._id,
+      name: project.name,
+      description: project.description,
+      key: project.key,
+      visibility: project.visibility,
+      workspace: workspace ? { name: workspace.name } : null,
+      lead: lead ? { name: lead.name, avatarUrl: lead.avatarUrl } : null,
+      memberCount: memberCount.length,
+      teamSettings: project.teamSettings,
+      metadata: project.metadata,
+    };
+  },
+});
+
+export const getUserProjects = query({
+  args: { userId: v.optional(v.id("users")) },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      return [];
+    }
+
+    const targetUserId = args.userId || user._id;
+
+    // Only allow users to see their own projects unless they have admin permissions
+    if (targetUserId !== user._id) {
+      // This would require additional permission checks for viewing other user's projects
+      // For now, restrict to own projects
+      return [];
+    }
+
+    const projectMemberships = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_user", (q) => q.eq("userId", targetUserId))
+      .filter((q) => q.eq(q.field("status"), "active"))
+      .collect();
+
+    const projectsWithDetails = await Promise.all(
+      projectMemberships.map(async (membership) => {
+        const project = await ctx.db.get(membership.projectId);
+        if (!project) return null;
+
+        const workspace = await ctx.db.get(project.workspaceId);
+        const lead = project.leadId ? await ctx.db.get(project.leadId) : null;
+
+        return {
+          ...project,
+          workspace: workspace ? { name: workspace.name } : null,
+          lead,
+          userRole: membership.role,
+          joinedAt: membership.joinedAt,
+        };
+      })
+    );
+
+    return projectsWithDetails.filter(Boolean);
+  },
+});
+
+export const getProjectInviteLink = query({
+  args: { projectId: v.id("projects") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthorized");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const hasAccess = await hasProjectPermission(
+      ctx.db,
+      user._id,
+      args.projectId,
+      "project.team.invite"
+    );
+
+    if (!hasAccess) {
+      throw new Error("Permission denied");
+    }
+
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error("Project not found");
+    }
+
+    return {
+      inviteCode: project.inviteCode,
+      projectName: project.name,
+      teamSettings: project.teamSettings || {
+        maxMembers: 50,
+        allowSelfJoin: true,
+        requireApproval: false,
+        autoAssignLead: true,
+      },
+    };
   },
 });

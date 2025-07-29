@@ -14,7 +14,8 @@ import {
   HiOutlineTerminal,
   HiOutlinePlay,
   HiOutlineChevronRight,
-  HiOutlineChevronLeft
+  HiOutlineChevronLeft,
+  HiOutlineUserGroup
 } from 'react-icons/hi'
 import clsx from 'clsx'
 
@@ -68,6 +69,7 @@ export default function DashboardLayout() {
     { path: '/workspaces', label: 'WORKSPACES', icon: HiOutlineBriefcase },
     { path: '/projects', label: 'PROJECTS', icon: HiOutlineFolder },
     { path: '/tasks', label: 'TASKS', icon: HiOutlineClipboardList },
+    { path: '/team', label: 'TEAM', icon: HiOutlineUserGroup },
     { path: '/sprints', label: 'SPRINTS', icon: HiOutlinePlay },
     { path: '/meetings', label: 'MEETINGS', icon: HiOutlineCalendar },
     { path: '/settings', label: 'SETTINGS', icon: HiOutlineCog },

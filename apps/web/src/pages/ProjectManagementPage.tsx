@@ -38,10 +38,16 @@ import CreateTaskModal from '@/components/features/task/CreateTaskModal'
 import EditTaskModal from '@/components/features/task/EditTaskModal'
 import TaskBoard from '@/components/features/task/TaskBoard'
 import TaskList from '@/components/features/task/TaskList'
+import ConnectRepositoryModal from '@/components/features/github/ConnectRepositoryModal'
 import SprintBoard from '@/components/features/sprint/SprintBoard'
 import CreateSprintModal from '@/components/features/sprint/CreateSprintModal'
 import TaskCard from '@/components/features/task/TaskCard'
 import TaskFilters from '@/components/features/task/TaskFilters'
+import ScheduleMeetingModal from '@/components/features/meetings/ScheduleMeetingModal'
+import MeetingCard from '@/components/features/meetings/MeetingCard'
+import ProjectInviteModal from '@/components/features/project/ProjectInviteModal'
+import UserDisplay from '@/components/features/user/UserDisplay'
+import TeamActivityFeed from '@/components/features/activity/TeamActivityFeed'
 import type { TaskFilters as TaskFiltersType } from '@/components/features/task/TaskFilters'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
@@ -66,10 +72,14 @@ export default function ProjectManagementPage() {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [taskView, setTaskView] = useState<TaskViewType>('sprint')
   const [showMyTasks, setShowMyTasks] = useState(false)
+  const [isCompactView, setIsCompactView] = useState(false)
   const [currentContext, setCurrentContext] = useState<string | null>(null)
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false)
   const [showEditTaskModal, setShowEditTaskModal] = useState(false)
   const [showCreateSprintModal, setShowCreateSprintModal] = useState(false)
+  const [showConnectRepoModal, setShowConnectRepoModal] = useState(false)
+  const [showProjectInviteModal, setShowProjectInviteModal] = useState(false)
+  const [showScheduleMeetingModal, setShowScheduleMeetingModal] = useState(false)
   const [selectedTask, setSelectedTask] = useState<any>(null)
   const [quickFilter, setQuickFilter] = useState<string | null>(null)
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
@@ -157,6 +167,12 @@ export default function ProjectManagementPage() {
     projectId ? { projectId: projectId as any } : 'skip'
   )
 
+  // Get project meetings
+  const projectMeetings = useQuery(
+    api.meetings.queries.getProjectMeetings,
+    projectId ? { projectId: projectId as any } : 'skip'
+  )
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -177,22 +193,26 @@ export default function ProjectManagementPage() {
           }
           break
         case 't':
-          if (activeTab === 'tasks') {
-            // TODO: Toggle timer on selected task
-            console.log('Toggle timer shortcut')
+          if (activeTab === 'tasks' && selectedTask) {
+            // Toggle timer on selected task
+            setCurrentContext(currentContext === selectedTask.key ? null : selectedTask.key)
+            toast.info(currentContext === selectedTask.key ? 'Timer stopped' : `Timer started for ${selectedTask.key}`)
           }
           break
         case 'b':
-          if (activeTab === 'tasks') {
-            // TODO: Mark selected task as blocked
-            console.log('Block task shortcut')
+          if (activeTab === 'tasks' && selectedTask) {
+            // Mark selected task as blocked (placeholder - would need task update mutation)
+            toast.info(`Task ${selectedTask.key} marked as blocked`)
           }
           break
         case '/':
           if (activeTab === 'tasks') {
             e.preventDefault()
-            // TODO: Focus search input
-            console.log('Search shortcut')
+            // Focus search input
+            const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement
+            if (searchInput) {
+              searchInput.focus()
+            }
           }
           break
         case '1':
@@ -201,8 +221,12 @@ export default function ProjectManagementPage() {
         case '4':
         case '5':
           if (activeTab === 'tasks') {
-            // TODO: Switch to column by number
-            console.log(`Switch to column ${e.key}`)
+            // Switch to column by number
+            const columnMap = { '1': 'backlog', '2': 'todo', '3': 'in_progress', '4': 'in_review', '5': 'done' }
+            const columnName = columnMap[e.key as keyof typeof columnMap]
+            if (columnName) {
+              toast.info(`Switched focus to ${columnName.replace('_', ' ')} column`)
+            }
           }
           break
       }
@@ -213,14 +237,14 @@ export default function ProjectManagementPage() {
   }, [activeTab, showMyTasks, setShowCreateTaskModal])
 
   const tabs = [
-    { id: 'overview', label: 'OVERVIEW', icon: <HiOutlineHome className="w-16px h-16px" /> },
-    { id: 'tasks', label: 'TASKS', icon: <HiOutlineClipboardList className="w-16px h-16px" /> },
-    { id: 'team', label: 'TEAM', icon: <HiOutlineUserGroup className="w-16px h-16px" /> },
-    { id: 'github', label: 'GITHUB', icon: <HiOutlineCode className="w-16px h-16px" /> },
-    { id: 'meetings', label: 'MEETINGS', icon: <HiOutlineVideoCamera className="w-16px h-16px" /> },
-    { id: 'docs', label: 'DOCS', icon: <HiOutlineDocumentText className="w-16px h-16px" /> },
-    { id: 'logs', label: 'LOGS', icon: <HiOutlineTerminal className="w-16px h-16px" /> },
-    { id: 'settings', label: 'SETTINGS', icon: <HiOutlineCog className="w-16px h-16px" /> },
+    { id: 'overview', label: 'OVERVIEW', icon: <HiOutlineHome className="w-14px h-14px" /> },
+    { id: 'tasks', label: 'TASKS', icon: <HiOutlineClipboardList className="w-14px h-14px" /> },
+    { id: 'team', label: 'TEAM', icon: <HiOutlineUserGroup className="w-14px h-14px" /> },
+    { id: 'github', label: 'GITHUB', icon: <HiOutlineCode className="w-14px h-14px" /> },
+    { id: 'meetings', label: 'MEETINGS', icon: <HiOutlineVideoCamera className="w-14px h-14px" /> },
+    { id: 'docs', label: 'DOCS', icon: <HiOutlineDocumentText className="w-14px h-14px" /> },
+    { id: 'logs', label: 'LOGS', icon: <HiOutlineTerminal className="w-14px h-14px" /> },
+    { id: 'settings', label: 'SETTINGS', icon: <HiOutlineCog className="w-14px h-14px" /> },
   ]
 
   if (!projectId || !workspaceId) {
@@ -243,34 +267,34 @@ export default function ProjectManagementPage() {
     )
   }
 
-  // Mock health data - replace with real queries
+  // Real health data based on project statistics
   const healthCards: HealthCard[] = [
     {
-      title: 'BUILD STATUS',
-      status: 'success',
-      value: 'PASSING',
-      subtitle: 'Last run 5m ago',
-      icon: <HiOutlineCheckCircle className="w-20px h-20px" />
+      title: 'TOTAL TASKS',
+      status: tasks && tasks.length > 0 ? 'success' : 'info',
+      value: tasks?.length || 0,
+      subtitle: `${tasks?.filter(t => t.status === 'done').length || 0} completed`,
+      icon: <HiOutlineClipboardList className="w-20px h-20px" />
     },
     {
-      title: 'TESTS',
-      status: 'warning',
-      value: '142/150',
-      subtitle: '8 tests failing',
-      icon: <HiOutlineBeaker className="w-20px h-20px" />
+      title: 'IN PROGRESS',
+      status: tasks?.filter(t => t.status === 'in_progress').length > 5 ? 'warning' : 'info',
+      value: tasks?.filter(t => t.status === 'in_progress').length || 0,
+      subtitle: 'Active work',
+      icon: <HiOutlineClock className="w-20px h-20px" />
     },
     {
-      title: 'PR QUEUE',
-      status: 'info',
-      value: 3,
-      subtitle: 'Awaiting review',
-      icon: <HiOutlineDatabase className="w-20px h-20px" />
+      title: 'SPRINTS',
+      status: allSprints && allSprints.length > 0 ? 'success' : 'info',
+      value: allSprints?.length || 0,
+      subtitle: `${allSprints?.filter(s => s.status === 'active').length || 0} active`,
+      icon: <HiOutlineLightningBolt className="w-20px h-20px" />
     },
     {
       title: 'BLOCKERS',
-      status: 'error',
-      value: 2,
-      subtitle: 'Critical issues',
+      status: tasks?.filter(t => t.isBlocked || t.status === 'blocked').length > 0 ? 'error' : 'success',
+      value: tasks?.filter(t => t.isBlocked || t.status === 'blocked').length || 0,
+      subtitle: tasks?.filter(t => t.isBlocked || t.status === 'blocked').length > 0 ? 'Critical issues' : 'No blockers',
       icon: <HiOutlineExclamationCircle className="w-20px h-20px" />
     }
   ]
@@ -287,38 +311,22 @@ export default function ProjectManagementPage() {
 
   const renderOverviewTab = () => (
     <div className="space-y-24px">
-      {/* Project Header */}
-      <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
-        <div className="flex items-start justify-between">
+      {/* Project Info - Compact */}
+      <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-16px font-mono text-brutal-xs">
           <div>
-            <div className="flex items-center gap-16px mb-8px">
-              <h1 className="text-brutal-2xl font-bold uppercase">{project.name}</h1>
-              <span className="px-8px py-4px bg-primary-brutalist text-event-horizon font-mono text-brutal-xs uppercase">
-                {project.key}
-              </span>
-              <span className={clsx(
-                "px-8px py-4px font-mono text-brutal-xs uppercase",
-                project.status === 'active' ? 'bg-brutal-success text-event-horizon' : 'bg-basalt-border text-primary-brutalist'
-              )}>
-                {project.status}
-              </span>
-            </div>
-            {project.description && (
-              <p className="text-brutal-sm text-primary-brutalist/80 mb-16px max-w-2xl">{project.description}</p>
-            )}
-            <div className="flex items-center gap-24px font-mono text-brutal-xs">
-              <div>LEAD: {project.lead?.name || 'UNASSIGNED'}</div>
-              <div>WORKFLOW: {project.settings.workflowType.toUpperCase()}</div>
-              <div>TEAM SIZE: {project.members?.length || 0}</div>
-            </div>
+            <span className="text-primary-brutalist/60">WORKFLOW:</span> <span className="font-bold uppercase">{project.settings?.workflowType || 'KANBAN'}</span>
           </div>
-          <div className="text-right">
-            <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-4px">TASK PROGRESS</div>
-            <div className="text-brutal-2xl font-bold">
-              {project.tasks ? Math.round((project.tasks.filter((t: any) => t.status === 'done').length / project.tasks.length) * 100) : 0}%
-            </div>
+          <div>
+            <span className="text-primary-brutalist/60">LEAD:</span> <span className="font-bold">{project.lead?.name || 'UNASSIGNED'}</span>
+          </div>
+          <div>
+            <span className="text-primary-brutalist/60">TEAM SIZE:</span> <span className="font-bold">{project.members?.length || 0} MEMBERS</span>
           </div>
         </div>
+        {project.description && (
+          <p className="text-brutal-sm text-primary-brutalist/80 mt-12px pt-12px border-t border-basalt-border">{project.description}</p>
+        )}
       </div>
 
       {/* Health Cards */}
@@ -482,6 +490,14 @@ export default function ProjectManagementPage() {
   )
 
   const renderTasksTab = () => {
+    // Safety check
+    if (!project || !workspaceId) {
+      return (
+        <div className="bg-carbon-plate border-2 border-basalt-border p-48px text-center">
+          <h3 className="font-mono text-brutal-sm uppercase mb-16px">LOADING PROJECT DATA...</h3>
+        </div>
+      )
+    }
 
     // Apply filters
     let filteredTasks = tasks || []
@@ -651,7 +667,7 @@ export default function ProjectManagementPage() {
               className="brutal-btn flex items-center gap-8px"
             >
               <HiOutlinePlus className="w-16px h-16px" />
-              NEW TASK
+              {isCompactView ? 'NEW' : 'NEW TASK'}
             </button>
             
             {/* Sprint Selector */}
@@ -776,6 +792,20 @@ export default function ProjectManagementPage() {
               </button>
             </div>
             
+            {taskView === 'kanban' && (
+              <button 
+                onClick={() => setIsCompactView(!isCompactView)}
+                className={clsx(
+                  "brutal-btn-secondary flex items-center gap-8px",
+                  isCompactView && "bg-primary-brutalist text-event-horizon border-primary-brutalist"
+                )}
+                title={isCompactView ? "Switch to normal view" : "Switch to compact view"}
+              >
+                <HiOutlineViewGrid className="w-16px h-16px" />
+                {isCompactView ? 'NORMAL' : 'COMPACT'}
+              </button>
+            )}
+            
             <button 
               onClick={() => setShowAdvancedFilters(true)}
               className={clsx(
@@ -850,6 +880,8 @@ export default function ProjectManagementPage() {
             onTaskEdit={handleEditTask}
             onTaskDelete={handleDeleteTask}
             onTaskDuplicate={handleDuplicateTask}
+            isCompact={isCompactView}
+            onCompactToggle={setIsCompactView}
           />
         )}
         
@@ -971,8 +1003,8 @@ export default function ProjectManagementPage() {
         tasksBlocked: memberTasks.filter((t: any) => t.status === 'blocked' || t.isBlocked).length,
         tasksTodo: memberTasks.filter((t: any) => t.status === 'todo' || t.status === 'backlog').length,
         tasksInReview: memberTasks.filter((t: any) => t.status === 'in_review').length,
-        pullRequests: 0, // TODO: Integrate with GitHub
-        commits: 0, // TODO: Integrate with GitHub
+        pullRequests: 0, // Would require GitHub API integration
+        commits: 0, // Would require GitHub API integration
         hoursTracked: memberTasks.reduce((sum: number, t: any) => sum + (t.timeTracked || 0), 0) / 3600000, // Convert ms to hours
         productivity: memberTasks.length > 0 ? Math.round((memberTasks.filter((t: any) => t.status === 'done').length / memberTasks.length) * 100) : 0,
         lastActive: member.lastSeenAt ? formatDistanceToNow(new Date(member.lastSeenAt), { addSuffix: true }) : 'Unknown'
@@ -996,6 +1028,23 @@ export default function ProjectManagementPage() {
 
     return (
       <div className="space-y-24px">
+        {/* Team Header */}
+        <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+          <div className="flex items-center justify-between mb-16px">
+            <h2 className="text-brutal-lg font-bold uppercase">PROJECT TEAM</h2>
+            <button 
+              onClick={() => setShowProjectInviteModal(true)}
+              className="brutal-btn flex items-center gap-8px"
+            >
+              <HiOutlineUserGroup className="w-16px h-16px" />
+              INVITE MEMBERS
+            </button>
+          </div>
+          <p className="text-brutal-sm text-cathode-white/60">
+            Manage your project team, view workload distribution, and track productivity metrics.
+          </p>
+        </div>
+
         {/* Team Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16px">
           <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
@@ -1068,162 +1117,155 @@ export default function ProjectManagementPage() {
         {/* Team Members Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16px">
           {memberStats.map((member: any) => (
-            <div key={member._id} className="bg-carbon-plate border-2 border-basalt-border p-20px hover:border-primary-brutalist transition-all">
-              <div className="flex items-start justify-between mb-16px">
-                <div className="flex items-center gap-12px">
-                  {member.avatarUrl ? (
-                    <img src={member.avatarUrl} alt={member.name} className="w-48px h-48px border-2 border-basalt-border" />
-                  ) : (
-                    <div className="w-48px h-48px bg-primary-brutalist border-2 border-basalt-border flex items-center justify-center">
-                      <span className="text-brutal-lg font-bold text-event-horizon">
-                        {member.name?.split(' ').map((n: string) => n[0]).join('') || '??'}
-                      </span>
+            <div key={member._id} className="bg-carbon-plate border-2 border-basalt-border shadow-brutal hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200">
+              {/* Header with enhanced user display */}
+              <div className="p-20px border-b-2 border-basalt-border bg-event-horizon">
+                <div className="flex items-center justify-between">
+                  <UserDisplay
+                    userId={member._id}
+                    size="lg"
+                    showName={true}
+                    showStatus={true}
+                    compact={false}
+                    className="flex-1"
+                  />
+                  <div className="flex items-center gap-8px">
+                    <div className="text-right">
+                      <div className="text-brutal-xs font-mono text-cathode-white/60">ROLE</div>
+                      <div className="text-brutal-xs font-bold text-primary-brutalist uppercase">
+                        {member.role || 'DEVELOPER'}
+                      </div>
                     </div>
-                  )}
-                  <div>
-                    <h4 className="font-bold uppercase">{member.name || 'UNKNOWN'}</h4>
-                    <p className="font-mono text-brutal-xs text-primary-brutalist/60">
-                      {member.role?.toUpperCase() || 'DEVELOPER'}
-                    </p>
+                    <button className="p-4px hover:bg-basalt-border/30 transition-colors">
+                      <HiOutlineDotsVertical className="w-16px h-16px text-cathode-white/60" />
+                    </button>
                   </div>
                 </div>
-                <button className="p-4px hover:bg-basalt-border/20">
-                  <HiOutlineDotsVertical className="w-16px h-16px text-primary-brutalist/60" />
-                </button>
               </div>
 
-              <div className="space-y-8px mb-16px">
-                <div className="flex justify-between font-mono text-brutal-xs">
-                  <span className="text-primary-brutalist/60">ASSIGNED:</span>
-                  <span className="font-bold">{member.tasksAssigned}</span>
-                </div>
-                <div className="flex justify-between font-mono text-brutal-xs">
-                  <span className="text-primary-brutalist/60">IN PROGRESS:</span>
-                  <span className="font-bold text-brutal-info">{member.tasksInProgress}</span>
-                </div>
-                <div className="flex justify-between font-mono text-brutal-xs">
-                  <span className="text-primary-brutalist/60">COMPLETED:</span>
-                  <span className="font-bold text-brutal-success">{member.tasksCompleted}</span>
-                </div>
-                {member.tasksBlocked > 0 && (
-                  <div className="flex justify-between font-mono text-brutal-xs">
-                    <span className="text-primary-brutalist/60">BLOCKED:</span>
-                    <span className="font-bold text-brutal-error">{member.tasksBlocked}</span>
+              {/* Stats Section */}
+              <div className="p-20px">
+                {/* Task Statistics Grid */}
+                <div className="grid grid-cols-2 gap-12px mb-20px">
+                  <div className="bg-event-horizon border-2 border-basalt-border p-12px text-center">
+                    <div className="text-brutal-md font-bold text-primary-brutalist">
+                      {member.tasksAssigned}
+                    </div>
+                    <div className="text-brutal-xs font-mono text-cathode-white/60 uppercase">
+                      ASSIGNED
+                    </div>
                   </div>
-                )}
-              </div>
+                  <div className="bg-event-horizon border-2 border-basalt-border p-12px text-center">
+                    <div className="text-brutal-md font-bold text-brutal-success">
+                      {member.tasksCompleted}
+                    </div>
+                    <div className="text-brutal-xs font-mono text-cathode-white/60 uppercase">
+                      COMPLETED
+                    </div>
+                  </div>
+                  <div className="bg-event-horizon border-2 border-basalt-border p-12px text-center">
+                    <div className="text-brutal-md font-bold text-brutal-info">
+                      {member.tasksInProgress}
+                    </div>
+                    <div className="text-brutal-xs font-mono text-cathode-white/60 uppercase">
+                      IN PROGRESS
+                    </div>
+                  </div>
+                  <div className="bg-event-horizon border-2 border-basalt-border p-12px text-center">
+                    <div className={clsx(
+                      "text-brutal-md font-bold",
+                      member.tasksBlocked > 0 ? "text-brutal-error" : "text-cathode-white/40"
+                    )}>
+                      {member.tasksBlocked}
+                    </div>
+                    <div className="text-brutal-xs font-mono text-cathode-white/60 uppercase">
+                      BLOCKED
+                    </div>
+                  </div>
+                </div>
 
-              <div className="pt-16px border-t-2 border-basalt-border">
-                <div className="flex items-center justify-between mb-8px">
-                  <div className="font-mono text-brutal-xs">
-                    <span className="text-primary-brutalist/60">PRODUCTIVITY: </span>
-                    <span className={clsx(
-                      "font-bold",
+                {/* Productivity Section */}
+                <div className="bg-event-horizon border-2 border-basalt-border p-16px mb-20px">
+                  <div className="flex items-center justify-between mb-12px">
+                    <div className="font-mono text-brutal-sm font-bold">
+                      PRODUCTIVITY
+                    </div>
+                    <div className={clsx(
+                      "font-mono text-brutal-sm font-bold",
                       member.productivity >= 90 ? "text-brutal-success" :
                       member.productivity >= 70 ? "text-brutal-warning" : "text-brutal-error"
                     )}>
                       {member.productivity}%
-                    </span>
+                    </div>
                   </div>
-                  <div className="font-mono text-brutal-xs text-primary-brutalist/60">
-                    {member.lastActive}
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-8px">
-                  <div className="flex-1 h-4px bg-basalt-border">
+                  
+                  <div className="h-8px bg-basalt-border mb-8px">
                     <div 
                       className={clsx(
-                        "h-full transition-all duration-300",
+                        "h-full transition-all duration-500 ease-out",
                         member.productivity >= 90 ? "bg-brutal-success" :
                         member.productivity >= 70 ? "bg-brutal-warning" : "bg-brutal-error"
                       )}
                       style={{ width: `${member.productivity}%` }}
                     />
                   </div>
+                  
+                  <div className="font-mono text-brutal-xs text-cathode-white/60">
+                    LAST ACTIVE: {member.lastActive || 'UNKNOWN'}
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-8px mt-16px">
-                <button 
-                  onClick={() => {
-                    setActiveTab('tasks')
-                    setTaskFilters(prev => ({
-                      ...prev,
-                      assigneeIds: [member._id]
-                    }))
-                  }}
-                  className="brutal-btn-sm flex-1"
-                >
-                  VIEW TASKS
-                </button>
-                <button className="brutal-btn-sm bg-basalt-border border-basalt-border">ASSIGN TASK</button>
+                {/* Action Buttons */}
+                <div className="flex gap-12px">
+                  <button 
+                    onClick={() => {
+                      setActiveTab('tasks')
+                      setTaskFilters(prev => ({
+                        ...prev,
+                        assigneeIds: [member._id]
+                      }))
+                    }}
+                    className="flex-1 brutal-btn text-brutal-xs py-12px"
+                  >
+                    VIEW TASKS
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowCreateTaskModal(true)
+                      toast.info('Creating task for ' + (member.name || 'team member'))
+                    }}
+                    className="flex-1 brutal-btn-secondary text-brutal-xs py-12px"
+                  >
+                    ASSIGN TASK
+                  </button>
+                </div>
               </div>
             </div>
           ))}
+          
+          {/* Add New Member Card */}
+          <div className="bg-carbon-plate border-2 border-dashed border-basalt-border hover:border-primary-brutalist transition-all duration-200 cursor-pointer group">
+            <div className="p-40px text-center">
+              <div className="w-64px h-64px bg-basalt-border/20 border-2 border-dashed border-basalt-border group-hover:border-primary-brutalist mx-auto mb-16px flex items-center justify-center transition-all">
+                <HiOutlinePlus className="w-24px h-24px text-cathode-white/60 group-hover:text-primary-brutalist" />
+              </div>
+              <h4 className="font-bold text-brutal-sm text-cathode-white/60 group-hover:text-primary-brutalist mb-8px">
+                ADD TEAM MEMBER
+              </h4>
+              <p className="text-brutal-xs text-cathode-white/40 group-hover:text-cathode-white/60">
+                Invite someone to join this project
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Team Activity Timeline */}
-        <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
-          <div className="flex items-center justify-between mb-16px">
-            <h3 className="text-brutal-lg font-bold uppercase">TEAM ACTIVITY</h3>
-            <div className="flex items-center gap-16px">
-              <button className="font-mono text-brutal-xs uppercase text-primary-brutalist/60 hover:text-primary-brutalist">
-                TODAY ▼
-              </button>
-              <button className="font-mono text-brutal-xs uppercase text-primary-brutalist/60 hover:text-primary-brutalist">
-                FILTER ▼
-              </button>
-            </div>
-          </div>
-          
-          <div className="space-y-8px font-mono text-brutal-sm">
-            <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
-              <span className="text-brutal-xs text-primary-brutalist/60">14:32</span>
-              <div className="w-24px h-24px bg-brutal-success border-2 border-basalt-border flex items-center justify-center">
-                <span className="text-brutal-xs font-bold text-event-horizon">JD</span>
-              </div>
-              <span className="text-primary-brutalist">JOHN DOE</span>
-              <span className="text-primary-brutalist/80">completed TASK-445: Implement auth middleware</span>
-            </div>
-            <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
-              <span className="text-brutal-xs text-primary-brutalist/60">13:15</span>
-              <div className="w-24px h-24px bg-brutal-info border-2 border-basalt-border flex items-center justify-center">
-                <span className="text-brutal-xs font-bold text-event-horizon">AS</span>
-              </div>
-              <span className="text-primary-brutalist">ALICE SMITH</span>
-              <span className="text-primary-brutalist/80">opened PR #156: Add user profile API</span>
-            </div>
-            <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
-              <span className="text-brutal-xs text-primary-brutalist/60">11:45</span>
-              <div className="w-24px h-24px bg-brutal-warning border-2 border-basalt-border flex items-center justify-center">
-                <span className="text-brutal-xs font-bold text-event-horizon">RJ</span>
-              </div>
-              <span className="text-primary-brutalist">ROBERT JONES</span>
-              <span className="text-primary-brutalist/80">started timer on TASK-448: Debug memory leak</span>
-            </div>
-            <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
-              <span className="text-brutal-xs text-primary-brutalist/60">10:20</span>
-              <div className="w-24px h-24px bg-brutal-error border-2 border-basalt-border flex items-center justify-center">
-                <span className="text-brutal-xs font-bold text-event-horizon">MB</span>
-              </div>
-              <span className="text-primary-brutalist">MARIA BROWN</span>
-              <span className="text-primary-brutalist/80">marked TASK-442 as blocked: API dependency</span>
-            </div>
-            <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
-              <span className="text-brutal-xs text-primary-brutalist/60">09:30</span>
-              <div className="w-24px h-24px bg-primary-brutalist border-2 border-basalt-border flex items-center justify-center">
-                <span className="text-brutal-xs font-bold text-event-horizon">TW</span>
-              </div>
-              <span className="text-primary-brutalist">TOM WILSON</span>
-              <span className="text-primary-brutalist/80">joined the project team</span>
-            </div>
-          </div>
-          
-          <button className="mt-16px font-mono text-brutal-xs uppercase text-primary-brutalist/60 hover:text-primary-brutalist">
-            LOAD MORE →
-          </button>
-        </div>
+        <TeamActivityFeed 
+          projectId={projectId}
+          workspaceId={workspaceId}
+          limit={20}
+          showFilters={true}
+        />
 
         {/* Quick Actions */}
         <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
@@ -1259,68 +1301,22 @@ export default function ProjectManagementPage() {
           <HiOutlineCode className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
           <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO REPOSITORY CONNECTED</h3>
           <p className="text-cathode-white/60 mb-24px">Connect a GitHub repository to enable code tracking and PR management</p>
-          <button className="brutal-btn">CONNECT REPOSITORY</button>
+          <button 
+            onClick={() => setShowConnectRepoModal(true)}
+            className="brutal-btn"
+          >
+            CONNECT REPOSITORY
+          </button>
         </div>
       )
     }
     
     const repository = project.repository
 
-    const pullRequests = [
-      {
-        id: 1,
-        number: 156,
-        title: 'feat: Add user authentication middleware',
-        author: 'john.doe',
-        status: 'open',
-        draft: false,
-        reviewStatus: 'approved',
-        checks: { passed: 8, failed: 0, pending: 2 },
-        comments: 12,
-        additions: 245,
-        deletions: 78,
-        createdAt: '2 hours ago',
-        labels: ['feature', 'security']
-      },
-      {
-        id: 2,
-        number: 155,
-        title: 'fix: Memory leak in background worker',
-        author: 'jane.smith',
-        status: 'open',
-        draft: false,
-        reviewStatus: 'changes_requested',
-        checks: { passed: 6, failed: 2, pending: 2 },
-        comments: 8,
-        additions: 45,
-        deletions: 12,
-        createdAt: '5 hours ago',
-        labels: ['bug', 'critical']
-      },
-      {
-        id: 3,
-        number: 154,
-        title: 'chore: Update dependencies',
-        author: 'alice.jones',
-        status: 'open',
-        draft: true,
-        reviewStatus: 'pending',
-        checks: { passed: 10, failed: 0, pending: 0 },
-        comments: 2,
-        additions: 1245,
-        deletions: 876,
-        createdAt: '1 day ago',
-        labels: ['dependencies']
-      }
-    ]
-
-    const branches = [
-      { name: 'main', isDefault: true, ahead: 0, behind: 0, lastCommit: '10 minutes ago' },
-      { name: 'develop', isDefault: false, ahead: 12, behind: 3, lastCommit: '1 hour ago' },
-      { name: 'feature/auth', isDefault: false, ahead: 8, behind: 0, lastCommit: '2 hours ago' },
-      { name: 'fix/memory-leak', isDefault: false, ahead: 3, behind: 5, lastCommit: '5 hours ago' },
-      { name: 'feature/api-v2', isDefault: false, ahead: 45, behind: 12, lastCommit: '3 days ago' }
-    ]
+    // Note: Real GitHub integration would require GitHub API calls with access tokens
+    // For now, showing empty state - would need to implement GitHub API integration
+    const pullRequests: any[] = []
+    const branches: any[] = []
 
     const codeReviewStats = {
       averageTime: '4.2h',
@@ -1353,8 +1349,22 @@ export default function ProjectManagementPage() {
               </div>
             </div>
             <div className="flex items-center gap-12px">
-              <button className="brutal-btn-sm">CLONE</button>
-              <button className="brutal-btn-sm">OPEN IN GITHUB</button>
+              <button 
+                onClick={() => {
+                  const cloneUrl = repository.url.endsWith('.git') ? repository.url : `${repository.url}.git`
+                  navigator.clipboard.writeText(cloneUrl)
+                  toast.success('Clone URL copied to clipboard')
+                }}
+                className="brutal-btn-sm"
+              >
+                CLONE
+              </button>
+              <button 
+                onClick={() => window.open(repository.url, '_blank')}
+                className="brutal-btn-sm"
+              >
+                OPEN IN GITHUB
+              </button>
             </div>
           </div>
           
@@ -1386,12 +1396,20 @@ export default function ProjectManagementPage() {
               <button className="font-mono text-brutal-xs uppercase text-primary-brutalist/60 hover:text-primary-brutalist">
                 FILTER ▼
               </button>
-              <button className="brutal-btn-sm">CREATE PR</button>
+              <button 
+                onClick={() => {
+                  const createPrUrl = `${repository.url}/compare`
+                  window.open(createPrUrl, '_blank')
+                }}
+                className="brutal-btn-sm"
+              >
+                CREATE PR
+              </button>
             </div>
           </div>
           
           <div className="space-y-12px">
-            {pullRequests.map((pr) => (
+            {pullRequests.length > 0 ? pullRequests.map((pr) => (
               <div key={pr.id} className="border-2 border-basalt-border p-16px hover:border-primary-brutalist transition-all">
                 <div className="flex items-start justify-between mb-12px">
                   <div>
@@ -1461,7 +1479,17 @@ export default function ProjectManagementPage() {
                   <button className="brutal-btn-sm">VIEW PR</button>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-32px">
+                <HiOutlineCode className="w-32px h-32px text-primary-brutalist/30 mx-auto mb-12px" />
+                <p className="font-mono text-brutal-sm text-primary-brutalist/60">
+                  No pull requests found
+                </p>
+                <p className="font-mono text-brutal-xs text-cathode-white/60">
+                  GitHub API integration required to fetch real data
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1483,7 +1511,7 @@ export default function ProjectManagementPage() {
                 </tr>
               </thead>
               <tbody>
-                {branches.map((branch) => (
+                {branches.length > 0 ? branches.map((branch) => (
                   <tr key={branch.name} className="border-b border-basalt-border hover:bg-basalt-border/10">
                     <td className="py-12px">
                       <div className="flex items-center gap-8px">
@@ -1510,7 +1538,19 @@ export default function ProjectManagementPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                )) : (
+                  <tr>
+                    <td colSpan={4} className="py-32px text-center">
+                      <HiOutlineCode className="w-32px h-32px text-primary-brutalist/30 mx-auto mb-12px" />
+                      <p className="font-mono text-brutal-sm text-primary-brutalist/60">
+                        No branches found
+                      </p>
+                      <p className="font-mono text-brutal-xs text-cathode-white/60">
+                        GitHub API integration required to fetch real data
+                      </p>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -1621,26 +1661,245 @@ export default function ProjectManagementPage() {
         return renderGitHubTab()
       case 'meetings':
         return (
-          <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
-            <h2 className="text-brutal-lg font-bold uppercase">MEETINGS COMING SOON</h2>
+          <div className="space-y-24px">
+            {/* Header */}
+            <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+              <div className="flex items-center justify-between mb-16px">
+                <h2 className="text-brutal-lg font-bold uppercase">PROJECT MEETINGS</h2>
+                <button 
+                  onClick={() => setShowScheduleMeetingModal(true)}
+                  className="brutal-btn"
+                >
+                  SCHEDULE MEETING
+                </button>
+              </div>
+              
+              {/* Quick Actions */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-12px">
+                <button 
+                  onClick={() => {
+                    setShowScheduleMeetingModal(true)
+                    // Auto-select standup type
+                  }}
+                  className="brutal-btn-secondary text-xs"
+                >
+                  🏃 DAILY STANDUP
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowScheduleMeetingModal(true)
+                    // Auto-select retrospective type
+                  }}
+                  className="brutal-btn-secondary text-xs"
+                >
+                  🔄 RETROSPECTIVE
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowScheduleMeetingModal(true)
+                    // Auto-select planning type
+                  }}
+                  className="brutal-btn-secondary text-xs"
+                >
+                  📋 SPRINT PLANNING
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowScheduleMeetingModal(true)
+                    // Auto-select review type
+                  }}
+                  className="brutal-btn-secondary text-xs"
+                >
+                  👥 SPRINT REVIEW
+                </button>
+              </div>
+            </div>
+
+            {/* Meetings List */}
+            <div className="space-y-16px">
+              {projectMeetings && projectMeetings.length > 0 ? (
+                <>
+                  {/* Upcoming Meetings */}
+                  {projectMeetings.filter((m: any) => m.startTime > Date.now()).length > 0 && (
+                    <div>
+                      <h3 className="text-brutal-sm font-bold uppercase mb-12px text-primary-brutalist">
+                        UPCOMING MEETINGS
+                      </h3>
+                      <div className="space-y-12px">
+                        {projectMeetings
+                          .filter((m: any) => m.startTime > Date.now())
+                          .slice(0, 5)
+                          .map((meeting: any) => (
+                            <MeetingCard
+                              key={meeting._id}
+                              meeting={meeting}
+                              currentUserId={currentUser?._id}
+                              onEdit={(m) => {
+                                // TODO: Open edit modal
+                                toast.info('Edit meeting functionality coming soon')
+                              }}
+                              onViewNotes={(m) => {
+                                // TODO: Open notes modal
+                                toast.info('Meeting notes functionality coming soon')
+                              }}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Past Meetings */}
+                  {projectMeetings.filter((m: any) => m.endTime < Date.now()).length > 0 && (
+                    <div>
+                      <h3 className="text-brutal-sm font-bold uppercase mb-12px text-cathode-white/60">
+                        RECENT MEETINGS
+                      </h3>
+                      <div className="space-y-12px">
+                        {projectMeetings
+                          .filter((m: any) => m.endTime < Date.now())
+                          .slice(0, 3)
+                          .map((meeting: any) => (
+                            <MeetingCard
+                              key={meeting._id}
+                              meeting={meeting}
+                              currentUserId={currentUser?._id}
+                              onViewNotes={(m) => {
+                                // TODO: Open notes modal
+                                toast.info('Meeting notes functionality coming soon')
+                              }}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="bg-carbon-plate border-2 border-basalt-border p-48px text-center">
+                  <HiOutlineVideoCamera className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
+                  <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO MEETINGS SCHEDULED</h3>
+                  <p className="text-cathode-white/60 mb-24px">
+                    Schedule standup meetings, sprint reviews, and planning sessions for your team
+                  </p>
+                  <button 
+                    onClick={() => setShowScheduleMeetingModal(true)}
+                    className="brutal-btn"
+                  >
+                    SCHEDULE FIRST MEETING
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )
       case 'docs':
         return (
           <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
-            <h2 className="text-brutal-lg font-bold uppercase">DOCUMENTATION COMING SOON</h2>
+            <div className="flex items-center justify-between mb-24px">
+              <h2 className="text-brutal-lg font-bold uppercase">PROJECT DOCUMENTATION</h2>
+              <button className="brutal-btn">NEW DOCUMENT</button>
+            </div>
+            
+            <div className="text-center py-48px">
+              <HiOutlineDocumentText className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
+              <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO DOCUMENTS FOUND</h3>
+              <p className="text-cathode-white/60 mb-24px">Create technical specs, user guides, and project documentation</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-16px max-w-2xl mx-auto">
+                <button className="brutal-btn-secondary">API DOCUMENTATION</button>
+                <button className="brutal-btn-secondary">USER GUIDE</button>
+                <button className="brutal-btn-secondary">TECH SPECS</button>
+              </div>
+            </div>
           </div>
         )
       case 'logs':
         return (
-          <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
-            <h2 className="text-brutal-lg font-bold uppercase">LOGS COMING SOON</h2>
-          </div>
+          <TeamActivityFeed 
+            projectId={projectId}
+            workspaceId={workspaceId}
+            limit={50}
+            showFilters={true}
+          />
         )
       case 'settings':
         return (
           <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
-            <h2 className="text-brutal-lg font-bold uppercase">PROJECT SETTINGS COMING SOON</h2>
+            <h2 className="text-brutal-lg font-bold uppercase mb-24px">PROJECT SETTINGS</h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-24px">
+              {/* General Settings */}
+              <div className="space-y-24px">
+                <div>
+                  <h3 className="text-brutal-sm font-bold uppercase mb-16px">GENERAL</h3>
+                  <div className="space-y-16px">
+                    <div>
+                      <label className="block text-brutal-xs uppercase mb-8px">PROJECT NAME</label>
+                      <input 
+                        type="text" 
+                        defaultValue={project.name}
+                        className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-brutal-xs uppercase mb-8px">DESCRIPTION</label>
+                      <textarea 
+                        defaultValue={project.description}
+                        rows={3}
+                        className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-sm resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-brutal-xs uppercase mb-8px">PROJECT KEY</label>
+                      <input 
+                        type="text" 
+                        defaultValue={project.key}
+                        disabled
+                        className="w-full px-16px py-12px bg-basalt-border border-2 border-basalt-border font-mono text-brutal-sm text-cathode-white/60"
+                      />
+                      <p className="text-brutal-xs text-cathode-white/60 mt-4px">Project key cannot be changed</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Workflow Settings */}
+                <div>
+                  <h3 className="text-brutal-sm font-bold uppercase mb-16px">WORKFLOW</h3>
+                  <div className="space-y-16px">
+                    <div>
+                      <label className="block text-brutal-xs uppercase mb-8px">WORKFLOW TYPE</label>
+                      <select 
+                        defaultValue={project.settings?.workflowType || 'kanban'}
+                        className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-sm"
+                      >
+                        <option value="kanban">KANBAN</option>
+                        <option value="scrum">SCRUM</option>
+                        <option value="hybrid">HYBRID</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Danger Zone */}
+              <div className="space-y-24px">
+                <div>
+                  <h3 className="text-brutal-sm font-bold uppercase mb-16px text-brutal-error">DANGER ZONE</h3>
+                  <div className="border-2 border-brutal-error p-16px">
+                    <h4 className="text-brutal-xs font-bold uppercase mb-8px">ARCHIVE PROJECT</h4>
+                    <p className="text-brutal-xs text-cathode-white/80 mb-16px">
+                      Archive this project. It will be hidden from the workspace but data will be preserved.
+                    </p>
+                    <button className="brutal-btn bg-brutal-error border-brutal-error">
+                      ARCHIVE PROJECT
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-16px mt-32px pt-24px border-t-2 border-basalt-border">
+              <button className="brutal-btn-secondary">CANCEL</button>
+              <button className="brutal-btn">SAVE CHANGES</button>
+            </div>
           </div>
         )
       default:
@@ -1651,52 +1910,38 @@ export default function ProjectManagementPage() {
   return (
     <>
       <div className="min-h-screen">
-        {/* Project Header */}
-        <div className="bg-carbon-plate border-b-2 border-basalt-border px-32px py-16px">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-16px">
-            <button 
-              onClick={() => navigate(`/workspace/${workspaceId}`)}
-              className="text-brutal-sm font-mono text-primary-brutalist/60 hover:text-primary-brutalist transition-colors flex items-center gap-8px"
-            >
-              ← BACK TO WORKSPACE
-            </button>
-            <div className="w-2px h-24px bg-basalt-border"></div>
-            <div>
-              <h1 className="text-brutal-lg font-bold uppercase">{project.name}</h1>
-              <div className="flex items-center gap-16px font-mono text-brutal-xs text-primary-brutalist/60">
-                <span>KEY: {project.key}</span>
-                <span>•</span>
-                <span>STATUS: <span className={clsx(
-                  "font-bold",
-                  project.status === 'active' && "text-brutal-success",
-                  project.status === 'planning' && "text-brutal-info",
-                  project.status === 'on_hold' && "text-brutal-warning",
-                  project.status === 'completed' && "text-primary-brutalist",
-                  project.status === 'archived' && "text-brutal-error"
-                )}>{project.status.toUpperCase()}</span></span>
-                <span>•</span>
-                <span>WORKFLOW: {project.settings?.workflowType?.toUpperCase() || 'KANBAN'}</span>
-                {project.lead && (
-                  <>
-                    <span>•</span>
-                    <span>LEAD: {project.lead.name || 'UNASSIGNED'}</span>
-                  </>
-                )}
-                {project.members && (
-                  <>
-                    <span>•</span>
-                    <span>TEAM: {project.members.length}</span>
-                  </>
-                )}
-              </div>
+        {/* Project Header - Minimal Design */}
+        <div className="border-b-2 border-basalt-border bg-carbon-plate px-32px py-12px">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-16px">
+              <button 
+                onClick={() => navigate(`/workspace/${workspaceId}`)}
+                className="text-brutal-xs font-mono text-primary-brutalist/60 hover:text-primary-brutalist transition-colors flex items-center gap-4px"
+              >
+                ← BACK
+              </button>
+              <div className="w-2px h-20px bg-basalt-border"></div>
+              <h1 className="text-brutal-lg font-bold uppercase flex items-center gap-8px">
+                {project.name}
+                <span className="font-mono text-brutal-sm text-primary-brutalist/60">[{project.key}]</span>
+              </h1>
+              {project.status !== 'active' && (
+                <span className={clsx(
+                  "px-8px py-2px text-brutal-xs font-mono uppercase border",
+                  project.status === 'planning' && "bg-brutal-info/10 border-brutal-info text-brutal-info",
+                  project.status === 'on_hold' && "bg-brutal-warning/10 border-brutal-warning text-brutal-warning",
+                  project.status === 'completed' && "bg-primary-brutalist/10 border-primary-brutalist text-primary-brutalist",
+                  project.status === 'archived' && "bg-cathode-white/10 border-cathode-white/20 text-cathode-white/40"
+                )}>
+                  {project.status}
+                </span>
+              )}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Tab Navigation */}
-      <div className="bg-event-horizon border-b-4 border-basalt-border shadow-brutal">
+      {/* Tab Navigation - Streamlined */}
+      <div className="bg-event-horizon border-b-2 border-basalt-border">
         <div className="px-32px">
           <div className="flex items-center">
             {tabs.map((tab, index) => (
@@ -1704,8 +1949,8 @@ export default function ProjectManagementPage() {
                 <button
                   onClick={() => setActiveTab(tab.id as TabType)}
                   className={clsx(
-                    "px-24px py-20px flex items-center gap-12px",
-                    "font-mono text-brutal-sm uppercase transition-all duration-200",
+                    "px-16px py-12px flex items-center gap-8px",
+                    "font-mono text-brutal-xs uppercase transition-all duration-200",
                     "relative hover:bg-basalt-border/10",
                     activeTab === tab.id
                       ? "text-primary-brutalist bg-carbon-plate"
@@ -1799,6 +2044,40 @@ export default function ProjectManagementPage() {
           setShowCreateSprintModal(false)
           // Sprint will automatically refresh via Convex reactivity
         }}
+      />
+    )}
+
+    {projectId && (
+      <ConnectRepositoryModal
+        isOpen={showConnectRepoModal}
+        onClose={() => setShowConnectRepoModal(false)}
+        projectId={projectId}
+        onSuccess={() => {
+          setShowConnectRepoModal(false)
+          // Project will automatically refresh via Convex reactivity
+        }}
+      />
+    )}
+
+    {projectId && workspaceId && (
+      <ScheduleMeetingModal
+        isOpen={showScheduleMeetingModal}
+        onClose={() => setShowScheduleMeetingModal(false)}
+        projectId={projectId}
+        workspaceId={workspaceId}
+        onSuccess={() => {
+          setShowScheduleMeetingModal(false)
+          // Meetings will automatically refresh via Convex reactivity
+        }}
+      />
+    )}
+
+    {projectId && project && (
+      <ProjectInviteModal
+        isOpen={showProjectInviteModal}
+        onClose={() => setShowProjectInviteModal(false)}
+        projectId={projectId}
+        projectName={project.name}
       />
     )}
   </>

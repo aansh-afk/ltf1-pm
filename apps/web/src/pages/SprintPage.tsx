@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import {
@@ -12,20 +11,22 @@ import {
 } from 'react-icons/hi'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import EmptyState from '@/components/common/EmptyState'
+import WorkspaceSelector from '@/components/common/WorkspaceSelector'
 import CreateSprintModal from '@/components/features/sprint/CreateSprintModal'
 import SprintBoard from '@/components/features/sprint/SprintBoard'
 import SprintPlanning from '@/components/features/sprint/SprintPlanning'
+import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
 import clsx from 'clsx'
 
 export default function SprintPage() {
-  const { workspaceId } = useParams()
+  const { currentWorkspaceId, isLoading: workspaceLoading, hasWorkspaceContext, workspaces } = useCurrentWorkspace()
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [viewMode, setViewMode] = useState<'board' | 'planning'>('board')
 
   const projects = useQuery(
     api.projects.queries.getWorkspaceProjects,
-    workspaceId ? { workspaceId: workspaceId as any } : 'skip'
+    currentWorkspaceId ? { workspaceId: currentWorkspaceId as any } : 'skip'
   )
 
   const sprints = useQuery(
@@ -38,12 +39,38 @@ export default function SprintPage() {
     selectedProjectId ? { projectId: selectedProjectId as any } : 'skip'
   )
 
-  if (!workspaceId) {
+  if (workspaceLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  // Show workspace selector for pages without URL workspace context
+  if (!currentWorkspaceId && workspaces && workspaces.length > 0) {
+    return (
+      <div className="p-24px">
+        <div className="max-w-md mx-auto">
+          <div className="bg-carbon-plate border-2 border-basalt-border p-32px">
+            <h1 className="text-brutal-lg font-bold mb-16px">SELECT WORKSPACE</h1>
+            <p className="text-brutal-sm text-cathode-white/60 mb-24px">
+              Choose a workspace to view and manage sprints.
+            </p>
+            <WorkspaceSelector size="lg" showLabel={false} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show empty state if no workspaces exist
+  if (!currentWorkspaceId && (!workspaces || workspaces.length === 0)) {
     return (
       <div className="p-24px">
         <EmptyState
-          title="No workspace selected"
-          description="Please select a workspace to view sprints"
+          title="NO WORKSPACES FOUND"
+          description="Create a workspace first to organize your sprints."
         />
       </div>
     )
@@ -69,14 +96,29 @@ export default function SprintPage() {
   }
 
   const selectedProject = projects.find(p => p._id === selectedProjectId)
+  const currentWorkspace = workspaces?.find(w => w._id === currentWorkspaceId)
 
   return (
     <div className="p-24px">
       {/* Header */}
       <div className="mb-32px">
         <div className="flex items-center justify-between mb-16px">
-          <h1 className="text-brutal-2xl font-bold uppercase">SPRINTS</h1>
+          <div>
+            <div className="flex items-center gap-16px mb-8px">
+              <h1 className="text-brutal-2xl font-bold uppercase">SPRINTS</h1>
+              {!hasWorkspaceContext && (
+                <div className="text-brutal-xs text-cathode-white/60">
+                  IN: {currentWorkspace?.name}
+                </div>
+              )}
+            </div>
+          </div>
           <div className="flex items-center gap-16px">
+            {/* Show workspace selector for global routes */}
+            {!hasWorkspaceContext && (
+              <WorkspaceSelector size="sm" showLabel={false} />
+            )}
+            
             <select
               className="px-16px py-8px bg-carbon-plate border-2 border-basalt-border 
                        font-mono text-brutal-sm uppercase

@@ -10,6 +10,10 @@ export type Permission =
   | "project.view"
   | "project.edit"
   | "project.delete"
+  | "project.team.manage"
+  | "project.team.invite"
+  | "project.team.remove"
+  | "project.team.view"
   | "task.create"
   | "task.view"
   | "task.edit"
@@ -24,24 +28,56 @@ const rolePermissions: Record<string, Permission[]> = {
   owner: [
     "workspace.view", "workspace.edit", "workspace.delete", "workspace.invite",
     "project.create", "project.view", "project.edit", "project.delete",
+    "project.team.manage", "project.team.invite", "project.team.remove", "project.team.view",
     "task.create", "task.view", "task.edit", "task.delete", "task.assign",
     "meeting.create", "meeting.view", "meeting.edit", "meeting.delete",
   ],
   admin: [
     "workspace.view", "workspace.edit", "workspace.invite",
     "project.create", "project.view", "project.edit", "project.delete",
+    "project.team.manage", "project.team.invite", "project.team.remove", "project.team.view",
     "task.create", "task.view", "task.edit", "task.delete", "task.assign",
     "meeting.create", "meeting.view", "meeting.edit", "meeting.delete",
   ],
   member: [
     "workspace.view",
     "project.view", "project.edit",
+    "project.team.view",
     "task.create", "task.view", "task.edit", "task.assign",
     "meeting.create", "meeting.view", "meeting.edit",
   ],
   viewer: [
     "workspace.view",
     "project.view",
+    "project.team.view",
+    "task.view",
+    "meeting.view",
+  ],
+};
+
+// Project-level role permissions
+const projectRolePermissions: Record<string, Permission[]> = {
+  lead: [
+    "project.view", "project.edit", 
+    "project.team.manage", "project.team.invite", "project.team.remove", "project.team.view",
+    "task.create", "task.view", "task.edit", "task.delete", "task.assign",
+    "meeting.create", "meeting.view", "meeting.edit", "meeting.delete",
+  ],
+  member: [
+    "project.view", "project.edit",
+    "project.team.view",
+    "task.create", "task.view", "task.edit", "task.assign",
+    "meeting.create", "meeting.view", "meeting.edit",
+  ],
+  contributor: [
+    "project.view",
+    "project.team.view",
+    "task.create", "task.view", "task.edit",
+    "meeting.view",
+  ],
+  viewer: [
+    "project.view",
+    "project.team.view",
     "task.view",
     "meeting.view",
   ],
@@ -130,5 +166,59 @@ export async function canAccessTask(
     return false;
   }
 
-  return await hasPermission(db, userId, project.workspaceId, permission);
+  return await hasProjectPermission(db, userId, task.projectId, permission);
+}
+
+export async function getUserProjectRole(
+  db: DatabaseReader,
+  userId: Id<"users">,
+  projectId: Id<"projects">
+): Promise<Doc<"projectMembers"> | null> {
+  return await db
+    .query("projectMembers")
+    .withIndex("by_project_user", (q) =>
+      q.eq("projectId", projectId).eq("userId", userId)
+    )
+    .filter((q) => q.eq(q.field("status"), "active"))
+    .first();
+}
+
+export async function hasProjectPermission(
+  db: DatabaseReader,
+  userId: Id<"users">,
+  projectId: Id<"projects">,
+  permission: Permission
+): Promise<boolean> {
+  const project = await db.get(projectId);
+  if (!project) {
+    return false;
+  }
+
+  // First check workspace-level permissions
+  const workspacePermission = await hasPermission(db, userId, project.workspaceId, permission);
+  if (workspacePermission) {
+    return true;
+  }
+
+  // Then check project-level permissions
+  const projectMember = await getUserProjectRole(db, userId, projectId);
+  if (!projectMember) {
+    return false;
+  }
+
+  const projectPerms = projectRolePermissions[projectMember.role] || [];
+  return projectPerms.includes(permission);
+}
+
+export async function requireProjectPermission(
+  db: DatabaseReader,
+  userId: Id<"users">,
+  projectId: Id<"projects">,
+  permission: Permission
+): Promise<void> {
+  const hasAccess = await hasProjectPermission(db, userId, projectId, permission);
+  
+  if (!hasAccess) {
+    throw new Error(`Permission denied: ${permission} for project ${projectId}`);
+  }
 }
