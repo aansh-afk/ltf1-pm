@@ -2,8 +2,112 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { HiOutlineCode, HiOutlineLightningBolt, HiOutlineUsers } from 'react-icons/hi'
 import BrutalFooterReveal from '../components/landing/BrutalFooterReveal'
+import { useEffect, useState, useRef } from 'react'
 
 export default function LandingPage() {
+  const [isAFK, setIsAFK] = useState(false)
+  const [afkTime, setAfkTime] = useState(0)
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
+  const lastActivityRef = useRef(Date.now())
+  const afkTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const messageRotationRef = useRef<NodeJS.Timeout | null>(null)
+  
+  const AFK_THRESHOLD = 35000 // 35 seconds
+  const MESSAGE_ROTATION_INTERVAL = 10000 // 10 seconds
+  
+  const regularMessages = [
+    "PRODUCTIVITY DECREASING",
+    "ARE YOU EVEN TRYING?",
+    "LOCK BACK IN OR LOG OUT",
+    "THIS IS NOT WHAT WINNERS DO",
+    "YOUR COMPETITION IS CODING RIGHT NOW"
+  ]
+  
+  const aggressiveMessages = [
+    "SERIOUSLY?",
+    "COFFEE BREAK ENDED 4 MINUTES AGO",
+    "YOUR SPRINT IS SUFFERING",
+    "STAND UP OR SHIP OUT"
+  ]
+  
+  // Reset activity on any user interaction
+  const resetActivity = () => {
+    lastActivityRef.current = Date.now()
+    
+    if (isAFK) {
+      // Hard cut back to normal
+      setIsAFK(false)
+      setAfkTime(0)
+      setCurrentMessageIndex(0)
+      
+      // Clear message rotation
+      if (messageRotationRef.current) {
+        clearInterval(messageRotationRef.current)
+        messageRotationRef.current = null
+      }
+    }
+  }
+  
+  // Check for AFK status
+  useEffect(() => {
+    const checkAFK = () => {
+      const now = Date.now()
+      const timeSinceActivity = now - lastActivityRef.current
+      
+      if (timeSinceActivity >= AFK_THRESHOLD && !isAFK) {
+        setIsAFK(true)
+        setAfkTime(Math.floor(timeSinceActivity / 1000))
+      }
+      
+      if (isAFK) {
+        setAfkTime(Math.floor((now - lastActivityRef.current) / 1000))
+      }
+    }
+    
+    // Set up activity listeners
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart']
+    events.forEach(event => {
+      document.addEventListener(event, resetActivity)
+    })
+    
+    // Check AFK status every second
+    afkTimerRef.current = setInterval(checkAFK, 1000)
+    
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, resetActivity)
+      })
+      
+      if (afkTimerRef.current) {
+        clearInterval(afkTimerRef.current)
+      }
+    }
+  }, [isAFK])
+  
+  // Separate effect for message rotation
+  useEffect(() => {
+    if (isAFK && !messageRotationRef.current) {
+      // Start message rotation when AFK
+      messageRotationRef.current = setInterval(() => {
+        setCurrentMessageIndex(prev => prev + 1)
+      }, MESSAGE_ROTATION_INTERVAL)
+    }
+    
+    return () => {
+      if (messageRotationRef.current) {
+        clearInterval(messageRotationRef.current)
+        messageRotationRef.current = null
+      }
+    }
+  }, [isAFK])
+  
+  // Format time as MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+  
   return (
     <div className="min-h-screen bg-event-horizon snap-y snap-mandatory overflow-y-auto h-screen">
       {/* BRUTAL NAV */}
@@ -256,6 +360,41 @@ export default function LandingPage() {
 
       {/* BRUTAL FOOTER REVEAL - INCLUDES TRANSFORM SECTION */}
       <BrutalFooterReveal />
+      
+      {/* AFK SHAME SCREEN */}
+      {isAFK && (
+        <div className="fixed inset-0 bg-event-horizon z-[9999] flex flex-col items-center justify-center">
+          {/* LTF1 Logo with brutal shadow */}
+          <h1 
+            className="text-[120px] font-bold text-cathode-white mb-24px select-none"
+            style={{ textShadow: '5px 5px 0px #000000' }}
+          >
+            LTF1
+          </h1>
+          
+          {/* Timer */}
+          <div className="mb-32px">
+            <div className="font-mono text-5xl font-bold text-brutal-error mb-8px" style={{ textShadow: '3px 3px 0px #000000' }}>
+              {formatTime(afkTime)}
+            </div>
+            <div className="font-mono text-sm uppercase tracking-[0.3em] text-cathode-white/60 border-t-2 border-brutal-error pt-8px">
+              TIME WASTED
+            </div>
+          </div>
+          
+          {/* Rotating message */}
+          <div className="font-mono text-xl text-cathode-white uppercase tracking-wider">
+            {afkTime >= 300 ? (
+              <>
+                <span className="text-brutal-error">{formatTime(afkTime)} - </span>
+                {aggressiveMessages[currentMessageIndex % aggressiveMessages.length]}
+              </>
+            ) : (
+              regularMessages[currentMessageIndex % regularMessages.length]
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

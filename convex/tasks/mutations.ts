@@ -70,18 +70,9 @@ export const createTask = mutation({
       updatedAt: now,
     });
 
-    await ctx.db.insert("activities", {
-      workspaceId: project.workspaceId,
-      userId: user._id,
-      entityType: "task",
-      entityId: taskId,
-      action: "task.created",
-      metadata: { 
-        title: args.title, 
-        projectKey: project.key,
-        taskNumber: maxNumber + 1,
-      },
-      createdAt: now,
+    // Log task creation activity
+    await ctx.runMutation("activities/mutations:logTaskCreated", {
+      taskId: taskId
     });
 
     // Send notifications to all assignees
@@ -202,15 +193,39 @@ export const updateTask = mutation({
       }
     }
     
-    await ctx.db.insert("activities", {
-      workspaceId: project.workspaceId,
-      userId: user._id,
-      entityType: "task",
-      entityId: args.taskId,
-      action: "task.updated",
-      metadata: activityMetadata,
-      createdAt: Date.now(),
-    });
+    // Log specific activity based on what was changed
+    if (args.status !== undefined && task.status !== args.status) {
+      await ctx.runMutation("activities/mutations:logTaskStatusChanged", {
+        taskId: args.taskId,
+        oldStatus: task.status,
+        newStatus: args.status
+      });
+      
+      if (args.status === "done") {
+        await ctx.runMutation("activities/mutations:logTaskCompleted", {
+          taskId: args.taskId
+        });
+      }
+    }
+    
+    if (args.assigneeIds !== undefined) {
+      const previousAssigneeIds = task.assigneeIds || [];
+      const newAssigneeIds = args.assigneeIds || [];
+      
+      const added = newAssigneeIds.filter(id => !previousAssigneeIds.includes(id));
+      
+      // Log assignments for newly assigned users
+      for (const assigneeId of added) {
+        const assignee = await ctx.db.get(assigneeId);
+        if (assignee) {
+          await ctx.runMutation("activities/mutations:logTaskAssigned", {
+            taskId: args.taskId,
+            assignedToId: assigneeId,
+            assignedToName: assignee.name || assignee.email
+          });
+        }
+      }
+    }
 
     // Send notifications to newly assigned users
     if (args.assigneeIds !== undefined) {
@@ -297,15 +312,8 @@ export const deleteTask = mutation({
       await ctx.db.patch(subtask._id, { parentTaskId: undefined });
     }
 
-    await ctx.db.insert("activities", {
-      workspaceId: project.workspaceId,
-      userId: user._id,
-      entityType: "task",
-      entityId: args.taskId,
-      action: "task.deleted",
-      metadata: { title: task.title },
-      createdAt: Date.now(),
-    });
+    // Note: Task deletion activities could be logged here if needed
+    // For now, we focus on core team activities (create, update, assign, complete)
 
     return args.taskId;
   },

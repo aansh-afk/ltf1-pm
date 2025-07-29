@@ -5,6 +5,7 @@ import clsx from 'clsx'
 interface Option {
   value: string
   label: string
+  avatar?: string
   avatarUrl?: string
 }
 
@@ -135,9 +136,9 @@ export default function MultiSelect({
                     )}
                   >
                     <div className="flex items-center gap-8px">
-                      {option.avatarUrl ? (
+                      {(option.avatarUrl || option.avatar) ? (
                         <img 
-                          src={option.avatarUrl} 
+                          src={option.avatarUrl || option.avatar} 
                           alt={option.label}
                           className="w-24px h-24px border-2 border-basalt-border"
                         />

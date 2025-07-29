@@ -13,13 +13,19 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as activities_mutations from "../activities/mutations.js";
+import type * as activities_queries from "../activities/queries.js";
 import type * as auth_permissions from "../auth/permissions.js";
 import type * as auth_users from "../auth/users.js";
 import type * as clerk from "../clerk.js";
 import type * as comments_mutations from "../comments/mutations.js";
+import type * as developers_mutations from "../developers/mutations.js";
+import type * as developers_queries from "../developers/queries.js";
 import type * as filterPresets_mutations from "../filterPresets/mutations.js";
 import type * as filterPresets_queries from "../filterPresets/queries.js";
 import type * as http from "../http.js";
+import type * as meetings_mutations from "../meetings/mutations.js";
+import type * as meetings_queries from "../meetings/queries.js";
 import type * as migrations_migrateToMultipleAssignees from "../migrations/migrateToMultipleAssignees.js";
 import type * as projects_mutations from "../projects/mutations.js";
 import type * as projects_queries from "../projects/queries.js";
@@ -40,13 +46,19 @@ import type * as workspaces_queries from "../workspaces/queries.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "activities/mutations": typeof activities_mutations;
+  "activities/queries": typeof activities_queries;
   "auth/permissions": typeof auth_permissions;
   "auth/users": typeof auth_users;
   clerk: typeof clerk;
   "comments/mutations": typeof comments_mutations;
+  "developers/mutations": typeof developers_mutations;
+  "developers/queries": typeof developers_queries;
   "filterPresets/mutations": typeof filterPresets_mutations;
   "filterPresets/queries": typeof filterPresets_queries;
   http: typeof http;
+  "meetings/mutations": typeof meetings_mutations;
+  "meetings/queries": typeof meetings_queries;
   "migrations/migrateToMultipleAssignees": typeof migrations_migrateToMultipleAssignees;
   "projects/mutations": typeof projects_mutations;
   "projects/queries": typeof projects_queries;

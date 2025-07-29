@@ -42,19 +42,26 @@ export function useCurrentWorkspace() {
     // If we have a real workspace ID in URL, store it
     if (params.workspaceId && params.workspaceId !== 'current') {
       setCurrentWorkspaceId(params.workspaceId)
+      return
+    }
+    
+    // NEW: Auto-select first workspace for global routes without workspace context
+    if (!params.workspaceId && !currentWorkspaceId && workspaces.length > 0) {
+      setCurrentWorkspaceId(workspaces[0]._id)
     }
   }, [params.workspaceId, workspaces, currentWorkspaceId, navigate, setCurrentWorkspaceId])
   
   // Return the resolved workspace ID
   const resolvedWorkspaceId = params.workspaceId === 'current' 
     ? (currentWorkspaceId || workspaces?.[0]?._id)
-    : params.workspaceId
+    : params.workspaceId || currentWorkspaceId || workspaces?.[0]?._id
   
   return {
     currentWorkspaceId: resolvedWorkspaceId,
     workspaceId: resolvedWorkspaceId, // For backward compatibility
     workspaces,
     isLoading: !workspaces,
-    setCurrentWorkspace: setCurrentWorkspaceId
+    setCurrentWorkspace: setCurrentWorkspaceId,
+    hasWorkspaceContext: !!params.workspaceId // New: indicates if URL has workspace context
   }
 }

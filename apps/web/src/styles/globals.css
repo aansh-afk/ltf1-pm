@@ -64,7 +64,8 @@
 
   /* BRUTAL SCROLLBAR */
   ::-webkit-scrollbar {
-    @apply w-8px h-8px;
+    width: 8px;
+    height: 8px;
   }
 
   ::-webkit-scrollbar-track {
@@ -78,6 +79,30 @@
 
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-cathode-white;
+  }
+
+  /* CUSTOM SCROLLBAR FOR KANBAN COLUMNS */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-event-horizon;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-basalt-border/60;
+    border-radius: 0 !important;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary-brutalist;
+  }
+
+  /* Firefox scrollbar support */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #4A4A4A #1A1A1A;
   }
 
   /* BRUTAL SELECTION */

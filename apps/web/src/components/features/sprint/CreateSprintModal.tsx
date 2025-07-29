@@ -66,9 +66,8 @@ export default function CreateSprintModal({
       setGoal('')
       setStartDate('')
       setEndDate('')
-    } catch (error) {
-      console.error('Failed to create sprint:', error)
-      toast.error('Failed to create sprint')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create sprint')
     } finally {
       setIsCreating(false)
     }

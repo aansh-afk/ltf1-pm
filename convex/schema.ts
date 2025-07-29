@@ -81,6 +81,34 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_workspace_user", ["workspaceId", "userId"]),
 
+  projectMembers: defineTable({
+    projectId: v.id("projects"),
+    userId: v.id("users"),
+    role: v.union(v.literal("lead"), v.literal("member"), v.literal("contributor"), v.literal("viewer")),
+    joinedAt: v.number(),
+    invitedBy: v.optional(v.id("users")),
+    status: v.union(v.literal("active"), v.literal("pending"), v.literal("removed")),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_user", ["userId"])
+    .index("by_project_user", ["projectId", "userId"])
+    .index("by_status", ["status"]),
+
+  projectInvitations: defineTable({
+    projectId: v.id("projects"),
+    invitedEmail: v.string(),
+    invitedBy: v.id("users"),
+    role: v.union(v.literal("lead"), v.literal("member"), v.literal("contributor"), v.literal("viewer")),
+    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined"), v.literal("expired")),
+    inviteCode: v.string(),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_invite_code", ["inviteCode"])
+    .index("by_status", ["status"])
+    .index("by_email", ["invitedEmail"]),
+
   projects: defineTable({
     workspaceId: v.id("workspaces"),
     name: v.string(),
@@ -89,6 +117,7 @@ export default defineSchema({
     leadId: v.optional(v.id("users")),
     status: v.union(v.literal("planning"), v.literal("active"), v.literal("on_hold"), v.literal("completed"), v.literal("archived")),
     visibility: v.union(v.literal("public"), v.literal("private")),
+    inviteCode: v.optional(v.string()), // UUID for project joining
     repository: v.optional(v.object({
       provider: v.union(v.literal("github"), v.literal("gitlab"), v.literal("bitbucket")),
       url: v.string(),
@@ -99,6 +128,12 @@ export default defineSchema({
       defaultAssigneeId: v.optional(v.id("users")),
       workflowType: v.union(v.literal("kanban"), v.literal("scrum"), v.literal("hybrid")),
     }),
+    teamSettings: v.optional(v.object({
+      maxMembers: v.optional(v.number()),
+      allowSelfJoin: v.optional(v.boolean()),
+      requireApproval: v.optional(v.boolean()),
+      autoAssignLead: v.optional(v.boolean()),
+    })),
     metadata: v.optional(v.object({
       color: v.string(),
       icon: v.string(),
@@ -110,7 +145,8 @@ export default defineSchema({
     .index("by_workspace", ["workspaceId"])
     .index("by_key", ["key"])
     .index("by_lead", ["leadId"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_invite_code", ["inviteCode"]),
 
   tasks: defineTable({
     projectId: v.id("projects"),
@@ -195,8 +231,17 @@ export default defineSchema({
 
   meetings: defineTable({
     workspaceId: v.id("workspaces"),
+    projectId: v.optional(v.id("projects")),
+    sprintId: v.optional(v.id("sprints")),
     title: v.string(),
     description: v.optional(v.string()),
+    type: v.union(
+      v.literal("standup"), 
+      v.literal("retrospective"), 
+      v.literal("planning"), 
+      v.literal("review"),
+      v.literal("custom")
+    ),
     organizerId: v.id("users"),
     startTime: v.number(),
     endTime: v.number(),
@@ -215,6 +260,19 @@ export default defineSchema({
       endDate: v.optional(v.number()),
     })),
     notes: v.optional(v.string()),
+    actionItems: v.optional(v.array(v.object({
+      id: v.string(),
+      description: v.string(),
+      assigneeId: v.optional(v.id("users")),
+      completed: v.boolean(),
+      createdTaskId: v.optional(v.id("tasks")),
+      createdAt: v.number(),
+    }))),
+    template: v.optional(v.object({
+      agenda: v.optional(v.array(v.string())),
+      duration: v.optional(v.number()), // in minutes
+      isRecurring: v.boolean(),
+    })),
     recordings: v.array(v.object({
       url: v.string(),
       duration: v.number(),
@@ -224,6 +282,9 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_workspace", ["workspaceId"])
+    .index("by_project", ["projectId"])
+    .index("by_sprint", ["sprintId"])
+    .index("by_type", ["type"])
     .index("by_organizer", ["organizerId"])
     .index("by_start_time", ["startTime"]),
 
@@ -241,18 +302,92 @@ export default defineSchema({
     .index("by_user_read", ["userId", "read"]),
 
   activities: defineTable({
+    // Core activity fields
+    type: v.union(
+      // Task activities
+      v.literal("task_created"),
+      v.literal("task_completed"), 
+      v.literal("task_status_changed"),
+      v.literal("task_assigned"),
+      v.literal("task_priority_changed"),
+      v.literal("task_time_started"),
+      v.literal("task_time_stopped"),
+      v.literal("task_commented"),
+      v.literal("task_blocked"),
+      v.literal("task_unblocked"),
+      
+      // Team activities
+      v.literal("member_joined"),
+      v.literal("member_removed"),
+      v.literal("member_role_changed"),
+      
+      // Project activities  
+      v.literal("project_created"),
+      v.literal("project_updated"),
+      v.literal("sprint_created"),
+      v.literal("sprint_started"),
+      v.literal("sprint_completed"),
+      
+      // Meeting activities
+      v.literal("meeting_scheduled"),
+      v.literal("meeting_completed"),
+      v.literal("meeting_cancelled"),
+      
+      // Code activities (for future GitHub integration)
+      v.literal("commit_pushed"),
+      v.literal("pr_opened"),
+      v.literal("pr_merged"),
+      v.literal("pr_reviewed")
+    ),
+    projectId: v.id("projects"),
     workspaceId: v.id("workspaces"),
-    userId: v.id("users"),
-    entityType: v.union(v.literal("workspace"), v.literal("project"), v.literal("task"), v.literal("meeting")),
-    entityId: v.string(),
-    action: v.string(),
-    metadata: v.optional(v.any()),
-    createdAt: v.number(),
+    
+    // Actor (who performed the action)
+    actorId: v.id("users"),
+    actorName: v.string(),
+    
+    // Target (what was acted upon)
+    targetType: v.union(
+      v.literal("task"),
+      v.literal("project"), 
+      v.literal("sprint"),
+      v.literal("meeting"),
+      v.literal("user"),
+      v.literal("comment")
+    ),
+    targetId: v.optional(v.string()), // ID of the target entity
+    targetName: v.optional(v.string()), // Display name of target
+    
+    // Activity metadata
+    description: v.string(), // Human readable description
+    metadata: v.optional(v.object({
+      // For status changes
+      oldValue: v.optional(v.string()),
+      newValue: v.optional(v.string()),
+      
+      // For assignments
+      assignedTo: v.optional(v.id("users")),
+      assignedToName: v.optional(v.string()),
+      
+      // For time tracking
+      timeSpent: v.optional(v.number()),
+      
+      // For priority changes
+      oldPriority: v.optional(v.string()),
+      newPriority: v.optional(v.string()),
+      
+      // For any additional context
+      extra: v.optional(v.any())
+    })),
+    
+    // Timestamps
+    timestamp: v.number(),
   })
-    .index("by_workspace", ["workspaceId"])
-    .index("by_user", ["userId"])
-    .index("by_entity", ["entityType", "entityId"])
-    .index("by_created", ["createdAt"]),
+    .index("by_project", ["projectId", "timestamp"])
+    .index("by_workspace", ["workspaceId", "timestamp"])  
+    .index("by_actor", ["actorId", "timestamp"])
+    .index("by_target", ["targetType", "targetId", "timestamp"])
+    .index("by_type", ["type", "timestamp"]),
 
   timeEntries: defineTable({
     taskId: v.id("tasks"),
@@ -301,4 +436,68 @@ export default defineSchema({
     .index("by_workspace", ["workspaceId"])
     .index("by_user", ["userId"])
     .index("by_workspace_user", ["workspaceId", "userId"]),
+
+  // Developer profiles - optional for backward compatibility
+  developerProfiles: defineTable({
+    userId: v.id("users"),
+    status: v.optional(v.union(
+      v.literal("LOCKED_IN"),
+      v.literal("AVAILABLE"),
+      v.literal("IN_REVIEW"),
+      v.literal("AFK"),
+      v.literal("IN_MEETING")
+    )),
+    statusMessage: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    workHours: v.optional(v.object({
+      start: v.string(), // "09:00"
+      end: v.string(),   // "17:00"
+      days: v.array(v.number()), // [1,2,3,4,5] for Mon-Fri
+    })),
+    techStack: v.optional(v.array(v.object({
+      name: v.string(),
+      level: v.union(v.literal("expert"), v.literal("proficient"), v.literal("learning")),
+      yearsOfExperience: v.optional(v.number()),
+    }))),
+    currentFocus: v.optional(v.string()),
+    reviewPreferences: v.optional(v.object({
+      maxConcurrentReviews: v.number(),
+      preferredFileTypes: v.array(v.string()),
+      averageResponseTime: v.optional(v.number()), // in hours
+    })),
+    githubStats: v.optional(v.object({
+      username: v.optional(v.string()),
+      totalPRs: v.number(),
+      totalReviews: v.number(),
+      avgReviewTime: v.number(), // in hours
+      languages: v.array(v.object({
+        name: v.string(),
+        percentage: v.number(),
+      })),
+      lastSynced: v.number(),
+    })),
+    gitCoAuthorString: v.optional(v.string()),
+    availability: v.optional(v.object({
+      forProjects: v.boolean(),
+      forReviews: v.boolean(),
+      forPairing: v.boolean(),
+    })),
+    profileCompleteness: v.number(), // 0-100
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"]),
+
+  expertiseSearchIndex: defineTable({
+    profileId: v.id("developerProfiles"),
+    userId: v.id("users"),
+    technology: v.string(),
+    level: v.string(),
+    searchableText: v.string(), // lowercase, normalized for search
+  })
+    .index("by_technology", ["technology"])
+    .searchIndex("search_expertise", {
+      searchField: "searchableText",
+    }),
 });

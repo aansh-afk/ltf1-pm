@@ -85,9 +85,8 @@ export default function EditTaskModal({
       
       toast.success('Task updated successfully!')
       onClose()
-    } catch (error) {
-      console.error('Failed to update task:', error)
-      toast.error('Failed to update task')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update task')
     } finally {
       setIsUpdating(false)
     }

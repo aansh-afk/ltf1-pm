@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { useUser } from '@clerk/clerk-react'
 import { api } from '../../../../../../convex/_generated/api'
+import toast from 'react-hot-toast'
 import {
   HiOutlineBookmark,
   HiOutlinePlus,
@@ -44,16 +45,16 @@ export default function FilterPresets({ workspaceId, currentFilters, onApplyPres
       })
       setPresetName('')
       setIsCreating(false)
-    } catch (error) {
-      console.error('Failed to create preset:', error)
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create preset')
     }
   }
 
   const handleDeletePreset = async (presetId: string) => {
     try {
       await deletePreset({ presetId: presetId as any })
-    } catch (error) {
-      console.error('Failed to delete preset:', error)
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete preset')
     }
   }
 

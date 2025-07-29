@@ -4,6 +4,7 @@ import { api } from '../../../../convex/_generated/api'
 import { HiOutlineViewBoards, HiOutlineViewList, HiOutlineFilter, HiOutlineCalendar, HiOutlineViewGrid, HiOutlineSearch } from 'react-icons/hi'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import EmptyState from '@/components/common/EmptyState'
+import WorkspaceSelector from '@/components/common/WorkspaceSelector'
 import TaskBoard from '@/components/features/task/TaskBoard'
 import TaskList from '@/components/features/task/TaskList'
 import TaskCalendar from '@/components/features/task/TaskCalendar'
@@ -27,7 +28,7 @@ const defaultFilters: TaskFiltersType = {
 }
 
 export default function TasksPage() {
-  const { currentWorkspaceId, isLoading: workspaceLoading } = useCurrentWorkspace()
+  const { currentWorkspaceId, isLoading: workspaceLoading, hasWorkspaceContext, workspaces } = useCurrentWorkspace()
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [viewMode, setViewMode] = useState<'board' | 'list' | 'calendar' | 'table'>('board')
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
@@ -109,15 +110,37 @@ export default function TasksPage() {
   }
 
   if (workspaceLoading) {
-    return <LoadingSpinner size="lg" />
+    return (
+      <div className="flex items-center justify-center h-full">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
   }
 
-  if (!currentWorkspaceId) {
+  // Show workspace selector for pages without URL workspace context
+  if (!currentWorkspaceId && workspaces && workspaces.length > 0) {
     return (
-      <div className="p-6">
+      <div className="p-24px">
+        <div className="max-w-md mx-auto">
+          <div className="bg-carbon-plate border-2 border-basalt-border p-32px">
+            <h1 className="text-brutal-lg font-bold mb-16px">SELECT WORKSPACE</h1>
+            <p className="text-brutal-sm text-cathode-white/60 mb-24px">
+              Choose a workspace to view and manage tasks.
+            </p>
+            <WorkspaceSelector size="lg" showLabel={false} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show empty state if no workspaces exist
+  if (!currentWorkspaceId && (!workspaces || workspaces.length === 0)) {
+    return (
+      <div className="p-24px">
         <EmptyState
-          title="No workspace selected"
-          description="Please select a workspace to view tasks"
+          title="NO WORKSPACES FOUND"
+          description="Create a workspace first to organize your tasks."
         />
       </div>
     )
@@ -142,12 +165,26 @@ export default function TasksPage() {
     setSelectedProjectId(projects[0]._id)
   }
 
+  const currentWorkspace = workspaces?.find(w => w._id === currentWorkspaceId)
+
   return (
     <div className="p-24px">
       <div className="flex items-center justify-between mb-24px">
         <div>
-          <h1 className="text-brutal-2xl font-bold mb-16px uppercase">TASKS</h1>
+          <div className="flex items-center gap-16px mb-8px">
+            <h1 className="text-brutal-2xl font-bold uppercase">TASKS</h1>
+            {!hasWorkspaceContext && (
+              <div className="text-brutal-xs text-cathode-white/60">
+                IN: {currentWorkspace?.name}
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-16px">
+            {/* Show workspace selector for global routes */}
+            {!hasWorkspaceContext && (
+              <WorkspaceSelector size="sm" showLabel={false} />
+            )}
+            
             <select
               className="px-16px py-8px bg-carbon-plate border-2 border-basalt-border 
                        font-mono text-brutal-sm uppercase

@@ -14,6 +14,8 @@ import MeetingsPage from './pages/MeetingsPage'
 import SprintPage from './pages/SprintPage'
 import WorkspaceSettingsPage from './pages/WorkspaceSettingsPage'
 import SettingsPage from './pages/SettingsPage'
+import TeamPage from './pages/TeamPage'
+import JoinProjectPage from './pages/JoinProjectPage'
 import { useEnsureUser } from './hooks/useEnsureUser'
 
 function AppContent() {
@@ -56,6 +58,10 @@ function AppContent() {
           </div>
         } />
 
+        {/* Join Project Routes - accessible by anyone */}
+        <Route path="/join-project" element={<JoinProjectPage />} />
+        <Route path="/join-project/:inviteCode" element={<JoinProjectPage />} />
+
         <Route path="/" element={
           <>
             <SignedIn>
@@ -72,6 +78,7 @@ function AppContent() {
           <Route path="workspace/:workspaceId/project/:projectId" element={<ProjectManagementPage />} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="tasks" element={<TasksPage />} />
+          <Route path="team" element={<TeamPage />} />
           <Route path="meetings" element={<MeetingsPage />} />
           <Route path="sprints" element={<SprintPage />} />
           <Route path="settings" element={<SettingsPage />} />

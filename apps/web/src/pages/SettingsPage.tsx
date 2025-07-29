@@ -103,7 +103,6 @@ export default function SettingsPage() {
         
         await updatePreferences({ preferences: cleanedData })
       } catch (error: any) {
-        console.error('Failed to save preferences:', error)
         throw error
       }
     }
