@@ -1,6 +1,7 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission, requireProjectPermission } from "../auth/permissions";
+import { internal } from "../_generated/api";
 
 export const createProject = mutation({
   args: {
@@ -81,14 +82,20 @@ export const createProject = mutation({
       status: "active",
     });
 
-    await ctx.db.insert("activities", {
+    // Log project creation activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "project_created",
+      projectId: projectId,
       workspaceId: args.workspaceId,
-      userId: user._id,
-      entityType: "project",
-      entityId: projectId,
-      action: "project.created",
-      metadata: { name: args.name, key: args.key },
-      createdAt: now,
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "project",
+      targetId: projectId,
+      targetName: args.name,
+      description: `created project "${args.name}"`,
+      metadata: {
+        extra: { name: args.name, key: args.key }
+      }
     });
 
     return projectId;
@@ -142,14 +149,20 @@ export const updateProject = mutation({
 
     await ctx.db.patch(args.projectId, updates);
 
-    await ctx.db.insert("activities", {
+    // Log project update activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "project_updated",
+      projectId: args.projectId,
       workspaceId: project.workspaceId,
-      userId: user._id,
-      entityType: "project",
-      entityId: args.projectId,
-      action: "project.updated",
-      metadata: updates,
-      createdAt: Date.now(),
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "project",
+      targetId: args.projectId,
+      targetName: project.name,
+      description: `updated project "${project.name}"`,
+      metadata: {
+        extra: updates
+      }
     });
 
     return args.projectId;
@@ -187,14 +200,20 @@ export const deleteProject = mutation({
       updatedAt: Date.now(),
     });
 
-    await ctx.db.insert("activities", {
+    // Log project archived activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "project_updated",
+      projectId: args.projectId,
       workspaceId: project.workspaceId,
-      userId: user._id,
-      entityType: "project",
-      entityId: args.projectId,
-      action: "project.archived",
-      metadata: { name: project.name },
-      createdAt: Date.now(),
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "project",
+      targetId: args.projectId,
+      targetName: project.name,
+      description: `archived project "${project.name}"`,
+      metadata: {
+        extra: { name: project.name, action: "archived" }
+      }
     });
 
     return args.projectId;
@@ -252,14 +271,20 @@ export const connectRepository = mutation({
       updatedAt: Date.now(),
     });
 
-    await ctx.db.insert("activities", {
+    // Log repository connection activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "project_updated",
+      projectId: args.projectId,
       workspaceId: project.workspaceId,
-      userId: user._id,
-      entityType: "project",
-      entityId: args.projectId,
-      action: "repository.connected",
-      metadata: { repositoryUrl: args.repositoryUrl, provider: args.provider },
-      createdAt: Date.now(),
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "project",
+      targetId: args.projectId,
+      targetName: project.name,
+      description: `connected repository to "${project.name}"`,
+      metadata: {
+        extra: { repositoryUrl: args.repositoryUrl, provider: args.provider }
+      }
     });
 
     return args.projectId;
@@ -449,10 +474,17 @@ export const joinProjectByCode = mutation({
     });
 
     // Log team member joined activity
-    await ctx.runMutation("activities/mutations:logMemberJoined", {
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "member_joined",
       projectId: project._id,
-      userId: user._id,
-      userName: user.name || user.email
+      workspaceId: project.workspaceId,
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "user",
+      targetId: user._id,
+      targetName: user.name || user.email,
+      description: `${user.name || user.email} joined the project`,
+      metadata: undefined
     });
 
     return {
@@ -528,19 +560,24 @@ export const addProjectMember = mutation({
     // Get project for activity log
     const project = await ctx.db.get(args.projectId);
 
-    // Create activity log
-    await ctx.db.insert("activities", {
+    // Log member added activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "member_joined",
+      projectId: args.projectId,
       workspaceId: project!.workspaceId,
-      userId: currentUser._id,
-      entityType: "project",
-      entityId: args.projectId,
-      action: "project.member.added",
-      metadata: { 
-        targetUserId: args.userId,
-        targetUserName: targetUser.name,
-        role: args.role
-      },
-      createdAt: now,
+      actorId: currentUser._id,
+      actorName: currentUser.name || currentUser.email,
+      targetType: "user",
+      targetId: args.userId,
+      targetName: targetUser.name || targetUser.email,
+      description: `added ${targetUser.name || targetUser.email} to the project`,
+      metadata: {
+        extra: { 
+          targetUserId: args.userId,
+          targetUserName: targetUser.name,
+          role: args.role
+        }
+      }
     });
 
     return { success: true };
@@ -597,19 +634,24 @@ export const removeProjectMember = mutation({
     const project = await ctx.db.get(args.projectId);
     const targetUser = await ctx.db.get(args.userId);
 
-    // Create activity log
-    await ctx.db.insert("activities", {
+    // Log member removed activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "member_removed",
+      projectId: args.projectId,
       workspaceId: project!.workspaceId,
-      userId: currentUser._id,
-      entityType: "project",
-      entityId: args.projectId,
-      action: "project.member.removed",
-      metadata: { 
-        targetUserId: args.userId,
-        targetUserName: targetUser?.name,
-        previousRole: member.role
-      },
-      createdAt: Date.now(),
+      actorId: currentUser._id,
+      actorName: currentUser.name || currentUser.email,
+      targetType: "user",
+      targetId: args.userId,
+      targetName: targetUser?.name || targetUser?.email || "Unknown User",
+      description: `removed ${targetUser?.name || targetUser?.email || "a user"} from the project`,
+      metadata: {
+        extra: { 
+          targetUserId: args.userId,
+          targetUserName: targetUser?.name,
+          previousRole: member.role
+        }
+      }
     });
 
     return { success: true };
@@ -662,20 +704,25 @@ export const updateProjectMemberRole = mutation({
     const project = await ctx.db.get(args.projectId);
     const targetUser = await ctx.db.get(args.userId);
 
-    // Create activity log
-    await ctx.db.insert("activities", {
+    // Log member role change activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "member_role_changed",
+      projectId: args.projectId,
       workspaceId: project!.workspaceId,
-      userId: currentUser._id,
-      entityType: "project",
-      entityId: args.projectId,
-      action: "project.member.role_updated",
-      metadata: { 
-        targetUserId: args.userId,
-        targetUserName: targetUser?.name,
-        previousRole: previousRole,
-        newRole: args.role
-      },
-      createdAt: Date.now(),
+      actorId: currentUser._id,
+      actorName: currentUser.name || currentUser.email,
+      targetType: "user",
+      targetId: args.userId,
+      targetName: targetUser?.name || targetUser?.email || "Unknown User",
+      description: `changed ${targetUser?.name || targetUser?.email || "a user"}'s role from ${previousRole} to ${args.role}`,
+      metadata: {
+        oldValue: previousRole,
+        newValue: args.role,
+        extra: { 
+          targetUserId: args.userId,
+          targetUserName: targetUser?.name
+        }
+      }
     });
 
     return { success: true };

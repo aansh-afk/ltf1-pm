@@ -221,11 +221,15 @@ export const getWorkspaceStats = query({
     const now = Date.now();
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
 
-    const recentActivities = await ctx.db
+    const allActivities = await ctx.db
       .query("activities")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-      .filter((q) => q.gte(q.field("createdAt"), thirtyDaysAgo))
+      .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
       .collect();
+      
+    const recentActivities = allActivities.filter(a => {
+      const timestamp = (a as any).timestamp;
+      return timestamp && timestamp >= thirtyDaysAgo;
+    });
 
     return {
       totalProjects: projects.length,

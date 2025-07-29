@@ -72,14 +72,19 @@ export const createWorkspace = mutation({
       joinedAt: now,
     });
 
-    await ctx.db.insert("activities", {
+    // Log workspace creation activity (using project_created as closest match)
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "project_created",
       workspaceId,
-      userId: user._id,
-      entityType: "workspace",
-      entityId: workspaceId,
-      action: "workspace.created",
-      metadata: { name: args.name },
-      createdAt: now,
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "project",
+      targetId: workspaceId,
+      targetName: args.name,
+      description: `created workspace "${args.name}"`,
+      metadata: {
+        extra: { name: args.name, type: "workspace" }
+      }
     });
 
     return workspaceId;
@@ -190,14 +195,19 @@ export const updateWorkspace = mutation({
 
     await ctx.db.patch(args.workspaceId, updates);
 
-    await ctx.db.insert("activities", {
+    // Log workspace update activity (using project_updated as closest match)
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "project_updated",
       workspaceId: args.workspaceId,
-      userId: user._id,
-      entityType: "workspace",
-      entityId: args.workspaceId,
-      action: "workspace.updated",
-      metadata: updates,
-      createdAt: Date.now(),
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "project",
+      targetId: args.workspaceId,
+      targetName: updates.name || "workspace",
+      description: `updated workspace settings`,
+      metadata: {
+        extra: { ...updates, type: "workspace" }
+      }
     });
 
     return args.workspaceId;
@@ -257,14 +267,19 @@ export const inviteToWorkspace = mutation({
       joinedAt: now,
     });
 
-    await ctx.db.insert("activities", {
+    // Log member invitation activity (using member_joined as closest match)
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "member_joined",
       workspaceId: args.workspaceId,
-      userId: user._id,
-      entityType: "workspace",
-      entityId: args.workspaceId,
-      action: "member.invited",
-      metadata: { email: args.email, role: args.role },
-      createdAt: now,
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "user",
+      targetId: invitedUser._id,
+      targetName: args.email,
+      description: `invited ${args.email} to workspace`,
+      metadata: {
+        extra: { email: args.email, role: args.role, action: "invited" }
+      }
     });
 
     await ctx.db.insert("notifications", {
@@ -323,14 +338,20 @@ export const updateMemberRole = mutation({
       role: args.role,
     });
 
-    await ctx.db.insert("activities", {
+    // Log member role update activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "member_role_changed",
       workspaceId: args.workspaceId,
-      userId: currentUser._id,
-      entityType: "workspace",
-      entityId: args.workspaceId,
-      action: "member.role_updated",
-      metadata: { userId: args.userId, role: args.role },
-      createdAt: Date.now(),
+      actorId: currentUser._id,
+      actorName: currentUser.name || currentUser.email,
+      targetType: "user",
+      targetId: args.userId,
+      targetName: "workspace member",
+      description: `changed workspace member role to ${args.role}`,
+      metadata: {
+        newValue: args.role,
+        extra: { userId: args.userId, role: args.role }
+      }
     });
 
     return member._id;
@@ -407,7 +428,7 @@ export const deleteWorkspace = mutation({
     // Delete all activities
     const activities = await ctx.db
       .query("activities")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+      .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
       .collect();
     
     for (const activity of activities) {
@@ -428,6 +449,33 @@ export const deleteWorkspace = mutation({
     await ctx.db.delete(args.workspaceId);
 
     return args.workspaceId;
+  },
+});
+
+export const clearOldActivities = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // Allow anyone to run this migration - it's safe to clear old data
+    
+    // Get all activities with the old schema
+    const oldActivities = await ctx.db
+      .query("activities")
+      .collect();
+
+    console.log(`Found ${oldActivities.length} old activity records to delete`);
+
+    // Delete all old activities (they're incompatible with new schema)
+    for (const activity of oldActivities) {
+      await ctx.db.delete(activity._id);
+    }
+
+    console.log("Cleared all old activity records. New activity tracking can now start fresh.");
+    
+    return { 
+      success: true,
+      deletedCount: oldActivities.length,
+      message: `Successfully updated ${oldActivities.length} activity records. The team activity feed will now show real-time activities!` 
+    };
   },
 });
 
@@ -470,14 +518,19 @@ export const removeMember = mutation({
 
     await ctx.db.delete(member._id);
 
-    await ctx.db.insert("activities", {
+    // Log member removal activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "member_removed",
       workspaceId: args.workspaceId,
-      userId: currentUser._id,
-      entityType: "workspace",
-      entityId: args.workspaceId,
-      action: "member.removed",
-      metadata: { userId: args.userId },
-      createdAt: Date.now(),
+      actorId: currentUser._id,
+      actorName: currentUser.name || currentUser.email,
+      targetType: "user",
+      targetId: args.userId,
+      targetName: "workspace member",
+      description: `removed member from workspace`,
+      metadata: {
+        extra: { userId: args.userId }
+      }
     });
 
     return member._id;

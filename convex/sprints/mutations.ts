@@ -1,6 +1,7 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../auth/permissions";
+import { internal } from "../_generated/api";
 
 export const createSprint = mutation({
   args: {
@@ -52,14 +53,20 @@ export const createSprint = mutation({
       updatedAt: now,
     });
 
-    await ctx.db.insert("activities", {
+    // Log sprint creation activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "sprint_created",
+      projectId: args.projectId,
       workspaceId: project.workspaceId,
-      userId: user._id,
-      entityType: "project",
-      entityId: args.projectId,
-      action: "sprint.created",
-      metadata: { name: args.name },
-      createdAt: now,
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "sprint",
+      targetId: sprintId,
+      targetName: args.name,
+      description: `created sprint "${args.name}"`,
+      metadata: {
+        extra: { name: args.name }
+      }
     });
 
     return sprintId;
@@ -134,14 +141,20 @@ export const updateSprint = mutation({
 
     await ctx.db.patch(args.sprintId, updates);
 
-    await ctx.db.insert("activities", {
+    // Log sprint update activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "sprint_created", // Using sprint_created as closest match, could add sprint_updated later
+      projectId: sprint.projectId,
       workspaceId: project.workspaceId,
-      userId: user._id,
-      entityType: "project",
-      entityId: sprint.projectId,
-      action: "sprint.updated",
-      metadata: { sprintId: args.sprintId, updates },
-      createdAt: Date.now(),
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "sprint",
+      targetId: args.sprintId,
+      targetName: sprint.name,
+      description: `updated sprint "${sprint.name}"`,
+      metadata: {
+        extra: { sprintId: args.sprintId, updates }
+      }
     });
 
     return args.sprintId;
@@ -191,14 +204,20 @@ export const deleteSprint = mutation({
 
     await ctx.db.delete(args.sprintId);
 
-    await ctx.db.insert("activities", {
+    // Log sprint deletion activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "sprint_completed", // Using sprint_completed as closest match
+      projectId: sprint.projectId,
       workspaceId: project.workspaceId,
-      userId: user._id,
-      entityType: "project",
-      entityId: sprint.projectId,
-      action: "sprint.deleted",
-      metadata: { name: sprint.name },
-      createdAt: Date.now(),
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "sprint",
+      targetId: args.sprintId,
+      targetName: sprint.name,
+      description: `deleted sprint "${sprint.name}"`,
+      metadata: {
+        extra: { name: sprint.name, action: "deleted" }
+      }
     });
 
     return args.sprintId;
@@ -247,14 +266,20 @@ export const addTasksToSprint = mutation({
       }
     }
 
-    await ctx.db.insert("activities", {
+    // Log tasks added to sprint activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "sprint_created", // Using sprint_created as closest match
+      projectId: sprint.projectId,
       workspaceId: project.workspaceId,
-      userId: user._id,
-      entityType: "project",
-      entityId: sprint.projectId,
-      action: "sprint.tasks_added",
-      metadata: { sprintId: args.sprintId, taskCount: args.taskIds.length },
-      createdAt: Date.now(),
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "sprint",
+      targetId: args.sprintId,
+      targetName: sprint.name,
+      description: `added ${args.taskIds.length} tasks to sprint "${sprint.name}"`,
+      metadata: {
+        extra: { sprintId: args.sprintId, taskCount: args.taskIds.length }
+      }
     });
 
     return args.taskIds.length;
@@ -299,14 +324,20 @@ export const removeTaskFromSprint = mutation({
     });
 
     if (sprintId) {
-      await ctx.db.insert("activities", {
+      // Log task removed from sprint activity
+      await ctx.runMutation(internal.activities.mutations.logActivity, {
+        type: "task_status_changed",
+        projectId: task.projectId,
         workspaceId: project.workspaceId,
-        userId: user._id,
-        entityType: "task",
-        entityId: args.taskId,
-        action: "task.removed_from_sprint",
-        metadata: { sprintId },
-        createdAt: Date.now(),
+        actorId: user._id,
+        actorName: user.name || user.email,
+        targetType: "task",
+        targetId: args.taskId,
+        targetName: task.title,
+        description: `removed task "${task.title}" from sprint`,
+        metadata: {
+          extra: { sprintId }
+        }
       });
     }
 

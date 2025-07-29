@@ -17,6 +17,7 @@ import SettingsPage from './pages/SettingsPage'
 import TeamPage from './pages/TeamPage'
 import JoinProjectPage from './pages/JoinProjectPage'
 import { useEnsureUser } from './hooks/useEnsureUser'
+import { DataMigrationBanner } from './components/admin/DataMigrationBanner'
 
 function AppContent() {
   // Ensure user is synced with Convex
@@ -34,6 +35,9 @@ function AppContent() {
   
   return (
     <div className="min-h-screen bg-event-horizon" data-theme="brutalist">
+      <SignedIn>
+        <DataMigrationBanner />
+      </SignedIn>
       <Routes>
         <Route path="/" element={
           <>

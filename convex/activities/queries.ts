@@ -1,5 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
+import { Id } from "../_generated/dataModel";
 
 // Get activities for a specific project
 export const getProjectActivities = query({
@@ -34,21 +35,21 @@ export const getProjectActivities = query({
 
     const activities = await ctx.db
       .query("activities")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .filter((q) => q.eq(q.field("projectId"), args.projectId))
       .order("desc")
       .take(args.limit || 50);
 
     // Enrich activities with actor user data
     const enrichedActivities = await Promise.all(
       activities.map(async (activity) => {
-        const actor = await ctx.db.get(activity.actorId);
+        const actor = activity.actorId ? await ctx.db.get(activity.actorId) : null;
         return {
           ...activity,
           actor: actor ? {
             _id: actor._id,
-            name: actor.name,
-            email: actor.email,
-            avatarUrl: actor.avatarUrl
+            name: (actor as any).name || 'Unknown',
+            email: (actor as any).email || 'unknown@example.com',
+            avatarUrl: (actor as any).avatarUrl || null
           } : null
         };
       })
@@ -62,7 +63,9 @@ export const getProjectActivities = query({
 export const getWorkspaceActivities = query({
   args: {
     workspaceId: v.id("workspaces"),
-    limit: v.optional(v.number())
+    limit: v.optional(v.number()),
+    timeRangeHours: v.optional(v.number()),
+    types: v.optional(v.array(v.string()))
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -79,7 +82,7 @@ export const getWorkspaceActivities = query({
       throw new Error("User not found");
     }
 
-    // Check if user has access to the workspace
+    // Check if user is a member of the workspace
     const workspaceMember = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_workspace_user", (q) => q.eq("workspaceId", args.workspaceId).eq("userId", user._id))
@@ -89,30 +92,52 @@ export const getWorkspaceActivities = query({
       throw new Error("Access denied to workspace");
     }
 
-    const activities = await ctx.db
+    let activities = await ctx.db
       .query("activities")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+      .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
       .order("desc")
       .take(args.limit || 50);
 
+    // Filter activities to only include those with proper structure
+    activities = activities.filter(activity => 
+      activity && typeof activity === 'object' && (activity as any).type
+    );
+
+    // Apply time range filter if specified
+    if (args.timeRangeHours) {
+      const now = Date.now();
+      const cutoffTime = now - (args.timeRangeHours * 60 * 60 * 1000);
+      activities = activities.filter(activity => {
+        const timestamp = (activity as any).timestamp;
+        return timestamp && timestamp >= cutoffTime;
+      });
+    }
+
+    // Filter by activity types if specified
+    if (args.types && args.types.length > 0) {
+      activities = activities.filter(activity => 
+        args.types!.includes((activity as any).type)
+      );
+    }
+
     // Enrich activities with actor user data and project names
     const enrichedActivities = await Promise.all(
       activities.map(async (activity) => {
-        const actor = await ctx.db.get(activity.actorId);
+        const actor = activity.actorId ? await ctx.db.get(activity.actorId) : null;
         const project = activity.projectId ? await ctx.db.get(activity.projectId) : null;
         
         return {
           ...activity,
           actor: actor ? {
             _id: actor._id,
-            name: actor.name,
-            email: actor.email,
-            avatarUrl: actor.avatarUrl
+            name: (actor as any).name || 'Unknown',
+            email: (actor as any).email || 'unknown@example.com',
+            avatarUrl: (actor as any).avatarUrl || null
           } : null,
           project: project ? {
             _id: project._id,
-            name: project.name,
-            key: project.key
+            name: (project as any).name || 'Unknown Project',
+            key: (project as any).key || 'UNK'
           } : null
         };
       })
@@ -122,71 +147,79 @@ export const getWorkspaceActivities = query({
   }
 });
 
-// Get activities by a specific user
-export const getUserActivities = query({
+// Get recent team activity for a project (main function for TeamActivityFeed)
+export const getRecentTeamActivity = query({
   args: {
-    userId: v.id("users"),
-    workspaceId: v.optional(v.id("workspaces")),
-    limit: v.optional(v.number())
+    projectId: v.id("projects"),
+    types: v.optional(v.array(v.string())),
+    limit: v.optional(v.number()),
+    timeRangeHours: v.optional(v.number())
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Unauthorized");
+      return [];
     }
 
-    const currentUser = await ctx.db
+    const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
       .first();
 
-    if (!currentUser) {
-      throw new Error("User not found");
+    if (!user) {
+      return [];
     }
 
-    let activitiesQuery = ctx.db
+    // Check project access
+    const projectMember = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_project_user", (q) => q.eq("projectId", args.projectId).eq("userId", user._id))
+      .first(); 
+
+    if (!projectMember) {
+      return [];
+    }
+
+    // Get activities for the project
+    let activities = await ctx.db
       .query("activities")
-      .withIndex("by_actor", (q) => q.eq("actorId", args.userId))
-      .order("desc");
+      .filter((q) => q.eq(q.field("projectId"), args.projectId))
+      .order("desc")
+      .take(args.limit || 100);
 
-    // If workspace filter is provided, filter by workspace
-    let activities = await activitiesQuery.take(args.limit || 50);
+    // Filter activities to only include those with proper structure
+    activities = activities.filter(activity => 
+      activity && typeof activity === 'object' && (activity as any).type
+    );
+
+    // Apply time range filter if specified
+    if (args.timeRangeHours) {
+      const now = Date.now();
+      const cutoffTime = now - (args.timeRangeHours * 60 * 60 * 1000);
+      activities = activities.filter(activity => {
+        const timestamp = (activity as any).timestamp;
+        return timestamp && timestamp >= cutoffTime;
+      });
+    }
     
-    if (args.workspaceId) {
-      activities = activities.filter(activity => activity.workspaceId === args.workspaceId);
+    // Filter by activity types if specified
+    if (args.types && args.types.length > 0) {
+      activities = activities.filter(activity => 
+        args.types!.includes((activity as any).type)
+      );
     }
 
-    // Filter activities to only include those from workspaces/projects the current user has access to
-    const accessibleActivities = [];
-    for (const activity of activities) {
-      const workspaceMember = await ctx.db
-        .query("workspaceMembers")
-        .withIndex("by_workspace_user", (q) => q.eq("workspaceId", activity.workspaceId).eq("userId", currentUser._id))
-        .first();
-
-      if (workspaceMember) {
-        accessibleActivities.push(activity);
-      }
-    }
-
-    // Enrich activities with actor user data and project names
+    // Enrich with user data
     const enrichedActivities = await Promise.all(
-      accessibleActivities.map(async (activity) => {
-        const actor = await ctx.db.get(activity.actorId);
-        const project = activity.projectId ? await ctx.db.get(activity.projectId) : null;
-        
+      activities.map(async (activity) => {
+        const actor = activity.actorId ? await ctx.db.get(activity.actorId) : null;
         return {
           ...activity,
           actor: actor ? {
             _id: actor._id,
-            name: actor.name,
-            email: actor.email,
-            avatarUrl: actor.avatarUrl
-          } : null,
-          project: project ? {
-            _id: project._id,
-            name: project.name,
-            key: project.key
+            name: (actor as any).name || 'Unknown',
+            email: (actor as any).email || 'unknown@example.com',
+            avatarUrl: (actor as any).avatarUrl || null
           } : null
         };
       })
@@ -196,12 +229,12 @@ export const getUserActivities = query({
   }
 });
 
-// Get activities filtered by type
-export const getActivitiesByType = query({
+// Get activity statistics for analytics
+export const getActivityStats = query({
   args: {
     workspaceId: v.id("workspaces"),
-    types: v.array(v.string()),
-    limit: v.optional(v.number())
+    projectId: v.optional(v.id("projects")),
+    timeRange: v.optional(v.union(v.literal("24h"), v.literal("7d"), v.literal("30d")))
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -218,302 +251,134 @@ export const getActivitiesByType = query({
       throw new Error("User not found");
     }
 
-    // Check if user has access to the workspace
+    // Check workspace access
     const workspaceMember = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_workspace_user", (q) => q.eq("workspaceId", args.workspaceId).eq("userId", user._id))
       .first();
 
     if (!workspaceMember) {
-      throw new Error("Access denied to workspace");
+      throw new Error("Access denied");
     }
 
-    // Get all activities for the workspace
-    const allActivities = await ctx.db
-      .query("activities")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-      .order("desc")
-      .take(args.limit || 100);
-
-    // Filter by activity types
-    const filteredActivities = allActivities.filter(activity => 
-      args.types.includes(activity.type)
-    );
-
-    // Enrich activities with actor user data and project names
-    const enrichedActivities = await Promise.all(
-      filteredActivities.slice(0, args.limit || 50).map(async (activity) => {
-        const actor = await ctx.db.get(activity.actorId);
-        const project = activity.projectId ? await ctx.db.get(activity.projectId) : null;
-        
-        return {
-          ...activity,
-          actor: actor ? {
-            _id: actor._id,
-            name: actor.name,
-            email: actor.email,
-            avatarUrl: actor.avatarUrl
-          } : null,
-          project: project ? {
-            _id: project._id,
-            name: project.name,
-            key: project.key
-          } : null
-        };
-      })
-    );
-
-    return enrichedActivities;
-  }
-});
-
-// Get recent team activity (last 24 hours)
-export const getRecentTeamActivity = query({
-  args: {
-    projectId: v.id("projects"),
-    hours: v.optional(v.number()) // Default to 24 hours
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // Check if user has access to the project
-    const projectMember = await ctx.db
-      .query("projectMembers")
-      .withIndex("by_project_user", (q) => q.eq("projectId", args.projectId).eq("userId", user._id))
-      .first();
-
-    if (!projectMember) {
-      throw new Error("Access denied to project");
-    }
-
-    const hoursBack = args.hours || 24;
-    const cutoffTime = Date.now() - (hoursBack * 60 * 60 * 1000);
-
-    const activities = await ctx.db
-      .query("activities")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .filter((q) => q.gte(q.field("timestamp"), cutoffTime))
-      .order("desc")
-      .take(100);
-
-    // Enrich activities with actor user data
-    const enrichedActivities = await Promise.all(
-      activities.map(async (activity) => {
-        const actor = await ctx.db.get(activity.actorId);
-        return {
-          ...activity,
-          actor: actor ? {
-            _id: actor._id,
-            name: actor.name,
-            email: actor.email,
-            avatarUrl: actor.avatarUrl
-          } : null
-        };
-      })
-    );
-
-    return enrichedActivities;
-  }
-});
-
-// Get activity statistics for a project
-export const getProjectActivityStats = query({
-  args: {
-    projectId: v.id("projects"),
-    days: v.optional(v.number()) // Default to 7 days
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // Check if user has access to the project
-    const projectMember = await ctx.db
-      .query("projectMembers")
-      .withIndex("by_project_user", (q) => q.eq("projectId", args.projectId).eq("userId", user._id))
-      .first();
-
-    if (!projectMember) {
-      throw new Error("Access denied to project");
-    }
-
-    const daysBack = args.days || 7;
-    const cutoffTime = Date.now() - (daysBack * 24 * 60 * 60 * 1000);
-
-    const activities = await ctx.db
-      .query("activities")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .filter((q) => q.gte(q.field("timestamp"), cutoffTime))
-      .collect();
-
-    // Count activities by type
-    const activityCounts: Record<string, number> = {};
-    activities.forEach(activity => {
-      activityCounts[activity.type] = (activityCounts[activity.type] || 0) + 1;
-    });
-
-    // Count activities by user
-    const userActivityCounts: Record<string, number> = {};
-    activities.forEach(activity => {
-      userActivityCounts[activity.actorId] = (userActivityCounts[activity.actorId] || 0) + 1;
-    });
-
-    // Get user names for the top contributors
-    const topContributors = await Promise.all(
-      Object.entries(userActivityCounts)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 10)
-        .map(async ([userId, count]) => {
-          const user = await ctx.db.get(userId as any);
-          return {
-            userId,
-            name: user?.name || user?.email || 'Unknown User',
-            avatarUrl: user?.avatarUrl,
-            activityCount: count
-          };
-        })
-    );
-
-    return {
-      totalActivities: activities.length,
-      activityCounts,
-      topContributors,
-      timeRange: {
-        from: cutoffTime,
-        to: Date.now(),
-        days: daysBack
-      }
+    // Calculate time range
+    const now = Date.now();
+    const timeRanges = {
+      "24h": 24 * 60 * 60 * 1000,
+      "7d": 7 * 24 * 60 * 60 * 1000,
+      "30d": 30 * 24 * 60 * 60 * 1000
     };
-  }
-});
+    const range = timeRanges[args.timeRange || "7d"];
+    const startTime = now - range;
 
-// Get activity feed with pagination
-export const getActivityFeed = query({
-  args: {
-    projectId: v.optional(v.id("projects")),
-    workspaceId: v.optional(v.id("workspaces")),
-    cursor: v.optional(v.number()), // timestamp cursor for pagination
-    limit: v.optional(v.number())
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    const limit = args.limit || 20;
-    let activities = [];
+    // Get activities
+    let query = ctx.db
+      .query("activities")
+      .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId));
 
     if (args.projectId) {
-      // Check project access
-      const projectMember = await ctx.db
-        .query("projectMembers")
-        .withIndex("by_project_user", (q) => q.eq("projectId", args.projectId).eq("userId", user._id))
-        .first();
-
-      if (!projectMember) {
-        throw new Error("Access denied to project");
-      }
-
-      let query = ctx.db
-        .query("activities")
-        .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-        .order("desc");
-
-      if (args.cursor) {
-        query = query.filter((q) => q.lt(q.field("timestamp"), args.cursor));
-      }
-
-      activities = await query.take(limit + 1); // +1 to check if there are more
-
-    } else if (args.workspaceId) {
-      // Check workspace access
-      const workspaceMember = await ctx.db
-        .query("workspaceMembers")
-        .withIndex("by_workspace_user", (q) => q.eq("workspaceId", args.workspaceId).eq("userId", user._id))
-        .first();
-
-      if (!workspaceMember) {
-        throw new Error("Access denied to workspace");
-      }
-
-      let query = ctx.db
-        .query("activities")
-        .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-        .order("desc");
-
-      if (args.cursor) {
-        query = query.filter((q) => q.lt(q.field("timestamp"), args.cursor));
-      }
-
-      activities = await query.take(limit + 1); // +1 to check if there are more
-    } else {
-      throw new Error("Either projectId or workspaceId must be provided");
+      query = query.filter((q) => q.eq(q.field("projectId"), args.projectId));
     }
 
-    const hasMore = activities.length > limit;
-    if (hasMore) {
-      activities.pop(); // Remove the extra item used for hasMore check
+    const activities = await query.collect();
+
+    // Filter by time and proper structure
+    const filteredActivities = activities.filter(activity => {
+      if (!activity || typeof activity !== 'object') return false;
+      const timestamp = (activity as any).timestamp;
+      return timestamp && timestamp >= startTime;
+    });
+
+    // Calculate statistics
+    const activityCounts: Record<string, number> = {};
+    const userActivityCounts: Record<string, number> = {};
+    
+    for (const activity of filteredActivities) {
+      const activityType = (activity as any).type;
+      if (activityType) {
+        activityCounts[activityType] = (activityCounts[activityType] || 0) + 1;
+      }
+      if (activity.actorId) {
+        userActivityCounts[activity.actorId] = (userActivityCounts[activity.actorId] || 0) + 1;
+      }
     }
 
-    // Enrich activities with actor user data and project names
+    return {
+      totalActivities: filteredActivities.length,
+      activityCounts,
+      userActivityCounts,
+      timeRange: args.timeRange || "7d"
+    };
+  }
+});
+
+// Get team activity dashboard data
+export const getTeamActivityDashboard = query({
+  args: {
+    workspaceId: v.id("workspaces"),
+    projectId: v.optional(v.id("projects"))
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthorized");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Check workspace access
+    const workspaceMember = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_workspace_user", (q) => q.eq("workspaceId", args.workspaceId).eq("userId", user._id))
+      .first();
+
+    if (!workspaceMember) {
+      throw new Error("Access denied");
+    }
+
+    // Get recent activities
+    let query = ctx.db
+      .query("activities")
+      .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
+      .order("desc")
+      .take(20);
+
+    const activities = await query;
+
+    // Filter and enrich activities
+    const validActivities = activities.filter(activity => 
+      activity && typeof activity === 'object' && (activity as any).type
+    );
+
     const enrichedActivities = await Promise.all(
-      activities.map(async (activity) => {
-        const actor = await ctx.db.get(activity.actorId);
+      validActivities.map(async (activity) => {
+        const actor = activity.actorId ? await ctx.db.get(activity.actorId) : null;
         const project = activity.projectId ? await ctx.db.get(activity.projectId) : null;
         
         return {
           ...activity,
           actor: actor ? {
             _id: actor._id,
-            name: actor.name,
-            email: actor.email,
-            avatarUrl: actor.avatarUrl
+            name: (actor as any).name || 'Unknown',
+            email: (actor as any).email || 'unknown@example.com',
+            avatarUrl: (actor as any).avatarUrl || null
           } : null,
           project: project ? {
             _id: project._id,
-            name: project.name,
-            key: project.key
+            name: (project as any).name || 'Unknown Project',
+            key: (project as any).key || 'UNK'
           } : null
         };
       })
     );
 
-    return {
-      activities: enrichedActivities,
-      hasMore,
-      nextCursor: activities.length > 0 ? activities[activities.length - 1].timestamp : null
-    };
+    return enrichedActivities;
   }
 });

@@ -1,6 +1,7 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { canAccessTask } from "../auth/permissions";
+import { internal } from "../_generated/api";
 
 export const createComment = mutation({
   args: {
@@ -46,14 +47,20 @@ export const createComment = mutation({
       createdAt: now,
     });
 
-    await ctx.db.insert("activities", {
+    // Log comment added activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "task_commented",
+      projectId: task.projectId,
       workspaceId: project.workspaceId,
-      userId: user._id,
-      entityType: "task",
-      entityId: args.taskId,
-      action: "comment.added",
-      metadata: { content: args.content },
-      createdAt: now,
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "task",
+      targetId: args.taskId,
+      targetName: task.title,
+      description: `commented on "${task.title}"`,
+      metadata: {
+        extra: { content: args.content }
+      }
     });
 
     // Notify all assignees about the comment
@@ -156,14 +163,18 @@ export const deleteComment = mutation({
 
     await ctx.db.delete(args.commentId);
 
-    await ctx.db.insert("activities", {
+    // Log comment deleted activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "task_commented",
+      projectId: task.projectId,
       workspaceId: project.workspaceId,
-      userId: user._id,
-      entityType: "task",
-      entityId: comment.taskId,
-      action: "comment.deleted",
-      metadata: {},
-      createdAt: Date.now(),
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "task",
+      targetId: comment.taskId,
+      targetName: task.title,
+      description: `deleted a comment on "${task.title}"`,
+      metadata: undefined
     });
 
     return args.commentId;

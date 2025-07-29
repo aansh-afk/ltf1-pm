@@ -189,14 +189,13 @@ export const getTask = query({
 
     const activities = await ctx.db
       .query("activities")
-      .withIndex("by_entity", (q) => 
-        q.eq("entityType", "task").eq("entityId", task._id)
-      )
+      .filter((q) => q.eq(q.field("targetId"), task._id))
+      .order("desc")
       .collect();
 
     const activitiesWithUsers = await Promise.all(
       activities.map(async (activity) => {
-        const user = await ctx.db.get(activity.userId);
+        const user = activity.actorId ? await ctx.db.get(activity.actorId) : null;
         return { ...activity, user };
       })
     );
