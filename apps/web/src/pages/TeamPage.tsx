@@ -1,14 +1,21 @@
 import { useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
-import { HiOutlineSearch, HiOutlineUser, HiOutlineFilter } from 'react-icons/hi'
+import { HiOutlineSearch, HiOutlineUser, HiOutlineFilter, HiOutlineChartBar } from 'react-icons/hi'
 import DeveloperProfileCard from '@/components/features/developer/DeveloperProfileCard'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
+import { ExpertiseSearchModal } from '@/components/features/profile/ExpertiseSearchModal'
+import { TeamExpertiseMatrix } from '@/components/features/profile/TeamExpertiseMatrix'
+import { useProfileCompletion } from '@/hooks/useProfileCompletion'
 import clsx from 'clsx'
 
 export default function TeamPage() {
+  // Enforce profile completion for team features
+  useProfileCompletion({ enforceCompletion: true })
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
+  const [showExpertiseSearch, setShowExpertiseSearch] = useState(false)
+  const [showExpertiseMatrix, setShowExpertiseMatrix] = useState(false)
   
   // Get current user's workspaces
   const workspaces = useQuery(api.workspaces.queries.getUserWorkspaces)
@@ -129,9 +136,20 @@ export default function TeamPage() {
           <option value="AFK">AFK</option>
         </select>
         
-        <button className="brutal-btn flex items-center gap-8px">
+        <button 
+          onClick={() => setShowExpertiseSearch(true)}
+          className="brutal-btn flex items-center gap-8px"
+        >
           <HiOutlineSearch className="w-16px h-16px" />
           FIND EXPERT
+        </button>
+        
+        <button 
+          onClick={() => setShowExpertiseMatrix(true)}
+          className="brutal-btn flex items-center gap-8px"
+        >
+          <HiOutlineChartBar className="w-16px h-16px" />
+          EXPERTISE MATRIX
         </button>
       </div>
 
@@ -154,6 +172,23 @@ export default function TeamPage() {
             />
           ))}
         </div>
+      )}
+
+      {/* Expertise Search Modal */}
+      {showExpertiseSearch && (
+        <ExpertiseSearchModal
+          onClose={() => setShowExpertiseSearch(false)}
+          workspaceId={currentWorkspace._id}
+        />
+      )}
+
+      {/* Expertise Matrix Modal */}
+      {showExpertiseMatrix && (
+        <TeamExpertiseMatrix
+          workspaceId={currentWorkspace._id}
+          onClose={() => setShowExpertiseMatrix(false)}
+          isModal={true}
+        />
       )}
     </div>
   )

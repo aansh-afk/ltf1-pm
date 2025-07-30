@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import toast from 'react-hot-toast'
 import BrutalModal from '../../ui/BrutalModal'
 import MultiSelect from '../../ui/MultiSelect'
+import { TaskAssignmentHelper } from '../task/TaskAssignmentHelper'
+import { HiOutlineSwitchHorizontal, HiOutlineLightBulb } from 'react-icons/hi'
 
 interface CreateTaskModalProps {
   isOpen: boolean
@@ -32,6 +35,7 @@ export default function CreateTaskModal({
   const [startDate, setStartDate] = useState<string>('')
   const [dueDate, setDueDate] = useState<string>(defaultDueDate || '')
   const [isCreating, setIsCreating] = useState(false)
+  const [useSmartAssignment, setUseSmartAssignment] = useState(true)
 
   const createTask = useMutation(api.tasks.mutations.createTask)
   const project = useQuery(api.projects.queries.getProject, { projectId })
@@ -204,42 +208,99 @@ export default function CreateTaskModal({
         </div>
 
         {/* ASSIGNEE & ESTIMATE */}
-        <div className="grid grid-cols-2 gap-16px">
-          <div>
-            <label className="block text-brutal-sm mb-8px">
-              ASSIGNEES (OPTIONAL)
+        <div className="space-y-16px">
+          <div className="flex items-center justify-between">
+            <label className="block text-brutal-sm">
+              TASK ASSIGNMENT
             </label>
-            <MultiSelect
-              options={project?.members?.map((member: any) => ({
-                value: member._id,
-                label: member.name.toUpperCase(),
-                avatarUrl: member.avatarUrl
-              })) || []}
-              value={assigneeIds}
-              onChange={setAssigneeIds}
-              placeholder="SELECT ASSIGNEES"
-              disabled={isCreating}
-            />
+            <button
+              type="button"
+              onClick={() => setUseSmartAssignment(!useSmartAssignment)}
+              className="flex items-center gap-8px font-mono text-brutal-xs text-primary-brutalist hover:text-brutal-info transition-colors"
+            >
+              {useSmartAssignment ? (
+                <>
+                  <HiOutlineLightBulb className="w-20px h-20px" />
+                  SMART ASSIGNMENT ON
+                </>
+              ) : (
+                <>
+                  <HiOutlineSwitchHorizontal className="w-20px h-20px" />
+                  SMART ASSIGNMENT OFF
+                </>
+              )}
+            </button>
           </div>
 
-          <div>
-            <label className="block text-brutal-sm mb-8px">
-              ESTIMATE (HOURS)
-            </label>
-            <input
-              type="number"
-              placeholder="0"
-              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
-                       font-mono text-brutal-md placeholder:text-neutral-600
-                       focus:border-primary-brutalist focus:outline-none transition-colors
-                       disabled:opacity-50 disabled:cursor-not-allowed"
-              value={estimateHours}
-              onChange={(e) => setEstimateHours(e.target.value)}
-              min="0"
-              step="0.5"
-              disabled={isCreating}
-            />
-          </div>
+          {useSmartAssignment ? (
+            <>
+              <TaskAssignmentHelper
+                workspaceId={project?.workspaceId as Id<"workspaces">}
+                currentAssignees={assigneeIds as Id<"users">[]}
+                onAssigneeChange={(ids) => setAssigneeIds(ids)}
+                taskTitle={title}
+                taskDescription={description}
+                taskLabels={labels.split(',').map(l => l.trim()).filter(Boolean)}
+                mode="compact"
+              />
+              <div>
+                <label className="block text-brutal-sm mb-8px">
+                  ESTIMATE (HOURS)
+                </label>
+                <input
+                  type="number"
+                  placeholder="0"
+                  className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                           font-mono text-brutal-md placeholder:text-neutral-600
+                           focus:border-primary-brutalist focus:outline-none transition-colors
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                  value={estimateHours}
+                  onChange={(e) => setEstimateHours(e.target.value)}
+                  min="0"
+                  step="0.5"
+                  disabled={isCreating}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-cols-2 gap-16px">
+              <div>
+                <label className="block text-brutal-sm mb-8px">
+                  ASSIGNEES (OPTIONAL)
+                </label>
+                <MultiSelect
+                  options={project?.members?.map((member: any) => ({
+                    value: member._id,
+                    label: member.name.toUpperCase(),
+                    avatarUrl: member.avatarUrl
+                  })) || []}
+                  value={assigneeIds}
+                  onChange={setAssigneeIds}
+                  placeholder="SELECT ASSIGNEES"
+                  disabled={isCreating}
+                />
+              </div>
+
+              <div>
+                <label className="block text-brutal-sm mb-8px">
+                  ESTIMATE (HOURS)
+                </label>
+                <input
+                  type="number"
+                  placeholder="0"
+                  className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                           font-mono text-brutal-md placeholder:text-neutral-600
+                           focus:border-primary-brutalist focus:outline-none transition-colors
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                  value={estimateHours}
+                  onChange={(e) => setEstimateHours(e.target.value)}
+                  min="0"
+                  step="0.5"
+                  disabled={isCreating}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* LABELS */}

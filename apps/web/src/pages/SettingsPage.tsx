@@ -11,31 +11,42 @@ import {
   HiOutlineBriefcase,
   HiOutlineCode,
   HiOutlineExclamation,
-  HiOutlineTerminal
+  HiOutlineTerminal,
+  HiOutlineAcademicCap,
+  HiOutlineChip,
+  HiOutlineClipboardCopy
 } from 'react-icons/hi'
 import BrutalToggle from '../components/ui/BrutalToggle'
 import BrutalSlider from '../components/ui/BrutalSlider'
 import SettingsSection from '../components/features/settings/SettingsSection'
 import { useSettingsState } from '../hooks/useSettingsState'
+import { EditDeveloperProfileModal } from '../components/features/profile/EditDeveloperProfileModal'
+import DeveloperStatusIndicator from '../components/features/developer/DeveloperStatusIndicator'
 
-type SettingsTab = 'profile' | 'accessibility' | 'notifications' | 'workspace' | 'github' | 'shortcuts'
+type SettingsTab = 'profile' | 'developer' | 'accessibility' | 'notifications' | 'workspace' | 'github' | 'shortcuts'
 
 const TABS: { id: SettingsTab; label: string; icon: React.ComponentType<any> }[] = [
   { id: 'profile', label: 'PROFILE', icon: HiOutlineUser },
+  { id: 'developer', label: 'DEVELOPER', icon: HiOutlineCode },
   { id: 'accessibility', label: 'ACCESSIBILITY', icon: HiOutlineEye },
   { id: 'notifications', label: 'NOTIFICATIONS', icon: HiOutlineBell },
   { id: 'workspace', label: 'WORKSPACE', icon: HiOutlineBriefcase },
-  { id: 'github', label: 'GITHUB', icon: HiOutlineCode },
+  { id: 'github', label: 'GITHUB', icon: HiOutlineTerminal },
   { id: 'shortcuts', label: 'SHORTCUTS', icon: HiOutlineTerminal },
 ]
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
+  const [showEditDeveloperProfile, setShowEditDeveloperProfile] = useState(false)
   const { user: authUser } = useAuth()
   
   // Queries
   const currentUser = useQuery(api.auth.users.getCurrentUser)
   const workspaces = useQuery(api.workspaces.queries.getUserWorkspaces)
+  const developerProfile = useQuery(
+    api.developers.queries.getDeveloperProfile,
+    currentUser ? { userId: currentUser._id } : 'skip'
+  )
   
   // Mutations
   const updateProfile = useMutation(api.auth.users.updateUserProfile)
@@ -424,6 +435,167 @@ export default function SettingsPage() {
                                focus:border-primary-brutalist focus:outline-none transition-colors"
                       placeholder="OCTOCAT"
                     />
+                  </div>
+                </div>
+              </SettingsSection>
+            </>
+          )}
+
+          {/* DEVELOPER TAB */}
+          {activeTab === 'developer' && (
+            <>
+              <SettingsSection
+                title="Developer Profile"
+                description="Configure your professional profile for team collaboration."
+              >
+                <div className="space-y-16px">
+                  {/* Current Status */}
+                  <div className="flex items-center justify-between p-16px bg-carbon-plate border-2 border-basalt-border">
+                    <div className="flex items-center gap-16px">
+                      <span className="text-brutal-sm uppercase">Current Status:</span>
+                      <DeveloperStatusIndicator 
+                        userId={currentUser._id}
+                        size="md"
+                        showLabel={true}
+                      />
+                    </div>
+                    <button
+                      onClick={() => setShowEditDeveloperProfile(true)}
+                      className="brutal-btn"
+                    >
+                      EDIT PROFILE
+                    </button>
+                  </div>
+
+                  {/* Profile Summary */}
+                  {developerProfile ? (
+                    <div className="space-y-16px">
+                      <div>
+                        <label className="block text-brutal-sm mb-8px">ROLE / TITLE</label>
+                        <div className="px-16px py-12px bg-carbon-plate border-2 border-basalt-border font-mono text-brutal-md">
+                          {developerProfile.profile?.role || 'NOT SET'}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-brutal-sm mb-8px">EXPERTISE</label>
+                        <div className="flex flex-wrap gap-8px">
+                          {developerProfile.profile?.technologies && developerProfile.profile.technologies.length > 0 ? (
+                            developerProfile.profile.technologies.map((tech: any) => (
+                              <span
+                                key={tech.name}
+                                className="px-12px py-6px bg-primary-brutalist/20 border border-primary-brutalist font-mono text-brutal-xs uppercase"
+                              >
+                                {tech.name} ({tech.level})
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-brutal-sm text-neutral-600">NO EXPERTISE SET</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-brutal-sm mb-8px">TIME ZONE</label>
+                        <div className="px-16px py-12px bg-carbon-plate border-2 border-basalt-border font-mono text-brutal-md">
+                          {developerProfile.profile?.timezone || 'NOT SET'}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-brutal-sm mb-8px">GIT CO-AUTHOR STRING</label>
+                        <div className="flex items-center gap-8px">
+                          <div className="flex-1 px-16px py-12px bg-carbon-plate border-2 border-basalt-border font-mono text-brutal-sm">
+                            Co-authored-by: {developerProfile.name || currentUser.name || 'Unknown'} &lt;{developerProfile.email || currentUser.email || 'email@example.com'}&gt;
+                          </div>
+                          <button
+                            onClick={() => {
+                              const coAuthorString = `Co-authored-by: ${developerProfile.name || currentUser.name || 'Unknown'} <${developerProfile.email || currentUser.email || 'email@example.com'}>`
+                              navigator.clipboard.writeText(coAuthorString)
+                              toast.success('CO-AUTHOR STRING COPIED')
+                            }}
+                            className="brutal-btn-secondary p-12px"
+                            title="Copy to clipboard"
+                          >
+                            <HiOutlineClipboardCopy className="w-20px h-20px" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-32px">
+                      <p className="text-brutal-md text-neutral-600 mb-16px">NO DEVELOPER PROFILE FOUND</p>
+                      <button
+                        onClick={() => setShowEditDeveloperProfile(true)}
+                        className="brutal-btn"
+                      >
+                        CREATE PROFILE
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </SettingsSection>
+
+              <SettingsSection
+                title="GitHub Statistics"
+                description="Your GitHub activity and contribution metrics."
+              >
+                {developerProfile?.profile?.githubStats ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-16px">
+                    <div className="brutal-card p-16px text-center">
+                      <div className="text-brutal-2xl font-bold text-primary-brutalist">
+                        {developerProfile.profile.githubStats.contributions || 0}
+                      </div>
+                      <div className="text-brutal-xs uppercase">Contributions</div>
+                    </div>
+                    <div className="brutal-card p-16px text-center">
+                      <div className="text-brutal-2xl font-bold text-brutal-success">
+                        {developerProfile.profile.githubStats.pullRequests || 0}
+                      </div>
+                      <div className="text-brutal-xs uppercase">Pull Requests</div>
+                    </div>
+                    <div className="brutal-card p-16px text-center">
+                      <div className="text-brutal-2xl font-bold text-brutal-info">
+                        {developerProfile.profile.githubStats.codeReviews || 0}
+                      </div>
+                      <div className="text-brutal-xs uppercase">Code Reviews</div>
+                    </div>
+                    <div className="brutal-card p-16px text-center">
+                      <div className="text-brutal-2xl font-bold text-brutal-warning">
+                        {developerProfile.profile.githubStats.issuesResolved || 0}
+                      </div>
+                      <div className="text-brutal-xs uppercase">Issues Resolved</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-24px text-brutal-sm text-neutral-600">
+                    CONNECT YOUR GITHUB ACCOUNT IN THE GITHUB TAB TO SEE STATS
+                  </div>
+                )}
+              </SettingsSection>
+
+              <SettingsSection
+                title="Work Preferences"
+                description="Configure how you prefer to work and collaborate."
+              >
+                <div className="space-y-16px">
+                  <div>
+                    <label className="block text-brutal-sm mb-8px">PREFERRED WORKING HOURS</label>
+                    <div className="grid grid-cols-2 gap-16px">
+                      <div className="px-16px py-12px bg-carbon-plate border-2 border-basalt-border font-mono text-brutal-md">
+                        START: {developerProfile?.profile?.workingHours?.start || 'NOT SET'}
+                      </div>
+                      <div className="px-16px py-12px bg-carbon-plate border-2 border-basalt-border font-mono text-brutal-md">
+                        END: {developerProfile?.profile?.workingHours?.end || 'NOT SET'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-brutal-sm mb-8px">AVAILABILITY</label>
+                    <div className="px-16px py-12px bg-carbon-plate border-2 border-basalt-border font-mono text-brutal-md">
+                      {developerProfile?.profile?.availability || 'NOT SET'}
+                    </div>
                   </div>
                 </div>
               </SettingsSection>
@@ -920,6 +1092,14 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+
+      {/* Modals */}
+      {showEditDeveloperProfile && currentUser && (
+        <EditDeveloperProfileModal
+          userId={currentUser._id}
+          onClose={() => setShowEditDeveloperProfile(false)}
+        />
+      )}
     </div>
   )
 }

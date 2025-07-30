@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import toast from 'react-hot-toast'
 import BrutalModal from '../../ui/BrutalModal'
-import { HiOutlineX, HiOutlineTrash } from 'react-icons/hi'
+import { HiOutlineX, HiOutlineTrash, HiOutlineSwitchHorizontal, HiOutlineLightBulb } from 'react-icons/hi'
 import clsx from 'clsx'
 import MultiSelect from '../../ui/MultiSelect'
+import { TaskAssignmentHelper } from '../task/TaskAssignmentHelper'
 
 interface EditTaskModalProps {
   isOpen: boolean
@@ -31,6 +33,7 @@ export default function EditTaskModal({
   const [startDate, setStartDate] = useState<string>('')
   const [dueDate, setDueDate] = useState<string>('')
   const [isUpdating, setIsUpdating] = useState(false)
+  const [useSmartAssignment, setUseSmartAssignment] = useState(true)
 
   const updateTask = useMutation(api.tasks.mutations.updateTask)
   const project = useQuery(api.projects.queries.getProject, { projectId: task?.projectId })
@@ -210,20 +213,52 @@ export default function EditTaskModal({
 
         {/* Assignees */}
         <div className="space-y-8px">
-          <label htmlFor="assignees" className="text-xs font-mono uppercase tracking-wider">
-            ASSIGNEES
-          </label>
-          <MultiSelect
-            options={project?.members?.map((member: any) => ({
-              value: member.user._id,
-              label: member.user.name?.toUpperCase() || member.user.email?.toUpperCase(),
-              avatarUrl: member.user.avatarUrl
-            })) || []}
-            value={assigneeIds}
-            onChange={setAssigneeIds}
-            placeholder="SELECT ASSIGNEES"
-            disabled={isUpdating}
-          />
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-mono uppercase tracking-wider">
+              ASSIGNEES
+            </label>
+            <button
+              type="button"
+              onClick={() => setUseSmartAssignment(!useSmartAssignment)}
+              className="flex items-center gap-8px font-mono text-brutal-xs text-primary-brutalist hover:text-brutal-info transition-colors"
+            >
+              {useSmartAssignment ? (
+                <>
+                  <HiOutlineLightBulb className="w-20px h-20px" />
+                  SMART ASSIGNMENT ON
+                </>
+              ) : (
+                <>
+                  <HiOutlineSwitchHorizontal className="w-20px h-20px" />
+                  SMART ASSIGNMENT OFF
+                </>
+              )}
+            </button>
+          </div>
+
+          {useSmartAssignment ? (
+            <TaskAssignmentHelper
+              workspaceId={project?.workspaceId as Id<"workspaces">}
+              currentAssignees={assigneeIds as Id<"users">[]}
+              onAssigneeChange={(ids) => setAssigneeIds(ids)}
+              taskTitle={title}
+              taskDescription={description}
+              taskLabels={labels.split(',').map(l => l.trim()).filter(Boolean)}
+              mode="compact"
+            />
+          ) : (
+            <MultiSelect
+              options={project?.members?.map((member: any) => ({
+                value: member.user._id,
+                label: member.user.name?.toUpperCase() || member.user.email?.toUpperCase(),
+                avatarUrl: member.user.avatarUrl
+              })) || []}
+              value={assigneeIds}
+              onChange={setAssigneeIds}
+              placeholder="SELECT ASSIGNEES"
+              disabled={isUpdating}
+            />
+          )}
         </div>
 
         {/* Labels */}

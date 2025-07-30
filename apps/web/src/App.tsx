@@ -16,6 +16,7 @@ import WorkspaceSettingsPage from './pages/WorkspaceSettingsPage'
 import SettingsPage from './pages/SettingsPage'
 import TeamPage from './pages/TeamPage'
 import JoinProjectPage from './pages/JoinProjectPage'
+import MyProfilePage from './pages/MyProfilePage'
 import { useEnsureUser } from './hooks/useEnsureUser'
 import { DataMigrationBanner } from './components/admin/DataMigrationBanner'
 
@@ -77,6 +78,7 @@ function AppContent() {
           </>
         }>
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="profile" element={<MyProfilePage />} />
           <Route path="workspaces" element={<WorkspacesPage />} />
           <Route path="workspace/:workspaceId" element={<WorkspaceManagementPage />} />
           <Route path="workspace/:workspaceId/project/:projectId" element={<ProjectManagementPage />} />

@@ -31,7 +31,8 @@ import {
   HiOutlineUser,
   HiOutlineDotsVertical,
   HiOutlineArrowRight,
-  HiOutlineChat
+  HiOutlineChat,
+  HiOutlineSearch
 } from 'react-icons/hi'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import CreateTaskModal from '@/components/features/task/CreateTaskModal'
@@ -48,6 +49,8 @@ import MeetingCard from '@/components/features/meetings/MeetingCard'
 import ProjectInviteModal from '@/components/features/project/ProjectInviteModal'
 import UserDisplay from '@/components/features/user/UserDisplay'
 import TeamActivityFeed from '@/components/features/activity/TeamActivityFeed'
+import { ExpertiseSearchModal } from '@/components/features/profile/ExpertiseSearchModal'
+import { TeamExpertiseMatrix } from '@/components/features/profile/TeamExpertiseMatrix'
 import type { TaskFilters as TaskFiltersType } from '@/components/features/task/TaskFilters'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
@@ -80,6 +83,8 @@ export default function ProjectManagementPage() {
   const [showConnectRepoModal, setShowConnectRepoModal] = useState(false)
   const [showProjectInviteModal, setShowProjectInviteModal] = useState(false)
   const [showScheduleMeetingModal, setShowScheduleMeetingModal] = useState(false)
+  const [showExpertiseSearch, setShowExpertiseSearch] = useState(false)
+  const [showExpertiseMatrix, setShowExpertiseMatrix] = useState(false)
   const [selectedTask, setSelectedTask] = useState<any>(null)
   const [quickFilter, setQuickFilter] = useState<string | null>(null)
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
@@ -1032,13 +1037,22 @@ export default function ProjectManagementPage() {
         <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
           <div className="flex items-center justify-between mb-16px">
             <h2 className="text-brutal-lg font-bold uppercase">PROJECT TEAM</h2>
-            <button 
-              onClick={() => setShowProjectInviteModal(true)}
-              className="brutal-btn flex items-center gap-8px"
-            >
-              <HiOutlineUserGroup className="w-16px h-16px" />
-              INVITE MEMBERS
-            </button>
+            <div className="flex items-center gap-12px">
+              <button 
+                onClick={() => setShowExpertiseMatrix(true)}
+                className="brutal-btn-secondary flex items-center gap-8px"
+              >
+                <HiOutlineChartBar className="w-16px h-16px" />
+                EXPERTISE MATRIX
+              </button>
+              <button 
+                onClick={() => setShowProjectInviteModal(true)}
+                className="brutal-btn flex items-center gap-8px"
+              >
+                <HiOutlineUserGroup className="w-16px h-16px" />
+                INVITE MEMBERS
+              </button>
+            </div>
           </div>
           <p className="text-brutal-sm text-cathode-white/60">
             Manage your project team, view workload distribution, and track productivity metrics.
@@ -1084,33 +1098,193 @@ export default function ProjectManagementPage() {
           </div>
         </div>
 
-        {/* Workload Distribution */}
-        <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
-          <h3 className="text-brutal-lg font-bold uppercase mb-16px">WORKLOAD DISTRIBUTION</h3>
-          <div className="space-y-12px">
-            {workloadData.labels.map((label: string, index: number) => (
-              <div key={label} className="flex items-center gap-16px">
-                <div className="w-80px font-mono text-brutal-sm text-primary-brutalist/80">{label.toUpperCase()}</div>
-                <div className="flex-1 h-24px bg-basalt-border relative">
-                  <div 
-                    className={clsx(
-                      "absolute inset-y-0 left-0 transition-all duration-300",
-                      workloadData.values[index] > 15 ? "bg-brutal-error" : 
-                      workloadData.values[index] > 10 ? "bg-brutal-warning" : "bg-brutal-success"
-                    )}
-                    style={{ width: `${(workloadData.values[index] / workloadData.max) * 100}%` }}
-                  />
-                  <div className="absolute inset-0 flex items-center px-8px">
-                    <span className="font-mono text-brutal-xs font-bold">
-                      {workloadData.values[index]} TASKS
-                    </span>
+        {/* Workload Distribution - Enhanced */}
+        <div className="bg-carbon-plate border-2 border-basalt-border">
+          {/* Header with Controls */}
+          <div className="flex items-center justify-between p-24px border-b-2 border-basalt-border bg-event-horizon">
+            <div className="flex items-center gap-16px">
+              <h3 className="text-brutal-lg font-bold uppercase">WORKLOAD DISTRIBUTION</h3>
+              <div className="flex items-center gap-8px font-mono text-brutal-xs">
+                <span className="text-primary-brutalist/60">AVG:</span>
+                <span className="font-bold">{Math.round(teamTotals.totalTasks / memberStats.length || 0)} TASKS</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-12px">
+              <div className="flex items-center gap-8px">
+                <div className="w-12px h-12px bg-brutal-success border border-basalt-border"></div>
+                <span className="font-mono text-brutal-xs">OPTIMAL</span>
+              </div>
+              <div className="flex items-center gap-8px">
+                <div className="w-12px h-12px bg-brutal-warning border border-basalt-border"></div>
+                <span className="font-mono text-brutal-xs">HIGH</span>
+              </div>
+              <div className="flex items-center gap-8px">
+                <div className="w-12px h-12px bg-brutal-error border border-basalt-border"></div>
+                <span className="font-mono text-brutal-xs">OVERLOAD</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Workload Visualization */}
+          <div className="p-24px">
+            <div className="space-y-16px">
+              {memberStats.map((member: any, index: number) => {
+                const taskCount = member.tasksAssigned
+                const completionRate = member.tasksAssigned > 0 ? Math.round((member.tasksCompleted / member.tasksAssigned) * 100) : 0
+                const isHighLoad = taskCount > 15
+                const isMediumLoad = taskCount > 10
+                const isLowProductivity = completionRate < 40
+                
+                return (
+                  <div key={member._id} className={clsx(
+                    "group relative bg-event-horizon border-2 p-20px transition-all duration-200 hover:shadow-brutal-sm",
+                    isHighLoad ? "border-brutal-error" : 
+                    isMediumLoad ? "border-brutal-warning" : "border-basalt-border"
+                  )}>
+                    {/* Member Info Header */}
+                    <div className="flex items-center justify-between mb-16px">
+                      <div className="flex items-center gap-16px">
+                        <UserDisplay 
+                          userId={member._id}
+                          size="sm"
+                          showName={true}
+                          showStatus={true}
+                        />
+                        <div className="flex items-center gap-12px font-mono text-brutal-xs">
+                          <span className="text-primary-brutalist/60">ROLE:</span>
+                          <span className="font-bold uppercase">{member.role || 'DEVELOPER'}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-16px">
+                        {/* Status Indicators */}
+                        {isHighLoad && (
+                          <div className="flex items-center gap-4px px-8px py-2px bg-brutal-error/20 border-2 border-brutal-error">
+                            <span className="w-4px h-4px bg-brutal-error"></span>
+                            <span className="font-mono text-brutal-xs text-brutal-error font-bold">OVERLOADED</span>
+                          </div>
+                        )}
+                        {isLowProductivity && taskCount > 0 && (
+                          <div className="flex items-center gap-4px px-8px py-2px bg-brutal-warning/20 border-2 border-brutal-warning">
+                            <span className="w-4px h-4px bg-brutal-warning"></span>
+                            <span className="font-mono text-brutal-xs text-brutal-warning font-bold">LOW VELOCITY</span>
+                          </div>
+                        )}
+                        
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-8px opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            className="brutal-btn-secondary text-xs px-8px py-4px"
+                            title="Reassign tasks"
+                          >
+                            BALANCE
+                          </button>
+                          <button 
+                            className="brutal-btn-secondary text-xs px-8px py-4px"
+                            title="View task details"
+                          >
+                            DETAILS
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Workload Visualization */}
+                    <div className="space-y-12px">
+                      {/* Main Progress Bar */}
+                      <div className="relative">
+                        <div className="flex items-center justify-between mb-8px">
+                          <span className="font-mono text-brutal-xs text-primary-brutalist/60">TASK LOAD</span>
+                          <span className="font-mono text-brutal-xs font-bold">{taskCount} / {workloadData.max} TASKS</span>
+                        </div>
+                        <div className="h-32px bg-basalt-border border-2 border-basalt-border relative overflow-hidden">
+                          {/* Background capacity markers */}
+                          <div className="absolute inset-0">
+                            <div className="absolute h-full border-r-2 border-brutal-warning/30" style={{ left: '66.7%' }} title="High load threshold"></div>
+                            <div className="absolute h-full border-r-2 border-brutal-error/30" style={{ left: '83.3%' }} title="Overload threshold"></div>
+                          </div>
+                          
+                          {/* Progress fill */}
+                          <div 
+                            className={clsx(
+                              "absolute inset-y-0 left-0 transition-all duration-500 flex items-center justify-center",
+                              isHighLoad ? "bg-brutal-error" : 
+                              isMediumLoad ? "bg-brutal-warning" : "bg-brutal-success"
+                            )}
+                            style={{ width: `${Math.min(100, (taskCount / workloadData.max) * 100)}%` }}
+                          >
+                            <span className="font-mono text-brutal-xs font-bold text-event-horizon">
+                              {Math.round((taskCount / workloadData.max) * 100)}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Task Breakdown */}
+                      <div className="grid grid-cols-3 gap-12px">
+                        <div className="text-center">
+                          <div className="font-mono text-brutal-lg font-bold text-brutal-success">{member.tasksCompleted}</div>
+                          <div className="font-mono text-brutal-xs text-primary-brutalist/60">COMPLETED</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-mono text-brutal-lg font-bold text-brutal-warning">{member.tasksInProgress}</div>
+                          <div className="font-mono text-brutal-xs text-primary-brutalist/60">IN PROGRESS</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-mono text-brutal-lg font-bold text-primary-brutalist">{completionRate}%</div>
+                          <div className="font-mono text-brutal-xs text-primary-brutalist/60">COMPLETION</div>
+                        </div>
+                      </div>
+
+                      {/* Time Tracking */}
+                      {member.hoursTracked > 0 && (
+                        <div className="flex items-center justify-between pt-8px border-t border-basalt-border/50">
+                          <span className="font-mono text-brutal-xs text-primary-brutalist/60">TIME TRACKED:</span>
+                          <span className="font-mono text-brutal-xs font-bold">{member.hoursTracked}H THIS WEEK</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                )
+              })}
+            </div>
+
+            {/* Team Summary Footer */}
+            <div className="mt-24px pt-24px border-t-2 border-basalt-border bg-event-horizon/50 p-20px">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-16px font-mono text-center">
+                <div>
+                  <div className="text-brutal-lg font-bold text-primary-brutalist">{teamTotals.totalTasks}</div>
+                  <div className="text-brutal-xs text-primary-brutalist/60">TOTAL TASKS</div>
+                </div>
+                <div>
+                  <div className="text-brutal-lg font-bold text-brutal-success">{teamTotals.completedTasks}</div>
+                  <div className="text-brutal-xs text-primary-brutalist/60">COMPLETED</div>
+                </div>
+                <div>
+                  <div className="text-brutal-lg font-bold text-brutal-warning">{teamTotals.inProgressTasks}</div>
+                  <div className="text-brutal-xs text-primary-brutalist/60">IN PROGRESS</div>
+                </div>
+                <div>
+                  <div className="text-brutal-lg font-bold text-primary-brutalist">{teamTotals.avgProductivity}%</div>
+                  <div className="text-brutal-xs text-primary-brutalist/60">AVG VELOCITY</div>
                 </div>
               </div>
-            ))}
-          </div>
-          <div className="mt-16px font-mono text-brutal-xs text-primary-brutalist/60">
-            CAPACITY WARNING: MEMBERS WITH &gt;15 TASKS MAY BE OVERLOADED
+              
+              {/* Smart Recommendations */}
+              <div className="mt-16px">
+                {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && (
+                  <div className="flex items-center gap-8px p-12px bg-brutal-error/10 border-2 border-brutal-error">
+                    <div className="w-8px h-8px bg-brutal-error animate-pulse"></div>
+                    <span className="font-mono text-brutal-xs text-brutal-error font-bold">
+                      {memberStats.filter((m: any) => m.tasksAssigned > 15).length} MEMBER(S) OVERLOADED - CONSIDER REDISTRIBUTING TASKS
+                    </span>
+                    <button className="ml-auto brutal-btn-secondary text-xs text-brutal-error border-brutal-error">
+                      AUTO-BALANCE
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1267,26 +1441,221 @@ export default function ProjectManagementPage() {
           showFilters={true}
         />
 
-        {/* Quick Actions */}
-        <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
-          <h3 className="text-brutal-lg font-bold uppercase mb-16px">QUICK ACTIONS</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-12px">
-            <button className="brutal-btn flex items-center justify-center gap-8px">
-              <HiOutlinePlus className="w-16px h-16px" />
-              ADD MEMBER
-            </button>
-            <button className="brutal-btn-secondary flex items-center justify-center gap-8px">
-              <HiOutlineUserGroup className="w-16px h-16px" />
-              BULK REASSIGN
-            </button>
-            <button className="brutal-btn-secondary flex items-center justify-center gap-8px">
-              <HiOutlineChartBar className="w-16px h-16px" />
-              EXPORT REPORT
-            </button>
-            <button className="brutal-btn-secondary flex items-center justify-center gap-8px">
-              <HiOutlineCog className="w-16px h-16px" />
-              TEAM SETTINGS
-            </button>
+        {/* Quick Actions - Functional */}
+        <div className="bg-carbon-plate border-2 border-basalt-border">
+          <div className="p-24px border-b-2 border-basalt-border bg-event-horizon">
+            <div className="flex items-center justify-between">
+              <h3 className="text-brutal-lg font-bold uppercase">QUICK ACTIONS</h3>
+              <div className="flex items-center gap-8px font-mono text-brutal-xs">
+                <span className="text-primary-brutalist/60">SHORTCUTS FOR TEAM MANAGEMENT</span>
+                <div className="w-4px h-4px bg-primary-brutalist animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-24px">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-16px">
+              {/* Add Member Action */}
+              <div className="group relative">
+                <button 
+                  onClick={() => setShowProjectInviteModal(true)}
+                  className="w-full brutal-btn flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
+                >
+                  <div className="flex items-center justify-center w-40px h-40px bg-primary-brutalist border-2 border-basalt-border">
+                    <HiOutlinePlus className="w-20px h-20px text-event-horizon" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-mono text-brutal-sm font-bold">ADD MEMBER</div>
+                    <div className="font-mono text-brutal-xs text-primary-brutalist/60 mt-4px">INVITE TO PROJECT</div>
+                  </div>
+                </button>
+                <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-basalt-border font-mono text-brutal-xs text-event-horizon">
+                    SHIFT+A
+                  </div>
+                </div>
+              </div>
+
+              {/* Bulk Reassign Action */}
+              <div className="group relative">
+                <button 
+                  onClick={() => {
+                    const overloadedMembers = memberStats.filter((m: any) => m.tasksAssigned > 15)
+                    if (overloadedMembers.length > 0) {
+                      // Open bulk reassign modal with overloaded members pre-selected
+                      console.log('Opening bulk reassign for overloaded members:', overloadedMembers)
+                    } else {
+                      // Open general bulk reassign modal
+                      console.log('Opening general bulk reassign modal')
+                    }
+                  }}
+                  className={clsx(
+                    "w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]",
+                    memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && "border-brutal-warning bg-brutal-warning/10"
+                  )}
+                >
+                  <div className={clsx(
+                    "flex items-center justify-center w-40px h-40px border-2 border-basalt-border",
+                    memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 ? "bg-brutal-warning" : "bg-basalt-border"
+                  )}>
+                    <HiOutlineUserGroup className={clsx(
+                      "w-20px h-20px",
+                      memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 ? "text-event-horizon" : "text-primary-brutalist"
+                    )} />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-mono text-brutal-sm font-bold">BULK REASSIGN</div>
+                    <div className="font-mono text-brutal-xs text-primary-brutalist/60 mt-4px">
+                      {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 
+                        ? `${memberStats.filter((m: any) => m.tasksAssigned > 15).length} OVERLOADED`
+                        : 'BALANCE WORKLOAD'
+                      }
+                    </div>
+                  </div>
+                  {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && (
+                    <div className="absolute top-8px right-8px w-8px h-8px bg-brutal-error animate-pulse"></div>
+                  )}
+                </button>
+                <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-basalt-border font-mono text-brutal-xs text-event-horizon">
+                    SHIFT+B
+                  </div>
+                </div>
+              </div>
+
+              {/* Export Report Action */}
+              <div className="group relative">
+                <button 
+                  onClick={() => {
+                    // Generate and download team performance report
+                    const reportData = {
+                      project: project.name,
+                      date: new Date().toISOString(),
+                      teamSize: memberStats.length,
+                      totalTasks: teamTotals.totalTasks,
+                      completedTasks: teamTotals.completedTasks,
+                      avgProductivity: teamTotals.avgProductivity,
+                      members: memberStats.map((m: any) => ({
+                        name: m.name,
+                        role: m.role,
+                        tasksAssigned: m.tasksAssigned,
+                        tasksCompleted: m.tasksCompleted,
+                        productivity: m.productivity,
+                        hoursTracked: m.hoursTracked
+                      }))
+                    }
+                    
+                    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `${project.name}-team-report-${new Date().toISOString().split('T')[0]}.json`
+                    document.body.appendChild(a)
+                    a.click()
+                    document.body.removeChild(a)
+                    URL.revokeObjectURL(url)
+                  }}
+                  className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
+                >
+                  <div className="flex items-center justify-center w-40px h-40px bg-basalt-border border-2 border-basalt-border">
+                    <HiOutlineChartBar className="w-20px h-20px text-primary-brutalist" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-mono text-brutal-sm font-bold">EXPORT REPORT</div>
+                    <div className="font-mono text-brutal-xs text-primary-brutalist/60 mt-4px">TEAM PERFORMANCE</div>
+                  </div>
+                </button>
+                <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-basalt-border font-mono text-brutal-xs text-event-horizon">
+                    SHIFT+E
+                  </div>
+                </div>
+              </div>
+
+              {/* Team Settings Action */}
+              <div className="group relative">
+                <button 
+                  onClick={() => {
+                    // Open team settings modal
+                    console.log('Opening team settings modal')
+                  }}
+                  className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
+                >
+                  <div className="flex items-center justify-center w-40px h-40px bg-basalt-border border-2 border-basalt-border">
+                    <HiOutlineCog className="w-20px h-20px text-primary-brutalist" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-mono text-brutal-sm font-bold">TEAM SETTINGS</div>
+                    <div className="font-mono text-brutal-xs text-primary-brutalist/60 mt-4px">CONFIGURE PROJECT</div>
+                  </div>
+                </button>
+                <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-basalt-border font-mono text-brutal-xs text-event-horizon">
+                    SHIFT+S
+                  </div>
+                </div>
+              </div>
+
+              {/* Find Expert Action */}
+              <div className="group relative">
+                <button 
+                  onClick={() => setShowExpertiseSearch(true)}
+                  className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
+                >
+                  <div className="flex items-center justify-center w-40px h-40px bg-basalt-border border-2 border-basalt-border">
+                    <HiOutlineSearch className="w-20px h-20px text-primary-brutalist" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-mono text-brutal-sm font-bold">FIND EXPERT</div>
+                    <div className="font-mono text-brutal-xs text-primary-brutalist/60 mt-4px">SEARCH EXPERTISE</div>
+                  </div>
+                </button>
+                <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-basalt-border font-mono text-brutal-xs text-event-horizon">
+                    SHIFT+F
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Smart Suggestions Bar */}
+            <div className="mt-24px pt-20px border-t-2 border-basalt-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-12px">
+                  <div className="w-8px h-8px bg-primary-brutalist animate-pulse"></div>
+                  <span className="font-mono text-brutal-xs font-bold text-primary-brutalist">SMART SUGGESTIONS:</span>
+                </div>
+                <div className="flex items-center gap-8px">
+                  {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && (
+                    <button 
+                      onClick={() => {
+                        // Quick balance action
+                        console.log('Quick balancing overloaded members')
+                      }}
+                      className="px-12px py-6px bg-brutal-error/20 border-2 border-brutal-error font-mono text-brutal-xs text-brutal-error hover:bg-brutal-error hover:text-event-horizon transition-colors"
+                    >
+                      BALANCE {memberStats.filter((m: any) => m.tasksAssigned > 15).length} OVERLOADED
+                    </button>
+                  )}
+                  {memberStats.filter((m: any) => m.tasksAssigned === 0).length > 0 && (
+                    <button 
+                      onClick={() => {
+                        // Assign tasks to idle members
+                        console.log('Assigning tasks to idle members')
+                      }}
+                      className="px-12px py-6px bg-brutal-info/20 border-2 border-brutal-info font-mono text-brutal-xs text-brutal-info hover:bg-brutal-info hover:text-event-horizon transition-colors"
+                    >
+                      ASSIGN TO {memberStats.filter((m: any) => m.tasksAssigned === 0).length} IDLE
+                    </button>
+                  )}
+                  {memberStats.filter((m: any) => m.productivity < 40 && m.tasksAssigned > 0).length > 0 && (
+                    <div className="px-12px py-6px bg-brutal-warning/20 border-2 border-brutal-warning font-mono text-brutal-xs text-brutal-warning">
+                      {memberStats.filter((m: any) => m.productivity < 40 && m.tasksAssigned > 0).length} LOW VELOCITY
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2078,6 +2447,23 @@ export default function ProjectManagementPage() {
         onClose={() => setShowProjectInviteModal(false)}
         projectId={projectId}
         projectName={project.name}
+      />
+    )}
+
+    {/* Expertise Search Modal */}
+    {showExpertiseSearch && (
+      <ExpertiseSearchModal
+        onClose={() => setShowExpertiseSearch(false)}
+        workspaceId={workspaceId}
+      />
+    )}
+
+    {/* Expertise Matrix Modal */}
+    {showExpertiseMatrix && workspaceId && (
+      <TeamExpertiseMatrix
+        workspaceId={workspaceId}
+        onClose={() => setShowExpertiseMatrix(false)}
+        isModal={true}
       />
     )}
   </>

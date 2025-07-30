@@ -15,10 +15,13 @@ import {
   HiOutlinePlay,
   HiOutlineChevronRight,
   HiOutlineChevronLeft,
-  HiOutlineUserGroup
+  HiOutlineUserGroup,
+  HiOutlineUser
 } from 'react-icons/hi'
 import clsx from 'clsx'
 import { useResourceMonitor } from '../../hooks/useResourceMonitor'
+import { useAfkDetection } from '../../hooks/useAfkDetection'
+import { ProfileCompletionBanner } from '../features/profile/ProfileCompletionBanner'
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile sidebar
@@ -33,6 +36,13 @@ export default function DashboardLayout() {
   
   // Real-time resource monitoring
   const { stats, formatMemory } = useResourceMonitor()
+  
+  // AFK detection for automatic status updates
+  useAfkDetection({
+    afkTimeout: 5 * 60 * 1000, // 5 minutes
+    awayTimeout: 15 * 60 * 1000, // 15 minutes
+    enabled: true
+  })
 
   // Save collapsed state to localStorage
   useEffect(() => {
@@ -70,6 +80,7 @@ export default function DashboardLayout() {
   // Simplified navigation without workspace dependencies
   const navItems = [
     { path: '/dashboard', label: 'DASHBOARD', icon: HiOutlineHome },
+    { path: '/profile', label: 'MY PROFILE', icon: HiOutlineUser },
     { path: '/workspaces', label: 'WORKSPACES', icon: HiOutlineBriefcase },
     { path: '/projects', label: 'PROJECTS', icon: HiOutlineFolder },
     { path: '/tasks', label: 'TASKS', icon: HiOutlineClipboardList },
@@ -248,6 +259,9 @@ export default function DashboardLayout() {
             </div>
           </div>
         </header>
+
+        {/* PROFILE COMPLETION BANNER */}
+        <ProfileCompletionBanner />
 
         {/* MAIN CONTENT AREA */}
         <main className="flex-1 overflow-y-auto bg-event-horizon">

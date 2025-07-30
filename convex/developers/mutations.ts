@@ -7,39 +7,43 @@ function calculateCompleteness(profile: any): number {
   let score = 0;
   let total = 0;
 
-  // Status (10 points)
-  total += 10;
-  if (profile.status) score += 10;
+  // Essential information (30 points)
+  total += 30;
+  if (profile.role || profile.profile?.role) score += 10;
+  if (profile.location || profile.profile?.location) score += 10;
+  if (profile.timezone || profile.profile?.timezone) score += 10;
 
-  // Work hours (10 points)
-  total += 10;
-  if (profile.workHours) score += 10;
-
-  // Tech stack (20 points)
+  // Tech stack/expertise (20 points)
   total += 20;
-  if (profile.techStack && profile.techStack.length > 0) {
-    score += Math.min(20, profile.techStack.length * 4);
+  if ((profile.techStack && profile.techStack.length > 0) || 
+      (profile.technologies && profile.technologies.length > 0) ||
+      (profile.profile?.technologies && profile.profile.technologies.length > 0)) {
+    const techCount = profile.techStack?.length || profile.technologies?.length || profile.profile?.technologies?.length || 0;
+    score += Math.min(20, techCount * 4);
   }
 
-  // Review preferences (10 points)
-  total += 10;
-  if (profile.reviewPreferences) score += 10;
-
-  // GitHub integration (20 points)
+  // Professional info (20 points)
   total += 20;
-  if (profile.githubStats) score += 20;
+  const yearsExp = profile.yearsExperience || profile.profile?.yearsExperience;
+  if (yearsExp !== undefined && yearsExp > 0) score += 10;
+  if (profile.careerLevel || profile.profile?.careerLevel) score += 10;
 
-  // Git co-author (10 points)
+  // Skills and interests (10 points)
   total += 10;
-  if (profile.gitCoAuthorString) score += 10;
+  if ((profile.skills && profile.skills.length > 0) || 
+      (profile.profile?.skills && profile.profile.skills.length > 0)) score += 5;
+  if ((profile.interests && profile.interests.length > 0) || 
+      (profile.profile?.interests && profile.profile.interests.length > 0)) score += 5;
 
-  // Availability settings (10 points)
+  // Work preferences (10 points)
   total += 10;
-  if (profile.availability) score += 10;
+  if (profile.workingHours || profile.workHours || profile.profile?.workingHours) score += 5;
+  if (profile.communicationPrefs || profile.profile?.communicationPrefs) score += 5;
 
-  // Current focus (10 points)
+  // Personal touch (10 points)
   total += 10;
-  if (profile.currentFocus) score += 10;
+  if (profile.bio || profile.profile?.bio) score += 5;
+  if (profile.careerGoals || profile.workStyle || profile.profile?.careerGoals || profile.profile?.workStyle) score += 5;
 
   return Math.round((score / total) * 100);
 }
@@ -47,6 +51,12 @@ function calculateCompleteness(profile: any): number {
 // Create or update developer profile
 export const updateDeveloperProfile = mutation({
   args: {
+    // User fields (stored in users table)
+    userId: v.id("users"),
+    name: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    
+    // Profile fields (stored in developerProfiles table)
     status: v.optional(v.union(
       v.literal("LOCKED_IN"),
       v.literal("AVAILABLE"),
@@ -78,6 +88,24 @@ export const updateDeveloperProfile = mutation({
       forPairing: v.boolean(),
     })),
     gitCoAuthorString: v.optional(v.string()),
+    
+    // Additional profile fields from frontend (store in a new profileInfo field)
+    role: v.optional(v.string()),
+    location: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    githubUsername: v.optional(v.string()),
+    yearsExperience: v.optional(v.number()),
+    careerLevel: v.optional(v.union(v.literal("junior"), v.literal("mid"), v.literal("senior"), v.literal("lead"), v.literal("principal"))),
+    skills: v.optional(v.array(v.string())),
+    interests: v.optional(v.array(v.string())),
+    workingHours: v.optional(v.object({
+      start: v.string(),
+      end: v.string(),
+    })),
+    communicationPrefs: v.optional(v.union(v.literal("email"), v.literal("slack"), v.literal("teams"), v.literal("discord"))),
+    workStyle: v.optional(v.string()),
+    careerGoals: v.optional(v.string()),
+    mentoringInterests: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -88,22 +116,78 @@ export const updateDeveloperProfile = mutation({
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
       .first();
 
-    if (!user) throw new Error("User not found");
+    if (!user || user._id !== args.userId) throw new Error("Unauthorized");
+
+    // Update user fields (name and bio)
+    if (args.name !== undefined || args.bio !== undefined) {
+      await ctx.db.patch(user._id, {
+        ...(args.name !== undefined && { name: args.name }),
+        ...(args.bio !== undefined && { bio: args.bio }),
+      });
+    }
+
+    // Prepare profile object with all the additional fields
+    const profileInfo = {
+      role: args.role,
+      bio: args.bio,
+      location: args.location,
+      phone: args.phone,
+      githubUsername: args.githubUsername,
+      yearsExperience: args.yearsExperience,
+      careerLevel: args.careerLevel,
+      skills: args.skills,
+      interests: args.interests,
+      workingHours: args.workingHours,
+      communicationPrefs: args.communicationPrefs,
+      workStyle: args.workStyle,
+      careerGoals: args.careerGoals,
+      mentoringInterests: args.mentoringInterests,
+      technologies: args.techStack, // Store techStack as technologies in profile
+      timezone: args.timezone,
+      availability: args.availability,
+    };
+
+    // Remove undefined values from profileInfo
+    const cleanedProfileInfo = Object.fromEntries(
+      Object.entries(profileInfo).filter(([_, v]) => v !== undefined)
+    );
+
+    // Calculate completeness first
+    const completeness = calculateCompleteness({ ...cleanedProfileInfo, techStack: args.techStack });
+
+    // Prepare developer profile data
+    const profileData = {
+      profile: cleanedProfileInfo,
+      status: args.status,
+      statusMessage: args.statusMessage,
+      timezone: args.timezone,
+      workHours: args.workingHours ? {
+        start: args.workingHours.start,
+        end: args.workingHours.end,
+        days: [1, 2, 3, 4, 5], // Default to weekdays
+      } : undefined,
+      techStack: args.techStack,
+      currentFocus: args.currentFocus,
+      reviewPreferences: args.reviewPreferences,
+      availability: args.availability,
+      gitCoAuthorString: args.gitCoAuthorString,
+      profileCompleteness: completeness,
+      updatedAt: Date.now(),
+    };
+
+    // Remove undefined values
+    const cleanedProfileData = Object.fromEntries(
+      Object.entries(profileData).filter(([_, v]) => v !== undefined)
+    ) as any;
 
     const existingProfile = await ctx.db
       .query("developerProfiles")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .first();
 
-    const profileData = {
-      ...args,
-      profileCompleteness: calculateCompleteness(args),
-      updatedAt: Date.now(),
-    };
-
     if (existingProfile) {
       // Update existing profile
-      await ctx.db.patch(existingProfile._id, profileData);
+      await ctx.db.patch(existingProfile._id, cleanedProfileData);
       
       // Update expertise search index if tech stack changed
       if (args.techStack) {
@@ -115,8 +199,10 @@ export const updateDeveloperProfile = mutation({
       // Create new profile
       const profileId = await ctx.db.insert("developerProfiles", {
         userId: user._id,
-        ...profileData,
+        ...cleanedProfileData,
         createdAt: Date.now(),
+        updatedAt: Date.now(),
+        profileCompleteness: completeness,
       });
 
       // Create expertise search index
