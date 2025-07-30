@@ -1,6 +1,8 @@
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { motion } from 'framer-motion'
+import { useProfileCompletion } from '../hooks/useProfileCompletion'
+import { Link } from 'react-router-dom'
 import { 
   HiOutlineBriefcase, 
   HiOutlineClipboardList, 
@@ -9,13 +11,15 @@ import {
   HiOutlineCode,
   HiOutlineLightningBolt,
   HiOutlineChip,
-  HiOutlineDatabase
+  HiOutlineDatabase,
+  HiOutlineUser
 } from 'react-icons/hi'
 import BrutalCard from '../components/ui/BrutalCard'
 import BrutalButton from '../components/ui/BrutalButton'
 
 export default function Dashboard() {
   const workspaces = useQuery(api.workspaces.queries.getUserWorkspaces) || []
+  const { profileComplete, missingFields } = useProfileCompletion()
   
   const totalProjects = workspaces.reduce((sum: number, ws: any) => sum + (ws.projectCount || 0), 0)
   const totalMembers = workspaces.reduce((sum: number, ws: any) => sum + (ws.memberCount || 0), 0)
@@ -38,6 +42,32 @@ export default function Dashboard() {
           SYSTEM STATUS: OPERATIONAL | TASKS PENDING: 42
         </p>
       </div>
+
+      {/* PROFILE COMPLETION PROMPT */}
+      {!profileComplete && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="mb-24px"
+        >
+          <Link to="/profile" className="block">
+            <BrutalCard variant="elevated" hoverable className="bg-brutal-warning/10 border-brutal-warning">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-brutal-lg font-bold mb-8px">COMPLETE YOUR DEVELOPER PROFILE</h3>
+                  <p className="text-brutal-sm text-primary-brutalist/80">
+                    Missing: {missingFields.join(', ')} — Complete your profile to unlock smart task assignments and team collaboration features.
+                  </p>
+                </div>
+                <BrutalButton variant="primary">
+                  COMPLETE NOW →
+                </BrutalButton>
+              </div>
+            </BrutalCard>
+          </Link>
+        </motion.div>
+      )}
 
       {/* STATS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-24px mb-48px">

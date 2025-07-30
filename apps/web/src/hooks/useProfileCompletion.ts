@@ -1,65 +1,80 @@
 import { useQuery } from 'convex/react'
-import { api } from '../../../../../convex/_generated/api'
-import { useState, useEffect, useMemo } from 'react'
+import { api } from '../../../../convex/_generated/api'
+import { useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 
-export function useProfileCompletion() {
-  const profile = useQuery(api.developers.queries.getMyProfile)
-  const [dismissed, setDismissed] = useState(false)
-  const [sessionPromptShown, setSessionPromptShown] = useState(false)
+interface ProfileCompletionOptions {
+  enforceCompletion?: boolean // Redirect to profile page if incomplete
+  excludePaths?: string[] // Paths to exclude from enforcement
+}
 
-  // Load dismissed state from localStorage
-  useEffect(() => {
-    if (profile?.hasProfile) {
-      // If they have a profile, check if they've dismissed prompts
-      const dismissedUntil = localStorage.getItem(`profile-prompt-dismissed-${profile._id}`)
-      if (dismissedUntil) {
-        const dismissedDate = new Date(dismissedUntil)
-        if (dismissedDate > new Date()) {
-          setDismissed(true)
-        }
-      }
-    }
-  }, [profile])
+export function useProfileCompletion(options: ProfileCompletionOptions = {}) {
+  const { 
+    enforceCompletion = false,
+    excludePaths = ['/profile', '/sign-in', '/sign-up', '/']
+  } = options
 
-  const shouldShowPrompt = useMemo(() => {
-    if (!profile || dismissed || sessionPromptShown) return false
-    
-    // Don't prompt if loading
-    if (!profile.hasProfile) {
-      // No profile exists yet - show prompt after they've been on the app for a bit
-      const accountAge = Date.now() - profile.createdAt
-      const ONE_HOUR = 60 * 60 * 1000
-      return accountAge > ONE_HOUR
-    }
-    
-    // Profile exists - check completeness
-    return profile.profile.profileCompleteness < 50
-  }, [profile, dismissed, sessionPromptShown])
+  const navigate = useNavigate()
+  const location = useLocation()
+  
+  // Get current user
+  const currentUser = useQuery(api.auth.users.getCurrentUser)
+  
+  // Get developer profile
+  const developerProfile = useQuery(
+    api.developers.queries.getDeveloperProfile,
+    currentUser ? { userId: currentUser._id } : 'skip'
+  )
 
-  const dismissPrompt = (duration?: 'session' | 'day' | 'week') => {
-    setSessionPromptShown(true)
+  // Check if profile is complete
+  const isProfileComplete = () => {
+    if (!developerProfile?.profile) return false
     
-    if (!profile) return
-    
-    if (duration === 'day') {
-      const tomorrow = new Date()
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      localStorage.setItem(`profile-prompt-dismissed-${profile._id}`, tomorrow.toISOString())
-      setDismissed(true)
-    } else if (duration === 'week') {
-      const nextWeek = new Date()
-      nextWeek.setDate(nextWeek.getDate() + 7)
-      localStorage.setItem(`profile-prompt-dismissed-${profile._id}`, nextWeek.toISOString())
-      setDismissed(true)
-    }
-    // 'session' just sets sessionPromptShown which resets on page reload
+    const profile = developerProfile.profile
+    return !!(
+      profile.role &&
+      profile.technologies &&
+      profile.technologies.length > 0 &&
+      profile.timezone
+    )
   }
 
+  const profileComplete = isProfileComplete()
+
+  // Get missing fields
+  const getMissingFields = () => {
+    const missing = []
+    if (!developerProfile?.profile) {
+      missing.push('entire profile')
+    } else {
+      const profile = developerProfile.profile
+      if (!profile.role) missing.push('role')
+      if (!profile.technologies || profile.technologies.length === 0) missing.push('expertise')
+      if (!profile.timezone) missing.push('timezone')
+    }
+    return missing
+  }
+
+  // Enforce profile completion by redirecting
+  useEffect(() => {
+    if (
+      enforceCompletion &&
+      currentUser &&
+      developerProfile !== undefined &&
+      !profileComplete &&
+      !excludePaths.includes(location.pathname)
+    ) {
+      // Store the intended destination
+      sessionStorage.setItem('profile-completion-redirect', location.pathname)
+      navigate('/profile')
+    }
+  }, [enforceCompletion, currentUser, developerProfile, profileComplete, location.pathname, navigate, excludePaths])
+
   return {
-    profile: profile?.profile,
-    hasProfile: profile?.hasProfile || false,
-    shouldShowPrompt,
-    completeness: profile?.profile?.profileCompleteness || 0,
-    dismissPrompt,
+    isLoading: !currentUser || developerProfile === undefined,
+    profileComplete,
+    missingFields: getMissingFields(),
+    needsProfile: currentUser && !developerProfile?.profile,
+    profile: developerProfile?.profile
   }
 }

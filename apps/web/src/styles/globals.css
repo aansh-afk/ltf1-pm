@@ -156,6 +156,15 @@
     border-radius: 0 !important;
   }
 
+  /* Textarea specific fixes */
+  textarea.brutal-input {
+    @apply resize-y;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
   /* GLITCH GRADIENT TEXT */
   .glitch-text {
     @apply bg-glitch-flare bg-clip-text text-transparent font-bold;

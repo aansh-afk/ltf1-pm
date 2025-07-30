@@ -1,0 +1,264 @@
+import { useState } from 'react'
+import { useQuery } from 'convex/react'
+import { api } from '../../../../convex/_generated/api'
+import type { Id } from '../../../../convex/_generated/dataModel'
+import clsx from 'clsx'
+import { 
+  HiOutlineUser,
+  HiOutlineSearch,
+  HiOutlineChartBar,
+  HiOutlineLightBulb,
+  HiOutlineClipboardList,
+  HiOutlineCode
+} from 'react-icons/hi'
+import { ExpertiseSearchModal } from '@/components/features/profile/ExpertiseSearchModal'
+import { TeamExpertiseMatrix } from '@/components/features/profile/TeamExpertiseMatrix'
+import { ReviewerSuggestions } from '@/components/features/profile/ReviewerSuggestions'
+import { TaskAssignmentHelper } from '@/components/features/task/TaskAssignmentHelper'
+import DeveloperProfileCard from '@/components/features/developer/DeveloperProfileCard'
+import { EditDeveloperProfileModal } from '@/components/features/profile/EditDeveloperProfileModal'
+
+export default function ProfileDemoPage() {
+  const [showExpertiseSearch, setShowExpertiseSearch] = useState(false)
+  const [showExpertiseMatrix, setShowExpertiseMatrix] = useState(false)
+  const [showEditProfile, setShowEditProfile] = useState(false)
+  const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>(['React', 'TypeScript', 'Node.js'])
+  const [assignedUsers, setAssignedUsers] = useState<Id<"users">[]>([])
+
+  // Get current user and workspace
+  const currentUser = useQuery(api.auth.users.getCurrentUser)
+  const workspaces = useQuery(api.workspaces.queries.getUserWorkspaces)
+  const currentWorkspace = workspaces?.[0]
+
+  if (!currentUser || !currentWorkspace) {
+    return (
+      <div className="p-48px text-center">
+        <div className="text-brutal-lg">Loading profile demo...</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="p-24px space-y-32px">
+      {/* Page Header */}
+      <div className="mb-32px">
+        <h1 className="text-brutal-2xl font-bold mb-8px">DEVELOPER PROFILE FEATURES DEMO</h1>
+        <p className="text-brutal-sm text-primary-brutalist/80">
+          Explore all the new developer profile and team expertise features
+        </p>
+      </div>
+
+      {/* Feature Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-24px">
+        {/* Profile Card Demo */}
+        <div className="brutal-card p-24px">
+          <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+            <HiOutlineUser className="w-20px h-20px" />
+            DEVELOPER PROFILE CARD
+          </h3>
+          <p className="text-brutal-sm text-primary-brutalist/80 mb-16px">
+            Real-time status, expertise display, and quick actions
+          </p>
+          <DeveloperProfileCard 
+            userId={currentUser._id}
+            onClick={() => console.log('Profile clicked')}
+          />
+          <button
+            onClick={() => setShowEditProfile(true)}
+            className="brutal-btn w-full mt-16px"
+          >
+            EDIT YOUR PROFILE
+          </button>
+        </div>
+
+        {/* Expertise Search Demo */}
+        <div className="brutal-card p-24px">
+          <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+            <HiOutlineSearch className="w-20px h-20px" />
+            FIND TEAM EXPERTS
+          </h3>
+          <p className="text-brutal-sm text-primary-brutalist/80 mb-16px">
+            Search for team members by technology, skill, or expertise
+          </p>
+          <button
+            onClick={() => setShowExpertiseSearch(true)}
+            className="brutal-btn w-full"
+          >
+            OPEN EXPERTISE SEARCH
+          </button>
+          <div className="mt-12px p-12px bg-event-horizon border border-basalt-border">
+            <p className="font-mono text-brutal-xs text-primary-brutalist/60">
+              Try searching for: React, Python, DevOps, UI/UX, or any technology
+            </p>
+          </div>
+        </div>
+
+        {/* Team Matrix Demo */}
+        <div className="brutal-card p-24px">
+          <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+            <HiOutlineChartBar className="w-20px h-20px" />
+            EXPERTISE MATRIX
+          </h3>
+          <p className="text-brutal-sm text-primary-brutalist/80 mb-16px">
+            Visualize your team's skills and expertise levels
+          </p>
+          <button
+            onClick={() => setShowExpertiseMatrix(true)}
+            className="brutal-btn w-full"
+          >
+            VIEW TEAM MATRIX
+          </button>
+          <div className="mt-12px p-12px bg-event-horizon border border-basalt-border">
+            <p className="font-mono text-brutal-xs text-primary-brutalist/60">
+              Matrix view with filters, sorting, and CSV export
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Reviewer Suggestions Demo */}
+      <div className="brutal-card p-24px">
+        <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+          <HiOutlineLightBulb className="w-20px h-20px" />
+          SMART REVIEWER SUGGESTIONS
+        </h3>
+        <p className="text-brutal-sm text-primary-brutalist/80 mb-16px">
+          Get AI-powered suggestions for code reviewers based on expertise matching
+        </p>
+        
+        <div className="mb-16px">
+          <label className="block font-mono text-brutal-sm font-bold mb-8px">
+            SELECT TECHNOLOGIES FOR REVIEW:
+          </label>
+          <div className="flex flex-wrap gap-8px">
+            {['React', 'TypeScript', 'Node.js', 'Python', 'DevOps', 'PostgreSQL'].map((tech) => (
+              <button
+                key={tech}
+                onClick={() => {
+                  if (selectedTechnologies.includes(tech)) {
+                    setSelectedTechnologies(prev => prev.filter(t => t !== tech))
+                  } else {
+                    setSelectedTechnologies(prev => [...prev, tech])
+                  }
+                }}
+                className={clsx(
+                  "px-12px py-6px font-mono text-brutal-xs font-bold transition-all",
+                  selectedTechnologies.includes(tech)
+                    ? "bg-primary-brutalist text-event-horizon border-2 border-primary-brutalist"
+                    : "bg-event-horizon text-primary-brutalist border-2 border-basalt-border hover:border-primary-brutalist"
+                )}
+              >
+                {tech}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <ReviewerSuggestions
+          technologies={selectedTechnologies}
+          workspaceId={currentWorkspace._id}
+          excludeUserId={currentUser._id}
+          maxSuggestions={5}
+          onSelectReviewer={(userId) => console.log('Selected reviewer:', userId)}
+          mode="detailed"
+        />
+      </div>
+
+      {/* Task Assignment Helper Demo */}
+      <div className="brutal-card p-24px">
+        <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+          <HiOutlineClipboardList className="w-20px h-20px" />
+          SMART TASK ASSIGNMENT
+        </h3>
+        <p className="text-brutal-sm text-primary-brutalist/80 mb-16px">
+          Automatically detect technologies from task details and suggest the best assignees
+        </p>
+
+        <TaskAssignmentHelper
+          workspaceId={currentWorkspace._id}
+          currentAssignees={assignedUsers}
+          onAssigneeChange={setAssignedUsers}
+          taskTitle="Implement React component with TypeScript and integrate Node.js API"
+          taskDescription="Need to create a new dashboard component using React hooks and TypeScript. The component should fetch data from our Node.js backend API and handle real-time updates."
+          taskLabels={['frontend', 'api-integration', 'urgent']}
+          mode="full"
+        />
+      </div>
+
+      {/* Integration Examples */}
+      <div className="brutal-card p-24px bg-event-horizon">
+        <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+          <HiOutlineCode className="w-20px h-20px" />
+          INTEGRATION POINTS
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16px">
+          <div>
+            <h4 className="font-mono text-brutal-sm font-bold mb-8px">WHERE TO FIND THESE FEATURES:</h4>
+            <ul className="space-y-4px">
+              <li className="flex items-center gap-8px">
+                <span className="w-4px h-4px bg-primary-brutalist"></span>
+                <span className="font-mono text-brutal-xs">Team Page → "FIND EXPERT" & "EXPERTISE MATRIX" buttons</span>
+              </li>
+              <li className="flex items-center gap-8px">
+                <span className="w-4px h-4px bg-primary-brutalist"></span>
+                <span className="font-mono text-brutal-xs">Project Management → Team section → "EXPERTISE MATRIX" button</span>
+              </li>
+              <li className="flex items-center gap-8px">
+                <span className="w-4px h-4px bg-primary-brutalist"></span>
+                <span className="font-mono text-brutal-xs">Quick Actions → "FIND EXPERT" action (Shift+F)</span>
+              </li>
+              <li className="flex items-center gap-8px">
+                <span className="w-4px h-4px bg-primary-brutalist"></span>
+                <span className="font-mono text-brutal-xs">Developer Profile Page → View & edit full profile</span>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-mono text-brutal-sm font-bold mb-8px">COMING SOON:</h4>
+            <ul className="space-y-4px">
+              <li className="flex items-center gap-8px">
+                <span className="w-4px h-4px bg-brutal-warning"></span>
+                <span className="font-mono text-brutal-xs">Task creation/edit → Smart assignee suggestions</span>
+              </li>
+              <li className="flex items-center gap-8px">
+                <span className="w-4px h-4px bg-brutal-warning"></span>
+                <span className="font-mono text-brutal-xs">Settings page → Developer profile tab</span>
+              </li>
+              <li className="flex items-center gap-8px">
+                <span className="w-4px h-4px bg-brutal-warning"></span>
+                <span className="font-mono text-brutal-xs">GitHub PR integration → Auto-suggest reviewers</span>
+              </li>
+              <li className="flex items-center gap-8px">
+                <span className="w-4px h-4px bg-brutal-warning"></span>
+                <span className="font-mono text-brutal-xs">AFK detection → Auto status updates</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Modals */}
+      {showExpertiseSearch && (
+        <ExpertiseSearchModal
+          onClose={() => setShowExpertiseSearch(false)}
+          workspaceId={currentWorkspace._id}
+        />
+      )}
+
+      {showExpertiseMatrix && (
+        <TeamExpertiseMatrix
+          workspaceId={currentWorkspace._id}
+          onClose={() => setShowExpertiseMatrix(false)}
+          isModal={true}
+        />
+      )}
+
+      {showEditProfile && (
+        <EditDeveloperProfileModal
+          userId={currentUser._id}
+          onClose={() => setShowEditProfile(false)}
+        />
+      )}
+    </div>
+  )
+}

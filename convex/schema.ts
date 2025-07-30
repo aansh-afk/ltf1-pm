@@ -356,6 +356,35 @@ export default defineSchema({
   // Developer profiles - optional for backward compatibility
   developerProfiles: defineTable({
     userId: v.id("users"),
+    
+    // Profile information (from frontend form)
+    profile: v.optional(v.object({
+      role: v.optional(v.string()),
+      bio: v.optional(v.string()),
+      location: v.optional(v.string()),
+      phone: v.optional(v.string()),
+      githubUsername: v.optional(v.string()),
+      yearsExperience: v.optional(v.number()),
+      careerLevel: v.optional(v.union(v.literal("junior"), v.literal("mid"), v.literal("senior"), v.literal("lead"), v.literal("principal"))),
+      skills: v.optional(v.array(v.string())),
+      interests: v.optional(v.array(v.string())),
+      workingHours: v.optional(v.object({
+        start: v.string(),
+        end: v.string(),
+      })),
+      communicationPrefs: v.optional(v.union(v.literal("email"), v.literal("slack"), v.literal("teams"), v.literal("discord"))),
+      workStyle: v.optional(v.string()),
+      careerGoals: v.optional(v.string()),
+      mentoringInterests: v.optional(v.array(v.string())),
+      technologies: v.optional(v.array(v.object({
+        name: v.string(),
+        level: v.union(v.literal("expert"), v.literal("proficient"), v.literal("learning")),
+      }))),
+      timezone: v.optional(v.string()),
+      availability: v.optional(v.string()),
+    })),
+    
+    // Work status
     status: v.optional(v.union(
       v.literal("LOCKED_IN"),
       v.literal("AVAILABLE"),

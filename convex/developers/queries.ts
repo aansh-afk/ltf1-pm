@@ -38,21 +38,47 @@ export const getDeveloperProfile = query({
     const user = await ctx.db.get(args.userId);
     if (!user) return null;
 
-    const profile = await ctx.db
+    const developerProfile = await ctx.db
       .query("developerProfiles")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
 
-    // Return merged data with defaults for existing users without profiles
+    if (!developerProfile) {
+      // Return user data with no profile
+      return {
+        ...user,
+        profile: null,
+        hasProfile: false,
+      };
+    }
+
+    // Merge user bio into profile object if it exists
+    const profileData = developerProfile.profile || {};
+    if (user.bio && !profileData.bio) {
+      profileData.bio = user.bio;
+    }
+
+    // Return merged data with the nested profile structure
     return {
       ...user,
-      profile: profile || {
-        ...getDefaultProfile(),
-        userId: args.userId,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+      name: user.name,
+      bio: user.bio,
+      profile: {
+        ...profileData,
+        // Include developer status fields at the profile level for backward compatibility
+        status: developerProfile.status,
+        statusMessage: developerProfile.statusMessage,
+        timezone: developerProfile.timezone || profileData.timezone,
+        workHours: developerProfile.workHours,
+        techStack: developerProfile.techStack,
+        currentFocus: developerProfile.currentFocus,
+        reviewPreferences: developerProfile.reviewPreferences,
+        githubStats: developerProfile.githubStats,
+        gitCoAuthorString: developerProfile.gitCoAuthorString,
+        availability: developerProfile.availability,
+        profileCompleteness: developerProfile.profileCompleteness,
       },
-      hasProfile: !!profile,
+      hasProfile: true,
     };
   },
 });
@@ -70,20 +96,45 @@ export const getMyProfile = query({
 
     if (!user) return null;
 
-    const profile = await ctx.db
+    // Call the handler logic directly
+    const developerProfile = await ctx.db
       .query("developerProfiles")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .first();
 
+    if (!developerProfile) {
+      return {
+        ...user,
+        profile: null,
+        hasProfile: false,
+      };
+    }
+
+    // Merge user bio into profile object if it exists
+    const profileData = developerProfile.profile || {};
+    if (user.bio && !profileData.bio) {
+      profileData.bio = user.bio;
+    }
+
     return {
       ...user,
-      profile: profile || {
-        ...getDefaultProfile(),
-        userId: user._id,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+      name: user.name,
+      bio: user.bio,
+      profile: {
+        ...profileData,
+        status: developerProfile.status,
+        statusMessage: developerProfile.statusMessage,
+        timezone: developerProfile.timezone || profileData.timezone,
+        workHours: developerProfile.workHours,
+        techStack: developerProfile.techStack,
+        currentFocus: developerProfile.currentFocus,
+        reviewPreferences: developerProfile.reviewPreferences,
+        githubStats: developerProfile.githubStats,
+        gitCoAuthorString: developerProfile.gitCoAuthorString,
+        availability: developerProfile.availability,
+        profileCompleteness: developerProfile.profileCompleteness,
       },
-      hasProfile: !!profile,
+      hasProfile: true,
     };
   },
 });
@@ -159,8 +210,10 @@ export const getTeamExpertiseMatrix = query({
           .withIndex("by_user", (q) => q.eq("userId", member.userId))
           .first();
 
-        if (profile?.techStack) {
-          profile.techStack.forEach(tech => allTechnologies.add(tech.name));
+        // Support both old techStack and new profile.technologies structure
+        const techStack = profile?.techStack || profile?.profile?.technologies || [];
+        if (techStack && techStack.length > 0) {
+          techStack.forEach(tech => allTechnologies.add(tech.name));
         }
 
         return {
@@ -183,7 +236,7 @@ export const getTeamExpertiseMatrix = query({
       members: memberProfiles.filter(Boolean).map(data => ({
         userId: data!.member.userId,
         name: data!.user.name,
-        expertise: data!.profile.techStack || [],
+        expertise: data!.profile.techStack || data!.profile.profile?.technologies || [],
         status: data!.profile.status || "AVAILABLE",
       })),
     };
@@ -238,10 +291,11 @@ export const getSuggestedReviewers = query({
           let score = 0;
           const reasons: string[] = [];
 
-          // Tech stack match
-          const techMatches = profile.techStack?.filter(tech => 
+          // Tech stack match (support both old and new structure)
+          const techStack = profile.techStack || profile.profile?.technologies || [];
+          const techMatches = techStack.filter(tech => 
             args.technologies.includes(tech.name)
-          ) || [];
+          );
           
           techMatches.forEach(tech => {
             if (tech.level === "expert") score += 3;
