@@ -143,6 +143,16 @@ export default function MyProfilePage() {
               )}
             </div>
 
+            {/* Bio Section */}
+            {developerProfile.profile?.bio && (
+              <div className="mb-24px">
+                <h3 className="font-mono text-brutal-xs font-bold mb-8px">ABOUT ME</h3>
+                <p className="text-brutal-sm text-cathode-white/80 whitespace-pre-wrap">
+                  {developerProfile.profile.bio}
+                </p>
+              </div>
+            )}
+
             {/* Quick Info Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-16px">
               <div className="p-16px bg-event-horizon border border-basalt-border">
@@ -205,45 +215,104 @@ export default function MyProfilePage() {
             )}
           </div>
 
-          {/* GitHub Stats */}
-          <div className="brutal-card p-24px">
+          {/* Skills & Interests */}
+          {(developerProfile.profile?.skills?.length > 0 || developerProfile.profile?.interests?.length > 0) && (
+            <div className="brutal-card p-24px">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-24px">
+                {/* Skills */}
+                {developerProfile.profile?.skills?.length > 0 && (
+                  <div>
+                    <h3 className="text-brutal-md font-bold mb-16px">SKILLS</h3>
+                    <div className="flex flex-wrap gap-8px">
+                      {developerProfile.profile.skills.map((skill: string) => (
+                        <span
+                          key={skill}
+                          className="px-12px py-6px font-mono text-brutal-xs bg-primary-brutalist/20 border-2 border-primary-brutalist text-primary-brutalist font-bold"
+                        >
+                          {skill.toUpperCase()}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Interests */}
+                {developerProfile.profile?.interests?.length > 0 && (
+                  <div>
+                    <h3 className="text-brutal-md font-bold mb-16px">INTERESTS</h3>
+                    <div className="flex flex-wrap gap-8px">
+                      {developerProfile.profile.interests.map((interest: string) => (
+                        <span
+                          key={interest}
+                          className="px-12px py-6px font-mono text-brutal-xs bg-brutal-info/20 border-2 border-brutal-info text-brutal-info font-bold"
+                        >
+                          {interest.toUpperCase()}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Career & Work Style */}
+          {(developerProfile.profile?.careerGoals || developerProfile.profile?.workStyle) && (
+            <div className="brutal-card p-24px">
+              <div className="space-y-24px">
+                {developerProfile.profile?.careerGoals && (
+                  <div>
+                    <h3 className="text-brutal-md font-bold mb-8px">CAREER GOALS</h3>
+                    <p className="text-brutal-sm text-cathode-white/80 whitespace-pre-wrap">
+                      {developerProfile.profile.careerGoals}
+                    </p>
+                  </div>
+                )}
+                
+                {developerProfile.profile?.workStyle && (
+                  <div>
+                    <h3 className="text-brutal-md font-bold mb-8px">WORK STYLE</h3>
+                    <p className="text-brutal-sm text-cathode-white/80 whitespace-pre-wrap">
+                      {developerProfile.profile.workStyle}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* GitHub Stats - Coming Soon */}
+          <div className="brutal-card p-24px relative overflow-hidden">
+            <div className="absolute inset-0 bg-basalt-border/10 z-10 flex items-center justify-center">
+              <div className="bg-event-horizon border-2 border-primary-brutalist px-24px py-16px">
+                <h4 className="text-brutal-lg font-bold text-primary-brutalist mb-8px">COMING SOON</h4>
+                <p className="text-brutal-sm text-cathode-white/80">GitHub integration will be available in a future update</p>
+              </div>
+            </div>
+            
             <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
               <HiOutlineChartBar className="w-20px h-20px text-primary-brutalist" />
               GITHUB STATISTICS
             </h3>
             
-            {developerProfile.profile?.githubStats ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-16px">
-                <div className="text-center p-16px bg-event-horizon border border-basalt-border">
-                  <div className="text-brutal-2xl font-bold text-primary-brutalist">
-                    {developerProfile.profile.githubStats.contributions || 0}
-                  </div>
-                  <div className="text-brutal-xs uppercase">Contributions</div>
-                </div>
-                <div className="text-center p-16px bg-event-horizon border border-basalt-border">
-                  <div className="text-brutal-2xl font-bold text-brutal-success">
-                    {developerProfile.profile.githubStats.pullRequests || 0}
-                  </div>
-                  <div className="text-brutal-xs uppercase">Pull Requests</div>
-                </div>
-                <div className="text-center p-16px bg-event-horizon border border-basalt-border">
-                  <div className="text-brutal-2xl font-bold text-brutal-info">
-                    {developerProfile.profile.githubStats.codeReviews || 0}
-                  </div>
-                  <div className="text-brutal-xs uppercase">Code Reviews</div>
-                </div>
-                <div className="text-center p-16px bg-event-horizon border border-basalt-border">
-                  <div className="text-brutal-2xl font-bold text-brutal-warning">
-                    {developerProfile.profile.githubStats.issuesResolved || 0}
-                  </div>
-                  <div className="text-brutal-xs uppercase">Issues Resolved</div>
-                </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-16px opacity-30">
+              <div className="text-center p-16px bg-event-horizon border border-basalt-border">
+                <div className="text-brutal-2xl font-bold text-primary-brutalist">--</div>
+                <div className="text-brutal-xs uppercase">Contributions</div>
               </div>
-            ) : (
-              <p className="text-brutal-sm text-primary-brutalist/60">
-                Connect your GitHub account to display your contribution stats.
-              </p>
-            )}
+              <div className="text-center p-16px bg-event-horizon border border-basalt-border">
+                <div className="text-brutal-2xl font-bold text-brutal-success">--</div>
+                <div className="text-brutal-xs uppercase">Pull Requests</div>
+              </div>
+              <div className="text-center p-16px bg-event-horizon border border-basalt-border">
+                <div className="text-brutal-2xl font-bold text-brutal-info">--</div>
+                <div className="text-brutal-xs uppercase">Code Reviews</div>
+              </div>
+              <div className="text-center p-16px bg-event-horizon border border-basalt-border">
+                <div className="text-brutal-2xl font-bold text-brutal-warning">--</div>
+                <div className="text-brutal-xs uppercase">Issues Resolved</div>
+              </div>
+            </div>
           </div>
         </div>
       ) : (
