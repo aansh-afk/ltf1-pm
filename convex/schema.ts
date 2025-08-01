@@ -56,6 +56,7 @@ export default defineSchema({
       }),
       integrations: v.optional(v.object({
         githubToken: v.optional(v.string()),
+        githubInstallationId: v.optional(v.number()),
         googleCalendarId: v.optional(v.string()),
       })),
     }),
@@ -445,4 +446,126 @@ export default defineSchema({
     .searchIndex("search_expertise", {
       searchField: "searchableText",
     }),
+
+  // GitHub Integration Tables
+  githubInstallations: defineTable({
+    installationId: v.number(), // GitHub's installation ID
+    accountType: v.union(v.literal("user"), v.literal("organization")),
+    accountName: v.string(), // GitHub username or org name
+    accountId: v.number(), // GitHub account ID
+    targetType: v.union(v.literal("user"), v.literal("organization")),
+    permissions: v.any(), // GitHub permissions object
+    events: v.array(v.string()), // Webhook events subscribed
+    repositorySelection: v.union(v.literal("all"), v.literal("selected")),
+    installedAt: v.number(),
+    updatedAt: v.number(),
+    suspendedAt: v.optional(v.number()),
+  })
+    .index("by_installation_id", ["installationId"])
+    .index("by_account", ["accountName"]),
+
+  githubRepositories: defineTable({
+    installationId: v.number(),
+    repoId: v.number(), // GitHub's repository ID
+    nodeId: v.string(), // GitHub's node ID
+    owner: v.string(),
+    name: v.string(),
+    fullName: v.string(), // owner/name
+    private: v.boolean(),
+    description: v.optional(v.string()),
+    defaultBranch: v.string(),
+    language: v.optional(v.string()),
+    topics: v.array(v.string()),
+    stargazersCount: v.number(),
+    forksCount: v.number(),
+    openIssuesCount: v.number(),
+    createdAt: v.string(), // ISO date string
+    updatedAt: v.string(), // ISO date string
+    pushedAt: v.optional(v.string()), // ISO date string
+    connectedAt: v.number(), // When connected to LTF1
+    syncedAt: v.optional(v.number()), // Last sync time
+  })
+    .index("by_installation", ["installationId"])
+    .index("by_repo_id", ["repoId"])
+    .index("by_full_name", ["fullName"]),
+
+  githubWebhookEvents: defineTable({
+    eventType: v.string(), // push, pull_request, etc.
+    deliveryId: v.string(), // GitHub's delivery ID
+    payload: v.any(), // Raw webhook payload
+    signature: v.string(), // Webhook signature
+    receivedAt: v.number(),
+    processedAt: v.optional(v.number()),
+    status: v.union(v.literal("pending"), v.literal("processed"), v.literal("failed")),
+    error: v.optional(v.string()),
+  })
+    .index("by_type", ["eventType", "receivedAt"])
+    .index("by_status", ["status"])
+    .index("by_delivery_id", ["deliveryId"]),
+
+  githubActivities: defineTable({
+    type: v.string(), // push, pull_request, issue, etc.
+    repositoryFullName: v.string(),
+    actor: v.string(), // GitHub username
+    metadata: v.any(), // Event-specific data
+    timestamp: v.number(),
+  })
+    .index("by_repository", ["repositoryFullName"])
+    .index("by_actor", ["actor"])
+    .index("by_type", ["type", "timestamp"]),
+
+  githubCommits: defineTable({
+    repositoryFullName: v.string(),
+    sha: v.string(), // Commit SHA
+    message: v.string(),
+    author: v.object({
+      name: v.string(),
+      email: v.string(),
+      date: v.optional(v.string()),
+    }),
+    timestamp: v.string(), // ISO date string
+    url: v.string(), // GitHub URL
+    branch: v.string(),
+    linkedTaskKeys: v.array(v.string()), // e.g., ["WEB-123", "API-456"]
+    createdAt: v.number(),
+  })
+    .index("by_repository", ["repositoryFullName"])
+    .index("by_sha", ["sha"])
+    .index("by_branch", ["repositoryFullName", "branch"]),
+
+  githubPullRequests: defineTable({
+    repositoryFullName: v.string(),
+    number: v.number(), // PR number
+    title: v.string(),
+    state: v.string(), // open, closed, merged
+    draft: v.boolean(),
+    url: v.string(),
+    createdAt: v.string(), // ISO date string
+    updatedAt: v.string(),
+    closedAt: v.optional(v.string()),
+    mergedAt: v.optional(v.string()),
+    author: v.string(), // GitHub username
+    linkedTaskKeys: v.array(v.string()), // e.g., ["WEB-123", "API-456"]
+  })
+    .index("by_repository", ["repositoryFullName"])
+    .index("by_repository_number", ["repositoryFullName", "number"])
+    .index("by_state", ["state"]),
+
+  githubIssues: defineTable({
+    repositoryFullName: v.string(),
+    number: v.number(), // Issue number
+    title: v.string(),
+    body: v.optional(v.string()),
+    state: v.string(), // open, closed
+    labels: v.array(v.string()),
+    assignees: v.array(v.string()), // GitHub usernames
+    author: v.string(), // GitHub username
+    createdAt: v.string(), // ISO date string
+    updatedAt: v.string(),
+    closedAt: v.optional(v.string()),
+    linkedTaskId: v.optional(v.id("tasks")), // If synced to LTF1 task
+  })
+    .index("by_repository", ["repositoryFullName"])
+    .index("by_repository_number", ["repositoryFullName", "number"])
+    .index("by_linked_task", ["linkedTaskId"]),
 });

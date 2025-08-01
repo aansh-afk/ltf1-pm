@@ -15,6 +15,7 @@ import {
 } from 'react-icons/hi'
 import DeveloperStatusIndicator from '../components/features/developer/DeveloperStatusIndicator'
 import { EditDeveloperProfileModal } from '../components/features/profile/EditDeveloperProfileModal'
+import { GitHubProfileSection } from '../components/features/profile/GitHubProfileSection'
 import clsx from 'clsx'
 
 export default function MyProfilePage() {
@@ -30,6 +31,12 @@ export default function MyProfilePage() {
     api.developers.queries.getDeveloperProfile,
     currentUser ? { userId: currentUser._id } : 'skip'
   )
+  
+  // Get GitHub stats to check if connected
+  const githubStats = useQuery(
+    api.integrations.github.queries.getDeveloperGitHubStats,
+    currentUser ? { userId: currentUser._id } : 'skip'
+  )
 
   // Check if profile is complete
   const isProfileComplete = () => {
@@ -40,7 +47,8 @@ export default function MyProfilePage() {
       profile.role &&
       profile.technologies &&
       profile.technologies.length > 0 &&
-      profile.timezone
+      profile.timezone &&
+      githubStats !== null // GitHub must be connected
     )
   }
 
@@ -84,6 +92,7 @@ export default function MyProfilePage() {
               <h3 className="text-brutal-md font-bold text-event-horizon">COMPLETE YOUR PROFILE</h3>
               <p className="text-brutal-sm text-event-horizon/80">
                 A complete profile helps your team find the right person for tasks and code reviews.
+                {!githubStats && " Don't forget to connect your GitHub account!"}
               </p>
             </div>
           </div>
@@ -281,39 +290,15 @@ export default function MyProfilePage() {
             </div>
           )}
 
-          {/* GitHub Stats - Coming Soon */}
-          <div className="brutal-card p-24px relative overflow-hidden">
-            <div className="absolute inset-0 bg-basalt-border/10 z-10 flex items-center justify-center">
-              <div className="bg-event-horizon border-2 border-primary-brutalist px-24px py-16px">
-                <h4 className="text-brutal-lg font-bold text-primary-brutalist mb-8px">COMING SOON</h4>
-                <p className="text-brutal-sm text-cathode-white/80">GitHub integration will be available in a future update</p>
-              </div>
-            </div>
-            
-            <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
-              <HiOutlineChartBar className="w-20px h-20px text-primary-brutalist" />
-              GITHUB STATISTICS
-            </h3>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-16px opacity-30">
-              <div className="text-center p-16px bg-event-horizon border border-basalt-border">
-                <div className="text-brutal-2xl font-bold text-primary-brutalist">--</div>
-                <div className="text-brutal-xs uppercase">Contributions</div>
-              </div>
-              <div className="text-center p-16px bg-event-horizon border border-basalt-border">
-                <div className="text-brutal-2xl font-bold text-brutal-success">--</div>
-                <div className="text-brutal-xs uppercase">Pull Requests</div>
-              </div>
-              <div className="text-center p-16px bg-event-horizon border border-basalt-border">
-                <div className="text-brutal-2xl font-bold text-brutal-info">--</div>
-                <div className="text-brutal-xs uppercase">Code Reviews</div>
-              </div>
-              <div className="text-center p-16px bg-event-horizon border border-basalt-border">
-                <div className="text-brutal-2xl font-bold text-brutal-warning">--</div>
-                <div className="text-brutal-xs uppercase">Issues Resolved</div>
-              </div>
-            </div>
-          </div>
+          {/* GitHub Stats */}
+          <GitHubProfileSection 
+            userId={currentUser._id} 
+            isProfileComplete={profileComplete}
+            onConnect={() => {
+              // Refresh profile data after connecting GitHub
+              window.location.reload();
+            }}
+          />
         </div>
       ) : (
         // No Profile State
