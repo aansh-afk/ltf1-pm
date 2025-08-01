@@ -39,7 +39,7 @@ import CreateTaskModal from '@/components/features/task/CreateTaskModal'
 import EditTaskModal from '@/components/features/task/EditTaskModal'
 import TaskBoard from '@/components/features/task/TaskBoard'
 import TaskList from '@/components/features/task/TaskList'
-import ConnectRepositoryModal from '@/components/features/github/ConnectRepositoryModal'
+import { GitHubProjectTab } from '@/components/features/github/GitHubProjectTab'
 import SprintBoard from '@/components/features/sprint/SprintBoard'
 import CreateSprintModal from '@/components/features/sprint/CreateSprintModal'
 import TaskCard from '@/components/features/task/TaskCard'
@@ -80,7 +80,6 @@ export default function ProjectManagementPage() {
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false)
   const [showEditTaskModal, setShowEditTaskModal] = useState(false)
   const [showCreateSprintModal, setShowCreateSprintModal] = useState(false)
-  const [showConnectRepoModal, setShowConnectRepoModal] = useState(false)
   const [showProjectInviteModal, setShowProjectInviteModal] = useState(false)
   const [showScheduleMeetingModal, setShowScheduleMeetingModal] = useState(false)
   const [showExpertiseSearch, setShowExpertiseSearch] = useState(false)
@@ -2027,7 +2026,7 @@ export default function ProjectManagementPage() {
       case 'team':
         return renderTeamTab()
       case 'github':
-        return renderGitHubTab()
+        return <GitHubProjectTab project={project} workspaceId={workspaceId as any} />
       case 'meetings':
         return (
           <div className="space-y-24px">
@@ -2412,18 +2411,6 @@ export default function ProjectManagementPage() {
         onSuccess={() => {
           setShowCreateSprintModal(false)
           // Sprint will automatically refresh via Convex reactivity
-        }}
-      />
-    )}
-
-    {projectId && (
-      <ConnectRepositoryModal
-        isOpen={showConnectRepoModal}
-        onClose={() => setShowConnectRepoModal(false)}
-        projectId={projectId}
-        onSuccess={() => {
-          setShowConnectRepoModal(false)
-          // Project will automatically refresh via Convex reactivity
         }}
       />
     )}

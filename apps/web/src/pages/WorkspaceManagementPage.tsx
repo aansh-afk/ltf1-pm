@@ -20,6 +20,7 @@ import {
 } from 'react-icons/hi'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import CreateProjectModal from '@/components/features/project/CreateProjectModal'
+import { WorkspaceIntegrationsTab } from '@/components/features/github/WorkspaceIntegrationsTab'
 import clsx from 'clsx'
 
 interface WorkspaceTab {
@@ -93,7 +94,7 @@ export default function WorkspaceManagementPage() {
       case 'analytics':
         return <AnalyticsTab workspaceId={workspaceId!} />
       case 'integrations':
-        return <IntegrationsTab workspace={workspace} />
+        return <WorkspaceIntegrationsTab workspace={workspace} />
       case 'billing':
         return <BillingTab workspace={workspace} />
       case 'danger':
@@ -336,17 +337,6 @@ function AnalyticsTab({ workspaceId }: any) {
   )
 }
 
-function IntegrationsTab({ workspace }: any) {
-  return (
-    <div className="p-32px">
-      <h1 className="text-brutal-xl font-bold uppercase mb-32px">INTEGRATIONS</h1>
-      <div className="brutal-card p-32px text-center">
-        <HiOutlineLink className="w-64px h-64px mx-auto mb-16px text-cathode-white/50" />
-        <p className="text-brutal-sm text-cathode-white/70">INTEGRATIONS HUB COMING SOON</p>
-      </div>
-    </div>
-  )
-}
 
 function BillingTab({ workspace }: any) {
   return (

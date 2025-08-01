@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Outlet, Link, useLocation, useParams } from 'react-router-dom'
 import { UserButton } from '@clerk/clerk-react'
 import { motion } from 'framer-motion'
 import { 
@@ -22,6 +22,7 @@ import clsx from 'clsx'
 import { useResourceMonitor } from '../../hooks/useResourceMonitor'
 import { useAfkDetection } from '../../hooks/useAfkDetection'
 import { ProfileCompletionBanner } from '../features/profile/ProfileCompletionBanner'
+import { GitHubMonitor } from '../features/github/GitHubMonitor'
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile sidebar
@@ -32,6 +33,7 @@ export default function DashboardLayout() {
   })
   const [isHovered, setIsHovered] = useState(false)
   const location = useLocation()
+  const params = useParams()
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   // Real-time resource monitoring
@@ -197,6 +199,9 @@ export default function DashboardLayout() {
           </div>
         )}
 
+        {/* GITHUB MONITOR */}
+        <GitHubMonitor isExpanded={isExpanded} />
+
         {/* USER SECTION */}
         <div className={clsx(
           "absolute bottom-0 left-0 right-0 border-t-2 border-basalt-border",
@@ -324,6 +329,14 @@ export default function DashboardLayout() {
                 ({stats.tasks.active} active)
               </span>
             </span>
+            
+            <GitHubMonitor 
+              workspaceId={params.workspaceId}
+              projectId={params.projectId}
+              compact={true}
+            />
+            
+            <GitHubMonitor compact />
             
             <span className="ml-auto transition-all duration-300">
               <span className={clsx(

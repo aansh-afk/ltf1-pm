@@ -16,12 +16,15 @@ import {
   HiOutlineChip,
   HiOutlineClipboardCopy
 } from 'react-icons/hi'
+import { FaGithub } from 'react-icons/fa'
 import BrutalToggle from '../components/ui/BrutalToggle'
 import BrutalSlider from '../components/ui/BrutalSlider'
 import SettingsSection from '../components/features/settings/SettingsSection'
 import { useSettingsState } from '../hooks/useSettingsState'
 import { EditDeveloperProfileModal } from '../components/features/profile/EditDeveloperProfileModal'
 import DeveloperStatusIndicator from '../components/features/developer/DeveloperStatusIndicator'
+import { GitHubSettings } from '../components/features/github/GitHubSettings'
+import { GitHubSettingsTab } from '../components/features/settings/GitHubSettingsTab'
 
 type SettingsTab = 'profile' | 'developer' | 'accessibility' | 'notifications' | 'workspace' | 'github' | 'shortcuts'
 
@@ -31,7 +34,7 @@ const TABS: { id: SettingsTab; label: string; icon: React.ComponentType<any> }[]
   { id: 'accessibility', label: 'ACCESSIBILITY', icon: HiOutlineEye },
   { id: 'notifications', label: 'NOTIFICATIONS', icon: HiOutlineBell },
   { id: 'workspace', label: 'WORKSPACE', icon: HiOutlineBriefcase },
-  { id: 'github', label: 'GITHUB', icon: HiOutlineTerminal },
+  { id: 'github', label: 'GITHUB', icon: FaGithub },
   { id: 'shortcuts', label: 'SHORTCUTS', icon: HiOutlineTerminal },
 ]
 
@@ -51,7 +54,6 @@ export default function SettingsPage() {
   // Mutations
   const updateProfile = useMutation(api.auth.users.updateUserProfile)
   const updatePreferences = useMutation(api.auth.users.updateUserPreferences)
-  const validateGitHubToken = useMutation(api.auth.users.validateGitHubToken)
 
   // Profile state
   const {
@@ -184,38 +186,6 @@ export default function SettingsPage() {
     }
   }, [preferences.accessibility])
 
-  // GitHub token validation
-  const handleGitHubTokenValidation = async (token: string) => {
-    if (!token) {
-      await validateGitHubToken({ isValid: false })
-      return
-    }
-
-    try {
-      // Test the token by making a request to GitHub API
-      const response = await fetch('https://api.github.com/user', {
-        headers: {
-          'Authorization': `token ${token}`,
-          'Accept': 'application/vnd.github.v3+json'
-        }
-      })
-      
-      const isValid = response.ok
-      await validateGitHubToken({ isValid })
-      
-      if (isValid) {
-        toast.success('GITHUB TOKEN VALIDATED')
-        // Don't store the actual token, just mark it as validated
-        localStorage.setItem('github_token_status', 'validated')
-      } else {
-        toast.error('INVALID GITHUB TOKEN')
-        localStorage.removeItem('github_token_status')
-      }
-    } catch (error) {
-      toast.error('FAILED TO VALIDATE TOKEN')
-      await validateGitHubToken({ isValid: false })
-    }
-  }
 
   // Reset functions for each section
   const resetProfile = async () => {
@@ -919,57 +889,7 @@ export default function SettingsPage() {
 
           {/* GITHUB TAB */}
           {activeTab === 'github' && (
-            <>
-              <SettingsSection
-                title="GitHub Integration"
-                description="Connect your GitHub account to sync issues and pull requests."
-              >
-                <div className="space-y-16px">
-                  <div>
-                    <label className="block text-brutal-sm mb-8px">PERSONAL ACCESS TOKEN</label>
-                    <input
-                      type="password"
-                      placeholder="GHP_XXXXXXXXXXXXXXXXXXXX"
-                      onChange={(e) => handleGitHubTokenValidation(e.target.value)}
-                      className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
-                               font-mono text-brutal-md placeholder:text-neutral-600
-                               focus:border-primary-brutalist focus:outline-none transition-colors"
-                    />
-                    <p className="text-brutal-xs text-neutral-600 mt-8px">
-                      CREATE A TOKEN AT: GITHUB.COM/SETTINGS/TOKENS
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-16px">
-                    <div className={clsx(
-                      'px-16px py-8px border-2 border-basalt-border font-mono text-brutal-sm uppercase',
-                      currentUser?.githubTokenValidated 
-                        ? 'bg-success-brutalist text-event-horizon' 
-                        : 'bg-carbon-plate text-neutral-600'
-                    )}>
-                      STATUS: {currentUser?.githubTokenValidated ? 'VALIDATED' : 'NOT CONNECTED'}
-                    </div>
-                  </div>
-
-                  {currentUser?.githubUsername && (
-                    <div className="text-brutal-sm">
-                      GITHUB USERNAME: <span className="text-primary-brutalist">{currentUser.githubUsername}</span>
-                    </div>
-                  )}
-                </div>
-              </SettingsSection>
-
-              <SettingsSection
-                title="Repository Permissions"
-                description="Your token should have the following scopes: repo, read:org"
-              >
-                <div className="space-y-8px text-brutal-sm">
-                  <div>✓ FULL CONTROL OF PRIVATE REPOSITORIES</div>
-                  <div>✓ READ ACCESS TO ORGANIZATION MEMBERSHIP</div>
-                  <div>✓ WEBHOOK MANAGEMENT</div>
-                </div>
-              </SettingsSection>
-            </>
+            <GitHubSettingsTab currentUser={currentUser} />
           )}
           {/* SHORTCUTS TAB */}
           {activeTab === 'shortcuts' && (

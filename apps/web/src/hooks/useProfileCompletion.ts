@@ -25,6 +25,12 @@ export function useProfileCompletion(options: ProfileCompletionOptions = {}) {
     api.developers.queries.getDeveloperProfile,
     currentUser ? { userId: currentUser._id } : 'skip'
   )
+  
+  // Get GitHub stats to check if connected
+  const githubStats = useQuery(
+    api.integrations.github.queries.getDeveloperGitHubStats,
+    currentUser ? { userId: currentUser._id } : 'skip'
+  )
 
   // Check if profile is complete
   const isProfileComplete = () => {
@@ -35,7 +41,8 @@ export function useProfileCompletion(options: ProfileCompletionOptions = {}) {
       profile.role &&
       profile.technologies &&
       profile.technologies.length > 0 &&
-      profile.timezone
+      profile.timezone &&
+      githubStats !== null // GitHub must be connected
     )
   }
 
@@ -51,6 +58,7 @@ export function useProfileCompletion(options: ProfileCompletionOptions = {}) {
       if (!profile.role) missing.push('role')
       if (!profile.technologies || profile.technologies.length === 0) missing.push('expertise')
       if (!profile.timezone) missing.push('timezone')
+      if (githubStats === null) missing.push('GitHub connection')
     }
     return missing
   }
@@ -61,6 +69,7 @@ export function useProfileCompletion(options: ProfileCompletionOptions = {}) {
       enforceCompletion &&
       currentUser &&
       developerProfile !== undefined &&
+      githubStats !== undefined &&
       !profileComplete &&
       !excludePaths.includes(location.pathname)
     ) {
@@ -68,13 +77,14 @@ export function useProfileCompletion(options: ProfileCompletionOptions = {}) {
       sessionStorage.setItem('profile-completion-redirect', location.pathname)
       navigate('/profile')
     }
-  }, [enforceCompletion, currentUser, developerProfile, profileComplete, location.pathname, navigate, excludePaths])
+  }, [enforceCompletion, currentUser, developerProfile, githubStats, profileComplete, location.pathname, navigate, excludePaths])
 
   return {
-    isLoading: !currentUser || developerProfile === undefined,
+    isLoading: !currentUser || developerProfile === undefined || githubStats === undefined,
     profileComplete,
     missingFields: getMissingFields(),
     needsProfile: currentUser && !developerProfile?.profile,
-    profile: developerProfile?.profile
+    profile: developerProfile?.profile,
+    hasGitHub: githubStats !== null
   }
 }
