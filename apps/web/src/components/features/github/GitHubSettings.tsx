@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
+import { api } from '../../../../../../convex/_generated/api';
 import { FaGithub, FaCheckCircle, FaTimesCircle, FaExclamationCircle, FaSync } from 'react-icons/fa';
 import { HiOutlineExternalLink, HiOutlineTrash } from 'react-icons/hi';
 import { BrutalButton, BrutalCard } from '@/components/ui';

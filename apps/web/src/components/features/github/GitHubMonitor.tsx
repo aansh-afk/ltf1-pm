@@ -1,5 +1,5 @@
 import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
+import { api } from '../../../../../../convex/_generated/api';
 import { FaGithub, FaSync, FaExclamationTriangle } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
@@ -22,7 +22,7 @@ export function GitHubMonitor({ isExpanded, compact = false }: GitHubMonitorProp
   // Get user's GitHub installations
   const installations = useQuery(api.integrations.github.auth.getUserInstallations);
   
-  const hasGitHub = githubStats !== null;
+  const hasGitHub = githubStats !== null && githubStats !== undefined;
   const isStale = githubStats?.isStale;
   
   if (compact) {
@@ -71,9 +71,9 @@ export function GitHubMonitor({ isExpanded, compact = false }: GitHubMonitorProp
             Connect account →
           </a>
         </div>
-      ) : (
+      ) : githubStats ? (
         <div className="space-y-8px text-brutal-xs">
-          {githubStats.username && (
+          {githubStats?.username && (
             <div className="flex items-center justify-between">
               <span className="text-cathode-white/60">USER:</span>
               <span className="font-mono">@{githubStats.username}</span>
@@ -87,7 +87,7 @@ export function GitHubMonitor({ isExpanded, compact = false }: GitHubMonitorProp
               isStale ? "text-brutal-warning" : "text-brutal-success"
             )}>
               {isStale && <FaExclamationTriangle className="w-10px h-10px" />}
-              {githubStats.lastSynced 
+              {githubStats?.lastSynced 
                 ? formatDistanceToNow(new Date(githubStats.lastSynced), { addSuffix: true })
                 : 'Never'}
             </span>
@@ -95,12 +95,12 @@ export function GitHubMonitor({ isExpanded, compact = false }: GitHubMonitorProp
           
           <div className="flex items-center justify-between">
             <span className="text-cathode-white/60">PRS:</span>
-            <span className="font-mono">{githubStats.totalPRs || 0}</span>
+            <span className="font-mono">{githubStats?.totalPRs || 0}</span>
           </div>
           
           <div className="flex items-center justify-between">
             <span className="text-cathode-white/60">REVIEWS:</span>
-            <span className="font-mono">{githubStats.totalReviews || 0}</span>
+            <span className="font-mono">{githubStats?.totalReviews || 0}</span>
           </div>
           
           {installations && installations.length > 0 && (
@@ -111,6 +111,10 @@ export function GitHubMonitor({ isExpanded, compact = false }: GitHubMonitorProp
               </div>
             </div>
           )}
+        </div>
+      ) : (
+        <div className="text-cathode-white/60 text-center py-8px">
+          <span className="text-brutal-xs">Loading...</span>
         </div>
       )}
     </div>

@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { Id } from '@/convex/_generated/dataModel';
+import { api } from '../../../../../../convex/_generated/api';
+import type { Id } from '../../../../../../convex/_generated/dataModel';
 import { 
   FaGithub,
   FaSlack,
   FaJira,
   FaTrello,
   FaDiscord,
-  FaWebhook,
+  FaPlug,
   FaCheckCircle,
   FaTimesCircle,
   FaExclamationCircle,
@@ -312,7 +312,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
           <div className="flex items-center justify-between mb-24px">
             <div>
               <h2 className="text-brutal-lg font-bold flex items-center gap-12px">
-                <FaWebhook className="w-24px h-24px" />
+                <FaPlug className="w-24px h-24px" />
                 CUSTOM WEBHOOKS
               </h2>
               <p className="text-brutal-sm text-cathode-white/60 mt-8px">
