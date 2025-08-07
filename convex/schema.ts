@@ -302,6 +302,29 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_read", ["userId", "read"]),
 
+  // GitHub OAuth
+  githubOAuthStates: defineTable({
+    state: v.string(),
+    clerkId: v.string(),
+    returnUrl: v.optional(v.string()),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+  })
+    .index("by_state", ["state"]),
+
+  githubConnections: defineTable({
+    userId: v.id("users"),
+    githubId: v.number(),
+    githubUsername: v.string(),
+    accessToken: v.string(),
+    scope: v.string(),
+    tokenType: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_github_id", ["githubId"]),
+
   // Temporary permissive schema for migration - will be restored after user clears old data
   activities: defineTable(v.any())
     .index("by_type", ["type", "timestamp"]),
@@ -568,4 +591,15 @@ export default defineSchema({
     .index("by_repository", ["repositoryFullName"])
     .index("by_repository_number", ["repositoryFullName", "number"])
     .index("by_linked_task", ["linkedTaskId"]),
+
+  // GitHub webhook events storage
+  webhookEvents: defineTable({
+    type: v.string(),
+    repository: v.string(),
+    data: v.any(),
+    createdAt: v.number(),
+  })
+    .index("by_type", ["type"])
+    .index("by_repository", ["repository"])
+    .index("by_created", ["createdAt"]),
 });

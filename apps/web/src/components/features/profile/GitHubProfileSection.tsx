@@ -10,8 +10,9 @@ import {
   FaStar,
   FaExclamationTriangle
 } from 'react-icons/fa';
-import { HiOutlineExternalLink } from 'react-icons/hi';
+import { HiOutlineExternalLink, HiOutlineTrash } from 'react-icons/hi';
 import { BrutalButton, BrutalCard } from '@/components/ui';
+import { GitHubConnectButton } from '../github/GitHubConnectButton';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 
@@ -22,39 +23,34 @@ interface GitHubProfileSectionProps {
 }
 
 export function GitHubProfileSection({ userId, isProfileComplete, onConnect }: GitHubProfileSectionProps) {
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   // Get GitHub stats
   const githubStats = useQuery(api.integrations.github.queries.getDeveloperGitHubStats, { userId });
   
+  // Get GitHub connection info
+  const connectionInfo = useQuery(api.integrations.github.oauth.getGitHubConnectionInfo);
+  
   // Get user's GitHub installations
   const installations = useQuery(api.integrations.github.auth.getUserInstallations);
   
-  // Link GitHub account mutation
-  const linkGitHub = useMutation(api.integrations.github.auth.linkGitHubAccount);
+  // Disconnect mutation
+  const disconnectGitHub = useMutation(api.integrations.github.oauth.disconnectGitHub);
   
-  const handleConnectGitHub = async () => {
+  const handleDisconnect = async () => {
+    if (!confirm('Are you sure you want to disconnect your GitHub account?')) {
+      return;
+    }
+    
     try {
-      setIsConnecting(true);
-      
-      // For MVP, we'll prompt for GitHub username
-      const username = prompt('Enter your GitHub username:');
-      if (!username) {
-        setIsConnecting(false);
-        return;
-      }
-      
-      await linkGitHub({ githubUsername: username });
-      toast.success('GitHub account linked successfully!');
-      
+      await disconnectGitHub();
+      toast.success('GitHub account disconnected');
       if (onConnect) {
         onConnect();
       }
     } catch (error) {
-      console.error('Error linking GitHub:', error);
-      toast.error('Failed to link GitHub account');
-    } finally {
-      setIsConnecting(false);
+      console.error('Error disconnecting GitHub:', error);
+      toast.error('Failed to disconnect GitHub account');
     }
   };
   
@@ -88,13 +84,11 @@ export function GitHubProfileSection({ userId, isProfileComplete, onConnect }: G
           </p>
           
           <div className="space-y-12px">
-            <BrutalButton
-              onClick={handleConnectGitHub}
-              disabled={isConnecting}
+            <GitHubConnectButton 
+              onConnect={onConnect}
               className="w-full max-w-xs mx-auto"
-            >
-              {isConnecting ? 'CONNECTING...' : 'CONNECT GITHUB ACCOUNT'}
-            </BrutalButton>
+              size="lg"
+            />
             
             {installations && installations.length > 0 && (
               <p className="text-brutal-xs text-cathode-white/40">
