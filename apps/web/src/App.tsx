@@ -17,6 +17,7 @@ import SettingsPage from './pages/SettingsPage'
 import TeamPage from './pages/TeamPage'
 import JoinProjectPage from './pages/JoinProjectPage'
 import MyProfilePage from './pages/MyProfilePage'
+import GitHubCallbackPage from './pages/GitHubCallbackPage'
 import { useEnsureUser } from './hooks/useEnsureUser'
 import { DataMigrationBanner } from './components/admin/DataMigrationBanner'
 
@@ -66,6 +67,9 @@ function AppContent() {
         {/* Join Project Routes - accessible by anyone */}
         <Route path="/join-project" element={<JoinProjectPage />} />
         <Route path="/join-project/:inviteCode" element={<JoinProjectPage />} />
+        
+        {/* GitHub OAuth Callback */}
+        <Route path="/api/auth/github/callback" element={<GitHubCallbackPage />} />
 
         <Route path="/" element={
           <>

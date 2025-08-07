@@ -92,7 +92,7 @@ async function handleInstallationEvent(ctx: any, data: any) {
   switch (action) {
     case "created":
       // Store new installation
-      await ctx.runMutation(internal.integrations.github.app.storeInstallation, {
+      await ctx.runMutation(internal.integrations.github.appSimple.storeInstallation, {
         installationId: installation.id,
         account: {
           type: installation.account.type,
@@ -114,19 +114,19 @@ async function handleInstallationEvent(ctx: any, data: any) {
       break;
 
     case "deleted":
-      await ctx.runMutation(internal.integrations.github.app.removeInstallation, {
+      await ctx.runMutation(internal.integrations.github.appSimple.removeInstallation, {
         installationId: installation.id,
       });
       break;
 
     case "suspend":
-      await ctx.runMutation(internal.integrations.github.app.suspendInstallation, {
+      await ctx.runMutation(internal.integrations.github.appSimple.suspendInstallation, {
         installationId: installation.id,
       });
       break;
 
     case "unsuspend":
-      await ctx.runMutation(internal.integrations.github.app.unsuspendInstallation, {
+      await ctx.runMutation(internal.integrations.github.appSimple.unsuspendInstallation, {
         installationId: installation.id,
       });
       break;
@@ -137,7 +137,7 @@ async function handleInstallationRepositoriesEvent(ctx: any, data: any) {
   const { action, installation, repositories_added, repositories_removed } = data;
 
   if (action === "added" && repositories_added) {
-    await ctx.runMutation(internal.integrations.github.app.addInstallationRepositories, {
+    await ctx.runMutation(internal.integrations.github.appSimple.addInstallationRepositories, {
       installationId: installation.id,
       repositories: repositories_added.map((repo: any) => ({
         id: repo.id,
@@ -150,7 +150,7 @@ async function handleInstallationRepositoriesEvent(ctx: any, data: any) {
   }
 
   if (action === "removed" && repositories_removed) {
-    await ctx.runMutation(internal.integrations.github.app.removeInstallationRepositories, {
+    await ctx.runMutation(internal.integrations.github.appSimple.removeInstallationRepositories, {
       installationId: installation.id,
       repositoryIds: repositories_removed.map((repo: any) => repo.id),
     });

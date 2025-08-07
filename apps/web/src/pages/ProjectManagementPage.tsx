@@ -97,8 +97,8 @@ export default function ProjectManagementPage() {
     labels: [],
     dueDateRange: { start: null, end: null },
     createdDateRange: { start: null, end: null },
-    hasTimeTracked: null,
-    isOverdue: null
+    hasTimeTracked: undefined,
+    isOverdue: undefined
   })
 
   // Move mutations to top level to follow React hooks rules
@@ -559,13 +559,13 @@ export default function ProjectManagementPage() {
       })
     }
     
-    if (taskFilters.hasTimeTracked !== null) {
+    if (taskFilters.hasTimeTracked !== undefined) {
       filteredTasks = filteredTasks.filter((t: any) => 
         taskFilters.hasTimeTracked ? (t.timeTracked && t.timeTracked > 0) : (!t.timeTracked || t.timeTracked === 0)
       )
     }
     
-    if (taskFilters.isOverdue !== null && taskFilters.isOverdue) {
+    if (taskFilters.isOverdue !== undefined && taskFilters.isOverdue) {
       filteredTasks = filteredTasks.filter((t: any) => 
         t.dueDate && new Date(t.dueDate) < new Date()
       )
@@ -629,8 +629,8 @@ export default function ProjectManagementPage() {
         {/* Filter Info Bar */}
         {(quickFilter || taskFilters.search || taskFilters.status.length > 0 || taskFilters.priority.length > 0 ||
          taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
-         taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== null ||
-         taskFilters.isOverdue !== null) && (
+         taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== undefined ||
+         taskFilters.isOverdue !== undefined) && (
           <div className="bg-carbon-plate border-2 border-basalt-border p-12px flex items-center justify-between">
             <div className="font-mono text-brutal-sm">
               SHOWING <span className="font-bold text-primary-brutalist">{filteredTasks.length}</span> OF <span className="font-bold">{tasks?.length || 0}</span> TASKS
@@ -652,8 +652,8 @@ export default function ProjectManagementPage() {
                   labels: [],
                   dueDateRange: { start: null, end: null },
                   createdDateRange: { start: null, end: null },
-                  hasTimeTracked: null,
-                  isOverdue: null
+                  hasTimeTracked: undefined,
+                  isOverdue: undefined
                 })
               }}
               className="text-xs font-mono uppercase text-brutal-error hover:underline"
