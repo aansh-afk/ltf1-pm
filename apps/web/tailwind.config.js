@@ -20,6 +20,7 @@ export default {
         'brutal-warning': '#FF00FF',
         'warning-brutalist': '#FF00FF',
         'success-brutalist': '#00FF00',
+        'terminal-green': '#00FF00',
       },
       backgroundImage: {
         'glitch-flare': 'linear-gradient(90deg, #00FFFF, #FF00FF, #FFFF00)',

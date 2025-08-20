@@ -12,7 +12,9 @@ import TaskTable from '@/components/features/task/TaskTable'
 import TaskFilters, { type TaskFilters as TaskFiltersType } from '@/components/features/task/TaskFilters'
 import FilterPresets from '@/components/features/task/FilterPresets'
 import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
+import { useShortcut } from '../contexts/ShortcutContext'
 import clsx from 'clsx'
+import toast from 'react-hot-toast'
 
 const defaultFilters: TaskFiltersType = {
   search: '',
@@ -108,6 +110,102 @@ export default function TasksPage() {
     if (effectiveFilters.isOverdue !== null) count++
     return count
   }
+
+  // Keyboard shortcuts integration
+  useEffect(() => {
+    const handleCommand = (event: CustomEvent) => {
+      const { command } = event.detail
+      
+      switch (command) {
+        case 'toggleTaskComplete':
+          // This will be handled by individual task components
+          break
+        
+        case 'editTask':
+          // This will be handled by individual task components
+          break
+        
+        case 'deleteTask':
+          // This will be handled by individual task components
+          break
+        
+        case 'assignTaskToMe':
+          // This will be handled by individual task components
+          break
+        
+        case 'setPriorityUrgent':
+        case 'setPriorityHigh':
+        case 'setPriorityMedium':
+        case 'setPriorityLow':
+          // These will be handled by individual task components
+          break
+        
+        case 'addTaskLabel':
+          // This will be handled by individual task components
+          break
+        
+        case 'setTaskDueDate':
+          // This will be handled by individual task components
+          break
+      }
+    }
+    
+    const handleNewTask = () => {
+      // This event should trigger the new task modal
+      // The actual modal component should listen for this event
+      toast.success('New task shortcut triggered')
+    }
+    
+    // Keyboard shortcuts for view switching
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return
+      }
+      
+      // View switching shortcuts
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+        switch (e.key.toLowerCase()) {
+          case 'b':
+            setViewMode('board')
+            break
+          case 'l':
+            setViewMode('list')
+            break
+          case 'c':
+            setViewMode('calendar')
+            break
+          case 't':
+            setViewMode('table')
+            break
+          case 'f':
+            setIsFiltersOpen(!isFiltersOpen)
+            break
+          case '/':
+            e.preventDefault()
+            // Focus search input
+            const searchInput = document.querySelector('input[placeholder*="SEARCH"]') as HTMLInputElement
+            searchInput?.focus()
+            break
+        }
+      }
+    }
+    
+    window.addEventListener('task-command' as any, handleCommand)
+    window.addEventListener('open-new-task' as any, handleNewTask)
+    document.addEventListener('keydown', handleKeyPress)
+    
+    return () => {
+      window.removeEventListener('task-command' as any, handleCommand)
+      window.removeEventListener('open-new-task' as any, handleNewTask)
+      document.removeEventListener('keydown', handleKeyPress)
+    }
+  }, [isFiltersOpen])
+
+  // Use specific shortcuts
+  useShortcut('newTask', () => {
+    window.dispatchEvent(new CustomEvent('open-new-task'))
+  })
 
   if (workspaceLoading) {
     return (

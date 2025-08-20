@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { SignIn, SignUp, SignedIn, SignedOut } from '@clerk/clerk-react'
 import { Toaster } from 'react-hot-toast'
 import { ConvexClientProvider } from './providers/ConvexClientProvider'
+import { ShortcutProvider } from './contexts/ShortcutContext'
 import DashboardLayout from './components/layout/DashboardLayout'
 import LandingPage from './pages/LandingPage'
 import Dashboard from './pages/Dashboard'
@@ -18,8 +19,11 @@ import TeamPage from './pages/TeamPage'
 import JoinProjectPage from './pages/JoinProjectPage'
 import MyProfilePage from './pages/MyProfilePage'
 import GitHubCallbackPage from './pages/GitHubCallbackPage'
+import TestCheckbox from './pages/TestCheckbox'
 import { useEnsureUser } from './hooks/useEnsureUser'
 import { DataMigrationBanner } from './components/admin/DataMigrationBanner'
+import CommandPalette from './components/shortcuts/CommandPalette'
+import ShortcutHelp from './components/shortcuts/ShortcutHelp'
 
 function AppContent() {
   // Ensure user is synced with Convex
@@ -40,6 +44,11 @@ function AppContent() {
       <SignedIn>
         <DataMigrationBanner />
       </SignedIn>
+      
+      {/* Global Shortcut Components */}
+      <CommandPalette />
+      <ShortcutHelp />
+      
       <Routes>
         <Route path="/" element={
           <>
@@ -92,6 +101,7 @@ function AppContent() {
           <Route path="meetings" element={<MeetingsPage />} />
           <Route path="sprints" element={<SprintPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="test-checkbox" element={<TestCheckbox />} />
         </Route>
 
         <Route path="*" element={
@@ -142,7 +152,9 @@ function App() {
   return (
     <ConvexClientProvider>
       <Router>
-        <AppContent />
+        <ShortcutProvider>
+          <AppContent />
+        </ShortcutProvider>
       </Router>
     </ConvexClientProvider>
   )

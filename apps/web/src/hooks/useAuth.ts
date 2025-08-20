@@ -5,19 +5,15 @@ import { useEffect } from 'react'
 
 export function useAuth() {
   const { user, isLoaded } = useUser()
-  const createOrUpdateUser = useMutation(api.auth.users.createOrUpdateUser)
+  const createCurrentUser = useMutation(api.auth.users.createCurrentUser)
   const currentUser = useQuery(api.auth.users.getCurrentUser)
 
   useEffect(() => {
-    if (isLoaded && user) {
-      createOrUpdateUser({
-        clerkId: user.id,
-        email: user.primaryEmailAddress?.emailAddress || '',
-        name: user.fullName || user.firstName || 'Anonymous',
-        avatarUrl: user.imageUrl,
-      }).catch(console.error)
+    if (isLoaded && user && !currentUser) {
+      // Only create user if it doesn't exist yet
+      createCurrentUser({}).catch(console.error)
     }
-  }, [isLoaded, user, createOrUpdateUser])
+  }, [isLoaded, user, currentUser, createCurrentUser])
 
   return {
     isLoaded,

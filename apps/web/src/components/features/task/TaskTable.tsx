@@ -14,6 +14,7 @@ import {
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 import CreateTaskModal from './CreateTaskModal'
+import { BrutalCheckbox } from '../../ui'
 
 interface TaskTableProps {
   tasks: any[]
@@ -215,10 +216,10 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
                     onClick={() => column.sortable && handleSort(column.key)}
                   >
                     {column.key === 'select' ? (
-                      <input
-                        type="checkbox"
+                      <BrutalCheckbox
                         checked={selectedTasks.size === tasks.length && tasks.length > 0}
                         onChange={handleSelectAll}
+                        size="sm"
                         className="w-16px h-16px border-2 border-basalt-border bg-carbon-plate"
                       />
                     ) : (
@@ -249,10 +250,10 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
                   >
                     {/* Select */}
                     <td className="p-16px">
-                      <input
-                        type="checkbox"
+                      <BrutalCheckbox
                         checked={selectedTasks.has(task._id)}
                         onChange={() => handleSelectTask(task._id)}
+                        size="sm"
                         className="w-16px h-16px border-2 border-basalt-border bg-carbon-plate"
                       />
                     </td>
