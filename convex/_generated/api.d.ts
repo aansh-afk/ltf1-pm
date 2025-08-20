@@ -17,6 +17,8 @@ import type * as activities_mutations from "../activities/mutations.js";
 import type * as activities_queries from "../activities/queries.js";
 import type * as admin_clearOldActivities from "../admin/clearOldActivities.js";
 import type * as admin_migrationStatus from "../admin/migrationStatus.js";
+import type * as ai_mutations from "../ai/mutations.js";
+import type * as ai_queries from "../ai/queries.js";
 import type * as auth_permissions from "../auth/permissions.js";
 import type * as auth_users from "../auth/users.js";
 import type * as clerk from "../clerk.js";
@@ -65,6 +67,8 @@ declare const fullApi: ApiFromModules<{
   "activities/queries": typeof activities_queries;
   "admin/clearOldActivities": typeof admin_clearOldActivities;
   "admin/migrationStatus": typeof admin_migrationStatus;
+  "ai/mutations": typeof ai_mutations;
+  "ai/queries": typeof ai_queries;
   "auth/permissions": typeof auth_permissions;
   "auth/users": typeof auth_users;
   clerk: typeof clerk;
