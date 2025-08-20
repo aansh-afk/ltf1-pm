@@ -14,7 +14,8 @@ import {
   HiOutlineTerminal,
   HiOutlineAcademicCap,
   HiOutlineChip,
-  HiOutlineClipboardCopy
+  HiOutlineClipboardCopy,
+  HiOutlineSparkles
 } from 'react-icons/hi'
 import { FaGithub } from 'react-icons/fa'
 import BrutalToggle from '../components/ui/BrutalToggle'
@@ -27,8 +28,9 @@ import { GitHubSettings } from '../components/features/github/GitHubSettings'
 import { GitHubSettingsTab } from '../components/features/settings/GitHubSettingsTab'
 import ShortcutSettings from './settings/ShortcutSettings'
 import ThemeSwitcher from '../components/theme/ThemeSwitcher'
+import AISettingsTab from '../components/features/settings/AISettingsTab'
 
-type SettingsTab = 'profile' | 'developer' | 'accessibility' | 'notifications' | 'workspace' | 'github' | 'shortcuts'
+type SettingsTab = 'profile' | 'developer' | 'accessibility' | 'notifications' | 'workspace' | 'github' | 'ai' | 'shortcuts'
 
 const TABS: { id: SettingsTab; label: string; icon: React.ComponentType<any> }[] = [
   { id: 'profile', label: 'PROFILE', icon: HiOutlineUser },
@@ -37,6 +39,7 @@ const TABS: { id: SettingsTab; label: string; icon: React.ComponentType<any> }[]
   { id: 'notifications', label: 'NOTIFICATIONS', icon: HiOutlineBell },
   { id: 'workspace', label: 'WORKSPACE', icon: HiOutlineBriefcase },
   { id: 'github', label: 'GITHUB', icon: FaGithub },
+  { id: 'ai', label: 'AI', icon: HiOutlineSparkles },
   { id: 'shortcuts', label: 'SHORTCUTS', icon: HiOutlineTerminal },
 ]
 
@@ -165,28 +168,9 @@ export default function SettingsPage() {
     }
   }, [currentUser, setProfileDataWithoutSave, setPreferencesWithoutSave])
 
-  // Apply accessibility settings to document
-  useEffect(() => {
-    const root = document.documentElement
-    const accessibility = preferences.accessibility || {}
-    
-    root.style.setProperty('--font-scale', (accessibility.fontScale || 1).toString())
-    root.style.setProperty('--line-height', (accessibility.lineHeight || 1.4).toString())
-    root.style.setProperty('--letter-spacing', accessibility.letterSpacing || 'normal')
-    root.style.setProperty('--focus-width', `${accessibility.focusWidth || 2}px`)
-    
-    if (accessibility.highContrast) {
-      root.setAttribute('data-accessibility', 'high-contrast')
-    } else {
-      root.removeAttribute('data-accessibility')
-    }
-    
-    if (accessibility.reducedMotion) {
-      root.classList.add('reduce-motion')
-    } else {
-      root.classList.remove('reduce-motion')
-    }
-  }, [preferences.accessibility])
+  // NOTE: Accessibility settings are now handled by AccessibilityContext
+  // to avoid conflicts with the theme system.
+  // The settings are saved to preferences and will be applied globally.
 
 
   // Reset functions for each section
@@ -279,7 +263,7 @@ export default function SettingsPage() {
       
       {/* Warning bar for unsaved changes */}
       {(hasUnsavedProfile || hasUnsavedPreferences) && (
-        <div className="bg-warning-brutalist border-2 border-[var(--theme-border)] p-16px mb-24px flex items-center justify-between">
+        <div className="border-2 p-16px mb-24px flex items-center justify-between" style={{ backgroundColor: 'var(--theme-warning)', borderColor: 'var(--theme-border)' }}>
           <div className="flex items-center gap-16px">
             <HiOutlineExclamation className="w-24px h-24px" />
             <span className="text-brutal-md uppercase">
@@ -295,9 +279,20 @@ export default function SettingsPage() {
                 if (hasUnsavedProfile) forceSaveProfile()
                 if (hasUnsavedPreferences) forceSavePreferences()
               }}
-              className="px-16px py-8px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]
-                       font-mono text-brutal-sm uppercase tracking-wider
-                       hover:bg-primary-brutalist hover:text-event-horizon transition-colors"
+              className="px-16px py-8px border-2 font-mono text-brutal-sm uppercase tracking-wider transition-colors"
+              style={{
+                backgroundColor: 'var(--theme-background-secondary)',
+                borderColor: 'var(--theme-border)',
+                color: 'var(--theme-foreground)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--theme-primary)';
+                e.currentTarget.style.color = 'var(--theme-background)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--theme-background-secondary)';
+                e.currentTarget.style.color = 'var(--theme-foreground)';
+              }}
             >
               SAVE NOW
             </button>
@@ -317,11 +312,22 @@ export default function SettingsPage() {
                   'w-full px-24px py-16px flex items-center gap-16px',
                   'border-b-2 border-[var(--theme-border)] last:border-b-0',
                   'font-mono text-brutal-md uppercase tracking-wider',
-                  'transition-colors text-left',
-                  activeTab === tab.id 
-                    ? 'bg-primary-brutalist text-event-horizon' 
-                    : 'hover:bg-basalt-border'
+                  'transition-colors text-left'
                 )}
+                style={{
+                  backgroundColor: activeTab === tab.id ? 'var(--theme-primary)' : 'transparent',
+                  color: activeTab === tab.id ? 'var(--theme-background)' : 'var(--theme-foreground)'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.currentTarget.style.backgroundColor = 'var(--theme-background-secondary)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
               >
                 <tab.icon className="w-20px h-20px" />
                 {tab.label}
@@ -347,9 +353,14 @@ export default function SettingsPage() {
                       type="text"
                       value={profileData.name}
                       onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                               font-mono text-brutal-md placeholder:text-neutral-600
-                               focus:border-primary-brutalist focus:outline-none transition-colors"
+                      className="w-full px-16px py-12px border-2 font-mono text-brutal-md focus:outline-none transition-colors"
+                      style={{
+                        backgroundColor: 'var(--theme-background)',
+                        borderColor: 'var(--theme-border)',
+                        color: 'var(--theme-foreground)'
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = 'var(--theme-primary)'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = 'var(--theme-border)'}
                       placeholder="YOUR NAME"
                     />
                   </div>
@@ -371,13 +382,18 @@ export default function SettingsPage() {
                   <textarea
                     value={profileData.bio}
                     onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value.slice(0, 150) }))}
-                    className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                             font-mono text-brutal-md placeholder:text-neutral-600
-                             focus:border-primary-brutalist focus:outline-none transition-colors resize-none"
+                    className="w-full px-16px py-12px border-2 font-mono text-brutal-md focus:outline-none transition-colors resize-none"
+                    style={{
+                      backgroundColor: 'var(--theme-background)',
+                      borderColor: 'var(--theme-border)',
+                      color: 'var(--theme-foreground)'
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = 'var(--theme-primary)'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = 'var(--theme-border)'}
                     placeholder="TELL US ABOUT YOURSELF..."
                     rows={3}
                   />
-                  <div className="text-brutal-xs text-neutral-600 mt-4px">
+                  <div className="text-brutal-xs mt-4px" style={{ color: 'var(--theme-foreground-secondary)' }}>
                     {profileData.bio.length}/150
                   </div>
                 </div>
@@ -389,9 +405,14 @@ export default function SettingsPage() {
                       type="url"
                       value={profileData.avatarUrl}
                       onChange={(e) => setProfileData(prev => ({ ...prev, avatarUrl: e.target.value }))}
-                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                               font-mono text-brutal-md placeholder:text-neutral-600
-                               focus:border-primary-brutalist focus:outline-none transition-colors"
+                      className="w-full px-16px py-12px border-2 font-mono text-brutal-md focus:outline-none transition-colors"
+                      style={{
+                        backgroundColor: 'var(--theme-background)',
+                        borderColor: 'var(--theme-border)',
+                        color: 'var(--theme-foreground)'
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = 'var(--theme-primary)'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = 'var(--theme-border)'}
                       placeholder="HTTPS://..."
                     />
                   </div>
@@ -402,9 +423,14 @@ export default function SettingsPage() {
                       type="text"
                       value={profileData.githubUsername}
                       onChange={(e) => setProfileData(prev => ({ ...prev, githubUsername: e.target.value }))}
-                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                               font-mono text-brutal-md placeholder:text-neutral-600
-                               focus:border-primary-brutalist focus:outline-none transition-colors"
+                      className="w-full px-16px py-12px border-2 font-mono text-brutal-md focus:outline-none transition-colors"
+                      style={{
+                        backgroundColor: 'var(--theme-background)',
+                        borderColor: 'var(--theme-border)',
+                        color: 'var(--theme-foreground)'
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = 'var(--theme-primary)'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = 'var(--theme-border)'}
                       placeholder="OCTOCAT"
                     />
                   </div>
@@ -456,13 +482,18 @@ export default function SettingsPage() {
                             developerProfile.profile.technologies.map((tech: any) => (
                               <span
                                 key={tech.name}
-                                className="px-12px py-6px bg-primary-brutalist/20 border border-primary-brutalist font-mono text-brutal-xs uppercase"
+                                className="px-12px py-6px font-mono text-brutal-xs uppercase"
+                                style={{
+                                  backgroundColor: 'var(--theme-primary-opacity-20)',
+                                  borderColor: 'var(--theme-primary)',
+                                  color: 'var(--theme-primary)'
+                                }}
                               >
                                 {tech.name} ({tech.level})
                               </span>
                             ))
                           ) : (
-                            <span className="text-brutal-sm text-neutral-600">NO EXPERTISE SET</span>
+                            <span className="text-brutal-sm" style={{ color: 'var(--theme-foreground-secondary)' }}>NO EXPERTISE SET</span>
                           )}
                         </div>
                       </div>
@@ -496,7 +527,7 @@ export default function SettingsPage() {
                     </div>
                   ) : (
                     <div className="text-center py-32px">
-                      <p className="text-brutal-md text-neutral-600 mb-16px">NO DEVELOPER PROFILE FOUND</p>
+                      <p className="text-brutal-md mb-16px" style={{ color: 'var(--theme-foreground-secondary)' }}>NO DEVELOPER PROFILE FOUND</p>
                       <button
                         onClick={() => setShowEditDeveloperProfile(true)}
                         className="brutal-btn"
@@ -515,32 +546,32 @@ export default function SettingsPage() {
                 {developerProfile?.profile?.githubStats ? (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-16px">
                     <div className="brutal-card p-16px text-center">
-                      <div className="text-brutal-2xl font-bold text-primary-brutalist">
+                      <div className="text-brutal-2xl font-bold" style={{ color: 'var(--theme-primary)' }}>
                         {developerProfile.profile.githubStats.contributions || 0}
                       </div>
                       <div className="text-brutal-xs uppercase">Contributions</div>
                     </div>
                     <div className="brutal-card p-16px text-center">
-                      <div className="text-brutal-2xl font-bold text-brutal-success">
+                      <div className="text-brutal-2xl font-bold" style={{ color: 'var(--theme-success)' }}>
                         {developerProfile.profile.githubStats.pullRequests || 0}
                       </div>
                       <div className="text-brutal-xs uppercase">Pull Requests</div>
                     </div>
                     <div className="brutal-card p-16px text-center">
-                      <div className="text-brutal-2xl font-bold text-brutal-info">
+                      <div className="text-brutal-2xl font-bold" style={{ color: 'var(--theme-info)' }}>
                         {developerProfile.profile.githubStats.codeReviews || 0}
                       </div>
                       <div className="text-brutal-xs uppercase">Code Reviews</div>
                     </div>
                     <div className="brutal-card p-16px text-center">
-                      <div className="text-brutal-2xl font-bold text-brutal-warning">
+                      <div className="text-brutal-2xl font-bold" style={{ color: 'var(--theme-warning)' }}>
                         {developerProfile.profile.githubStats.issuesResolved || 0}
                       </div>
                       <div className="text-brutal-xs uppercase">Issues Resolved</div>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-24px text-brutal-sm text-neutral-600">
+                  <div className="text-center py-24px text-brutal-sm" style={{ color: 'var(--theme-foreground-secondary)' }}>
                     CONNECT YOUR GITHUB ACCOUNT IN THE GITHUB TAB TO SEE STATS
                   </div>
                 )}
@@ -586,7 +617,7 @@ export default function SettingsPage() {
                     <label className="block text-brutal-sm mb-12px uppercase">Current Theme</label>
                     <ThemeSwitcher size="lg" variant="dropdown" showLabel={true} />
                   </div>
-                  <div className="text-brutal-xs text-neutral-600 uppercase">
+                  <div className="text-brutal-xs uppercase" style={{ color: 'var(--theme-foreground-secondary)' }}>
                     Tip: You can also change themes from the terminal using the 'theme' command
                   </div>
                 </div>
@@ -652,9 +683,14 @@ export default function SettingsPage() {
                         focusWidth: prev.accessibility?.focusWidth || 2
                       }
                     }))}
-                    className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                             font-mono text-brutal-md uppercase
-                             focus:border-primary-brutalist focus:outline-none transition-colors"
+                    className="w-full px-16px py-12px border-2 font-mono text-brutal-md uppercase focus:outline-none transition-colors"
+                    style={{
+                      backgroundColor: 'var(--theme-background)',
+                      borderColor: 'var(--theme-border)',
+                      color: 'var(--theme-foreground)'
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = 'var(--theme-primary)'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = 'var(--theme-border)'}
                   >
                     <option value="normal">NORMAL</option>
                     <option value="wide">WIDE</option>
@@ -739,7 +775,7 @@ export default function SettingsPage() {
                 />
 
                 {/* These are placeholders for future functionality */}
-                <div className="text-brutal-sm text-neutral-600 uppercase">
+                <div className="text-brutal-sm uppercase" style={{ color: 'var(--theme-foreground-secondary)' }}>
                   More notification options coming soon...
                 </div>
               </SettingsSection>
@@ -796,9 +832,14 @@ export default function SettingsPage() {
                     ...prev,
                     defaultWorkspaceId: e.target.value || undefined
                   }))}
-                  className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                           font-mono text-brutal-md uppercase
-                           focus:border-primary-brutalist focus:outline-none transition-colors"
+                  className="w-full px-16px py-12px border-2 font-mono text-brutal-md uppercase focus:outline-none transition-colors"
+                  style={{
+                    backgroundColor: 'var(--theme-background)',
+                    borderColor: 'var(--theme-border)',
+                    color: 'var(--theme-foreground)'
+                  }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = 'var(--theme-primary)'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = 'var(--theme-border)'}
                 >
                   <option value="">NO DEFAULT</option>
                   {workspaces?.map(ws => (
@@ -826,9 +867,14 @@ export default function SettingsPage() {
                         autoAssignSelf: prev.defaults?.autoAssignSelf || false
                       }
                     }))}
-                    className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                             font-mono text-brutal-md uppercase
-                             focus:border-primary-brutalist focus:outline-none transition-colors"
+                    className="w-full px-16px py-12px border-2 font-mono text-brutal-md uppercase focus:outline-none transition-colors"
+                    style={{
+                      backgroundColor: 'var(--theme-background)',
+                      borderColor: 'var(--theme-border)',
+                      color: 'var(--theme-foreground)'
+                    }}
+                    onFocus={(e) => e.currentTarget.style.borderColor = 'var(--theme-primary)'}
+                    onBlur={(e) => e.currentTarget.style.borderColor = 'var(--theme-border)'}
                   >
                     <option value="kanban">KANBAN BOARD</option>
                     <option value="list">LIST VIEW</option>
@@ -850,9 +896,14 @@ export default function SettingsPage() {
                           autoAssignSelf: prev.defaults?.autoAssignSelf || false
                         }
                       }))}
-                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                               font-mono text-brutal-md uppercase
-                               focus:border-primary-brutalist focus:outline-none transition-colors"
+                      className="w-full px-16px py-12px border-2 font-mono text-brutal-md uppercase focus:outline-none transition-colors"
+                      style={{
+                        backgroundColor: 'var(--theme-background)',
+                        borderColor: 'var(--theme-border)',
+                        color: 'var(--theme-foreground)'
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = 'var(--theme-primary)'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = 'var(--theme-border)'}
                     >
                       <option value="low">LOW</option>
                       <option value="medium">MEDIUM</option>
@@ -874,9 +925,14 @@ export default function SettingsPage() {
                           autoAssignSelf: prev.defaults?.autoAssignSelf || false
                         }
                       }))}
-                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                               font-mono text-brutal-md uppercase
-                               focus:border-primary-brutalist focus:outline-none transition-colors"
+                      className="w-full px-16px py-12px border-2 font-mono text-brutal-md uppercase focus:outline-none transition-colors"
+                      style={{
+                        backgroundColor: 'var(--theme-background)',
+                        borderColor: 'var(--theme-border)',
+                        color: 'var(--theme-foreground)'
+                      }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = 'var(--theme-primary)'}
+                      onBlur={(e) => e.currentTarget.style.borderColor = 'var(--theme-border)'}
                     >
                       <option value="task">TASK</option>
                       <option value="feature">FEATURE</option>
@@ -908,6 +964,12 @@ export default function SettingsPage() {
           {activeTab === 'github' && (
             <GitHubSettingsTab currentUser={currentUser} />
           )}
+          
+          {/* AI TAB */}
+          {activeTab === 'ai' && (
+            <AISettingsTab />
+          )}
+          
           {/* SHORTCUTS TAB */}
           {activeTab === 'shortcuts' && <ShortcutSettings />}
         </div>

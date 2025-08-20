@@ -28,6 +28,7 @@
   --theme-primary-hover: #FFFF33;
   --theme-primary-focus: #FFFF00;
   --theme-primary-active: #CCCC00;
+  --theme-primary-opacity-20: rgba(255, 255, 0, 0.2);
   
   --theme-success: #00FF00;
   --theme-success-hover: #33FF33;

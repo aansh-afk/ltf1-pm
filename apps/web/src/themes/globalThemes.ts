@@ -790,6 +790,7 @@ export const generateCSSCustomProperties = (theme: GlobalTheme): Record<string, 
     '--theme-primary-hover': theme.colors.primaryHover,
     '--theme-primary-focus': theme.colors.primaryFocus,
     '--theme-primary-active': theme.colors.primaryActive,
+    '--theme-primary-opacity-20': `${theme.colors.primary}33`, // 20% opacity (33 in hex)
     
     '--theme-success': theme.colors.success,
     '--theme-success-hover': theme.colors.successHover,

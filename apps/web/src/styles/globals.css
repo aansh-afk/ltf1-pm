@@ -260,6 +260,21 @@
     box-shadow: var(--theme-box-shadow-hover);
   }
 
+  /* BRUTAL BUTTON SECONDARY */
+  .brutal-btn-secondary {
+    @apply bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)];
+    @apply hover:translate-x-[2px] hover:translate-y-[2px];
+    @apply transition-all duration-200 ease-brutal-out;
+    @apply px-24px py-16px font-semibold uppercase tracking-wider;
+    box-shadow: var(--theme-box-shadow);
+    border-radius: 0 !important;
+  }
+  
+  .brutal-btn-secondary:hover {
+    @apply bg-[var(--theme-background-tertiary)];
+    box-shadow: var(--theme-box-shadow-hover);
+  }
+
   /* BRUTAL INPUT */
   .brutal-input {
     @apply bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)];

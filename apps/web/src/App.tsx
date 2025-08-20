@@ -22,6 +22,7 @@ import MyProfilePage from './pages/MyProfilePage'
 import GitHubCallbackPage from './pages/GitHubCallbackPage'
 import TestCheckbox from './pages/TestCheckbox'
 import TestAI from './pages/TestAI'
+import NotFoundPage from './pages/NotFoundPage'
 import { useEnsureUser } from './hooks/useEnsureUser'
 import { DataMigrationBanner } from './components/admin/DataMigrationBanner'
 import CommandPalette from './components/shortcuts/CommandPalette'
@@ -107,16 +108,8 @@ function AppContent() {
           <Route path="test-ai" element={<TestAI />} />
         </Route>
 
-        <Route path="*" element={
-          <>
-            <SignedIn>
-              <Navigate to="/dashboard" replace />
-            </SignedIn>
-            <SignedOut>
-              <Navigate to="/" replace />
-            </SignedOut>
-          </>
-        } />
+        {/* 404 Page - Catch all unmatched routes */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       
       <Toaster

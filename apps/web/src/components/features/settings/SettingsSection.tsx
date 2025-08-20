@@ -19,7 +19,7 @@ export default function SettingsSection({
         <div className="flex-1">
           <h3 className="text-brutal-lg mb-8px">{title.toUpperCase()}</h3>
           {description && (
-            <p className="text-brutal-sm text-neutral-400 max-w-2xl">
+            <p className="text-brutal-sm max-w-2xl" style={{ color: 'var(--theme-foreground-secondary)' }}>
               {description}
             </p>
           )}
@@ -27,9 +27,20 @@ export default function SettingsSection({
         {onReset && (
           <button
             onClick={onReset}
-            className="px-16px py-8px border-2 border-[var(--theme-border)] bg-transparent
-                     font-mono text-brutal-sm uppercase tracking-wider
-                     hover:bg-basalt-border transition-colors"
+            className="px-16px py-8px border-2 font-mono text-brutal-sm uppercase tracking-wider transition-colors hover:translate-x-[-2px] hover:translate-y-[-2px]"
+            style={{
+              borderColor: 'var(--theme-border)',
+              backgroundColor: 'transparent',
+              color: 'var(--theme-foreground)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--theme-background-secondary)';
+              e.currentTarget.style.boxShadow = '4px 4px 0 var(--theme-shadow)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
           >
             RESET
           </button>
