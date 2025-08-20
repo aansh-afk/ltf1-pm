@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@clerk/backend": "^2.5.0",
+    "@google/generative-ai": "^0.24.1",
     "@octokit/app": "^16.0.1",
     "@octokit/rest": "^22.0.0",
     "@octokit/webhooks": "^14.1.3",
