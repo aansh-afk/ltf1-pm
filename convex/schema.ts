@@ -365,6 +365,62 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_status", ["status"]),
 
+  // AI Sessions for tracking all AI interactions
+  aiSessions: defineTable({
+    userId: v.id("users"),
+    workspaceId: v.id("workspaces"),
+    type: v.string(), // task.title.generate, sprint.analysis, etc.
+    input: v.string(),
+    output: v.string(),
+    model: v.union(v.literal("gemini-2.5-flash"), v.literal("gemini-2.5-flash-lite")),
+    tokens: v.object({
+      input: v.number(),
+      output: v.number(),
+      total: v.number(),
+    }),
+    cost: v.number(),
+    latency: v.number(), // milliseconds
+    cached: v.boolean(),
+    feedback: v.optional(v.object({
+      helpful: v.boolean(),
+      rating: v.number(), // 1-5
+      comment: v.optional(v.string()),
+    })),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_workspace", ["workspaceId"])
+    .index("by_type", ["type"])
+    .index("by_created", ["createdAt"]),
+
+  // AI-generated insights and recommendations
+  aiInsights: defineTable({
+    workspaceId: v.id("workspaces"),
+    targetType: v.union(v.literal("task"), v.literal("sprint"), v.literal("project"), v.literal("team"), v.literal("user")),
+    targetId: v.string(), // ID of the target entity
+    insightType: v.union(
+      v.literal("risk"),
+      v.literal("recommendation"),
+      v.literal("opportunity"),
+      v.literal("anomaly"),
+      v.literal("prediction")
+    ),
+    severity: v.union(v.literal("critical"), v.literal("high"), v.literal("medium"), v.literal("low")),
+    title: v.string(),
+    description: v.string(),
+    recommendations: v.array(v.string()),
+    metadata: v.any(), // Additional context
+    dismissed: v.boolean(),
+    actionTaken: v.optional(v.string()),
+    createdAt: v.number(),
+    expiresAt: v.optional(v.number()),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_target", ["targetType", "targetId"])
+    .index("by_insight_type", ["insightType"])
+    .index("by_dismissed", ["dismissed"])
+    .index("by_created", ["createdAt"]),
+
   filterPresets: defineTable({
     workspaceId: v.id("workspaces"),
     userId: v.id("users"),

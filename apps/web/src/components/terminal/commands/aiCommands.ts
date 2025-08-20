@@ -1,43 +1,115 @@
+// AI Commands for LTF1 Command Terminal
+// Smart AI-powered commands using Gemini 2.5 Flash and Flash Lite
+
 import type { Command, CommandContext, CommandResult } from '../types'
+import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 
 export const aiCommands: Command[] = [
   {
     name: 'ai',
-    aliases: ['assist', 'suggest'],
-    description: 'AI-powered assistance and suggestions',
-    usage: 'ai [suggest-reviewer|estimate|generate|optimize|analyze] [options]',
+    aliases: ['smart', 'assist'],
+    description: 'AI-powered smart features (Gemini 2.5)',
+    usage: 'ai [command] [options]',
     examples: [
-      'ai suggest-reviewer TASK-123',
-      'ai estimate "Implement user authentication"',
-      'ai generate description TASK-456',
-      'ai optimize workflow',
-      'ai analyze sprint'
+      'ai suggest-task "Fix authentication bug"',
+      'ai estimate "Implement dashboard"',
+      'ai sprint-analysis current',
+      'ai insights project',
+      'ai ask "How to optimize queries?"'
     ],
     execute: async (args, context) => {
       const subcommand = args[0]
       
+      if (!subcommand) {
+        return showAIHelp()
+      }
+
       switch (subcommand) {
-        case 'suggest-reviewer':
+        // Task Intelligence
+        case 'suggest-task':
+        case 'suggest':
+          return await suggestTask(args.slice(1), context)
+        case 'estimate':
+        case 'points':
+          return await estimateTask(args.slice(1), context)
+        case 'assign':
+          return await suggestAssignee(args.slice(1), context)
+        case 'enhance':
+          return await enhanceDescription(args.slice(1), context)
+        case 'prioritize':
+        case 'priority':
+          return await suggestPriority(args.slice(1), context)
+        case 'labels':
+        case 'tags':
+          return await extractLabels(args.slice(1), context)
+        
+        // Sprint Intelligence
+        case 'sprint-analysis':
+        case 'analyze-sprint':
+          return await analyzeSprintCommand(args.slice(1), context)
+        case 'velocity':
+        case 'predict-velocity':
+          return await predictVelocity(args.slice(1), context)
+        case 'optimize-backlog':
+        case 'optimize':
+          return await optimizeBacklog(args.slice(1), context)
+        case 'risks':
+        case 'identify-risks':
+          return await identifyRisks(args.slice(1), context)
+        
+        // Code & Development
+        case 'review':
         case 'reviewer':
           return await suggestReviewer(args.slice(1), context)
-        case 'estimate':
-          return await estimateComplexity(args.slice(1), context)
-        case 'generate':
-          return await generateContent(args.slice(1), context)
-        case 'optimize':
-          return await optimizeWorkflow(args.slice(1), context)
-        case 'analyze':
-          return await analyzeData(args.slice(1), context)
-        case 'prioritize':
-          return await prioritizeTasks(context)
-        case 'bottleneck':
-          return await findBottlenecks(context)
+        case 'commit':
+          return await generateCommitMessage(args.slice(1), context)
+        case 'pr-summary':
+        case 'pr':
+          return await generatePRSummary(args.slice(1), context)
+        case 'test-cases':
+        case 'tests':
+          return await generateTestCases(args.slice(1), context)
+        case 'docs':
+        case 'document':
+          return await generateDocumentation(args.slice(1), context)
+        
+        // Natural Language
+        case 'ask':
+        case 'question':
+          return await askAI(args.slice(1), context)
+        case 'translate':
+          return await translateCommand(args.slice(1), context)
+        case 'explain':
+          return await explainCode(args.slice(1), context)
+        
+        // Analytics & Insights
+        case 'insights':
+          return await getInsights(args.slice(1), context)
+        case 'anomalies':
+        case 'detect':
+          return await detectAnomalies(args.slice(1), context)
+        case 'forecast':
         case 'predict':
-          return await predictDelivery(args.slice(1), context)
+          return await forecastProject(args.slice(1), context)
+        case 'workload':
+          return await analyzeWorkload(args.slice(1), context)
+        
+        // Utility
+        case 'status':
+          return await getAIStatus(args.slice(1), context)
+        case 'usage':
+        case 'stats':
+          return await getUsageStats(args.slice(1), context)
+        case 'feedback':
+          return await provideFeedback(args.slice(1), context)
+        case 'config':
+          return await configureAI(args.slice(1), context)
+        
         default:
           return {
             success: false,
-            output: `Unknown AI command: ${subcommand}\nUsage: ${aiCommands[0].usage}`,
+            output: `Unknown AI command: ${subcommand}\nUse 'ai help' for available commands`,
             type: 'error'
           }
       }
