@@ -1,0 +1,53 @@
+
+<svg width="550" height="250" viewBox="0 0 550 250" xmlns="http://www.w3.org/2000/svg" style="background-color:#000000;">
+    <defs>
+        <style>
+            .tagline-font { font-family: 'Courier New', Courier, monospace; font-size: 24px; fill: #FFFFFF; text-anchor: middle; }
+        </style>
+    </defs>
+
+    <!-- Black Background -->
+    <rect width="100%" height="100%" fill="#000000"/>
+
+    <!-- Logo Group: >LTF1 -->
+    <g id="logo-mark" transform="translate(80, 60)">
+        <!-- Cursor '>' -->
+        <g id="cursor">
+            <polygon points="0,0 30,40 0,80" fill="#FFFFFF"/>
+        </g>
+
+        <!-- L -->
+        <g id="char-L" transform="translate(50, 0)">
+            <rect x="0" y="0" width="15" height="80" fill="#FFFFFF"/>
+            <rect x="0" y="65" width="55" height="15" fill="#FFFFFF"/>
+        </g>
+
+        <!-- T -->
+        <g id="char-T" transform="translate(125, 0)">
+            <rect x="0" y="0" width="70" height="15" fill="#FFFFFF"/>
+            <rect x="27.5" y="0" width="15" height="80" fill="#FFFFFF"/>
+        </g>
+
+        <!-- F -->
+        <g id="char-F" transform="translate(215, 0)">
+            <rect x="0" y="0" width="60" height="15" fill="#FFFFFF"/>
+            <rect x="0" y="32.5" width="50" height="15" fill="#FFFFFF"/>
+            <rect x="0" y="0" width="15" height="80" fill="#FFFFFF"/>
+        </g>
+
+        <!-- 1 -->
+        <g id="char-1" transform="translate(295, 0)">
+            <rect x="0" y="0" width="30" height="15" fill="#FFFFFF"/>
+            <rect x="15" y="0" width="15" height="80" fill="#FFFFFF"/>
+            <rect x="0" y="65" width="45" height="15" fill="#FFFFFF"/>
+        </g>
+    </g>
+
+    <!-- Tagline: COMMAND YOUR PROJECTS -->
+    <text x="275" y="190" class="tagline-font">COMMAND YOUR PROJECTS</text>
+
+    <!-- Optional: Frame for a more "industrial plate" feel -->
+    <rect x="2" y="2" width="546" height="246" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+</svg>
+
+

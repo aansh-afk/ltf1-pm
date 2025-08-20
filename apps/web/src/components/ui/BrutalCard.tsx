@@ -16,13 +16,13 @@ const BrutalCard = forwardRef<HTMLDivElement, BrutalCardProps>(
     padding = 'md',
     ...props 
   }, ref) => {
-    const baseClasses = 'bg-carbon-plate transition-all duration-200 ease-brutal-out'
+    const baseClasses = 'bg-[var(--theme-background-secondary)] transition-all duration-200 ease-brutal-out'
     
     const variants = {
-      default: 'border-2 border-basalt-border',
-      bordered: 'border-4 border-basalt-border',
-      elevated: 'border-2 border-basalt-border shadow-brutal',
-      glitch: 'border-2 border-[#00FFFF] shadow-[0_0_10px_#00FFFF]',
+      default: 'border-2 border-[var(--theme-border)]',
+      bordered: 'border-4 border-[var(--theme-border)]',
+      elevated: 'border-2 border-[var(--theme-border)] shadow-[var(--theme-box-shadow)]',
+      glitch: 'border-2 border-[var(--theme-glow)] shadow-[0_0_10px_var(--theme-glow)]',
     }
 
     const paddings = {

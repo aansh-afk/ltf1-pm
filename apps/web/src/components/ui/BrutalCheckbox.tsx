@@ -37,17 +37,17 @@ const BrutalCheckbox = forwardRef<HTMLInputElement, BrutalCheckboxProps>(({
   }
 
   const variantClasses = {
-    default: 'border-basalt-border',
-    danger: 'border-brutal-error',
-    success: 'border-brutal-success',
-    warning: 'border-brutal-warning'
+    default: 'border-[var(--theme-border)]',
+    danger: 'border-[var(--theme-error)]',
+    success: 'border-[var(--theme-success)]',
+    warning: 'border-[var(--theme-warning)]'
   }
 
   const checkedVariantClasses = {
-    default: 'bg-primary-brutalist border-primary-brutalist',
-    danger: 'bg-brutal-error border-brutal-error',
-    success: 'bg-brutal-success border-brutal-success',
-    warning: 'bg-brutal-warning border-brutal-warning'
+    default: 'bg-[var(--theme-primary)] border-[var(--theme-primary)]',
+    danger: 'bg-[var(--theme-error)] border-[var(--theme-error)]',
+    success: 'bg-[var(--theme-success)] border-[var(--theme-success)]',
+    warning: 'bg-[var(--theme-warning)] border-[var(--theme-warning)]'
   }
 
   const labelSizeClasses = {
@@ -80,10 +80,10 @@ const BrutalCheckbox = forwardRef<HTMLInputElement, BrutalCheckboxProps>(({
             className={clsx(
               'border-2 transition-all duration-150',
               'flex items-center justify-center',
-              checked ? checkedVariantClasses[variant] : `bg-carbon-plate ${variantClasses[variant]}`,
-              !disabled && 'hover:border-primary-brutalist',
+              checked ? checkedVariantClasses[variant] : `bg-[var(--theme-background-secondary)] ${variantClasses[variant]}`,
+              !disabled && 'hover:border-[var(--theme-primary)]',
               checked && 'shadow-brutal-sm',
-              'focus-within:outline-none focus-within:ring-2 focus-within:ring-primary-brutalist focus-within:ring-offset-2 focus-within:ring-offset-event-horizon'
+              'focus-within:outline-none focus-within:ring-2 focus-within:ring-[var(--theme-border-focus)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--theme-background)]'
             )}
             style={sizeStyles[size]}>
             {/* Check mark or indeterminate mark */}
@@ -93,7 +93,7 @@ const BrutalCheckbox = forwardRef<HTMLInputElement, BrutalCheckboxProps>(({
                   iconSizeClasses[size],
                   'stroke-[3]'
                 )} 
-                style={{ color: '#000000' }}
+                style={{ color: 'var(--theme-background)' }}
               />
             )}
             {indeterminate && (
@@ -101,7 +101,7 @@ const BrutalCheckbox = forwardRef<HTMLInputElement, BrutalCheckboxProps>(({
                 style={{
                   width: size === 'sm' ? '8px' : size === 'md' ? '10px' : '12px',
                   height: '2px',
-                  backgroundColor: '#000000'
+                  backgroundColor: 'var(--theme-background)'
                 }}
               />
             )}
@@ -115,18 +115,18 @@ const BrutalCheckbox = forwardRef<HTMLInputElement, BrutalCheckboxProps>(({
               <span className={clsx(
                 'font-mono uppercase',
                 labelSizeClasses[size],
-                error ? 'text-brutal-error' : 'text-cathode-white'
+                error ? 'text-[var(--theme-error)]' : 'text-[var(--theme-foreground)]'
               )}>
                 {label}
               </span>
             )}
             {description && (
-              <span className="text-brutal-xs text-cathode-white/60">
+              <span className="text-brutal-xs text-[var(--theme-foreground)]/60">
                 {description}
               </span>
             )}
             {error && (
-              <span className="text-brutal-xs text-brutal-error flex items-center gap-4px">
+              <span className="text-brutal-xs text-[var(--theme-error)] flex items-center gap-4px">
                 <HiOutlineX className="w-12px h-12px" />
                 {error}
               </span>

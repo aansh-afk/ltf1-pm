@@ -22,10 +22,10 @@ interface TaskCalendarProps {
 const statusColors = {
   backlog: 'bg-neutral-600',
   todo: 'bg-primary-brutalist',
-  in_progress: 'bg-[#00FFFF]',
-  in_review: 'bg-[#FF00FF]',
-  done: 'bg-[#00FF00]',
-  cancelled: 'bg-[#FF0000]'
+  in_progress: 'bg-[var(--theme-info)]',
+  in_review: 'bg-[var(--theme-accent)]',
+  done: 'bg-[var(--theme-success)]',
+  cancelled: 'bg-[var(--theme-error)]'
 }
 
 const priorityIcons = {
@@ -122,7 +122,7 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
       <div className="space-y-24px">
         {/* Selected Date Info */}
         {selectedDate && (
-          <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
             <div className="flex items-center justify-between mb-16px">
               <h3 className="font-mono text-brutal-md uppercase">
                 {format(selectedDate, 'MMM dd, yyyy')}
@@ -146,8 +146,8 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
                       key={task._id}
                       onClick={() => setSelectedTask(task)}
                       className={clsx(
-                        "p-8px border-2 border-basalt-border cursor-pointer",
-                        "hover:bg-event-horizon transition-colors",
+                        "p-8px border-2 border-[var(--theme-border)] cursor-pointer",
+                        "hover:bg-[var(--theme-background-secondary)] transition-colors",
                         selectedTask?._id === task._id && "bg-primary-brutalist text-event-horizon"
                       )}
                     >
@@ -159,8 +159,8 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
                         )}>
                           {task.key}
                         </span>
-                        {isDue && <span className="text-brutal-xs text-[#FF0000]">DUE</span>}
-                        {isStart && <span className="text-brutal-xs text-[#00FF00]">START</span>}
+                        {isDue && <span className="text-brutal-xs text-[var(--theme-error)]">DUE</span>}
+                        {isStart && <span className="text-brutal-xs text-[var(--theme-success)]">START</span>}
                       </div>
                       <div className="font-mono text-brutal-xs">{task.title}</div>
                     </div>
@@ -175,7 +175,7 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
 
         {/* Selected Task Details */}
         {selectedTask && (
-          <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
             <h3 className="font-mono text-brutal-md uppercase mb-16px">TASK DETAILS</h3>
             
             <div className="space-y-12px">
@@ -234,11 +234,11 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
         )}
 
         {/* Calendar Legend */}
-        <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
           <h3 className="font-mono text-brutal-md uppercase mb-16px">LEGEND</h3>
           <div className="space-y-8px text-brutal-xs">
             <div className="flex items-center gap-8px">
-              <div className="w-16px h-16px bg-[#00FFFF] border border-basalt-border"></div>
+              <div className="w-16px h-16px bg-[var(--theme-info)] border border-[var(--theme-border)]"></div>
               <span>TODAY</span>
             </div>
             <div className="flex items-center gap-8px">

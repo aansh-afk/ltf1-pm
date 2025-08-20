@@ -145,7 +145,7 @@ export function ReviewerSuggestions({
                 "flex items-center gap-8px p-6px border cursor-pointer transition-all",
                 selectedReviewers.includes(reviewer.user._id)
                   ? "bg-primary-brutalist/20 border-primary-brutalist"
-                  : "bg-event-horizon border-basalt-border hover:border-primary-brutalist/50"
+                  : "bg-[var(--theme-background-secondary)] border-[var(--theme-border)] hover:border-primary-brutalist/50"
               )}
               onClick={() => handleSelectReviewer(reviewer.user._id)}
             >
@@ -222,7 +222,7 @@ export function ReviewerSuggestions({
               "brutal-card p-16px cursor-pointer transition-all",
               selectedReviewers.includes(reviewer.user._id)
                 ? "border-2 border-primary-brutalist bg-primary-brutalist/10"
-                : "border-2 border-basalt-border hover:border-primary-brutalist/50"
+                : "border-2 border-[var(--theme-border)] hover:border-primary-brutalist/50"
             )}
           >
             <div className="flex items-start justify-between">

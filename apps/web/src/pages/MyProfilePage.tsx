@@ -85,7 +85,7 @@ export default function MyProfilePage() {
     <div className="p-24px max-w-4xl mx-auto">
       {/* Profile Completion Banner */}
       {!profileComplete && (
-        <div className="mb-24px p-16px bg-brutal-error border-2 border-basalt-border flex items-center justify-between">
+        <div className="mb-24px p-16px bg-brutal-error border-2 border-[var(--theme-border)] flex items-center justify-between">
           <div className="flex items-center gap-16px">
             <HiOutlineExclamationCircle className="w-24px h-24px text-event-horizon" />
             <div>
@@ -98,7 +98,7 @@ export default function MyProfilePage() {
           </div>
           <button
             onClick={() => setShowEditModal(true)}
-            className="px-24px py-12px bg-event-horizon text-brutal-error border-2 border-event-horizon
+            className="px-24px py-12px bg-[var(--theme-background-secondary)] text-brutal-error border-2 border-event-horizon
                      font-mono text-brutal-sm uppercase tracking-wider
                      hover:bg-brutal-error/90 transition-colors"
           >
@@ -156,7 +156,7 @@ export default function MyProfilePage() {
             {developerProfile.profile?.bio && (
               <div className="mb-24px">
                 <h3 className="font-mono text-brutal-xs font-bold mb-8px">ABOUT ME</h3>
-                <p className="text-brutal-sm text-cathode-white/80 whitespace-pre-wrap">
+                <p className="text-brutal-sm text-[var(--theme-foreground)]/80 whitespace-pre-wrap">
                   {developerProfile.profile.bio}
                 </p>
               </div>
@@ -164,7 +164,7 @@ export default function MyProfilePage() {
 
             {/* Quick Info Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-16px">
-              <div className="p-16px bg-event-horizon border border-basalt-border">
+              <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
                 <div className="flex items-center gap-8px mb-8px">
                   <HiOutlineGlobeAlt className="w-16px h-16px text-primary-brutalist" />
                   <span className="font-mono text-brutal-xs">TIMEZONE</span>
@@ -172,7 +172,7 @@ export default function MyProfilePage() {
                 <p className="font-mono text-brutal-sm">{developerProfile.profile?.timezone || 'NOT SET'}</p>
               </div>
               
-              <div className="p-16px bg-event-horizon border border-basalt-border">
+              <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
                 <div className="flex items-center gap-8px mb-8px">
                   <HiOutlineClock className="w-16px h-16px text-primary-brutalist" />
                   <span className="font-mono text-brutal-xs">WORKING HOURS</span>
@@ -184,7 +184,7 @@ export default function MyProfilePage() {
                 </p>
               </div>
               
-              <div className="p-16px bg-event-horizon border border-basalt-border">
+              <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
                 <div className="flex items-center gap-8px mb-8px">
                   <HiOutlineBriefcase className="w-16px h-16px text-primary-brutalist" />
                   <span className="font-mono text-brutal-xs">AVAILABILITY</span>
@@ -272,7 +272,7 @@ export default function MyProfilePage() {
                 {developerProfile.profile?.careerGoals && (
                   <div>
                     <h3 className="text-brutal-md font-bold mb-8px">CAREER GOALS</h3>
-                    <p className="text-brutal-sm text-cathode-white/80 whitespace-pre-wrap">
+                    <p className="text-brutal-sm text-[var(--theme-foreground)]/80 whitespace-pre-wrap">
                       {developerProfile.profile.careerGoals}
                     </p>
                   </div>
@@ -281,7 +281,7 @@ export default function MyProfilePage() {
                 {developerProfile.profile?.workStyle && (
                   <div>
                     <h3 className="text-brutal-md font-bold mb-8px">WORK STYLE</h3>
-                    <p className="text-brutal-sm text-cathode-white/80 whitespace-pre-wrap">
+                    <p className="text-brutal-sm text-[var(--theme-foreground)]/80 whitespace-pre-wrap">
                       {developerProfile.profile.workStyle}
                     </p>
                   </div>

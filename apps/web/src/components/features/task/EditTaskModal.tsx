@@ -107,7 +107,7 @@ export default function EditTaskModal({
     { value: 'urgent', label: 'URGENT', className: 'text-brutal-error' },
     { value: 'high', label: 'HIGH', className: 'text-brutal-warning' },
     { value: 'medium', label: 'MEDIUM', className: 'text-brutal-info' },
-    { value: 'low', label: 'LOW', className: 'text-cathode-white/60' },
+    { value: 'low', label: 'LOW', className: 'text-[var(--theme-foreground)]/60' },
   ]
 
   const statusOptions = [
@@ -322,7 +322,7 @@ export default function EditTaskModal({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-between border-t-2 border-basalt-border pt-24px">
+        <div className="flex items-center justify-between border-t-2 border-[var(--theme-border)] pt-24px">
           <button
             type="button"
             onClick={onDelete}

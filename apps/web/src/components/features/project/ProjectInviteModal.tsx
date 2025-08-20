@@ -110,9 +110,9 @@ export default function ProjectInviteModal({
     >
       <div className="space-y-24px">
         {/* Project Info */}
-        <div className="bg-event-horizon border-2 border-basalt-border p-16px">
+        <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-16px">
           <h3 className="text-brutal-md font-bold mb-8px">INVITING TO: {projectName}</h3>
-          <p className="text-brutal-sm text-cathode-white/60">
+          <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
             Share the link or code below to invite people to join this project.
           </p>
         </div>
@@ -174,8 +174,8 @@ export default function ProjectInviteModal({
                   type="text"
                   value={inviteUrl || (isEnsuring ? 'Generating...' : 'No invite code available')}
                   readOnly
-                  className="flex-1 px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
-                           font-mono text-brutal-sm text-cathode-white/80
+                  className="flex-1 px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+                           font-mono text-brutal-sm text-[var(--theme-foreground)]/80
                            focus:border-primary-brutalist focus:outline-none"
                 />
                 <button
@@ -184,7 +184,7 @@ export default function ProjectInviteModal({
                   className={`px-16px py-12px border-2 transition-colors disabled:opacity-50 ${
                     copiedText === 'Invite Link'
                       ? 'bg-brutal-success border-brutal-success text-event-horizon'
-                      : 'bg-carbon-plate border-basalt-border text-cathode-white hover:border-primary-brutalist'
+                      : 'bg-[var(--theme-background)] border-[var(--theme-border)] text-[var(--theme-foreground)] hover:border-primary-brutalist'
                   }`}
                 >
                   <HiOutlineClipboard className="w-16px h-16px" />
@@ -211,7 +211,7 @@ export default function ProjectInviteModal({
                   type="text"
                   value={inviteCode || (isEnsuring ? 'Generating...' : 'No invite code available')}
                   readOnly
-                  className="flex-1 px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                  className="flex-1 px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                            font-mono text-brutal-md text-primary-brutalist font-bold
                            focus:border-primary-brutalist focus:outline-none"
                 />
@@ -221,21 +221,21 @@ export default function ProjectInviteModal({
                   className={`px-16px py-12px border-2 transition-colors disabled:opacity-50 ${
                     copiedText === 'Invite Code'
                       ? 'bg-brutal-success border-brutal-success text-event-horizon'
-                      : 'bg-carbon-plate border-basalt-border text-cathode-white hover:border-primary-brutalist'
+                      : 'bg-[var(--theme-background)] border-[var(--theme-border)] text-[var(--theme-foreground)] hover:border-primary-brutalist'
                   }`}
                 >
                   <HiOutlineClipboard className="w-16px h-16px" />
                 </button>
               </div>
 
-              <p className="text-brutal-xs text-cathode-white/60">
+              <p className="text-brutal-xs text-[var(--theme-foreground)]/60">
                 Users can enter this code at <strong>/join-project</strong> to join the project.
               </p>
             </div>
 
             {/* Team Settings Info */}
             {inviteLinkData.teamSettings && (
-              <div className="bg-event-horizon border-2 border-basalt-border p-16px">
+              <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-16px">
                 <div className="flex items-center gap-8px mb-12px">
                   <HiOutlineCog className="w-16px h-16px text-primary-brutalist" />
                   <h4 className="text-brutal-sm font-bold">TEAM SETTINGS</h4>
@@ -243,19 +243,19 @@ export default function ProjectInviteModal({
                 
                 <div className="grid grid-cols-2 gap-16px text-brutal-xs">
                   <div>
-                    <span className="text-cathode-white/60">Max Members:</span>{' '}
-                    <span className="text-cathode-white">
+                    <span className="text-[var(--theme-foreground)]/60">Max Members:</span>{' '}
+                    <span className="text-[var(--theme-foreground)]">
                       {inviteLinkData.teamSettings.maxMembers || 'Unlimited'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-cathode-white/60">Self Join:</span>{' '}
+                    <span className="text-[var(--theme-foreground)]/60">Self Join:</span>{' '}
                     <span className={inviteLinkData.teamSettings.allowSelfJoin ? 'text-brutal-success' : 'text-brutal-error'}>
                       {inviteLinkData.teamSettings.allowSelfJoin ? 'Enabled' : 'Disabled'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-cathode-white/60">Requires Approval:</span>{' '}
+                    <span className="text-[var(--theme-foreground)]/60">Requires Approval:</span>{' '}
                     <span className={inviteLinkData.teamSettings.requireApproval ? 'text-brutal-warning' : 'text-brutal-success'}>
                       {inviteLinkData.teamSettings.requireApproval ? 'Yes' : 'No'}
                     </span>
@@ -265,7 +265,7 @@ export default function ProjectInviteModal({
             )}
 
             {/* Quick Actions */}
-            <div className="flex gap-16px pt-16px border-t-2 border-basalt-border">
+            <div className="flex gap-16px pt-16px border-t-2 border-[var(--theme-border)]">
               <button
                 onClick={() => window.open(inviteUrl, '_blank')}
                 disabled={!inviteUrl || isEnsuring}
@@ -285,7 +285,7 @@ export default function ProjectInviteModal({
         ) : (
           <div className="text-center py-48px">
             <div className="animate-spin w-24px h-24px border-2 border-primary-brutalist border-t-transparent mx-auto mb-16px"></div>
-            <p className="text-brutal-sm text-cathode-white/60">Loading invite information...</p>
+            <p className="text-brutal-sm text-[var(--theme-foreground)]/60">Loading invite information...</p>
           </div>
         )}
       </div>

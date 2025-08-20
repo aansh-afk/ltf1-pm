@@ -382,3 +382,204 @@ export const getTeamActivityDashboard = query({
     return enrichedActivities;
   }
 });
+
+// Get dashboard activities - fetches recent activities across all user's workspaces
+export const getDashboardActivities = query({
+  args: {
+    limit: v.optional(v.number()),
+    timeRangeHours: v.optional(v.number())
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      return [];
+    }
+
+    // Get all workspaces the user is a member of
+    const workspaceMemberships = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    if (workspaceMemberships.length === 0) {
+      return [];
+    }
+
+    const workspaceIds = workspaceMemberships.map(m => m.workspaceId);
+    const limit = args.limit || 20;
+    const timeRange = args.timeRangeHours || 168; // Default to last week
+    const cutoffTime = Date.now() - (timeRange * 60 * 60 * 1000);
+
+    // Fetch activities from all workspaces
+    const allActivities: any[] = [];
+    for (const workspaceId of workspaceIds) {
+      const activities = await ctx.db
+        .query("activities")
+        .filter((q) => q.eq(q.field("workspaceId"), workspaceId))
+        .order("desc")
+        .take(limit);
+      
+      allActivities.push(...activities);
+    }
+
+    // Sort by timestamp and filter
+    const sortedActivities = allActivities
+      .filter(activity => {
+        if (!activity || typeof activity !== 'object') return false;
+        const timestamp = (activity as any).timestamp;
+        const type = (activity as any).type;
+        
+        // Filter out low-priority activities for dashboard
+        const lowPriorityTypes = ['task_commented', 'task_time_started', 'task_time_stopped'];
+        if (lowPriorityTypes.includes(type)) return false;
+        
+        return timestamp && timestamp >= cutoffTime;
+      })
+      .sort((a, b) => ((b as any).timestamp || 0) - ((a as any).timestamp || 0))
+      .slice(0, limit);
+
+    // Enrich activities with related data
+    const enrichedActivities = await Promise.all(
+      sortedActivities.map(async (activity) => {
+        const actor = activity.actorId ? await ctx.db.get(activity.actorId) : null;
+        const project = activity.projectId ? await ctx.db.get(activity.projectId) : null;
+        const workspace = await ctx.db.get(activity.workspaceId);
+        
+        // Get task details if it's a task activity
+        let task = null;
+        if ((activity as any).targetType === 'task' && (activity as any).targetId) {
+          try {
+            task = await ctx.db.get((activity as any).targetId as any);
+          } catch (e) {
+            // Task might have been deleted
+          }
+        }
+
+        // Format the activity for dashboard display
+        const activityType = (activity as any).type;
+        let formattedAction = '';
+        let formattedTarget = '';
+        let icon = '';
+        let color = '';
+
+        switch (activityType) {
+          case 'task_completed':
+            formattedAction = 'COMPLETED TASK';
+            formattedTarget = task ? `#${(task as any).key || (activity as any).targetId}` : (activity as any).targetName || 'Unknown';
+            icon = 'check';
+            color = '#00FF00';
+            break;
+          case 'task_created':
+            formattedAction = 'CREATED TASK';
+            formattedTarget = task ? `#${(task as any).key || (activity as any).targetId}` : (activity as any).targetName || 'Unknown';
+            icon = 'plus';
+            color = '#00FFFF';
+            break;
+          case 'task_assigned':
+            formattedAction = 'ASSIGNED TASK';
+            formattedTarget = task ? `#${(task as any).key || (activity as any).targetId}` : (activity as any).targetName || 'Unknown';
+            icon = 'user';
+            color = '#FF00FF';
+            break;
+          case 'sprint_started':
+            formattedAction = 'STARTED SPRINT';
+            formattedTarget = (activity as any).targetName || 'Sprint';
+            icon = 'play';
+            color = '#FFFF00';
+            break;
+          case 'sprint_completed':
+            formattedAction = 'COMPLETED SPRINT';
+            formattedTarget = (activity as any).targetName || 'Sprint';
+            icon = 'flag';
+            color = '#00FF00';
+            break;
+          case 'pr_merged':
+            formattedAction = 'MERGED PR';
+            formattedTarget = `#${(activity as any).targetId || 'PR'}`;
+            icon = 'git-merge';
+            color = '#00FFFF';
+            break;
+          case 'commit_pushed':
+            formattedAction = 'PUSHED COMMIT';
+            formattedTarget = (activity as any).targetName || 'main';
+            icon = 'git-commit';
+            color = '#FFFF00';
+            break;
+          case 'meeting_scheduled':
+            formattedAction = 'SCHEDULED MEETING';
+            formattedTarget = (activity as any).targetName || 'Meeting';
+            icon = 'calendar';
+            color = '#FF00FF';
+            break;
+          case 'member_joined':
+            formattedAction = 'JOINED';
+            formattedTarget = workspace ? (workspace as any).name : 'Workspace';
+            icon = 'user-plus';
+            color = '#00FF00';
+            break;
+          default:
+            formattedAction = activityType ? activityType.replace(/_/g, ' ').toUpperCase() : 'ACTIVITY';
+            formattedTarget = (activity as any).targetName || '';
+            icon = 'activity';
+            color = '#FFFFFF';
+        }
+
+        // Calculate time ago
+        const timestamp = (activity as any).timestamp || Date.now();
+        const now = Date.now();
+        const diffMs = now - timestamp;
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
+        
+        let timeAgo = '';
+        if (diffMinutes < 1) {
+          timeAgo = 'JUST NOW';
+        } else if (diffMinutes < 60) {
+          timeAgo = `${diffMinutes} MIN AGO`;
+        } else if (diffHours < 24) {
+          timeAgo = `${diffHours} HOUR${diffHours !== 1 ? 'S' : ''} AGO`;
+        } else {
+          const diffDays = Math.floor(diffHours / 24);
+          timeAgo = `${diffDays} DAY${diffDays !== 1 ? 'S' : ''} AGO`;
+        }
+
+        return {
+          ...activity,
+          actor: actor ? {
+            _id: actor._id,
+            name: (actor as any).name || 'Unknown',
+            email: (actor as any).email || 'unknown@example.com',
+            avatarUrl: (actor as any).avatarUrl || null,
+            initials: ((actor as any).name || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+          } : null,
+          project: project ? {
+            _id: project._id,
+            name: (project as any).name || 'Unknown Project',
+            key: (project as any).key || 'UNK'
+          } : null,
+          workspace: workspace ? {
+            _id: workspace._id,
+            name: (workspace as any).name || 'Unknown Workspace'
+          } : null,
+          formattedAction,
+          formattedTarget,
+          icon,
+          color,
+          timeAgo,
+          showWorkspace: workspaceIds.length > 1 // Only show workspace if user has multiple
+        };
+      })
+    );
+
+    return enrichedActivities;
+  }
+});

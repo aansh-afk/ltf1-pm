@@ -147,7 +147,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-brutal-lg font-bold mb-8px">GitHub Integration</h3>
-              <p className="text-brutal-sm text-cathode-white/60">
+              <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
                 Connected to {installation.accountName} ({installation.accountType})
               </p>
             </div>
@@ -172,12 +172,12 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
           </div>
           
           <div className="grid grid-cols-2 gap-16px">
-            <div className="p-16px bg-event-horizon border border-basalt-border">
-              <div className="text-brutal-xs uppercase text-cathode-white/60 mb-4px">Installation ID</div>
+            <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+              <div className="text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-4px">Installation ID</div>
               <div className="font-mono font-bold">#{installation.installationId}</div>
             </div>
-            <div className="p-16px bg-event-horizon border border-basalt-border">
-              <div className="text-brutal-xs uppercase text-cathode-white/60 mb-4px">Connected Since</div>
+            <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+              <div className="text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-4px">Connected Since</div>
               <div className="font-mono font-bold">
                 {format(new Date(installation.createdAt), 'MMM d, yyyy')}
               </div>
@@ -210,7 +210,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
       <div className="text-center py-48px">
         <integration.icon className="w-64px h-64px mx-auto mb-24px" style={{ color: integration.color }} />
         <h3 className="text-brutal-lg font-bold mb-16px">{integration.name}</h3>
-        <p className="text-brutal-sm text-cathode-white/60 mb-24px max-w-md mx-auto">
+        <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mb-24px max-w-md mx-auto">
           {integration.description}
         </p>
         
@@ -221,7 +221,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
               {integration.features.map((feature) => (
                 <div key={feature} className="flex items-center gap-8px">
                   <div className="w-4px h-4px bg-primary-brutalist" />
-                  <span className="text-brutal-sm text-cathode-white/80">{feature}</span>
+                  <span className="text-brutal-sm text-[var(--theme-foreground)]/80">{feature}</span>
                 </div>
               ))}
             </div>
@@ -233,7 +233,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
             CONNECT {integration.name.toUpperCase()}
           </BrutalButton>
         ) : integration.status === 'coming_soon' ? (
-          <div className="inline-flex items-center gap-8px px-24px py-12px bg-basalt-border/50 text-cathode-white/60">
+          <div className="inline-flex items-center gap-8px px-24px py-12px bg-basalt-border/50 text-[var(--theme-foreground)]/60">
             <FaClock className="w-16px h-16px" />
             <span className="font-mono text-brutal-sm uppercase">Coming Soon</span>
           </div>
@@ -246,7 +246,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
     <div className="p-32px">
       <div className="mb-32px">
         <h1 className="text-brutal-xl font-bold uppercase mb-8px">WORKSPACE INTEGRATIONS</h1>
-        <p className="text-brutal-sm text-cathode-white/60">
+        <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
           Connect external services to enhance your workflow and automate tasks.
         </p>
       </div>
@@ -260,8 +260,8 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
               onClick={() => setSelectedIntegration(integration.id)}
               className={`w-full p-24px border-2 transition-all text-left ${
                 selectedIntegration === integration.id
-                  ? 'bg-event-horizon border-primary-brutalist'
-                  : 'bg-carbon-plate border-basalt-border hover:border-primary-brutalist'
+                  ? 'bg-[var(--theme-background-secondary)] border-primary-brutalist'
+                  : 'bg-[var(--theme-background)] border-[var(--theme-border)] hover:border-primary-brutalist'
               }`}
             >
               <div className="flex items-center justify-between mb-12px">
@@ -272,7 +272,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
                   />
                   <div>
                     <h3 className="font-bold text-brutal-md">{integration.name}</h3>
-                    <p className="text-brutal-xs text-cathode-white/60">
+                    <p className="text-brutal-xs text-[var(--theme-foreground)]/60">
                       {integration.status === 'connected' ? 'Connected' : 
                        integration.status === 'coming_soon' ? 'Coming Soon' : 'Not Connected'}
                     </p>
@@ -282,7 +282,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
                   <FaCheckCircle className="w-20px h-20px text-brutal-success" />
                 )}
               </div>
-              <p className="text-brutal-xs text-cathode-white/60">
+              <p className="text-brutal-xs text-[var(--theme-foreground)]/60">
                 {integration.description}
               </p>
             </button>
@@ -296,8 +296,8 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
               renderIntegrationDetail(integrations.find(i => i.id === selectedIntegration)!)
             ) : (
               <div className="text-center py-48px">
-                <HiOutlineLink className="w-64px h-64px mx-auto mb-24px text-cathode-white/20" />
-                <p className="text-brutal-sm text-cathode-white/60">
+                <HiOutlineLink className="w-64px h-64px mx-auto mb-24px text-[var(--theme-foreground)]/20" />
+                <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
                   Select an integration to view details and configure settings.
                 </p>
               </div>
@@ -315,7 +315,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
                 <FaPlug className="w-24px h-24px" />
                 CUSTOM WEBHOOKS
               </h2>
-              <p className="text-brutal-sm text-cathode-white/60 mt-8px">
+              <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mt-8px">
                 Configure custom webhooks to integrate with any service.
               </p>
             </div>
@@ -325,8 +325,8 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
             </BrutalButton>
           </div>
           
-          <div className="text-center py-32px border-2 border-dashed border-basalt-border">
-            <p className="text-brutal-sm text-cathode-white/40">
+          <div className="text-center py-32px border-2 border-dashed border-[var(--theme-border)]">
+            <p className="text-brutal-sm text-[var(--theme-foreground)]/40">
               Custom webhooks coming soon. You'll be able to send events to your own endpoints.
             </p>
           </div>

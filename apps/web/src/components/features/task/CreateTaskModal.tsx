@@ -99,7 +99,7 @@ export default function CreateTaskModal({
           <input
             type="text"
             placeholder="TASK TITLE"
-            className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+            className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-md uppercase placeholder:text-neutral-600
                      focus:border-primary-brutalist focus:outline-none transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed"
@@ -117,7 +117,7 @@ export default function CreateTaskModal({
           </label>
           <textarea
             placeholder="ADD A DESCRIPTION..."
-            className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+            className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-md placeholder:text-neutral-600
                      focus:border-primary-brutalist focus:outline-none transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed resize-none"
@@ -135,7 +135,7 @@ export default function CreateTaskModal({
               TYPE
             </label>
             <select
-              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+              className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-md uppercase
                        focus:border-primary-brutalist focus:outline-none transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
@@ -156,7 +156,7 @@ export default function CreateTaskModal({
               PRIORITY
             </label>
             <select
-              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+              className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-md uppercase
                        focus:border-primary-brutalist focus:outline-none transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
@@ -180,7 +180,7 @@ export default function CreateTaskModal({
             </label>
             <input
               type="date"
-              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+              className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-md
                        focus:border-primary-brutalist focus:outline-none transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
@@ -196,7 +196,7 @@ export default function CreateTaskModal({
             </label>
             <input
               type="date"
-              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+              className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-md
                        focus:border-primary-brutalist focus:outline-none transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
@@ -250,7 +250,7 @@ export default function CreateTaskModal({
                 <input
                   type="number"
                   placeholder="0"
-                  className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                  className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                            font-mono text-brutal-md placeholder:text-neutral-600
                            focus:border-primary-brutalist focus:outline-none transition-colors
                            disabled:opacity-50 disabled:cursor-not-allowed"
@@ -288,7 +288,7 @@ export default function CreateTaskModal({
                 <input
                   type="number"
                   placeholder="0"
-                  className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                  className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                            font-mono text-brutal-md placeholder:text-neutral-600
                            focus:border-primary-brutalist focus:outline-none transition-colors
                            disabled:opacity-50 disabled:cursor-not-allowed"
@@ -311,7 +311,7 @@ export default function CreateTaskModal({
           <input
             type="text"
             placeholder="FRONTEND, URGENT, REFACTOR"
-            className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+            className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-md uppercase placeholder:text-neutral-600
                      focus:border-primary-brutalist focus:outline-none transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed"
@@ -322,10 +322,10 @@ export default function CreateTaskModal({
         </div>
 
         {/* ACTIONS */}
-        <div className="flex justify-end gap-16px pt-24px border-t-2 border-basalt-border">
+        <div className="flex justify-end gap-16px pt-24px border-t-2 border-[var(--theme-border)]">
           <button 
             type="button" 
-            className="px-24px py-12px bg-transparent border-2 border-basalt-border 
+            className="px-24px py-12px bg-transparent border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-md uppercase tracking-wider
                      hover:bg-basalt-border transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed"
@@ -336,7 +336,7 @@ export default function CreateTaskModal({
           </button>
           <button 
             type="submit" 
-            className="px-24px py-12px bg-primary-brutalist border-2 border-basalt-border 
+            className="px-24px py-12px bg-primary-brutalist border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-md uppercase tracking-wider text-event-horizon
                      hover:bg-yellow-400 transition-colors shadow-brutal-sm
                      disabled:opacity-50 disabled:cursor-not-allowed

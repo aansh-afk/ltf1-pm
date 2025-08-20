@@ -91,25 +91,25 @@ export default function BrutalCalendar({
   }
 
   return (
-    <div className={clsx("bg-carbon-plate border-2 border-basalt-border", className)}>
+    <div className={clsx("bg-[var(--theme-background)] border-2 border-[var(--theme-border)]", className)}>
       {/* Calendar Header */}
-      <div className="p-16px border-b-2 border-basalt-border">
+      <div className="p-16px border-b-2 border-[var(--theme-border)]">
         <div className="flex items-center justify-between mb-16px">
           <div className="flex items-center gap-16px">
             <button
               onClick={handlePreviousMonth}
-              className="p-8px border-2 border-basalt-border bg-event-horizon hover:bg-primary-brutalist hover:text-event-horizon transition-colors"
+              className="p-8px border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] transition-colors text-[var(--theme-foreground)]"
             >
               <HiOutlineChevronLeft className="w-16px h-16px" />
             </button>
             
-            <h2 className="font-mono text-brutal-lg uppercase min-w-200px text-center">
+            <h2 className="font-mono text-brutal-lg uppercase min-w-200px text-center text-[var(--theme-foreground)]">
               {format(currentDate, 'MMMM yyyy')}
             </h2>
             
             <button
               onClick={handleNextMonth}
-              className="p-8px border-2 border-basalt-border bg-event-horizon hover:bg-primary-brutalist hover:text-event-horizon transition-colors"
+              className="p-8px border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] transition-colors text-[var(--theme-foreground)]"
             >
               <HiOutlineChevronRight className="w-16px h-16px" />
             </button>
@@ -126,11 +126,11 @@ export default function BrutalCalendar({
       </div>
 
       {/* Week Days Header */}
-      <div className="grid grid-cols-7 border-b-2 border-basalt-border">
+      <div className="grid grid-cols-7 border-b-2 border-[var(--theme-border)]">
         {weekDays.map(day => (
           <div
             key={day}
-            className="p-8px text-center font-mono text-brutal-xs uppercase bg-event-horizon border-r-2 border-basalt-border last:border-r-0"
+            className="p-8px text-center font-mono text-brutal-xs uppercase bg-[var(--theme-background-secondary)] border-r-2 border-[var(--theme-border)] last:border-r-0 text-[var(--theme-foreground)]"
           >
             {day}
           </div>
@@ -154,18 +154,19 @@ export default function BrutalCalendar({
               onMouseEnter={() => setHoveredDate(day)}
               onMouseLeave={() => setHoveredDate(null)}
               className={clsx(
-                "min-h-100px p-8px border-r-2 border-b-2 border-basalt-border last:border-r-0",
+                "min-h-100px p-8px border-r-2 border-b-2 border-[var(--theme-border)] last:border-r-0 bg-[var(--theme-background)]",
                 "cursor-pointer transition-all duration-200",
                 !isCurrentMonth && "opacity-40",
-                isSelected && "bg-primary-brutalist",
-                isHovered && !isSelected && "bg-event-horizon/20",
-                isTodayDate && "ring-2 ring-[#00FFFF] ring-inset"
+                isSelected && "bg-[var(--theme-primary)]",
+                isHovered && !isSelected && "bg-[var(--theme-background-secondary)]/50",
+                isTodayDate && "ring-2 ring-[var(--theme-info)] ring-inset"
               )}
             >
               <div className={clsx(
                 "font-mono text-brutal-sm mb-4px",
-                isSelected && "text-event-horizon",
-                isTodayDate && !isSelected && "text-[#00FFFF]"
+                isSelected && "text-[var(--theme-background)]",
+                isTodayDate && !isSelected && "text-[var(--theme-info)]",
+                !isSelected && !isTodayDate && "text-[var(--theme-foreground)]"
               )}>
                 {format(day, 'd')}
               </div>
@@ -181,15 +182,15 @@ export default function BrutalCalendar({
                     }}
                     className={clsx(
                       "px-4px py-2px text-brutal-xs truncate cursor-pointer",
-                      "border border-basalt-border hover:scale-105 transition-transform",
-                      event.color || "bg-primary-brutalist text-event-horizon"
+                      "border border-[var(--theme-border)] hover:scale-105 transition-transform",
+                      event.color || "bg-[var(--theme-primary)] text-[var(--theme-background)]"
                     )}
                   >
                     {event.title}
                   </div>
                 ))}
                 {dayEvents.length > 3 && (
-                  <div className="text-brutal-xs text-neutral-500">
+                  <div className="text-brutal-xs text-[var(--theme-foreground)]/60">
                     +{dayEvents.length - 3} MORE
                   </div>
                 )}

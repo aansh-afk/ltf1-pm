@@ -21,7 +21,7 @@ export default function WorkspacesPage() {
       <div className="flex items-center justify-between mb-32px">
         <div>
           <h1 className="text-4xl font-bold mb-8px uppercase">WORKSPACES</h1>
-          <p className="text-brutal-sm text-cathode-white/70 uppercase">
+          <p className="text-brutal-sm text-[var(--theme-foreground)]/70 uppercase">
             MANAGE YOUR WORKSPACES AND COLLABORATE WITH YOUR TEAM
           </p>
         </div>

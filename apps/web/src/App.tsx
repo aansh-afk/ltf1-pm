@@ -3,6 +3,7 @@ import { SignIn, SignUp, SignedIn, SignedOut } from '@clerk/clerk-react'
 import { Toaster } from 'react-hot-toast'
 import { ConvexClientProvider } from './providers/ConvexClientProvider'
 import { ShortcutProvider } from './contexts/ShortcutContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import DashboardLayout from './components/layout/DashboardLayout'
 import LandingPage from './pages/LandingPage'
 import Dashboard from './pages/Dashboard'
@@ -20,6 +21,7 @@ import JoinProjectPage from './pages/JoinProjectPage'
 import MyProfilePage from './pages/MyProfilePage'
 import GitHubCallbackPage from './pages/GitHubCallbackPage'
 import TestCheckbox from './pages/TestCheckbox'
+import TestAI from './pages/TestAI'
 import { useEnsureUser } from './hooks/useEnsureUser'
 import { DataMigrationBanner } from './components/admin/DataMigrationBanner'
 import CommandPalette from './components/shortcuts/CommandPalette'
@@ -31,8 +33,8 @@ function AppContent() {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-event-horizon flex items-center justify-center">
-        <div className="text-primary-brutalist font-mono uppercase tracking-widest">
+      <div className="min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
+        <div className="text-[var(--theme-primary)] font-mono uppercase tracking-widest">
           Syncing user...
         </div>
       </div>
@@ -40,7 +42,7 @@ function AppContent() {
   }
   
   return (
-    <div className="min-h-screen bg-event-horizon" data-theme="brutalist">
+    <div className="min-h-screen bg-[var(--theme-background)]">
       <SignedIn>
         <DataMigrationBanner />
       </SignedIn>
@@ -102,6 +104,7 @@ function AppContent() {
           <Route path="sprints" element={<SprintPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="test-checkbox" element={<TestCheckbox />} />
+          <Route path="test-ai" element={<TestAI />} />
         </Route>
 
         <Route path="*" element={
@@ -121,25 +124,25 @@ function AppContent() {
         toastOptions={{
           duration: 4000,
           style: {
-            background: '#0A0A0A',
-            color: '#F5F5F5',
-            border: '2px solid #333333',
+            background: 'var(--theme-background-secondary)',
+            color: 'var(--theme-foreground)',
+            border: '2px solid var(--theme-border)',
             borderRadius: '0',
-            boxShadow: '5px 5px 0px #000000',
-            fontFamily: 'IBM Plex Mono, monospace',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
+            boxShadow: 'var(--theme-box-shadow)',
+            fontFamily: 'var(--theme-font-family)',
+            textTransform: 'var(--theme-text-transform)' as any,
+            letterSpacing: 'var(--theme-letter-spacing)',
           },
           success: {
             iconTheme: {
-              primary: '#FFFF00',
-              secondary: '#000000',
+              primary: 'var(--theme-success)',
+              secondary: 'var(--theme-background)',
             },
           },
           error: {
             iconTheme: {
-              primary: '#FF0000',
-              secondary: '#000000',
+              primary: 'var(--theme-error)',
+              secondary: 'var(--theme-background)',
             },
           },
         }}
@@ -152,9 +155,11 @@ function App() {
   return (
     <ConvexClientProvider>
       <Router>
-        <ShortcutProvider>
-          <AppContent />
-        </ShortcutProvider>
+        <ThemeProvider>
+          <ShortcutProvider>
+            <AppContent />
+          </ShortcutProvider>
+        </ThemeProvider>
       </Router>
     </ConvexClientProvider>
   )

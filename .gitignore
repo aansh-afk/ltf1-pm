@@ -73,3 +73,6 @@ logs
 *.temp
 .tmp/
 .temp/
+
+# AI System Prompts (Planning/Internal Use)
+ai-system-prompts/

@@ -49,10 +49,10 @@ const statusLabels = {
 const statusColors = {
   backlog: 'text-neutral-500',
   todo: 'text-primary-brutalist',
-  in_progress: 'text-[#00FFFF]',
-  in_review: 'text-[#FF00FF]',
-  done: 'text-[#00FF00]',
-  cancelled: 'text-[#FF0000]'
+  in_progress: 'text-[var(--theme-info)]',
+  in_review: 'text-[var(--theme-accent)]',
+  done: 'text-[var(--theme-success)]',
+  cancelled: 'text-[var(--theme-error)]'
 }
 
 interface Column {
@@ -180,18 +180,18 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
     <div className="space-y-24px">
       {/* Bulk Actions Bar */}
       {selectedTasks.size > 0 && (
-        <div className="bg-primary-brutalist border-2 border-basalt-border p-16px flex items-center justify-between">
+        <div className="bg-primary-brutalist border-2 border-[var(--theme-border)] p-16px flex items-center justify-between">
           <span className="font-mono text-brutal-sm text-event-horizon">
             {selectedTasks.size} TASKS SELECTED
           </span>
           <div className="flex gap-16px">
-            <button className="brutal-btn-sm bg-event-horizon text-primary-brutalist">
+            <button className="brutal-btn-sm bg-[var(--theme-background-secondary)] text-primary-brutalist">
               ASSIGN
             </button>
-            <button className="brutal-btn-sm bg-event-horizon text-primary-brutalist">
+            <button className="brutal-btn-sm bg-[var(--theme-background-secondary)] text-primary-brutalist">
               UPDATE STATUS
             </button>
-            <button className="brutal-btn-sm bg-[#FF0000] text-cathode-white">
+            <button className="brutal-btn-sm bg-[var(--theme-error)] text-[var(--theme-foreground)]">
               DELETE
             </button>
           </div>
@@ -199,19 +199,19 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
       )}
 
       {/* Table */}
-      <div className="bg-carbon-plate border-2 border-basalt-border overflow-hidden">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             {/* Header */}
             <thead>
-              <tr className="border-b-2 border-basalt-border">
+              <tr className="border-b-2 border-[var(--theme-border)]">
                 {columns.map((column) => (
                   <th
                     key={column.key}
                     className={clsx(
                       "p-16px text-left font-mono text-brutal-sm uppercase",
                       column.width,
-                      column.sortable && "cursor-pointer hover:bg-event-horizon/10"
+                      column.sortable && "cursor-pointer hover:bg-[var(--theme-background-secondary)]/10"
                     )}
                     onClick={() => column.sortable && handleSort(column.key)}
                   >
@@ -220,7 +220,7 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
                         checked={selectedTasks.size === tasks.length && tasks.length > 0}
                         onChange={handleSelectAll}
                         size="sm"
-                        className="w-16px h-16px border-2 border-basalt-border bg-carbon-plate"
+                        className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                       />
                     ) : (
                       <div className="flex items-center gap-8px">
@@ -244,8 +244,8 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
                   <tr 
                     key={task._id}
                     className={clsx(
-                      "border-b border-basalt-border/50 hover:bg-event-horizon/5",
-                      expandedRow === task._id && "bg-event-horizon/10"
+                      "border-b border-[var(--theme-border)]/50 hover:bg-[var(--theme-background-secondary)]/5",
+                      expandedRow === task._id && "bg-[var(--theme-background-secondary)]/10"
                     )}
                   >
                     {/* Select */}
@@ -254,7 +254,7 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
                         checked={selectedTasks.has(task._id)}
                         onChange={() => handleSelectTask(task._id)}
                         size="sm"
-                        className="w-16px h-16px border-2 border-basalt-border bg-carbon-plate"
+                        className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                       />
                     </td>
 
@@ -293,7 +293,7 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
                         )}
                       >
                         {Object.entries(statusLabels).map(([value, label]) => (
-                          <option key={value} value={value} className="bg-carbon-plate text-cathode-white">
+                          <option key={value} value={value} className="bg-[var(--theme-background)] text-[var(--theme-foreground)]">
                             {label}
                           </option>
                         ))}
@@ -326,7 +326,7 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
                       <span className={clsx(
                         "font-mono text-brutal-sm",
                         task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'done' 
-                          ? "text-[#FF0000]" 
+                          ? "text-[var(--theme-error)]" 
                           : ""
                       )}>
                         {formatDate(task.dueDate)}
@@ -340,18 +340,18 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
                           e.stopPropagation()
                           setShowContextMenu(showContextMenu === task._id ? null : task._id)
                         }}
-                        className="p-4px hover:bg-event-horizon/20 transition-colors"
+                        className="p-4px hover:bg-[var(--theme-background-secondary)]/20 transition-colors"
                       >
                         <HiOutlineDotsVertical className="w-16px h-16px" />
                       </button>
 
                       {showContextMenu === task._id && (
-                        <div className="absolute right-0 top-full mt-4px bg-carbon-plate border-2 border-basalt-border z-10 min-w-160px">
+                        <div className="absolute right-0 top-full mt-4px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] z-10 min-w-160px">
                           <button
                             onClick={() => {
                               setShowContextMenu(null)
                             }}
-                            className="w-full px-16px py-8px text-left font-mono text-brutal-sm hover:bg-event-horizon/20 flex items-center gap-8px"
+                            className="w-full px-16px py-8px text-left font-mono text-brutal-sm hover:bg-[var(--theme-background-secondary)]/20 flex items-center gap-8px"
                           >
                             <HiOutlinePencil className="w-16px h-16px" />
                             EDIT
@@ -360,7 +360,7 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
                             onClick={() => {
                               setShowContextMenu(null)
                             }}
-                            className="w-full px-16px py-8px text-left font-mono text-brutal-sm hover:bg-event-horizon/20 flex items-center gap-8px"
+                            className="w-full px-16px py-8px text-left font-mono text-brutal-sm hover:bg-[var(--theme-background-secondary)]/20 flex items-center gap-8px"
                           >
                             <HiOutlineDuplicate className="w-16px h-16px" />
                             DUPLICATE
@@ -369,14 +369,14 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
                             onClick={() => {
                               setShowContextMenu(null)
                             }}
-                            className="w-full px-16px py-8px text-left font-mono text-brutal-sm hover:bg-event-horizon/20 flex items-center gap-8px"
+                            className="w-full px-16px py-8px text-left font-mono text-brutal-sm hover:bg-[var(--theme-background-secondary)]/20 flex items-center gap-8px"
                           >
                             <HiOutlineClock className="w-16px h-16px" />
                             LOG TIME
                           </button>
                           <button
                             onClick={() => handleDeleteTask(task._id)}
-                            className="w-full px-16px py-8px text-left font-mono text-brutal-sm hover:bg-[#FF0000] hover:text-cathode-white flex items-center gap-8px"
+                            className="w-full px-16px py-8px text-left font-mono text-brutal-sm hover:bg-[var(--theme-error)] hover:text-[var(--theme-foreground)] flex items-center gap-8px"
                           >
                             <HiOutlineTrash className="w-16px h-16px" />
                             DELETE
@@ -389,7 +389,7 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
                   {/* Expanded Row */}
                   {expandedRow === task._id && (
                     <tr>
-                      <td colSpan={columns.length} className="p-24px bg-event-horizon/5 border-b border-basalt-border">
+                      <td colSpan={columns.length} className="p-24px bg-[var(--theme-background-secondary)]/5 border-b border-[var(--theme-border)]">
                         <div className="space-y-16px">
                           {task.description && (
                             <div>

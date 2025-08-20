@@ -282,12 +282,12 @@ export default function ScheduleMeetingModal({
                 className={`p-12px border-2 text-center transition-colors ${
                   type === meetingType.value
                     ? 'bg-primary-brutalist border-primary-brutalist text-event-horizon'
-                    : 'bg-event-horizon border-basalt-border text-cathode-white hover:border-primary-brutalist'
+                    : 'bg-[var(--theme-background-secondary)] border-[var(--theme-border)] text-[var(--theme-foreground)] hover:border-primary-brutalist'
                 }`}
               >
                 <div className="text-lg mb-4px">{meetingType.icon}</div>
                 <div className="font-mono text-brutal-xs uppercase">{meetingType.label}</div>
-                <div className="font-mono text-brutal-xs text-cathode-white/60">{meetingType.duration}min</div>
+                <div className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60">{meetingType.duration}min</div>
               </button>
             ))}
           </div>
@@ -301,7 +301,7 @@ export default function ScheduleMeetingModal({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border 
+              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none"
               required
             />
@@ -314,7 +314,7 @@ export default function ScheduleMeetingModal({
               onChange={(e) => setDuration(parseInt(e.target.value) || 30)}
               min={5}
               max={480}
-              className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border 
+              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none"
             />
           </div>
@@ -326,7 +326,7 @@ export default function ScheduleMeetingModal({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border 
+            className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none resize-none"
           />
         </div>
@@ -342,7 +342,7 @@ export default function ScheduleMeetingModal({
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border 
+              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none"
               required
             />
@@ -356,7 +356,7 @@ export default function ScheduleMeetingModal({
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border 
+              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none"
               required
             />
@@ -375,7 +375,7 @@ export default function ScheduleMeetingModal({
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="CONFERENCE ROOM A"
-              className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border 
+              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm placeholder:text-neutral-600
                        focus:border-primary-brutalist focus:outline-none"
             />
@@ -390,7 +390,7 @@ export default function ScheduleMeetingModal({
               value={meetingUrl}
               onChange={(e) => setMeetingUrl(e.target.value)}
               placeholder="HTTPS://MEET.GOOGLE.COM/..."
-              className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border 
+              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm placeholder:text-neutral-600
                        focus:border-primary-brutalist focus:outline-none"
             />
@@ -425,13 +425,13 @@ export default function ScheduleMeetingModal({
           </label>
           
           {isRecurring && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-16px p-16px bg-event-horizon border border-basalt-border">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-16px p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
               <div>
                 <label className="block text-brutal-xs uppercase mb-8px">FREQUENCY</label>
                 <select
                   value={recurrenceFreq}
                   onChange={(e) => setRecurrenceFreq(e.target.value as 'daily' | 'weekly' | 'monthly')}
-                  className="w-full px-12px py-8px bg-carbon-plate border border-basalt-border font-mono text-brutal-xs"
+                  className="w-full px-12px py-8px bg-[var(--theme-background)] border border-[var(--theme-border)] font-mono text-brutal-xs"
                 >
                   <option value="daily">DAILY</option>
                   <option value="weekly">WEEKLY</option>
@@ -446,7 +446,7 @@ export default function ScheduleMeetingModal({
                   onChange={(e) => setRecurrenceInterval(parseInt(e.target.value) || 1)}
                   min={1}
                   max={12}
-                  className="w-full px-12px py-8px bg-carbon-plate border border-basalt-border font-mono text-brutal-xs"
+                  className="w-full px-12px py-8px bg-[var(--theme-background)] border border-[var(--theme-border)] font-mono text-brutal-xs"
                 />
               </div>
               <div>
@@ -455,7 +455,7 @@ export default function ScheduleMeetingModal({
                   type="date"
                   value={recurrenceEndDate}
                   onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                  className="w-full px-12px py-8px bg-carbon-plate border border-basalt-border font-mono text-brutal-xs"
+                  className="w-full px-12px py-8px bg-[var(--theme-background)] border border-[var(--theme-border)] font-mono text-brutal-xs"
                 />
               </div>
             </div>
@@ -473,7 +473,7 @@ export default function ScheduleMeetingModal({
                   value={item}
                   onChange={(e) => updateAgendaItem(index, e.target.value)}
                   placeholder={`AGENDA ITEM ${index + 1}`}
-                  className="flex-1 px-16px py-12px bg-event-horizon border-2 border-basalt-border 
+                  className="flex-1 px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                            font-mono text-brutal-sm placeholder:text-neutral-600
                            focus:border-primary-brutalist focus:outline-none"
                 />
@@ -491,8 +491,8 @@ export default function ScheduleMeetingModal({
             <button
               type="button"
               onClick={addAgendaItem}
-              className="w-full px-16px py-12px border-2 border-dashed border-basalt-border 
-                       text-cathode-white/60 hover:text-cathode-white hover:border-primary-brutalist 
+              className="w-full px-16px py-12px border-2 border-dashed border-[var(--theme-border)] 
+                       text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] hover:border-primary-brutalist 
                        transition-colors font-mono text-brutal-sm"
             >
               + ADD AGENDA ITEM
@@ -501,7 +501,7 @@ export default function ScheduleMeetingModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-16px justify-end pt-24px border-t-2 border-basalt-border">
+        <div className="flex gap-16px justify-end pt-24px border-t-2 border-[var(--theme-border)]">
           <button
             type="button"
             onClick={onClose}

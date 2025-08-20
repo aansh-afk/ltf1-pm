@@ -19,25 +19,25 @@ export default function BrutalProgress({
   const percentage = Math.min(Math.max((value / max) * 100, 0), 100)
   
   const barClasses = {
-    default: 'bg-brutal-info',
-    glitch: 'bg-glitch-flare'
+    default: 'bg-[var(--theme-info)]',
+    glitch: 'bg-[var(--theme-gradient)]'
   }
 
   return (
     <div className="relative">
       {showLabel && (
         <div className="flex justify-between mb-8px">
-          <span className="text-xs font-bold uppercase tracking-wider text-cathode-white">
+          <span className="text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)]">
             PROGRESS
           </span>
-          <span className="text-xs font-bold uppercase tracking-wider text-cathode-white">
+          <span className="text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)]">
             {Math.floor(percentage)}%
           </span>
         </div>
       )}
       <div
         className={clsx(
-          'relative h-24px bg-carbon-plate border-2 border-basalt-border overflow-hidden',
+          'relative h-24px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] overflow-hidden',
           className
         )}
         style={{ borderRadius: '0 !important' }}
@@ -58,7 +58,7 @@ export default function BrutalProgress({
           {[...Array(9)].map((_, i) => (
             <div
               key={i}
-              className="flex-1 border-r-2 border-basalt-border opacity-50"
+              className="flex-1 border-r-2 border-[var(--theme-border)] opacity-50"
               style={{ borderRadius: '0 !important' }}
             />
           ))}

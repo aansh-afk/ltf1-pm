@@ -93,10 +93,10 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-event-horizon/80">
-      <div className="bg-carbon-plate border-2 border-basalt-border shadow-brutal w-full max-w-4xl max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background-secondary)]/80">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-24px border-b-2 border-basalt-border bg-event-horizon">
+        <div className="flex items-center justify-between p-24px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
           <div className="flex items-center gap-12px">
             <HiOutlineSearch className="w-24px h-24px text-primary-brutalist" />
             <h2 className="text-brutal-lg font-bold">FIND WHO KNOWS</h2>
@@ -110,7 +110,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
         </div>
 
         {/* Search Input */}
-        <div className="p-24px border-b-2 border-basalt-border">
+        <div className="p-24px border-b-2 border-[var(--theme-border)]">
           <div className="relative">
             <HiOutlineSearch className="absolute left-16px top-50% transform -translate-y-50% w-20px h-20px text-primary-brutalist/60" />
             <input
@@ -152,7 +152,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
                     <button
                       key={example}
                       onClick={() => setSearchQuery(example)}
-                      className="px-12px py-6px font-mono text-brutal-xs bg-event-horizon border border-basalt-border text-primary-brutalist/80 hover:bg-primary-brutalist/10 hover:text-primary-brutalist transition-all"
+                      className="px-12px py-6px font-mono text-brutal-xs bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-primary-brutalist/80 hover:bg-primary-brutalist/10 hover:text-primary-brutalist transition-all"
                     >
                       {example}
                     </button>
@@ -208,7 +208,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
                         <div className="flex items-start justify-between">
                           <div className="flex items-start gap-16px flex-1">
                             {/* Avatar */}
-                            <div className="w-48px h-48px bg-basalt-border border-2 border-basalt-border flex items-center justify-center flex-shrink-0">
+                            <div className="w-48px h-48px bg-basalt-border border-2 border-[var(--theme-border)] flex items-center justify-center flex-shrink-0">
                               {result.avatarUrl ? (
                                 <img 
                                   src={result.avatarUrl} 
@@ -349,7 +349,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-16px border-t-2 border-basalt-border bg-event-horizon">
+        <div className="flex items-center justify-between p-16px border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
           <div className="font-mono text-brutal-xs text-primary-brutalist/60">
             Use ESC to close • Results show team members with matching expertise
           </div>

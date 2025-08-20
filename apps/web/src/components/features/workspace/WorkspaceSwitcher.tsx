@@ -47,8 +47,8 @@ export default function WorkspaceSwitcher() {
   if (!workspaces) {
     return (
       <div className="h-48px px-16px flex items-center gap-8px">
-        <div className="w-32px h-32px bg-carbon-plate animate-pulse" />
-        <div className="w-120px h-20px bg-carbon-plate animate-pulse" />
+        <div className="w-32px h-32px bg-[var(--theme-background)] animate-pulse" />
+        <div className="w-120px h-20px bg-[var(--theme-background)] animate-pulse" />
       </div>
     )
   }
@@ -59,14 +59,14 @@ export default function WorkspaceSwitcher() {
         onClick={() => setIsOpen(!isOpen)}
         className={clsx(
           "h-48px px-16px flex items-center gap-8px",
-          "border-2 border-basalt-border bg-carbon-plate",
-          "hover:bg-event-horizon hover:text-primary-brutalist",
+          "border-2 border-[var(--theme-border)] bg-[var(--theme-background)]",
+          "hover:bg-[var(--theme-background-secondary)] hover:text-primary-brutalist",
           "transition-colors duration-200",
           "font-mono text-brutal-sm uppercase tracking-wider",
-          isOpen && "bg-event-horizon text-primary-brutalist"
+          isOpen && "bg-[var(--theme-background-secondary)] text-primary-brutalist"
         )}
       >
-        <div className="w-32px h-32px bg-primary-brutalist border-2 border-basalt-border flex items-center justify-center">
+        <div className="w-32px h-32px bg-primary-brutalist border-2 border-[var(--theme-border)] flex items-center justify-center">
           {currentWorkspace?.logoUrl ? (
             <img 
               src={currentWorkspace.logoUrl} 
@@ -101,7 +101,7 @@ export default function WorkspaceSwitcher() {
           <div className={clsx(
             "absolute top-full left-0 mt-8px z-50",
             "min-w-280px max-w-360px",
-            "bg-carbon-plate border-2 border-basalt-border",
+            "bg-[var(--theme-background)] border-2 border-[var(--theme-border)]",
             "shadow-brutal-lg"
           )}>
             {/* Workspace List */}
@@ -113,14 +113,14 @@ export default function WorkspaceSwitcher() {
                   className={clsx(
                     "w-full px-16px py-12px",
                     "flex items-center gap-12px",
-                    "hover:bg-event-horizon hover:text-primary-brutalist",
+                    "hover:bg-[var(--theme-background-secondary)] hover:text-primary-brutalist",
                     "transition-colors duration-200",
                     "font-mono text-brutal-sm uppercase",
-                    "border-b-2 border-basalt-border last:border-b-0",
+                    "border-b-2 border-[var(--theme-border)] last:border-b-0",
                     workspace._id === currentWorkspaceId && "bg-primary-brutalist text-event-horizon"
                   )}
                 >
-                  <div className="w-24px h-24px bg-cathode-white border border-basalt-border flex items-center justify-center flex-shrink-0">
+                  <div className="w-24px h-24px bg-cathode-white border border-[var(--theme-border)] flex items-center justify-center flex-shrink-0">
                     {workspace.logoUrl ? (
                       <img 
                         src={workspace.logoUrl} 
@@ -147,13 +147,13 @@ export default function WorkspaceSwitcher() {
             </div>
 
             {/* Actions */}
-            <div className="border-t-2 border-basalt-border">
+            <div className="border-t-2 border-[var(--theme-border)]">
               <button
                 onClick={handleCreateWorkspace}
                 className={clsx(
                   "w-full px-16px py-12px",
                   "flex items-center gap-12px",
-                  "hover:bg-event-horizon hover:text-primary-brutalist",
+                  "hover:bg-[var(--theme-background-secondary)] hover:text-primary-brutalist",
                   "transition-colors duration-200",
                   "font-mono text-brutal-sm uppercase"
                 )}
@@ -168,10 +168,10 @@ export default function WorkspaceSwitcher() {
                   className={clsx(
                     "w-full px-16px py-12px",
                     "flex items-center gap-12px",
-                    "hover:bg-event-horizon hover:text-primary-brutalist",
+                    "hover:bg-[var(--theme-background-secondary)] hover:text-primary-brutalist",
                     "transition-colors duration-200",
                     "font-mono text-brutal-sm uppercase",
-                    "border-t-2 border-basalt-border"
+                    "border-t-2 border-[var(--theme-border)]"
                   )}
                 >
                   <HiOutlineCog className="w-16px h-16px" />

@@ -252,7 +252,7 @@ export default function TeamActivityFeed({
 
   if (!activities) {
     return (
-      <div className={clsx('bg-carbon-plate border-2 border-basalt-border p-24px', className)}>
+      <div className={clsx('bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px', className)}>
         <div className="flex items-center justify-between mb-16px">
           <h3 className="text-brutal-lg font-bold uppercase">TEAM ACTIVITY</h3>
         </div>
@@ -271,7 +271,7 @@ export default function TeamActivityFeed({
   }
 
   return (
-    <div className={clsx('bg-carbon-plate border-2 border-basalt-border p-24px', className)}>
+    <div className={clsx('bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px', className)}>
       <div className="flex items-center justify-between mb-16px">
         <h3 className="text-brutal-lg font-bold uppercase">TEAM ACTIVITY</h3>
         
@@ -282,7 +282,7 @@ export default function TeamActivityFeed({
               <select
                 value={timeFilter}
                 onChange={(e) => setTimeFilter(Number(e.target.value))}
-                className="bg-event-horizon border-2 border-basalt-border font-mono text-brutal-xs uppercase text-primary-brutalist appearance-none pr-24px pl-8px py-4px cursor-pointer hover:border-primary-brutalist/50 transition-colors"
+                className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-xs uppercase text-primary-brutalist appearance-none pr-24px pl-8px py-4px cursor-pointer hover:border-primary-brutalist/50 transition-colors"
               >
                 {timeFilterOptions.map(option => (
                   <option key={option.value} value={option.value}>{option.label}</option>
@@ -299,7 +299,7 @@ export default function TeamActivityFeed({
                   const value = e.target.value
                   setTypeFilter(value === 'null' ? null : JSON.parse(value))
                 }}
-                className="bg-event-horizon border-2 border-basalt-border font-mono text-brutal-xs uppercase text-primary-brutalist appearance-none pr-24px pl-8px py-4px cursor-pointer hover:border-primary-brutalist/50 transition-colors"
+                className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-xs uppercase text-primary-brutalist appearance-none pr-24px pl-8px py-4px cursor-pointer hover:border-primary-brutalist/50 transition-colors"
               >
                 {typeFilterOptions.map(option => (
                   <option key={option.label} value={option.value ? JSON.stringify(option.value) : 'null'}>
@@ -336,7 +336,7 @@ export default function TeamActivityFeed({
                 </span>
                 
                 <div className={clsx(
-                  'w-24px h-24px border-2 border-basalt-border flex items-center justify-center',
+                  'w-24px h-24px border-2 border-[var(--theme-border)] flex items-center justify-center',
                   config.bgColor
                 )}>
                   <Icon className={clsx('w-12px h-12px', config.color)} />
@@ -383,7 +383,7 @@ export default function TeamActivityFeed({
           <div className="text-center py-48px">
             <HiOutlineTerminal className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
             <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO RECENT ACTIVITY</h3>
-            <p className="text-cathode-white/60">
+            <p className="text-[var(--theme-foreground)]/60">
               Team activity will appear here as actions are performed
             </p>
           </div>

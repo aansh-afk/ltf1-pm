@@ -8,9 +8,9 @@ export default function TestCheckbox() {
   const [checked4, setChecked4] = useState(true)
 
   return (
-    <div className="min-h-screen bg-event-horizon p-48px">
+    <div className="min-h-screen bg-[var(--theme-background-secondary)] p-48px">
       <div className="max-w-600px mx-auto">
-        <h1 className="text-brutal-2xl text-cathode-white mb-32px uppercase">
+        <h1 className="text-brutal-2xl text-[var(--theme-foreground)] mb-32px uppercase">
           Brutalist Checkbox Test
         </h1>
         

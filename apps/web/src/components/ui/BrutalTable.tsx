@@ -30,9 +30,9 @@ export default function BrutalTable<T extends { id?: string; _id?: string }>({
 
   if (isLoading) {
     return (
-      <div className="border-2 border-basalt-border">
+      <div className="border-2 border-[var(--theme-border)]">
         <div className="p-48px text-center">
-          <div className="animate-pulse text-brutal-lg text-cathode-white/50">
+          <div className="animate-pulse text-brutal-lg text-[var(--theme-foreground)]/50">
             LOADING DATA...
           </div>
         </div>
@@ -42,25 +42,25 @@ export default function BrutalTable<T extends { id?: string; _id?: string }>({
 
   if (data.length === 0) {
     return (
-      <div className="border-2 border-basalt-border">
+      <div className="border-2 border-[var(--theme-border)]">
         <div className="p-48px text-center">
-          <p className="text-brutal-sm text-cathode-white/50">{emptyMessage}</p>
+          <p className="text-brutal-sm text-[var(--theme-foreground)]/50">{emptyMessage}</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="border-2 border-basalt-border overflow-hidden">
+    <div className="border-2 border-[var(--theme-border)] overflow-hidden bg-[var(--theme-background)]">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-carbon-plate border-b-2 border-basalt-border">
+            <tr className="bg-[var(--theme-background-secondary)] border-b-2 border-[var(--theme-border)]">
               {columns.map(column => (
                 <th
                   key={column.key}
                   className={clsx(
-                    'px-16px py-12px text-left text-brutal-sm font-bold',
+                    'px-16px py-12px text-left text-brutal-sm font-bold text-[var(--theme-foreground)]',
                     column.width,
                     {
                       'text-left': column.align === 'left' || !column.align,
@@ -79,8 +79,8 @@ export default function BrutalTable<T extends { id?: string; _id?: string }>({
               <tr
                 key={getRowKey(item, index)}
                 className={clsx(
-                  'border-b border-basalt-border/50 transition-all duration-200',
-                  'hover:bg-carbon-plate/50',
+                  'border-b border-[var(--theme-border)]/50 transition-all duration-200 text-[var(--theme-foreground)]',
+                  'hover:bg-[var(--theme-background-secondary)]/50',
                   onRowClick && 'cursor-pointer hover:translate-x-2px'
                 )}
                 onClick={() => onRowClick?.(item)}

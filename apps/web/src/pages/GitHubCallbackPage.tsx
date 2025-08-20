@@ -67,7 +67,7 @@ export default function GitHubCallbackPage() {
     <div className="min-h-screen bg-obsidian-black flex items-center justify-center p-24px">
       <BrutalCard className="max-w-md w-full p-48px text-center">
         <div className="mb-24px">
-          <FaGithub className="w-64px h-64px mx-auto text-cathode-white/20" />
+          <FaGithub className="w-64px h-64px mx-auto text-[var(--theme-foreground)]/20" />
         </div>
 
         {status === 'processing' && (
@@ -75,7 +75,7 @@ export default function GitHubCallbackPage() {
             <h1 className="text-brutal-xl font-bold mb-16px">
               CONNECTING GITHUB
             </h1>
-            <div className="text-cathode-white/60 mb-24px">
+            <div className="text-[var(--theme-foreground)]/60 mb-24px">
               <div className="inline-block animate-spin">⚙️</div>
               <p className="mt-16px">Processing authentication...</p>
             </div>
@@ -90,7 +90,7 @@ export default function GitHubCallbackPage() {
             <h1 className="text-brutal-xl font-bold mb-16px">
               CONNECTED!
             </h1>
-            <p className="text-cathode-white/60">
+            <p className="text-[var(--theme-foreground)]/60">
               Your GitHub account has been successfully connected.
               Redirecting...
             </p>
@@ -105,10 +105,10 @@ export default function GitHubCallbackPage() {
             <h1 className="text-brutal-xl font-bold mb-16px">
               CONNECTION FAILED
             </h1>
-            <p className="text-cathode-white/60 mb-8px">
+            <p className="text-[var(--theme-foreground)]/60 mb-8px">
               {error || 'An error occurred while connecting your GitHub account.'}
             </p>
-            <p className="text-cathode-white/40 text-brutal-xs">
+            <p className="text-[var(--theme-foreground)]/40 text-brutal-xs">
               Redirecting to profile...
             </p>
           </>

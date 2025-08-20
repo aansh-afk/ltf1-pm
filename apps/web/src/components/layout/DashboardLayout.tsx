@@ -24,6 +24,7 @@ import { useAfkDetection } from '../../hooks/useAfkDetection'
 import { ProfileCompletionBanner } from '../features/profile/ProfileCompletionBanner'
 import { GitHubMonitor } from '../features/github/GitHubMonitor'
 import CommandTerminal from '../terminal/CommandTerminal'
+// ThemeSwitcher moved to Settings page
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile sidebar
@@ -108,14 +109,14 @@ export default function DashboardLayout() {
   ]
 
   return (
-    <div className="flex h-screen bg-event-horizon">
+    <div className="flex h-screen bg-[var(--theme-background)]">
       {/* MOBILE OVERLAY */}
       <div className={clsx(
         'fixed inset-0 z-[40] lg:hidden',
         sidebarOpen ? 'block' : 'hidden'
       )}>
         <div 
-          className="absolute inset-0 bg-event-horizon/90"
+          className="absolute inset-0 bg-[var(--theme-background)]/90"
           onClick={() => setSidebarOpen(false)}
         />
       </div>
@@ -123,7 +124,7 @@ export default function DashboardLayout() {
       {/* BRUTAL SIDEBAR */}
       <aside 
         className={clsx(
-          'fixed inset-y-0 left-0 z-[50] bg-carbon-plate border-r-2 border-basalt-border transform lg:relative lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-[50] bg-[var(--theme-background-secondary)] border-r-2 border-[var(--theme-border)] transform lg:relative lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
           isExpanded ? 'w-256px' : 'w-80px',
           // Different transition durations for hover vs button
@@ -133,13 +134,13 @@ export default function DashboardLayout() {
         onMouseLeave={handleMouseLeave}
       >
         {/* SIDEBAR HEADER */}
-        <div className="h-64px px-24px border-b-2 border-basalt-border flex items-center justify-between">
+        <div className="h-64px px-24px border-b-2 border-[var(--theme-border)] flex items-center justify-between">
           <h1 className={clsx(
             "text-2xl font-bold",
             !isExpanded && "opacity-0",
             isHovered ? "transition-opacity duration-200 ease-out" : "transition-opacity duration-300 ease-in-out"
           )}>
-            <span className="text-cathode-white">LTF1</span>
+            <span className="text-[var(--theme-foreground)]">LTF1</span>
           </h1>
 
           {/* Mobile close button */}
@@ -147,7 +148,7 @@ export default function DashboardLayout() {
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden brutal-hover"
           >
-            <HiOutlineX className="w-24px h-24px text-cathode-white" />
+            <HiOutlineX className="w-24px h-24px text-[var(--theme-foreground)]" />
           </button>
         </div>
 
@@ -166,8 +167,8 @@ export default function DashboardLayout() {
                   isExpanded ? 'px-24px' : 'px-0 justify-center',
                   'py-16px',
                   isActive
-                    ? 'bg-event-horizon text-[#00FFFF] border-l-4 border-[#00FFFF] shadow-brutal-sm'
-                    : 'text-cathode-white hover:bg-event-horizon/50 hover:text-cathode-white',
+                    ? 'bg-[var(--theme-background)] text-[var(--theme-info)] border-l-4 border-[var(--theme-info)] shadow-brutal-sm'
+                    : 'text-[var(--theme-foreground)] hover:bg-[var(--theme-hover)] hover:text-[var(--theme-foreground)]',
                   isExpanded && !isActive && 'hover:translate-x-4px',
                   isHovered ? 'transition-all duration-200 ease-out' : 'transition-all duration-300 ease-in-out'
                 )}
@@ -195,7 +196,7 @@ export default function DashboardLayout() {
                 
                 {/* Tooltip for collapsed state */}
                 {!isExpanded && (
-                  <div className="absolute left-full ml-8px px-8px py-4px bg-carbon-plate border-2 border-basalt-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 whitespace-nowrap z-[60]">
+                  <div className="absolute left-full ml-8px px-8px py-4px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 whitespace-nowrap z-[60]">
                     <span className="text-brutal-xs">{item.label}</span>
                   </div>
                 )}
@@ -210,7 +211,7 @@ export default function DashboardLayout() {
 
         {/* USER SECTION */}
         <div className={clsx(
-          "absolute bottom-0 left-0 right-0 border-t-2 border-basalt-border",
+          "absolute bottom-0 left-0 right-0 border-t-2 border-[var(--theme-border)]",
           isExpanded ? "p-24px" : "p-16px",
           isHovered ? "transition-all duration-200 ease-out" : "transition-all duration-300 ease-in-out"
         )}>
@@ -219,7 +220,7 @@ export default function DashboardLayout() {
             isExpanded ? "gap-16px" : "justify-center",
             isHovered ? "transition-all duration-200 ease-out" : "transition-all duration-300 ease-in-out"
           )}>
-            <div className="border-2 border-basalt-border p-2">
+            <div className="border-2 border-[var(--theme-border)] p-2">
               <UserButton afterSignOutUrl="/" />
             </div>
             {isExpanded && (
@@ -227,7 +228,7 @@ export default function DashboardLayout() {
                 isHovered ? "transition-opacity duration-200 ease-out" : "transition-opacity duration-300 ease-in-out"
               )}>
                 <p className="text-brutal-xs">USER ACCOUNT</p>
-                <p className="text-brutal-xs text-[#00FFFF]">ACTIVE</p>
+                <p className="text-brutal-xs text-[var(--theme-info)]">ACTIVE</p>
               </div>
             )}
           </div>
@@ -237,7 +238,7 @@ export default function DashboardLayout() {
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* BRUTAL HEADER */}
-        <header className="h-64px bg-carbon-plate border-b-2 border-basalt-border flex items-center px-24px gap-16px">
+        <header className="h-64px bg-[var(--theme-background-secondary)] border-b-2 border-[var(--theme-border)] flex items-center px-24px gap-16px">
           {/* Desktop hamburger to toggle sidebar */}
           <button
             onClick={() => isCollapsed ? setIsCollapsed(false) : setIsCollapsed(true)}
@@ -262,11 +263,16 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-16px">
-            <button className="brutal-btn">
-              + QUICK ADD
+            <button 
+              className="brutal-btn flex items-center gap-8px"
+              onClick={() => setTerminalOpen(true)}
+              title="Open Terminal (Ctrl+K)"
+            >
+              <HiOutlineTerminal className="w-20px h-20px" />
+              <span>TERMINAL</span>
             </button>
             <div className="text-brutal-xs">
-              <span className="text-[#00FFFF]">STATUS:</span> OPERATIONAL
+              <span className="text-[var(--theme-info)]">STATUS:</span> OPERATIONAL
             </div>
           </div>
         </header>
@@ -275,7 +281,7 @@ export default function DashboardLayout() {
         <ProfileCompletionBanner />
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 overflow-y-auto bg-event-horizon">
+        <main className="flex-1 overflow-y-auto bg-[var(--theme-background)]">
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: 8 }}
@@ -289,20 +295,20 @@ export default function DashboardLayout() {
         </main>
 
         {/* BRUTAL STATUS BAR */}
-        <footer className="h-32px bg-carbon-plate border-t-2 border-basalt-border flex items-center px-24px">
+        <footer className="h-32px bg-[var(--theme-background-secondary)] border-t-2 border-[var(--theme-border)] flex items-center px-24px">
           <div className="flex items-center gap-24px text-brutal-xs font-mono">
             <span className="transition-all duration-200">
-              <span className="text-[#FFFF00]">MEM:</span>{' '}
+              <span className="text-[var(--theme-primary)]">MEM:</span>{' '}
               <span className={clsx(
                 "transition-colors duration-300",
-                stats.memory.percentage && stats.memory.percentage > 75 ? "text-[#FF6B6B]" : "text-cathode-white"
+                stats.memory.percentage && stats.memory.percentage > 75 ? "text-[var(--theme-error)]" : "text-[var(--theme-foreground)]"
               )}>
                 {formatMemory(stats.memory.used)}
               </span>
               {stats.memory.percentage && (
                 <span className={clsx(
                   "ml-4px transition-colors duration-300",
-                  stats.memory.percentage > 75 ? "text-[#FF6B6B]/80" : "text-cathode-white/60"
+                  stats.memory.percentage > 75 ? "text-[var(--theme-error)]/80" : "text-[var(--theme-foreground)]/60"
                 )}>
                   ({stats.memory.percentage}%)
                 </span>
@@ -310,18 +316,18 @@ export default function DashboardLayout() {
             </span>
             
             <span className="transition-all duration-200">
-              <span className="text-[#00FFFF]">CPU:</span>{' '}
+              <span className="text-[var(--theme-info)]">CPU:</span>{' '}
               <span className={clsx(
                 "transition-colors duration-300",
-                stats.cpu.usage > 70 ? "text-[#FF6B6B]" : 
-                stats.cpu.usage > 40 ? "text-[#FFFF00]" : "text-cathode-white"
+                stats.cpu.usage > 70 ? "text-[var(--theme-error)]" : 
+                stats.cpu.usage > 40 ? "text-[var(--theme-warning)]" : "text-[var(--theme-foreground)]"
               )}>
                 {stats.cpu.usage}%
               </span>
               {stats.cpu.trend !== 'stable' && (
                 <span className={clsx(
                   "ml-4px transition-all duration-300",
-                  stats.cpu.trend === 'increasing' ? "text-[#FF6B6B] animate-pulse" : "text-[#4ECDC4]"
+                  stats.cpu.trend === 'increasing' ? "text-[var(--theme-error)] animate-pulse" : "text-[var(--theme-success)]"
                 )}>
                   {stats.cpu.trend === 'increasing' ? '↗' : '↘'}
                 </span>
@@ -329,9 +335,9 @@ export default function DashboardLayout() {
             </span>
             
             <span className="transition-all duration-200">
-              <span className="text-[#FF00FF]">TASKS:</span>{' '}
-              <span className="text-cathode-white">{stats.tasks.total}</span>
-              <span className="text-cathode-white/60 ml-4px">
+              <span className="text-[var(--theme-warning)]">TASKS:</span>{' '}
+              <span className="text-[var(--theme-foreground)]">{stats.tasks.total}</span>
+              <span className="text-[var(--theme-foreground)]/60 ml-4px">
                 ({stats.tasks.active} active)
               </span>
             </span>
@@ -342,29 +348,27 @@ export default function DashboardLayout() {
               compact={true}
             />
             
-            <GitHubMonitor compact />
-            
             <span className="ml-auto transition-all duration-300">
               <span className={clsx(
                 "transition-colors duration-500",
-                stats.system.status === 'NOMINAL' ? "text-[#00FF00]" :
-                stats.system.status === 'DEGRADED' ? "text-[#FFFF00]" : "text-[#FF6B6B]"
+                stats.system.status === 'NOMINAL' ? "text-[var(--theme-success)]" :
+                stats.system.status === 'DEGRADED' ? "text-[var(--theme-warning)]" : "text-[var(--theme-error)]"
               )}>
                 SYSTEM:
               </span>
               <span className={clsx(
                 "ml-4px transition-all duration-500",
-                stats.system.status === 'NOMINAL' ? "text-[#00FF00]" :
-                stats.system.status === 'DEGRADED' ? "text-[#FFFF00] animate-pulse" : "text-[#FF6B6B] animate-pulse"
+                stats.system.status === 'NOMINAL' ? "text-[var(--theme-success)]" :
+                stats.system.status === 'DEGRADED' ? "text-[var(--theme-warning)] animate-pulse" : "text-[var(--theme-error)] animate-pulse"
               )}>
                 {stats.system.status}
               </span>
               {stats.system.errors > 0 && (
-                <span className="text-[#FF6B6B] ml-4px animate-bounce">
+                <span className="text-[var(--theme-error)] ml-4px animate-bounce">
                   ({stats.system.errors} ERR)
                 </span>
               )}
-              <span className="text-cathode-white/40 ml-4px text-brutal-xs">
+              <span className="text-[var(--theme-foreground)]/40 ml-4px text-brutal-xs">
                 ↻ {Math.floor(stats.system.uptime / 60)}m
               </span>
             </span>

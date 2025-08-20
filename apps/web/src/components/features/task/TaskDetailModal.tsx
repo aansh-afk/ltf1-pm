@@ -42,7 +42,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
   if (!task) return null
 
   const priorityColors = {
-    urgent: 'text-[#FF0000] border-[#FF0000]',
+    urgent: 'text-[var(--theme-error)] border-[var(--theme-error)]',
     high: 'text-warning-brutalist border-warning-brutalist',
     medium: 'text-primary-brutalist border-primary-brutalist',
     low: 'text-neutral-400 border-neutral-400',
@@ -53,8 +53,8 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
     todo: 'text-primary-brutalist',
     in_progress: 'text-warning-brutalist',
     in_review: 'text-[#FF6B00]',
-    done: 'text-[#00FF00]',
-    cancelled: 'text-[#FF0000]',
+    done: 'text-[var(--theme-success)]',
+    cancelled: 'text-[var(--theme-error)]',
   }
 
   const tabs = [
@@ -69,7 +69,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
     <BrutalModal isOpen={isOpen} onClose={onClose} size="lg">
       <div className="p-0">
         {/* Header */}
-        <div className="p-24px border-b-2 border-basalt-border">
+        <div className="p-24px border-b-2 border-[var(--theme-border)]">
           <div className="flex items-start justify-between gap-16px">
             <div className="flex-1">
               <div className="flex items-center gap-12px mb-8px">
@@ -95,7 +95,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
             </div>
             <button
               onClick={onClose}
-              className="p-8px hover:bg-event-horizon/20 transition-colors"
+              className="p-8px hover:bg-[var(--theme-background-secondary)]/20 transition-colors"
             >
               <HiOutlineX className="w-20px h-20px" />
             </button>
@@ -103,7 +103,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b-2 border-basalt-border">
+        <div className="flex border-b-2 border-[var(--theme-border)]">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -112,8 +112,8 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
                 'px-24px py-16px text-brutal-sm font-mono uppercase transition-colors',
                 'border-b-4 -mb-2px',
                 activeTab === tab.id
-                  ? 'border-primary-brutalist bg-event-horizon/10 text-primary-brutalist'
-                  : 'border-transparent hover:bg-event-horizon/5'
+                  ? 'border-primary-brutalist bg-[var(--theme-background-secondary)]/10 text-primary-brutalist'
+                  : 'border-transparent hover:bg-[var(--theme-background-secondary)]/5'
               )}
             >
               {tab.label}
@@ -129,7 +129,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
               {task.description && (
                 <div>
                   <h3 className="text-brutal-sm font-mono uppercase mb-12px">DESCRIPTION</h3>
-                  <div className="p-16px bg-event-horizon/5 border-2 border-basalt-border">
+                  <div className="p-16px bg-[var(--theme-background-secondary)]/5 border-2 border-[var(--theme-border)]">
                     <p className="text-brutal-sm whitespace-pre-wrap">{task.description}</p>
                   </div>
                 </div>
@@ -201,7 +201,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
                     {task.labels.map((label: string) => (
                       <span
                         key={label}
-                        className="px-12px py-4px bg-event-horizon/10 border border-basalt-border text-brutal-xs font-mono uppercase"
+                        className="px-12px py-4px bg-[var(--theme-background-secondary)]/10 border border-[var(--theme-border)] text-brutal-xs font-mono uppercase"
                       >
                         {label}
                       </span>
@@ -232,7 +232,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
                     {timeEntries.map((entry: any) => (
                       <div
                         key={entry._id}
-                        className="p-16px bg-event-horizon/5 border border-basalt-border"
+                        className="p-16px bg-[var(--theme-background-secondary)]/5 border border-[var(--theme-border)]"
                       >
                         <div className="flex items-center justify-between">
                           <div>

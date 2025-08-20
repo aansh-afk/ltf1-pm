@@ -154,9 +154,9 @@ export default function ShortcutSettings() {
   ]
 
   return (
-    <div className="h-full flex flex-col bg-event-horizon overflow-hidden">
+    <div className="h-full flex flex-col bg-[var(--theme-background-secondary)] overflow-hidden">
       {/* Header */}
-      <div className="bg-carbon-plate border-b-4 border-basalt-border p-24px flex-shrink-0">
+      <div className="bg-[var(--theme-background)] border-b-4 border-[var(--theme-border)] p-24px flex-shrink-0">
         <div className="flex items-center justify-between mb-24px">
           <h1 className="text-2xl font-mono uppercase">KEYBOARD SHORTCUTS</h1>
           
@@ -181,7 +181,7 @@ export default function ShortcutSettings() {
         {/* Search and Filter */}
         <div className="flex items-center gap-16px">
           <div className="relative flex-1 max-w-400px">
-            <HiOutlineSearch className="absolute left-12px top-1/2 -translate-y-1/2 w-16px h-16px text-cathode-white/60" />
+            <HiOutlineSearch className="absolute left-12px top-1/2 -translate-y-1/2 w-16px h-16px text-[var(--theme-foreground)]/60" />
             <input
               type="text"
               placeholder="SEARCH SHORTCUTS..."
@@ -200,7 +200,7 @@ export default function ShortcutSettings() {
                   "px-16px py-10px font-mono text-brutal-xs uppercase transition-colors",
                   selectedCategory === cat.value
                     ? "bg-primary-brutalist text-event-horizon"
-                    : "bg-carbon-plate border-2 border-basalt-border hover:border-primary-brutalist"
+                    : "bg-[var(--theme-background)] border-2 border-[var(--theme-border)] hover:border-primary-brutalist"
                 )}
               >
                 {cat.label}
@@ -212,11 +212,11 @@ export default function ShortcutSettings() {
 
       {/* Import/Export Panel */}
       {showImportExport && (
-        <div className="bg-carbon-plate border-b-2 border-basalt-border p-24px flex-shrink-0">
+        <div className="bg-[var(--theme-background)] border-b-2 border-[var(--theme-border)] p-24px flex-shrink-0">
           <div className="grid grid-cols-2 gap-24px">
             <div>
               <h3 className="font-mono text-brutal-sm uppercase mb-12px">EXPORT SETTINGS</h3>
-              <p className="text-brutal-xs text-cathode-white/60 mb-12px">
+              <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mb-12px">
                 Download your custom keyboard shortcuts as a JSON file
               </p>
               <button
@@ -250,7 +250,7 @@ export default function ShortcutSettings() {
                   value={importJson}
                   onChange={(e) => setImportJson(e.target.value)}
                   placeholder="OR PASTE JSON HERE..."
-                  className="w-full h-100px p-12px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-xs resize-none focus:border-primary-brutalist focus:outline-none"
+                  className="w-full h-100px p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-xs resize-none focus:border-primary-brutalist focus:outline-none"
                 />
                 
                 <button
@@ -270,7 +270,7 @@ export default function ShortcutSettings() {
       <div className="flex-1 overflow-y-auto p-24px">
         {groupedShortcuts.length === 0 ? (
           <div className="text-center py-48px">
-            <p className="text-cathode-white/60 font-mono text-brutal-sm uppercase">
+            <p className="text-[var(--theme-foreground)]/60 font-mono text-brutal-sm uppercase">
               NO SHORTCUTS FOUND
             </p>
           </div>
@@ -283,7 +283,7 @@ export default function ShortcutSettings() {
                     {info?.name || category}
                   </h2>
                   {info?.description && (
-                    <p className="text-brutal-xs text-cathode-white/60 mt-4px">
+                    <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-4px">
                       {info.description}
                     </p>
                   )}
@@ -294,7 +294,7 @@ export default function ShortcutSettings() {
                     <div
                       key={shortcut.id}
                       className={clsx(
-                        "bg-carbon-plate border-2 border-basalt-border p-16px",
+                        "bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px",
                         !shortcut.enabled && "opacity-50"
                       )}
                     >
@@ -318,7 +318,7 @@ export default function ShortcutSettings() {
                                 <h3 className="font-mono text-brutal-sm uppercase">
                                   {shortcut.name}
                                 </h3>
-                                <p className="text-brutal-xs text-cathode-white/60 mt-2px">
+                                <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-2px">
                                   {shortcut.description}
                                 </p>
                               </div>
@@ -327,7 +327,7 @@ export default function ShortcutSettings() {
 
                           <div className="flex items-center gap-12px">
                             {/* Shortcut Display */}
-                            <div className="px-16px py-8px bg-event-horizon border-2 border-basalt-border">
+                            <div className="px-16px py-8px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]">
                               <span className="font-mono text-brutal-sm">
                                 {formatKeyCombo(shortcut.customKeys || shortcut.defaultKeys)}
                               </span>
@@ -371,8 +371,8 @@ export default function ShortcutSettings() {
       </div>
 
       {/* Help Text */}
-      <div className="bg-carbon-plate border-t-2 border-basalt-border p-16px flex-shrink-0">
-        <p className="font-mono text-brutal-xs text-cathode-white/60 text-center">
+      <div className="bg-[var(--theme-background)] border-t-2 border-[var(--theme-border)] p-16px flex-shrink-0">
+        <p className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60 text-center">
           PRESS ? TO SHOW KEYBOARD SHORTCUTS HELP • CTRL+K TO OPEN COMMAND PALETTE
         </p>
       </div>

@@ -26,24 +26,24 @@ export default function BrutalNotification({
 
   const colors = {
     success: {
-      border: 'border-[#00FF00]',
-      icon: 'text-[#00FF00]',
-      bg: 'bg-[#00FF00]/10',
+      border: 'border-[var(--theme-success)]',
+      icon: 'text-[var(--theme-success)]',
+      bg: 'bg-[var(--theme-success)]/10',
     },
     error: {
-      border: 'border-[#FF0000]',
-      icon: 'text-[#FF0000]',
-      bg: 'bg-[#FF0000]/10',
+      border: 'border-[var(--theme-error)]',
+      icon: 'text-[var(--theme-error)]',
+      bg: 'bg-[var(--theme-error)]/10',
     },
     warning: {
-      border: 'border-[#FFFF00]',
-      icon: 'text-[#FFFF00]',
-      bg: 'bg-[#FFFF00]/10',
+      border: 'border-[var(--theme-warning)]',
+      icon: 'text-[var(--theme-warning)]',
+      bg: 'bg-[var(--theme-warning)]/10',
     },
     info: {
-      border: 'border-[#00FFFF]',
-      icon: 'text-[#00FFFF]',
-      bg: 'bg-[#00FFFF]/10',
+      border: 'border-[var(--theme-info)]',
+      icon: 'text-[var(--theme-info)]',
+      bg: 'bg-[var(--theme-info)]/10',
     },
   }
 
@@ -57,7 +57,8 @@ export default function BrutalNotification({
       exit={{ opacity: 0, x: 100, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
       className={clsx(
-        'bg-carbon-plate border-2 shadow-brutal-lg p-16px min-w-[300px] max-w-[500px]',
+        'border-2 shadow-brutal-lg p-16px min-w-[300px] max-w-[500px]',
+        'bg-[var(--theme-background)]',
         colorScheme.border
       )}
     >
@@ -67,16 +68,16 @@ export default function BrutalNotification({
         </div>
         
         <div className="flex-1">
-          <h3 className="text-brutal-sm font-bold mb-4px">{title.toUpperCase()}</h3>
+          <h3 className="text-brutal-sm font-bold mb-4px text-[var(--theme-foreground)]">{title.toUpperCase()}</h3>
           {message && (
-            <p className="text-xs text-cathode-white/70">{message}</p>
+            <p className="text-xs text-[var(--theme-foreground)]/70">{message}</p>
           )}
         </div>
 
         {onClose && (
           <button
             onClick={onClose}
-            className="p-4px hover:bg-event-horizon transition-colors"
+            className="p-4px hover:bg-[var(--theme-background-secondary)] transition-colors text-[var(--theme-foreground)]"
           >
             <HiOutlineXCircle className="w-20px h-20px" />
           </button>

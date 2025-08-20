@@ -157,7 +157,7 @@ export function TaskAssignmentHelper({
       </div>
 
       {/* Technology Detection */}
-      <div className="brutal-card p-16px bg-event-horizon">
+      <div className="brutal-card p-16px bg-[var(--theme-background-secondary)]">
         <h4 className="font-mono text-brutal-sm font-bold mb-8px flex items-center gap-8px">
           <HiOutlineCode className="w-16px h-16px" />
           DETECTED TECHNOLOGIES

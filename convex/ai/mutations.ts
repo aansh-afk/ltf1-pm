@@ -3,7 +3,7 @@
 
 import { v } from "convex/values"
 import { mutation } from "../_generated/server"
-import { getCurrentUser } from "../auth/users"
+import { api } from "../_generated/api"
 
 // Track AI session (store AI interaction for analytics)
 export const trackAISession = mutation({
@@ -22,11 +22,11 @@ export const trackAISession = mutation({
     cached: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {})
     if (!user) throw new Error("Not authenticated")
 
     // Get user's active workspace
-    const workspaceMember = await ctx.db
+    const workspaceMember: any = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .first()
@@ -60,7 +60,7 @@ export const addAIFeedback = mutation({
     comment: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {})
     if (!user) throw new Error("Not authenticated")
 
     const session = await ctx.db.get(args.sessionId)
@@ -98,11 +98,11 @@ export const createAIInsight = mutation({
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {})
     if (!user) throw new Error("Not authenticated")
 
     // Get user's active workspace
-    const workspaceMember = await ctx.db
+    const workspaceMember: any = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .first()
@@ -135,7 +135,7 @@ export const dismissAIInsight = mutation({
     actionTaken: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {})
     if (!user) throw new Error("Not authenticated")
 
     const insight = await ctx.db.get(args.insightId)
@@ -144,7 +144,7 @@ export const dismissAIInsight = mutation({
     }
 
     // Verify user has access to this workspace
-    const workspaceMember = await ctx.db
+    const workspaceMember: any = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_workspace_user", (q) => 
         q.eq("workspaceId", insight.workspaceId).eq("userId", user._id)
@@ -177,11 +177,11 @@ export const createAITaskSuggestion = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {})
     if (!user) throw new Error("Not authenticated")
 
     // Get user's active workspace
-    const workspaceMember = await ctx.db
+    const workspaceMember: any = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .first()
@@ -209,7 +209,7 @@ export const updateAITaskStatus = mutation({
     status: v.union(v.literal("accepted"), v.literal("rejected")),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {})
     if (!user) throw new Error("Not authenticated")
 
     const aiTask = await ctx.db.get(args.taskId)

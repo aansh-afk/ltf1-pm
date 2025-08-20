@@ -45,25 +45,25 @@ interface TaskFiltersProps {
 const statusOptions = [
   { value: 'backlog', label: 'BACKLOG', color: 'bg-neutral-600' },
   { value: 'todo', label: 'TO DO', color: 'bg-primary-brutalist' },
-  { value: 'in_progress', label: 'IN PROGRESS', color: 'bg-[#00FFFF]' },
-  { value: 'in_review', label: 'IN REVIEW', color: 'bg-[#FF00FF]' },
-  { value: 'done', label: 'DONE', color: 'bg-[#00FF00]' },
-  { value: 'cancelled', label: 'CANCELLED', color: 'bg-[#FF0000]' }
+  { value: 'in_progress', label: 'IN PROGRESS', color: 'bg-[var(--theme-info)]' },
+  { value: 'in_review', label: 'IN REVIEW', color: 'bg-[var(--theme-accent)]' },
+  { value: 'done', label: 'DONE', color: 'bg-[var(--theme-success)]' },
+  { value: 'cancelled', label: 'CANCELLED', color: 'bg-[var(--theme-error)]' }
 ]
 
 const priorityOptions = [
-  { value: 'urgent', label: 'URGENT', color: 'text-[#FF0000]' },
-  { value: 'high', label: 'HIGH', color: 'text-[#FF00FF]' },
+  { value: 'urgent', label: 'URGENT', color: 'text-[var(--theme-error)]' },
+  { value: 'high', label: 'HIGH', color: 'text-[var(--theme-accent)]' },
   { value: 'medium', label: 'MEDIUM', color: 'text-primary-brutalist' },
   { value: 'low', label: 'LOW', color: 'text-neutral-400' }
 ]
 
 const typeOptions = [
-  { value: 'feature', label: 'FEATURE', color: 'bg-[#00FF00]' },
-  { value: 'bug', label: 'BUG', color: 'bg-[#FF0000]' },
-  { value: 'improvement', label: 'IMPROVEMENT', color: 'bg-[#00FFFF]' },
+  { value: 'feature', label: 'FEATURE', color: 'bg-[var(--theme-success)]' },
+  { value: 'bug', label: 'BUG', color: 'bg-[var(--theme-error)]' },
+  { value: 'improvement', label: 'IMPROVEMENT', color: 'bg-[var(--theme-info)]' },
   { value: 'task', label: 'TASK', color: 'bg-primary-brutalist' },
-  { value: 'epic', label: 'EPIC', color: 'bg-[#FF00FF]' }
+  { value: 'epic', label: 'EPIC', color: 'bg-[var(--theme-accent)]' }
 ]
 
 const defaultFilters: TaskFilters = {
@@ -157,14 +157,14 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-event-horizon/50 z-40"
+        className="fixed inset-0 bg-[var(--theme-background-secondary)]/50 z-40"
         onClick={onClose}
       />
       
       {/* Filter Panel */}
-      <div className="fixed right-0 top-0 h-full w-480px bg-carbon-plate border-l-4 border-basalt-border z-50 overflow-y-auto">
+      <div className="fixed right-0 top-0 h-full w-480px bg-[var(--theme-background)] border-l-4 border-[var(--theme-border)] z-50 overflow-y-auto">
         {/* Header */}
-        <div className="p-24px border-b-2 border-basalt-border">
+        <div className="p-24px border-b-2 border-[var(--theme-border)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-12px">
               <HiOutlineFilter className="w-20px h-20px" />
@@ -193,7 +193,7 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
               <input
                 type="text"
                 placeholder="SEARCH TASKS..."
-                className="w-full pl-40px pr-16px py-12px bg-event-horizon border-2 border-basalt-border 
+                className="w-full pl-40px pr-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                          font-mono text-brutal-sm uppercase placeholder:text-neutral-600
                          focus:border-primary-brutalist focus:outline-none transition-colors"
                 value={localFilters.search}
@@ -222,7 +222,7 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
                       type="checkbox"
                       checked={localFilters.status.includes(option.value)}
                       onChange={() => toggleArrayFilter('status', option.value)}
-                      className="w-16px h-16px border-2 border-basalt-border bg-carbon-plate"
+                      className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                     />
                     <div className={clsx(
                       "px-8px py-4px text-brutal-xs font-bold text-event-horizon",
@@ -256,7 +256,7 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
                       type="checkbox"
                       checked={localFilters.priority.includes(option.value)}
                       onChange={() => toggleArrayFilter('priority', option.value)}
-                      className="w-16px h-16px border-2 border-basalt-border bg-carbon-plate"
+                      className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                     />
                     <span className={clsx("font-mono text-brutal-sm uppercase", option.color)}>
                       {option.label}
@@ -287,7 +287,7 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
                       type="checkbox"
                       checked={localFilters.type.includes(option.value)}
                       onChange={() => toggleArrayFilter('type', option.value)}
-                      className="w-16px h-16px border-2 border-basalt-border bg-carbon-plate"
+                      className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                     />
                     <div className={clsx(
                       "px-8px py-4px text-brutal-xs font-bold text-event-horizon",
@@ -321,7 +321,7 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
                       type="checkbox"
                       checked={localFilters.assigneeIds.includes('unassigned')}
                       onChange={() => toggleArrayFilter('assigneeIds', 'unassigned')}
-                      className="w-16px h-16px border-2 border-basalt-border bg-carbon-plate"
+                      className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                     />
                     <span className="font-mono text-brutal-sm text-neutral-500">UNASSIGNED</span>
                   </label>
@@ -331,10 +331,10 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
                         type="checkbox"
                         checked={localFilters.assigneeIds.includes(member.userId)}
                         onChange={() => toggleArrayFilter('assigneeIds', member.userId)}
-                        className="w-16px h-16px border-2 border-basalt-border bg-carbon-plate"
+                        className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                       />
                       <div className="flex items-center gap-8px">
-                        <div className="w-24px h-24px bg-primary-brutalist border border-basalt-border flex items-center justify-center">
+                        <div className="w-24px h-24px bg-primary-brutalist border border-[var(--theme-border)] flex items-center justify-center">
                           <HiOutlineUser className="w-16px h-16px text-event-horizon" />
                         </div>
                         <span className="font-mono text-brutal-sm">{member.user.name}</span>
@@ -367,7 +367,7 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
                         type="checkbox"
                         checked={localFilters.labels.includes(label)}
                         onChange={() => toggleArrayFilter('labels', label)}
-                        className="w-16px h-16px border-2 border-basalt-border bg-carbon-plate"
+                        className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                       />
                       <div className="flex items-center gap-8px">
                         <HiOutlineTag className="w-16px h-16px text-primary-brutalist" />
@@ -398,7 +398,7 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
                   <label className="block text-brutal-xs mb-4px text-neutral-500">FROM</label>
                   <input
                     type="date"
-                    className="w-full px-12px py-8px bg-event-horizon border-2 border-basalt-border 
+                    className="w-full px-12px py-8px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                              font-mono text-brutal-sm
                              focus:border-primary-brutalist focus:outline-none transition-colors"
                     value={localFilters.dueDateRange.start || ''}
@@ -409,7 +409,7 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
                   <label className="block text-brutal-xs mb-4px text-neutral-500">TO</label>
                   <input
                     type="date"
-                    className="w-full px-12px py-8px bg-event-horizon border-2 border-basalt-border 
+                    className="w-full px-12px py-8px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                              font-mono text-brutal-sm
                              focus:border-primary-brutalist focus:outline-none transition-colors"
                     value={localFilters.dueDateRange.end || ''}
@@ -428,10 +428,10 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
                 <button
                   onClick={() => handleBooleanFilter('hasTimeTracked', localFilters.hasTimeTracked === true ? null : true)}
                   className={clsx(
-                    "px-12px py-6px border-2 border-basalt-border font-mono text-brutal-xs uppercase transition-colors",
+                    "px-12px py-6px border-2 border-[var(--theme-border)] font-mono text-brutal-xs uppercase transition-colors",
                     localFilters.hasTimeTracked === true
                       ? "bg-primary-brutalist text-event-horizon"
-                      : "bg-carbon-plate hover:bg-event-horizon"
+                      : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
                   )}
                 >
                   HAS TIME TRACKED
@@ -441,10 +441,10 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
                 <button
                   onClick={() => handleBooleanFilter('isOverdue', localFilters.isOverdue === true ? null : true)}
                   className={clsx(
-                    "px-12px py-6px border-2 border-basalt-border font-mono text-brutal-xs uppercase transition-colors",
+                    "px-12px py-6px border-2 border-[var(--theme-border)] font-mono text-brutal-xs uppercase transition-colors",
                     localFilters.isOverdue === true
-                      ? "bg-[#FF0000] text-cathode-white"
-                      : "bg-carbon-plate hover:bg-event-horizon"
+                      ? "bg-[var(--theme-error)] text-[var(--theme-foreground)]"
+                      : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
                   )}
                 >
                   OVERDUE
@@ -455,7 +455,7 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
         </div>
 
         {/* Footer Actions */}
-        <div className="sticky bottom-0 p-24px bg-carbon-plate border-t-2 border-basalt-border">
+        <div className="sticky bottom-0 p-24px bg-[var(--theme-background)] border-t-2 border-[var(--theme-border)]">
           <div className="flex gap-12px">
             <button
               onClick={handleResetFilters}

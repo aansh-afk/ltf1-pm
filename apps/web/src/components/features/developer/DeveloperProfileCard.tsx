@@ -20,7 +20,7 @@ export default function DeveloperProfileCard({
   if (!developerData) {
     return (
       <div className={clsx(
-        'bg-carbon-plate border-2 border-basalt-border p-24px',
+        'bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px',
         'animate-pulse',
         className
       )}>
@@ -38,7 +38,7 @@ export default function DeveloperProfileCard({
     return (
       <div 
         className={clsx(
-          'bg-carbon-plate border-2 border-basalt-border p-24px',
+          'bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px',
           'hover:border-primary-brutalist transition-colors cursor-pointer',
           className
         )}
@@ -49,7 +49,7 @@ export default function DeveloperProfileCard({
           <DeveloperStatusIndicator status={profile.status || 'AVAILABLE'} showLabel />
         </div>
         
-        <div className="text-cathode-white/60 text-brutal-sm mb-16px">
+        <div className="text-[var(--theme-foreground)]/60 text-brutal-sm mb-16px">
           No developer profile set up yet
         </div>
         
@@ -63,7 +63,7 @@ export default function DeveloperProfileCard({
   return (
     <div 
       className={clsx(
-        'bg-carbon-plate border-2 border-basalt-border p-24px',
+        'bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px',
         'hover:border-primary-brutalist transition-colors',
         onClick && 'cursor-pointer',
         className
@@ -78,7 +78,7 @@ export default function DeveloperProfileCard({
       
       {/* Status message if any */}
       {profile.statusMessage && (
-        <div className="text-brutal-sm text-cathode-white/80 mb-16px font-mono">
+        <div className="text-brutal-sm text-[var(--theme-foreground)]/80 mb-16px font-mono">
           "{profile.statusMessage}"
         </div>
       )}
@@ -119,7 +119,7 @@ export default function DeveloperProfileCard({
                       }}
                     />
                   </div>
-                  <span className="text-brutal-xs uppercase text-cathode-white/60">
+                  <span className="text-brutal-xs uppercase text-[var(--theme-foreground)]/60">
                     {tech.level}
                   </span>
                 </div>
@@ -136,7 +136,7 @@ export default function DeveloperProfileCard({
       
       {/* Work hours */}
       {profile.workHours && (
-        <div className="flex items-center gap-8px text-brutal-xs text-cathode-white/60">
+        <div className="flex items-center gap-8px text-brutal-xs text-[var(--theme-foreground)]/60">
           <HiOutlineClock className="w-16px h-16px" />
           <span>{profile.workHours.start} - {profile.workHours.end}</span>
           <span>({profile.timezone || 'UTC'})</span>

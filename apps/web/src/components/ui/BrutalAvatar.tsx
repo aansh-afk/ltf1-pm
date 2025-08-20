@@ -30,9 +30,9 @@ export default function BrutalAvatar({
     .slice(0, 2)
 
   const baseClasses = clsx(
-    'relative overflow-hidden border-2 border-basalt-border',
-    'bg-carbon-plate flex items-center justify-center',
-    'font-bold uppercase text-cathode-white',
+    'relative overflow-hidden border-2 border-[var(--theme-border)]',
+    'bg-[var(--theme-background-secondary)] flex items-center justify-center',
+    'font-bold uppercase text-[var(--theme-foreground)]',
     sizeClasses[size],
     className
   )

@@ -52,9 +52,9 @@ export default function SprintPage() {
     return (
       <div className="p-24px">
         <div className="max-w-md mx-auto">
-          <div className="bg-carbon-plate border-2 border-basalt-border p-32px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-32px">
             <h1 className="text-brutal-lg font-bold mb-16px">SELECT WORKSPACE</h1>
-            <p className="text-brutal-sm text-cathode-white/60 mb-24px">
+            <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mb-24px">
               Choose a workspace to view and manage sprints.
             </p>
             <WorkspaceSelector size="lg" showLabel={false} />
@@ -107,7 +107,7 @@ export default function SprintPage() {
             <div className="flex items-center gap-16px mb-8px">
               <h1 className="text-brutal-2xl font-bold uppercase">SPRINTS</h1>
               {!hasWorkspaceContext && (
-                <div className="text-brutal-xs text-cathode-white/60">
+                <div className="text-brutal-xs text-[var(--theme-foreground)]/60">
                   IN: {currentWorkspace?.name}
                 </div>
               )}
@@ -120,7 +120,7 @@ export default function SprintPage() {
             )}
             
             <select
-              className="px-16px py-8px bg-carbon-plate border-2 border-basalt-border 
+              className="px-16px py-8px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm uppercase
                        focus:border-primary-brutalist focus:outline-none transition-colors"
               value={selectedProjectId}
@@ -144,7 +144,7 @@ export default function SprintPage() {
 
         {/* Current Sprint Info */}
         {currentSprint && (
-          <div className="bg-primary-brutalist border-2 border-basalt-border p-24px">
+          <div className="bg-primary-brutalist border-2 border-[var(--theme-border)] p-24px">
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-8px mb-8px">
@@ -152,7 +152,7 @@ export default function SprintPage() {
                   <h2 className="text-brutal-lg font-bold text-event-horizon">
                     {currentSprint.name}
                   </h2>
-                  <span className="px-8px py-4px bg-event-horizon text-primary-brutalist font-mono text-brutal-xs uppercase">
+                  <span className="px-8px py-4px bg-[var(--theme-background-secondary)] text-primary-brutalist font-mono text-brutal-xs uppercase">
                     ACTIVE
                   </span>
                 </div>
@@ -183,22 +183,22 @@ export default function SprintPage() {
               <div className="text-right">
                 <div className="font-mono text-brutal-xs text-event-horizon mb-8px">TASK PROGRESS</div>
                 <div className="flex gap-4px">
-                  <div className="w-40px h-32px bg-event-horizon flex items-center justify-center">
+                  <div className="w-40px h-32px bg-[var(--theme-background-secondary)] flex items-center justify-center">
                     <span className="font-mono text-brutal-xs text-primary-brutalist">
                       {currentSprint.taskStats.done}
                     </span>
                   </div>
-                  <div className="w-40px h-32px bg-[#00FF00] flex items-center justify-center">
+                  <div className="w-40px h-32px bg-[var(--theme-success)] flex items-center justify-center">
                     <span className="font-mono text-brutal-xs text-event-horizon">
                       {currentSprint.taskStats.inReview}
                     </span>
                   </div>
-                  <div className="w-40px h-32px bg-[#00FFFF] flex items-center justify-center">
+                  <div className="w-40px h-32px bg-[var(--theme-info)] flex items-center justify-center">
                     <span className="font-mono text-brutal-xs text-event-horizon">
                       {currentSprint.taskStats.inProgress}
                     </span>
                   </div>
-                  <div className="w-40px h-32px bg-[#FF00FF] flex items-center justify-center">
+                  <div className="w-40px h-32px bg-[var(--theme-accent)] flex items-center justify-center">
                     <span className="font-mono text-brutal-xs text-event-horizon">
                       {currentSprint.taskStats.todo}
                     </span>
@@ -212,15 +212,15 @@ export default function SprintPage() {
 
       {/* View Toggle */}
       <div className="flex items-center gap-16px mb-24px">
-        <div className="flex border-2 border-basalt-border">
+        <div className="flex border-2 border-[var(--theme-border)]">
           <button
             className={clsx(
               "px-16px py-8px flex items-center gap-8px",
               "font-mono text-brutal-sm uppercase transition-colors",
-              "border-r-2 border-basalt-border",
+              "border-r-2 border-[var(--theme-border)]",
               viewMode === 'board' 
                 ? "bg-primary-brutalist text-event-horizon" 
-                : "bg-carbon-plate hover:bg-event-horizon"
+                : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
             )}
             onClick={() => setViewMode('board')}
           >
@@ -233,7 +233,7 @@ export default function SprintPage() {
               "font-mono text-brutal-sm uppercase transition-colors",
               viewMode === 'planning' 
                 ? "bg-primary-brutalist text-event-horizon" 
-                : "bg-carbon-plate hover:bg-event-horizon"
+                : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
             )}
             onClick={() => setViewMode('planning')}
           >

@@ -53,7 +53,7 @@ export default function BrutalModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-event-horizon/90 z-50"
+            className="fixed inset-0 bg-[var(--theme-background)]/90 z-50"
             onClick={onClose}
           />
 
@@ -89,17 +89,17 @@ export default function BrutalModal({
                 overflow: 'auto'
               }}
             >
-              <div className="bg-carbon-plate border-4 border-basalt-border shadow-brutal-lg">
+              <div className="bg-[var(--theme-background-secondary)] border-4 border-[var(--theme-border)] shadow-[var(--theme-box-shadow-hover)]">
               {/* HEADER */}
               {(title || showCloseButton) && (
-                <div className="px-24px py-16px border-b-2 border-basalt-border flex items-center justify-between">
+                <div className="px-24px py-16px border-b-2 border-[var(--theme-border)] flex items-center justify-between">
                   {title && (
                     <h2 className="text-brutal-xl">{title.toUpperCase()}</h2>
                   )}
                   {showCloseButton && (
                     <button
                       onClick={onClose}
-                      className="ml-auto p-8px hover:bg-event-horizon transition-colors"
+                      className="ml-auto p-8px hover:bg-[var(--theme-hover)] transition-colors"
                     >
                       <HiOutlineX className="w-24px h-24px" />
                     </button>

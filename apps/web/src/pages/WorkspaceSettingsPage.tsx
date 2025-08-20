@@ -155,7 +155,7 @@ export default function WorkspaceSettingsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2px mb-32px border-b-2 border-basalt-border">
+        <div className="flex gap-2px mb-32px border-b-2 border-[var(--theme-border)]">
           {tabs.map((tab) => {
             const Icon = tab.icon
             return (
@@ -167,8 +167,8 @@ export default function WorkspaceSettingsPage() {
                   "font-mono text-brutal-sm uppercase transition-all duration-200",
                   "border-b-4 -mb-2px",
                   activeTab === tab.id
-                    ? "border-primary-brutalist bg-event-horizon text-primary-brutalist"
-                    : "border-transparent hover:bg-event-horizon/20"
+                    ? "border-primary-brutalist bg-[var(--theme-background-secondary)] text-primary-brutalist"
+                    : "border-transparent hover:bg-[var(--theme-background-secondary)]/20"
                 )}
               >
                 <Icon className="w-16px h-16px" />
@@ -195,7 +195,7 @@ export default function WorkspaceSettingsPage() {
                       value={generalSettings.name}
                       onChange={(e) => setGeneralSettings({ ...generalSettings, name: e.target.value })}
                       disabled={!canEdit}
-                      className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                                font-mono text-brutal-md placeholder:text-neutral-600
                                focus:border-primary-brutalist focus:outline-none transition-colors
                                disabled:opacity-50 disabled:cursor-not-allowed"
@@ -210,7 +210,7 @@ export default function WorkspaceSettingsPage() {
                       onChange={(e) => setGeneralSettings({ ...generalSettings, slug: e.target.value })}
                       disabled={!canEdit}
                       pattern="[a-z0-9-]+"
-                      className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                                font-mono text-brutal-md placeholder:text-neutral-600
                                focus:border-primary-brutalist focus:outline-none transition-colors
                                disabled:opacity-50 disabled:cursor-not-allowed"
@@ -227,7 +227,7 @@ export default function WorkspaceSettingsPage() {
                       onChange={(e) => setGeneralSettings({ ...generalSettings, description: e.target.value })}
                       disabled={!canEdit}
                       rows={4}
-                      className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                                font-mono text-brutal-md placeholder:text-neutral-600
                                focus:border-primary-brutalist focus:outline-none transition-colors
                                disabled:opacity-50 disabled:cursor-not-allowed resize-none"
@@ -242,7 +242,7 @@ export default function WorkspaceSettingsPage() {
                       onChange={(e) => setGeneralSettings({ ...generalSettings, logoUrl: e.target.value })}
                       disabled={!canEdit}
                       placeholder="https://example.com/logo.png"
-                      className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                                font-mono text-brutal-md placeholder:text-neutral-600
                                focus:border-primary-brutalist focus:outline-none transition-colors
                                disabled:opacity-50 disabled:cursor-not-allowed"
@@ -255,10 +255,10 @@ export default function WorkspaceSettingsPage() {
                 <SettingsSection
                   title="DANGER ZONE"
                   description="Irreversible and destructive actions"
-                  className="border-2 border-[#FF0000]"
+                  className="border-2 border-[var(--theme-error)]"
                 >
                   <div className="space-y-16px">
-                    <p className="text-brutal-sm text-[#FF0000]">
+                    <p className="text-brutal-sm text-[var(--theme-error)]">
                       <HiOutlineExclamation className="inline w-16px h-16px mr-4px" />
                       Deleting a workspace will permanently remove all projects, tasks, and data.
                     </p>
@@ -266,14 +266,14 @@ export default function WorkspaceSettingsPage() {
                     {!showDeleteConfirm ? (
                       <button
                         onClick={() => setShowDeleteConfirm(true)}
-                        className="px-24px py-12px bg-[#FF0000] border-2 border-basalt-border 
-                                 font-mono text-brutal-sm uppercase tracking-wider text-cathode-white
+                        className="px-24px py-12px bg-[var(--theme-error)] border-2 border-[var(--theme-border)] 
+                                 font-mono text-brutal-sm uppercase tracking-wider text-[var(--theme-foreground)]
                                  hover:bg-[#CC0000] transition-colors"
                       >
                         DELETE WORKSPACE
                       </button>
                     ) : (
-                      <div className="space-y-16px p-16px bg-[#FF0000]/10 border-2 border-[#FF0000]">
+                      <div className="space-y-16px p-16px bg-[var(--theme-error)]/10 border-2 border-[var(--theme-error)]">
                         <p className="text-brutal-sm">
                           Type <span className="font-bold">{workspace.name}</span> to confirm deletion:
                         </p>
@@ -281,16 +281,16 @@ export default function WorkspaceSettingsPage() {
                           type="text"
                           value={deleteConfirmText}
                           onChange={(e) => setDeleteConfirmText(e.target.value)}
-                          className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                          className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                                    font-mono text-brutal-md placeholder:text-neutral-600
-                                   focus:border-[#FF0000] focus:outline-none transition-colors"
+                                   focus:border-[var(--theme-error)] focus:outline-none transition-colors"
                         />
                         <div className="flex gap-16px">
                           <button
                             onClick={handleDeleteWorkspace}
                             disabled={deleteConfirmText !== workspace.name}
-                            className="px-24px py-12px bg-[#FF0000] border-2 border-basalt-border 
-                                     font-mono text-brutal-sm uppercase tracking-wider text-cathode-white
+                            className="px-24px py-12px bg-[var(--theme-error)] border-2 border-[var(--theme-border)] 
+                                     font-mono text-brutal-sm uppercase tracking-wider text-[var(--theme-foreground)]
                                      hover:bg-[#CC0000] transition-colors
                                      disabled:opacity-50 disabled:cursor-not-allowed"
                           >
@@ -336,7 +336,7 @@ export default function WorkspaceSettingsPage() {
                     checked={featureSettings.enableProjects}
                     onChange={(e) => setFeatureSettings({ ...featureSettings, enableProjects: e.target.checked })}
                     disabled={!canEdit}
-                    className="w-20px h-20px border-2 border-basalt-border bg-carbon-plate"
+                    className="w-20px h-20px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                   />
                   <div>
                     <div className="font-mono text-brutal-sm uppercase">PROJECTS</div>
@@ -350,7 +350,7 @@ export default function WorkspaceSettingsPage() {
                     checked={featureSettings.enableTasks}
                     onChange={(e) => setFeatureSettings({ ...featureSettings, enableTasks: e.target.checked })}
                     disabled={!canEdit}
-                    className="w-20px h-20px border-2 border-basalt-border bg-carbon-plate"
+                    className="w-20px h-20px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                   />
                   <div>
                     <div className="font-mono text-brutal-sm uppercase">TASKS</div>
@@ -364,7 +364,7 @@ export default function WorkspaceSettingsPage() {
                     checked={featureSettings.enableMeetings}
                     onChange={(e) => setFeatureSettings({ ...featureSettings, enableMeetings: e.target.checked })}
                     disabled={!canEdit}
-                    className="w-20px h-20px border-2 border-basalt-border bg-carbon-plate"
+                    className="w-20px h-20px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                   />
                   <div>
                     <div className="font-mono text-brutal-sm uppercase">MEETINGS</div>
@@ -378,7 +378,7 @@ export default function WorkspaceSettingsPage() {
                     checked={featureSettings.enableSprints}
                     onChange={(e) => setFeatureSettings({ ...featureSettings, enableSprints: e.target.checked })}
                     disabled={!canEdit}
-                    className="w-20px h-20px border-2 border-basalt-border bg-carbon-plate"
+                    className="w-20px h-20px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                   />
                   <div>
                     <div className="font-mono text-brutal-sm uppercase">SPRINTS</div>
@@ -392,7 +392,7 @@ export default function WorkspaceSettingsPage() {
                     checked={featureSettings.enableTimeTracking}
                     onChange={(e) => setFeatureSettings({ ...featureSettings, enableTimeTracking: e.target.checked })}
                     disabled={!canEdit}
-                    className="w-20px h-20px border-2 border-basalt-border bg-carbon-plate"
+                    className="w-20px h-20px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                   />
                   <div>
                     <div className="font-mono text-brutal-sm uppercase">TIME TRACKING</div>
@@ -410,7 +410,7 @@ export default function WorkspaceSettingsPage() {
               description="Connect your workspace with external services"
             >
               <div className="space-y-24px">
-                <div className="p-16px bg-event-horizon/10 border-2 border-basalt-border">
+                <div className="p-16px bg-[var(--theme-background-secondary)]/10 border-2 border-[var(--theme-border)]">
                   <h3 className="font-mono text-brutal-sm uppercase mb-8px">GITHUB INTEGRATION</h3>
                   <p className="text-brutal-xs text-neutral-500 mb-16px">
                     Connect GitHub repositories to sync issues and pull requests
@@ -423,7 +423,7 @@ export default function WorkspaceSettingsPage() {
                   </button>
                 </div>
 
-                <div className="p-16px bg-event-horizon/10 border-2 border-basalt-border">
+                <div className="p-16px bg-[var(--theme-background-secondary)]/10 border-2 border-[var(--theme-border)]">
                   <h3 className="font-mono text-brutal-sm uppercase mb-8px">GOOGLE CALENDAR</h3>
                   <p className="text-brutal-xs text-neutral-500 mb-16px">
                     Sync meetings with Google Calendar
@@ -436,7 +436,7 @@ export default function WorkspaceSettingsPage() {
                   </button>
                 </div>
 
-                <div className="p-16px bg-event-horizon/10 border-2 border-basalt-border">
+                <div className="p-16px bg-[var(--theme-background-secondary)]/10 border-2 border-[var(--theme-border)]">
                   <h3 className="font-mono text-brutal-sm uppercase mb-8px">SLACK</h3>
                   <p className="text-brutal-xs text-neutral-500 mb-16px">
                     Send notifications to Slack channels
@@ -458,7 +458,7 @@ export default function WorkspaceSettingsPage() {
               title="SUBSCRIPTION & BILLING"
               description="Manage your workspace subscription"
             >
-              <div className="p-24px bg-event-horizon/10 border-2 border-basalt-border">
+              <div className="p-24px bg-[var(--theme-background-secondary)]/10 border-2 border-[var(--theme-border)]">
                 <p className="text-brutal-lg font-bold mb-8px">FREE PLAN</p>
                 <p className="text-brutal-sm text-neutral-500 mb-16px">
                   You're currently on the free plan with up to 5 members.
@@ -473,7 +473,7 @@ export default function WorkspaceSettingsPage() {
 
         {/* Save Indicator */}
         {(hasUnsavedGeneral || hasUnsavedFeatures) && (
-          <div className="fixed bottom-24px right-24px bg-warning-brutalist border-2 border-basalt-border p-16px shadow-brutal-lg">
+          <div className="fixed bottom-24px right-24px bg-warning-brutalist border-2 border-[var(--theme-border)] p-16px shadow-brutal-lg">
             <p className="text-brutal-sm mb-8px">UNSAVED CHANGES</p>
             <div className="flex gap-8px">
               {(isSavingGeneral || isSavingFeatures) ? (

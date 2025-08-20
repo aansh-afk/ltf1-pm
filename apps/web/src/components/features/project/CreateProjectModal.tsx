@@ -89,7 +89,7 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
             <input
               type="text"
               placeholder="MY AWESOME PROJECT"
-              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+              className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-md uppercase placeholder:text-neutral-600
                        focus:border-primary-brutalist focus:outline-none transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
@@ -107,7 +107,7 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
             <input
               type="text"
               placeholder="MAP"
-              className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+              className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-md uppercase placeholder:text-neutral-600
                        focus:border-primary-brutalist focus:outline-none transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
@@ -126,7 +126,7 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
           </label>
           <textarea
             placeholder="WHAT'S THIS PROJECT ABOUT?"
-            className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+            className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-md placeholder:text-neutral-600
                      focus:border-primary-brutalist focus:outline-none transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed resize-none"
@@ -143,7 +143,7 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
             WORKFLOW TYPE
           </label>
           <select
-            className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+            className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-md uppercase
                      focus:border-primary-brutalist focus:outline-none transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed"
@@ -158,10 +158,10 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
         </div>
 
         {/* ACTIONS */}
-        <div className="flex justify-end gap-16px pt-24px border-t-2 border-basalt-border">
+        <div className="flex justify-end gap-16px pt-24px border-t-2 border-[var(--theme-border)]">
           <button 
             type="button" 
-            className="px-24px py-12px bg-transparent border-2 border-basalt-border 
+            className="px-24px py-12px bg-transparent border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-md uppercase tracking-wider
                      hover:bg-basalt-border transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed"
@@ -172,7 +172,7 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
           </button>
           <button 
             type="submit" 
-            className="px-24px py-12px bg-primary-brutalist border-2 border-basalt-border 
+            className="px-24px py-12px bg-primary-brutalist border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-md uppercase tracking-wider text-event-horizon
                      hover:bg-yellow-400 transition-colors shadow-brutal-sm
                      disabled:opacity-50 disabled:cursor-not-allowed

@@ -26,6 +26,7 @@ import DeveloperStatusIndicator from '../components/features/developer/Developer
 import { GitHubSettings } from '../components/features/github/GitHubSettings'
 import { GitHubSettingsTab } from '../components/features/settings/GitHubSettingsTab'
 import ShortcutSettings from './settings/ShortcutSettings'
+import ThemeSwitcher from '../components/theme/ThemeSwitcher'
 
 type SettingsTab = 'profile' | 'developer' | 'accessibility' | 'notifications' | 'workspace' | 'github' | 'shortcuts'
 
@@ -278,7 +279,7 @@ export default function SettingsPage() {
       
       {/* Warning bar for unsaved changes */}
       {(hasUnsavedProfile || hasUnsavedPreferences) && (
-        <div className="bg-warning-brutalist border-2 border-basalt-border p-16px mb-24px flex items-center justify-between">
+        <div className="bg-warning-brutalist border-2 border-[var(--theme-border)] p-16px mb-24px flex items-center justify-between">
           <div className="flex items-center gap-16px">
             <HiOutlineExclamation className="w-24px h-24px" />
             <span className="text-brutal-md uppercase">
@@ -294,7 +295,7 @@ export default function SettingsPage() {
                 if (hasUnsavedProfile) forceSaveProfile()
                 if (hasUnsavedPreferences) forceSavePreferences()
               }}
-              className="px-16px py-8px bg-event-horizon border-2 border-basalt-border
+              className="px-16px py-8px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]
                        font-mono text-brutal-sm uppercase tracking-wider
                        hover:bg-primary-brutalist hover:text-event-horizon transition-colors"
             >
@@ -307,14 +308,14 @@ export default function SettingsPage() {
       <div className="flex gap-24px">
         {/* Tabs */}
         <div className="w-240px">
-          <div className="bg-carbon-plate border-2 border-basalt-border">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
             {TABS.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={clsx(
                   'w-full px-24px py-16px flex items-center gap-16px',
-                  'border-b-2 border-basalt-border last:border-b-0',
+                  'border-b-2 border-[var(--theme-border)] last:border-b-0',
                   'font-mono text-brutal-md uppercase tracking-wider',
                   'transition-colors text-left',
                   activeTab === tab.id 
@@ -346,7 +347,7 @@ export default function SettingsPage() {
                       type="text"
                       value={profileData.name}
                       onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                                font-mono text-brutal-md placeholder:text-neutral-600
                                focus:border-primary-brutalist focus:outline-none transition-colors"
                       placeholder="YOUR NAME"
@@ -359,7 +360,7 @@ export default function SettingsPage() {
                       type="email"
                       value={authUser?.primaryEmailAddress?.emailAddress || ''}
                       disabled
-                      className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                                font-mono text-brutal-md opacity-50 cursor-not-allowed"
                     />
                   </div>
@@ -370,7 +371,7 @@ export default function SettingsPage() {
                   <textarea
                     value={profileData.bio}
                     onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value.slice(0, 150) }))}
-                    className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                    className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                              font-mono text-brutal-md placeholder:text-neutral-600
                              focus:border-primary-brutalist focus:outline-none transition-colors resize-none"
                     placeholder="TELL US ABOUT YOURSELF..."
@@ -388,7 +389,7 @@ export default function SettingsPage() {
                       type="url"
                       value={profileData.avatarUrl}
                       onChange={(e) => setProfileData(prev => ({ ...prev, avatarUrl: e.target.value }))}
-                      className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                                font-mono text-brutal-md placeholder:text-neutral-600
                                focus:border-primary-brutalist focus:outline-none transition-colors"
                       placeholder="HTTPS://..."
@@ -401,7 +402,7 @@ export default function SettingsPage() {
                       type="text"
                       value={profileData.githubUsername}
                       onChange={(e) => setProfileData(prev => ({ ...prev, githubUsername: e.target.value }))}
-                      className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                                font-mono text-brutal-md placeholder:text-neutral-600
                                focus:border-primary-brutalist focus:outline-none transition-colors"
                       placeholder="OCTOCAT"
@@ -421,7 +422,7 @@ export default function SettingsPage() {
               >
                 <div className="space-y-16px">
                   {/* Current Status */}
-                  <div className="flex items-center justify-between p-16px bg-carbon-plate border-2 border-basalt-border">
+                  <div className="flex items-center justify-between p-16px bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
                     <div className="flex items-center gap-16px">
                       <span className="text-brutal-sm uppercase">Current Status:</span>
                       <DeveloperStatusIndicator 
@@ -443,7 +444,7 @@ export default function SettingsPage() {
                     <div className="space-y-16px">
                       <div>
                         <label className="block text-brutal-sm mb-8px">ROLE / TITLE</label>
-                        <div className="px-16px py-12px bg-carbon-plate border-2 border-basalt-border font-mono text-brutal-md">
+                        <div className="px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-brutal-md">
                           {developerProfile.profile?.role || 'NOT SET'}
                         </div>
                       </div>
@@ -468,7 +469,7 @@ export default function SettingsPage() {
 
                       <div>
                         <label className="block text-brutal-sm mb-8px">TIME ZONE</label>
-                        <div className="px-16px py-12px bg-carbon-plate border-2 border-basalt-border font-mono text-brutal-md">
+                        <div className="px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-brutal-md">
                           {developerProfile.profile?.timezone || 'NOT SET'}
                         </div>
                       </div>
@@ -476,7 +477,7 @@ export default function SettingsPage() {
                       <div>
                         <label className="block text-brutal-sm mb-8px">GIT CO-AUTHOR STRING</label>
                         <div className="flex items-center gap-8px">
-                          <div className="flex-1 px-16px py-12px bg-carbon-plate border-2 border-basalt-border font-mono text-brutal-sm">
+                          <div className="flex-1 px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm">
                             Co-authored-by: {developerProfile.name || currentUser.name || 'Unknown'} &lt;{developerProfile.email || currentUser.email || 'email@example.com'}&gt;
                           </div>
                           <button
@@ -553,10 +554,10 @@ export default function SettingsPage() {
                   <div>
                     <label className="block text-brutal-sm mb-8px">PREFERRED WORKING HOURS</label>
                     <div className="grid grid-cols-2 gap-16px">
-                      <div className="px-16px py-12px bg-carbon-plate border-2 border-basalt-border font-mono text-brutal-md">
+                      <div className="px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-brutal-md">
                         START: {developerProfile?.profile?.workingHours?.start || 'NOT SET'}
                       </div>
-                      <div className="px-16px py-12px bg-carbon-plate border-2 border-basalt-border font-mono text-brutal-md">
+                      <div className="px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-brutal-md">
                         END: {developerProfile?.profile?.workingHours?.end || 'NOT SET'}
                       </div>
                     </div>
@@ -564,7 +565,7 @@ export default function SettingsPage() {
 
                   <div>
                     <label className="block text-brutal-sm mb-8px">AVAILABILITY</label>
-                    <div className="px-16px py-12px bg-carbon-plate border-2 border-basalt-border font-mono text-brutal-md">
+                    <div className="px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-brutal-md">
                       {developerProfile?.profile?.availability || 'NOT SET'}
                     </div>
                   </div>
@@ -576,6 +577,21 @@ export default function SettingsPage() {
           {/* ACCESSIBILITY TAB */}
           {activeTab === 'accessibility' && (
             <>
+              <SettingsSection
+                title="Theme Selection"
+                description="Choose from 9 unique themes to customize your workspace appearance."
+              >
+                <div className="space-y-16px">
+                  <div className="mb-16px">
+                    <label className="block text-brutal-sm mb-12px uppercase">Current Theme</label>
+                    <ThemeSwitcher size="lg" variant="dropdown" showLabel={true} />
+                  </div>
+                  <div className="text-brutal-xs text-neutral-600 uppercase">
+                    Tip: You can also change themes from the terminal using the 'theme' command
+                  </div>
+                </div>
+              </SettingsSection>
+
               <SettingsSection
                 title="Visual Preferences"
                 description="Customize the interface to match your visual needs and preferences."
@@ -636,7 +652,7 @@ export default function SettingsPage() {
                         focusWidth: prev.accessibility?.focusWidth || 2
                       }
                     }))}
-                    className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                    className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                              font-mono text-brutal-md uppercase
                              focus:border-primary-brutalist focus:outline-none transition-colors"
                   >
@@ -780,7 +796,7 @@ export default function SettingsPage() {
                     ...prev,
                     defaultWorkspaceId: e.target.value || undefined
                   }))}
-                  className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                  className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                            font-mono text-brutal-md uppercase
                            focus:border-primary-brutalist focus:outline-none transition-colors"
                 >
@@ -810,7 +826,7 @@ export default function SettingsPage() {
                         autoAssignSelf: prev.defaults?.autoAssignSelf || false
                       }
                     }))}
-                    className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                    className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                              font-mono text-brutal-md uppercase
                              focus:border-primary-brutalist focus:outline-none transition-colors"
                   >
@@ -834,7 +850,7 @@ export default function SettingsPage() {
                           autoAssignSelf: prev.defaults?.autoAssignSelf || false
                         }
                       }))}
-                      className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                                font-mono text-brutal-md uppercase
                                focus:border-primary-brutalist focus:outline-none transition-colors"
                     >
@@ -858,7 +874,7 @@ export default function SettingsPage() {
                           autoAssignSelf: prev.defaults?.autoAssignSelf || false
                         }
                       }))}
-                      className="w-full px-16px py-12px bg-carbon-plate border-2 border-basalt-border 
+                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                                font-mono text-brutal-md uppercase
                                focus:border-primary-brutalist focus:outline-none transition-colors"
                     >

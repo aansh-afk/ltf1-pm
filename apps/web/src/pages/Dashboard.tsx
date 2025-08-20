@@ -12,23 +12,34 @@ import {
   HiOutlineLightningBolt,
   HiOutlineChip,
   HiOutlineDatabase,
-  HiOutlineUser
+  HiOutlineUser,
+  HiOutlineCheckCircle,
+  HiOutlinePlus,
+  HiOutlinePlay,
+  HiOutlineFlag,
+  HiOutlineUserAdd,
+  HiOutlineTerminal
 } from 'react-icons/hi'
+import { 
+  HiCodeBracket as HiOutlineGitMerge,
+  HiArrowPath as HiOutlineGitCommit
+} from 'react-icons/hi2'
 import BrutalCard from '../components/ui/BrutalCard'
 import BrutalButton from '../components/ui/BrutalButton'
 
 export default function Dashboard() {
   const workspaces = useQuery(api.workspaces.queries.getUserWorkspaces) || []
+  const recentActivities = useQuery(api.activities.queries.getDashboardActivities, { limit: 10 }) || []
   const { profileComplete, missingFields } = useProfileCompletion()
   
   const totalProjects = workspaces.reduce((sum: number, ws: any) => sum + (ws.projectCount || 0), 0)
   const totalMembers = workspaces.reduce((sum: number, ws: any) => sum + (ws.memberCount || 0), 0)
 
   const stats = [
-    { label: 'WORKSPACES', value: workspaces.length.toString(), icon: HiOutlineBriefcase, color: '#00FFFF' },
-    { label: 'PROJECTS', value: totalProjects.toString(), icon: HiOutlineClipboardList, color: '#FF00FF' },
-    { label: 'TEAM MEMBERS', value: totalMembers.toString(), icon: HiOutlineUsers, color: '#FFFF00' },
-    { label: 'MEETINGS TODAY', value: '0', icon: HiOutlineCalendar, color: '#00FF00' },
+    { label: 'WORKSPACES', value: workspaces.length.toString(), icon: HiOutlineBriefcase, color: 'var(--theme-info)' },
+    { label: 'PROJECTS', value: totalProjects.toString(), icon: HiOutlineClipboardList, color: 'var(--theme-accent)' },
+    { label: 'TEAM MEMBERS', value: totalMembers.toString(), icon: HiOutlineUsers, color: 'var(--theme-warning)' },
+    { label: 'MEETINGS TODAY', value: '0', icon: HiOutlineCalendar, color: 'var(--theme-success)' },
   ]
 
   return (
@@ -38,7 +49,7 @@ export default function Dashboard() {
         <h1 className="text-4xl font-bold mb-8px">
           WELCOME BACK, <span className="glitch-text">OPERATOR</span>
         </h1>
-        <p className="text-brutal-sm text-cathode-white/70">
+        <p className="text-brutal-sm text-[var(--theme-foreground)]/70">
           SYSTEM STATUS: OPERATIONAL | TASKS PENDING: 42
         </p>
       </div>
@@ -52,11 +63,11 @@ export default function Dashboard() {
           className="mb-24px"
         >
           <Link to="/profile" className="block">
-            <BrutalCard variant="elevated" hoverable className="bg-brutal-warning/10 border-brutal-warning">
+            <BrutalCard variant="elevated" hoverable className="bg-[var(--theme-warning)]/10 border-[var(--theme-warning)]">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-brutal-lg font-bold mb-8px">COMPLETE YOUR DEVELOPER PROFILE</h3>
-                  <p className="text-brutal-sm text-primary-brutalist/80">
+                  <h3 className="text-brutal-lg font-bold mb-8px text-[var(--theme-foreground)]">COMPLETE YOUR DEVELOPER PROFILE</h3>
+                  <p className="text-brutal-sm text-[var(--theme-foreground)]/80">
                     Missing: {missingFields.join(', ')} — Complete your profile to unlock smart task assignments and team collaboration features.
                   </p>
                 </div>
@@ -83,7 +94,7 @@ export default function Dashboard() {
               <BrutalCard variant="elevated" hoverable>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-brutal-xs text-cathode-white/70">{stat.label}</p>
+                    <p className="text-brutal-xs text-[var(--theme-foreground)]/70">{stat.label}</p>
                     <p className="text-5xl font-bold mt-8px" style={{ color: stat.color }}>
                       {stat.value}
                     </p>
@@ -102,40 +113,92 @@ export default function Dashboard() {
         <div className="lg:col-span-2">
           <BrutalCard variant="elevated">
             <div className="flex items-center justify-between mb-24px">
-              <h2 className="text-brutal-xl">RECENT ACTIVITY</h2>
+              <h2 className="text-brutal-xl text-[var(--theme-foreground)]">RECENT ACTIVITY</h2>
               <div className="flex items-center gap-8px">
-                <div className="w-8px h-8px bg-[#00FF00] animate-pulse"></div>
-                <span className="text-brutal-xs">LIVE</span>
+                <div className="w-8px h-8px bg-[var(--theme-success)] animate-pulse"></div>
+                <span className="text-brutal-xs text-[var(--theme-foreground)]">LIVE</span>
               </div>
             </div>
             
             <div className="space-y-16px">
-              {[
-                { user: 'JD', action: 'COMPLETED TASK', target: '#142', time: '2 HOURS AGO', icon: HiOutlineCode },
-                { user: 'SM', action: 'DEPLOYED TO', target: 'PRODUCTION', time: '3 HOURS AGO', icon: HiOutlineLightningBolt },
-                { user: 'AK', action: 'MERGED PR', target: '#89', time: '5 HOURS AGO', icon: HiOutlineChip },
-                { user: 'RT', action: 'UPDATED DATABASE', target: 'SCHEMA', time: '6 HOURS AGO', icon: HiOutlineDatabase },
-              ].map((activity, i) => (
-                <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="flex items-start gap-16px p-16px bg-event-horizon border-2 border-basalt-border hover:border-[#00FFFF] transition-colors cursor-pointer"
-                >
-                  <div className="w-40px h-40px bg-carbon-plate border-2 border-basalt-border flex items-center justify-center">
-                    <span className="text-brutal-xs font-bold text-[#00FFFF]">{activity.user}</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-brutal-sm">
-                      <span className="text-cathode-white/70">{activity.action}</span>{' '}
-                      <span className="text-[#FFFF00]">{activity.target}</span>
-                    </p>
-                    <p className="text-brutal-xs text-cathode-white/50">{activity.time}</p>
-                  </div>
-                  <activity.icon className="w-24px h-24px text-cathode-white/30" />
-                </motion.div>
-              ))}
+              {recentActivities.length > 0 ? (
+                recentActivities.slice(0, 6).map((activity: any, i: number) => {
+                  // Get the appropriate icon based on activity type
+                  const getActivityIcon = () => {
+                    switch (activity.icon) {
+                      case 'check': return HiOutlineCheckCircle;
+                      case 'plus': return HiOutlinePlus;
+                      case 'user': return HiOutlineUser;
+                      case 'play': return HiOutlinePlay;
+                      case 'flag': return HiOutlineFlag;
+                      case 'git-merge': return HiOutlineGitMerge;
+                      case 'git-commit': return HiOutlineGitCommit;
+                      case 'calendar': return HiOutlineCalendar;
+                      case 'user-plus': return HiOutlineUserAdd;
+                      default: return HiOutlineTerminal;
+                    }
+                  };
+                  
+                  const Icon = getActivityIcon();
+                  
+                  return (
+                    <motion.div 
+                      key={activity._id || i}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="flex items-start gap-16px p-16px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] hover:border-[var(--theme-info)] transition-colors cursor-pointer"
+                    >
+                      <div className="w-40px h-40px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] flex items-center justify-center">
+                        <span className="text-brutal-xs font-bold" style={{ color: activity.color }}>
+                          {activity.actor?.initials || 'SYS'}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-brutal-sm">
+                          <span className="text-[var(--theme-foreground)]/70">{activity.formattedAction}</span>{' '}
+                          <span style={{ color: activity.color }}>{activity.formattedTarget}</span>
+                        </p>
+                        <div className="flex items-center gap-8px">
+                          <p className="text-brutal-xs text-[var(--theme-foreground)]/50">{activity.timeAgo}</p>
+                          {activity.showWorkspace && activity.workspace && (
+                            <>
+                              <span className="text-brutal-xs text-[var(--theme-foreground)]/30">•</span>
+                              <p className="text-brutal-xs text-[var(--theme-foreground)]/50">{activity.workspace.name}</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <Icon className="w-24px h-24px" style={{ color: `${activity.color}30` }} />
+                    </motion.div>
+                  );
+                })
+              ) : (
+                // Fallback placeholder data if no activities
+                [
+                  { user: 'SYS', action: 'WAITING FOR', target: 'ACTIVITIES', time: 'JUST NOW', icon: HiOutlineTerminal, color: 'var(--theme-info)' },
+                ].map((activity, i) => (
+                  <motion.div 
+                    key={i}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="flex items-start gap-16px p-16px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]"
+                  >
+                    <div className="w-40px h-40px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] flex items-center justify-center">
+                      <span className="text-brutal-xs font-bold text-[var(--theme-info)]">{activity.user}</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-brutal-sm">
+                        <span className="text-[var(--theme-foreground)]/70">{activity.action}</span>{' '}
+                        <span className="text-[var(--theme-warning)]">{activity.target}</span>
+                      </p>
+                      <p className="text-brutal-xs text-[var(--theme-foreground)]/50">{activity.time}</p>
+                    </div>
+                    <activity.icon className="w-24px h-24px text-[var(--theme-foreground)]/30" />
+                  </motion.div>
+                ))
+              )}
             </div>
           </BrutalCard>
         </div>
@@ -143,7 +206,7 @@ export default function Dashboard() {
         {/* WORKSPACES PANEL */}
         <div>
           <BrutalCard variant="elevated">
-            <h2 className="text-brutal-xl mb-24px">YOUR WORKSPACES</h2>
+            <h2 className="text-brutal-xl mb-24px text-[var(--theme-foreground)]">YOUR WORKSPACES</h2>
             
             <div className="space-y-16px">
               {workspaces.length > 0 ? (
@@ -153,22 +216,22 @@ export default function Dashboard() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    className="p-16px bg-event-horizon border-2 border-basalt-border hover:border-[#FF00FF] transition-all cursor-pointer brutal-hover"
+                    className="p-16px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] hover:border-[var(--theme-accent)] transition-all cursor-pointer brutal-hover"
                   >
-                    <h3 className="text-brutal-sm font-bold mb-4px">{workspace.name.toUpperCase()}</h3>
+                    <h3 className="text-brutal-sm font-bold mb-4px text-[var(--theme-foreground)]">{workspace.name.toUpperCase()}</h3>
                     <div className="flex items-center gap-16px text-brutal-xs">
-                      <span className="text-[#00FFFF]">{workspace.memberCount} MEMBERS</span>
-                      <span className="text-[#FFFF00]">{workspace.role.toUpperCase()}</span>
+                      <span className="text-[var(--theme-info)]">{workspace.memberCount} MEMBERS</span>
+                      <span className="text-[var(--theme-warning)]">{workspace.role.toUpperCase()}</span>
                     </div>
                   </motion.div>
                 ))
               ) : (
                 <div className="text-center py-48px">
                   <div className="mb-24px">
-                    <div className="w-80px h-80px mx-auto bg-carbon-plate border-2 border-basalt-border flex items-center justify-center mb-16px">
-                      <HiOutlineBriefcase className="w-40px h-40px text-cathode-white/30" />
+                    <div className="w-80px h-80px mx-auto bg-[var(--theme-background)] border-2 border-[var(--theme-border)] flex items-center justify-center mb-16px">
+                      <HiOutlineBriefcase className="w-40px h-40px text-[var(--theme-foreground)]/30" />
                     </div>
-                    <p className="text-brutal-sm text-cathode-white/60">NO WORKSPACES DETECTED</p>
+                    <p className="text-brutal-sm text-[var(--theme-foreground)]/60">NO WORKSPACES DETECTED</p>
                   </div>
                   <BrutalButton variant="glitch" size="sm">
                     CREATE WORKSPACE
@@ -180,23 +243,23 @@ export default function Dashboard() {
 
           {/* SYSTEM METRICS */}
           <BrutalCard variant="bordered" className="mt-24px">
-            <h3 className="text-brutal-sm mb-16px">SYSTEM METRICS</h3>
+            <h3 className="text-brutal-sm mb-16px text-[var(--theme-foreground)]">SYSTEM METRICS</h3>
             <div className="space-y-8px text-brutal-xs">
               <div className="flex justify-between">
-                <span className="text-cathode-white/70">UPTIME</span>
-                <span className="text-[#00FF00]">99.98%</span>
+                <span className="text-[var(--theme-foreground)]/70">UPTIME</span>
+                <span className="text-[var(--theme-success)]">99.98%</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-cathode-white/70">API LATENCY</span>
-                <span className="text-[#FFFF00]">42MS</span>
+                <span className="text-[var(--theme-foreground)]/70">API LATENCY</span>
+                <span className="text-[var(--theme-warning)]">42MS</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-cathode-white/70">QUEUE DEPTH</span>
-                <span className="text-[#00FFFF]">128</span>
+                <span className="text-[var(--theme-foreground)]/70">QUEUE DEPTH</span>
+                <span className="text-[var(--theme-info)]">128</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-cathode-white/70">ERROR RATE</span>
-                <span className="text-[#FF00FF]">0.02%</span>
+                <span className="text-[var(--theme-foreground)]/70">ERROR RATE</span>
+                <span className="text-[var(--theme-accent)]">0.02%</span>
               </div>
             </div>
           </BrutalCard>

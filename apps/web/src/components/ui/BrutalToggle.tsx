@@ -43,8 +43,8 @@ export default function BrutalToggle({
           'relative inline-flex items-center transition-colors duration-200',
           sizeConfig.width,
           sizeConfig.height,
-          'border-2 border-basalt-border',
-          checked ? 'bg-primary-brutalist' : 'bg-carbon-plate',
+          'border-2 border-[var(--theme-border)]',
+          checked ? 'bg-[var(--theme-primary)]' : 'bg-[var(--theme-background-secondary)]',
           disabled && 'cursor-not-allowed'
         )}
       >
@@ -52,8 +52,8 @@ export default function BrutalToggle({
           className={clsx(
             'absolute transition-all duration-200',
             sizeConfig.thumb,
-            'border-2 border-basalt-border',
-            checked ? 'bg-cathode-white' : 'bg-neutral-600'
+            'border-2 border-[var(--theme-border)]',
+            checked ? 'bg-[var(--theme-foreground)]' : 'bg-[var(--theme-disabled)]'
           )}
           style={{
             transform: checked ? `translateX(${size === 'sm' ? '20px' : size === 'md' ? '28px' : '36px'})` : 'translateX(2px)'

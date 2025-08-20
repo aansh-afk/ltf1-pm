@@ -263,7 +263,7 @@ export default function ProjectManagementPage() {
   if (!project) {
     return (
       <div className="p-24px">
-        <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
           <h1 className="text-brutal-xl font-bold uppercase text-brutal-error mb-8px">PROJECT NOT FOUND</h1>
           <p className="font-mono text-brutal-sm">The requested project does not exist or you don't have access.</p>
         </div>
@@ -309,14 +309,14 @@ export default function ProjectManagementPage() {
       case 'warning': return 'text-brutal-warning border-brutal-warning bg-brutal-warning/10'
       case 'error': return 'text-brutal-error border-brutal-error bg-brutal-error/10'
       case 'info': return 'text-brutal-info border-brutal-info bg-brutal-info/10'
-      default: return 'text-primary-brutalist border-basalt-border'
+      default: return 'text-primary-brutalist border-[var(--theme-border)]'
     }
   }
 
   const renderOverviewTab = () => (
     <div className="space-y-24px">
       {/* Project Info - Compact */}
-      <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-16px font-mono text-brutal-xs">
           <div>
             <span className="text-primary-brutalist/60">WORKFLOW:</span> <span className="font-bold uppercase">{project.settings?.workflowType || 'KANBAN'}</span>
@@ -329,7 +329,7 @@ export default function ProjectManagementPage() {
           </div>
         </div>
         {project.description && (
-          <p className="text-brutal-sm text-primary-brutalist/80 mt-12px pt-12px border-t border-basalt-border">{project.description}</p>
+          <p className="text-brutal-sm text-primary-brutalist/80 mt-12px pt-12px border-t border-[var(--theme-border)]">{project.description}</p>
         )}
       </div>
 
@@ -357,7 +357,7 @@ export default function ProjectManagementPage() {
 
       {/* Sprint Progress */}
       {project.activeSprint && (
-        <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
           <h2 className="text-brutal-lg font-bold uppercase mb-16px flex items-center gap-8px">
             <HiOutlineLightningBolt className="w-20px h-20px" />
             ACTIVE SPRINT: {project.activeSprint.name}
@@ -365,7 +365,7 @@ export default function ProjectManagementPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24px">
             <div>
               <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-8px">PROGRESS VISUALIZATION</div>
-              <div className="h-80px bg-event-horizon border-2 border-basalt-border relative overflow-hidden">
+              <div className="h-80px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] relative overflow-hidden">
                 <div 
                   className="absolute inset-y-0 left-0 bg-primary-brutalist transition-all duration-300"
                   style={{ width: '65%' }}
@@ -394,7 +394,7 @@ export default function ProjectManagementPage() {
       )}
 
       {/* Developer Timeline */}
-      <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
         <h2 className="text-brutal-lg font-bold uppercase mb-16px flex items-center gap-8px">
           <HiOutlineClock className="w-20px h-20px" />
           DEVELOPER TIMELINE
@@ -424,33 +424,33 @@ export default function ProjectManagementPage() {
       </div>
 
       {/* Command Palette */}
-      <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
         <h2 className="text-brutal-lg font-bold uppercase mb-16px flex items-center gap-8px">
           <HiOutlineTerminal className="w-20px h-20px" />
           QUICK COMMANDS
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8px">
-          <button className="p-12px bg-event-horizon border-2 border-basalt-border hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
+          <button className="p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
             <div className="text-primary-brutalist">npm run dev</div>
             <div className="text-brutal-xs text-primary-brutalist/60">Start development server</div>
           </button>
-          <button className="p-12px bg-event-horizon border-2 border-basalt-border hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
+          <button className="p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
             <div className="text-primary-brutalist">npm test</div>
             <div className="text-brutal-xs text-primary-brutalist/60">Run test suite</div>
           </button>
-          <button className="p-12px bg-event-horizon border-2 border-basalt-border hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
+          <button className="p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
             <div className="text-primary-brutalist">git push origin main</div>
             <div className="text-brutal-xs text-primary-brutalist/60">Deploy to production</div>
           </button>
-          <button className="p-12px bg-event-horizon border-2 border-basalt-border hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
+          <button className="p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
             <div className="text-primary-brutalist">docker-compose up</div>
             <div className="text-brutal-xs text-primary-brutalist/60">Start containers</div>
           </button>
-          <button className="p-12px bg-event-horizon border-2 border-basalt-border hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
+          <button className="p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
             <div className="text-primary-brutalist">npm run build</div>
             <div className="text-brutal-xs text-primary-brutalist/60">Build for production</div>
           </button>
-          <button className="p-12px bg-event-horizon border-2 border-basalt-border hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
+          <button className="p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
             <div className="text-primary-brutalist">npm run lint</div>
             <div className="text-brutal-xs text-primary-brutalist/60">Check code quality</div>
           </button>
@@ -458,7 +458,7 @@ export default function ProjectManagementPage() {
       </div>
 
       {/* Active Blockers */}
-      <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
         <h2 className="text-brutal-lg font-bold uppercase mb-16px flex items-center gap-8px">
           <HiOutlineExclamationCircle className="w-20px h-20px text-brutal-error" />
           ACTIVE BLOCKERS
@@ -497,7 +497,7 @@ export default function ProjectManagementPage() {
     // Safety check
     if (!project || !workspaceId) {
       return (
-        <div className="bg-carbon-plate border-2 border-basalt-border p-48px text-center">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-48px text-center">
           <h3 className="font-mono text-brutal-sm uppercase mb-16px">LOADING PROJECT DATA...</h3>
         </div>
       )
@@ -631,11 +631,11 @@ export default function ProjectManagementPage() {
          taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
          taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== undefined ||
          taskFilters.isOverdue !== undefined) && (
-          <div className="bg-carbon-plate border-2 border-basalt-border p-12px flex items-center justify-between">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-12px flex items-center justify-between">
             <div className="font-mono text-brutal-sm">
               SHOWING <span className="font-bold text-primary-brutalist">{filteredTasks.length}</span> OF <span className="font-bold">{tasks?.length || 0}</span> TASKS
               {quickFilter && (
-                <span className="ml-16px text-cathode-white/60">
+                <span className="ml-16px text-[var(--theme-foreground)]/60">
                   QUICK: <span className="text-primary-brutalist">{quickFilter.replace('-', ' ').toUpperCase()}</span>
                 </span>
               )}
@@ -678,7 +678,7 @@ export default function ProjectManagementPage() {
             <select
               value={selectedSprintId || 'all'}
               onChange={(e) => setSelectedSprintId(e.target.value === 'all' ? 'all' : e.target.value === 'backlog' ? null : e.target.value)}
-              className="px-16px py-8px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-sm uppercase focus:border-primary-brutalist focus:outline-none transition-colors"
+              className="px-16px py-8px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm uppercase focus:border-primary-brutalist focus:outline-none transition-colors"
             >
               <option value="all">ALL TASKS</option>
               <option value="backlog">BACKLOG (NO SPRINT)</option>
@@ -766,7 +766,7 @@ export default function ProjectManagementPage() {
               </button>
             </div>
             
-            <div className="flex items-center bg-carbon-plate border-2 border-basalt-border">
+            <div className="flex items-center bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
               <button 
                 onClick={() => setTaskView('sprint')}
                 className={clsx(
@@ -779,7 +779,7 @@ export default function ProjectManagementPage() {
               <button 
                 onClick={() => setTaskView('kanban')}
                 className={clsx(
-                  "px-16px py-8px font-mono text-brutal-xs uppercase transition-colors border-x-2 border-basalt-border",
+                  "px-16px py-8px font-mono text-brutal-xs uppercase transition-colors border-x-2 border-[var(--theme-border)]",
                   taskView === 'kanban' ? "bg-primary-brutalist text-event-horizon" : "text-primary-brutalist/60 hover:text-primary-brutalist"
                 )}
               >
@@ -826,7 +826,7 @@ export default function ProjectManagementPage() {
                taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
                taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== null ||
                taskFilters.isOverdue !== null) && (
-                <span className="ml-4px px-6px py-2px bg-event-horizon text-primary-brutalist text-xs font-bold rounded-none">
+                <span className="ml-4px px-6px py-2px bg-[var(--theme-background-secondary)] text-primary-brutalist text-xs font-bold rounded-none">
                   ACTIVE
                 </span>
               )}
@@ -841,7 +841,7 @@ export default function ProjectManagementPage() {
 
         {/* Sprint Metrics Bar */}
         {sprintProgress && (
-          <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
             <div className="flex items-center justify-between mb-12px">
               <div className="flex items-center gap-24px font-mono text-brutal-sm">
                 <span>VELOCITY: <span className="font-bold text-primary-brutalist">{sprintProgress.velocity}/day</span></span>
@@ -900,9 +900,9 @@ export default function ProjectManagementPage() {
         )}
         
         {taskView === 'sprint' && !activeSprint && (
-          <div className="bg-carbon-plate border-2 border-basalt-border p-48px text-center">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-48px text-center">
             <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO ACTIVE SPRINT</h3>
-            <p className="text-cathode-white/60 mb-24px">Create a sprint to start organizing your tasks</p>
+            <p className="text-[var(--theme-foreground)]/60 mb-24px">Create a sprint to start organizing your tasks</p>
             <button 
               onClick={() => setShowCreateSprintModal(true)}
               className="brutal-btn"
@@ -913,7 +913,7 @@ export default function ProjectManagementPage() {
         )}
 
         {/* Task Activity Timeline */}
-        <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
           <div className="flex items-center justify-between mb-16px">
             <h3 className="font-mono text-brutal-sm uppercase">TASK ACTIVITY FEED</h3>
             <button className="text-brutal-xs font-mono uppercase text-primary-brutalist/60 hover:text-primary-brutalist">
@@ -950,7 +950,7 @@ export default function ProjectManagementPage() {
   // Remove the inline TaskCard component (we're using the imported one now)
   const InlineTaskCard = ({ task, onContextSwitch }: any) => {
     return (
-      <div className="bg-event-horizon border-2 border-basalt-border p-12px hover:border-primary-brutalist hover:shadow-brutal-sm transition-all cursor-move">
+      <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-12px hover:border-primary-brutalist hover:shadow-brutal-sm transition-all cursor-move">
         <div className="flex items-start justify-between mb-8px">
           <div className="flex items-center gap-8px">
             <span className="font-mono text-brutal-xs font-bold">{task.key || 'TASK-' + task.number}</span>
@@ -968,7 +968,7 @@ export default function ProjectManagementPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8px">
             {task.assigneeId && (
-              <div className="w-24px h-24px bg-primary-brutalist border-2 border-basalt-border flex items-center justify-center">
+              <div className="w-24px h-24px bg-primary-brutalist border-2 border-[var(--theme-border)] flex items-center justify-center">
                 <span className="text-brutal-xs font-bold text-event-horizon">JD</span>
               </div>
             )}
@@ -1033,7 +1033,7 @@ export default function ProjectManagementPage() {
     return (
       <div className="space-y-24px">
         {/* Team Header */}
-        <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
           <div className="flex items-center justify-between mb-16px">
             <h2 className="text-brutal-lg font-bold uppercase">PROJECT TEAM</h2>
             <div className="flex items-center gap-12px">
@@ -1053,14 +1053,14 @@ export default function ProjectManagementPage() {
               </button>
             </div>
           </div>
-          <p className="text-brutal-sm text-cathode-white/60">
+          <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
             Manage your project team, view workload distribution, and track productivity metrics.
           </p>
         </div>
 
         {/* Team Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16px">
-          <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
             <div className="flex items-center justify-between mb-8px">
               <HiOutlineUserGroup className="w-20px h-20px text-primary-brutalist" />
               <span className="font-mono text-brutal-xs text-primary-brutalist/60">TEAM SIZE</span>
@@ -1069,7 +1069,7 @@ export default function ProjectManagementPage() {
             <div className="font-mono text-brutal-xs text-primary-brutalist/60">MEMBERS</div>
           </div>
           
-          <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
             <div className="flex items-center justify-between mb-8px">
               <HiOutlineClipboardList className="w-20px h-20px text-brutal-info" />
               <span className="font-mono text-brutal-xs text-primary-brutalist/60">ACTIVE TASKS</span>
@@ -1078,7 +1078,7 @@ export default function ProjectManagementPage() {
             <div className="font-mono text-brutal-xs text-primary-brutalist/60">ACROSS TEAM</div>
           </div>
           
-          <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
             <div className="flex items-center justify-between mb-8px">
               <HiOutlineClock className="w-20px h-20px text-brutal-warning" />
               <span className="font-mono text-brutal-xs text-primary-brutalist/60">HOURS TRACKED</span>
@@ -1087,7 +1087,7 @@ export default function ProjectManagementPage() {
             <div className="font-mono text-brutal-xs text-primary-brutalist/60">TOTAL HOURS</div>
           </div>
           
-          <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
             <div className="flex items-center justify-between mb-8px">
               <HiOutlineChartBar className="w-20px h-20px text-brutal-success" />
               <span className="font-mono text-brutal-xs text-primary-brutalist/60">PRODUCTIVITY</span>
@@ -1098,9 +1098,9 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Workload Distribution - Enhanced */}
-        <div className="bg-carbon-plate border-2 border-basalt-border">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
           {/* Header with Controls */}
-          <div className="flex items-center justify-between p-24px border-b-2 border-basalt-border bg-event-horizon">
+          <div className="flex items-center justify-between p-24px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
             <div className="flex items-center gap-16px">
               <h3 className="text-brutal-lg font-bold uppercase">WORKLOAD DISTRIBUTION</h3>
               <div className="flex items-center gap-8px font-mono text-brutal-xs">
@@ -1110,15 +1110,15 @@ export default function ProjectManagementPage() {
             </div>
             <div className="flex items-center gap-12px">
               <div className="flex items-center gap-8px">
-                <div className="w-12px h-12px bg-brutal-success border border-basalt-border"></div>
+                <div className="w-12px h-12px bg-brutal-success border border-[var(--theme-border)]"></div>
                 <span className="font-mono text-brutal-xs">OPTIMAL</span>
               </div>
               <div className="flex items-center gap-8px">
-                <div className="w-12px h-12px bg-brutal-warning border border-basalt-border"></div>
+                <div className="w-12px h-12px bg-brutal-warning border border-[var(--theme-border)]"></div>
                 <span className="font-mono text-brutal-xs">HIGH</span>
               </div>
               <div className="flex items-center gap-8px">
-                <div className="w-12px h-12px bg-brutal-error border border-basalt-border"></div>
+                <div className="w-12px h-12px bg-brutal-error border border-[var(--theme-border)]"></div>
                 <span className="font-mono text-brutal-xs">OVERLOAD</span>
               </div>
             </div>
@@ -1136,9 +1136,9 @@ export default function ProjectManagementPage() {
                 
                 return (
                   <div key={member._id} className={clsx(
-                    "group relative bg-event-horizon border-2 p-20px transition-all duration-200 hover:shadow-brutal-sm",
+                    "group relative bg-[var(--theme-background-secondary)] border-2 p-20px transition-all duration-200 hover:shadow-brutal-sm",
                     isHighLoad ? "border-brutal-error" : 
-                    isMediumLoad ? "border-brutal-warning" : "border-basalt-border"
+                    isMediumLoad ? "border-brutal-warning" : "border-[var(--theme-border)]"
                   )}>
                     {/* Member Info Header */}
                     <div className="flex items-center justify-between mb-16px">
@@ -1196,7 +1196,7 @@ export default function ProjectManagementPage() {
                           <span className="font-mono text-brutal-xs text-primary-brutalist/60">TASK LOAD</span>
                           <span className="font-mono text-brutal-xs font-bold">{taskCount} / {workloadData.max} TASKS</span>
                         </div>
-                        <div className="h-32px bg-basalt-border border-2 border-basalt-border relative overflow-hidden">
+                        <div className="h-32px bg-basalt-border border-2 border-[var(--theme-border)] relative overflow-hidden">
                           {/* Background capacity markers */}
                           <div className="absolute inset-0">
                             <div className="absolute h-full border-r-2 border-brutal-warning/30" style={{ left: '66.7%' }} title="High load threshold"></div>
@@ -1237,7 +1237,7 @@ export default function ProjectManagementPage() {
 
                       {/* Time Tracking */}
                       {member.hoursTracked > 0 && (
-                        <div className="flex items-center justify-between pt-8px border-t border-basalt-border/50">
+                        <div className="flex items-center justify-between pt-8px border-t border-[var(--theme-border)]/50">
                           <span className="font-mono text-brutal-xs text-primary-brutalist/60">TIME TRACKED:</span>
                           <span className="font-mono text-brutal-xs font-bold">{member.hoursTracked}H THIS WEEK</span>
                         </div>
@@ -1249,7 +1249,7 @@ export default function ProjectManagementPage() {
             </div>
 
             {/* Team Summary Footer */}
-            <div className="mt-24px pt-24px border-t-2 border-basalt-border bg-event-horizon/50 p-20px">
+            <div className="mt-24px pt-24px border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/50 p-20px">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-16px font-mono text-center">
                 <div>
                   <div className="text-brutal-lg font-bold text-primary-brutalist">{teamTotals.totalTasks}</div>
@@ -1290,9 +1290,9 @@ export default function ProjectManagementPage() {
         {/* Team Members Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16px">
           {memberStats.map((member: any) => (
-            <div key={member._id} className="bg-carbon-plate border-2 border-basalt-border shadow-brutal hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200">
+            <div key={member._id} className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200">
               {/* Header with enhanced user display */}
-              <div className="p-20px border-b-2 border-basalt-border bg-event-horizon">
+              <div className="p-20px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
                 <div className="flex items-center justify-between">
                   <UserDisplay
                     userId={member._id}
@@ -1304,13 +1304,13 @@ export default function ProjectManagementPage() {
                   />
                   <div className="flex items-center gap-8px">
                     <div className="text-right">
-                      <div className="text-brutal-xs font-mono text-cathode-white/60">ROLE</div>
+                      <div className="text-brutal-xs font-mono text-[var(--theme-foreground)]/60">ROLE</div>
                       <div className="text-brutal-xs font-bold text-primary-brutalist uppercase">
                         {member.role || 'DEVELOPER'}
                       </div>
                     </div>
                     <button className="p-4px hover:bg-basalt-border/30 transition-colors">
-                      <HiOutlineDotsVertical className="w-16px h-16px text-cathode-white/60" />
+                      <HiOutlineDotsVertical className="w-16px h-16px text-[var(--theme-foreground)]/60" />
                     </button>
                   </div>
                 </div>
@@ -1320,45 +1320,45 @@ export default function ProjectManagementPage() {
               <div className="p-20px">
                 {/* Task Statistics Grid */}
                 <div className="grid grid-cols-2 gap-12px mb-20px">
-                  <div className="bg-event-horizon border-2 border-basalt-border p-12px text-center">
+                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-12px text-center">
                     <div className="text-brutal-md font-bold text-primary-brutalist">
                       {member.tasksAssigned}
                     </div>
-                    <div className="text-brutal-xs font-mono text-cathode-white/60 uppercase">
+                    <div className="text-brutal-xs font-mono text-[var(--theme-foreground)]/60 uppercase">
                       ASSIGNED
                     </div>
                   </div>
-                  <div className="bg-event-horizon border-2 border-basalt-border p-12px text-center">
+                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-12px text-center">
                     <div className="text-brutal-md font-bold text-brutal-success">
                       {member.tasksCompleted}
                     </div>
-                    <div className="text-brutal-xs font-mono text-cathode-white/60 uppercase">
+                    <div className="text-brutal-xs font-mono text-[var(--theme-foreground)]/60 uppercase">
                       COMPLETED
                     </div>
                   </div>
-                  <div className="bg-event-horizon border-2 border-basalt-border p-12px text-center">
+                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-12px text-center">
                     <div className="text-brutal-md font-bold text-brutal-info">
                       {member.tasksInProgress}
                     </div>
-                    <div className="text-brutal-xs font-mono text-cathode-white/60 uppercase">
+                    <div className="text-brutal-xs font-mono text-[var(--theme-foreground)]/60 uppercase">
                       IN PROGRESS
                     </div>
                   </div>
-                  <div className="bg-event-horizon border-2 border-basalt-border p-12px text-center">
+                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-12px text-center">
                     <div className={clsx(
                       "text-brutal-md font-bold",
-                      member.tasksBlocked > 0 ? "text-brutal-error" : "text-cathode-white/40"
+                      member.tasksBlocked > 0 ? "text-brutal-error" : "text-[var(--theme-foreground)]/40"
                     )}>
                       {member.tasksBlocked}
                     </div>
-                    <div className="text-brutal-xs font-mono text-cathode-white/60 uppercase">
+                    <div className="text-brutal-xs font-mono text-[var(--theme-foreground)]/60 uppercase">
                       BLOCKED
                     </div>
                   </div>
                 </div>
 
                 {/* Productivity Section */}
-                <div className="bg-event-horizon border-2 border-basalt-border p-16px mb-20px">
+                <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-16px mb-20px">
                   <div className="flex items-center justify-between mb-12px">
                     <div className="font-mono text-brutal-sm font-bold">
                       PRODUCTIVITY
@@ -1383,7 +1383,7 @@ export default function ProjectManagementPage() {
                     />
                   </div>
                   
-                  <div className="font-mono text-brutal-xs text-cathode-white/60">
+                  <div className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
                     LAST ACTIVE: {member.lastActive || 'UNKNOWN'}
                   </div>
                 </div>
@@ -1417,15 +1417,15 @@ export default function ProjectManagementPage() {
           ))}
           
           {/* Add New Member Card */}
-          <div className="bg-carbon-plate border-2 border-dashed border-basalt-border hover:border-primary-brutalist transition-all duration-200 cursor-pointer group">
+          <div className="bg-[var(--theme-background)] border-2 border-dashed border-[var(--theme-border)] hover:border-primary-brutalist transition-all duration-200 cursor-pointer group">
             <div className="p-40px text-center">
-              <div className="w-64px h-64px bg-basalt-border/20 border-2 border-dashed border-basalt-border group-hover:border-primary-brutalist mx-auto mb-16px flex items-center justify-center transition-all">
-                <HiOutlinePlus className="w-24px h-24px text-cathode-white/60 group-hover:text-primary-brutalist" />
+              <div className="w-64px h-64px bg-basalt-border/20 border-2 border-dashed border-[var(--theme-border)] group-hover:border-primary-brutalist mx-auto mb-16px flex items-center justify-center transition-all">
+                <HiOutlinePlus className="w-24px h-24px text-[var(--theme-foreground)]/60 group-hover:text-primary-brutalist" />
               </div>
-              <h4 className="font-bold text-brutal-sm text-cathode-white/60 group-hover:text-primary-brutalist mb-8px">
+              <h4 className="font-bold text-brutal-sm text-[var(--theme-foreground)]/60 group-hover:text-primary-brutalist mb-8px">
                 ADD TEAM MEMBER
               </h4>
-              <p className="text-brutal-xs text-cathode-white/40 group-hover:text-cathode-white/60">
+              <p className="text-brutal-xs text-[var(--theme-foreground)]/40 group-hover:text-[var(--theme-foreground)]/60">
                 Invite someone to join this project
               </p>
             </div>
@@ -1441,8 +1441,8 @@ export default function ProjectManagementPage() {
         />
 
         {/* Quick Actions - Functional */}
-        <div className="bg-carbon-plate border-2 border-basalt-border">
-          <div className="p-24px border-b-2 border-basalt-border bg-event-horizon">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
+          <div className="p-24px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
             <div className="flex items-center justify-between">
               <h3 className="text-brutal-lg font-bold uppercase">QUICK ACTIONS</h3>
               <div className="flex items-center gap-8px font-mono text-brutal-xs">
@@ -1460,7 +1460,7 @@ export default function ProjectManagementPage() {
                   onClick={() => setShowProjectInviteModal(true)}
                   className="w-full brutal-btn flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
                 >
-                  <div className="flex items-center justify-center w-40px h-40px bg-primary-brutalist border-2 border-basalt-border">
+                  <div className="flex items-center justify-center w-40px h-40px bg-primary-brutalist border-2 border-[var(--theme-border)]">
                     <HiOutlinePlus className="w-20px h-20px text-event-horizon" />
                   </div>
                   <div className="text-center">
@@ -1469,7 +1469,7 @@ export default function ProjectManagementPage() {
                   </div>
                 </button>
                 <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-basalt-border font-mono text-brutal-xs text-event-horizon">
+                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-[var(--theme-border)] font-mono text-brutal-xs text-event-horizon">
                     SHIFT+A
                   </div>
                 </div>
@@ -1494,7 +1494,7 @@ export default function ProjectManagementPage() {
                   )}
                 >
                   <div className={clsx(
-                    "flex items-center justify-center w-40px h-40px border-2 border-basalt-border",
+                    "flex items-center justify-center w-40px h-40px border-2 border-[var(--theme-border)]",
                     memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 ? "bg-brutal-warning" : "bg-basalt-border"
                   )}>
                     <HiOutlineUserGroup className={clsx(
@@ -1516,7 +1516,7 @@ export default function ProjectManagementPage() {
                   )}
                 </button>
                 <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-basalt-border font-mono text-brutal-xs text-event-horizon">
+                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-[var(--theme-border)] font-mono text-brutal-xs text-event-horizon">
                     SHIFT+B
                   </div>
                 </div>
@@ -1556,7 +1556,7 @@ export default function ProjectManagementPage() {
                   }}
                   className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
                 >
-                  <div className="flex items-center justify-center w-40px h-40px bg-basalt-border border-2 border-basalt-border">
+                  <div className="flex items-center justify-center w-40px h-40px bg-basalt-border border-2 border-[var(--theme-border)]">
                     <HiOutlineChartBar className="w-20px h-20px text-primary-brutalist" />
                   </div>
                   <div className="text-center">
@@ -1565,7 +1565,7 @@ export default function ProjectManagementPage() {
                   </div>
                 </button>
                 <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-basalt-border font-mono text-brutal-xs text-event-horizon">
+                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-[var(--theme-border)] font-mono text-brutal-xs text-event-horizon">
                     SHIFT+E
                   </div>
                 </div>
@@ -1580,7 +1580,7 @@ export default function ProjectManagementPage() {
                   }}
                   className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
                 >
-                  <div className="flex items-center justify-center w-40px h-40px bg-basalt-border border-2 border-basalt-border">
+                  <div className="flex items-center justify-center w-40px h-40px bg-basalt-border border-2 border-[var(--theme-border)]">
                     <HiOutlineCog className="w-20px h-20px text-primary-brutalist" />
                   </div>
                   <div className="text-center">
@@ -1589,7 +1589,7 @@ export default function ProjectManagementPage() {
                   </div>
                 </button>
                 <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-basalt-border font-mono text-brutal-xs text-event-horizon">
+                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-[var(--theme-border)] font-mono text-brutal-xs text-event-horizon">
                     SHIFT+S
                   </div>
                 </div>
@@ -1601,7 +1601,7 @@ export default function ProjectManagementPage() {
                   onClick={() => setShowExpertiseSearch(true)}
                   className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
                 >
-                  <div className="flex items-center justify-center w-40px h-40px bg-basalt-border border-2 border-basalt-border">
+                  <div className="flex items-center justify-center w-40px h-40px bg-basalt-border border-2 border-[var(--theme-border)]">
                     <HiOutlineSearch className="w-20px h-20px text-primary-brutalist" />
                   </div>
                   <div className="text-center">
@@ -1610,7 +1610,7 @@ export default function ProjectManagementPage() {
                   </div>
                 </button>
                 <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-basalt-border font-mono text-brutal-xs text-event-horizon">
+                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-[var(--theme-border)] font-mono text-brutal-xs text-event-horizon">
                     SHIFT+F
                   </div>
                 </div>
@@ -1618,7 +1618,7 @@ export default function ProjectManagementPage() {
             </div>
 
             {/* Smart Suggestions Bar */}
-            <div className="mt-24px pt-20px border-t-2 border-basalt-border">
+            <div className="mt-24px pt-20px border-t-2 border-[var(--theme-border)]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-12px">
                   <div className="w-8px h-8px bg-primary-brutalist animate-pulse"></div>
@@ -1665,10 +1665,10 @@ export default function ProjectManagementPage() {
     // Check if project has repository configured
     if (!project?.repository) {
       return (
-        <div className="bg-carbon-plate border-2 border-basalt-border p-48px text-center">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-48px text-center">
           <HiOutlineCode className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
           <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO REPOSITORY CONNECTED</h3>
-          <p className="text-cathode-white/60 mb-24px">Connect a GitHub repository to enable code tracking and PR management</p>
+          <p className="text-[var(--theme-foreground)]/60 mb-24px">Connect a GitHub repository to enable code tracking and PR management</p>
           <button 
             onClick={() => setShowConnectRepoModal(true)}
             className="brutal-btn"
@@ -1707,7 +1707,7 @@ export default function ProjectManagementPage() {
     return (
       <div className="space-y-24px">
         {/* Repository Overview */}
-        <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
           <div className="flex items-center justify-between mb-16px">
             <div className="flex items-center gap-16px">
               <HiOutlineCode className="w-24px h-24px text-primary-brutalist" />
@@ -1737,19 +1737,19 @@ export default function ProjectManagementPage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-16px">
-            <div className="border-2 border-basalt-border p-16px">
+            <div className="border-2 border-[var(--theme-border)] p-16px">
               <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-4px">DEFAULT BRANCH</div>
               <div className="font-bold">{repository.defaultBranch}</div>
             </div>
-            <div className="border-2 border-basalt-border p-16px">
+            <div className="border-2 border-[var(--theme-border)] p-16px">
               <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-4px">OPEN PRS</div>
               <div className="font-bold text-brutal-info">{pullRequests.filter(pr => pr.status === 'open').length}</div>
             </div>
-            <div className="border-2 border-basalt-border p-16px">
+            <div className="border-2 border-[var(--theme-border)] p-16px">
               <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-4px">ACTIVE BRANCHES</div>
               <div className="font-bold">{branches.length}</div>
             </div>
-            <div className="border-2 border-basalt-border p-16px">
+            <div className="border-2 border-[var(--theme-border)] p-16px">
               <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-4px">CI STATUS</div>
               <div className="font-bold text-brutal-success">PASSING</div>
             </div>
@@ -1757,7 +1757,7 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Pull Request Queue */}
-        <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
           <div className="flex items-center justify-between mb-16px">
             <h3 className="text-brutal-lg font-bold uppercase">PULL REQUEST QUEUE</h3>
             <div className="flex items-center gap-12px">
@@ -1778,7 +1778,7 @@ export default function ProjectManagementPage() {
           
           <div className="space-y-12px">
             {pullRequests.length > 0 ? pullRequests.map((pr) => (
-              <div key={pr.id} className="border-2 border-basalt-border p-16px hover:border-primary-brutalist transition-all">
+              <div key={pr.id} className="border-2 border-[var(--theme-border)] p-16px hover:border-primary-brutalist transition-all">
                 <div className="flex items-start justify-between mb-12px">
                   <div>
                     <div className="flex items-center gap-12px mb-4px">
@@ -1853,7 +1853,7 @@ export default function ProjectManagementPage() {
                 <p className="font-mono text-brutal-sm text-primary-brutalist/60">
                   No pull requests found
                 </p>
-                <p className="font-mono text-brutal-xs text-cathode-white/60">
+                <p className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
                   GitHub API integration required to fetch real data
                 </p>
               </div>
@@ -1862,7 +1862,7 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Branch Management */}
-        <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
           <div className="flex items-center justify-between mb-16px">
             <h3 className="text-brutal-lg font-bold uppercase">BRANCH MANAGEMENT</h3>
             <button className="brutal-btn-sm">CREATE BRANCH</button>
@@ -1871,7 +1871,7 @@ export default function ProjectManagementPage() {
           <div className="overflow-x-auto">
             <table className="w-full font-mono text-brutal-sm">
               <thead>
-                <tr className="border-b-2 border-basalt-border">
+                <tr className="border-b-2 border-[var(--theme-border)]">
                   <th className="text-left py-8px text-brutal-xs text-primary-brutalist/60 uppercase">BRANCH</th>
                   <th className="text-left py-8px text-brutal-xs text-primary-brutalist/60 uppercase">STATUS</th>
                   <th className="text-left py-8px text-brutal-xs text-primary-brutalist/60 uppercase">LAST COMMIT</th>
@@ -1880,7 +1880,7 @@ export default function ProjectManagementPage() {
               </thead>
               <tbody>
                 {branches.length > 0 ? branches.map((branch) => (
-                  <tr key={branch.name} className="border-b border-basalt-border hover:bg-basalt-border/10">
+                  <tr key={branch.name} className="border-b border-[var(--theme-border)] hover:bg-basalt-border/10">
                     <td className="py-12px">
                       <div className="flex items-center gap-8px">
                         {branch.isDefault && <HiOutlineHome className="w-16px h-16px text-primary-brutalist" />}
@@ -1913,7 +1913,7 @@ export default function ProjectManagementPage() {
                       <p className="font-mono text-brutal-sm text-primary-brutalist/60">
                         No branches found
                       </p>
-                      <p className="font-mono text-brutal-xs text-cathode-white/60">
+                      <p className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
                         GitHub API integration required to fetch real data
                       </p>
                     </td>
@@ -1926,7 +1926,7 @@ export default function ProjectManagementPage() {
 
         {/* Code Review Analytics */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16px">
-          <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
             <h3 className="text-brutal-lg font-bold uppercase mb-16px">CODE REVIEW METRICS</h3>
             <div className="space-y-12px">
               <div className="flex justify-between font-mono text-brutal-sm">
@@ -1943,7 +1943,7 @@ export default function ProjectManagementPage() {
               </div>
             </div>
             
-            <div className="mt-16px pt-16px border-t-2 border-basalt-border">
+            <div className="mt-16px pt-16px border-t-2 border-[var(--theme-border)]">
               <h4 className="font-mono text-brutal-xs text-primary-brutalist/60 uppercase mb-8px">TOP REVIEWERS</h4>
               {codeReviewStats.topReviewers.map((reviewer, index) => (
                 <div key={reviewer.name} className="flex items-center justify-between py-4px">
@@ -1957,11 +1957,11 @@ export default function ProjectManagementPage() {
           </div>
 
           {/* CI/CD Pipeline Status */}
-          <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
             <h3 className="text-brutal-lg font-bold uppercase mb-16px">CI/CD PIPELINE</h3>
             <div className="space-y-8px">
               {ciPipeline.map((stage) => (
-                <div key={stage.name} className="flex items-center justify-between p-12px bg-event-horizon/10 border border-basalt-border">
+                <div key={stage.name} className="flex items-center justify-between p-12px bg-[var(--theme-background-secondary)]/10 border border-[var(--theme-border)]">
                   <div className="flex items-center gap-12px">
                     {stage.status === 'success' && <HiOutlineCheckCircle className="w-16px h-16px text-brutal-success" />}
                     {stage.status === 'running' && <HiOutlinePlay className="w-16px h-16px text-brutal-info animate-pulse" />}
@@ -1984,7 +1984,7 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Recent Commits */}
-        <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
           <div className="flex items-center justify-between mb-16px">
             <h3 className="text-brutal-lg font-bold uppercase">RECENT COMMITS</h3>
             <button className="font-mono text-brutal-xs uppercase text-primary-brutalist/60 hover:text-primary-brutalist">
@@ -2031,7 +2031,7 @@ export default function ProjectManagementPage() {
         return (
           <div className="space-y-24px">
             {/* Header */}
-            <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+            <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
               <div className="flex items-center justify-between mb-16px">
                 <h2 className="text-brutal-lg font-bold uppercase">PROJECT MEETINGS</h2>
                 <button 
@@ -2119,7 +2119,7 @@ export default function ProjectManagementPage() {
                   {/* Past Meetings */}
                   {projectMeetings.filter((m: any) => m.endTime < Date.now()).length > 0 && (
                     <div>
-                      <h3 className="text-brutal-sm font-bold uppercase mb-12px text-cathode-white/60">
+                      <h3 className="text-brutal-sm font-bold uppercase mb-12px text-[var(--theme-foreground)]/60">
                         RECENT MEETINGS
                       </h3>
                       <div className="space-y-12px">
@@ -2142,10 +2142,10 @@ export default function ProjectManagementPage() {
                   )}
                 </>
               ) : (
-                <div className="bg-carbon-plate border-2 border-basalt-border p-48px text-center">
+                <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-48px text-center">
                   <HiOutlineVideoCamera className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
                   <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO MEETINGS SCHEDULED</h3>
-                  <p className="text-cathode-white/60 mb-24px">
+                  <p className="text-[var(--theme-foreground)]/60 mb-24px">
                     Schedule standup meetings, sprint reviews, and planning sessions for your team
                   </p>
                   <button 
@@ -2161,7 +2161,7 @@ export default function ProjectManagementPage() {
         )
       case 'docs':
         return (
-          <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
             <div className="flex items-center justify-between mb-24px">
               <h2 className="text-brutal-lg font-bold uppercase">PROJECT DOCUMENTATION</h2>
               <button className="brutal-btn">NEW DOCUMENT</button>
@@ -2170,7 +2170,7 @@ export default function ProjectManagementPage() {
             <div className="text-center py-48px">
               <HiOutlineDocumentText className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
               <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO DOCUMENTS FOUND</h3>
-              <p className="text-cathode-white/60 mb-24px">Create technical specs, user guides, and project documentation</p>
+              <p className="text-[var(--theme-foreground)]/60 mb-24px">Create technical specs, user guides, and project documentation</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-16px max-w-2xl mx-auto">
                 <button className="brutal-btn-secondary">API DOCUMENTATION</button>
                 <button className="brutal-btn-secondary">USER GUIDE</button>
@@ -2190,7 +2190,7 @@ export default function ProjectManagementPage() {
         )
       case 'settings':
         return (
-          <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
             <h2 className="text-brutal-lg font-bold uppercase mb-24px">PROJECT SETTINGS</h2>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-24px">
@@ -2204,7 +2204,7 @@ export default function ProjectManagementPage() {
                       <input 
                         type="text" 
                         defaultValue={project.name}
-                        className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-sm"
+                        className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm"
                       />
                     </div>
                     <div>
@@ -2212,7 +2212,7 @@ export default function ProjectManagementPage() {
                       <textarea 
                         defaultValue={project.description}
                         rows={3}
-                        className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-sm resize-none"
+                        className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm resize-none"
                       />
                     </div>
                     <div>
@@ -2221,9 +2221,9 @@ export default function ProjectManagementPage() {
                         type="text" 
                         defaultValue={project.key}
                         disabled
-                        className="w-full px-16px py-12px bg-basalt-border border-2 border-basalt-border font-mono text-brutal-sm text-cathode-white/60"
+                        className="w-full px-16px py-12px bg-basalt-border border-2 border-[var(--theme-border)] font-mono text-brutal-sm text-[var(--theme-foreground)]/60"
                       />
-                      <p className="text-brutal-xs text-cathode-white/60 mt-4px">Project key cannot be changed</p>
+                      <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-4px">Project key cannot be changed</p>
                     </div>
                   </div>
                 </div>
@@ -2236,7 +2236,7 @@ export default function ProjectManagementPage() {
                       <label className="block text-brutal-xs uppercase mb-8px">WORKFLOW TYPE</label>
                       <select 
                         defaultValue={project.settings?.workflowType || 'kanban'}
-                        className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-sm"
+                        className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm"
                       >
                         <option value="kanban">KANBAN</option>
                         <option value="scrum">SCRUM</option>
@@ -2253,7 +2253,7 @@ export default function ProjectManagementPage() {
                   <h3 className="text-brutal-sm font-bold uppercase mb-16px text-brutal-error">DANGER ZONE</h3>
                   <div className="border-2 border-brutal-error p-16px">
                     <h4 className="text-brutal-xs font-bold uppercase mb-8px">ARCHIVE PROJECT</h4>
-                    <p className="text-brutal-xs text-cathode-white/80 mb-16px">
+                    <p className="text-brutal-xs text-[var(--theme-foreground)]/80 mb-16px">
                       Archive this project. It will be hidden from the workspace but data will be preserved.
                     </p>
                     <button className="brutal-btn bg-brutal-error border-brutal-error">
@@ -2264,7 +2264,7 @@ export default function ProjectManagementPage() {
               </div>
             </div>
             
-            <div className="flex justify-end gap-16px mt-32px pt-24px border-t-2 border-basalt-border">
+            <div className="flex justify-end gap-16px mt-32px pt-24px border-t-2 border-[var(--theme-border)]">
               <button className="brutal-btn-secondary">CANCEL</button>
               <button className="brutal-btn">SAVE CHANGES</button>
             </div>
@@ -2279,7 +2279,7 @@ export default function ProjectManagementPage() {
     <>
       <div className="min-h-screen">
         {/* Project Header - Minimal Design */}
-        <div className="border-b-2 border-basalt-border bg-carbon-plate px-32px py-12px">
+        <div className="border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)] px-32px py-12px">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-16px">
               <button 
@@ -2299,7 +2299,7 @@ export default function ProjectManagementPage() {
                   project.status === 'planning' && "bg-brutal-info/10 border-brutal-info text-brutal-info",
                   project.status === 'on_hold' && "bg-brutal-warning/10 border-brutal-warning text-brutal-warning",
                   project.status === 'completed' && "bg-primary-brutalist/10 border-primary-brutalist text-primary-brutalist",
-                  project.status === 'archived' && "bg-cathode-white/10 border-cathode-white/20 text-cathode-white/40"
+                  project.status === 'archived' && "bg-cathode-white/10 border-cathode-white/20 text-[var(--theme-foreground)]/40"
                 )}>
                   {project.status}
                 </span>
@@ -2309,7 +2309,7 @@ export default function ProjectManagementPage() {
         </div>
 
       {/* Tab Navigation - Streamlined */}
-      <div className="bg-event-horizon border-b-2 border-basalt-border">
+      <div className="bg-[var(--theme-background-secondary)] border-b-2 border-[var(--theme-border)]">
         <div className="px-32px">
           <div className="flex items-center">
             {tabs.map((tab, index) => (
@@ -2321,7 +2321,7 @@ export default function ProjectManagementPage() {
                     "font-mono text-brutal-xs uppercase transition-all duration-200",
                     "relative hover:bg-basalt-border/10",
                     activeTab === tab.id
-                      ? "text-primary-brutalist bg-carbon-plate"
+                      ? "text-primary-brutalist bg-[var(--theme-background)]"
                       : "text-primary-brutalist/60 hover:text-primary-brutalist"
                   )}
                 >

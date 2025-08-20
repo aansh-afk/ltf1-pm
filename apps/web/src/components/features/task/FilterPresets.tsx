@@ -90,11 +90,11 @@ export default function FilterPresets({ workspaceId, currentFilters, onApplyPres
 
       {/* Create Preset Form */}
       {isCreating && (
-        <div className="p-16px bg-event-horizon/10 border-2 border-basalt-border space-y-12px">
+        <div className="p-16px bg-[var(--theme-background-secondary)]/10 border-2 border-[var(--theme-border)] space-y-12px">
           <input
             type="text"
             placeholder="PRESET NAME..."
-            className="w-full px-12px py-8px bg-carbon-plate border-2 border-basalt-border 
+            className="w-full px-12px py-8px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-sm uppercase placeholder:text-neutral-600
                      focus:border-primary-brutalist focus:outline-none transition-colors"
             value={presetName}
@@ -137,7 +137,7 @@ export default function FilterPresets({ workspaceId, currentFilters, onApplyPres
           {presets.map(preset => (
             <div
               key={preset._id}
-              className="flex items-center justify-between p-12px bg-carbon-plate border-2 border-basalt-border hover:bg-event-horizon transition-colors"
+              className="flex items-center justify-between p-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] hover:bg-[var(--theme-background-secondary)] transition-colors"
             >
               <button
                 onClick={() => onApplyPreset(preset.filters as TaskFilters)}
@@ -153,7 +153,7 @@ export default function FilterPresets({ workspaceId, currentFilters, onApplyPres
               </button>
               <button
                 onClick={() => handleDeletePreset(preset._id)}
-                className="brutal-hover p-4px text-neutral-500 hover:text-[#FF0000]"
+                className="brutal-hover p-4px text-neutral-500 hover:text-[var(--theme-error)]"
               >
                 <HiOutlineTrash className="w-14px h-14px" />
               </button>
@@ -172,7 +172,7 @@ export default function FilterPresets({ workspaceId, currentFilters, onApplyPres
               assigneeIds: currentUser?._id ? [currentUser._id] : [],
               status: ['todo', 'in_progress']
             })}
-            className="w-full text-left px-12px py-8px bg-carbon-plate border border-basalt-border hover:bg-event-horizon transition-colors"
+            className="w-full text-left px-12px py-8px bg-[var(--theme-background)] border border-[var(--theme-border)] hover:bg-[var(--theme-background-secondary)] transition-colors"
           >
             <span className="font-mono text-brutal-xs uppercase">MY ACTIVE TASKS</span>
           </button>
@@ -181,18 +181,18 @@ export default function FilterPresets({ workspaceId, currentFilters, onApplyPres
               ...getEmptyFilters(),
               isOverdue: true
             })}
-            className="w-full text-left px-12px py-8px bg-carbon-plate border border-basalt-border hover:bg-event-horizon transition-colors"
+            className="w-full text-left px-12px py-8px bg-[var(--theme-background)] border border-[var(--theme-border)] hover:bg-[var(--theme-background-secondary)] transition-colors"
           >
-            <span className="font-mono text-brutal-xs uppercase text-[#FF0000]">OVERDUE TASKS</span>
+            <span className="font-mono text-brutal-xs uppercase text-[var(--theme-error)]">OVERDUE TASKS</span>
           </button>
           <button
             onClick={() => onApplyPreset({
               ...getEmptyFilters(),
               priority: ['urgent', 'high']
             })}
-            className="w-full text-left px-12px py-8px bg-carbon-plate border border-basalt-border hover:bg-event-horizon transition-colors"
+            className="w-full text-left px-12px py-8px bg-[var(--theme-background)] border border-[var(--theme-border)] hover:bg-[var(--theme-background-secondary)] transition-colors"
           >
-            <span className="font-mono text-brutal-xs uppercase text-[#FF00FF]">HIGH PRIORITY</span>
+            <span className="font-mono text-brutal-xs uppercase text-[var(--theme-accent)]">HIGH PRIORITY</span>
           </button>
           <button
             onClick={() => onApplyPreset({
@@ -203,9 +203,9 @@ export default function FilterPresets({ workspaceId, currentFilters, onApplyPres
                 end: null
               }
             })}
-            className="w-full text-left px-12px py-8px bg-carbon-plate border border-basalt-border hover:bg-event-horizon transition-colors"
+            className="w-full text-left px-12px py-8px bg-[var(--theme-background)] border border-[var(--theme-border)] hover:bg-[var(--theme-background-secondary)] transition-colors"
           >
-            <span className="font-mono text-brutal-xs uppercase text-[#00FF00]">COMPLETED THIS WEEK</span>
+            <span className="font-mono text-brutal-xs uppercase text-[var(--theme-success)]">COMPLETED THIS WEEK</span>
           </button>
         </div>
       </div>

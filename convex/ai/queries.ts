@@ -3,7 +3,7 @@
 
 import { v } from "convex/values"
 import { query } from "../_generated/server"
-import { getCurrentUser } from "../auth/users"
+import { api } from "../_generated/api"
 
 // Get AI sessions for current user
 export const getUserAISessions = query({
@@ -12,24 +12,25 @@ export const getUserAISessions = query({
     type: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {})
     if (!user) return []
 
-    let sessions = ctx.db
+    const limit = args.limit || 50
+    
+    if (args.type) {
+      return await ctx.db
+        .query("aiSessions")
+        .withIndex("by_type", (q) => q.eq("type", args.type!))
+        .filter((q) => q.eq(q.field("userId"), user._id))
+        .order("desc")
+        .take(limit)
+    }
+    
+    return await ctx.db
       .query("aiSessions")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .order("desc")
-    
-    if (args.type) {
-      sessions = ctx.db
-        .query("aiSessions")
-        .withIndex("by_type", (q) => q.eq("type", args.type))
-        .filter((q) => q.eq(q.field("userId"), user._id))
-        .order("desc")
-    }
-
-    const limit = args.limit || 50
-    return await sessions.take(limit)
+      .take(limit)
   },
 })
 
@@ -40,11 +41,11 @@ export const getWorkspaceAIStats = query({
     timeRange: v.optional(v.union(v.literal("day"), v.literal("week"), v.literal("month"))),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {})
     if (!user) return null
 
     // Verify user has access to workspace
-    const member = await ctx.db
+    const member: any = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_workspace_user", (q) => 
         q.eq("workspaceId", args.workspaceId).eq("userId", user._id)
@@ -113,52 +114,62 @@ export const getActiveInsights = query({
     )),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {})
     if (!user) return []
 
     // Get user's workspace
-    const member = await ctx.db
+    const member: any = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .first()
     
     if (!member) return []
 
-    let query = ctx.db
+    // Filter out expired insights
+    const now = Date.now()
+    
+    // Apply filters
+    if (args.targetType && args.targetId) {
+      const insights: any[] = await ctx.db
+        .query("aiInsights")
+        .withIndex("by_target", (q) => 
+          q.eq("targetType", args.targetType!).eq("targetId", args.targetId!)
+        )
+        .filter((q) => 
+          q.and(
+            q.eq(q.field("workspaceId"), member.workspaceId),
+            q.eq(q.field("dismissed"), false)
+          )
+        )
+        .collect()
+      
+      return insights.filter((insight: any) => 
+        !insight.expiresAt || insight.expiresAt > now
+      )
+    } else if (args.insightType) {
+      const insights: any[] = await ctx.db
+        .query("aiInsights")
+        .withIndex("by_insight_type", (q) => q.eq("insightType", args.insightType!))
+        .filter((q) => 
+          q.and(
+            q.eq(q.field("workspaceId"), member.workspaceId),
+            q.eq(q.field("dismissed"), false)
+          )
+        )
+        .collect()
+      
+      return insights.filter((insight: any) => 
+        !insight.expiresAt || insight.expiresAt > now
+      )
+    }
+    
+    const insights: any[] = await ctx.db
       .query("aiInsights")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", member.workspaceId))
       .filter((q) => q.eq(q.field("dismissed"), false))
-
-    // Apply filters
-    if (args.targetType && args.targetId) {
-      query = ctx.db
-        .query("aiInsights")
-        .withIndex("by_target", (q) => 
-          q.eq("targetType", args.targetType).eq("targetId", args.targetId)
-        )
-        .filter((q) => 
-          q.and(
-            q.eq(q.field("workspaceId"), member.workspaceId),
-            q.eq(q.field("dismissed"), false)
-          )
-        )
-    } else if (args.insightType) {
-      query = ctx.db
-        .query("aiInsights")
-        .withIndex("by_insight_type", (q) => q.eq("insightType", args.insightType))
-        .filter((q) => 
-          q.and(
-            q.eq(q.field("workspaceId"), member.workspaceId),
-            q.eq(q.field("dismissed"), false)
-          )
-        )
-    }
-
-    // Filter out expired insights
-    const now = Date.now()
-    const insights = await query.collect()
+      .collect()
     
-    return insights.filter(insight => 
+    return insights.filter((insight: any) => 
       !insight.expiresAt || insight.expiresAt > now
     )
   },
@@ -168,7 +179,7 @@ export const getActiveInsights = query({
 export const getPendingAITasks = query({
   args: {},
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {})
     if (!user) return []
 
     return await ctx.db
@@ -186,11 +197,11 @@ export const getAIFeedbackSummary = query({
     workspaceId: v.id("workspaces"),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx)
+    const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {})
     if (!user) return null
 
     // Verify user has access to workspace
-    const member = await ctx.db
+    const member: any = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_workspace_user", (q) => 
         q.eq("workspaceId", args.workspaceId).eq("userId", user._id)

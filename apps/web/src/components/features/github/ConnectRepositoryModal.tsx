@@ -75,9 +75,9 @@ export default function ConnectRepositoryModal({
     >
       <form onSubmit={handleSubmit} className="space-y-24px">
         {/* Information Banner */}
-        <div className="bg-event-horizon border-2 border-brutal-info p-16px flex gap-12px">
+        <div className="bg-[var(--theme-background-secondary)] border-2 border-brutal-info p-16px flex gap-12px">
           <HiOutlineInformationCircle className="w-20px h-20px text-brutal-info flex-shrink-0 mt-2px" />
-          <div className="text-brutal-xs text-cathode-white/80">
+          <div className="text-brutal-xs text-[var(--theme-foreground)]/80">
             Connect your repository to enable pull request tracking, commit history, and automated workflows.
           </div>
         </div>
@@ -96,7 +96,7 @@ export default function ConnectRepositoryModal({
                 className={`px-16px py-12px border-2 text-brutal-xs uppercase font-mono transition-colors ${
                   provider === p
                     ? 'bg-primary-brutalist border-primary-brutalist text-event-horizon'
-                    : 'bg-event-horizon border-basalt-border text-cathode-white hover:border-primary-brutalist'
+                    : 'bg-[var(--theme-background-secondary)] border-[var(--theme-border)] text-[var(--theme-foreground)] hover:border-primary-brutalist'
                 }`}
               >
                 {p}
@@ -115,18 +115,18 @@ export default function ConnectRepositoryModal({
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder={exampleUrls[provider]}
-            className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border 
+            className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-sm placeholder:text-neutral-600
                      focus:border-primary-brutalist focus:outline-none transition-colors"
             required
           />
-          <p className="text-brutal-xs text-cathode-white/60 mt-8px">
+          <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-8px">
             Enter the HTTPS URL of your repository (e.g., {exampleUrls[provider]})
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-16px justify-end pt-24px border-t-2 border-basalt-border">
+        <div className="flex gap-16px justify-end pt-24px border-t-2 border-[var(--theme-border)]">
           <button
             type="button"
             onClick={onClose}

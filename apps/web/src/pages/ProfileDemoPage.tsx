@@ -86,7 +86,7 @@ export default function ProfileDemoPage() {
           >
             OPEN EXPERTISE SEARCH
           </button>
-          <div className="mt-12px p-12px bg-event-horizon border border-basalt-border">
+          <div className="mt-12px p-12px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
             <p className="font-mono text-brutal-xs text-primary-brutalist/60">
               Try searching for: React, Python, DevOps, UI/UX, or any technology
             </p>
@@ -108,7 +108,7 @@ export default function ProfileDemoPage() {
           >
             VIEW TEAM MATRIX
           </button>
-          <div className="mt-12px p-12px bg-event-horizon border border-basalt-border">
+          <div className="mt-12px p-12px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
             <p className="font-mono text-brutal-xs text-primary-brutalist/60">
               Matrix view with filters, sorting, and CSV export
             </p>
@@ -145,7 +145,7 @@ export default function ProfileDemoPage() {
                   "px-12px py-6px font-mono text-brutal-xs font-bold transition-all",
                   selectedTechnologies.includes(tech)
                     ? "bg-primary-brutalist text-event-horizon border-2 border-primary-brutalist"
-                    : "bg-event-horizon text-primary-brutalist border-2 border-basalt-border hover:border-primary-brutalist"
+                    : "bg-[var(--theme-background-secondary)] text-primary-brutalist border-2 border-[var(--theme-border)] hover:border-primary-brutalist"
                 )}
               >
                 {tech}
@@ -186,7 +186,7 @@ export default function ProfileDemoPage() {
       </div>
 
       {/* Integration Examples */}
-      <div className="brutal-card p-24px bg-event-horizon">
+      <div className="brutal-card p-24px bg-[var(--theme-background-secondary)]">
         <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
           <HiOutlineCode className="w-20px h-20px" />
           INTEGRATION POINTS

@@ -22,11 +22,11 @@ export default function BrutalBadge({
   }
 
   const variantClasses = {
-    default: 'bg-carbon-plate border-basalt-border text-cathode-white',
-    error: 'bg-brutal-error border-brutal-error text-event-horizon',
-    success: 'bg-brutal-success border-brutal-success text-event-horizon',
-    info: 'bg-brutal-info border-brutal-info text-event-horizon',
-    warning: 'bg-brutal-warning border-brutal-warning text-event-horizon'
+    default: 'bg-[var(--theme-background-secondary)] border-[var(--theme-border)] text-[var(--theme-foreground)]',
+    error: 'bg-[var(--theme-error)] border-[var(--theme-error)] text-[var(--theme-background)]',
+    success: 'bg-[var(--theme-success)] border-[var(--theme-success)] text-[var(--theme-background)]',
+    info: 'bg-[var(--theme-info)] border-[var(--theme-info)] text-[var(--theme-background)]',
+    warning: 'bg-[var(--theme-warning)] border-[var(--theme-warning)] text-[var(--theme-background)]'
   }
 
   return (
