@@ -15,6 +15,7 @@ import {
 import clsx from 'clsx'
 import { format } from 'date-fns'
 import CreateTaskModal from './CreateTaskModal'
+import { BrutalCheckbox } from '../../ui'
 
 interface TaskListProps {
   tasks: any[]
@@ -134,10 +135,10 @@ export default function TaskList({ tasks, projectId, onTaskUpdate, onTaskEdit, o
       {/* Actions Bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-16px">
-          <input
-            type="checkbox"
+          <BrutalCheckbox
             checked={selectedTasks.size === tasks.length && tasks.length > 0}
             onChange={selectAllTasks}
+            size="sm"
             className="w-16px h-16px border-2 border-basalt-border bg-carbon-plate"
           />
           <span className="text-brutal-sm">
@@ -198,10 +199,10 @@ export default function TaskList({ tasks, projectId, onTaskUpdate, onTaskEdit, o
                 isSelected && "bg-primary-brutalist/10"
               )}>
                 <div className="col-span-1 flex items-center gap-8px">
-                  <input
-                    type="checkbox"
+                  <BrutalCheckbox
                     checked={isSelected}
                     onChange={() => toggleTaskSelection(task._id)}
+                    size="sm"
                     className="w-16px h-16px border-2 border-basalt-border bg-carbon-plate"
                   />
                   <button

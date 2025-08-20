@@ -20,6 +20,7 @@ interface ScheduleMeetingModalProps {
   projectId?: string
   sprintId?: string
   workspaceId: string
+  meeting?: any  // For editing existing meeting
   onSuccess?: () => void
 }
 
@@ -37,6 +38,7 @@ export default function ScheduleMeetingModal({
   projectId,
   sprintId,
   workspaceId,
+  meeting,
   onSuccess 
 }: ScheduleMeetingModalProps) {
   
@@ -58,6 +60,7 @@ export default function ScheduleMeetingModal({
   const [isCreating, setIsCreating] = useState(false)
 
   const createMeeting = useMutation(api.meetings.mutations.createMeeting)
+  const updateMeeting = useMutation(api.meetings.mutations.updateMeeting)
   const templates = useQuery(api.meetings.queries.getMeetingTemplates)
   
   // Get workspace members for attendee selection
@@ -66,26 +69,60 @@ export default function ScheduleMeetingModal({
     workspaceId ? { workspaceId: workspaceId as any } : 'skip'
   )
 
-  // Auto-populate based on meeting type
+  // Auto-populate from existing meeting if editing
   useEffect(() => {
-    const selectedType = meetingTypes.find(t => t.value === type)
-    const template = templates?.find(t => t.type === type)
-    
-    if (selectedType && template) {
-      setTitle(template.title)
-      setDuration(template.duration)
-      setAgenda(template.agenda || [''])
-      setIsRecurring(template.isRecurring)
+    if (meeting && isOpen) {
+      setTitle(meeting.title || '')
+      setDescription(meeting.description || '')
+      setType(meeting.type || 'custom')
+      setDuration(Math.round((meeting.endTime - meeting.startTime) / 60000))
+      setLocation(meeting.location || '')
+      setMeetingUrl(meeting.meetingUrl || '')
+      setSelectedAttendees(meeting.attendees?.map((a: any) => a.userId) || [])
       
-      if (template.defaultRecurrence) {
-        setRecurrenceFreq(template.defaultRecurrence.frequency)
-        setRecurrenceInterval(template.defaultRecurrence.interval)
+      if (meeting.startTime) {
+        const startDateTime = new Date(meeting.startTime)
+        setStartDate(startDateTime.toISOString().split('T')[0])
+        setStartTime(startDateTime.toTimeString().slice(0, 5))
       }
-    } else if (selectedType) {
-      setTitle(selectedType.label)
-      setDuration(selectedType.duration)
+      
+      if (meeting.template?.agenda) {
+        setAgenda(meeting.template.agenda)
+      }
+      
+      if (meeting.recurrence) {
+        setIsRecurring(true)
+        setRecurrenceFreq(meeting.recurrence.frequency)
+        setRecurrenceInterval(meeting.recurrence.interval)
+        if (meeting.recurrence.endDate) {
+          setRecurrenceEndDate(new Date(meeting.recurrence.endDate).toISOString().split('T')[0])
+        }
+      }
     }
-  }, [type, templates])
+  }, [meeting, isOpen])
+
+  // Auto-populate based on meeting type (only if not editing)
+  useEffect(() => {
+    if (!meeting) {
+      const selectedType = meetingTypes.find(t => t.value === type)
+      const template = templates?.find(t => t.type === type)
+      
+      if (selectedType && template) {
+        setTitle(template.title)
+        setDuration(template.duration)
+        setAgenda(template.agenda || [''])
+        setIsRecurring(template.isRecurring)
+        
+        if (template.defaultRecurrence) {
+          setRecurrenceFreq(template.defaultRecurrence.frequency)
+          setRecurrenceInterval(template.defaultRecurrence.interval)
+        }
+      } else if (selectedType) {
+        setTitle(selectedType.label)
+        setDuration(selectedType.duration)
+      }
+    }
+  }, [type, templates, meeting])
 
   // Set default date/time
   useEffect(() => {
@@ -142,23 +179,37 @@ export default function ScheduleMeetingModal({
         isRecurring,
       }
 
-      await createMeeting({
-        workspaceId: workspaceId as any,
-        projectId: projectId ? projectId as any : undefined,
-        sprintId: sprintId ? sprintId as any : undefined,
-        title: title.trim(),
-        description: description.trim() || undefined,
-        type,
-        startTime: startDateTime,
-        endTime: endDateTime,
-        location: location.trim() || undefined,
-        meetingUrl: meetingUrl.trim() || undefined,
-        attendeeIds: selectedAttendees as any[],
-        template,
-        recurrence,
-      })
-      
-      toast.success('Meeting scheduled successfully')
+      if (meeting) {
+        // Update existing meeting
+        await updateMeeting({
+          meetingId: meeting._id,
+          title: title.trim(),
+          description: description.trim() || undefined,
+          startTime: startDateTime,
+          endTime: endDateTime,
+          location: location.trim() || undefined,
+          meetingUrl: meetingUrl.trim() || undefined,
+        })
+        toast.success('Meeting updated successfully')
+      } else {
+        // Create new meeting
+        await createMeeting({
+          workspaceId: workspaceId as any,
+          projectId: projectId ? projectId as any : undefined,
+          sprintId: sprintId ? sprintId as any : undefined,
+          title: title.trim(),
+          description: description.trim() || undefined,
+          type,
+          startTime: startDateTime,
+          endTime: endDateTime,
+          location: location.trim() || undefined,
+          meetingUrl: meetingUrl.trim() || undefined,
+          attendeeIds: selectedAttendees as any[],
+          template,
+          recurrence,
+        })
+        toast.success('Meeting scheduled successfully')
+      }
       onSuccess?.()
       onClose()
       resetForm()
@@ -212,7 +263,7 @@ export default function ScheduleMeetingModal({
     <BrutalModal
       isOpen={isOpen}
       onClose={onClose}
-      title="SCHEDULE MEETING"
+      title={meeting ? "EDIT MEETING" : "SCHEDULE MEETING"}
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-24px">
@@ -464,7 +515,7 @@ export default function ScheduleMeetingModal({
             className="brutal-btn"
             disabled={isCreating}
           >
-            {isCreating ? 'SCHEDULING...' : 'SCHEDULE MEETING'}
+            {isCreating ? (meeting ? 'UPDATING...' : 'SCHEDULING...') : (meeting ? 'UPDATE MEETING' : 'SCHEDULE MEETING')}
           </button>
         </div>
       </form>

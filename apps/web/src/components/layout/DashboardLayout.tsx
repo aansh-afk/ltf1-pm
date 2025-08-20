@@ -23,6 +23,7 @@ import { useResourceMonitor } from '../../hooks/useResourceMonitor'
 import { useAfkDetection } from '../../hooks/useAfkDetection'
 import { ProfileCompletionBanner } from '../features/profile/ProfileCompletionBanner'
 import { GitHubMonitor } from '../features/github/GitHubMonitor'
+import CommandTerminal from '../terminal/CommandTerminal'
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile sidebar
@@ -32,6 +33,7 @@ export default function DashboardLayout() {
     return saved ? JSON.parse(saved) : false
   })
   const [isHovered, setIsHovered] = useState(false)
+  const [terminalOpen, setTerminalOpen] = useState(false)
   const location = useLocation()
   const params = useParams()
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -50,6 +52,19 @@ export default function DashboardLayout() {
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', JSON.stringify(isCollapsed))
   }, [isCollapsed])
+
+  // Listen for terminal open events
+  useEffect(() => {
+    const handleOpenTerminal = () => {
+      setTerminalOpen(true)
+    }
+
+    window.addEventListener('open-terminal', handleOpenTerminal)
+    
+    return () => {
+      window.removeEventListener('open-terminal', handleOpenTerminal)
+    }
+  }, [])
 
   // Cleanup hover timeout on unmount
   useEffect(() => {
@@ -96,7 +111,7 @@ export default function DashboardLayout() {
     <div className="flex h-screen bg-event-horizon">
       {/* MOBILE OVERLAY */}
       <div className={clsx(
-        'fixed inset-0 z-40 lg:hidden',
+        'fixed inset-0 z-[40] lg:hidden',
         sidebarOpen ? 'block' : 'hidden'
       )}>
         <div 
@@ -108,7 +123,7 @@ export default function DashboardLayout() {
       {/* BRUTAL SIDEBAR */}
       <aside 
         className={clsx(
-          'fixed inset-y-0 left-0 z-50 bg-carbon-plate border-r-2 border-basalt-border transform lg:relative lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-[50] bg-carbon-plate border-r-2 border-basalt-border transform lg:relative lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
           isExpanded ? 'w-256px' : 'w-80px',
           // Different transition durations for hover vs button
@@ -158,22 +173,29 @@ export default function DashboardLayout() {
                 )}
                 title={!isExpanded ? item.label : undefined}
               >
-                <Icon className={clsx(
-                  "w-24px h-24px flex-shrink-0",
-                  isExpanded && "mr-16px",
-                  isHovered ? "transition-all duration-200 ease-out" : "transition-all duration-300 ease-in-out"
-                )} />
-                <span className={clsx(
-                  "whitespace-nowrap",
-                  !isExpanded && "hidden",
-                  isHovered ? "transition-all duration-200 ease-out" : "transition-all duration-300 ease-in-out"
+                <div className={clsx(
+                  "flex items-center flex-1",
+                  isExpanded ? "justify-between" : "justify-center"
                 )}>
-                  {item.label}
-                </span>
+                  <div className="flex items-center">
+                    <Icon className={clsx(
+                      "w-24px h-24px flex-shrink-0",
+                      isExpanded && "mr-16px",
+                      isHovered ? "transition-all duration-200 ease-out" : "transition-all duration-300 ease-in-out"
+                    )} />
+                    <span className={clsx(
+                      "whitespace-nowrap",
+                      !isExpanded && "hidden",
+                      isHovered ? "transition-all duration-200 ease-out" : "transition-all duration-300 ease-in-out"
+                    )}>
+                      {item.label}
+                    </span>
+                  </div>
+                </div>
                 
                 {/* Tooltip for collapsed state */}
                 {!isExpanded && (
-                  <div className="absolute left-full ml-8px px-8px py-4px bg-carbon-plate border-2 border-basalt-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 whitespace-nowrap z-50">
+                  <div className="absolute left-full ml-8px px-8px py-4px bg-carbon-plate border-2 border-basalt-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 whitespace-nowrap z-[60]">
                     <span className="text-brutal-xs">{item.label}</span>
                   </div>
                 )}
@@ -182,22 +204,6 @@ export default function DashboardLayout() {
           })}
         </nav>
 
-        {/* TERMINAL COMMAND */}
-        {isExpanded && (
-          <div className="px-24px py-16px">
-            <div className="brutal-card p-16px">
-              <div className="flex items-center gap-8px mb-8px">
-                <HiOutlineTerminal className="w-16px h-16px text-[#00FFFF]" />
-                <span className="text-brutal-xs">QUICK CMD</span>
-              </div>
-              <input 
-                type="text" 
-                placeholder="$ TYPE COMMAND..."
-                className="brutal-input w-full text-xs"
-              />
-            </div>
-          </div>
-        )}
 
         {/* GITHUB MONITOR */}
         <GitHubMonitor isExpanded={isExpanded} />
@@ -365,6 +371,12 @@ export default function DashboardLayout() {
           </div>
         </footer>
       </div>
+
+      {/* Command Terminal */}
+      <CommandTerminal 
+        isOpen={terminalOpen} 
+        onClose={() => setTerminalOpen(false)} 
+      />
     </div>
   )
 }
