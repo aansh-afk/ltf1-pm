@@ -164,7 +164,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
 
   const Container = isModal ? 'div' : 'div'
   const containerProps = isModal ? {
-    className: "fixed inset-0 z-50 flex items-center justify-center bg-event-horizon/80"
+    className: "fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background-secondary)]/80"
   } : {
     className: "p-24px"
   }
@@ -172,11 +172,11 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
   return (
     <Container {...containerProps}>
       <div className={clsx(
-        "bg-carbon-plate border-2 border-basalt-border",
+        "bg-[var(--theme-background)] border-2 border-[var(--theme-border)]",
         isModal ? "w-full max-w-7xl max-h-[90vh] overflow-hidden shadow-brutal" : ""
       )}>
         {/* Header */}
-        <div className="p-24px border-b-2 border-basalt-border bg-event-horizon">
+        <div className="p-24px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-brutal-lg font-bold mb-8px flex items-center gap-12px">
@@ -209,7 +209,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
         </div>
 
         {/* Controls */}
-        <div className="p-16px border-b-2 border-basalt-border bg-carbon-plate/50">
+        <div className="p-16px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)]/50">
           <div className="flex flex-wrap items-center gap-12px">
             {/* Search */}
             <div className="flex-1 min-w-200px relative">
@@ -307,18 +307,18 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
             <div className="min-w-800px">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b-2 border-basalt-border bg-event-horizon sticky top-0 z-10">
-                    <th className="p-12px text-left font-mono text-brutal-xs font-bold text-primary-brutalist sticky left-0 bg-event-horizon border-r-2 border-basalt-border min-w-200px">
+                  <tr className="border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] sticky top-0 z-10">
+                    <th className="p-12px text-left font-mono text-brutal-xs font-bold text-primary-brutalist sticky left-0 bg-[var(--theme-background-secondary)] border-r-2 border-[var(--theme-border)] min-w-200px">
                       TEAM MEMBER
                     </th>
-                    <th className="p-12px text-center font-mono text-brutal-xs font-bold text-primary-brutalist border-r-2 border-basalt-border">
+                    <th className="p-12px text-center font-mono text-brutal-xs font-bold text-primary-brutalist border-r-2 border-[var(--theme-border)]">
                       STATUS
                     </th>
                     {processedData.technologies.map((tech) => (
                       <th
                         key={tech}
                         className={clsx(
-                          "p-12px text-center font-mono text-brutal-xs font-bold text-primary-brutalist border-r border-basalt-border/50 cursor-pointer hover:bg-primary-brutalist/10",
+                          "p-12px text-center font-mono text-brutal-xs font-bold text-primary-brutalist border-r border-[var(--theme-border)]/50 cursor-pointer hover:bg-primary-brutalist/10",
                           selectedTech === tech && "bg-primary-brutalist/20"
                         )}
                         onClick={() => setSelectedTech(selectedTech === tech ? null : tech)}
@@ -335,13 +335,13 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                     <tr 
                       key={member.userId}
                       className={clsx(
-                        "border-b border-basalt-border/50 hover:bg-primary-brutalist/5 transition-colors",
+                        "border-b border-[var(--theme-border)]/50 hover:bg-primary-brutalist/5 transition-colors",
                         selectedMember === member.userId && "bg-primary-brutalist/10",
-                        idx % 2 === 0 ? "bg-carbon-plate" : "bg-event-horizon"
+                        idx % 2 === 0 ? "bg-[var(--theme-background)]" : "bg-[var(--theme-background-secondary)]"
                       )}
                     >
                       <td 
-                        className="p-12px font-mono text-brutal-sm font-bold sticky left-0 border-r-2 border-basalt-border cursor-pointer hover:text-primary-brutalist"
+                        className="p-12px font-mono text-brutal-sm font-bold sticky left-0 border-r-2 border-[var(--theme-border)] cursor-pointer hover:text-primary-brutalist"
                         style={{ backgroundColor: idx % 2 === 0 ? 'var(--carbon-plate)' : 'var(--event-horizon)' }}
                         onClick={() => handleMemberClick(member.userId)}
                       >
@@ -350,7 +350,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                           {member.name || 'UNKNOWN'}
                         </div>
                       </td>
-                      <td className="p-12px text-center border-r-2 border-basalt-border">
+                      <td className="p-12px text-center border-r-2 border-[var(--theme-border)]">
                         <DeveloperStatusIndicator 
                           userId={member.userId as Id<"users">}
                           size="sm"
@@ -363,7 +363,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                           <td
                             key={tech}
                             className={clsx(
-                              "p-8px text-center border-r border-basalt-border/30",
+                              "p-8px text-center border-r border-[var(--theme-border)]/30",
                               selectedTech === tech && "bg-primary-brutalist/10"
                             )}
                           >
@@ -416,7 +416,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                           return (
                             <div
                               key={member.userId}
-                              className="flex items-center justify-between p-8px bg-event-horizon border border-basalt-border hover:border-primary-brutalist cursor-pointer transition-all"
+                              className="flex items-center justify-between p-8px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] hover:border-primary-brutalist cursor-pointer transition-all"
                               onClick={() => handleMemberClick(member.userId)}
                             >
                               <div className="flex items-center gap-8px">
@@ -449,7 +449,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
         </div>
 
         {/* Legend */}
-        <div className="p-16px border-t-2 border-basalt-border bg-event-horizon">
+        <div className="p-16px border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-16px">
               <span className="font-mono text-brutal-xs font-bold text-primary-brutalist">EXPERTISE LEVELS:</span>

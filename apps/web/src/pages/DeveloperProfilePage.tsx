@@ -115,12 +115,12 @@ export default function DeveloperProfilePage() {
   return (
     <div className="space-y-24px">
       {/* Profile Header */}
-      <div className="bg-carbon-plate border-2 border-basalt-border">
-        <div className="p-24px border-b-2 border-basalt-border bg-event-horizon">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
+        <div className="p-24px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-24px">
               {/* Avatar */}
-              <div className="w-80px h-80px bg-basalt-border border-2 border-basalt-border flex items-center justify-center">
+              <div className="w-80px h-80px bg-basalt-border border-2 border-[var(--theme-border)] flex items-center justify-center">
                 {profile.avatarUrl ? (
                   <img 
                     src={profile.avatarUrl} 
@@ -221,10 +221,10 @@ export default function DeveloperProfilePage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={clsx(
-                  "flex items-center gap-8px px-24px py-16px font-mono text-brutal-sm font-bold transition-all border-r-2 border-basalt-border last:border-r-0",
+                  "flex items-center gap-8px px-24px py-16px font-mono text-brutal-sm font-bold transition-all border-r-2 border-[var(--theme-border)] last:border-r-0",
                   activeTab === tab.id
                     ? "bg-primary-brutalist text-event-horizon"
-                    : "bg-carbon-plate text-primary-brutalist/80 hover:bg-event-horizon hover:text-primary-brutalist"
+                    : "bg-[var(--theme-background)] text-primary-brutalist/80 hover:bg-[var(--theme-background-secondary)] hover:text-primary-brutalist"
                 )}
               >
                 <Icon className="w-16px h-16px" />
@@ -236,7 +236,7 @@ export default function DeveloperProfilePage() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-carbon-plate border-2 border-basalt-border p-24px">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
         {activeTab === 'overview' && (
           <div className="space-y-24px">
             {/* Quick Stats */}
@@ -340,7 +340,7 @@ export default function DeveloperProfilePage() {
                   {profile.techStack.map((tech, index) => {
                     const expertise = getExpertiseLevel(tech.level)
                     return (
-                      <div key={index} className="flex items-center justify-between p-12px bg-event-horizon border-2 border-basalt-border">
+                      <div key={index} className="flex items-center justify-between p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]">
                         <span className="font-mono text-brutal-sm font-bold">{tech.name}</span>
                         <div className="flex items-center gap-8px">
                           <span className={clsx("font-mono text-brutal-xs font-bold", expertise.color)}>
@@ -351,7 +351,7 @@ export default function DeveloperProfilePage() {
                               <div
                                 key={i}
                                 className={clsx(
-                                  "w-4px h-16px border-r border-basalt-border last:border-r-0",
+                                  "w-4px h-16px border-r border-[var(--theme-border)] last:border-r-0",
                                   i < tech.level ? "bg-primary-brutalist" : "bg-basalt-border"
                                 )}
                               />

@@ -118,7 +118,7 @@ export default function TimeTracker({
   }
 
   return (
-    <div className="flex items-center gap-12px p-16px bg-carbon-plate border-2 border-basalt-border">
+    <div className="flex items-center gap-12px p-16px bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
       {/* Time Display */}
       <div className="flex items-center gap-8px">
         <HiOutlineClock className="w-16px h-16px text-neutral-400" />
@@ -133,7 +133,7 @@ export default function TimeTracker({
           <button
             onClick={handleStart}
             className={clsx(
-              "p-8px border-2 border-basalt-border transition-colors",
+              "p-8px border-2 border-[var(--theme-border)] transition-colors",
               "hover:bg-primary-brutalist hover:text-event-horizon",
               "flex items-center justify-center"
             )}
@@ -145,7 +145,7 @@ export default function TimeTracker({
           <button
             onClick={handlePause}
             className={clsx(
-              "p-8px border-2 border-basalt-border transition-colors",
+              "p-8px border-2 border-[var(--theme-border)] transition-colors",
               "bg-warning-brutalist text-event-horizon",
               "hover:bg-warning-brutalist/80",
               "flex items-center justify-center"
@@ -160,8 +160,8 @@ export default function TimeTracker({
           <button
             onClick={handleStop}
             className={clsx(
-              "p-8px border-2 border-basalt-border transition-colors",
-              "hover:bg-danger-brutalist hover:text-cathode-white",
+              "p-8px border-2 border-[var(--theme-border)] transition-colors",
+              "hover:bg-danger-brutalist hover:text-[var(--theme-foreground)]",
               "flex items-center justify-center"
             )}
             title="Stop Timer & Log Time"

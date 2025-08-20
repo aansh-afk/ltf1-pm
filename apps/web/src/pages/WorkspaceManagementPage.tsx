@@ -61,8 +61,8 @@ export default function WorkspaceManagementPage() {
     return (
       <div className="p-32px">
         <div className="brutal-card p-32px text-center">
-          <h1 className="text-brutal-xl font-bold uppercase mb-16px text-[#FF0000]">WORKSPACE NOT FOUND</h1>
-          <p className="text-brutal-sm text-cathode-white/70">
+          <h1 className="text-brutal-xl font-bold uppercase mb-16px text-[var(--theme-error)]">WORKSPACE NOT FOUND</h1>
+          <p className="text-brutal-sm text-[var(--theme-foreground)]/70">
             THE WORKSPACE YOU'RE LOOKING FOR DOESN'T EXIST OR YOU DON'T HAVE ACCESS TO IT.
           </p>
         </div>
@@ -107,11 +107,11 @@ export default function WorkspaceManagementPage() {
   return (
     <div className="h-full flex">
       {/* Sidebar Navigation */}
-      <aside className="w-320px bg-carbon-plate border-r-2 border-basalt-border">
+      <aside className="w-320px bg-[var(--theme-background)] border-r-2 border-[var(--theme-border)]">
         {/* Workspace Header */}
-        <div className="p-24px border-b-2 border-basalt-border">
+        <div className="p-24px border-b-2 border-[var(--theme-border)]">
           <h1 className="text-brutal-xl font-bold uppercase mb-8px">{workspace.name}</h1>
-          <p className="text-brutal-xs text-cathode-white/70 uppercase">
+          <p className="text-brutal-xs text-[var(--theme-foreground)]/70 uppercase">
             {workspace.description || 'WORKSPACE MANAGEMENT'}
           </p>
         </div>
@@ -129,8 +129,8 @@ export default function WorkspaceManagementPage() {
                 className={clsx(
                   'w-full flex items-center justify-between px-24px py-16px text-brutal-sm font-semibold transition-all duration-200 ease-brutal-out',
                   isActive
-                    ? 'bg-event-horizon text-primary-brutalist border-l-4 border-primary-brutalist'
-                    : 'text-cathode-white hover:bg-event-horizon/50 hover:text-cathode-white hover:translate-x-4px'
+                    ? 'bg-[var(--theme-background-secondary)] text-primary-brutalist border-l-4 border-primary-brutalist'
+                    : 'text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]/50 hover:text-[var(--theme-foreground)] hover:translate-x-4px'
                 )}
               >
                 <div className="flex items-center">
@@ -165,31 +165,31 @@ function OverviewTab({ workspace, projects, members }: any) {
         <div className="brutal-card p-24px">
           <div className="flex items-center justify-between mb-16px">
             <HiOutlineFolder className="w-24px h-24px text-primary-brutalist" />
-            <span className="text-brutal-xs text-cathode-white/70">PROJECTS</span>
+            <span className="text-brutal-xs text-[var(--theme-foreground)]/70">PROJECTS</span>
           </div>
           <div className="text-brutal-2xl font-bold">{projects?.length || 0}</div>
         </div>
 
         <div className="brutal-card p-24px">
           <div className="flex items-center justify-between mb-16px">
-            <HiOutlineUsers className="w-24px h-24px text-[#00FFFF]" />
-            <span className="text-brutal-xs text-cathode-white/70">MEMBERS</span>
+            <HiOutlineUsers className="w-24px h-24px text-[var(--theme-info)]" />
+            <span className="text-brutal-xs text-[var(--theme-foreground)]/70">MEMBERS</span>
           </div>
           <div className="text-brutal-2xl font-bold">{members?.length || 0}</div>
         </div>
 
         <div className="brutal-card p-24px">
           <div className="flex items-center justify-between mb-16px">
-            <HiOutlinePlay className="w-24px h-24px text-[#00FF00]" />
-            <span className="text-brutal-xs text-cathode-white/70">ACTIVE SPRINTS</span>
+            <HiOutlinePlay className="w-24px h-24px text-[var(--theme-success)]" />
+            <span className="text-brutal-xs text-[var(--theme-foreground)]/70">ACTIVE SPRINTS</span>
           </div>
           <div className="text-brutal-2xl font-bold">3</div>
         </div>
 
         <div className="brutal-card p-24px">
           <div className="flex items-center justify-between mb-16px">
-            <HiOutlineClock className="w-24px h-24px text-[#FFFF00]" />
-            <span className="text-brutal-xs text-cathode-white/70">TASKS COMPLETED</span>
+            <HiOutlineClock className="w-24px h-24px text-[var(--theme-warning)]" />
+            <span className="text-brutal-xs text-[var(--theme-foreground)]/70">TASKS COMPLETED</span>
           </div>
           <div className="text-brutal-2xl font-bold">127</div>
         </div>
@@ -200,13 +200,13 @@ function OverviewTab({ workspace, projects, members }: any) {
         <h2 className="text-brutal-lg font-bold uppercase mb-24px">RECENT ACTIVITY</h2>
         <div className="space-y-16px">
           {[1, 2, 3, 4, 5].map((item) => (
-            <div key={item} className="flex items-center gap-16px p-16px bg-event-horizon/10 border border-basalt-border">
+            <div key={item} className="flex items-center gap-16px p-16px bg-[var(--theme-background-secondary)]/10 border border-[var(--theme-border)]">
               <div className="w-8px h-8px bg-primary-brutalist"></div>
               <div className="flex-1">
                 <p className="text-brutal-sm font-mono">
                   USER JOHN_DOE COMPLETED TASK "IMPLEMENT AUTH SYSTEM"
                 </p>
-                <p className="text-brutal-xs text-cathode-white/60">2 HOURS AGO</p>
+                <p className="text-brutal-xs text-[var(--theme-foreground)]/60">2 HOURS AGO</p>
               </div>
             </div>
           ))}
@@ -237,9 +237,9 @@ function ProjectsTab({ workspaceId, projects }: any) {
         {projects?.map((project: any) => (
           <div key={project._id} className="brutal-card p-24px">
             <h3 className="text-brutal-lg font-bold uppercase mb-16px">{project.name}</h3>
-            <p className="text-brutal-sm text-cathode-white/70 mb-16px">{project.description}</p>
+            <p className="text-brutal-sm text-[var(--theme-foreground)]/70 mb-16px">{project.description}</p>
             <div className="flex items-center justify-between">
-              <span className="text-brutal-xs text-cathode-white/60">STATUS: {project.status}</span>
+              <span className="text-brutal-xs text-[var(--theme-foreground)]/60">STATUS: {project.status}</span>
               <button 
                 onClick={() => navigate(`/workspace/${workspaceId}/project/${project._id}`)}
                 className="brutal-btn-sm"
@@ -272,19 +272,19 @@ function MembersTab({ workspaceId, members }: any) {
       <div className="brutal-card p-32px">
         <div className="space-y-16px">
           {members?.map((member: any) => (
-            <div key={member.userId} className="flex items-center justify-between p-16px bg-event-horizon/10 border border-basalt-border">
+            <div key={member.userId} className="flex items-center justify-between p-16px bg-[var(--theme-background-secondary)]/10 border border-[var(--theme-border)]">
               <div className="flex items-center gap-16px">
-                <div className="w-48px h-48px bg-primary-brutalist border-2 border-basalt-border flex items-center justify-center">
+                <div className="w-48px h-48px bg-primary-brutalist border-2 border-[var(--theme-border)] flex items-center justify-center">
                   <HiOutlineUsers className="w-24px h-24px text-event-horizon" />
                 </div>
                 <div>
                   <h3 className="font-mono text-brutal-sm uppercase">{member.user?.name || 'UNKNOWN USER'}</h3>
-                  <p className="text-brutal-xs text-cathode-white/60">ROLE: {member.role}</p>
+                  <p className="text-brutal-xs text-[var(--theme-foreground)]/60">ROLE: {member.role}</p>
                 </div>
               </div>
               <div className="flex items-center gap-8px">
                 <button className="brutal-btn-sm">EDIT</button>
-                <button className="brutal-btn-sm bg-[#FF0000] border-[#FF0000]">REMOVE</button>
+                <button className="brutal-btn-sm bg-[var(--theme-error)] border-[var(--theme-error)]">REMOVE</button>
               </div>
             </div>
           ))}
@@ -308,14 +308,14 @@ function SettingsTab({ workspace }: any) {
             <input 
               type="text" 
               defaultValue={workspace.name}
-              className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-sm"
+              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm"
             />
           </div>
           <div>
             <label className="block text-brutal-sm mb-8px uppercase">DESCRIPTION</label>
             <textarea 
               defaultValue={workspace.description}
-              className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-sm h-96px"
+              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm h-96px"
             />
           </div>
         </div>
@@ -330,8 +330,8 @@ function AnalyticsTab({ workspaceId }: any) {
     <div className="p-32px">
       <h1 className="text-brutal-xl font-bold uppercase mb-32px">ANALYTICS</h1>
       <div className="brutal-card p-32px text-center">
-        <HiOutlineChartBar className="w-64px h-64px mx-auto mb-16px text-cathode-white/50" />
-        <p className="text-brutal-sm text-cathode-white/70">ANALYTICS DASHBOARD COMING SOON</p>
+        <HiOutlineChartBar className="w-64px h-64px mx-auto mb-16px text-[var(--theme-foreground)]/50" />
+        <p className="text-brutal-sm text-[var(--theme-foreground)]/70">ANALYTICS DASHBOARD COMING SOON</p>
       </div>
     </div>
   )
@@ -343,8 +343,8 @@ function BillingTab({ workspace }: any) {
     <div className="p-32px">
       <h1 className="text-brutal-xl font-bold uppercase mb-32px">BILLING & SUBSCRIPTION</h1>
       <div className="brutal-card p-32px text-center">
-        <HiOutlineCreditCard className="w-64px h-64px mx-auto mb-16px text-cathode-white/50" />
-        <p className="text-brutal-sm text-cathode-white/70">BILLING MANAGEMENT COMING SOON</p>
+        <HiOutlineCreditCard className="w-64px h-64px mx-auto mb-16px text-[var(--theme-foreground)]/50" />
+        <p className="text-brutal-sm text-[var(--theme-foreground)]/70">BILLING MANAGEMENT COMING SOON</p>
       </div>
     </div>
   )
@@ -353,15 +353,15 @@ function BillingTab({ workspace }: any) {
 function DangerTab({ workspace }: any) {
   return (
     <div className="p-32px">
-      <h1 className="text-brutal-xl font-bold uppercase mb-32px text-[#FF0000]">DANGER ZONE</h1>
-      <div className="brutal-card p-32px border-[#FF0000]">
+      <h1 className="text-brutal-xl font-bold uppercase mb-32px text-[var(--theme-error)]">DANGER ZONE</h1>
+      <div className="brutal-card p-32px border-[var(--theme-error)]">
         <div className="space-y-24px">
-          <div className="p-24px bg-[#FF0000]/10 border border-[#FF0000]">
-            <h3 className="text-brutal-lg font-bold uppercase mb-16px text-[#FF0000]">DELETE WORKSPACE</h3>
-            <p className="text-brutal-sm text-cathode-white/70 mb-16px">
+          <div className="p-24px bg-[var(--theme-error)]/10 border border-[var(--theme-error)]">
+            <h3 className="text-brutal-lg font-bold uppercase mb-16px text-[var(--theme-error)]">DELETE WORKSPACE</h3>
+            <p className="text-brutal-sm text-[var(--theme-foreground)]/70 mb-16px">
               PERMANENTLY DELETE THIS WORKSPACE AND ALL ITS DATA. THIS ACTION CANNOT BE UNDONE.
             </p>
-            <button className="brutal-btn bg-[#FF0000] border-[#FF0000] hover:bg-[#CC0000]">
+            <button className="brutal-btn bg-[var(--theme-error)] border-[var(--theme-error)] hover:bg-[#CC0000]">
               DELETE WORKSPACE
             </button>
           </div>

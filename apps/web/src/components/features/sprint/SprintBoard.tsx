@@ -28,13 +28,13 @@ interface SprintBoardProps {
 
 const columns = [
   { id: 'todo', title: 'TODO', color: 'bg-neutral-600' },
-  { id: 'in_progress', title: 'IN PROGRESS', color: 'bg-[#00FFFF]' },
-  { id: 'in_review', title: 'IN REVIEW', color: 'bg-[#FF00FF]' },
-  { id: 'done', title: 'DONE', color: 'bg-[#00FF00]' }
+  { id: 'in_progress', title: 'IN PROGRESS', color: 'bg-[var(--theme-info)]' },
+  { id: 'in_review', title: 'IN REVIEW', color: 'bg-[var(--theme-accent)]' },
+  { id: 'done', title: 'DONE', color: 'bg-[var(--theme-success)]' }
 ]
 
 const priorityColors = {
-  urgent: 'border-[#FF0000]',
+  urgent: 'border-[var(--theme-error)]',
   high: 'border-[#FF8800]',
   medium: 'border-primary-brutalist',
   low: 'border-neutral-600'
@@ -156,7 +156,7 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
             <div key={column.id} className="flex flex-col">
               {/* Column Header */}
               <div className={clsx(
-                "p-16px border-2 border-basalt-border mb-16px",
+                "p-16px border-2 border-[var(--theme-border)] mb-16px",
                 column.color
               )}>
                 <h3 className="font-mono text-brutal-sm uppercase text-event-horizon">
@@ -177,7 +177,7 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
                       "flex-1 space-y-16px p-16px border-2 border-dashed transition-colors min-h-400px",
                       snapshot.isDraggingOver
                         ? "border-primary-brutalist bg-primary-brutalist/10"
-                        : "border-basalt-border"
+                        : "border-[var(--theme-border)]"
                     )}
                   >
                     {tasksByStatus[column.id].map((task, index) => (
@@ -188,7 +188,7 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                             className={clsx(
-                              "bg-carbon-plate border-2 p-16px transition-all",
+                              "bg-[var(--theme-background)] border-2 p-16px transition-all",
                               priorityColors[task.priority],
                               snapshot.isDragging && "shadow-brutal-lg rotate-2"
                             )}
@@ -207,7 +207,7 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
                                     e.stopPropagation()
                                     onTaskEdit?.(task)
                                   }}
-                                  className="p-4px hover:bg-event-horizon/20 transition-colors"
+                                  className="p-4px hover:bg-[var(--theme-background-secondary)]/20 transition-colors"
                                   title="Edit"
                                 >
                                   <HiOutlinePencil className="w-12px h-12px" />
@@ -217,7 +217,7 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
                                     e.stopPropagation()
                                     handleRemoveFromSprint(task._id)
                                   }}
-                                  className="p-4px hover:bg-event-horizon/20 transition-colors"
+                                  className="p-4px hover:bg-[var(--theme-background-secondary)]/20 transition-colors"
                                   title="Remove from sprint"
                                 >
                                   <HiOutlineX className="w-12px h-12px" />
@@ -247,7 +247,7 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
                               {task.dueDate && (
                                 <div className={clsx(
                                   "flex items-center gap-4px",
-                                  new Date(task.dueDate) < new Date() ? "text-[#FF0000]" : "text-neutral-500"
+                                  new Date(task.dueDate) < new Date() ? "text-[var(--theme-error)]" : "text-neutral-500"
                                 )}>
                                   <HiOutlineClock className="w-12px h-12px" />
                                   {new Date(task.dueDate).toLocaleDateString('en-US', { 

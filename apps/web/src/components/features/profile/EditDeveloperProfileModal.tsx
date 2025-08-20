@@ -181,10 +181,10 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
   ] as const
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-event-horizon/80">
-      <div className="bg-carbon-plate border-2 border-basalt-border shadow-brutal w-full max-w-4xl max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background-secondary)]/80">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-24px border-b-2 border-basalt-border bg-event-horizon">
+        <div className="flex items-center justify-between p-24px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
           <h2 className="text-brutal-lg font-bold">EDIT DEVELOPER PROFILE</h2>
           <button
             onClick={onClose}
@@ -195,7 +195,7 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b-2 border-basalt-border">
+        <div className="flex border-b-2 border-[var(--theme-border)]">
           {tabs.map((tab) => {
             const Icon = tab.icon
             return (
@@ -203,10 +203,10 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={clsx(
-                  "flex items-center gap-8px px-24px py-16px font-mono text-brutal-sm font-bold transition-all border-r-2 border-basalt-border last:border-r-0",
+                  "flex items-center gap-8px px-24px py-16px font-mono text-brutal-sm font-bold transition-all border-r-2 border-[var(--theme-border)] last:border-r-0",
                   activeTab === tab.id
                     ? "bg-primary-brutalist text-event-horizon"
-                    : "bg-carbon-plate text-primary-brutalist/80 hover:bg-event-horizon hover:text-primary-brutalist"
+                    : "bg-[var(--theme-background)] text-primary-brutalist/80 hover:bg-[var(--theme-background-secondary)] hover:text-primary-brutalist"
                 )}
               >
                 <Icon className="w-16px h-16px" />
@@ -386,7 +386,7 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
                 </div>
                 <div className="space-y-12px">
                   {formData.techStack.map((tech, index) => (
-                    <div key={index} className="flex items-center gap-12px p-12px bg-event-horizon border-2 border-basalt-border">
+                    <div key={index} className="flex items-center gap-12px p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]">
                       <input
                         type="text"
                         value={tech.name}
@@ -580,7 +580,7 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-24px border-t-2 border-basalt-border">
+        <div className="flex items-center justify-between p-24px border-t-2 border-[var(--theme-border)]">
           <div className="font-mono text-brutal-xs text-primary-brutalist/60">
             Changes will be saved immediately
           </div>

@@ -54,12 +54,12 @@ export default function UserDisplay({
     return (
       <div 
         className={clsx(
-          'flex items-center gap-8px text-cathode-white/60',
+          'flex items-center gap-8px text-[var(--theme-foreground)]/60',
           className
         )}
       >
         <div className={clsx(
-          'border-2 border-dashed border-basalt-border flex items-center justify-center',
+          'border-2 border-dashed border-[var(--theme-border)] flex items-center justify-center',
           size === 'xs' && 'w-20px h-20px',
           size === 'sm' && 'w-24px h-24px',
           size === 'md' && 'w-32px h-32px',
@@ -106,7 +106,7 @@ export default function UserDisplay({
         onClick={handleClick}
         className={clsx(
           'flex items-center gap-8px cursor-pointer group relative',
-          'hover:bg-event-horizon/20 transition-colors',
+          'hover:bg-[var(--theme-background-secondary)]/20 transition-colors',
           compact ? 'p-2px' : 'p-4px',
           className
         )}
@@ -141,7 +141,7 @@ export default function UserDisplay({
         {showName && (
           <div className="flex flex-col">
             <span className={clsx(
-              'font-mono font-semibold text-cathode-white group-hover:text-primary-brutalist transition-colors',
+              'font-mono font-semibold text-[var(--theme-foreground)] group-hover:text-primary-brutalist transition-colors',
               size === 'xs' && 'text-brutal-xs',
               size === 'sm' && 'text-brutal-xs',
               size === 'md' && 'text-brutal-sm',
@@ -150,7 +150,7 @@ export default function UserDisplay({
               {user.name || 'UNNAMED'}
             </span>
             {profile && !compact && (
-              <span className="text-brutal-xs text-cathode-white/60 uppercase">
+              <span className="text-brutal-xs text-[var(--theme-foreground)]/60 uppercase">
                 {profile.role || 'MEMBER'}
               </span>
             )}
@@ -170,11 +170,11 @@ export default function UserDisplay({
 
         {/* Tooltip for compact mode */}
         {compact && showTooltip && (
-          <div className="absolute left-full ml-8px px-8px py-4px bg-carbon-plate border-2 border-basalt-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 whitespace-nowrap z-50 pointer-events-none">
+          <div className="absolute left-full ml-8px px-8px py-4px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 whitespace-nowrap z-50 pointer-events-none">
             <div className="text-brutal-xs">
               <div className="font-semibold">{user.name || user.email}</div>
               {profile && (
-                <div className="text-cathode-white/60">
+                <div className="text-[var(--theme-foreground)]/60">
                   {profile.role || 'Member'} • Click to view profile
                 </div>
               )}

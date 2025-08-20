@@ -76,7 +76,7 @@ export default function MeetingCard({
       case 'accepted': return 'text-brutal-success'
       case 'declined': return 'text-brutal-error'
       case 'tentative': return 'text-brutal-warning'
-      default: return 'text-cathode-white/60'
+      default: return 'text-[var(--theme-foreground)]/60'
     }
   }
 
@@ -94,8 +94,8 @@ export default function MeetingCard({
 
   return (
     <div className={clsx(
-      "bg-carbon-plate border-2 p-16px transition-all hover:border-primary-brutalist",
-      isHappening ? "border-brutal-success" : "border-basalt-border"
+      "bg-[var(--theme-background)] border-2 p-16px transition-all hover:border-primary-brutalist",
+      isHappening ? "border-brutal-success" : "border-[var(--theme-border)]"
     )}>
       {/* Header */}
       <div className="flex items-start justify-between mb-12px">
@@ -108,7 +108,7 @@ export default function MeetingCard({
           </div>
           <div>
             <h3 className="font-mono text-brutal-sm font-bold uppercase">{meeting.title}</h3>
-            <div className="flex items-center gap-8px text-brutal-xs text-cathode-white/60">
+            <div className="flex items-center gap-8px text-brutal-xs text-[var(--theme-foreground)]/60">
               <span className="uppercase">{typeConfig.label}</span>
               {meeting.projectId && (
                 <>
@@ -131,13 +131,13 @@ export default function MeetingCard({
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-4px hover:bg-event-horizon/20 transition-colors"
+              className="p-4px hover:bg-[var(--theme-background-secondary)]/20 transition-colors"
             >
               <HiOutlineDotsVertical className="w-16px h-16px" />
             </button>
             
             {showMenu && (
-              <div className="absolute right-0 top-full mt-4px bg-carbon-plate border-2 border-basalt-border shadow-brutal-md z-10 min-w-150px">
+              <div className="absolute right-0 top-full mt-4px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal-md z-10 min-w-150px">
                 {meeting.meetingUrl && (
                   <button
                     onClick={() => window.open(meeting.meetingUrl, '_blank')}
@@ -175,7 +175,7 @@ export default function MeetingCard({
 
       {/* Description */}
       {meeting.description && (
-        <p className="text-brutal-xs text-cathode-white/80 mb-12px">{meeting.description}</p>
+        <p className="text-brutal-xs text-[var(--theme-foreground)]/80 mb-12px">{meeting.description}</p>
       )}
 
       {/* Time & Location */}
@@ -190,7 +190,7 @@ export default function MeetingCard({
             {format(new Date(meeting.startTime), 'h:mm a')} - {format(new Date(meeting.endTime), 'h:mm a')}
           </span>
           {isUpcoming && (
-            <span className="text-cathode-white/60">
+            <span className="text-[var(--theme-foreground)]/60">
               ({formatDistanceToNow(new Date(meeting.startTime), { addSuffix: true })})
             </span>
           )}
@@ -243,12 +243,12 @@ export default function MeetingCard({
               </div>
             ))}
             {totalAttendees > 5 && (
-              <div className="w-24px h-24px border-2 border-basalt-border bg-event-horizon flex items-center justify-center">
+              <div className="w-24px h-24px border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] flex items-center justify-center">
                 <span className="text-brutal-xs">+{totalAttendees - 5}</span>
               </div>
             )}
           </div>
-          <span className="text-brutal-xs text-cathode-white/60">
+          <span className="text-brutal-xs text-[var(--theme-foreground)]/60">
             {acceptedCount}/{totalAttendees} ACCEPTED
           </span>
         </div>
@@ -256,7 +256,7 @@ export default function MeetingCard({
         {/* User Response */}
         {currentUserId && !isOrganizer && isUpcoming && (
           <div className="flex items-center gap-4px">
-            <span className="text-brutal-xs text-cathode-white/60 mr-8px">YOUR RESPONSE:</span>
+            <span className="text-brutal-xs text-[var(--theme-foreground)]/60 mr-8px">YOUR RESPONSE:</span>
             <div className="flex items-center gap-4px">
               <button
                 onClick={() => handleResponse('accepted')}
@@ -265,7 +265,7 @@ export default function MeetingCard({
                   "px-8px py-4px text-brutal-xs font-mono uppercase transition-colors",
                   userResponse === 'accepted'
                     ? 'bg-brutal-success text-white'
-                    : 'bg-event-horizon border border-basalt-border hover:border-brutal-success'
+                    : 'bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] hover:border-brutal-success'
                 )}
               >
                 {getStatusIcon('accepted')} YES
@@ -277,7 +277,7 @@ export default function MeetingCard({
                   "px-8px py-4px text-brutal-xs font-mono uppercase transition-colors",
                   userResponse === 'tentative'
                     ? 'bg-brutal-warning text-white'
-                    : 'bg-event-horizon border border-basalt-border hover:border-brutal-warning'
+                    : 'bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] hover:border-brutal-warning'
                 )}
               >
                 {getStatusIcon('tentative')} MAYBE
@@ -289,7 +289,7 @@ export default function MeetingCard({
                   "px-8px py-4px text-brutal-xs font-mono uppercase transition-colors",
                   userResponse === 'declined'
                     ? 'bg-brutal-error text-white'
-                    : 'bg-event-horizon border border-basalt-border hover:border-brutal-error'
+                    : 'bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] hover:border-brutal-error'
                 )}
               >
                 {getStatusIcon('declined')} NO
@@ -301,7 +301,7 @@ export default function MeetingCard({
         {/* Meeting Status for Organizer */}
         {isOrganizer && (
           <div className="flex items-center gap-8px text-brutal-xs">
-            <span className="text-cathode-white/60">ORGANIZER</span>
+            <span className="text-[var(--theme-foreground)]/60">ORGANIZER</span>
             {isHappening && meeting.meetingUrl && (
               <button
                 onClick={() => window.open(meeting.meetingUrl, '_blank')}

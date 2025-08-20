@@ -26,13 +26,13 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-event-horizon/90 z-50" onClick={onClose} />
+      <div className="fixed inset-0 bg-[var(--theme-background-secondary)]/90 z-50" onClick={onClose} />
       
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-24px">
-        <div className="bg-carbon-plate border-2 border-basalt-border shadow-brutal-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-24px border-b-2 border-basalt-border">
+          <div className="flex items-center justify-between p-24px border-b-2 border-[var(--theme-border)]">
             <h2 className="text-brutal-lg font-bold uppercase">USER PROFILE</h2>
             <button
               onClick={onClose}
@@ -46,12 +46,12 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
             {!user || !profile ? (
               <div className="p-48px text-center">
                 <LoadingSpinner size="lg" />
-                <p className="text-brutal-sm text-cathode-white/60 mt-16px">LOADING PROFILE...</p>
+                <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mt-16px">LOADING PROFILE...</p>
               </div>
             ) : (
               <>
                 {/* User Info Header */}
-                <div className="p-24px border-b-2 border-basalt-border">
+                <div className="p-24px border-b-2 border-[var(--theme-border)]">
                   <div className="flex items-start gap-24px">
                     <BrutalAvatar
                       size="xl"
@@ -68,8 +68,8 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                       </div>
                       
                       <div className="flex items-center gap-8px mb-12px">
-                        <HiOutlineMail className="w-16px h-16px text-cathode-white/60" />
-                        <span className="text-brutal-sm text-cathode-white/80 font-mono">{user.email}</span>
+                        <HiOutlineMail className="w-16px h-16px text-[var(--theme-foreground)]/60" />
+                        <span className="text-brutal-sm text-[var(--theme-foreground)]/80 font-mono">{user.email}</span>
                       </div>
 
                       <div className="flex items-center gap-16px mb-16px">
@@ -79,7 +79,7 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                           size="md"
                         />
                         {profile.location && (
-                          <div className="flex items-center gap-4px text-brutal-xs text-cathode-white/60">
+                          <div className="flex items-center gap-4px text-brutal-xs text-[var(--theme-foreground)]/60">
                             <HiOutlineLocationMarker className="w-12px h-12px" />
                             <span>{profile.location}</span>
                           </div>
@@ -87,14 +87,14 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                       </div>
 
                       {profile.bio && (
-                        <p className="text-brutal-sm text-cathode-white/80 max-w-md">{profile.bio}</p>
+                        <p className="text-brutal-sm text-[var(--theme-foreground)]/80 max-w-md">{profile.bio}</p>
                       )}
                     </div>
                   </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="border-b-2 border-basalt-border">
+                <div className="border-b-2 border-[var(--theme-border)]">
                   <div className="flex">
                     {[
                       { id: 'profile', label: 'PROFILE', icon: HiOutlineUser },
@@ -106,10 +106,10 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                         onClick={() => setActiveTab(tab.id as any)}
                         className={clsx(
                           'flex items-center gap-8px px-24px py-16px text-brutal-sm font-mono uppercase',
-                          'border-r-2 border-basalt-border transition-colors',
+                          'border-r-2 border-[var(--theme-border)] transition-colors',
                           activeTab === tab.id
-                            ? 'bg-event-horizon text-primary-brutalist'
-                            : 'hover:bg-event-horizon/50'
+                            ? 'bg-[var(--theme-background-secondary)] text-primary-brutalist'
+                            : 'hover:bg-[var(--theme-background-secondary)]/50'
                         )}
                       >
                         <tab.icon className="w-16px h-16px" />
@@ -166,22 +166,22 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                       {profile.workPreferences && (
                         <div>
                           <h4 className="text-brutal-md font-bold mb-16px">WORK PREFERENCES</h4>
-                          <div className="bg-event-horizon p-16px border-2 border-basalt-border">
+                          <div className="bg-[var(--theme-background-secondary)] p-16px border-2 border-[var(--theme-border)]">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-12px text-brutal-sm">
                               <div>
-                                <span className="text-cathode-white/60">COMMUNICATION:</span>{' '}
+                                <span className="text-[var(--theme-foreground)]/60">COMMUNICATION:</span>{' '}
                                 <span className="uppercase">{profile.workPreferences.communicationStyle}</span>
                               </div>
                               <div>
-                                <span className="text-cathode-white/60">WORK HOURS:</span>{' '}
+                                <span className="text-[var(--theme-foreground)]/60">WORK HOURS:</span>{' '}
                                 <span className="uppercase">{profile.workPreferences.workingHours}</span>
                               </div>
                               <div>
-                                <span className="text-cathode-white/60">FOCUS TIME:</span>{' '}
+                                <span className="text-[var(--theme-foreground)]/60">FOCUS TIME:</span>{' '}
                                 <span className="uppercase">{profile.workPreferences.focusTime}</span>
                               </div>
                               <div>
-                                <span className="text-cathode-white/60">AVAILABILITY:</span>{' '}
+                                <span className="text-[var(--theme-foreground)]/60">AVAILABILITY:</span>{' '}
                                 <span className="uppercase">{profile.workPreferences.availability}</span>
                               </div>
                             </div>
@@ -194,7 +194,7 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                   {activeTab === 'activity' && (
                     <div className="space-y-16px">
                       <h4 className="text-brutal-md font-bold">RECENT ACTIVITY</h4>
-                      <div className="text-center py-32px text-cathode-white/60">
+                      <div className="text-center py-32px text-[var(--theme-foreground)]/60">
                         <HiOutlineClock className="w-48px h-48px mx-auto mb-16px" />
                         <p>Activity tracking coming soon...</p>
                       </div>
@@ -288,8 +288,8 @@ function InfoItem({ icon: Icon, label, value, link }: {
 }) {
   const content = (
     <div className="flex items-center gap-8px">
-      <Icon className="w-16px h-16px text-cathode-white/60" />
-      <span className="text-brutal-xs text-cathode-white/60">{label}:</span>
+      <Icon className="w-16px h-16px text-[var(--theme-foreground)]/60" />
+      <span className="text-brutal-xs text-[var(--theme-foreground)]/60">{label}:</span>
       <span className="text-brutal-sm font-mono">{value}</span>
     </div>
   )
@@ -312,9 +312,9 @@ function InfoItem({ icon: Icon, label, value, link }: {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-event-horizon border-2 border-basalt-border p-16px text-center">
+    <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-16px text-center">
       <div className="text-brutal-lg font-bold text-primary-brutalist">{value}</div>
-      <div className="text-brutal-xs text-cathode-white/60">{label}</div>
+      <div className="text-brutal-xs text-[var(--theme-foreground)]/60">{label}</div>
     </div>
   )
 }

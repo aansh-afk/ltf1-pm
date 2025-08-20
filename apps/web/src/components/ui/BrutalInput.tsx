@@ -23,7 +23,7 @@ const BrutalInput = forwardRef<HTMLInputElement, BrutalInputProps>(
     return (
       <div className={clsx('space-y-8px', fullWidth && 'w-full')}>
         {label && (
-          <label htmlFor={inputId} className="block text-brutal-sm text-cathode-white">
+          <label htmlFor={inputId} className="block text-brutal-sm text-[var(--theme-foreground)]">
             {label}
           </label>
         )}
@@ -32,12 +32,12 @@ const BrutalInput = forwardRef<HTMLInputElement, BrutalInputProps>(
           ref={ref}
           id={inputId}
           className={clsx(
-            'bg-event-horizon text-cathode-white border-2 px-16px py-8px',
+            'bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 px-16px py-8px',
             'transition-all duration-200 ease-brutal-out',
-            'placeholder:text-cathode-white/50 placeholder:uppercase placeholder:text-xs',
+            'placeholder:text-[var(--theme-foreground)]/50 placeholder:uppercase placeholder:text-xs',
             error
-              ? 'border-[#FF0000] focus:border-[#FF0000] focus:shadow-[3px_3px_0px_#FF0000]'
-              : 'border-basalt-border focus:border-[#00FFFF] focus:shadow-brutal',
+              ? 'border-[var(--theme-error)] focus:border-[var(--theme-error)] focus:shadow-[3px_3px_0px_var(--theme-error)]'
+              : 'border-[var(--theme-border)] focus:border-[var(--theme-border-focus)] focus:shadow-[var(--theme-box-shadow)]',
             'outline-none',
             fullWidth && 'w-full',
             className
@@ -48,7 +48,7 @@ const BrutalInput = forwardRef<HTMLInputElement, BrutalInputProps>(
         {(error || helperText) && (
           <p className={clsx(
             'text-brutal-xs',
-            error ? 'text-[#FF0000]' : 'text-cathode-white/70'
+            error ? 'text-[var(--theme-error)]' : 'text-[var(--theme-foreground)]/70'
           )}>
             {error || helperText}
           </p>

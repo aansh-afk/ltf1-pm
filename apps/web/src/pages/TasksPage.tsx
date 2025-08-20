@@ -220,9 +220,9 @@ export default function TasksPage() {
     return (
       <div className="p-24px">
         <div className="max-w-md mx-auto">
-          <div className="bg-carbon-plate border-2 border-basalt-border p-32px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-32px">
             <h1 className="text-brutal-lg font-bold mb-16px">SELECT WORKSPACE</h1>
-            <p className="text-brutal-sm text-cathode-white/60 mb-24px">
+            <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mb-24px">
               Choose a workspace to view and manage tasks.
             </p>
             <WorkspaceSelector size="lg" showLabel={false} />
@@ -272,7 +272,7 @@ export default function TasksPage() {
           <div className="flex items-center gap-16px mb-8px">
             <h1 className="text-brutal-2xl font-bold uppercase">TASKS</h1>
             {!hasWorkspaceContext && (
-              <div className="text-brutal-xs text-cathode-white/60">
+              <div className="text-brutal-xs text-[var(--theme-foreground)]/60">
                 IN: {currentWorkspace?.name}
               </div>
             )}
@@ -284,7 +284,7 @@ export default function TasksPage() {
             )}
             
             <select
-              className="px-16px py-8px bg-carbon-plate border-2 border-basalt-border 
+              className="px-16px py-8px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm uppercase
                        focus:border-primary-brutalist focus:outline-none transition-colors"
               value={selectedProjectId}
@@ -306,7 +306,7 @@ export default function TasksPage() {
             <input
               type="text"
               placeholder="QUICK SEARCH..."
-              className="w-240px pl-40px pr-16px py-8px bg-event-horizon border-2 border-basalt-border 
+              className="w-240px pl-40px pr-16px py-8px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm uppercase placeholder:text-neutral-600
                        focus:border-primary-brutalist focus:outline-none transition-colors"
               value={quickSearch}
@@ -314,15 +314,15 @@ export default function TasksPage() {
             />
           </div>
 
-          <div className="flex border-2 border-basalt-border">
+          <div className="flex border-2 border-[var(--theme-border)]">
             <button
               className={clsx(
                 "px-16px py-8px flex items-center gap-8px",
                 "font-mono text-brutal-sm uppercase transition-colors",
-                "border-r-2 border-basalt-border",
+                "border-r-2 border-[var(--theme-border)]",
                 viewMode === 'board' 
                   ? "bg-primary-brutalist text-event-horizon" 
-                  : "bg-carbon-plate hover:bg-event-horizon"
+                  : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
               )}
               onClick={() => setViewMode('board')}
             >
@@ -335,7 +335,7 @@ export default function TasksPage() {
                 "font-mono text-brutal-sm uppercase transition-colors",
                 viewMode === 'list' 
                   ? "bg-primary-brutalist text-event-horizon" 
-                  : "bg-carbon-plate hover:bg-event-horizon"
+                  : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
               )}
               onClick={() => setViewMode('list')}
             >
@@ -346,10 +346,10 @@ export default function TasksPage() {
               className={clsx(
                 "px-16px py-8px flex items-center gap-8px",
                 "font-mono text-brutal-sm uppercase transition-colors",
-                "border-r-2 border-basalt-border",
+                "border-r-2 border-[var(--theme-border)]",
                 viewMode === 'calendar' 
                   ? "bg-primary-brutalist text-event-horizon" 
-                  : "bg-carbon-plate hover:bg-event-horizon"
+                  : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
               )}
               onClick={() => setViewMode('calendar')}
             >
@@ -362,7 +362,7 @@ export default function TasksPage() {
                 "font-mono text-brutal-sm uppercase transition-colors",
                 viewMode === 'table' 
                   ? "bg-primary-brutalist text-event-horizon" 
-                  : "bg-carbon-plate hover:bg-event-horizon"
+                  : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
               )}
               onClick={() => setViewMode('table')}
             >
@@ -380,7 +380,7 @@ export default function TasksPage() {
             <HiOutlineFilter className="w-16px h-16px" />
             FILTER
             {getActiveFilterCount() > 0 && (
-              <span className="px-6px py-2px bg-event-horizon text-primary-brutalist text-brutal-xs font-bold">
+              <span className="px-6px py-2px bg-[var(--theme-background-secondary)] text-primary-brutalist text-brutal-xs font-bold">
                 {getActiveFilterCount()}
               </span>
             )}

@@ -94,7 +94,7 @@ export function GitHubSettingsTab({ currentUser }: GitHubSettingsTabProps) {
       >
         <div className="space-y-24px">
           {/* Connection Status */}
-          <div className="p-24px bg-event-horizon border-2 border-basalt-border">
+          <div className="p-24px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]">
             <div className="flex items-center justify-between mb-16px">
               <div className="flex items-center gap-16px">
                 <FaGithub className="w-32px h-32px" />
@@ -103,7 +103,7 @@ export function GitHubSettingsTab({ currentUser }: GitHubSettingsTabProps) {
                     {isConnected ? 'GitHub Connected' : 'GitHub Not Connected'}
                   </h4>
                   {githubStats?.username && (
-                    <p className="text-brutal-sm text-cathode-white/60">
+                    <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
                       @{githubStats.username}
                     </p>
                   )}
@@ -148,15 +148,15 @@ export function GitHubSettingsTab({ currentUser }: GitHubSettingsTabProps) {
             
             {isConnected && githubStats && (
               <div className="grid grid-cols-3 gap-16px">
-                <div className="text-center p-16px bg-carbon-plate border border-basalt-border">
+                <div className="text-center p-16px bg-[var(--theme-background)] border border-[var(--theme-border)]">
                   <div className="text-brutal-xl font-bold text-brutal-info">{githubStats.totalPRs || 0}</div>
                   <div className="text-brutal-xs uppercase">Pull Requests</div>
                 </div>
-                <div className="text-center p-16px bg-carbon-plate border border-basalt-border">
+                <div className="text-center p-16px bg-[var(--theme-background)] border border-[var(--theme-border)]">
                   <div className="text-brutal-xl font-bold text-brutal-success">{githubStats.totalReviews || 0}</div>
                   <div className="text-brutal-xs uppercase">Code Reviews</div>
                 </div>
-                <div className="text-center p-16px bg-carbon-plate border border-basalt-border">
+                <div className="text-center p-16px bg-[var(--theme-background)] border border-[var(--theme-border)]">
                   <div className="text-brutal-xl font-bold text-brutal-warning">
                     {githubStats.languages?.length || 0}
                   </div>
@@ -166,7 +166,7 @@ export function GitHubSettingsTab({ currentUser }: GitHubSettingsTabProps) {
             )}
             
             {isConnected && githubStats?.lastSynced && (
-              <p className="text-brutal-xs text-cathode-white/60 mt-12px">
+              <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-12px">
                 Last synced: {format(new Date(githubStats.lastSynced), 'MMM d, yyyy h:mm a')}
                 {githubStats.isStale && (
                   <span className="text-brutal-warning ml-8px">
@@ -179,11 +179,11 @@ export function GitHubSettingsTab({ currentUser }: GitHubSettingsTabProps) {
           </div>
           
           {/* GitHub App Installation */}
-          <div className="p-24px bg-event-horizon border-2 border-basalt-border">
+          <div className="p-24px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]">
             <div className="flex items-center justify-between mb-16px">
               <div>
                 <h4 className="text-brutal-md font-bold mb-8px">GitHub App Installation</h4>
-                <p className="text-brutal-sm text-cathode-white/60">
+                <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
                   Install the LTF1 GitHub App for advanced features like automatic syncing and webhooks.
                 </p>
               </div>
@@ -194,7 +194,7 @@ export function GitHubSettingsTab({ currentUser }: GitHubSettingsTabProps) {
                   <span className="font-mono text-brutal-sm">INSTALLED</span>
                 </div>
               ) : (
-                <FaTimesCircle className="w-20px h-20px text-cathode-white/40" />
+                <FaTimesCircle className="w-20px h-20px text-[var(--theme-foreground)]/40" />
               )}
             </div>
             
@@ -205,10 +205,10 @@ export function GitHubSettingsTab({ currentUser }: GitHubSettingsTabProps) {
             ) : (
               <div className="space-y-12px">
                 {installations.map((installation: any) => (
-                  <div key={installation._id} className="flex items-center justify-between p-12px bg-carbon-plate border border-basalt-border">
+                  <div key={installation._id} className="flex items-center justify-between p-12px bg-[var(--theme-background)] border border-[var(--theme-border)]">
                     <div>
                       <p className="font-mono text-brutal-sm">{installation.accountName}</p>
-                      <p className="text-brutal-xs text-cathode-white/60">
+                      <p className="text-brutal-xs text-[var(--theme-foreground)]/60">
                         {installation.accountType} • ID: {installation.installationId}
                       </p>
                     </div>
@@ -238,7 +238,7 @@ export function GitHubSettingsTab({ currentUser }: GitHubSettingsTabProps) {
             <FaCheckCircle className="w-16px h-16px text-brutal-success mt-2px" />
             <div>
               <p className="font-mono text-brutal-sm font-bold">Automatic Task-Code Linking</p>
-              <p className="text-brutal-xs text-cathode-white/60">
+              <p className="text-brutal-xs text-[var(--theme-foreground)]/60">
                 Commits and PRs mentioning task keys (e.g., WEB-123) are automatically linked
               </p>
             </div>
@@ -248,7 +248,7 @@ export function GitHubSettingsTab({ currentUser }: GitHubSettingsTabProps) {
             <FaCheckCircle className="w-16px h-16px text-brutal-success mt-2px" />
             <div>
               <p className="font-mono text-brutal-sm font-bold">Pull Request Tracking</p>
-              <p className="text-brutal-xs text-cathode-white/60">
+              <p className="text-brutal-xs text-[var(--theme-foreground)]/60">
                 See PR status, reviews, and merge state directly in your projects
               </p>
             </div>
@@ -258,7 +258,7 @@ export function GitHubSettingsTab({ currentUser }: GitHubSettingsTabProps) {
             <FaCheckCircle className="w-16px h-16px text-brutal-success mt-2px" />
             <div>
               <p className="font-mono text-brutal-sm font-bold">Developer Activity Sync</p>
-              <p className="text-brutal-xs text-cathode-white/60">
+              <p className="text-brutal-xs text-[var(--theme-foreground)]/60">
                 Your GitHub stats and contributions are synced to your developer profile
               </p>
             </div>
@@ -268,7 +268,7 @@ export function GitHubSettingsTab({ currentUser }: GitHubSettingsTabProps) {
             <FaCheckCircle className="w-16px h-16px text-brutal-success mt-2px" />
             <div>
               <p className="font-mono text-brutal-sm font-bold">Real-time Webhooks</p>
-              <p className="text-brutal-xs text-cathode-white/60">
+              <p className="text-brutal-xs text-[var(--theme-foreground)]/60">
                 Get instant updates when commits are pushed or PRs are opened/merged
               </p>
             </div>

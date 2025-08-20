@@ -136,11 +136,11 @@ NOTES:
     >
       <div className="space-y-24px">
         {/* Header */}
-        <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
           <div className="flex items-center justify-between mb-12px">
             <div>
               <h2 className="font-mono text-lg font-bold uppercase">{meeting?.title}</h2>
-              <div className="flex items-center gap-12px text-brutal-xs text-cathode-white/60">
+              <div className="flex items-center gap-12px text-brutal-xs text-[var(--theme-foreground)]/60">
                 <span className="flex items-center gap-4px">
                   <HiOutlineClock className="w-12px h-12px" />
                   {format(new Date(meeting.startTime), 'MMM d, yyyy h:mm a')}
@@ -218,12 +218,12 @@ NOTES:
         </div>
 
         {/* Notes Editor/Viewer */}
-        <div className="bg-event-horizon border-4 border-basalt-border">
+        <div className="bg-[var(--theme-background-secondary)] border-4 border-[var(--theme-border)]">
           {isEditing ? (
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full h-400px p-16px bg-carbon-plate border-0 font-mono text-brutal-sm text-cathode-white placeholder:text-neutral-600 focus:outline-none resize-none"
+              className="w-full h-400px p-16px bg-[var(--theme-background)] border-0 font-mono text-brutal-sm text-[var(--theme-foreground)] placeholder:text-neutral-600 focus:outline-none resize-none"
               placeholder="ADD YOUR MEETING NOTES HERE...
 
 USE MARKDOWN FOR FORMATTING:
@@ -242,8 +242,8 @@ USE MARKDOWN FOR FORMATTING:
                 </pre>
               ) : (
                 <div className="text-center py-48px">
-                  <HiOutlineDocumentText className="w-48px h-48px mx-auto mb-16px text-cathode-white/30" />
-                  <p className="text-cathode-white/60 font-mono text-brutal-sm uppercase mb-16px">
+                  <HiOutlineDocumentText className="w-48px h-48px mx-auto mb-16px text-[var(--theme-foreground)]/30" />
+                  <p className="text-[var(--theme-foreground)]/60 font-mono text-brutal-sm uppercase mb-16px">
                     NO NOTES YET
                   </p>
                   {canEdit && (
@@ -262,15 +262,15 @@ USE MARKDOWN FOR FORMATTING:
 
         {/* Participants who can edit */}
         {meeting?.attendees && (
-          <div className="bg-carbon-plate border-2 border-basalt-border p-12px">
-            <div className="flex items-center gap-8px text-brutal-xs text-cathode-white/60">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-12px">
+            <div className="flex items-center gap-8px text-brutal-xs text-[var(--theme-foreground)]/60">
               <HiOutlineUser className="w-14px h-14px" />
               <span className="uppercase">Can Edit:</span>
               <div className="flex items-center gap-8px">
                 {meeting.attendees
                   .filter((a: any) => a.status === 'accepted' || a.userId === meeting.organizerId)
                   .map((a: any) => (
-                    <span key={a.userId} className="px-8px py-2px bg-event-horizon border border-basalt-border">
+                    <span key={a.userId} className="px-8px py-2px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
                       {a.user?.name || 'Unknown'}
                     </span>
                   ))}
@@ -280,7 +280,7 @@ USE MARKDOWN FOR FORMATTING:
         )}
 
         {/* Footer */}
-        <div className="flex gap-16px justify-end pt-16px border-t-2 border-basalt-border">
+        <div className="flex gap-16px justify-end pt-16px border-t-2 border-[var(--theme-border)]">
           <button
             onClick={onClose}
             className="brutal-btn"

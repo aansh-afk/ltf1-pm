@@ -306,13 +306,13 @@ export default function MeetingsPage() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="bg-carbon-plate border-b-2 border-basalt-border p-16px">
+      <div className="bg-[var(--theme-background)] border-b-2 border-[var(--theme-border)] p-16px">
         <div className="flex items-center justify-between mb-16px">
           <div className="flex items-center gap-16px">
             <h1 className="text-2xl font-mono uppercase">Meetings</h1>
             
             {/* View Toggle */}
-            <div className="flex items-center gap-4px bg-event-horizon">
+            <div className="flex items-center gap-4px bg-[var(--theme-background-secondary)]">
               <button
                 onClick={() => setViewMode('calendar')}
                 className={clsx(
@@ -346,7 +346,7 @@ export default function MeetingsPage() {
           <div className="flex items-center gap-12px">
             {/* Search */}
             <div className="relative">
-              <HiOutlineSearch className="absolute left-12px top-1/2 -translate-y-1/2 w-16px h-16px text-cathode-white/60" />
+              <HiOutlineSearch className="absolute left-12px top-1/2 -translate-y-1/2 w-16px h-16px text-[var(--theme-foreground)]/60" />
               <input
                 type="text"
                 placeholder="SEARCH MEETINGS..."
@@ -370,7 +370,7 @@ export default function MeetingsPage() {
             {/* Bulk Actions */}
             {selectedMeetings.size > 0 && (
               <div className="flex items-center gap-8px">
-                <span className="text-brutal-xs text-cathode-white/60">
+                <span className="text-brutal-xs text-[var(--theme-foreground)]/60">
                   {selectedMeetings.size} SELECTED
                 </span>
                 <button
@@ -401,7 +401,7 @@ export default function MeetingsPage() {
 
         {/* Filters */}
         {showFilters && (
-          <div className="flex items-center gap-12px py-12px border-t border-basalt-border">
+          <div className="flex items-center gap-12px py-12px border-t border-[var(--theme-border)]">
             <select
               value={filters.type || ''}
               onChange={(e) => setFilters({ ...filters, type: e.target.value || undefined })}
@@ -544,9 +544,9 @@ function CalendarView({
   const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
   return (
-    <div className="h-full flex flex-col bg-event-horizon">
+    <div className="h-full flex flex-col bg-[var(--theme-background-secondary)]">
       {/* Calendar Header */}
-      <div className="bg-carbon-plate border-b-2 border-basalt-border p-16px flex items-center justify-between">
+      <div className="bg-[var(--theme-background)] border-b-2 border-[var(--theme-border)] p-16px flex items-center justify-between">
         <div className="flex items-center gap-16px">
           <div className="flex items-center gap-8px">
             <button
@@ -611,7 +611,7 @@ function CalendarView({
           {/* Week Days Header */}
           <div className="grid grid-cols-7 gap-1px mb-1px">
             {weekDays.map((day: string) => (
-              <div key={day} className="bg-carbon-plate p-8px text-center font-mono text-brutal-xs uppercase">
+              <div key={day} className="bg-[var(--theme-background)] p-8px text-center font-mono text-brutal-xs uppercase">
                 {day}
               </div>
             ))}
@@ -628,8 +628,8 @@ function CalendarView({
                 <div
                   key={index}
                   className={clsx(
-                    "bg-carbon-plate p-8px min-h-100px border-2",
-                    isCurrentMonth ? 'border-basalt-border' : 'border-transparent opacity-50',
+                    "bg-[var(--theme-background)] p-8px min-h-100px border-2",
+                    isCurrentMonth ? 'border-[var(--theme-border)]' : 'border-transparent opacity-50',
                     isTodayDate && 'border-primary-brutalist'
                   )}
                 >
@@ -650,7 +650,7 @@ function CalendarView({
                       </button>
                     ))}
                     {dayMeetings.length > 3 && (
-                      <div className="text-brutal-xs text-cathode-white/60 px-4px">
+                      <div className="text-brutal-xs text-[var(--theme-foreground)]/60 px-4px">
                         +{dayMeetings.length - 3} MORE
                       </div>
                     )}
@@ -690,10 +690,10 @@ function ListView({
   onViewNotes
 }: any) {
   return (
-    <div className="h-full overflow-y-auto bg-event-horizon p-16px">
+    <div className="h-full overflow-y-auto bg-[var(--theme-background-secondary)] p-16px">
       {groupedMeetings.length === 0 ? (
         <div className="text-center py-48px">
-          <p className="text-cathode-white/60 mb-16px">NO MEETINGS FOUND</p>
+          <p className="text-[var(--theme-foreground)]/60 mb-16px">NO MEETINGS FOUND</p>
         </div>
       ) : (
         <div className="space-y-24px">
@@ -749,39 +749,39 @@ function DashboardView({
   onQuickRSVP
 }: any) {
   return (
-    <div className="h-full overflow-y-auto bg-event-horizon p-16px">
+    <div className="h-full overflow-y-auto bg-[var(--theme-background-secondary)] p-16px">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-16px">
         {/* Stats Cards */}
         <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-16px">
-          <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
-            <div className="text-brutal-xs text-cathode-white/60 uppercase mb-8px">Upcoming</div>
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
+            <div className="text-brutal-xs text-[var(--theme-foreground)]/60 uppercase mb-8px">Upcoming</div>
             <div className="text-2xl font-mono">{stats?.upcoming || 0}</div>
           </div>
-          <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
-            <div className="text-brutal-xs text-cathode-white/60 uppercase mb-8px">Today</div>
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
+            <div className="text-brutal-xs text-[var(--theme-foreground)]/60 uppercase mb-8px">Today</div>
             <div className="text-2xl font-mono">{stats?.today || 0}</div>
           </div>
-          <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
-            <div className="text-brutal-xs text-cathode-white/60 uppercase mb-8px">Hours This Month</div>
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
+            <div className="text-brutal-xs text-[var(--theme-foreground)]/60 uppercase mb-8px">Hours This Month</div>
             <div className="text-2xl font-mono">{stats?.totalHours || 0}h</div>
           </div>
-          <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
-            <div className="text-brutal-xs text-cathode-white/60 uppercase mb-8px">Acceptance Rate</div>
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
+            <div className="text-brutal-xs text-[var(--theme-foreground)]/60 uppercase mb-8px">Acceptance Rate</div>
             <div className="text-2xl font-mono">{stats?.acceptanceRate || 0}%</div>
           </div>
         </div>
 
         {/* Next Meetings */}
-        <div className="lg:col-span-2 bg-carbon-plate border-2 border-basalt-border p-16px">
+        <div className="lg:col-span-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
           <h3 className="font-mono text-brutal-sm uppercase mb-16px">UPCOMING MEETINGS</h3>
           {upcomingMeetings.length === 0 ? (
-            <p className="text-cathode-white/60 text-brutal-xs">NO UPCOMING MEETINGS</p>
+            <p className="text-[var(--theme-foreground)]/60 text-brutal-xs">NO UPCOMING MEETINGS</p>
           ) : (
             <div className="space-y-12px">
               {upcomingMeetings.slice(0, 5).map((meeting: any) => (
                 <div 
                   key={meeting._id}
-                  className="flex items-center justify-between p-12px bg-event-horizon border border-basalt-border hover:border-primary-brutalist transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-12px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] hover:border-primary-brutalist transition-colors cursor-pointer"
                   onClick={() => onMeetingClick(meeting)}
                 >
                   <div className="flex-1">
@@ -829,7 +829,7 @@ function DashboardView({
         </div>
 
         {/* Today's Schedule */}
-        <div className="bg-carbon-plate border-2 border-basalt-border p-16px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
           <h3 className="font-mono text-brutal-sm uppercase mb-16px">TODAY'S SCHEDULE</h3>
           <TodaySchedule />
         </div>
@@ -848,10 +848,10 @@ function WeekView({ currentDate, getMeetingsForDay, onMeetingClick }: any) {
     <div className="flex-1 overflow-auto p-16px">
       <div className="grid grid-cols-8 gap-1px min-w-800px">
         {/* Time column */}
-        <div className="bg-carbon-plate">
-          <div className="h-40px border-b border-basalt-border"></div>
+        <div className="bg-[var(--theme-background)]">
+          <div className="h-40px border-b border-[var(--theme-border)]"></div>
           {hours.map(hour => (
-            <div key={hour} className="h-60px border-b border-basalt-border p-4px text-brutal-xs text-cathode-white/60">
+            <div key={hour} className="h-60px border-b border-[var(--theme-border)] p-4px text-brutal-xs text-[var(--theme-foreground)]/60">
               {format(new Date().setHours(hour, 0, 0, 0), 'HH:mm')}
             </div>
           ))}
@@ -859,8 +859,8 @@ function WeekView({ currentDate, getMeetingsForDay, onMeetingClick }: any) {
 
         {/* Day columns */}
         {weekDays.map(day => (
-          <div key={day.toISOString()} className="bg-carbon-plate">
-            <div className="h-40px border-b border-basalt-border p-4px">
+          <div key={day.toISOString()} className="bg-[var(--theme-background)]">
+            <div className="h-40px border-b border-[var(--theme-border)] p-4px">
               <div className="font-mono text-brutal-xs uppercase">{format(day, 'EEE')}</div>
               <div className={clsx(
                 "font-mono text-brutal-sm",
@@ -871,7 +871,7 @@ function WeekView({ currentDate, getMeetingsForDay, onMeetingClick }: any) {
             </div>
             <div className="relative">
               {hours.map(hour => (
-                <div key={hour} className="h-60px border-b border-basalt-border"></div>
+                <div key={hour} className="h-60px border-b border-[var(--theme-border)]"></div>
               ))}
               {/* Meetings */}
               {getMeetingsForDay(day).map((meeting: any) => {
@@ -919,10 +919,10 @@ function DayView({ meetings, onMeetingClick }: any) {
 
           return (
             <div key={hour} className="flex gap-16px mb-1px">
-              <div className="w-60px text-right font-mono text-brutal-xs text-cathode-white/60 py-8px">
+              <div className="w-60px text-right font-mono text-brutal-xs text-[var(--theme-foreground)]/60 py-8px">
                 {format(new Date().setHours(hour, 0, 0, 0), 'HH:mm')}
               </div>
-              <div className="flex-1 min-h-60px bg-carbon-plate border border-basalt-border p-8px">
+              <div className="flex-1 min-h-60px bg-[var(--theme-background)] border border-[var(--theme-border)] p-8px">
                 {hourMeetings.map((meeting: any) => (
                   <button
                     key={meeting._id}
@@ -954,7 +954,7 @@ function TodaySchedule({ }: any) {
   // This would normally query today's meetings
   return (
     <div className="space-y-8px">
-      <div className="text-brutal-xs text-cathode-white/60">
+      <div className="text-brutal-xs text-[var(--theme-foreground)]/60">
         YOUR SCHEDULE IS CLEAR TODAY
       </div>
     </div>

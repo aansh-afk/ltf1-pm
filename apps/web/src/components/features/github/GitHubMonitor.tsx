@@ -31,12 +31,12 @@ export function GitHubMonitor({ isExpanded, compact = false }: GitHubMonitorProp
       <span className="flex items-center gap-8px">
         <FaGithub className={clsx(
           "w-12px h-12px transition-colors duration-300",
-          hasGitHub ? "text-[#00FF00]" : "text-cathode-white/40"
+          hasGitHub ? "text-[var(--theme-success)]" : "text-[var(--theme-foreground)]/40"
         )} />
-        <span className="text-[#00FFFF]">GIT:</span>
+        <span className="text-[var(--theme-info)]">GIT:</span>
         <span className={clsx(
           "transition-colors duration-300",
-          hasGitHub ? (isStale ? "text-[#FFFF00]" : "text-[#00FF00]") : "text-cathode-white/40"
+          hasGitHub ? (isStale ? "text-[var(--theme-warning)]" : "text-[var(--theme-success)]") : "text-[var(--theme-foreground)]/40"
         )}>
           {hasGitHub ? (isStale ? "STALE" : "SYNCED") : "OFFLINE"}
         </span>
@@ -47,10 +47,10 @@ export function GitHubMonitor({ isExpanded, compact = false }: GitHubMonitorProp
   if (!isExpanded) {
     // Icon-only mode
     return (
-      <div className="flex justify-center py-16px border-t-2 border-basalt-border">
+      <div className="flex justify-center py-16px border-t-2 border-[var(--theme-border)]">
         <FaGithub className={clsx(
           "w-20px h-20px transition-colors duration-300",
-          hasGitHub ? "text-primary-brutalist" : "text-cathode-white/20"
+          hasGitHub ? "text-primary-brutalist" : "text-[var(--theme-foreground)]/20"
         )} />
       </div>
     );
@@ -58,14 +58,14 @@ export function GitHubMonitor({ isExpanded, compact = false }: GitHubMonitorProp
   
   // Full expanded mode
   return (
-    <div className="px-24px py-16px border-t-2 border-basalt-border">
+    <div className="px-24px py-16px border-t-2 border-[var(--theme-border)]">
       <h3 className="text-brutal-xs font-bold mb-12px flex items-center gap-8px">
         <FaGithub className="w-16px h-16px" />
         GITHUB STATUS
       </h3>
       
       {!hasGitHub ? (
-        <div className="text-brutal-xs text-cathode-white/40">
+        <div className="text-brutal-xs text-[var(--theme-foreground)]/40">
           <p>Not connected</p>
           <a href="/profile" className="text-primary-brutalist hover:underline">
             Connect account →
@@ -75,13 +75,13 @@ export function GitHubMonitor({ isExpanded, compact = false }: GitHubMonitorProp
         <div className="space-y-8px text-brutal-xs">
           {githubStats?.username && (
             <div className="flex items-center justify-between">
-              <span className="text-cathode-white/60">USER:</span>
+              <span className="text-[var(--theme-foreground)]/60">USER:</span>
               <span className="font-mono">@{githubStats.username}</span>
             </div>
           )}
           
           <div className="flex items-center justify-between">
-            <span className="text-cathode-white/60">SYNC:</span>
+            <span className="text-[var(--theme-foreground)]/60">SYNC:</span>
             <span className={clsx(
               "font-mono flex items-center gap-4px",
               isStale ? "text-brutal-warning" : "text-brutal-success"
@@ -94,26 +94,26 @@ export function GitHubMonitor({ isExpanded, compact = false }: GitHubMonitorProp
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-cathode-white/60">PRS:</span>
+            <span className="text-[var(--theme-foreground)]/60">PRS:</span>
             <span className="font-mono">{githubStats?.totalPRs || 0}</span>
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-cathode-white/60">REVIEWS:</span>
+            <span className="text-[var(--theme-foreground)]/60">REVIEWS:</span>
             <span className="font-mono">{githubStats?.totalReviews || 0}</span>
           </div>
           
           {installations && installations.length > 0 && (
-            <div className="pt-8px border-t border-basalt-border">
+            <div className="pt-8px border-t border-[var(--theme-border)]">
               <div className="flex items-center justify-between">
-                <span className="text-cathode-white/60">APPS:</span>
+                <span className="text-[var(--theme-foreground)]/60">APPS:</span>
                 <span className="font-mono text-brutal-success">{installations.length}</span>
               </div>
             </div>
           )}
         </div>
       ) : (
-        <div className="text-cathode-white/60 text-center py-8px">
+        <div className="text-[var(--theme-foreground)]/60 text-center py-8px">
           <span className="text-brutal-xs">Loading...</span>
         </div>
       )}

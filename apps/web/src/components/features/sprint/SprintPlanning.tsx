@@ -128,7 +128,7 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
           </div>
         </div>
 
-        <div className="bg-carbon-plate border-2 border-basalt-border p-16px space-y-16px max-h-600px overflow-y-auto">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px space-y-16px max-h-600px overflow-y-auto">
           {!backlogTasks ? (
             <p className="text-brutal-sm text-neutral-500">Loading tasks...</p>
           ) : backlogTasks.length === 0 ? (
@@ -141,7 +141,7 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
                   "p-16px border-2 cursor-pointer transition-all",
                   selectedTasks.has(task._id)
                     ? "border-primary-brutalist bg-primary-brutalist/10"
-                    : "border-basalt-border hover:border-primary-brutalist/50"
+                    : "border-[var(--theme-border)] hover:border-primary-brutalist/50"
                 )}
                 onClick={() => {
                   const newSelected = new Set(selectedTasks)
@@ -179,7 +179,7 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
         </div>
 
         {selectedTasks.size > 0 && (
-          <div className="bg-primary-brutalist border-2 border-basalt-border p-16px">
+          <div className="bg-primary-brutalist border-2 border-[var(--theme-border)] p-16px">
             <p className="font-mono text-brutal-sm text-event-horizon mb-8px">
               {selectedTasks.size} TASKS SELECTED
             </p>
@@ -205,8 +205,8 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
                 className={clsx(
                   "border-2 p-24px",
                   isActive ? "border-primary-brutalist bg-primary-brutalist/10" :
-                  isCompleted ? "border-[#00FF00] bg-[#00FF00]/10" :
-                  "border-basalt-border bg-carbon-plate"
+                  isCompleted ? "border-[var(--theme-success)] bg-[var(--theme-success)]/10" :
+                  "border-[var(--theme-border)] bg-[var(--theme-background)]"
                 )}
               >
                 <div className="flex items-start justify-between mb-16px">
@@ -219,7 +219,7 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
                         </span>
                       )}
                       {isCompleted && (
-                        <span className="px-8px py-4px bg-[#00FF00] text-event-horizon font-mono text-brutal-xs uppercase">
+                        <span className="px-8px py-4px bg-[var(--theme-success)] text-event-horizon font-mono text-brutal-xs uppercase">
                           COMPLETED
                         </span>
                       )}
@@ -239,7 +239,7 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
                       </button>
                       <button
                         onClick={() => handleDeleteSprint(sprint._id)}
-                        className="p-8px border-2 border-[#FF0000] text-[#FF0000] hover:bg-[#FF0000] hover:text-cathode-white transition-colors"
+                        className="p-8px border-2 border-[var(--theme-error)] text-[var(--theme-error)] hover:bg-[var(--theme-error)] hover:text-[var(--theme-foreground)] transition-colors"
                       >
                         <HiOutlineTrash className="w-16px h-16px" />
                       </button>
@@ -268,7 +268,7 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
                     <span className="font-mono text-brutal-xs">PROGRESS</span>
                     <span className="font-mono text-brutal-xs">{sprint.progress}%</span>
                   </div>
-                  <div className="h-16px bg-event-horizon/20 border-2 border-basalt-border">
+                  <div className="h-16px bg-[var(--theme-background-secondary)]/20 border-2 border-[var(--theme-border)]">
                     <div 
                       className="h-full bg-primary-brutalist transition-all duration-300"
                       style={{ width: `${sprint.progress}%` }}
@@ -278,19 +278,19 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
 
                 {/* Task Stats */}
                 <div className="grid grid-cols-4 gap-8px mb-16px">
-                  <div className="text-center p-8px bg-event-horizon/10">
+                  <div className="text-center p-8px bg-[var(--theme-background-secondary)]/10">
                     <p className="font-mono text-brutal-xs text-neutral-500">TODO</p>
                     <p className="font-mono text-brutal-sm">{sprint.taskStats.todo}</p>
                   </div>
-                  <div className="text-center p-8px bg-[#00FFFF]/10">
+                  <div className="text-center p-8px bg-[var(--theme-info)]/10">
                     <p className="font-mono text-brutal-xs text-neutral-500">IN PROGRESS</p>
                     <p className="font-mono text-brutal-sm">{sprint.taskStats.inProgress}</p>
                   </div>
-                  <div className="text-center p-8px bg-[#FF00FF]/10">
+                  <div className="text-center p-8px bg-[var(--theme-accent)]/10">
                     <p className="font-mono text-brutal-xs text-neutral-500">IN REVIEW</p>
                     <p className="font-mono text-brutal-sm">{sprint.taskStats.inReview}</p>
                   </div>
-                  <div className="text-center p-8px bg-[#00FF00]/10">
+                  <div className="text-center p-8px bg-[var(--theme-success)]/10">
                     <p className="font-mono text-brutal-xs text-neutral-500">DONE</p>
                     <p className="font-mono text-brutal-sm">{sprint.taskStats.done}</p>
                   </div>

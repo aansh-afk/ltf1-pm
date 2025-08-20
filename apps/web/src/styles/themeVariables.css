@@ -1,0 +1,110 @@
+/**
+ * GLOBAL THEME VARIABLES - CSS CUSTOM PROPERTIES
+ * Dynamic theming system that replaces hardcoded colors
+ * Compatible with all 9 global themes
+ * 
+ * PERFORMANCE OPTIMIZED FOR INSTANT THEME SWITCHING
+ * - CSS containment for paint optimization
+ * - Batch custom property updates
+ * - Browser rendering hints
+ * - Brutalist Protocol v2.0 compliant (instant changes)
+ */
+
+:root {
+  /* Default theme (Brutalist) variables - fallback values */
+  --theme-background: #000000;
+  --theme-background-secondary: #0A0A0A;
+  --theme-background-tertiary: #1A1A1A;
+  
+  --theme-foreground: #F5F5F5;
+  --theme-foreground-secondary: #CCCCCC;
+  --theme-foreground-tertiary: #999999;
+  
+  --theme-border: #333333;
+  --theme-border-hover: #555555;
+  --theme-border-focus: #00FFFF;
+  
+  --theme-primary: #FFFF00;
+  --theme-primary-hover: #FFFF33;
+  --theme-primary-focus: #FFFF00;
+  --theme-primary-active: #CCCC00;
+  
+  --theme-success: #00FF00;
+  --theme-success-hover: #33FF33;
+  --theme-error: #FF0000;
+  --theme-error-hover: #FF3333;
+  --theme-warning: #FF00FF;
+  --theme-warning-hover: #FF33FF;
+  --theme-info: #00FFFF;
+  --theme-info-hover: #33FFFF;
+  
+  --theme-hover: #1A1A1A;
+  --theme-active: #0A0A0A;
+  --theme-selected: #333333;
+  --theme-disabled: #0A0A0A;
+  --theme-disabled-text: #666666;
+  
+  --theme-shadow: #000000;
+  --theme-shadow-hover: #000000;
+  
+  --theme-glow: #00FFFF;
+  --theme-glow-secondary: #FF00FF;
+  --theme-gradient: linear-gradient(90deg, #00FFFF, #FF00FF, #FFFF00);
+  
+  /* Typography */
+  --theme-font-family: 'IBM Plex Mono', monospace;
+  --theme-letter-spacing: 0.05em;
+  --theme-text-transform: uppercase;
+  
+  /* Effects - BRUTALIST PROTOCOL v2.0 COMPLIANT */
+  --theme-border-radius: 0px; /* 1.1 THE LAW OF ZERO RADIUS */
+  --theme-box-shadow: 5px 5px 0px var(--theme-shadow);
+  --theme-box-shadow-hover: 8px 8px 0px var(--theme-shadow);
+  --theme-transition-duration: none; /* 6.1 THE LAW OF INSTANT CHANGE */
+  --theme-glow-intensity: 0.5;
+  
+  /* PERFORMANCE OPTIMIZATION HINTS */
+  --theme-paint-order: normal;
+  --theme-will-change: auto;
+  --theme-contain: layout style paint;
+  --theme-content-visibility: auto;
+  
+  /* Component-specific */
+  --theme-button-border-width: 2px;
+  --theme-button-shadow-offset: 5px;
+  --theme-input-border-width: 2px;
+  --theme-input-focus-ring-width: 2px;
+  --theme-card-border-width: 2px;
+  --theme-modal-backdrop-opacity: 0.8;
+  --theme-modal-border-width: 2px;
+  
+  /* Accessibility Settings */
+  --font-scale: 1;
+  --line-height: 1.4;
+  --letter-spacing: normal;
+  --focus-width: 2px;
+}
+
+/* High contrast accessibility mode */
+[data-accessibility="high-contrast"] {
+  --theme-border: #000000;
+  --theme-background-secondary: #000000;
+  --theme-background: #000000;
+  --theme-primary: #FFFF00;
+  --focus-width: 4px;
+}
+
+/* Theme-aware color mappings for backward compatibility */
+:root {
+  /* Map old brutalist colors to theme variables */
+  --event-horizon: var(--theme-background);
+  --carbon-plate: var(--theme-background-secondary);
+  --cathode-white: var(--theme-foreground);
+  --basalt-border: var(--theme-border);
+  --primary-brutalist: var(--theme-primary);
+  --brutal-error: var(--theme-error);
+  --brutal-success: var(--theme-success);
+  --brutal-info: var(--theme-info);
+  --brutal-warning: var(--theme-warning);
+  --glitch-flare: var(--theme-gradient);
+}

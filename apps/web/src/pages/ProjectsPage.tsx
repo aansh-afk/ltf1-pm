@@ -31,9 +31,9 @@ export default function ProjectsPage() {
     return (
       <div className="p-24px">
         <div className="max-w-md mx-auto">
-          <div className="bg-carbon-plate border-2 border-basalt-border p-32px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-32px">
             <h1 className="text-brutal-lg font-bold mb-16px">SELECT WORKSPACE</h1>
-            <p className="text-brutal-sm text-cathode-white/60 mb-24px">
+            <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mb-24px">
               Choose a workspace to view and manage projects.
             </p>
             <WorkspaceSelector size="lg" showLabel={false} />
@@ -73,12 +73,12 @@ export default function ProjectsPage() {
           <div className="flex items-center gap-16px mb-8px">
             <h1 className="text-brutal-2xl font-bold">PROJECTS</h1>
             {!hasWorkspaceContext && (
-              <div className="text-brutal-xs text-cathode-white/60">
+              <div className="text-brutal-xs text-[var(--theme-foreground)]/60">
                 IN: {currentWorkspace?.name}
               </div>
             )}
           </div>
-          <p className="text-cathode-white/60 text-brutal-sm">
+          <p className="text-[var(--theme-foreground)]/60 text-brutal-sm">
             Organize your work into projects and track progress
           </p>
         </div>
@@ -101,10 +101,10 @@ export default function ProjectsPage() {
 
       {/* Projects Grid */}
       {projects.length === 0 ? (
-        <div className="bg-carbon-plate border-2 border-basalt-border p-48px text-center">
-          <HiOutlineFolder className="w-64px h-64px text-cathode-white/40 mx-auto mb-24px" />
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-48px text-center">
+          <HiOutlineFolder className="w-64px h-64px text-[var(--theme-foreground)]/40 mx-auto mb-24px" />
           <h3 className="text-brutal-lg font-bold mb-12px">NO PROJECTS YET</h3>
-          <p className="text-brutal-sm text-cathode-white/60 mb-32px max-w-md mx-auto">
+          <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mb-32px max-w-md mx-auto">
             Create your first project to start organizing tasks and tracking progress.
           </p>
           <button

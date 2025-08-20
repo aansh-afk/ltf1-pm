@@ -25,7 +25,7 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: Cre
     if (!name.trim()) {
       toast.error('WORKSPACE NAME REQUIRED', {
         style: {
-          background: '#FF0000',
+          background: 'var(--theme-error)',
           color: '#000000',
           border: '2px solid #000000',
           borderRadius: '0',
@@ -48,7 +48,7 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: Cre
       
       toast.success('WORKSPACE CREATED', {
         style: {
-          background: '#00FF00',
+          background: 'var(--theme-success)',
           color: '#000000',
           border: '2px solid #000000',
           borderRadius: '0',
@@ -65,7 +65,7 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: Cre
     } catch (error: any) {
       toast.error(`ERROR: ${error.message || 'CREATION FAILED'}`.toUpperCase(), {
         style: {
-          background: '#FF0000',
+          background: 'var(--theme-error)',
           color: '#000000',
           border: '2px solid #000000',
           borderRadius: '0',
@@ -89,7 +89,7 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: Cre
     >
       <form onSubmit={handleSubmit} className="space-y-24px">
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider mb-8px text-cathode-white">
+          <label className="block text-xs font-bold uppercase tracking-wider mb-8px text-[var(--theme-foreground)]">
             WORKSPACE NAME *
           </label>
           <BrutalInput
@@ -104,15 +104,15 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: Cre
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider mb-8px text-cathode-white">
+          <label className="block text-xs font-bold uppercase tracking-wider mb-8px text-[var(--theme-foreground)]">
             DESCRIPTION (OPTIONAL)
           </label>
           <textarea
             placeholder="DESCRIBE THIS WORKSPACE..."
-            className="w-full bg-event-horizon text-cathode-white border-2 border-basalt-border 
+            className="w-full bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)] 
                      focus:border-brutal-info focus:shadow-brutal px-16px py-8px
                      disabled:opacity-50 disabled:cursor-not-allowed
-                     placeholder:text-cathode-white/50 font-mono text-sm uppercase"
+                     placeholder:text-[var(--theme-foreground)]/50 font-mono text-sm uppercase"
             style={{ borderRadius: '0 !important' }}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -121,7 +121,7 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: Cre
           />
         </div>
 
-        <div className="border-t-2 border-basalt-border pt-24px flex justify-end gap-16px">
+        <div className="border-t-2 border-[var(--theme-border)] pt-24px flex justify-end gap-16px">
           <BrutalButton
             type="button"
             variant="secondary"

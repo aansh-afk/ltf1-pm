@@ -14,7 +14,7 @@ export default function SettingsSection({
   onReset
 }: SettingsSectionProps) {
   return (
-    <div className="bg-carbon-plate border-2 border-basalt-border p-24px mb-24px">
+    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px mb-24px">
       <div className="flex items-start justify-between mb-24px">
         <div className="flex-1">
           <h3 className="text-brutal-lg mb-8px">{title.toUpperCase()}</h3>
@@ -27,7 +27,7 @@ export default function SettingsSection({
         {onReset && (
           <button
             onClick={onReset}
-            className="px-16px py-8px border-2 border-basalt-border bg-transparent
+            className="px-16px py-8px border-2 border-[var(--theme-border)] bg-transparent
                      font-mono text-brutal-sm uppercase tracking-wider
                      hover:bg-basalt-border transition-colors"
           >

@@ -241,7 +241,7 @@ export default function BulkScheduleModal({
                   "p-16px border-2 text-left transition-colors",
                   selectedTemplate === template.id
                     ? 'bg-primary-brutalist border-primary-brutalist text-event-horizon'
-                    : 'bg-carbon-plate border-basalt-border hover:border-primary-brutalist'
+                    : 'bg-[var(--theme-background)] border-[var(--theme-border)] hover:border-primary-brutalist'
                 )}
               >
                 <div className="font-mono text-brutal-sm uppercase mb-4px">{template.name}</div>
@@ -261,7 +261,7 @@ export default function BulkScheduleModal({
                 "p-16px border-2 text-left transition-colors",
                 selectedTemplate === 'custom'
                   ? 'bg-primary-brutalist border-primary-brutalist text-event-horizon'
-                  : 'bg-carbon-plate border-basalt-border hover:border-primary-brutalist'
+                  : 'bg-[var(--theme-background)] border-[var(--theme-border)] hover:border-primary-brutalist'
               )}
             >
               <div className="font-mono text-brutal-sm uppercase mb-4px">CUSTOM SCHEDULE</div>
@@ -281,7 +281,7 @@ export default function BulkScheduleModal({
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none"
+              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none"
               required
             />
           </div>
@@ -295,7 +295,7 @@ export default function BulkScheduleModal({
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               min={startDate}
-              className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none"
+              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none"
               required
             />
           </div>
@@ -312,7 +312,7 @@ export default function BulkScheduleModal({
               {customMeetings.map(meeting => (
                 <div
                   key={meeting.id}
-                  className="p-12px bg-carbon-plate border-2 border-basalt-border"
+                  className="p-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)]"
                 >
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-8px items-center">
                     <input
@@ -320,12 +320,12 @@ export default function BulkScheduleModal({
                       value={meeting.title}
                       onChange={(e) => updateCustomMeeting(meeting.id, 'title', e.target.value)}
                       placeholder="MEETING TITLE"
-                      className="px-12px py-8px bg-event-horizon border border-basalt-border font-mono text-brutal-xs placeholder:text-neutral-600 focus:border-primary-brutalist focus:outline-none"
+                      className="px-12px py-8px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs placeholder:text-neutral-600 focus:border-primary-brutalist focus:outline-none"
                     />
                     <select
                       value={meeting.type}
                       onChange={(e) => updateCustomMeeting(meeting.id, 'type', e.target.value)}
-                      className="px-12px py-8px bg-event-horizon border border-basalt-border font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
+                      className="px-12px py-8px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
                     >
                       <option value="standup">STANDUP</option>
                       <option value="retrospective">RETROSPECTIVE</option>
@@ -340,7 +340,7 @@ export default function BulkScheduleModal({
                           ? e.target.value 
                           : parseInt(e.target.value)
                       )}
-                      className="px-12px py-8px bg-event-horizon border border-basalt-border font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
+                      className="px-12px py-8px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
                     >
                       <option value="daily">DAILY</option>
                       <option value="weekdays">WEEKDAYS</option>
@@ -356,7 +356,7 @@ export default function BulkScheduleModal({
                       type="time"
                       value={meeting.time}
                       onChange={(e) => updateCustomMeeting(meeting.id, 'time', e.target.value)}
-                      className="px-12px py-8px bg-event-horizon border border-basalt-border font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
+                      className="px-12px py-8px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
                     />
                     <div className="flex items-center gap-4px">
                       <input
@@ -365,7 +365,7 @@ export default function BulkScheduleModal({
                         onChange={(e) => updateCustomMeeting(meeting.id, 'duration', parseInt(e.target.value))}
                         min="5"
                         max="480"
-                        className="w-60px px-8px py-8px bg-event-horizon border border-basalt-border font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
+                        className="w-60px px-8px py-8px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
                       />
                       <span className="text-brutal-xs">MIN</span>
                       <button
@@ -382,7 +382,7 @@ export default function BulkScheduleModal({
               <button
                 type="button"
                 onClick={addCustomMeeting}
-                className="w-full p-12px border-2 border-dashed border-basalt-border text-cathode-white/60 hover:text-cathode-white hover:border-primary-brutalist transition-colors font-mono text-brutal-sm"
+                className="w-full p-12px border-2 border-dashed border-[var(--theme-border)] text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] hover:border-primary-brutalist transition-colors font-mono text-brutal-sm"
               >
                 <HiOutlinePlus className="inline w-16px h-16px mr-8px" />
                 ADD MEETING
@@ -407,7 +407,7 @@ export default function BulkScheduleModal({
 
         {/* Summary */}
         {meetingCount > 0 && (
-          <div className="bg-carbon-plate border-2 border-primary-brutalist p-16px">
+          <div className="bg-[var(--theme-background)] border-2 border-primary-brutalist p-16px">
             <div className="flex items-center gap-8px text-brutal-sm">
               <HiOutlineExclamationCircle className="w-20px h-20px text-primary-brutalist" />
               <span className="font-mono uppercase">
@@ -418,7 +418,7 @@ export default function BulkScheduleModal({
         )}
 
         {/* Actions */}
-        <div className="flex gap-16px justify-end pt-24px border-t-2 border-basalt-border">
+        <div className="flex gap-16px justify-end pt-24px border-t-2 border-[var(--theme-border)]">
           <button
             type="button"
             onClick={onClose}

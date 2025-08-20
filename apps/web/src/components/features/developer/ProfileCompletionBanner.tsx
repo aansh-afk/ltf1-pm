@@ -10,7 +10,7 @@ export default function ProfileCompletionBanner() {
   if (!shouldShowPrompt) return null
 
   return (
-    <div className="bg-carbon-plate border-2 border-primary-brutalist p-16px mb-24px">
+    <div className="bg-[var(--theme-background)] border-2 border-primary-brutalist p-16px mb-24px">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-16px flex-1">
           {/* Progress indicator */}
@@ -27,7 +27,7 @@ export default function ProfileCompletionBanner() {
           {/* Message */}
           <div className="text-brutal-sm">
             <span className="font-bold uppercase">COMPLETE YOUR DEVELOPER PROFILE</span>
-            <span className="hidden md:inline text-cathode-white/60 ml-8px">
+            <span className="hidden md:inline text-[var(--theme-foreground)]/60 ml-8px">
               TO UNLOCK TEAM FEATURES AND IMPROVE COLLABORATION
             </span>
           </div>

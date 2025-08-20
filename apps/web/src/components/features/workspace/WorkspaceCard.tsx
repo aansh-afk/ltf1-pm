@@ -21,14 +21,14 @@ export default function WorkspaceCard({ workspace, index }: WorkspaceCardProps) 
     owner: 'border-brutal-error',
     admin: 'border-brutal-warning',
     member: 'border-brutal-info',
-    viewer: 'border-basalt-border',
+    viewer: 'border-[var(--theme-border)]',
   }
 
   return (
     <Link 
       to={`/workspace/${workspace._id}`}
       className={clsx(
-        'block bg-carbon-plate border-2 shadow-brutal',
+        'block bg-[var(--theme-background)] border-2 shadow-brutal',
         'hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px]',
         'transition-all duration-200 ease-brutal-out',
         'relative overflow-hidden',
@@ -53,11 +53,11 @@ export default function WorkspaceCard({ workspace, index }: WorkspaceCardProps) 
       <div className="p-32px">
         <div className="flex items-start justify-between gap-16px mb-24px">
           <div className="flex-1">
-            <h3 className="text-xl font-bold uppercase tracking-wider text-cathode-white mb-16px">
+            <h3 className="text-xl font-bold uppercase tracking-wider text-[var(--theme-foreground)] mb-16px">
               {workspace.name}
             </h3>
             {workspace.description && (
-              <p className="text-sm font-mono text-cathode-white/70 line-clamp-2">
+              <p className="text-sm font-mono text-[var(--theme-foreground)]/70 line-clamp-2">
                 {workspace.description}
               </p>
             )}
@@ -67,7 +67,7 @@ export default function WorkspaceCard({ workspace, index }: WorkspaceCardProps) 
           </BrutalBadge>
         </div>
 
-        <div className="flex items-center gap-24px text-xs font-mono uppercase tracking-wider text-cathode-white/60 pb-16px border-b-2 border-basalt-border">
+        <div className="flex items-center gap-24px text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/60 pb-16px border-b-2 border-[var(--theme-border)]">
           <div className="flex items-center gap-8px">
             <HiOutlineUsers className="w-16px h-16px" />
             <span>{workspace.memberCount} MEMBERS</span>
@@ -78,7 +78,7 @@ export default function WorkspaceCard({ workspace, index }: WorkspaceCardProps) 
           </div>
         </div>
 
-        <div className="mt-16px text-xs font-mono uppercase tracking-wider text-cathode-white/50">
+        <div className="mt-16px text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/50">
           CREATED {formatDistanceToNow(new Date(workspace.createdAt)).toUpperCase()} AGO
         </div>
 

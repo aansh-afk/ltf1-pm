@@ -22,11 +22,11 @@ const BrutalButton = forwardRef<HTMLButtonElement, BrutalButtonProps>(
     const baseClasses = 'font-semibold uppercase tracking-wider transition-all duration-200 ease-brutal-out border-2 relative overflow-hidden'
     
     const variants = {
-      primary: 'bg-event-horizon text-cathode-white border-basalt-border shadow-brutal hover:shadow-brutal-hover hover:translate-x-[2px] hover:translate-y-[2px]',
-      secondary: 'bg-carbon-plate text-cathode-white border-basalt-border shadow-brutal hover:shadow-brutal-hover hover:translate-x-[2px] hover:translate-y-[2px]',
-      ghost: 'bg-transparent text-cathode-white border-transparent hover:border-basalt-border hover:shadow-brutal',
-      danger: 'bg-[#FF0000] text-event-horizon border-[#CC0000] shadow-brutal hover:shadow-brutal-hover hover:translate-x-[2px] hover:translate-y-[2px]',
-      glitch: 'bg-glitch-flare text-event-horizon border-event-horizon shadow-brutal hover:shadow-brutal-lg hover:animate-glitch',
+      primary: 'bg-[var(--theme-background)] text-[var(--theme-foreground)] border-[var(--theme-border)] shadow-[var(--theme-box-shadow)] hover:shadow-[var(--theme-box-shadow-hover)] hover:translate-x-[2px] hover:translate-y-[2px]',
+      secondary: 'bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)] border-[var(--theme-border)] shadow-[var(--theme-box-shadow)] hover:shadow-[var(--theme-box-shadow-hover)] hover:translate-x-[2px] hover:translate-y-[2px]',
+      ghost: 'bg-transparent text-[var(--theme-foreground)] border-transparent hover:border-[var(--theme-border)] hover:shadow-[var(--theme-box-shadow)]',
+      danger: 'bg-[var(--theme-error)] text-[var(--theme-background)] border-[var(--theme-error-hover)] shadow-[var(--theme-box-shadow)] hover:shadow-[var(--theme-box-shadow-hover)] hover:translate-x-[2px] hover:translate-y-[2px]',
+      glitch: 'bg-[var(--theme-gradient)] text-[var(--theme-background)] border-[var(--theme-background)] shadow-[var(--theme-box-shadow)] hover:shadow-[var(--theme-box-shadow-hover)] hover:animate-glitch',
     }
 
     const sizes = {

@@ -48,9 +48,9 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
     return (
       <div className="space-y-24px">
         <BrutalCard className="p-48px text-center">
-          <FaGithub className="w-64px h-64px text-cathode-white/20 mx-auto mb-24px" />
+          <FaGithub className="w-64px h-64px text-[var(--theme-foreground)]/20 mx-auto mb-24px" />
           <h3 className="text-brutal-lg font-bold mb-16px">NO REPOSITORY CONNECTED</h3>
-          <p className="text-brutal-sm text-cathode-white/60 mb-24px max-w-md mx-auto">
+          <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mb-24px max-w-md mx-auto">
             Connect a GitHub repository to enable automatic code tracking, PR management, and task linking.
           </p>
           
@@ -153,24 +153,24 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
         
         {/* Repository Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-16px">
-          <div className="p-16px bg-event-horizon border border-basalt-border">
-            <div className="text-brutal-xs uppercase text-cathode-white/60 mb-4px">Default Branch</div>
+          <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+            <div className="text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-4px">Default Branch</div>
             <div className="font-mono font-bold">{repository.defaultBranch}</div>
           </div>
-          <div className="p-16px bg-event-horizon border border-basalt-border">
-            <div className="text-brutal-xs uppercase text-cathode-white/60 mb-4px">Total Commits</div>
+          <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+            <div className="text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-4px">Total Commits</div>
             <div className="font-mono font-bold text-brutal-info">
               {filteredActivities.filter(a => a.type === 'commit').length}
             </div>
           </div>
-          <div className="p-16px bg-event-horizon border border-basalt-border">
-            <div className="text-brutal-xs uppercase text-cathode-white/60 mb-4px">Open PRs</div>
+          <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+            <div className="text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-4px">Open PRs</div>
             <div className="font-mono font-bold text-brutal-success">
               {filteredActivities.filter(a => a.type === 'pull_request' && a.metadata?.state === 'open').length}
             </div>
           </div>
-          <div className="p-16px bg-event-horizon border border-basalt-border">
-            <div className="text-brutal-xs uppercase text-cathode-white/60 mb-4px">Linked Tasks</div>
+          <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+            <div className="text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-4px">Linked Tasks</div>
             <div className="font-mono font-bold text-primary-brutalist">
               {Object.keys(activitiesByTask).length}
             </div>
@@ -191,7 +191,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                 className={`px-16px py-8px font-mono text-brutal-xs uppercase border ${
                   selectedActivity === filter
                     ? 'bg-primary-brutalist text-event-horizon border-primary-brutalist'
-                    : 'bg-event-horizon border-basalt-border hover:border-primary-brutalist'
+                    : 'bg-[var(--theme-background-secondary)] border-[var(--theme-border)] hover:border-primary-brutalist'
                 }`}
               >
                 {filter}
@@ -202,7 +202,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
         
         {filteredActivities.length === 0 ? (
           <div className="text-center py-32px">
-            <p className="text-brutal-sm text-cathode-white/60">
+            <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
               No GitHub activity found. Activities will appear here once you start pushing commits and creating PRs.
             </p>
           </div>
@@ -211,7 +211,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
             {filteredActivities.map((activity) => (
               <div 
                 key={activity._id}
-                className="p-16px border border-basalt-border hover:border-primary-brutalist transition-colors"
+                className="p-16px border border-[var(--theme-border)] hover:border-primary-brutalist transition-colors"
               >
                 <div className="flex items-start gap-16px">
                   {/* Activity Icon */}
@@ -234,7 +234,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                         {/* Linked Tasks */}
                         {activity.metadata?.taskKeys && activity.metadata.taskKeys.length > 0 && (
                           <div className="flex items-center gap-8px mt-4px">
-                            <FaLink className="w-12px h-12px text-cathode-white/40" />
+                            <FaLink className="w-12px h-12px text-[var(--theme-foreground)]/40" />
                             {activity.metadata.taskKeys.map((taskKey: string) => (
                               <span key={taskKey} className="font-mono text-brutal-xs text-primary-brutalist">
                                 {taskKey}
@@ -261,7 +261,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-16px font-mono text-brutal-xs text-cathode-white/60">
+                    <div className="flex items-center gap-16px font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
                       <span>by {activity.actorUsername}</span>
                       <span>•</span>
                       <span>{formatDistanceToNow(new Date(activity.createdAt))} ago</span>
@@ -286,28 +286,28 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
           <h3 className="text-brutal-md font-bold mb-16px">TASK-CODE LINKAGE</h3>
           <div className="space-y-12px">
             {Object.entries(activitiesByTask).map(([taskKey, activities]) => (
-              <div key={taskKey} className="p-16px bg-event-horizon border border-basalt-border">
+              <div key={taskKey} className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
                 <div className="flex items-center justify-between mb-8px">
                   <h4 className="font-mono font-bold text-primary-brutalist">{taskKey}</h4>
-                  <span className="font-mono text-brutal-xs text-cathode-white/60">
+                  <span className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
                     {activities.length} linked {activities.length === 1 ? 'activity' : 'activities'}
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-8px text-brutal-xs">
                   <div>
-                    <span className="text-cathode-white/60">Commits:</span>{' '}
+                    <span className="text-[var(--theme-foreground)]/60">Commits:</span>{' '}
                     <span className="font-mono font-bold">
                       {activities.filter(a => a.type === 'commit').length}
                     </span>
                   </div>
                   <div>
-                    <span className="text-cathode-white/60">PRs:</span>{' '}
+                    <span className="text-[var(--theme-foreground)]/60">PRs:</span>{' '}
                     <span className="font-mono font-bold">
                       {activities.filter(a => a.type === 'pull_request').length}
                     </span>
                   </div>
                   <div>
-                    <span className="text-cathode-white/60">Last Activity:</span>{' '}
+                    <span className="text-[var(--theme-foreground)]/60">Last Activity:</span>{' '}
                     <span className="font-mono">
                       {formatDistanceToNow(new Date(Math.max(...activities.map(a => new Date(a.createdAt).getTime()))))} ago
                     </span>

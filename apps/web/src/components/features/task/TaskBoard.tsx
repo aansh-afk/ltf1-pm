@@ -21,7 +21,7 @@ interface TaskBoardProps {
 }
 
 const columns = [
-  { id: 'backlog', title: 'BACKLOG', borderColor: 'border-basalt-border', bgColor: 'bg-basalt-border', textColor: 'text-cathode-white/60' },
+  { id: 'backlog', title: 'BACKLOG', borderColor: 'border-[var(--theme-border)]', bgColor: 'bg-basalt-border', textColor: 'text-[var(--theme-foreground)]/60' },
   { id: 'todo', title: 'TO DO', borderColor: 'border-brutal-info', bgColor: 'bg-brutal-info', textColor: 'text-brutal-info' },
   { id: 'in_progress', title: 'IN PROGRESS', borderColor: 'border-brutal-warning', bgColor: 'bg-brutal-warning', textColor: 'text-brutal-warning' },
   { id: 'in_review', title: 'IN REVIEW', borderColor: 'border-brutal-error', bgColor: 'bg-brutal-error', textColor: 'text-brutal-error' },
@@ -137,7 +137,7 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
             <div
               key={column.id}
               className={clsx(
-                "flex flex-col bg-carbon-plate border-2 border-basalt-border shadow-brutal relative",
+                "flex flex-col bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal relative",
                 "transition-all duration-200",
                 hoveredColumn === column.id && "border-primary-brutalist",
                 draggedTask && "border-opacity-50"
@@ -156,7 +156,7 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
               <div className={clsx(
                 "p-12px border-b-2",
                 "flex items-center justify-between",
-                "bg-event-horizon",
+                "bg-[var(--theme-background-secondary)]",
                 column.borderColor
               )}>
                 <h3 className={clsx(
@@ -168,7 +168,7 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
                     "px-8px py-2px text-brutal-xs font-mono font-bold",
                     "border-2",
                     taskCount === 0 
-                      ? "border-basalt-border text-cathode-white/40"
+                      ? "border-[var(--theme-border)] text-[var(--theme-foreground)]/40"
                       : taskCount > 10 
                         ? "border-brutal-warning text-brutal-warning bg-brutal-warning/10"
                         : "border-primary-brutalist text-primary-brutalist bg-primary-brutalist/10"
@@ -227,8 +227,8 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
                 <button
                   onClick={() => openCreateModal(column.id)}
                   className={clsx(
-                    "w-full border-2 border-dashed border-basalt-border",
-                    "text-cathode-white/50 hover:text-cathode-white hover:border-primary-brutalist",
+                    "w-full border-2 border-dashed border-[var(--theme-border)]",
+                    "text-[var(--theme-foreground)]/50 hover:text-[var(--theme-foreground)] hover:border-primary-brutalist",
                     "transition-all flex items-center justify-center gap-8px",
                     "uppercase text-brutal-xs font-mono font-bold",
                     isCompactView ? "p-8px" : "p-16px"

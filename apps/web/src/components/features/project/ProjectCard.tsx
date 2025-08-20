@@ -24,8 +24,8 @@ export default function ProjectCard({ project, workspaceId, index }: ProjectCard
     planning: 'border-brutal-info',
     active: 'border-brutal-success',
     on_hold: 'border-brutal-warning',
-    completed: 'border-basalt-border',
-    archived: 'border-basalt-border opacity-50',
+    completed: 'border-[var(--theme-border)]',
+    archived: 'border-[var(--theme-border)] opacity-50',
   }
 
   const completionPercentage = project.taskStats?.total > 0
@@ -42,7 +42,7 @@ export default function ProjectCard({ project, workspaceId, index }: ProjectCard
     <Link 
       to={`/workspace/${workspaceId}/project/${project._id}`}
       className={clsx(
-        'block bg-carbon-plate border-2 shadow-brutal',
+        'block bg-[var(--theme-background)] border-2 shadow-brutal',
         'hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px]',
         'transition-all duration-200 ease-brutal-out',
         'relative overflow-hidden animate-brutal-fade',
@@ -56,16 +56,16 @@ export default function ProjectCard({ project, workspaceId, index }: ProjectCard
       <div className="p-32px">
         <div className="flex items-start justify-between mb-24px">
           <div className="flex items-center gap-16px">
-            <div className="w-48px h-48px border-2 border-basalt-border flex items-center justify-center bg-event-horizon">
-              <span className="text-xl font-bold text-cathode-white font-mono">
+            <div className="w-48px h-48px border-2 border-[var(--theme-border)] flex items-center justify-center bg-[var(--theme-background-secondary)]">
+              <span className="text-xl font-bold text-[var(--theme-foreground)] font-mono">
                 {getProjectIcon()}
               </span>
             </div>
             <div>
-              <h3 className="text-lg font-bold uppercase tracking-wider text-cathode-white">
+              <h3 className="text-lg font-bold uppercase tracking-wider text-[var(--theme-foreground)]">
                 {project.name}
               </h3>
-              <p className="text-xs font-mono uppercase tracking-wider text-cathode-white/60">
+              <p className="text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/60">
                 {project.key}
               </p>
             </div>
@@ -76,15 +76,15 @@ export default function ProjectCard({ project, workspaceId, index }: ProjectCard
         </div>
 
         {project.description && (
-          <p className="text-sm font-mono text-cathode-white/70 mb-24px line-clamp-2">
+          <p className="text-sm font-mono text-[var(--theme-foreground)]/70 mb-24px line-clamp-2">
             {project.description}
           </p>
         )}
 
         <div className="space-y-16px mb-24px">
           <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider">
-            <span className="text-cathode-white/60">PROGRESS</span>
-            <span className="font-bold text-cathode-white">{completionPercentage}%</span>
+            <span className="text-[var(--theme-foreground)]/60">PROGRESS</span>
+            <span className="font-bold text-[var(--theme-foreground)]">{completionPercentage}%</span>
           </div>
           <BrutalProgress 
             value={project.taskStats?.completed || 0} 
@@ -93,7 +93,7 @@ export default function ProjectCard({ project, workspaceId, index }: ProjectCard
           />
         </div>
 
-        <div className="flex items-center gap-24px text-xs font-mono uppercase tracking-wider text-cathode-white/60 border-t-2 border-basalt-border pt-16px">
+        <div className="flex items-center gap-24px text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/60 border-t-2 border-[var(--theme-border)] pt-16px">
           <div className="flex items-center gap-8px">
             <HiOutlineClipboardList className="w-16px h-16px" />
             <span>{project.taskStats?.total || 0} TASKS</span>
@@ -106,7 +106,7 @@ export default function ProjectCard({ project, workspaceId, index }: ProjectCard
           )}
         </div>
 
-        <div className="mt-16px text-xs font-mono uppercase tracking-wider text-cathode-white/50">
+        <div className="mt-16px text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/50">
           UPDATED {formatDistanceToNow(new Date(project.updatedAt)).toUpperCase()} AGO
         </div>
 
