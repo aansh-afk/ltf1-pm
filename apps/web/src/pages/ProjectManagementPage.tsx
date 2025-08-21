@@ -48,6 +48,14 @@ import ScheduleMeetingModal from '@/components/features/meetings/ScheduleMeeting
 import MeetingCard from '@/components/features/meetings/MeetingCard'
 import ProjectInviteModal from '@/components/features/project/ProjectInviteModal'
 import UserDisplay from '@/components/features/user/UserDisplay'
+import DeveloperTimeline from '@/components/features/project/DeveloperTimeline'
+import SprintBurndownChart from '@/components/features/project/SprintBurndownChart'
+import TaskDistributionCharts from '@/components/features/project/TaskDistributionCharts'
+import AIInsightsPanel from '@/components/features/project/AIInsightsPanel'
+import GitHubStyleHeatmap from '@/components/features/project/GitHubStyleHeatmap'
+import SmartTaskGenerator from '@/components/features/project/SmartTaskGenerator'
+import DailyStandupSummary from '@/components/features/project/DailyStandupSummary'
+import NaturalLanguageTaskCreator from '@/components/features/ai/NaturalLanguageTaskCreator'
 import TeamActivityFeed from '@/components/features/activity/TeamActivityFeed'
 import { ExpertiseSearchModal } from '@/components/features/profile/ExpertiseSearchModal'
 import { TeamExpertiseMatrix } from '@/components/features/profile/TeamExpertiseMatrix'
@@ -174,6 +182,12 @@ export default function ProjectManagementPage() {
   // Get project meetings
   const projectMeetings = useQuery(
     api.meetings.queries.getProjectMeetings,
+    projectId ? { projectId: projectId as any } : 'skip'
+  )
+
+  // Get project team members
+  const team = useQuery(
+    api.projects.members.getProjectMembers,
     projectId ? { projectId: projectId as any } : 'skip'
   )
 
@@ -313,185 +327,117 @@ export default function ProjectManagementPage() {
     }
   }
 
-  const renderOverviewTab = () => (
-    <div className="space-y-24px">
-      {/* Project Info - Compact */}
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-16px font-mono text-brutal-xs">
-          <div>
-            <span className="text-primary-brutalist/60">WORKFLOW:</span> <span className="font-bold uppercase">{project.settings?.workflowType || 'KANBAN'}</span>
-          </div>
-          <div>
-            <span className="text-primary-brutalist/60">LEAD:</span> <span className="font-bold">{project.lead?.name || 'UNASSIGNED'}</span>
-          </div>
-          <div>
-            <span className="text-primary-brutalist/60">TEAM SIZE:</span> <span className="font-bold">{project.members?.length || 0} MEMBERS</span>
-          </div>
-        </div>
-        {project.description && (
-          <p className="text-brutal-sm text-primary-brutalist/80 mt-12px pt-12px border-t border-[var(--theme-border)]">{project.description}</p>
-        )}
-      </div>
-
-      {/* Health Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16px">
-        {healthCards.map((card) => (
-          <div 
-            key={card.title}
-            className={clsx(
-              "border-2 p-16px transition-all",
-              getStatusColor(card.status)
-            )}
-          >
-            <div className="flex items-start justify-between mb-8px">
-              <h3 className="font-mono text-brutal-xs uppercase">{card.title}</h3>
-              {card.icon}
-            </div>
-            <div className="text-brutal-xl font-bold mb-4px">{card.value}</div>
-            {card.subtitle && (
-              <div className="font-mono text-brutal-xs opacity-80">{card.subtitle}</div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Sprint Progress */}
-      {project.activeSprint && (
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-          <h2 className="text-brutal-lg font-bold uppercase mb-16px flex items-center gap-8px">
-            <HiOutlineLightningBolt className="w-20px h-20px" />
-            ACTIVE SPRINT: {project.activeSprint.name}
-          </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24px">
+  const renderOverviewTab = () => {
+    // Get active sprint
+    const activeSprint = allSprints?.find(s => s.status === 'active')
+    
+    return (
+      <div className="space-y-24px">
+        {/* Project Info - Compact */}
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-16px font-mono text-brutal-xs">
             <div>
-              <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-8px">PROGRESS VISUALIZATION</div>
-              <div className="h-80px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] relative overflow-hidden">
-                <div 
-                  className="absolute inset-y-0 left-0 bg-primary-brutalist transition-all duration-300"
-                  style={{ width: '65%' }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center font-mono text-brutal-sm">
-                  65% COMPLETE
-                </div>
-              </div>
+              <span className="text-primary-brutalist/60">WORKFLOW:</span> <span className="font-bold uppercase">{project.settings?.workflowType || 'KANBAN'}</span>
             </div>
-            <div className="space-y-8px">
-              <div className="flex justify-between font-mono text-brutal-sm">
-                <span>DAYS REMAINING:</span>
-                <span className="font-bold">7</span>
-              </div>
-              <div className="flex justify-between font-mono text-brutal-sm">
-                <span>STORY POINTS:</span>
-                <span className="font-bold">24/40</span>
-              </div>
-              <div className="flex justify-between font-mono text-brutal-sm">
-                <span>VELOCITY:</span>
-                <span className="font-bold">3.4 PTS/DAY</span>
-              </div>
+            <div>
+              <span className="text-primary-brutalist/60">LEAD:</span> <span className="font-bold">{project.lead?.name || 'UNASSIGNED'}</span>
+            </div>
+            <div>
+              <span className="text-primary-brutalist/60">TEAM SIZE:</span> <span className="font-bold">{project.members?.length || 0} MEMBERS</span>
             </div>
           </div>
+          {project.description && (
+            <p className="text-brutal-sm text-primary-brutalist/80 mt-12px pt-12px border-t border-[var(--theme-border)]">{project.description}</p>
+          )}
         </div>
-      )}
-
-      {/* Developer Timeline */}
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-        <h2 className="text-brutal-lg font-bold uppercase mb-16px flex items-center gap-8px">
-          <HiOutlineClock className="w-20px h-20px" />
-          DEVELOPER TIMELINE
-        </h2>
-        <div className="space-y-8px font-mono text-brutal-sm">
-          <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
-            <span className="text-brutal-xs text-primary-brutalist/60">10:45</span>
-            <span className="text-brutal-success">✓ BUILD PASSED</span>
-            <span className="text-primary-brutalist/80">main branch - commit 7a8f9d2</span>
-          </div>
-          <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
-            <span className="text-brutal-xs text-primary-brutalist/60">10:32</span>
-            <span className="text-brutal-warning">⚠ TEST FAILURES</span>
-            <span className="text-primary-brutalist/80">feature/auth - 8 tests failing</span>
-          </div>
-          <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
-            <span className="text-brutal-xs text-primary-brutalist/60">09:15</span>
-            <span className="text-brutal-info">→ PR OPENED</span>
-            <span className="text-primary-brutalist/80">#142: Add user authentication</span>
-          </div>
-          <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
-            <span className="text-brutal-xs text-primary-brutalist/60">08:45</span>
-            <span className="text-brutal-error">✗ DEPLOY FAILED</span>
-            <span className="text-primary-brutalist/80">staging environment - timeout error</span>
-          </div>
+        
+        {/* Natural Language Task Creator */}
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
+          <NaturalLanguageTaskCreator 
+            projectId={project._id}
+            sprintId={activeSprint?._id}
+            onTasksCreated={() => {
+              // Refresh tasks will happen automatically via Convex subscriptions
+            }}
+          />
         </div>
+        
+        {/* AI Insights and Daily Standup Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16px">
+          <AIInsightsPanel 
+            projectId={project._id} 
+            sprintId={activeSprint?._id}
+            compact={true}
+          />
+          <DailyStandupSummary 
+            projectId={project._id}
+            compact={true}
+          />
+        </div>
+        
+        {/* Health Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16px">
+          {healthCards.map((card) => (
+            <div 
+              key={card.title}
+              className={clsx(
+                "border-2 p-16px transition-all",
+                getStatusColor(card.status)
+              )}
+            >
+              <div className="flex items-start justify-between mb-8px">
+                <h3 className="font-mono text-brutal-xs uppercase">{card.title}</h3>
+                {card.icon}
+              </div>
+              <div className="text-brutal-xl font-bold mb-4px">{card.value}</div>
+              {card.subtitle && (
+                <div className="font-mono text-brutal-xs opacity-80">{card.subtitle}</div>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        {/* Smart Task Generator */}
+        <SmartTaskGenerator 
+          projectId={project._id}
+          sprintId={activeSprint?._id}
+          onTasksCreated={() => {
+            // Refresh tasks will happen automatically via Convex subscriptions
+            toast.success('Tasks created successfully!')
+          }}
+          compact={true}
+        />
+        
+        {/* Sprint Burndown Chart */}
+        {activeSprint && (
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
+            <SprintBurndownChart 
+              sprint={activeSprint}
+              tasks={tasks || []}
+              showPrediction={true}
+            />
+          </div>
+        )}
+        
+        {/* Activity Heatmap */}
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
+          <GitHubStyleHeatmap 
+            tasks={tasks || []}
+            weeks={12}
+          />
+        </div>
+        
+        {/* Task Distribution Charts */}
+        <TaskDistributionCharts 
+          tasks={tasks || []}
+          team={team || []}
+        />
+        
+        {/* Developer Timeline */}
+        <DeveloperTimeline projectId={project._id} />
       </div>
-
-      {/* Command Palette */}
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-        <h2 className="text-brutal-lg font-bold uppercase mb-16px flex items-center gap-8px">
-          <HiOutlineTerminal className="w-20px h-20px" />
-          QUICK COMMANDS
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8px">
-          <button className="p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
-            <div className="text-primary-brutalist">npm run dev</div>
-            <div className="text-brutal-xs text-primary-brutalist/60">Start development server</div>
-          </button>
-          <button className="p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
-            <div className="text-primary-brutalist">npm test</div>
-            <div className="text-brutal-xs text-primary-brutalist/60">Run test suite</div>
-          </button>
-          <button className="p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
-            <div className="text-primary-brutalist">git push origin main</div>
-            <div className="text-brutal-xs text-primary-brutalist/60">Deploy to production</div>
-          </button>
-          <button className="p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
-            <div className="text-primary-brutalist">docker-compose up</div>
-            <div className="text-brutal-xs text-primary-brutalist/60">Start containers</div>
-          </button>
-          <button className="p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
-            <div className="text-primary-brutalist">npm run build</div>
-            <div className="text-brutal-xs text-primary-brutalist/60">Build for production</div>
-          </button>
-          <button className="p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] hover:border-primary-brutalist hover:bg-basalt-border transition-all text-left font-mono text-brutal-sm">
-            <div className="text-primary-brutalist">npm run lint</div>
-            <div className="text-brutal-xs text-primary-brutalist/60">Check code quality</div>
-          </button>
-        </div>
-      </div>
-
-      {/* Active Blockers */}
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-        <h2 className="text-brutal-lg font-bold uppercase mb-16px flex items-center gap-8px">
-          <HiOutlineExclamationCircle className="w-20px h-20px text-brutal-error" />
-          ACTIVE BLOCKERS
-        </h2>
-        <div className="space-y-12px">
-          <div className="border-2 border-brutal-error bg-brutal-error/10 p-16px">
-            <div className="flex items-start justify-between mb-8px">
-              <h3 className="font-bold text-brutal-error">CRITICAL: Database connection timeout</h3>
-              <span className="font-mono text-brutal-xs text-brutal-error">2H AGO</span>
-            </div>
-            <p className="text-brutal-sm mb-8px">Production database experiencing intermittent connection timeouts. Affecting user authentication.</p>
-            <div className="flex items-center gap-16px font-mono text-brutal-xs">
-              <span>ASSIGNED: @john.doe</span>
-              <span>PRIORITY: P0</span>
-              <span>EST: 4H</span>
-            </div>
-          </div>
-          <div className="border-2 border-brutal-warning bg-brutal-warning/10 p-16px">
-            <div className="flex items-start justify-between mb-8px">
-              <h3 className="font-bold text-brutal-warning">HIGH: Memory leak in worker process</h3>
-              <span className="font-mono text-brutal-xs text-brutal-warning">5H AGO</span>
-            </div>
-            <p className="text-brutal-sm mb-8px">Background worker consuming excessive memory. Requires restart every 6 hours.</p>
-            <div className="flex items-center gap-16px font-mono text-brutal-xs">
-              <span>ASSIGNED: @jane.smith</span>
-              <span>PRIORITY: P1</span>
-              <span>EST: 8H</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+    )
+  }
 
   const renderTasksTab = () => {
     // Safety check

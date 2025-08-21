@@ -10,6 +10,7 @@ export default defineSchema({
     role: v.union(v.literal("admin"), v.literal("user")),
     preferences: v.optional(v.object({
       theme: v.optional(v.string()),
+      hasCompletedOnboarding: v.optional(v.boolean()),
       notifications: v.optional(v.object({
         email: v.boolean(),
         push: v.boolean(),
@@ -116,6 +117,7 @@ export default defineSchema({
     key: v.string(),
     description: v.optional(v.string()),
     leadId: v.optional(v.id("users")),
+    members: v.optional(v.array(v.id("users"))), // Array of user IDs who are members
     status: v.union(v.literal("planning"), v.literal("active"), v.literal("on_hold"), v.literal("completed"), v.literal("archived")),
     visibility: v.union(v.literal("public"), v.literal("private")),
     inviteCode: v.optional(v.string()), // UUID for project joining
@@ -747,4 +749,15 @@ export default defineSchema({
     updatedAt: v.string(),
   })
     .index("by_tier", ["tier"]),
+
+  aiCredits: defineTable({
+    userId: v.id("users"),
+    apiKey: v.optional(v.string()), // User's own API key for BYOK
+    credits: v.number(), // Credits remaining
+    monthlyCredits: v.number(), // Monthly credit allowance
+    lastResetDate: v.string(), // Last date credits were reset
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"]),
 });

@@ -4,11 +4,14 @@ import { mutation } from "../_generated/server"
 // Simple encryption for API keys (in production, use proper encryption)
 const encryptApiKey = (key: string): string => {
   // In production, use proper encryption like AES
-  return Buffer.from(key).toString('base64')
+  // For now, using btoa alternative that works in Convex
+  // The key is already protected by Convex's database encryption
+  return btoa(key)
 }
 
 const decryptApiKey = (encrypted: string): string => {
-  return Buffer.from(encrypted, 'base64').toString()
+  // Using atob alternative that works in Convex
+  return atob(encrypted)
 }
 
 // Setup initial AI credits for a user
