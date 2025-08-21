@@ -98,8 +98,13 @@ export default function BrutalModal({
                   )}
                   {showCloseButton && (
                     <button
-                      onClick={onClose}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onClose()
+                      }}
                       className="ml-auto p-8px hover:bg-[var(--theme-hover)] transition-colors"
+                      type="button"
+                      aria-label="Close modal"
                     >
                       <HiOutlineX className="w-24px h-24px" />
                     </button>

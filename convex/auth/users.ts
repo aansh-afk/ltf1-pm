@@ -85,6 +85,7 @@ export const ensureUserExists = internalMutation({
     role: v.union(v.literal("admin"), v.literal("user")),
     preferences: v.optional(v.object({
       theme: v.optional(v.string()),
+      hasCompletedOnboarding: v.optional(v.boolean()),
       notifications: v.optional(v.object({
         email: v.boolean(),
         push: v.boolean(),
@@ -164,6 +165,7 @@ export const createCurrentUser = mutation({
     role: v.union(v.literal("admin"), v.literal("user")),
     preferences: v.optional(v.object({
       theme: v.optional(v.string()),
+      hasCompletedOnboarding: v.optional(v.boolean()),
       notifications: v.optional(v.object({
         email: v.boolean(),
         push: v.boolean(),
@@ -248,6 +250,7 @@ export const updateUserPreferences = mutation({
   args: {
     preferences: v.object({
       theme: v.optional(v.string()),
+      hasCompletedOnboarding: v.optional(v.boolean()),
       notifications: v.optional(v.object({
         email: v.optional(v.boolean()),
         push: v.optional(v.boolean()),
@@ -296,6 +299,9 @@ export const updateUserPreferences = mutation({
     const updatedPreferences: any = {
       ...user.preferences,
       theme: args.preferences.theme !== undefined ? args.preferences.theme : user.preferences?.theme,
+      hasCompletedOnboarding: args.preferences.hasCompletedOnboarding !== undefined 
+        ? args.preferences.hasCompletedOnboarding 
+        : user.preferences?.hasCompletedOnboarding,
       notifications: notifications || {
         email: true,
         push: true,

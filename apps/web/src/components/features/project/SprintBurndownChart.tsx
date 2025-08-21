@@ -1,0 +1,239 @@
+import React from 'react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart } from 'recharts'
+import { format, eachDayOfInterval, parseISO, differenceInDays } from 'date-fns'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
+
+interface SprintBurndownChartProps {
+  sprint: {
+    _id: Id<'sprints'>
+    name: string
+    startDate: string
+    endDate: string
+    totalPoints: number
+  }
+  tasks: {
+    _id: Id<'tasks'>
+    points?: number
+    status: string
+    completedAt?: string
+    sprintId?: Id<'sprints'>
+  }[]
+  showPrediction?: boolean
+}
+
+export default function SprintBurndownChart({ sprint, tasks, showPrediction = true }: SprintBurndownChartProps) {
+  // Filter tasks for this sprint
+  const sprintTasks = tasks.filter(t => t.sprintId === sprint._id)
+  
+  // Calculate burndown data
+  const startDate = parseISO(sprint.startDate)
+  const endDate = parseISO(sprint.endDate)
+  const totalDays = differenceInDays(endDate, startDate) + 1
+  const days = eachDayOfInterval({ start: startDate, end: endDate })
+  
+  // Calculate ideal burndown
+  const pointsPerDay = sprint.totalPoints / (totalDays - 1) // -1 because we start with full points
+  
+  // Calculate actual burndown
+  const burndownData = days.map((day, index) => {
+    const dayStr = format(day, 'MMM dd')
+    const dayEnd = new Date(day)
+    dayEnd.setHours(23, 59, 59, 999)
+    
+    // Calculate remaining points up to this day
+    const completedByDay = sprintTasks.filter(task => {
+      if (task.status === 'done' && task.completedAt) {
+        const completedDate = parseISO(task.completedAt)
+        return completedDate <= dayEnd
+      }
+      return false
+    })
+    
+    const completedPoints = completedByDay.reduce((sum, task) => sum + (task.points || 0), 0)
+    const remainingPoints = sprint.totalPoints - completedPoints
+    
+    // Ideal line
+    const idealRemaining = Math.max(0, sprint.totalPoints - (pointsPerDay * index))
+    
+    // Only show actual data up to today
+    const today = new Date()
+    const isActualData = day <= today
+    
+    return {
+      day: dayStr,
+      ideal: Math.round(idealRemaining * 10) / 10,
+      actual: isActualData ? remainingPoints : null,
+      predicted: null, // Will calculate this next
+    }
+  })
+  
+  // Calculate prediction based on current velocity
+  if (showPrediction) {
+    const today = new Date()
+    const todayIndex = days.findIndex(d => format(d, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'))
+    
+    if (todayIndex >= 0 && todayIndex < days.length - 1) {
+      const daysElapsed = todayIndex + 1
+      const pointsCompleted = sprintTasks
+        .filter(t => t.status === 'done')
+        .reduce((sum, t) => sum + (t.points || 0), 0)
+      
+      const velocity = daysElapsed > 0 ? pointsCompleted / daysElapsed : 0
+      const remainingPoints = sprint.totalPoints - pointsCompleted
+      
+      // Add prediction from today onwards
+      for (let i = todayIndex; i < burndownData.length; i++) {
+        const daysFromToday = i - todayIndex
+        const predictedCompleted = Math.min(
+          remainingPoints,
+          velocity * daysFromToday
+        )
+        burndownData[i].predicted = Math.max(0, remainingPoints - predictedCompleted)
+      }
+    }
+  }
+  
+  // Custom tooltip
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-8px">
+          <p className="text-brutal-xs font-bold">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} className="text-brutal-xs" style={{ color: entry.color }}>
+              {entry.name}: {entry.value !== null ? `${entry.value} pts` : 'N/A'}
+            </p>
+          ))}
+        </div>
+      )
+    }
+    return null
+  }
+  
+  // Calculate sprint health
+  const today = new Date()
+  const todayIndex = days.findIndex(d => format(d, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'))
+  const currentActual = todayIndex >= 0 ? burndownData[todayIndex]?.actual || 0 : sprint.totalPoints
+  const currentIdeal = todayIndex >= 0 ? burndownData[todayIndex]?.ideal || 0 : sprint.totalPoints
+  const healthStatus = currentActual <= currentIdeal ? 'on-track' : 'behind'
+  const healthColor = healthStatus === 'on-track' ? 'var(--theme-success)' : 'var(--theme-warning)'
+  
+  return (
+    <div className="w-full">
+      <div className="flex items-center justify-between mb-16px">
+        <h3 className="text-brutal-md font-bold uppercase">Sprint Burndown</h3>
+        <div className="flex items-center gap-16px">
+          <span className="text-brutal-xs font-mono">
+            {Math.round(currentActual)} / {sprint.totalPoints} pts remaining
+          </span>
+          <span 
+            className="text-brutal-xs font-mono px-8px py-4px border"
+            style={{ 
+              borderColor: healthColor,
+              backgroundColor: healthColor + '20',
+              color: healthColor
+            }}
+          >
+            {healthStatus.toUpperCase()}
+          </span>
+        </div>
+      </div>
+      
+      <ResponsiveContainer width="100%" height={300}>
+        <ComposedChart data={burndownData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid 
+            strokeDasharray="0" 
+            stroke="var(--theme-border)"
+            strokeOpacity={0.3}
+          />
+          <XAxis 
+            dataKey="day" 
+            stroke="var(--theme-foreground-secondary)"
+            tick={{ fontSize: 10 }}
+            angle={-45}
+            textAnchor="end"
+            height={60}
+          />
+          <YAxis 
+            stroke="var(--theme-foreground-secondary)"
+            tick={{ fontSize: 10 }}
+            label={{ 
+              value: 'Story Points', 
+              angle: -90, 
+              position: 'insideLeft',
+              style: { fontSize: 10, fill: 'var(--theme-foreground-secondary)' }
+            }}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend 
+            wrapperStyle={{ fontSize: '12px' }}
+            iconType="line"
+          />
+          
+          {/* Ideal burndown line */}
+          <Line 
+            type="monotone" 
+            dataKey="ideal" 
+            stroke="var(--theme-border)"
+            strokeWidth={2}
+            strokeDasharray="5 5"
+            dot={false}
+            name="Ideal"
+          />
+          
+          {/* Actual burndown line */}
+          <Line 
+            type="monotone" 
+            dataKey="actual" 
+            stroke="var(--theme-primary)"
+            strokeWidth={3}
+            dot={{ fill: 'var(--theme-primary)', r: 4 }}
+            name="Actual"
+            connectNulls={false}
+          />
+          
+          {/* Predicted line */}
+          {showPrediction && (
+            <Line 
+              type="monotone" 
+              dataKey="predicted" 
+              stroke="var(--theme-info)"
+              strokeWidth={2}
+              strokeDasharray="2 2"
+              dot={false}
+              name="Predicted"
+              connectNulls={false}
+            />
+          )}
+          
+          {/* Fill area between actual and ideal to show deviation */}
+          <Area
+            type="monotone"
+            dataKey="actual"
+            fill={healthStatus === 'on-track' ? 'var(--theme-success)' : 'var(--theme-warning)'}
+            fillOpacity={0.1}
+            stroke="none"
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
+      
+      {/* Legend and insights */}
+      <div className="mt-16px flex items-center gap-24px text-brutal-xs">
+        <div className="flex items-center gap-8px">
+          <div className="w-16px h-2px bg-[var(--theme-border)]" style={{ borderStyle: 'dashed' }} />
+          <span>Ideal Pace</span>
+        </div>
+        <div className="flex items-center gap-8px">
+          <div className="w-16px h-3px bg-[var(--theme-primary)]" />
+          <span>Actual Progress</span>
+        </div>
+        {showPrediction && (
+          <div className="flex items-center gap-8px">
+            <div className="w-16px h-2px bg-[var(--theme-info)]" style={{ borderStyle: 'dashed' }} />
+            <span>Predicted</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

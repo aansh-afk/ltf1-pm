@@ -1,6 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { SignIn, SignUp, SignedIn, SignedOut } from '@clerk/clerk-react'
 import { Toaster } from 'react-hot-toast'
+import React, { useState } from 'react'
+import { useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { ConvexClientProvider } from './providers/ConvexClientProvider'
 import { ShortcutProvider } from './contexts/ShortcutContext'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -27,19 +30,61 @@ import { useEnsureUser } from './hooks/useEnsureUser'
 import { DataMigrationBanner } from './components/admin/DataMigrationBanner'
 import CommandPalette from './components/shortcuts/CommandPalette'
 import ShortcutHelp from './components/shortcuts/ShortcutHelp'
+import OnboardingFlow from './components/onboarding/OnboardingFlow'
+import BrutalistLoader from './components/common/BrutalistLoader'
 
 function AppContent() {
   // Ensure user is synced with Convex
-  const { isLoading } = useEnsureUser()
+  const { isLoading, isFirstTimeUser, user } = useEnsureUser()
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const updatePreferences = useMutation(api.auth.users.updateUserPreferences)
+  
+  // Check session storage to see if we've already shown/completed onboarding this session
+  const getOnboardingDismissed = () => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('ltf1_onboarding_dismissed') === 'true'
+    }
+    return false
+  }
+  
+  // Show onboarding for first-time users (only if not dismissed this session)
+  React.useEffect(() => {
+    const wasOnboardingDismissed = getOnboardingDismissed()
+    
+    if (isFirstTimeUser && user && !wasOnboardingDismissed) {
+      setShowOnboarding(true)
+    } else if (!isFirstTimeUser || wasOnboardingDismissed) {
+      // User has completed onboarding or dismissed it this session
+      setShowOnboarding(false)
+    }
+  }, [isFirstTimeUser, user])
+  
+  const handleOnboardingComplete = () => {
+    // Close modal immediately
+    setShowOnboarding(false)
+    
+    // Mark as dismissed in session storage
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('ltf1_onboarding_dismissed', 'true')
+    }
+    
+    // Update preferences in the background
+    if (user) {
+      updatePreferences({ 
+        preferences: { 
+          ...user.preferences,
+          hasCompletedOnboarding: true 
+        } 
+      }).then(() => {
+        console.log('Onboarding preferences saved successfully')
+      }).catch(error => {
+        console.error('Error updating onboarding preferences:', error)
+      })
+    }
+  }
   
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
-        <div className="text-[var(--theme-primary)] font-mono uppercase tracking-widest">
-          Syncing user...
-        </div>
-      </div>
-    )
+    return <BrutalistLoader />
   }
   
   return (
@@ -47,6 +92,14 @@ function AppContent() {
       <SignedIn>
         <DataMigrationBanner />
       </SignedIn>
+      
+      {/* Onboarding Flow for First-Time Users */}
+      {showOnboarding && (
+        <OnboardingFlow 
+          isOpen={showOnboarding} 
+          onComplete={handleOnboardingComplete} 
+        />
+      )}
       
       {/* Global Shortcut Components */}
       <CommandPalette />

@@ -14,8 +14,8 @@ import clsx from 'clsx'
 interface ThemeSwitcherProps {
   className?: string
   showLabel?: boolean
-  size?: 'sm' | 'md' | 'lg'
-  variant?: 'button' | 'dropdown' | 'modal'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
+  variant?: 'button' | 'dropdown' | 'modal' | 'grid'
 }
 
 export default function ThemeSwitcher({ 
@@ -58,12 +58,14 @@ export default function ThemeSwitcher({
     sm: 'w-32px h-32px text-sm',
     md: 'w-40px h-40px text-base',
     lg: 'w-48px h-48px text-lg',
+    xl: 'w-56px h-56px text-xl',
   }
   
   const iconSizes = {
     sm: 'w-16px h-16px',
     md: 'w-20px h-20px',  
     lg: 'w-24px h-24px',
+    xl: 'w-32px h-32px',
   }
   
   // Get theme preview colors
@@ -85,6 +87,96 @@ export default function ThemeSwitcher({
   
   // Current theme preview colors
   const currentPreview = getThemePreview(themeName)
+  
+  // Grid variant - display all themes inline
+  if (variant === 'grid') {
+    return (
+      <div className={className}>
+        <div className="grid grid-cols-3 gap-12px">
+          {availableThemes.map((theme) => {
+            const preview = getThemePreview(theme)
+            const themeObj = globalThemes[theme]
+            const isActive = theme === themeName
+            
+            return (
+              <button
+                key={theme}
+                onClick={() => handleThemeSelect(theme)}
+                className={clsx(
+                  'relative p-16px border-2 transition-all duration-200',
+                  'hover:translate-x-[-2px] hover:translate-y-[-2px]',
+                  'focus:outline-none focus:ring-2 focus:ring-[var(--theme-border-focus)]',
+                  isActive && 'shadow-[0_0_15px_var(--theme-glow)]'
+                )}
+                style={{
+                  backgroundColor: preview.background,
+                  borderColor: isActive ? preview.primary : preview.border,
+                  boxShadow: isActive ? `0 0 10px ${preview.primary}` : '4px 4px 0 var(--theme-shadow)'
+                }}
+                aria-label={`Select ${themeObj.name} theme`}
+              >
+                <div className="flex flex-col items-center gap-8px">
+                  {/* Color preview bar */}
+                  <div className="flex gap-4px mb-8px">
+                    <div 
+                      className="w-16px h-16px border"
+                      style={{ 
+                        backgroundColor: preview.primary,
+                        borderColor: preview.border
+                      }}
+                    />
+                    <div 
+                      className="w-16px h-16px border"
+                      style={{ 
+                        backgroundColor: preview.secondary,
+                        borderColor: preview.border
+                      }}
+                    />
+                    <div 
+                      className="w-16px h-16px border"
+                      style={{ 
+                        backgroundColor: preview.background,
+                        borderColor: preview.border
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Theme name */}
+                  <span 
+                    className="text-brutal-sm font-bold tracking-wider"
+                    style={{ 
+                      color: preview.primary,
+                      textTransform: themeObj.typography.textTransform as any,
+                    }}
+                  >
+                    {themeObj.name}
+                  </span>
+                  
+                  {/* Description */}
+                  {showLabel && (
+                    <span 
+                      className="text-brutal-xs mt-4px"
+                      style={{ color: preview.border }}
+                    >
+                      {themeObj.description.split(' - ')[1] || themeObj.description}
+                    </span>
+                  )}
+                  
+                  {/* Active indicator */}
+                  {isActive && (
+                    <div 
+                      className="absolute -top-2px -right-2px w-12px h-12px"
+                      style={{ backgroundColor: preview.primary }}
+                    />
+                  )}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
   
   return (
     <div className={clsx('relative', className)} ref={dropdownRef}>
@@ -139,7 +231,7 @@ export default function ThemeSwitcher({
         <div 
           className={clsx(
             'absolute right-0 top-full mt-8px',
-            'min-w-280px max-w-400px',
+            'w-320px',
             'bg-[var(--theme-background-secondary)]',
             'border-2 border-[var(--theme-border)]',
             'shadow-[var(--theme-box-shadow)]',
