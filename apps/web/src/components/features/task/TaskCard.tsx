@@ -318,6 +318,6 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
           </div>
         )}
       </div>
-    </div>
+    </article>
   )
 }

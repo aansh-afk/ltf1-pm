@@ -401,7 +401,7 @@ export const getCustomFieldValues = query({
         const fieldDef = await ctx.db.get(value.fieldDefinitionId)
         return {
           ...value,
-          fieldDefinition: fieldDef,
+          fieldDefinition: fieldDef || undefined,
         }
       })
     )

@@ -13,7 +13,7 @@ import {
 } from 'react-icons/hi'
 import clsx from 'clsx'
 import { useQuery, useMutation } from 'convex/react'
-import { api } from '@/convex/_generated/api'
+import { api } from '../../../../../../convex/_generated/api'
 import BrutalModal from '../../ui/BrutalModal'
 import BrutalInput from '../../ui/BrutalInput'
 import toast from 'react-hot-toast'

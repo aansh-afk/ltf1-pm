@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs'
-import type { Id } from '@/convex/_generated/dataModel'
+import type { Id } from '../../../../convex/_generated/dataModel'
 
 interface Task {
   _id: Id<"tasks">

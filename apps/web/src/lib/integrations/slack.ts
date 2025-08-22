@@ -1,4 +1,4 @@
-import type { Id } from '@/convex/_generated/dataModel'
+import type { Id } from '../../../../convex/_generated/dataModel'
 
 // Slack OAuth configuration
 export const SLACK_CLIENT_ID = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID || ''

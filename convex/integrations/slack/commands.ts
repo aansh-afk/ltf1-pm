@@ -198,7 +198,7 @@ async function handleTaskCommand(ctx: any, args: any, commandArgs: string, userM
         return { text: "This channel is not connected to a project. Use `/ltf1 connect` first." }
       }
 
-      const tasks = await ctx.runQuery(api.tasks.queries.getTasksByProject, {
+      const tasks = await ctx.runQuery(api.tasks.queries.getProjectTasks, {
         projectId: channelMapping.projectId,
       })
 
@@ -283,7 +283,7 @@ async function handleSprintCommand(ctx: any, args: any, commandArgs: string) {
 
   switch (sprintAction) {
     case "status":
-      const activeSprint = await ctx.runQuery(api.sprints.getActiveSprint, {
+      const activeSprint = await ctx.runQuery(api.sprints.queries.getCurrentSprint, {
         projectId: channelMapping.projectId,
       })
 
@@ -291,9 +291,11 @@ async function handleSprintCommand(ctx: any, args: any, commandArgs: string) {
         return { text: "No active sprint found for this project." }
       }
 
-      const sprintTasks = await ctx.runQuery(api.tasks.queries.getTasksBySprint, {
-        sprintId: activeSprint._id,
+      // TODO: getTasksBySprint doesn't exist - filtering tasks by sprint
+      const allTasks = await ctx.runQuery(api.tasks.queries.getProjectTasks, {
+        projectId: args.projectId,
       })
+      const sprintTasks = allTasks.filter((task: any) => task.sprintId === activeSprint._id)
 
       const completedTasks = sprintTasks.filter((t: any) => t.status === "done").length
       const totalTasks = sprintTasks.length
@@ -316,7 +318,7 @@ async function handleSprintCommand(ctx: any, args: any, commandArgs: string) {
       }
     
     case "tasks":
-      const sprint = await ctx.runQuery(api.sprints.getActiveSprint, {
+      const sprint = await ctx.runQuery(api.sprints.queries.getCurrentSprint, {
         projectId: channelMapping.projectId,
       })
 
@@ -324,9 +326,11 @@ async function handleSprintCommand(ctx: any, args: any, commandArgs: string) {
         return { text: "No active sprint found." }
       }
 
-      const tasks = await ctx.runQuery(api.tasks.queries.getTasksBySprint, {
-        sprintId: sprint._id,
+      // TODO: getTasksBySprint doesn't exist - filtering tasks by sprint
+      const allProjectTasks = await ctx.runQuery(api.tasks.queries.getProjectTasks, {
+        projectId: args.projectId,
       })
+      const tasks = allProjectTasks.filter((task: any) => task.sprintId === sprint._id)
 
       const tasksByStatus = {
         todo: tasks.filter((t: any) => t.status === "todo"),
@@ -377,7 +381,7 @@ async function handleSprintCommand(ctx: any, args: any, commandArgs: string) {
 
 // Project command handler
 async function handleProjectCommand(ctx: any, args: any, commandArgs: string) {
-  const projects = await ctx.runQuery(api.projects.getProjects, {
+  const projects = await ctx.runQuery(api.projects.queries.getWorkspaceProjects, {
     workspaceId: args.workspaceId,
   })
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery, useMutation } from 'convex/react'
-import { api } from '@/convex/_generated/api'
-import { Id } from '@/convex/_generated/dataModel'
+import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import { 
   HiOutlineZoomIn, 
   HiOutlineZoomOut,
@@ -58,7 +58,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
   const ganttRef = useRef<SVGSVGElement>(null)
   
   // Fetch tasks
-  const tasks = useQuery(api.tasks.queries.getTasksByProject, { projectId }) || []
+  const tasks = useQuery(api.tasks.queries.getProjectTasks, { projectId }) || []
   const updateTask = useMutation(api.tasks.mutations.updateTask)
   
   // Process tasks into Gantt format
