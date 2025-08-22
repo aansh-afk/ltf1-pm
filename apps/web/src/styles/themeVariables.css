@@ -16,9 +16,9 @@
   --theme-background-secondary: #0A0A0A;
   --theme-background-tertiary: #1A1A1A;
   
-  --theme-foreground: #F5F5F5;
-  --theme-foreground-secondary: #CCCCCC;
-  --theme-foreground-tertiary: #999999;
+  --theme-foreground: #FFFFFF;
+  --theme-foreground-secondary: #D0D0D0;
+  --theme-foreground-tertiary: #B0B0B0;
   
   --theme-border: #333333;
   --theme-border-hover: #555555;
@@ -43,7 +43,7 @@
   --theme-active: #0A0A0A;
   --theme-selected: #333333;
   --theme-disabled: #0A0A0A;
-  --theme-disabled-text: #666666;
+  --theme-disabled-text: #808080;
   
   --theme-shadow: #000000;
   --theme-shadow-hover: #000000;
