@@ -19,6 +19,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const cardRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -61,8 +62,22 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
     epic: '[EPIC]',
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onViewDetails?.()
+    } else if (e.key === 'e' && e.ctrlKey) {
+      e.preventDefault()
+      onEdit?.()
+    } else if (e.key === 'Delete') {
+      e.preventDefault()
+      onDelete?.()
+    }
+  }
+
   return (
-    <div 
+    <article 
+      ref={cardRef}
       className={clsx(
         'bg-[var(--theme-background)] border-2 shadow-brutal',
         'hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px]',
@@ -71,6 +86,11 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
         priorityColors[task.priority as keyof typeof priorityColors]
       )}
       style={{ borderRadius: '0 !important' }}
+      role="article"
+      aria-label={`Task: ${task.title}`}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      onClick={onViewDetails}
     >
       {/* Status indicator bar */}
       <div 

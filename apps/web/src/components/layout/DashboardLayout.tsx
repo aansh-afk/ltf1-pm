@@ -16,7 +16,8 @@ import {
   HiOutlineChevronRight,
   HiOutlineChevronLeft,
   HiOutlineUserGroup,
-  HiOutlineUser
+  HiOutlineUser,
+  HiOutlineSearch
 } from 'react-icons/hi'
 import clsx from 'clsx'
 import { useResourceMonitor } from '../../hooks/useResourceMonitor'
@@ -24,6 +25,7 @@ import { useAfkDetection } from '../../hooks/useAfkDetection'
 import { ProfileCompletionBanner } from '../features/profile/ProfileCompletionBanner'
 import { GitHubMonitor } from '../features/github/GitHubMonitor'
 import CommandTerminal from '../terminal/CommandTerminal'
+import GlobalSearchModal from '../features/search/GlobalSearchModal'
 // ThemeSwitcher moved to Settings page
 
 export default function DashboardLayout() {
@@ -35,6 +37,7 @@ export default function DashboardLayout() {
   })
   const [isHovered, setIsHovered] = useState(false)
   const [terminalOpen, setTerminalOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const location = useLocation()
   const params = useParams()
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -65,6 +68,25 @@ export default function DashboardLayout() {
     return () => {
       window.removeEventListener('open-terminal', handleOpenTerminal)
     }
+  }, [])
+
+  // Keyboard shortcuts for search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl+K for search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+      // Forward slash for quick search (when not in input)
+      if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   // Cleanup hover timeout on unmount
@@ -265,8 +287,16 @@ export default function DashboardLayout() {
           <div className="flex items-center gap-16px">
             <button 
               className="brutal-btn flex items-center gap-8px"
+              onClick={() => setSearchOpen(true)}
+              title="Global Search (Ctrl+K or /)"
+            >
+              <HiOutlineSearch className="w-20px h-20px" />
+              <span>SEARCH</span>
+            </button>
+            <button 
+              className="brutal-btn flex items-center gap-8px"
               onClick={() => setTerminalOpen(true)}
-              title="Open Terminal (Ctrl+K)"
+              title="Open Terminal"
             >
               <HiOutlineTerminal className="w-20px h-20px" />
               <span>TERMINAL</span>
@@ -380,6 +410,12 @@ export default function DashboardLayout() {
       <CommandTerminal 
         isOpen={terminalOpen} 
         onClose={() => setTerminalOpen(false)} 
+      />
+
+      {/* Global Search Modal */}
+      <GlobalSearchModal
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
       />
     </div>
   )

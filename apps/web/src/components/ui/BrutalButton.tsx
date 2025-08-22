@@ -6,6 +6,7 @@ interface BrutalButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'sm' | 'md' | 'lg' | 'xl'
   fullWidth?: boolean
   loading?: boolean
+  ariaLabel?: string
 }
 
 const BrutalButton = forwardRef<HTMLButtonElement, BrutalButtonProps>(
@@ -17,6 +18,7 @@ const BrutalButton = forwardRef<HTMLButtonElement, BrutalButtonProps>(
     fullWidth = false,
     loading = false,
     disabled,
+    ariaLabel,
     ...props 
   }, ref) => {
     const baseClasses = 'font-semibold uppercase tracking-wider transition-all duration-200 ease-brutal-out border-2 relative overflow-hidden'
@@ -50,6 +52,8 @@ const BrutalButton = forwardRef<HTMLButtonElement, BrutalButtonProps>(
           className
         )}
         disabled={isDisabled}
+        aria-label={ariaLabel || (typeof children === 'string' ? children : undefined)}
+        aria-busy={loading}
         {...props}
       >
         {loading ? (

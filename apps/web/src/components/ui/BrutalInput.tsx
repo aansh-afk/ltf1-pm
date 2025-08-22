@@ -31,6 +31,9 @@ const BrutalInput = forwardRef<HTMLInputElement, BrutalInputProps>(
         <input
           ref={ref}
           id={inputId}
+          aria-label={label || props['aria-label']}
+          aria-invalid={!!error}
+          aria-describedby={error || helperText ? `${inputId}-description` : undefined}
           className={clsx(
             'bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 px-16px py-8px',
             'transition-all duration-200 ease-brutal-out',
@@ -46,10 +49,14 @@ const BrutalInput = forwardRef<HTMLInputElement, BrutalInputProps>(
         />
         
         {(error || helperText) && (
-          <p className={clsx(
-            'text-brutal-xs',
-            error ? 'text-[var(--theme-error)]' : 'text-[var(--theme-foreground)]/70'
-          )}>
+          <p 
+            id={`${inputId}-description`}
+            className={clsx(
+              'text-brutal-xs',
+              error ? 'text-[var(--theme-error)]' : 'text-[var(--theme-foreground)]/70'
+            )}
+            role={error ? 'alert' : 'status'}
+          >
             {error || helperText}
           </p>
         )}

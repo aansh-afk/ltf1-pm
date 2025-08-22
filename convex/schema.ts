@@ -174,6 +174,10 @@ export default defineSchema({
     dueDate: v.optional(v.number()),
     startDate: v.optional(v.number()),
     completedAt: v.optional(v.number()),
+    dependencies: v.optional(v.array(v.id("tasks"))), // Task dependencies for Gantt
+    progress: v.optional(v.number()), // 0-100 progress percentage
+    milestone: v.optional(v.boolean()), // Is this a milestone
+    criticalPath: v.optional(v.boolean()), // Is on critical path
     estimate: v.optional(v.object({
       points: v.optional(v.number()),
       hours: v.optional(v.number()),
@@ -185,6 +189,8 @@ export default defineSchema({
       pullRequestUrl: v.optional(v.string()),
       pullRequestStatus: v.optional(v.union(v.literal("open"), v.literal("merged"), v.literal("closed"))),
     })),
+    gitlabIssueId: v.optional(v.number()), // GitLab issue ID if synced
+    gitlabIssueUrl: v.optional(v.string()), // GitLab issue URL
     sprintId: v.optional(v.id("sprints")),
     position: v.number(),
     createdAt: v.number(),
@@ -338,6 +344,8 @@ export default defineSchema({
     endTime: v.optional(v.number()),
     duration: v.optional(v.number()), // In milliseconds
     description: v.optional(v.string()),
+    billable: v.optional(v.boolean()),
+    approved: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -760,4 +768,524 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"]),
+
+  // GitLab Integration Tables
+  gitlabOAuthStates: defineTable({
+    state: v.string(),
+    userId: v.string(),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+  })
+    .index("by_state", ["state"]),
+
+  gitlabIntegrations: defineTable({
+    userId: v.string(),
+    accessToken: v.string(),
+    refreshToken: v.optional(v.string()),
+    expiresAt: v.number(),
+    scope: v.optional(v.string()),
+    gitlabUserId: v.number(),
+    gitlabUsername: v.string(),
+    gitlabEmail: v.string(),
+    gitlabName: v.string(),
+    gitlabAvatarUrl: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"]),
+
+  gitlabProjects: defineTable({
+    userId: v.string(),
+    projectId: v.id("projects"),
+    gitlabProjectId: v.number(),
+    gitlabProjectPath: v.string(),
+    gitlabProjectUrl: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_project", ["projectId"]),
+
+  gitlabMergeRequests: defineTable({
+    projectId: v.id("projects"),
+    gitlabMrId: v.number(),
+    gitlabMrIid: v.number(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    state: v.string(),
+    sourceBranch: v.string(),
+    targetBranch: v.string(),
+    authorId: v.number(),
+    authorUsername: v.string(),
+    labels: v.array(v.string()),
+    webUrl: v.string(),
+    mergedAt: v.optional(v.number()),
+    closedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_project_and_mr", ["projectId", "gitlabMrId"]),
+
+  // Slack Integration Tables
+  slackIntegrations: defineTable({
+    workspaceId: v.id("workspaces"),
+    accessToken: v.string(),
+    teamId: v.string(),
+    teamName: v.string(),
+    botUserId: v.string(),
+    botAccessToken: v.string(),
+    incomingWebhookUrl: v.optional(v.string()),
+    incomingWebhookChannel: v.optional(v.string()),
+    scopes: v.array(v.string()),
+    userId: v.string(), // Clerk user ID who connected
+    active: v.boolean(),
+    settings: v.optional(v.any()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_team", ["teamId"]),
+
+  slackChannels: defineTable({
+    workspaceId: v.id("workspaces"),
+    projectId: v.optional(v.id("projects")),
+    channelId: v.string(),
+    channelName: v.string(),
+    channelType: v.union(v.literal("project"), v.literal("general"), v.literal("alerts")),
+    syncEvents: v.array(v.string()),
+    active: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_project", ["projectId"])
+    .index("by_channel", ["workspaceId", "channelId"]),
+
+  slackUserMappings: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.id("users"),
+    slackUserId: v.string(),
+    slackUsername: v.string(),
+    slackEmail: v.optional(v.string()),
+    slackRealName: v.optional(v.string()),
+    slackAvatar: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_user", ["userId"])
+    .index("by_slack_user", ["workspaceId", "slackUserId"]),
+
+  slackEvents: defineTable({
+    workspaceId: v.id("workspaces"),
+    eventType: v.string(),
+    eventData: v.any(),
+    userId: v.optional(v.string()),
+    channelId: v.optional(v.string()),
+    messageTs: v.optional(v.string()),
+    processed: v.boolean(),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_processed", ["processed", "createdAt"]),
+
+  slackFiles: defineTable({
+    workspaceId: v.id("workspaces"),
+    projectId: v.id("projects"),
+    fileId: v.string(),
+    fileName: v.string(),
+    fileType: v.string(),
+    fileSize: v.number(),
+    fileUrl: v.string(),
+    uploadedBy: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_project", ["projectId"]),
+
+  slackTaskLinks: defineTable({
+    taskId: v.id("tasks"),
+    messageTs: v.string(),
+    channelId: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_task", ["taskId"])
+    .index("by_message", ["messageTs", "channelId"]),
+
+  standups: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.id("users"),
+    date: v.number(),
+    yesterday: v.string(),
+    today: v.string(),
+    blockers: v.optional(v.string()),
+    slackUserId: v.optional(v.string()),
+    channelId: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_user", ["userId"])
+    .index("by_user_date", ["userId", "date"])
+    .index("by_date", ["date"]),
+
+  // Audit Logs
+  auditLogs: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.optional(v.string()), // Clerk user ID
+    userEmail: v.optional(v.string()),
+    userName: v.optional(v.string()),
+    eventType: v.string(),
+    severity: v.string(),
+    entityType: v.optional(v.string()),
+    entityId: v.optional(v.string()),
+    entityName: v.optional(v.string()),
+    description: v.string(),
+    metadata: v.optional(v.any()),
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    location: v.optional(v.object({
+      country: v.optional(v.string()),
+      city: v.optional(v.string()),
+      region: v.optional(v.string()),
+    })),
+    timestamp: v.number(),
+    sessionId: v.optional(v.string()),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_user", ["userId"])
+    .index("by_event_type", ["eventType"])
+    .index("by_entity", ["entityType", "entityId"])
+    .index("by_timestamp", ["timestamp"]),
+
+  // Custom Fields
+  customFieldDefinitions: defineTable({
+    workspaceId: v.id("workspaces"),
+    entityType: v.union(v.literal("task"), v.literal("project"), v.literal("user")),
+    key: v.string(),
+    label: v.string(),
+    type: v.union(
+      v.literal("text"),
+      v.literal("number"),
+      v.literal("date"),
+      v.literal("select"),
+      v.literal("multiselect"),
+      v.literal("boolean"),
+      v.literal("url"),
+      v.literal("email")
+    ),
+    options: v.optional(v.array(v.string())), // For select/multiselect
+    required: v.boolean(),
+    defaultValue: v.optional(v.any()),
+    validation: v.optional(v.object({
+      min: v.optional(v.number()),
+      max: v.optional(v.number()),
+      pattern: v.optional(v.string()),
+      message: v.optional(v.string()),
+    })),
+    permissions: v.optional(v.object({
+      view: v.array(v.string()), // Role IDs
+      edit: v.array(v.string()),
+    })),
+    order: v.number(),
+    active: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_entity_type", ["entityType"])
+    .index("by_key", ["workspaceId", "entityType", "key"]),
+
+  customFieldValues: defineTable({
+    fieldDefinitionId: v.id("customFieldDefinitions"),
+    entityId: v.string(), // ID of task, project, or user
+    value: v.any(),
+    updatedAt: v.number(),
+    updatedBy: v.string(), // Clerk user ID
+  })
+    .index("by_field", ["fieldDefinitionId"])
+    .index("by_entity", ["entityId"])
+    .index("by_field_and_entity", ["fieldDefinitionId", "entityId"]),
+
+  // Workflow Automation
+  workflows: defineTable({
+    workspaceId: v.id("workspaces"),
+    name: v.string(),
+    description: v.optional(v.string()),
+    trigger: v.object({
+      type: v.union(
+        v.literal("event"),
+        v.literal("schedule"),
+        v.literal("webhook"),
+        v.literal("manual")
+      ),
+      eventType: v.optional(v.string()),
+      schedule: v.optional(v.string()), // Cron expression
+      webhookUrl: v.optional(v.string()),
+      conditions: v.optional(v.array(v.object({
+        field: v.string(),
+        operator: v.string(),
+        value: v.any(),
+      }))),
+    }),
+    actions: v.array(v.object({
+      type: v.string(),
+      config: v.any(),
+      order: v.number(),
+    })),
+    enabled: v.boolean(),
+    lastRun: v.optional(v.number()),
+    runCount: v.number(),
+    createdBy: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_enabled", ["enabled"])
+    .index("by_trigger_type", ["trigger.type"]),
+
+  workflowRuns: defineTable({
+    workflowId: v.id("workflows"),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("failed")
+    ),
+    triggeredBy: v.string(),
+    triggerData: v.optional(v.any()),
+    executionLog: v.array(v.object({
+      timestamp: v.number(),
+      action: v.string(),
+      status: v.string(),
+      message: v.string(),
+      data: v.optional(v.any()),
+    })),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    error: v.optional(v.string()),
+  })
+    .index("by_workflow", ["workflowId"])
+    .index("by_status", ["status"])
+    .index("by_started_at", ["startedAt"]),
+
+  // Chat System
+  chatChannels: defineTable({
+    workspaceId: v.id("workspaces"),
+    name: v.string(),
+    description: v.optional(v.string()),
+    type: v.union(
+      v.literal("public"),
+      v.literal("private"),
+      v.literal("direct"),
+      v.literal("project"),
+      v.literal("sprint")
+    ),
+    entityId: v.optional(v.string()), // For project/sprint channels
+    members: v.array(v.id("users")),
+    admins: v.array(v.id("users")),
+    settings: v.optional(v.object({
+      allowThreads: v.boolean(),
+      allowReactions: v.boolean(),
+      allowFiles: v.boolean(),
+      allowGuestAccess: v.boolean(),
+      autoArchiveAfterDays: v.optional(v.number()),
+    })),
+    archived: v.boolean(),
+    pinnedMessages: v.array(v.id("chatMessages")),
+    lastActivityAt: v.number(),
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_type", ["type"])
+    .index("by_members", ["members"])
+    .index("by_entity", ["entityId"])
+    .index("by_activity", ["lastActivityAt"]),
+
+  chatMessages: defineTable({
+    channelId: v.id("chatChannels"),
+    senderId: v.id("users"),
+    content: v.string(),
+    type: v.union(
+      v.literal("text"),
+      v.literal("file"),
+      v.literal("image"),
+      v.literal("code"),
+      v.literal("system"),
+      v.literal("task"),
+      v.literal("meeting")
+    ),
+    metadata: v.optional(v.object({
+      fileName: v.optional(v.string()),
+      fileUrl: v.optional(v.string()),
+      fileSize: v.optional(v.number()),
+      mimeType: v.optional(v.string()),
+      codeLanguage: v.optional(v.string()),
+      taskId: v.optional(v.id("tasks")),
+      meetingId: v.optional(v.id("meetings")),
+      editedAt: v.optional(v.number()),
+      editedBy: v.optional(v.id("users")),
+    })),
+    parentId: v.optional(v.id("chatMessages")), // For threads
+    threadCount: v.number(),
+    reactions: v.array(v.object({
+      emoji: v.string(),
+      userId: v.id("users"),
+      createdAt: v.number(),
+    })),
+    mentions: v.array(v.id("users")),
+    readBy: v.array(v.object({
+      userId: v.id("users"),
+      readAt: v.number(),
+    })),
+    deleted: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_channel", ["channelId"])
+    .index("by_sender", ["senderId"])
+    .index("by_parent", ["parentId"])
+    .index("by_created", ["channelId", "createdAt"])
+    .searchIndex("search_content", {
+      searchField: "content",
+      filterFields: ["channelId", "senderId"],
+    }),
+
+  chatTypingIndicators: defineTable({
+    channelId: v.id("chatChannels"),
+    userId: v.id("users"),
+    lastTypingAt: v.number(),
+  })
+    .index("by_channel", ["channelId"])
+    .index("by_user", ["userId"]),
+
+  chatNotificationSettings: defineTable({
+    userId: v.id("users"),
+    channelId: v.id("chatChannels"),
+    muted: v.boolean(),
+    muteUntil: v.optional(v.number()),
+    notifyFor: v.union(
+      v.literal("all"),
+      v.literal("mentions"),
+      v.literal("none")
+    ),
+  })
+    .index("by_user", ["userId"])
+    .index("by_channel", ["channelId"])
+    .index("by_user_channel", ["userId", "channelId"]),
+
+  // Video Conferencing
+  videoRooms: defineTable({
+    workspaceId: v.id("workspaces"),
+    name: v.string(),
+    type: v.union(
+      v.literal("meeting"),
+      v.literal("instant"),
+      v.literal("persistent")
+    ),
+    meetingId: v.optional(v.id("meetings")),
+    hostId: v.id("users"),
+    participants: v.array(v.object({
+      userId: v.id("users"),
+      joinedAt: v.number(),
+      leftAt: v.optional(v.number()),
+      role: v.union(v.literal("host"), v.literal("presenter"), v.literal("participant")),
+      audio: v.boolean(),
+      video: v.boolean(),
+      screen: v.boolean(),
+    })),
+    settings: v.object({
+      maxParticipants: v.number(),
+      allowGuests: v.boolean(),
+      recordingEnabled: v.boolean(),
+      waitingRoomEnabled: v.boolean(),
+      muteOnEntry: v.boolean(),
+      videoOnEntry: v.boolean(),
+      chatEnabled: v.boolean(),
+      screenShareEnabled: v.boolean(),
+    }),
+    recordingUrl: v.optional(v.string()),
+    status: v.union(
+      v.literal("scheduled"),
+      v.literal("active"),
+      v.literal("ended")
+    ),
+    startedAt: v.optional(v.number()),
+    endedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_meeting", ["meetingId"])
+    .index("by_host", ["hostId"])
+    .index("by_status", ["status"]),
+
+  // Collaborative Whiteboard
+  whiteboards: defineTable({
+    workspaceId: v.id("workspaces"),
+    name: v.string(),
+    description: v.optional(v.string()),
+    projectId: v.optional(v.id("projects")),
+    meetingId: v.optional(v.id("meetings")),
+    thumbnail: v.optional(v.string()),
+    elements: v.array(v.object({
+      id: v.string(),
+      type: v.union(
+        v.literal("shape"),
+        v.literal("text"),
+        v.literal("line"),
+        v.literal("image"),
+        v.literal("sticky"),
+        v.literal("drawing")
+      ),
+      data: v.any(), // Element-specific data
+      position: v.object({
+        x: v.number(),
+        y: v.number(),
+      }),
+      size: v.object({
+        width: v.number(),
+        height: v.number(),
+      }),
+      rotation: v.number(),
+      style: v.any(),
+      locked: v.boolean(),
+      createdBy: v.id("users"),
+      updatedBy: v.id("users"),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    })),
+    collaborators: v.array(v.object({
+      userId: v.id("users"),
+      cursor: v.optional(v.object({
+        x: v.number(),
+        y: v.number(),
+      })),
+      color: v.string(),
+      lastActiveAt: v.number(),
+    })),
+    version: v.number(),
+    locked: v.boolean(),
+    public: v.boolean(),
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_project", ["projectId"])
+    .index("by_meeting", ["meetingId"])
+    .index("by_creator", ["createdBy"]),
+
+  whiteboardSnapshots: defineTable({
+    whiteboardId: v.id("whiteboards"),
+    version: v.number(),
+    elements: v.any(), // Snapshot of elements at this version
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_whiteboard", ["whiteboardId"])
+    .index("by_version", ["whiteboardId", "version"]),
 });

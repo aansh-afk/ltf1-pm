@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import clsx from 'clsx'
@@ -21,18 +21,56 @@ export default function BrutalModal({
   size = 'md',
   showCloseButton = true,
 }: BrutalModalProps) {
-  // Handle ESC key
+  const modalRef = useRef<HTMLDivElement>(null)
+  const previousActiveElement = useRef<HTMLElement | null>(null)
+
+  // Handle ESC key and focus trap
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+        return
+      }
+      
+      // Tab key for focus trap
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+        const firstElement = focusableElements[0] as HTMLElement
+        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
+        
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault()
+          lastElement?.focus()
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault()
+          firstElement?.focus()
+        }
+      }
     }
+    
     if (isOpen) {
-      document.addEventListener('keydown', handleEsc)
+      previousActiveElement.current = document.activeElement as HTMLElement
+      document.addEventListener('keydown', handleKeyDown)
       document.body.style.overflow = 'hidden'
+      
+      // Focus first focusable element after modal opens
+      setTimeout(() => {
+        const firstFocusable = modalRef.current?.querySelector(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        ) as HTMLElement
+        firstFocusable?.focus()
+      }, 100)
     }
+    
     return () => {
-      document.removeEventListener('keydown', handleEsc)
+      document.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = 'unset'
+      // Restore focus to previous element
+      if (!isOpen && previousActiveElement.current) {
+        previousActiveElement.current.focus()
+      }
     }
   }, [isOpen, onClose])
 
@@ -74,6 +112,7 @@ export default function BrutalModal({
           >
             {/* MODAL CONTENT - handles animation */}
             <motion.div
+              ref={modalRef}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -88,13 +127,16 @@ export default function BrutalModal({
                 maxHeight: 'calc(100vh - 48px)',
                 overflow: 'auto'
               }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={title ? "modal-title" : undefined}
             >
               <div className="bg-[var(--theme-background-secondary)] border-4 border-[var(--theme-border)] shadow-[var(--theme-box-shadow-hover)]">
               {/* HEADER */}
               {(title || showCloseButton) && (
                 <div className="px-24px py-16px border-b-2 border-[var(--theme-border)] flex items-center justify-between">
                   {title && (
-                    <h2 className="text-brutal-xl">{title.toUpperCase()}</h2>
+                    <h2 id="modal-title" className="text-brutal-xl">{title.toUpperCase()}</h2>
                   )}
                   {showCloseButton && (
                     <button

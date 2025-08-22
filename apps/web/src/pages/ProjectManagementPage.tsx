@@ -55,6 +55,8 @@ import AIInsightsPanel from '@/components/features/project/AIInsightsPanel'
 import GitHubStyleHeatmap from '@/components/features/project/GitHubStyleHeatmap'
 import SmartTaskGenerator from '@/components/features/project/SmartTaskGenerator'
 import DailyStandupSummary from '@/components/features/project/DailyStandupSummary'
+import GanttView from '@/components/features/project/GanttView'
+import CalendarView from '@/components/features/project/CalendarView'
 import NaturalLanguageTaskCreator from '@/components/features/ai/NaturalLanguageTaskCreator'
 import TeamActivityFeed from '@/components/features/activity/TeamActivityFeed'
 import { ExpertiseSearchModal } from '@/components/features/profile/ExpertiseSearchModal'
@@ -74,7 +76,7 @@ interface HealthCard {
   icon: React.ReactNode
 }
 
-type TaskViewType = 'sprint' | 'kanban' | 'list'
+type TaskViewType = 'sprint' | 'kanban' | 'list' | 'gantt' | 'calendar'
 
 export default function ProjectManagementPage() {
   const { workspaceId, projectId } = useParams()
@@ -734,11 +736,29 @@ export default function ProjectManagementPage() {
               <button 
                 onClick={() => setTaskView('list')}
                 className={clsx(
-                  "px-16px py-8px font-mono text-brutal-xs uppercase transition-colors",
+                  "px-16px py-8px font-mono text-brutal-xs uppercase transition-colors border-r-2 border-[var(--theme-border)]",
                   taskView === 'list' ? "bg-primary-brutalist text-event-horizon" : "text-primary-brutalist/60 hover:text-primary-brutalist"
                 )}
               >
                 LIST
+              </button>
+              <button 
+                onClick={() => setTaskView('gantt')}
+                className={clsx(
+                  "px-16px py-8px font-mono text-brutal-xs uppercase transition-colors border-r-2 border-[var(--theme-border)]",
+                  taskView === 'gantt' ? "bg-primary-brutalist text-event-horizon" : "text-primary-brutalist/60 hover:text-primary-brutalist"
+                )}
+              >
+                GANTT
+              </button>
+              <button 
+                onClick={() => setTaskView('calendar')}
+                className={clsx(
+                  "px-16px py-8px font-mono text-brutal-xs uppercase transition-colors",
+                  taskView === 'calendar' ? "bg-primary-brutalist text-event-horizon" : "text-primary-brutalist/60 hover:text-primary-brutalist"
+                )}
+              >
+                CALENDAR
               </button>
             </div>
             
@@ -842,6 +862,20 @@ export default function ProjectManagementPage() {
             onTaskEdit={handleEditTask}
             onTaskDelete={handleDeleteTask}
             onTaskDuplicate={handleDuplicateTask}
+          />
+        )}
+        
+        {taskView === 'gantt' && (
+          <GanttView 
+            projectId={projectId as string}
+            workspaceId={workspaceId as string}
+          />
+        )}
+        
+        {taskView === 'calendar' && (
+          <CalendarView 
+            projectId={projectId as string}
+            workspaceId={workspaceId as string}
           />
         )}
         

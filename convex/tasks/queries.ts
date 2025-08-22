@@ -611,3 +611,79 @@ export const getWorkspaceLabels = query({
     return Array.from(labelSet).sort();
   }
 })
+
+export const getTasksByUser = query({
+  args: { 
+    userId: v.string() 
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    // Find user by clerk ID
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.userId))
+      .first();
+
+    if (!user) {
+      return [];
+    }
+
+    // Get all tasks and filter by user
+    const allTasks = await ctx.db
+      .query("tasks")
+      .collect();
+    
+    // Filter tasks where user is an assignee
+    const userTasks = allTasks.filter(task => {
+      // Check new assigneeIds array
+      if (task.assigneeIds && task.assigneeIds.includes(user._id)) {
+        return true;
+      }
+      // Fallback to old assigneeId for backward compatibility
+      if (task.assigneeId === user._id) {
+        return true;
+      }
+      // Check if user is the reporter
+      if (task.reporterId === user._id) {
+        return true;
+      }
+      return false;
+    });
+
+    return userTasks;
+  },
+})
+
+export const getTasksByWorkspace = query({
+  args: { 
+    workspaceId: v.id("workspaces") 
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    // Get all projects in the workspace
+    const projects = await ctx.db
+      .query("projects")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+      .collect();
+
+    // Get all tasks for these projects
+    const allTasks = await Promise.all(
+      projects.map(project =>
+        ctx.db
+          .query("tasks")
+          .withIndex("by_project", (q) => q.eq("projectId", project._id))
+          .collect()
+      )
+    );
+
+    return allTasks.flat();
+  },
+})

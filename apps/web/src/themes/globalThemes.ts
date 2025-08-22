@@ -20,9 +20,9 @@ export const brutalistTheme: GlobalTheme = {
     backgroundSecondary: '#0A0A0A',  // carbon-plate
     backgroundTertiary: '#1A1A1A',   // lighter panels
     
-    foreground: '#F5F5F5',           // cathode-white
-    foregroundSecondary: '#CCCCCC',  // muted text
-    foregroundTertiary: '#999999',   // subtle text
+    foreground: '#FFFFFF',           // cathode-white - improved contrast
+    foregroundSecondary: '#D0D0D0',  // muted text - improved from #CCCCCC
+    foregroundTertiary: '#B0B0B0',   // subtle text - improved from #999999 for better contrast
     
     border: '#333333',               // basalt-border
     borderHover: '#555555',          // border hover
@@ -46,7 +46,7 @@ export const brutalistTheme: GlobalTheme = {
     active: '#0A0A0A',              // active background
     selected: '#333333',            // selected background
     disabled: '#0A0A0A',            // disabled background
-    disabledText: '#666666',        // disabled text
+    disabledText: '#808080',        // disabled text - improved from #666666 for better contrast
     
     shadow: '#000000',              // shadow color
     shadowHover: '#000000',         // hover shadow
