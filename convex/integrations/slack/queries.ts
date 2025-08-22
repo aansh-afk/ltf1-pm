@@ -11,6 +11,7 @@ export const getSlackIntegration = query({
     teamId: v.string(),
     teamName: v.string(),
     botUserId: v.string(),
+    botAccessToken: v.string(),
     incomingWebhookChannel: v.optional(v.string()),
     scopes: v.array(v.string()),
     active: v.boolean(),
@@ -32,13 +33,14 @@ export const getSlackIntegration = query({
       return null
     }
 
-    // Don't return sensitive tokens
+    // Return integration with bot access token (needed for sending messages)
     return {
       _id: integration._id,
       workspaceId: integration.workspaceId,
       teamId: integration.teamId,
       teamName: integration.teamName,
       botUserId: integration.botUserId,
+      botAccessToken: integration.botAccessToken,
       incomingWebhookChannel: integration.incomingWebhookChannel,
       scopes: integration.scopes,
       active: integration.active,

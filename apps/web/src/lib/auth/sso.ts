@@ -1,5 +1,5 @@
 import { SignIn, SignUp } from '@clerk/clerk-react'
-import type { Id } from '@/convex/_generated/dataModel'
+import type { Id } from '../../../../convex/_generated/dataModel'
 
 // SSO Provider configuration
 export interface SSOProvider {

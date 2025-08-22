@@ -1,9 +1,9 @@
 import React from 'react'
 import { useParams } from 'react-router-dom'
-import type { Id } from '@/convex/_generated/dataModel'
+import type { Id } from '../../../../convex/_generated/dataModel'
 import ReportBuilder from '@/components/features/reports/ReportBuilder'
 import { useQuery } from 'convex/react'
-import { api } from '@/convex/_generated/api'
+import { api } from '../../../../convex/_generated/api'
 
 const ReportsPage: React.FC = () => {
   const { workspaceId, projectId } = useParams<{

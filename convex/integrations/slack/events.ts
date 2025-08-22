@@ -346,7 +346,7 @@ async function processAppMentionEvent(ctx: any, event: any, integration: any) {
 
     if (channelMapping && channelMapping.projectId) {
       // Get open tasks
-      const tasks = await ctx.runQuery(api.tasks.queries.getTasksByProject, {
+      const tasks = await ctx.runQuery(api.tasks.queries.getProjectTasks, {
         projectId: channelMapping.projectId,
       })
 

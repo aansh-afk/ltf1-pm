@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation } from 'convex/react'
-import { api } from '@/convex/_generated/api'
-import { Id } from '@/convex/_generated/dataModel'
+import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import { 
   HiOutlineCalendar,
   HiOutlineChevronLeft,
@@ -88,9 +88,9 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
   const [filterType, setFilterType] = useState<'all' | 'tasks' | 'meetings' | 'sprints'>('all')
   
   // Fetch data
-  const tasks = useQuery(api.tasks.queries.getTasksByProject, { projectId }) || []
-  const meetings = useQuery(api.meetings.queries.getMeetingsByProject, { projectId }) || []
-  const sprints = useQuery(api.sprints.queries.getSprintsByProject, { projectId }) || []
+  const tasks = useQuery(api.tasks.queries.getProjectTasks, { projectId }) || []
+  const meetings = useQuery(api.meetings.queries.getProjectMeetings, { projectId }) || []
+  const sprints = useQuery(api.sprints.queries.getProjectSprints, { projectId }) || []
   const updateTask = useMutation(api.tasks.mutations.updateTask)
   
   // Convert data to calendar events
