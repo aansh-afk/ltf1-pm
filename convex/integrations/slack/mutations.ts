@@ -7,6 +7,7 @@ export const updateSlackEvent = mutation({
     processed: v.boolean(),
     error: v.optional(v.string()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.patch(args.eventId, {
       processed: args.processed,
@@ -20,6 +21,7 @@ export const disconnectChannel = mutation({
     workspaceId: v.id("workspaces"),
     channelId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -46,6 +48,7 @@ export const disconnectSlack = mutation({
   args: {
     workspaceId: v.id("workspaces"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -91,6 +94,7 @@ export const storeSlackFile = mutation({
     fileUrl: v.string(),
     uploadedBy: v.string(),
   },
+  returns: v.id("slackFiles"),
   handler: async (ctx, args) => {
     return await ctx.db.insert("slackFiles", {
       workspaceId: args.workspaceId,
@@ -112,6 +116,7 @@ export const linkTaskToSlackMessage = mutation({
     messageTs: v.string(),
     channelId: v.string(),
   },
+  returns: v.id("slackTaskLinks"),
   handler: async (ctx, args) => {
     return await ctx.db.insert("slackTaskLinks", {
       taskId: args.taskId,
@@ -133,6 +138,7 @@ export const storeStandup = mutation({
     slackUserId: v.optional(v.string()),
     channelId: v.optional(v.string()),
   },
+  returns: v.id("standups"),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -194,6 +200,7 @@ export const updateSlackIntegrationSettings = mutation({
       syncUsers: v.optional(v.boolean()),
     }),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {

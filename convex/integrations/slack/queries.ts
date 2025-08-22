@@ -5,6 +5,18 @@ export const getSlackIntegration = query({
   args: {
     workspaceId: v.id("workspaces"),
   },
+  returns: v.union(v.null(), v.object({
+    _id: v.id("slackIntegrations"),
+    workspaceId: v.id("workspaces"),
+    teamId: v.string(),
+    teamName: v.string(),
+    botUserId: v.string(),
+    incomingWebhookChannel: v.optional(v.string()),
+    scopes: v.array(v.string()),
+    active: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -41,6 +53,19 @@ export const getSlackChannel = query({
     workspaceId: v.id("workspaces"),
     channelId: v.string(),
   },
+  returns: v.union(v.null(), v.object({
+    _id: v.id("slackChannels"),
+    _creationTime: v.number(),
+    workspaceId: v.id("workspaces"),
+    projectId: v.optional(v.id("projects")),
+    channelId: v.string(),
+    channelName: v.string(),
+    channelType: v.union(v.literal("project"), v.literal("general"), v.literal("alerts")),
+    syncEvents: v.array(v.string()),
+    active: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -61,6 +86,19 @@ export const getSlackChannels = query({
     workspaceId: v.id("workspaces"),
     projectId: v.optional(v.id("projects")),
   },
+  returns: v.array(v.object({
+    _id: v.id("slackChannels"),
+    _creationTime: v.number(),
+    workspaceId: v.id("workspaces"),
+    projectId: v.optional(v.id("projects")),
+    channelId: v.string(),
+    channelName: v.string(),
+    channelType: v.union(v.literal("project"), v.literal("general"), v.literal("alerts")),
+    syncEvents: v.array(v.string()),
+    active: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -86,6 +124,19 @@ export const getSlackChannelsForEvent = query({
     workspaceId: v.id("workspaces"),
     eventType: v.string(),
   },
+  returns: v.array(v.object({
+    _id: v.id("slackChannels"),
+    _creationTime: v.number(),
+    workspaceId: v.id("workspaces"),
+    projectId: v.optional(v.id("projects")),
+    channelId: v.string(),
+    channelName: v.string(),
+    channelType: v.union(v.literal("project"), v.literal("general"), v.literal("alerts")),
+    syncEvents: v.array(v.string()),
+    active: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })),
   handler: async (ctx, args) => {
     const channels = await ctx.db
       .query("slackChannels")
@@ -104,6 +155,19 @@ export const getSlackUserMapping = query({
     workspaceId: v.id("workspaces"),
     slackUserId: v.string(),
   },
+  returns: v.union(v.null(), v.object({
+    _id: v.id("slackUserMappings"),
+    _creationTime: v.number(),
+    workspaceId: v.id("workspaces"),
+    userId: v.id("users"),
+    slackUserId: v.string(),
+    slackUsername: v.string(),
+    slackEmail: v.optional(v.string()),
+    slackRealName: v.optional(v.string()),
+    slackAvatar: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -123,6 +187,19 @@ export const getSlackUserMappings = query({
   args: {
     workspaceId: v.id("workspaces"),
   },
+  returns: v.array(v.object({
+    _id: v.id("slackUserMappings"),
+    _creationTime: v.number(),
+    workspaceId: v.id("workspaces"),
+    userId: v.id("users"),
+    slackUserId: v.string(),
+    slackUsername: v.string(),
+    slackEmail: v.optional(v.string()),
+    slackRealName: v.optional(v.string()),
+    slackAvatar: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -140,6 +217,19 @@ export const getSlackEvent = query({
   args: {
     eventId: v.id("slackEvents"),
   },
+  returns: v.union(v.null(), v.object({
+    _id: v.id("slackEvents"),
+    _creationTime: v.number(),
+    workspaceId: v.id("workspaces"),
+    eventType: v.string(),
+    eventData: v.any(),
+    userId: v.optional(v.string()),
+    channelId: v.optional(v.string()),
+    messageTs: v.optional(v.string()),
+    processed: v.boolean(),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+  })),
   handler: async (ctx, args) => {
     return await ctx.db.get(args.eventId)
   },
@@ -150,6 +240,19 @@ export const getRecentSlackEvents = query({
     workspaceId: v.id("workspaces"),
     limit: v.optional(v.number()),
   },
+  returns: v.array(v.object({
+    _id: v.id("slackEvents"),
+    _creationTime: v.number(),
+    workspaceId: v.id("workspaces"),
+    eventType: v.string(),
+    eventData: v.any(),
+    userId: v.optional(v.string()),
+    channelId: v.optional(v.string()),
+    messageTs: v.optional(v.string()),
+    processed: v.boolean(),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+  })),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -171,6 +274,14 @@ export const getTaskBySlackMessage = query({
     messageTs: v.string(),
     channelId: v.string(),
   },
+  returns: v.union(v.null(), v.object({
+    _id: v.id("slackTaskLinks"),
+    _creationTime: v.number(),
+    taskId: v.id("tasks"),
+    messageTs: v.string(),
+    channelId: v.string(),
+    createdAt: v.number(),
+  })),
   handler: async (ctx, args) => {
     return await ctx.db
       .query("slackTaskLinks")
@@ -186,6 +297,19 @@ export const getSlackFiles = query({
     workspaceId: v.id("workspaces"),
     projectId: v.optional(v.id("projects")),
   },
+  returns: v.array(v.object({
+    _id: v.id("slackFiles"),
+    _creationTime: v.number(),
+    workspaceId: v.id("workspaces"),
+    projectId: v.id("projects"),
+    fileId: v.string(),
+    fileName: v.string(),
+    fileType: v.string(),
+    fileSize: v.number(),
+    fileUrl: v.string(),
+    uploadedBy: v.string(),
+    createdAt: v.number(),
+  })),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -210,6 +334,13 @@ export const getSlackIntegrationStatus = query({
   args: {
     workspaceId: v.id("workspaces"),
   },
+  returns: v.object({
+    connected: v.boolean(),
+    teamName: v.optional(v.string()),
+    channels: v.number(),
+    users: v.number(),
+    lastSync: v.union(v.null(), v.number()),
+  }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {

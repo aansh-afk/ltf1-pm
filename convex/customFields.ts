@@ -32,7 +32,7 @@ export const createCustomField = mutation({
     ),
     options: v.optional(v.array(v.string())),
     required: v.optional(v.boolean()),
-    defaultValue: v.optional(v.any()),
+    defaultValue: v.optional(v.union(v.string(), v.number(), v.boolean(), v.array(v.string()))),
     validation: v.optional(v.object({
       min: v.optional(v.number()),
       max: v.optional(v.number()),
@@ -44,6 +44,7 @@ export const createCustomField = mutation({
       edit: v.array(v.string()),
     })),
   },
+  returns: v.id("customFieldDefinitions"),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -102,7 +103,7 @@ export const updateCustomField = mutation({
     label: v.optional(v.string()),
     options: v.optional(v.array(v.string())),
     required: v.optional(v.boolean()),
-    defaultValue: v.optional(v.any()),
+    defaultValue: v.optional(v.union(v.string(), v.number(), v.boolean(), v.array(v.string()))),
     validation: v.optional(v.object({
       min: v.optional(v.number()),
       max: v.optional(v.number()),
@@ -115,6 +116,7 @@ export const updateCustomField = mutation({
     })),
     active: v.optional(v.boolean()),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -150,6 +152,7 @@ export const deleteCustomField = mutation({
   args: {
     fieldId: v.id("customFieldDefinitions"),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -188,6 +191,7 @@ export const reorderCustomFields = mutation({
       order: v.number(),
     })),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -213,6 +217,41 @@ export const getCustomFields = query({
     entityType: v.optional(v.union(v.literal("task"), v.literal("project"), v.literal("user"))),
     active: v.optional(v.boolean()),
   },
+  returns: v.array(v.object({
+    _id: v.id("customFieldDefinitions"),
+    _creationTime: v.number(),
+    workspaceId: v.id("workspaces"),
+    entityType: v.union(v.literal("task"), v.literal("project"), v.literal("user")),
+    key: v.string(),
+    label: v.string(),
+    type: v.union(
+      v.literal("text"),
+      v.literal("number"),
+      v.literal("date"),
+      v.literal("select"),
+      v.literal("multiselect"),
+      v.literal("boolean"),
+      v.literal("url"),
+      v.literal("email")
+    ),
+    options: v.optional(v.array(v.string())),
+    required: v.boolean(),
+    defaultValue: v.optional(v.union(v.string(), v.number(), v.boolean(), v.array(v.string()))),
+    validation: v.optional(v.object({
+      min: v.optional(v.number()),
+      max: v.optional(v.number()),
+      pattern: v.optional(v.string()),
+      message: v.optional(v.string()),
+    })),
+    permissions: v.optional(v.object({
+      view: v.array(v.string()),
+      edit: v.array(v.string()),
+    })),
+    order: v.number(),
+    active: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -247,8 +286,9 @@ export const setCustomFieldValue = mutation({
   args: {
     fieldDefinitionId: v.id("customFieldDefinitions"),
     entityId: v.string(),
-    value: v.any(),
+    value: v.union(v.string(), v.number(), v.boolean(), v.array(v.string()), v.null()),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -300,6 +340,50 @@ export const getCustomFieldValues = query({
   args: {
     entityId: v.string(),
   },
+  returns: v.array(v.object({
+    _id: v.id("customFieldValues"),
+    _creationTime: v.number(),
+    fieldDefinitionId: v.id("customFieldDefinitions"),
+    entityId: v.string(),
+    value: v.union(v.string(), v.number(), v.boolean(), v.array(v.string()), v.null()),
+    updatedAt: v.number(),
+    updatedBy: v.string(),
+    fieldDefinition: v.optional(v.object({
+      _id: v.id("customFieldDefinitions"),
+      _creationTime: v.number(),
+      workspaceId: v.id("workspaces"),
+      entityType: v.union(v.literal("task"), v.literal("project"), v.literal("user")),
+      key: v.string(),
+      label: v.string(),
+      type: v.union(
+        v.literal("text"),
+        v.literal("number"),
+        v.literal("date"),
+        v.literal("select"),
+        v.literal("multiselect"),
+        v.literal("boolean"),
+        v.literal("url"),
+        v.literal("email")
+      ),
+      options: v.optional(v.array(v.string())),
+      required: v.boolean(),
+      defaultValue: v.optional(v.union(v.string(), v.number(), v.boolean(), v.array(v.string()))),
+      validation: v.optional(v.object({
+        min: v.optional(v.number()),
+        max: v.optional(v.number()),
+        pattern: v.optional(v.string()),
+        message: v.optional(v.string()),
+      })),
+      permissions: v.optional(v.object({
+        view: v.array(v.string()),
+        edit: v.array(v.string()),
+      })),
+      order: v.number(),
+      active: v.boolean(),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    })),
+  })),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -332,9 +416,10 @@ export const bulkSetCustomFieldValues = mutation({
     entityId: v.string(),
     values: v.array(v.object({
       fieldDefinitionId: v.id("customFieldDefinitions"),
-      value: v.any(),
+      value: v.union(v.string(), v.number(), v.boolean(), v.array(v.string()), v.null()),
     })),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -386,6 +471,7 @@ export const deleteCustomFieldValues = mutation({
   args: {
     entityId: v.string(),
   },
+  returns: v.object({ success: v.boolean(), deletedCount: v.number() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -423,10 +509,11 @@ export const searchByCustomFields = query({
         v.literal("is_empty"),
         v.literal("is_not_empty")
       ),
-      value: v.any(),
-      value2: v.optional(v.any()), // For "between" operator
+      value: v.union(v.string(), v.number(), v.boolean(), v.array(v.string()), v.null()),
+      value2: v.optional(v.union(v.string(), v.number(), v.boolean(), v.array(v.string()), v.null())), // For "between" operator
     })),
   },
+  returns: v.array(v.any()), // Returns different entity types (tasks, projects, users)
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {

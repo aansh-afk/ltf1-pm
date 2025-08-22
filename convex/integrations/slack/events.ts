@@ -16,6 +16,7 @@ export const storeSlackIntegration = mutation({
     incomingWebhookChannel: v.optional(v.string()),
     scopes: v.array(v.string()),
   },
+  returns: v.id("slackIntegrations"),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -73,6 +74,7 @@ export const mapSlackChannel = mutation({
     channelType: v.union(v.literal("project"), v.literal("general"), v.literal("alerts")),
     syncEvents: v.array(v.string()), // ["task_created", "task_completed", "sprint_started", etc.]
   },
+  returns: v.id("slackChannels"),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -125,6 +127,7 @@ export const mapSlackUser = mutation({
     slackRealName: v.optional(v.string()),
     slackAvatar: v.optional(v.string()),
   },
+  returns: v.id("slackUserMappings"),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -170,13 +173,28 @@ export const logSlackEvent = mutation({
   args: {
     workspaceId: v.id("workspaces"),
     eventType: v.string(),
-    eventData: v.any(),
+    eventData: v.object({
+      text: v.optional(v.string()),
+      user: v.optional(v.string()),
+      channel: v.optional(v.string()),
+      thread_ts: v.optional(v.string()),
+      reaction: v.optional(v.string()),
+      item: v.optional(v.object({
+        type: v.string(),
+        ts: v.string(),
+        channel: v.string(),
+      })),
+      file_id: v.optional(v.string()),
+      user_id: v.optional(v.string()),
+      channel_id: v.optional(v.string()),
+    }),
     userId: v.optional(v.string()),
     channelId: v.optional(v.string()),
     messageTs: v.optional(v.string()),
     processed: v.boolean(),
     error: v.optional(v.string()),
   },
+  returns: v.id("slackEvents"),
   handler: async (ctx, args) => {
     return await ctx.db.insert("slackEvents", {
       workspaceId: args.workspaceId,
@@ -197,6 +215,10 @@ export const processSlackEvent = action({
   args: {
     eventId: v.id("slackEvents"),
   },
+  returns: v.object({
+    success: v.boolean(),
+    message: v.optional(v.string()),
+  }),
   handler: async (ctx, args) => {
     // Get the event
     const event = await ctx.runQuery(api.integrations.slack.queries.getSlackEvent, {
@@ -434,8 +456,35 @@ export const sendNotification = action({
   args: {
     workspaceId: v.id("workspaces"),
     eventType: v.string(),
-    eventData: v.any(),
+    eventData: v.object({
+      task: v.optional(v.object({
+        title: v.string(),
+        priority: v.string(),
+        status: v.string(),
+        timeSpent: v.optional(v.number()),
+      })),
+      projectName: v.optional(v.string()),
+      creatorName: v.optional(v.string()),
+      completedByName: v.optional(v.string()),
+      sprint: v.optional(v.object({
+        name: v.string(),
+      })),
+      startDate: v.optional(v.string()),
+      endDate: v.optional(v.string()),
+      taskCount: v.optional(v.number()),
+      totalPoints: v.optional(v.number()),
+      meeting: v.optional(v.object({
+        title: v.string(),
+        duration: v.number(),
+      })),
+      startTime: v.optional(v.string()),
+      attendees: v.optional(v.array(v.string())),
+    }),
   },
+  returns: v.object({
+    success: v.boolean(),
+    message: v.optional(v.string()),
+  }),
   handler: async (ctx, args) => {
     // Get integration
     const integration = await ctx.runQuery(api.integrations.slack.queries.getSlackIntegration, {

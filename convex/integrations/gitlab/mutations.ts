@@ -206,6 +206,16 @@ export const syncGitLabIssues = mutation({
       throw new Error("Unauthorized")
     }
     
+    // Get the internal user record
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first()
+    
+    if (!user) {
+      throw new Error("User not found")
+    }
+    
     // Process each issue
     for (const issue of args.issues) {
       // Check if task already exists for this issue
@@ -236,7 +246,7 @@ export const syncGitLabIssues = mutation({
           priority: "medium",
           type: "task",
           labels: issue.labels,
-          reporterId: identity.subject,
+          reporterId: user._id,
           assigneeIds: [], // Would need to map GitLab users to system users
           dueDate: issue.due_date ? new Date(issue.due_date).getTime() : undefined,
           gitlabIssueId: issue.id,

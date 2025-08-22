@@ -124,6 +124,7 @@ export const createWorkflow = mutation({
     })),
     active: v.optional(v.boolean()),
   },
+  returns: v.id("workflows"),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -134,17 +135,20 @@ export const createWorkflow = mutation({
       workspaceId: args.workspaceId,
       name: args.name,
       description: args.description,
-      triggerType: args.triggerType,
-      triggerConfig: args.triggerConfig,
-      conditions: args.conditions,
+      trigger: {
+        type: args.triggerType as "manual" | "event" | "schedule" | "webhook",
+        eventType: args.triggerConfig?.eventType,
+        schedule: args.triggerConfig?.schedule,
+        webhookUrl: args.triggerConfig?.webhookUrl,
+        conditions: args.conditions,
+      },
       actions: args.actions,
-      active: args.active ?? true,
+      enabled: args.active ?? true,
+      lastRun: undefined,
+      runCount: 0,
       createdBy: identity.subject,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      executionCount: 0,
-      lastExecutedAt: undefined,
-      errorCount: 0,
     })
   },
 })
@@ -169,6 +173,7 @@ export const updateWorkflow = mutation({
     }))),
     active: v.optional(v.boolean()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -188,6 +193,7 @@ export const deleteWorkflow = mutation({
   args: {
     workflowId: v.id("workflows"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -204,6 +210,40 @@ export const getWorkflows = query({
     workspaceId: v.id("workspaces"),
     active: v.optional(v.boolean()),
   },
+  returns: v.array(v.object({
+    _id: v.id("workflows"),
+    _creationTime: v.number(),
+    workspaceId: v.id("workspaces"),
+    name: v.string(),
+    description: v.optional(v.string()),
+    trigger: v.object({
+      type: v.union(
+        v.literal("event"),
+        v.literal("schedule"),
+        v.literal("webhook"),
+        v.literal("manual")
+      ),
+      eventType: v.optional(v.string()),
+      schedule: v.optional(v.string()),
+      webhookUrl: v.optional(v.string()),
+      conditions: v.optional(v.array(v.object({
+        field: v.string(),
+        operator: v.string(),
+        value: v.any(),
+      }))),
+    }),
+    actions: v.array(v.object({
+      type: v.string(),
+      config: v.any(),
+      order: v.number(),
+    })),
+    enabled: v.boolean(),
+    lastRun: v.optional(v.number()),
+    runCount: v.number(),
+    createdBy: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })),
   handler: async (ctx, args) => {
     let query = ctx.db
       .query("workflows")
@@ -212,7 +252,7 @@ export const getWorkflows = query({
     const workflows = await query.collect()
     
     if (args.active !== undefined) {
-      return workflows.filter(w => w.active === args.active)
+      return workflows.filter(w => w.enabled === args.active)
     }
     
     return workflows
@@ -225,6 +265,29 @@ export const getWorkflowRuns = query({
     workflowId: v.id("workflows"),
     limit: v.optional(v.number()),
   },
+  returns: v.array(v.object({
+    _id: v.id("workflowRuns"),
+    _creationTime: v.number(),
+    workflowId: v.id("workflows"),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("failed")
+    ),
+    triggeredBy: v.string(),
+    triggerData: v.optional(v.any()),
+    executionLog: v.array(v.object({
+      timestamp: v.number(),
+      action: v.string(),
+      status: v.string(),
+      message: v.string(),
+      data: v.optional(v.any()),
+    })),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    error: v.optional(v.string()),
+  })),
   handler: async (ctx, args) => {
     const runs = await ctx.db
       .query("workflowRuns")
@@ -242,12 +305,13 @@ export const triggerWorkflow = action({
     workflowId: v.id("workflows"),
     context: v.optional(v.any()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const workflow = await ctx.runQuery(api.automation.getWorkflowById, {
       workflowId: args.workflowId,
     })
 
-    if (!workflow || !workflow.active) {
+    if (!workflow || !workflow.enabled) {
       throw new Error("Workflow not found or inactive")
     }
 
@@ -268,6 +332,43 @@ export const getWorkflowById = query({
   args: {
     workflowId: v.id("workflows"),
   },
+  returns: v.union(
+    v.null(),
+    v.object({
+      _id: v.id("workflows"),
+      _creationTime: v.number(),
+      workspaceId: v.id("workspaces"),
+      name: v.string(),
+      description: v.optional(v.string()),
+      trigger: v.object({
+        type: v.union(
+          v.literal("event"),
+          v.literal("schedule"),
+          v.literal("webhook"),
+          v.literal("manual")
+        ),
+        eventType: v.optional(v.string()),
+        schedule: v.optional(v.string()),
+        webhookUrl: v.optional(v.string()),
+        conditions: v.optional(v.array(v.object({
+          field: v.string(),
+          operator: v.string(),
+          value: v.any(),
+        }))),
+      }),
+      actions: v.array(v.object({
+        type: v.string(),
+        config: v.any(),
+        order: v.number(),
+      })),
+      enabled: v.boolean(),
+      lastRun: v.optional(v.number()),
+      runCount: v.number(),
+      createdBy: v.string(),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    })
+  ),
   handler: async (ctx, args) => {
     return await ctx.db.get(args.workflowId)
   },
@@ -280,15 +381,16 @@ export const createWorkflowRun = mutation({
     triggerType: v.string(),
     context: v.optional(v.any()),
   },
+  returns: v.id("workflowRuns"),
   handler: async (ctx, args) => {
     return await ctx.db.insert("workflowRuns", {
       workflowId: args.workflowId,
       status: "running",
+      triggeredBy: args.triggerType,
+      triggerData: args.context,
+      executionLog: [],
       startedAt: Date.now(),
       completedAt: undefined,
-      triggerType: args.triggerType,
-      context: args.context,
-      actions: [],
       error: undefined,
     })
   },
@@ -299,22 +401,22 @@ export const updateWorkflowRun = mutation({
   args: {
     runId: v.id("workflowRuns"),
     status: v.optional(v.union(
+      v.literal("pending"),
       v.literal("running"),
       v.literal("completed"),
-      v.literal("failed"),
-      v.literal("cancelled")
+      v.literal("failed")
     )),
     completedAt: v.optional(v.number()),
-    actions: v.optional(v.array(v.object({
-      type: v.string(),
+    executionLog: v.optional(v.array(v.object({
+      timestamp: v.number(),
+      action: v.string(),
       status: v.string(),
-      startedAt: v.number(),
-      completedAt: v.optional(v.number()),
-      result: v.optional(v.any()),
-      error: v.optional(v.string()),
+      message: v.string(),
+      data: v.optional(v.any()),
     }))),
     error: v.optional(v.string()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { runId, ...updateData } = args
     await ctx.db.patch(runId, updateData)
@@ -328,6 +430,7 @@ export const processEventTrigger = action({
     entityId: v.string(),
     context: v.any(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     // Find workflows triggered by this event
     const workflows = await ctx.runQuery(api.automation.getWorkflowsByTrigger, {
@@ -337,11 +440,11 @@ export const processEventTrigger = action({
 
     // Execute each matching workflow
     for (const workflow of workflows) {
-      if (!workflow.active) continue
+      if (!workflow.enabled) continue
 
       // Check conditions
-      if (workflow.conditions && workflow.conditions.length > 0) {
-        const conditionsMet = await evaluateConditions(ctx, workflow.conditions, args.context)
+      if (workflow.trigger.conditions && workflow.trigger.conditions.length > 0) {
+        const conditionsMet = await evaluateConditions(ctx, workflow.trigger.conditions, args.context)
         if (!conditionsMet) continue
       }
 
@@ -364,15 +467,49 @@ export const getWorkflowsByTrigger = query({
     triggerType: v.string(),
     eventType: v.optional(v.string()),
   },
+  returns: v.array(v.object({
+    _id: v.id("workflows"),
+    _creationTime: v.number(),
+    workspaceId: v.id("workspaces"),
+    name: v.string(),
+    description: v.optional(v.string()),
+    trigger: v.object({
+      type: v.union(
+        v.literal("event"),
+        v.literal("schedule"),
+        v.literal("webhook"),
+        v.literal("manual")
+      ),
+      eventType: v.optional(v.string()),
+      schedule: v.optional(v.string()),
+      webhookUrl: v.optional(v.string()),
+      conditions: v.optional(v.array(v.object({
+        field: v.string(),
+        operator: v.string(),
+        value: v.any(),
+      }))),
+    }),
+    actions: v.array(v.object({
+      type: v.string(),
+      config: v.any(),
+      order: v.number(),
+    })),
+    enabled: v.boolean(),
+    lastRun: v.optional(v.number()),
+    runCount: v.number(),
+    createdBy: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })),
   handler: async (ctx, args) => {
     const workflows = await ctx.db
       .query("workflows")
-      .filter((q) => q.eq(q.field("triggerType"), args.triggerType))
+      .filter((q) => q.eq(q.field("trigger.type"), args.triggerType))
       .collect()
 
     if (args.eventType) {
       return workflows.filter(w => 
-        w.triggerConfig?.eventType === args.eventType
+        w.trigger.eventType === args.eventType
       )
     }
 
@@ -383,6 +520,7 @@ export const getWorkflowsByTrigger = query({
 // Process scheduled workflows
 export const processScheduledWorkflows = action({
   args: {},
+  returns: v.null(),
   handler: async (ctx, args) => {
     const workflows = await ctx.runQuery(api.automation.getWorkflowsByTrigger, {
       triggerType: TRIGGER_TYPES.SCHEDULE,
@@ -391,7 +529,7 @@ export const processScheduledWorkflows = action({
     const now = Date.now()
 
     for (const workflow of workflows) {
-      if (!workflow.active) continue
+      if (!workflow.enabled) continue
 
       // Check if it's time to run based on schedule
       if (shouldRunScheduledWorkflow(workflow, now)) {
@@ -421,10 +559,11 @@ export const updateWorkflowLastExecuted = mutation({
     workflowId: v.id("workflows"),
     lastExecutedAt: v.number(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.patch(args.workflowId, {
-      lastExecutedAt: args.lastExecutedAt,
-      executionCount: (await ctx.db.get(args.workflowId))?.executionCount ?? 0 + 1,
+      lastRun: args.lastExecutedAt,
+      runCount: (await ctx.db.get(args.workflowId))?.runCount ?? 0 + 1,
     })
   },
 })
@@ -509,12 +648,12 @@ export const incrementWorkflowErrorCount = mutation({
   args: {
     workflowId: v.id("workflows"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const workflow = await ctx.db.get(args.workflowId)
     if (workflow) {
-      await ctx.db.patch(args.workflowId, {
-        errorCount: (workflow.errorCount ?? 0) + 1,
-      })
+      // Note: errorCount field removed from schema
+      // Could track errors in a separate table if needed
     }
   },
 })
@@ -528,7 +667,7 @@ async function executeAction(
 ): Promise<any> {
   switch (action.type) {
     case ACTION_TYPES.CREATE_TASK:
-      return await ctx.runMutation(api.tasks.createTask, {
+      return await ctx.runMutation(api.tasks.mutations.createTask, {
         workspaceId: context.workspaceId,
         projectId: action.config.projectId || context.projectId,
         title: replaceVariables(action.config.title, context),
@@ -540,26 +679,26 @@ async function executeAction(
       })
 
     case ACTION_TYPES.UPDATE_TASK:
-      return await ctx.runMutation(api.tasks.updateTask, {
+      return await ctx.runMutation(api.tasks.mutations.updateTask, {
         taskId: context.taskId || action.config.taskId,
         ...action.config.updates,
       })
 
     case ACTION_TYPES.ASSIGN_TASK:
-      return await ctx.runMutation(api.tasks.updateTask, {
+      return await ctx.runMutation(api.tasks.mutations.updateTask, {
         taskId: context.taskId || action.config.taskId,
         assignedTo: action.config.userId,
       })
 
     case ACTION_TYPES.CHANGE_TASK_STATUS:
-      return await ctx.runMutation(api.tasks.updateTask, {
+      return await ctx.runMutation(api.tasks.mutations.updateTask, {
         taskId: context.taskId || action.config.taskId,
         status: action.config.status,
       })
 
     case ACTION_TYPES.SEND_SLACK_MESSAGE:
       if (action.config.channelId) {
-        return await ctx.runAction(api.integrations.slack.actions.sendSlackMessage, {
+        return await ctx.runAction(api.integrations.slack.commands.handleSlashCommand, {
           channelId: action.config.channelId,
           text: replaceVariables(action.config.message, context),
         })
@@ -841,6 +980,23 @@ export const exportWorkflowTemplate = query({
   args: {
     workflowId: v.id("workflows"),
   },
+  returns: v.object({
+    name: v.string(),
+    description: v.optional(v.string()),
+    triggerType: v.string(),
+    triggerConfig: v.any(),
+    conditions: v.optional(v.array(v.object({
+      field: v.string(),
+      operator: v.string(),
+      value: v.any(),
+      connector: v.optional(v.union(v.literal("AND"), v.literal("OR"))),
+    }))),
+    actions: v.array(v.object({
+      type: v.string(),
+      config: v.any(),
+      order: v.number(),
+    })),
+  }),
   handler: async (ctx, args) => {
     const workflow = await ctx.db.get(args.workflowId)
     if (!workflow) {
@@ -851,9 +1007,13 @@ export const exportWorkflowTemplate = query({
     const template = {
       name: workflow.name,
       description: workflow.description,
-      triggerType: workflow.triggerType,
-      triggerConfig: workflow.triggerConfig,
-      conditions: workflow.conditions,
+      triggerType: workflow.trigger.type,
+      triggerConfig: {
+        eventType: workflow.trigger.eventType,
+        schedule: workflow.trigger.schedule,
+        webhookUrl: workflow.trigger.webhookUrl,
+      },
+      conditions: workflow.trigger.conditions,
       actions: workflow.actions,
     }
 
@@ -874,6 +1034,7 @@ export const importWorkflowTemplate = mutation({
       actions: v.array(v.any()),
     }),
   },
+  returns: v.id("workflows"),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -884,17 +1045,20 @@ export const importWorkflowTemplate = mutation({
       workspaceId: args.workspaceId,
       name: args.template.name,
       description: args.template.description,
-      triggerType: args.template.triggerType,
-      triggerConfig: args.template.triggerConfig,
-      conditions: args.template.conditions,
+      trigger: {
+        type: args.template.triggerType as "manual" | "event" | "schedule" | "webhook",
+        eventType: args.template.triggerConfig?.eventType,
+        schedule: args.template.triggerConfig?.schedule,
+        webhookUrl: args.template.triggerConfig?.webhookUrl,
+        conditions: args.template.conditions,
+      },
       actions: args.template.actions,
-      active: false, // Start as inactive for safety
+      enabled: false, // Start as inactive for safety
       createdBy: identity.subject,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      executionCount: 0,
-      lastExecutedAt: undefined,
-      errorCount: 0,
+      runCount: 0,
+      lastRun: undefined,
     })
   },
 })

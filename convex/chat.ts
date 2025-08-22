@@ -41,25 +41,18 @@ export const createChannel = mutation({
       }
       
       // Check if direct channel already exists
-      const existingChannel = await ctx.db
+      const directChannels = await ctx.db
         .query("chatChannels")
         .withIndex("by_type", (q) => q.eq("type", "direct"))
-        .filter((q) => 
-          q.and(
-            q.eq(q.field("workspaceId"), args.workspaceId),
-            q.or(
-              q.and(
-                q.eq(q.field("members")[0], args.members[0]),
-                q.eq(q.field("members")[1], args.members[1])
-              ),
-              q.and(
-                q.eq(q.field("members")[0], args.members[1]),
-                q.eq(q.field("members")[1], args.members[0])
-              )
-            )
-          )
-        )
-        .first()
+        .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
+        .collect()
+      
+      const existingChannel = args.members ? directChannels.find(channel => 
+        channel.members && 
+        channel.members.length === 2 &&
+        ((channel.members[0] === args.members![0] && channel.members[1] === args.members![1]) ||
+         (channel.members[0] === args.members![1] && channel.members[1] === args.members![0]))
+      ) : undefined
 
       if (existingChannel) {
         return existingChannel._id
@@ -502,7 +495,7 @@ export const getMessages = query({
 
     // Filter by time if before is specified
     if (args.before) {
-      query = query.filter((q) => q.lt(q.field("createdAt"), args.before))
+      query = query.filter((q) => q.lt(q.field("createdAt"), args.before!))
     }
 
     const messages = await query
@@ -591,7 +584,7 @@ export const searchMessages = query({
     const userChannels = await ctx.db
       .query("chatChannels")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-      .filter((q) => q.eq(q.field("members"), user._id))
+      .filter((q) => q.eq(q.field("members"), [user._id]))
       .collect()
 
     const userChannelIds = userChannels.map(c => c._id)
@@ -868,7 +861,7 @@ export const getUnreadCounts = query({
     const channels = await ctx.db
       .query("chatChannels")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-      .filter((q) => q.eq(q.field("members"), user._id))
+      .filter((q) => q.eq(q.field("members"), [user._id]))
       .collect()
 
     const unreadCounts: Record<string, number> = {}

@@ -61,10 +61,10 @@ export const createRoom = mutation({
       createdAt: Date.now(),
     })
 
-    // If this is for a meeting, update the meeting with the room ID
+    // If this is for a meeting, update the meeting with the room URL
     if (args.meetingId) {
       await ctx.db.patch(args.meetingId, {
-        videoRoomId: roomId,
+        meetingUrl: `https://meet.jit.si/${roomId}`,
       })
     }
 
@@ -143,11 +143,12 @@ export const joinRoom = mutation({
       // Create audit log
       await ctx.runMutation(api.audit.createAuditLog, {
         workspaceId: room.workspaceId,
-        userId: user._id,
-        action: "video.room.joined",
+        eventType: "video.room.joined",
+        description: "User joined video room",
+        severity: "info",
         entityType: "videoRoom",
         entityId: args.roomId,
-        details: {
+        metadata: {
           roomName: room.name,
           audio: newParticipant.audio,
           video: newParticipant.video,
@@ -396,11 +397,12 @@ export const startRecording = mutation({
     // Create audit log
     await ctx.runMutation(api.audit.createAuditLog, {
       workspaceId: room.workspaceId,
-      userId: user._id,
-      action: "video.recording.started",
+      eventType: "video.recording.started",
+      description: "Video recording started",
+      severity: "info",
       entityType: "videoRoom",
       entityId: args.roomId,
-      details: {
+      metadata: {
         roomName: room.name,
       },
       ipAddress: undefined,
@@ -442,11 +444,12 @@ export const stopRecording = mutation({
     // Create audit log
     await ctx.runMutation(api.audit.createAuditLog, {
       workspaceId: room.workspaceId,
-      userId: user._id,
-      action: "video.recording.stopped",
+      eventType: "video.recording.stopped",
+      description: "Video recording stopped",
+      severity: "info",
       entityType: "videoRoom",
       entityId: args.roomId,
-      details: {
+      metadata: {
         roomName: room.name,
         recordingUrl: room.recordingUrl,
       },
@@ -720,9 +723,9 @@ export const scheduleMeeting = mutation({
       createdAt: Date.now(),
     })
 
-    // Update meeting with room ID
+    // Update meeting with room URL
     await ctx.db.patch(args.meetingId, {
-      videoRoomId: roomId,
+      meetingUrl: `https://meet.jit.si/${roomId}`,
     })
 
     return roomId

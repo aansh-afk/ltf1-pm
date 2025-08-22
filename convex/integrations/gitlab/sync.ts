@@ -8,15 +8,21 @@ export const syncProjectData = action({
   args: {
     projectId: v.id("projects"),
   },
+  returns: v.object({
+    success: v.boolean(),
+    projectName: v.string(),
+    issueCount: v.number(),
+    mergeRequestCount: v.number(),
+  }),
   handler: async (ctx, args) => {
     // Get GitLab integration
-    const integration = await ctx.runQuery(api.integrations.gitlab.queries.getGitLabIntegration, {})
+    const integration: any = await ctx.runQuery(api.integrations.gitlab.queries.getGitLabIntegration, {})
     if (!integration || integration.isExpired) {
       throw new Error("GitLab integration not found or expired")
     }
     
     // Get project connection
-    const connection = await ctx.runQuery(api.integrations.gitlab.queries.getProjectGitLabConnection, {
+    const connection: any = await ctx.runQuery(api.integrations.gitlab.queries.getProjectGitLabConnection, {
       projectId: args.projectId,
     })
     
@@ -25,7 +31,7 @@ export const syncProjectData = action({
     }
     
     // Fetch project details
-    const projectResponse = await fetch(
+    const projectResponse: any = await fetch(
       `${GITLAB_API_URL}/projects/${connection.gitlabProjectId}`,
       {
         headers: {
@@ -38,7 +44,7 @@ export const syncProjectData = action({
       throw new Error("Failed to fetch GitLab project")
     }
     
-    const projectData = await projectResponse.json()
+    const projectData: any = await projectResponse.json()
     
     // Fetch issues
     const issuesResponse = await fetch(
@@ -120,15 +126,34 @@ export const syncProjectData = action({
 
 export const fetchGitLabProjects = action({
   args: {},
+  returns: v.array(v.object({
+    id: v.number(),
+    name: v.string(),
+    nameWithNamespace: v.string(),
+    path: v.string(),
+    pathWithNamespace: v.string(),
+    description: v.union(v.string(), v.null()),
+    defaultBranch: v.string(),
+    visibility: v.string(),
+    webUrl: v.string(),
+    httpUrlToRepo: v.string(),
+    sshUrlToRepo: v.string(),
+    createdAt: v.string(),
+    lastActivityAt: v.string(),
+    starCount: v.number(),
+    forksCount: v.number(),
+    openIssuesCount: v.number(),
+    archived: v.boolean(),
+  })),
   handler: async (ctx) => {
     // Get GitLab integration
-    const integration = await ctx.runQuery(api.integrations.gitlab.queries.getGitLabIntegration, {})
+    const integration: any = await ctx.runQuery(api.integrations.gitlab.queries.getGitLabIntegration, {})
     if (!integration || integration.isExpired) {
       throw new Error("GitLab integration not found or expired")
     }
     
     // Fetch user's projects from GitLab
-    const response = await fetch(
+    const response: any = await fetch(
       `${GITLAB_API_URL}/projects?membership=true&per_page=100`,
       {
         headers: {
@@ -141,7 +166,7 @@ export const fetchGitLabProjects = action({
       throw new Error("Failed to fetch GitLab projects")
     }
     
-    const projects = await response.json()
+    const projects: any = await response.json()
     
     return projects.map((project: any) => ({
       id: project.id,
@@ -174,15 +199,21 @@ export const createGitLabIssue = action({
     assigneeIds: v.optional(v.array(v.number())),
     dueDate: v.optional(v.string()),
   },
+  returns: v.object({
+    id: v.number(),
+    iid: v.number(),
+    title: v.string(),
+    webUrl: v.string(),
+  }),
   handler: async (ctx, args) => {
     // Get GitLab integration
-    const integration = await ctx.runQuery(api.integrations.gitlab.queries.getGitLabIntegration, {})
+    const integration: any = await ctx.runQuery(api.integrations.gitlab.queries.getGitLabIntegration, {})
     if (!integration || integration.isExpired) {
       throw new Error("GitLab integration not found or expired")
     }
     
     // Get project connection
-    const connection = await ctx.runQuery(api.integrations.gitlab.queries.getProjectGitLabConnection, {
+    const connection: any = await ctx.runQuery(api.integrations.gitlab.queries.getProjectGitLabConnection, {
       projectId: args.projectId,
     })
     
@@ -208,7 +239,7 @@ export const createGitLabIssue = action({
       body.due_date = args.dueDate
     }
     
-    const response = await fetch(
+    const response: any = await fetch(
       `${GITLAB_API_URL}/projects/${connection.gitlabProjectId}/issues`,
       {
         method: "POST",
@@ -225,7 +256,7 @@ export const createGitLabIssue = action({
       throw new Error(`Failed to create GitLab issue: ${error}`)
     }
     
-    const issue = await response.json()
+    const issue: any = await response.json()
     
     return {
       id: issue.id,
@@ -246,15 +277,21 @@ export const createGitLabMergeRequest = action({
     assigneeId: v.optional(v.number()),
     labels: v.optional(v.array(v.string())),
   },
+  returns: v.object({
+    id: v.number(),
+    iid: v.number(),
+    title: v.string(),
+    webUrl: v.string(),
+  }),
   handler: async (ctx, args) => {
     // Get GitLab integration
-    const integration = await ctx.runQuery(api.integrations.gitlab.queries.getGitLabIntegration, {})
+    const integration: any = await ctx.runQuery(api.integrations.gitlab.queries.getGitLabIntegration, {})
     if (!integration || integration.isExpired) {
       throw new Error("GitLab integration not found or expired")
     }
     
     // Get project connection
-    const connection = await ctx.runQuery(api.integrations.gitlab.queries.getProjectGitLabConnection, {
+    const connection: any = await ctx.runQuery(api.integrations.gitlab.queries.getProjectGitLabConnection, {
       projectId: args.projectId,
     })
     
@@ -278,7 +315,7 @@ export const createGitLabMergeRequest = action({
       body.labels = args.labels.join(",")
     }
     
-    const response = await fetch(
+    const response: any = await fetch(
       `${GITLAB_API_URL}/projects/${connection.gitlabProjectId}/merge_requests`,
       {
         method: "POST",
@@ -295,7 +332,7 @@ export const createGitLabMergeRequest = action({
       throw new Error(`Failed to create GitLab merge request: ${error}`)
     }
     
-    const mergeRequest = await response.json()
+    const mergeRequest: any = await response.json()
     
     return {
       id: mergeRequest.id,

@@ -161,7 +161,7 @@ export const getTimeEntriesForApproval = query({
       // Get all tasks for the project
       const tasks = await ctx.db
         .query("tasks")
-        .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+        .withIndex("by_project", (q) => q.eq("projectId", args.projectId!))
         .collect()
 
       const taskIds = tasks.map(t => t._id)
@@ -178,7 +178,7 @@ export const getTimeEntriesForApproval = query({
     } else if (args.userId) {
       entries = await ctx.db
         .query("timeEntries")
-        .withIndex("by_user", (q) => q.eq("userId", args.userId))
+        .withIndex("by_user", (q) => q.eq("userId", args.userId!))
         .filter((q) => q.eq(q.field("approved"), false))
         .collect()
     } else {
@@ -271,9 +271,9 @@ export const stopTimer = mutation({
     // Update task time spent
     const task = await ctx.db.get(entry.taskId)
     if (task) {
-      const currentTimeSpent = task.timeSpent || 0
+      const currentTimeTracked = task.timeTracked || 0
       await ctx.db.patch(entry.taskId, {
-        timeSpent: currentTimeSpent + (duration / 3600000), // Convert to hours
+        timeTracked: currentTimeTracked + duration, // Store in milliseconds
         updatedAt: Date.now(),
       })
     }
@@ -318,9 +318,9 @@ export const createManualEntry = mutation({
     // Update task time spent
     const task = await ctx.db.get(args.taskId)
     if (task) {
-      const currentTimeSpent = task.timeSpent || 0
+      const currentTimeTracked = task.timeTracked || 0
       await ctx.db.patch(args.taskId, {
-        timeSpent: currentTimeSpent + (duration / 3600000), // Convert to hours
+        timeTracked: currentTimeTracked + duration, // Store in milliseconds
         updatedAt: Date.now(),
       })
     }
@@ -409,10 +409,10 @@ export const deleteTimeEntry = mutation({
     if (entry.duration) {
       const task = await ctx.db.get(entry.taskId)
       if (task) {
-        const currentTimeSpent = task.timeSpent || 0
-        const newTimeSpent = Math.max(0, currentTimeSpent - (entry.duration / 3600000))
+        const currentTimeTracked = task.timeTracked || 0
+        const newTimeTracked = Math.max(0, currentTimeTracked - entry.duration)
         await ctx.db.patch(entry.taskId, {
-          timeSpent: newTimeSpent,
+          timeTracked: newTimeTracked,
           updatedAt: Date.now(),
         })
       }

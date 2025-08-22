@@ -15,6 +15,55 @@ export const globalSearch = query({
     })),
     limit: v.optional(v.number())
   },
+  returns: v.array(v.union(
+    v.object({
+      id: v.id("tasks"),
+      type: v.literal("task"),
+      title: v.string(),
+      description: v.optional(v.string()),
+      status: v.optional(v.string()),
+      priority: v.optional(v.string()),
+      projectId: v.optional(v.id("projects")),
+      createdAt: v.number(),
+      url: v.string(),
+    }),
+    v.object({
+      id: v.id("projects"),
+      type: v.literal("project"),
+      title: v.string(),
+      description: v.optional(v.string()),
+      status: v.optional(v.string()),
+      createdAt: v.number(),
+      url: v.string(),
+    }),
+    v.object({
+      id: v.id("sprints"),
+      type: v.literal("sprint"),
+      title: v.string(),
+      description: v.optional(v.string()),
+      status: v.optional(v.string()),
+      projectId: v.optional(v.id("projects")),
+      createdAt: v.number(),
+      url: v.string(),
+    }),
+    v.object({
+      id: v.id("meetings"),
+      type: v.literal("meeting"),
+      title: v.string(),
+      description: v.optional(v.string()),
+      createdAt: v.number(),
+      url: v.string(),
+    }),
+    v.object({
+      id: v.id("users"),
+      type: v.literal("user"),
+      title: v.string(),
+      description: v.optional(v.string()),
+      role: v.optional(v.string()),
+      createdAt: v.number(),
+      url: v.string(),
+    })
+  )),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -27,24 +76,21 @@ export const globalSearch = query({
     
     // Search Tasks
     if (!args.filters?.type || args.filters.type.includes('task')) {
-      const tasks = await ctx.db
-        .query("tasks")
-        .filter((q) => {
-          let filter = q.or(
-            q.gte(q.field("title").toLowerCase(), searchQuery),
-            q.gte(q.field("description").toLowerCase(), searchQuery)
-          )
-          
-          if (args.filters?.workspace) {
-            filter = q.and(filter, q.eq(q.field("workspaceId"), args.filters.workspace))
-          }
-          if (args.filters?.project) {
-            filter = q.and(filter, q.eq(q.field("projectId"), args.filters.project))
-          }
-          
-          return filter
+      let allTasks = await ctx.db.query("tasks").collect()
+      
+      // Apply project filter if provided
+      if (args.filters?.project) {
+        allTasks = allTasks.filter(t => t.projectId === args.filters!.project)
+      }
+      
+      // Filter by search query in JavaScript (case-insensitive)
+      const tasks = allTasks
+        .filter(task => {
+          const titleMatch = task.title.toLowerCase().includes(searchQuery)
+          const descMatch = task.description?.toLowerCase().includes(searchQuery) || false
+          return titleMatch || descMatch
         })
-        .take(limit)
+        .slice(0, limit)
       
       results.push(...tasks.map(task => ({
         id: task._id,
@@ -54,7 +100,6 @@ export const globalSearch = query({
         status: task.status,
         priority: task.priority,
         projectId: task.projectId,
-        workspaceId: task.workspaceId,
         createdAt: task._creationTime,
         url: `/tasks/${task._id}`
       })))
@@ -62,21 +107,21 @@ export const globalSearch = query({
     
     // Search Projects
     if (!args.filters?.type || args.filters.type.includes('project')) {
-      const projects = await ctx.db
-        .query("projects")
-        .filter((q) => {
-          let filter = q.or(
-            q.gte(q.field("name").toLowerCase(), searchQuery),
-            q.gte(q.field("description").toLowerCase(), searchQuery)
-          )
-          
-          if (args.filters?.workspace) {
-            filter = q.and(filter, q.eq(q.field("workspaceId"), args.filters.workspace))
-          }
-          
-          return filter
+      let allProjects = await ctx.db.query("projects").collect()
+      
+      // Apply workspace filter if provided
+      if (args.filters?.workspace) {
+        allProjects = allProjects.filter(p => p.workspaceId === args.filters!.workspace)
+      }
+      
+      // Filter by search query in JavaScript (case-insensitive)
+      const projects = allProjects
+        .filter((project: any) => {
+          const nameMatch = project.name.toLowerCase().includes(searchQuery)
+          const descMatch = project.description?.toLowerCase().includes(searchQuery) || false
+          return nameMatch || descMatch
         })
-        .take(limit)
+        .slice(0, limit)
       
       results.push(...projects.map(project => ({
         id: project._id,
@@ -84,7 +129,6 @@ export const globalSearch = query({
         title: project.name,
         description: project.description,
         status: project.status,
-        workspaceId: project.workspaceId,
         createdAt: project._creationTime,
         url: `/projects/${project._id}`
       })))
@@ -92,21 +136,21 @@ export const globalSearch = query({
     
     // Search Sprints
     if (!args.filters?.type || args.filters.type.includes('sprint')) {
-      const sprints = await ctx.db
-        .query("sprints")
-        .filter((q) => {
-          let filter = q.or(
-            q.gte(q.field("name").toLowerCase(), searchQuery),
-            q.gte(q.field("goal").toLowerCase(), searchQuery)
-          )
-          
-          if (args.filters?.project) {
-            filter = q.and(filter, q.eq(q.field("projectId"), args.filters.project))
-          }
-          
-          return filter
+      let allSprints = await ctx.db.query("sprints").collect()
+      
+      // Apply project filter if provided
+      if (args.filters?.project) {
+        allSprints = allSprints.filter(s => s.projectId === args.filters!.project)
+      }
+      
+      // Filter by search query in JavaScript (case-insensitive)
+      const sprints = allSprints
+        .filter((sprint: any) => {
+          const nameMatch = sprint.name.toLowerCase().includes(searchQuery)
+          const goalMatch = sprint.goal?.toLowerCase().includes(searchQuery) || false
+          return nameMatch || goalMatch
         })
-        .take(limit)
+        .slice(0, limit)
       
       results.push(...sprints.map(sprint => ({
         id: sprint._id,
@@ -122,23 +166,23 @@ export const globalSearch = query({
     
     // Search Meetings
     if (!args.filters?.type || args.filters.type.includes('meeting')) {
-      const meetings = await ctx.db
-        .query("meetings")
-        .filter((q) => {
-          let filter = q.or(
-            q.gte(q.field("title").toLowerCase(), searchQuery),
-            q.gte(q.field("description").toLowerCase(), searchQuery)
-          )
-          
-          if (args.filters?.workspace) {
-            filter = q.and(filter, q.eq(q.field("workspaceId"), args.filters.workspace))
-          }
-          
-          return filter
-        })
-        .take(limit)
+      let allMeetings = await ctx.db.query("meetings").collect()
       
-      results.push(...meetings.map(meeting => ({
+      // Apply workspace filter if provided
+      if (args.filters?.workspace) {
+        allMeetings = allMeetings.filter(m => m.workspaceId === args.filters!.workspace)
+      }
+      
+      // Filter by search query in JavaScript (case-insensitive)
+      const meetings = allMeetings
+        .filter((meeting: any) => {
+          const titleMatch = meeting.title.toLowerCase().includes(searchQuery)
+          const descMatch = meeting.description?.toLowerCase().includes(searchQuery) || false
+          return titleMatch || descMatch
+        })
+        .slice(0, limit)
+      
+      results.push(...meetings.map((meeting: any) => ({
         id: meeting._id,
         type: 'meeting' as const,
         title: meeting.title,
@@ -152,21 +196,20 @@ export const globalSearch = query({
     
     // Search Users
     if (!args.filters?.type || args.filters.type.includes('user')) {
-      const users = await ctx.db
-        .query("users")
-        .filter((q) => {
-          return q.or(
-            q.gte(q.field("firstName").toLowerCase(), searchQuery),
-            q.gte(q.field("lastName").toLowerCase(), searchQuery),
-            q.gte(q.field("email").toLowerCase(), searchQuery)
-          )
+      const allUsers = await ctx.db.query("users").collect()
+      
+      // Filter by search query in JavaScript (case-insensitive)
+      const users = allUsers
+        .filter(user => {
+          const emailMatch = user.email.toLowerCase().includes(searchQuery)
+          return emailMatch
         })
-        .take(limit)
+        .slice(0, limit)
       
       results.push(...users.map(user => ({
         id: user._id,
         type: 'user' as const,
-        title: `${user.firstName} ${user.lastName}`,
+        title: user.email,
         description: user.email,
         role: user.role,
         createdAt: user._creationTime,
@@ -218,6 +261,13 @@ export const quickSearch = query({
     query: v.string(),
     limit: v.optional(v.number())
   },
+  returns: v.array(v.object({
+    id: v.union(v.id("tasks"), v.id("projects")),
+    type: v.string(),
+    title: v.string(),
+    icon: v.string(),
+    action: v.string(),
+  })),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -228,29 +278,21 @@ export const quickSearch = query({
     const searchQuery = args.query.toLowerCase()
     
     // Quick search only returns top matches across all types
-    const results = await ctx.db
-      .query("tasks")
-      .filter((q) => 
-        q.or(
-          q.gte(q.field("title").toLowerCase(), searchQuery),
-          q.gte(q.field("key").toLowerCase(), searchQuery)
-        )
-      )
-      .take(limit / 2) // Get some tasks
+    const allTasks = await ctx.db.query("tasks").collect()
+    const results = allTasks
+      .filter(task => task.title.toLowerCase().includes(searchQuery))
+      .slice(0, Math.floor(limit / 2))
     
-    const projects = await ctx.db
-      .query("projects")
-      .filter((q) => 
-        q.gte(q.field("name").toLowerCase(), searchQuery)
-      )
-      .take(limit / 2) // Get some projects
+    const allProjects = await ctx.db.query("projects").collect()
+    const projects = allProjects
+      .filter(project => project.name.toLowerCase().includes(searchQuery))
+      .slice(0, Math.floor(limit / 2))
     
     return [
       ...results.map(task => ({
         id: task._id,
         type: 'task' as const,
         title: task.title,
-        key: task.key,
         icon: '📋',
         action: `/tasks/${task._id}`
       })),
@@ -258,7 +300,6 @@ export const quickSearch = query({
         id: project._id,
         type: 'project' as const,
         title: project.name,
-        key: project.key,
         icon: '📁',
         action: `/projects/${project._id}`
       }))
@@ -272,6 +313,7 @@ export const searchSuggestions = query({
     query: v.string(),
     limit: v.optional(v.number())
   },
+  returns: v.array(v.string()),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
@@ -285,22 +327,18 @@ export const searchSuggestions = query({
     const suggestions = new Set<string>()
     
     // Get task titles
-    const tasks = await ctx.db
-      .query("tasks")
-      .filter((q) => 
-        q.gte(q.field("title").toLowerCase(), searchQuery)
-      )
-      .take(limit)
+    const allTasks = await ctx.db.query("tasks").collect()
+    const tasks = allTasks
+      .filter(task => task.title.toLowerCase().includes(searchQuery))
+      .slice(0, limit)
     
     tasks.forEach(task => suggestions.add(task.title))
     
     // Get project names
-    const projects = await ctx.db
-      .query("projects")
-      .filter((q) => 
-        q.gte(q.field("name").toLowerCase(), searchQuery)
-      )
-      .take(limit)
+    const allProjects = await ctx.db.query("projects").collect()
+    const projects = allProjects
+      .filter(project => project.name.toLowerCase().includes(searchQuery))
+      .slice(0, limit)
     
     projects.forEach(project => suggestions.add(project.name))
     
