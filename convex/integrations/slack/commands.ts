@@ -16,6 +16,7 @@ export const handleSlashCommand = action({
     responseUrl: v.string(),
     triggerId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     // Parse command and arguments
     const parts = args.text.trim().split(/\s+/)

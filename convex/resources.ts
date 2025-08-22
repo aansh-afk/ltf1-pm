@@ -4,7 +4,7 @@ import { Doc, Id } from "./_generated/dataModel"
 
 // Resource allocation interface
 export interface ResourceAllocation {
-  _id?: Id<"resourceAllocations">
+  _id?: string
   userId: Id<"users">
   projectId: Id<"projects">
   allocation: number // Percentage 0-100
@@ -188,7 +188,7 @@ export const getWorkloadBalance = query({
         )
 
         const totalEstimate = userTasks.reduce((sum, task) => 
-          sum + (task.timeEstimate || 8), 0
+          sum + (task.estimate?.hours || 8), 0
         )
 
         const capacity = period === "week" ? 40 : period === "month" ? 160 : 480

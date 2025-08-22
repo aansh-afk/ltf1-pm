@@ -1,5 +1,6 @@
 import { httpRouter } from "convex/server"
 import { httpAction } from "../../_generated/server"
+import { api } from "../../_generated/api"
 
 const GITLAB_CLIENT_ID = process.env.GITLAB_CLIENT_ID!
 const GITLAB_CLIENT_SECRET = process.env.GITLAB_CLIENT_SECRET!
@@ -131,7 +132,21 @@ export const gitlabOAuth = httpAction(async (ctx, request) => {
 })
 
 // Export for HTTP router
-export default httpRouter({
-  route: "/api/gitlab/*",
+const http = httpRouter()
+http.route({
+  path: "/api/gitlab/auth",
+  method: "GET",
   handler: gitlabOAuth,
 })
+http.route({
+  path: "/api/gitlab/callback",
+  method: "GET", 
+  handler: gitlabOAuth,
+})
+http.route({
+  path: "/api/gitlab/disconnect",
+  method: "POST",
+  handler: gitlabOAuth,
+})
+
+export default http
