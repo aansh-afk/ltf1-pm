@@ -4,6 +4,12 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  safelist: [
+    'animate-marquee',
+    'animate-marquee2',
+    'animate-marquee-slow',
+    'animate-marquee-fast',
+  ],
   theme: {
     extend: {
       colors: {
@@ -68,6 +74,10 @@ export default {
         'glitch': 'glitch 0.5s infinite linear',
         'brutal-pulse': 'brutalPulse 1s infinite steps(2)',
         'brutal-slide': 'brutalSlide 0.2s linear',
+        'marquee': 'marquee 25s linear infinite',
+        'marquee2': 'marquee2 25s linear infinite',
+        'marquee-slow': 'marquee 50s linear infinite',
+        'marquee-fast': 'marquee 15s linear infinite',
       },
       keyframes: {
         brutalFade: {
@@ -88,6 +98,14 @@ export default {
         brutalSlide: {
           '0%': { transform: 'translateX(-8px)' },
           '100%': { transform: 'translateX(0)' },
+        },
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-100%)' },
+        },
+        marquee2: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0%)' },
         },
       },
       borderRadius: {

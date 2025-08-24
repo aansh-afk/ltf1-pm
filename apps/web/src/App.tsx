@@ -9,6 +9,9 @@ import { ShortcutProvider } from './contexts/ShortcutContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import DashboardLayout from './components/layout/DashboardLayout'
 import LandingPage from './pages/LandingPage'
+import PricingPage from './pages/PricingPage'
+import ContactPage from './pages/ContactPage'
+import BlogPage from './pages/BlogPage'
 import Dashboard from './pages/Dashboard'
 import WorkspacesPage from './pages/WorkspacesPage'
 import WorkspaceManagementPage from './pages/WorkspaceManagementPage'
@@ -120,6 +123,10 @@ function AppContent() {
             </SignedIn>
           </>
         } />
+        
+        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/blog" element={<BlogPage />} />
         
         <Route path="/sign-in/*" element={
           <div className="flex items-center justify-center min-h-screen">

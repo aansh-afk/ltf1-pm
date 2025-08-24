@@ -894,6 +894,27 @@ html {
   animation: brutalGlitchText 0.8s infinite;
 }
 
+/* Marquee animations are now defined in tailwind.config.js */
+
+/* CSS-based marquee test animations */
+@keyframes cssMarquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes cssMarquee2 {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(0%); }
+}
+
+.css-marquee {
+  animation: cssMarquee 25s linear infinite;
+}
+
+.css-marquee2 {
+  animation: cssMarquee2 25s linear infinite;
+}
+
 /* Halftone pattern background */
 .halftone-pattern {
   background-image: radial-gradient(circle, #F5F5F5 2px, transparent 2px);
