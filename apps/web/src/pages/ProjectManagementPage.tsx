@@ -61,6 +61,7 @@ import NaturalLanguageTaskCreator from '@/components/features/ai/NaturalLanguage
 import TeamActivityFeed from '@/components/features/activity/TeamActivityFeed'
 import { ExpertiseSearchModal } from '@/components/features/profile/ExpertiseSearchModal'
 import { TeamExpertiseMatrix } from '@/components/features/profile/TeamExpertiseMatrix'
+import AIDocumentationHub from '@/components/features/documentation/AIDocumentationHub'
 import type { TaskFilters as TaskFiltersType } from '@/components/features/task/TaskFilters'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
@@ -611,115 +612,140 @@ export default function ProjectManagementPage() {
           </div>
         )}
         
-        {/* Header Controls */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-16px">
+        {/* Header Controls - Compact */}
+        <div className="flex items-center justify-between overflow-x-auto">
+          <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
             <button 
               onClick={() => setShowCreateTaskModal(true)}
-              className="brutal-btn flex items-center gap-8px"
+              className="h-[24px] px-3 flex items-center gap-1 bg-primary-brutalist text-event-horizon border border-primary-brutalist hover:bg-opacity-90 font-mono text-[10px] uppercase transition-colors"
             >
-              <HiOutlinePlus className="w-16px h-16px" />
-              {isCompactView ? 'NEW' : 'NEW TASK'}
+              <HiOutlinePlus className="w-[12px] h-[12px]" />
+              NEW
             </button>
             
-            {/* Sprint Selector */}
+            {/* Compact Sprint Selector */}
             <select
               value={selectedSprintId || 'all'}
               onChange={(e) => setSelectedSprintId(e.target.value === 'all' ? 'all' : e.target.value === 'backlog' ? null : e.target.value)}
-              className="px-16px py-8px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm uppercase focus:border-primary-brutalist focus:outline-none transition-colors"
+              className="h-[24px] px-2 bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-[10px] uppercase focus:border-primary-brutalist focus:outline-none transition-colors"
             >
-              <option value="all">ALL TASKS</option>
-              <option value="backlog">BACKLOG (NO SPRINT)</option>
+              <option value="all">ALL</option>
+              <option value="backlog">BACKLOG</option>
               {allSprints?.map((sprint) => (
                 <option key={sprint._id} value={sprint._id}>
-                  {sprint.name} {sprint.status === 'active' ? '(ACTIVE)' : sprint.status === 'completed' ? '(COMPLETED)' : ''}
+                  {sprint.name} {sprint.status === 'active' ? '✓' : ''}
                 </option>
               ))}
             </select>
             
-            <div className="flex items-center gap-8px">
+            {/* Compact Filter Buttons - 3-Tier System */}
+            <div className="flex items-center gap-1">
+              {/* Tier 1: Primary Filters */}
               <button 
                 onClick={() => setQuickFilter(quickFilter === 'my-tasks' ? null : 'my-tasks')}
                 className={clsx(
-                  "brutal-btn-secondary text-xs",
-                  quickFilter === 'my-tasks' && "bg-primary-brutalist text-event-horizon border-primary-brutalist"
+                  "h-[22px] px-2 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
+                  quickFilter === 'my-tasks' 
+                    ? "bg-primary-brutalist text-event-horizon" 
+                    : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
                 )}
+                title="Show only my tasks"
               >
-                MY TASKS
+                MINE
               </button>
               <button 
                 onClick={() => setQuickFilter(quickFilter === 'unassigned' ? null : 'unassigned')}
                 className={clsx(
-                  "brutal-btn-secondary text-xs",
-                  quickFilter === 'unassigned' && "bg-primary-brutalist text-event-horizon border-primary-brutalist"
+                  "h-[22px] px-2 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
+                  quickFilter === 'unassigned' 
+                    ? "bg-primary-brutalist text-event-horizon"
+                    : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
                 )}
+                title="Show unassigned tasks"
               >
-                UNASSIGNED
+                NONE
               </button>
-              <button 
-                onClick={() => setQuickFilter(quickFilter === 'due-soon' ? null : 'due-soon')}
-                className={clsx(
-                  "brutal-btn-secondary text-xs",
-                  quickFilter === 'due-soon' && "bg-primary-brutalist text-event-horizon border-primary-brutalist"
-                )}
-              >
-                DUE SOON
-              </button>
-              <button 
-                onClick={() => setQuickFilter(quickFilter === 'overdue' ? null : 'overdue')}
-                className={clsx(
-                  "brutal-btn-secondary text-xs text-brutal-error",
-                  quickFilter === 'overdue' && "bg-brutal-error text-event-horizon border-brutal-error"
-                )}
-              >
-                OVERDUE
-              </button>
-              <button 
-                onClick={() => setQuickFilter(quickFilter === 'high-priority' ? null : 'high-priority')}
-                className={clsx(
-                  "brutal-btn-secondary text-xs",
-                  quickFilter === 'high-priority' && "bg-primary-brutalist text-event-horizon border-primary-brutalist"
-                )}
-              >
-                HIGH PRIORITY
-              </button>
-              <div className="h-24px w-1px bg-basalt-border mx-8px" />
+              
+              {/* Separator */}
+              <div className="w-[1px] h-[16px] bg-[var(--theme-border)]" />
+              
+              {/* Tier 2: Status Filters */}
               <button 
                 onClick={() => {
-                  // Preset: In Progress tasks
                   setTaskFilters(prev => ({
                     ...prev,
                     status: ['in_progress', 'in_review']
                   }))
                   setQuickFilter(null)
                 }}
-                className="brutal-btn-secondary text-xs"
-                title="Show tasks in progress or review"
+                className="h-[22px] px-2 border border-[var(--theme-border)] bg-blue-500/20 hover:bg-blue-500/30 font-mono text-[9px] uppercase transition-colors"
+                title="In progress or review"
               >
-                IN PROGRESS
+                WIP
               </button>
               <button 
                 onClick={() => {
-                  // Preset: Blocked tasks
                   setTaskFilters(prev => ({
                     ...prev,
                     status: ['blocked']
                   }))
                   setQuickFilter(null)
                 }}
-                className="brutal-btn-secondary text-xs text-brutal-error"
-                title="Show blocked tasks"
+                className="h-[22px] px-2 border border-[var(--theme-border)] bg-red-500/20 hover:bg-red-500/30 font-mono text-[9px] uppercase transition-colors"
+                title="Blocked tasks"
               >
-                BLOCKED
+                BLOCK
+              </button>
+              
+              {/* Separator */}
+              <div className="w-[1px] h-[16px] bg-[var(--theme-border)]" />
+              
+              {/* Tier 3: Priority/Time Filters */}
+              <button 
+                onClick={() => setQuickFilter(quickFilter === 'overdue' ? null : 'overdue')}
+                className={clsx(
+                  "h-[22px] px-2 border border-red-600 font-mono text-[9px] uppercase transition-colors",
+                  quickFilter === 'overdue'
+                    ? "bg-red-600 text-white"
+                    : "bg-red-600/20 text-red-600 hover:bg-red-600 hover:text-white"
+                )}
+                title="Overdue tasks"
+              >
+                !DUE
+              </button>
+              <button 
+                onClick={() => setQuickFilter(quickFilter === 'high-priority' ? null : 'high-priority')}
+                className={clsx(
+                  "h-[22px] px-2 border border-orange-500 font-mono text-[9px] uppercase transition-colors",
+                  quickFilter === 'high-priority'
+                    ? "bg-orange-500 text-white"
+                    : "bg-orange-500/20 text-orange-600 hover:bg-orange-500 hover:text-white"
+                )}
+                title="High priority tasks"
+              >
+                !PRI
+              </button>
+              <button 
+                onClick={() => setQuickFilter(quickFilter === 'due-soon' ? null : 'due-soon')}
+                className={clsx(
+                  "h-[22px] px-2 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
+                  quickFilter === 'due-soon'
+                    ? "bg-primary-brutalist text-event-horizon"
+                    : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
+                )}
+                title="Due within 7 days"
+              >
+                SOON
               </button>
             </div>
             
-            <div className="flex items-center bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
+            {/* Compact View Mode Selector */}
+            <div className="flex items-center bg-[var(--theme-background)] border border-[var(--theme-border)]">
               <button 
                 onClick={() => setTaskView('sprint')}
                 className={clsx(
-                  "px-16px py-8px font-mono text-brutal-xs uppercase transition-colors",
-                  taskView === 'sprint' ? "bg-primary-brutalist text-event-horizon" : "text-primary-brutalist/60 hover:text-primary-brutalist"
+                  "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors",
+                  taskView === 'sprint' ? "bg-primary-brutalist text-event-horizon" : "hover:bg-[var(--theme-background-secondary)]"
                 )}
               >
                 SPRINT
@@ -727,17 +753,17 @@ export default function ProjectManagementPage() {
               <button 
                 onClick={() => setTaskView('kanban')}
                 className={clsx(
-                  "px-16px py-8px font-mono text-brutal-xs uppercase transition-colors border-x-2 border-[var(--theme-border)]",
-                  taskView === 'kanban' ? "bg-primary-brutalist text-event-horizon" : "text-primary-brutalist/60 hover:text-primary-brutalist"
+                  "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors border-x border-[var(--theme-border)]",
+                  taskView === 'kanban' ? "bg-primary-brutalist text-event-horizon" : "hover:bg-[var(--theme-background-secondary)]"
                 )}
               >
-                KANBAN
+                BOARD
               </button>
               <button 
                 onClick={() => setTaskView('list')}
                 className={clsx(
-                  "px-16px py-8px font-mono text-brutal-xs uppercase transition-colors border-r-2 border-[var(--theme-border)]",
-                  taskView === 'list' ? "bg-primary-brutalist text-event-horizon" : "text-primary-brutalist/60 hover:text-primary-brutalist"
+                  "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors border-r border-[var(--theme-border)]",
+                  taskView === 'list' ? "bg-primary-brutalist text-event-horizon" : "hover:bg-[var(--theme-background-secondary)]"
                 )}
               >
                 LIST
@@ -745,8 +771,8 @@ export default function ProjectManagementPage() {
               <button 
                 onClick={() => setTaskView('gantt')}
                 className={clsx(
-                  "px-16px py-8px font-mono text-brutal-xs uppercase transition-colors border-r-2 border-[var(--theme-border)]",
-                  taskView === 'gantt' ? "bg-primary-brutalist text-event-horizon" : "text-primary-brutalist/60 hover:text-primary-brutalist"
+                  "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors border-r border-[var(--theme-border)]",
+                  taskView === 'gantt' ? "bg-primary-brutalist text-event-horizon" : "hover:bg-[var(--theme-background-secondary)]"
                 )}
               >
                 GANTT
@@ -754,11 +780,11 @@ export default function ProjectManagementPage() {
               <button 
                 onClick={() => setTaskView('calendar')}
                 className={clsx(
-                  "px-16px py-8px font-mono text-brutal-xs uppercase transition-colors",
-                  taskView === 'calendar' ? "bg-primary-brutalist text-event-horizon" : "text-primary-brutalist/60 hover:text-primary-brutalist"
+                  "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors",
+                  taskView === 'calendar' ? "bg-primary-brutalist text-event-horizon" : "hover:bg-[var(--theme-background-secondary)]"
                 )}
               >
-                CALENDAR
+                CAL
               </button>
             </div>
             
@@ -766,40 +792,42 @@ export default function ProjectManagementPage() {
               <button 
                 onClick={() => setIsCompactView(!isCompactView)}
                 className={clsx(
-                  "brutal-btn-secondary flex items-center gap-8px",
-                  isCompactView && "bg-primary-brutalist text-event-horizon border-primary-brutalist"
+                  "h-[22px] px-2 flex items-center gap-1 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
+                  isCompactView 
+                    ? "bg-primary-brutalist text-event-horizon" 
+                    : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
                 )}
                 title={isCompactView ? "Switch to normal view" : "Switch to compact view"}
               >
-                <HiOutlineViewGrid className="w-16px h-16px" />
-                {isCompactView ? 'NORMAL' : 'COMPACT'}
+                <HiOutlineViewGrid className="w-[10px] h-[10px]" />
+                {isCompactView ? 'NORM' : 'COMP'}
               </button>
             )}
             
             <button 
               onClick={() => setShowAdvancedFilters(true)}
               className={clsx(
-                "brutal-btn-secondary flex items-center gap-8px",
+                "h-[22px] px-2 flex items-center gap-1 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
                 (taskFilters.search || taskFilters.status.length > 0 || taskFilters.priority.length > 0 ||
                  taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
                  taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== null ||
-                 taskFilters.isOverdue !== null) && "bg-primary-brutalist text-event-horizon border-primary-brutalist"
+                 taskFilters.isOverdue !== null) 
+                  ? "bg-primary-brutalist text-event-horizon" 
+                  : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
               )}
             >
-              <HiOutlineFilter className="w-16px h-16px" />
-              ADVANCED FILTERS
+              <HiOutlineFilter className="w-[10px] h-[10px]" />
+              ADV
               {(taskFilters.search || taskFilters.status.length > 0 || taskFilters.priority.length > 0 ||
                taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
                taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== null ||
                taskFilters.isOverdue !== null) && (
-                <span className="ml-4px px-6px py-2px bg-[var(--theme-background-secondary)] text-primary-brutalist text-xs font-bold rounded-none">
-                  ACTIVE
-                </span>
+                <span className="px-1 bg-red-600 text-white text-[7px] font-bold">!</span>
               )}
             </button>
           </div>
           
-          <div className="flex items-center gap-16px font-mono text-brutal-sm">
+          <div className="flex items-center gap-2 font-mono text-[10px]">
             <span className="text-primary-brutalist/60">CONTEXT:</span>
             <span className="text-primary-brutalist font-bold">{currentContext || 'NONE'}</span>
           </div>
@@ -1026,7 +1054,7 @@ export default function ProjectManagementPage() {
               </button>
               <button 
                 onClick={() => setShowProjectInviteModal(true)}
-                className="brutal-btn flex items-center gap-8px"
+                className="brutal-btn-secondary flex items-center gap-8px"
               >
                 <HiOutlineUserGroup className="w-16px h-16px" />
                 INVITE MEMBERS
@@ -1276,7 +1304,7 @@ export default function ProjectManagementPage() {
                 <div className="flex items-center justify-between">
                   <UserDisplay
                     userId={member._id}
-                    size="lg"
+                    size="sm"
                     showName={true}
                     showStatus={true}
                     compact={false}
@@ -1378,7 +1406,7 @@ export default function ProjectManagementPage() {
                         assigneeIds: [member._id]
                       }))
                     }}
-                    className="flex-1 brutal-btn text-brutal-xs py-12px"
+                    className="flex-1 brutal-btn-secondary text-brutal-xs py-12px"
                   >
                     VIEW TASKS
                   </button>
@@ -1438,10 +1466,10 @@ export default function ProjectManagementPage() {
               <div className="group relative">
                 <button 
                   onClick={() => setShowProjectInviteModal(true)}
-                  className="w-full brutal-btn flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
+                  className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
                 >
-                  <div className="flex items-center justify-center w-40px h-40px bg-primary-brutalist border-2 border-[var(--theme-border)]">
-                    <HiOutlinePlus className="w-20px h-20px text-event-horizon" />
+                  <div className="flex items-center justify-center w-40px h-40px bg-basalt-border border-2 border-[var(--theme-border)]">
+                    <HiOutlinePlus className="w-20px h-20px text-primary-brutalist" />
                   </div>
                   <div className="text-center">
                     <div className="font-mono text-brutal-sm font-bold">ADD MEMBER</div>
@@ -2141,23 +2169,10 @@ export default function ProjectManagementPage() {
         )
       case 'docs':
         return (
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-            <div className="flex items-center justify-between mb-24px">
-              <h2 className="text-brutal-lg font-bold uppercase">PROJECT DOCUMENTATION</h2>
-              <button className="brutal-btn">NEW DOCUMENT</button>
-            </div>
-            
-            <div className="text-center py-48px">
-              <HiOutlineDocumentText className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
-              <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO DOCUMENTS FOUND</h3>
-              <p className="text-[var(--theme-foreground)]/60 mb-24px">Create technical specs, user guides, and project documentation</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-16px max-w-2xl mx-auto">
-                <button className="brutal-btn-secondary">API DOCUMENTATION</button>
-                <button className="brutal-btn-secondary">USER GUIDE</button>
-                <button className="brutal-btn-secondary">TECH SPECS</button>
-              </div>
-            </div>
-          </div>
+          <AIDocumentationHub 
+            projectId={projectId}
+            workspaceId={workspaceId}
+          />
         )
       case 'logs':
         return (

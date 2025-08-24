@@ -299,88 +299,90 @@ export default function TasksPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-16px">
-          {/* Quick Search */}
+        <div className="flex items-center gap-8px flex-wrap">
+          {/* Compact Search */}
           <div className="relative">
-            <HiOutlineSearch className="absolute left-12px top-1/2 -translate-y-1/2 w-16px h-16px text-neutral-500" />
+            <HiOutlineSearch className="absolute left-6px top-1/2 -translate-y-1/2 w-10px h-10px text-neutral-500" />
             <input
               type="text"
-              placeholder="QUICK SEARCH..."
-              className="w-240px pl-40px pr-16px py-8px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
-                       font-mono text-brutal-sm uppercase placeholder:text-neutral-600
+              placeholder="SEARCH..."
+              className="w-120px h-[24px] pl-20px pr-4px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] 
+                       font-mono text-[10px] uppercase placeholder:text-neutral-600
                        focus:border-primary-brutalist focus:outline-none transition-colors"
               value={quickSearch}
               onChange={(e) => setQuickSearch(e.target.value)}
             />
           </div>
 
-          <div className="flex border-2 border-[var(--theme-border)]">
+          {/* Compact View Mode Buttons */}
+          <div className="flex border border-[var(--theme-border)]">
             <button
               className={clsx(
-                "px-16px py-8px flex items-center gap-8px",
-                "font-mono text-brutal-sm uppercase transition-colors",
-                "border-r-2 border-[var(--theme-border)]",
+                "w-[24px] h-[24px] flex items-center justify-center transition-colors",
+                "border-r border-[var(--theme-border)]",
                 viewMode === 'board' 
                   ? "bg-primary-brutalist text-event-horizon" 
                   : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
               )}
               onClick={() => setViewMode('board')}
+              title="Board View"
             >
-              <HiOutlineViewBoards className="w-16px h-16px" />
-              BOARD
+              <HiOutlineViewBoards className="w-10px h-10px" />
             </button>
             <button
               className={clsx(
-                "px-16px py-8px flex items-center gap-8px",
-                "font-mono text-brutal-sm uppercase transition-colors",
+                "w-[24px] h-[24px] flex items-center justify-center transition-colors",
+                "border-r border-[var(--theme-border)]",
                 viewMode === 'list' 
                   ? "bg-primary-brutalist text-event-horizon" 
                   : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
               )}
               onClick={() => setViewMode('list')}
+              title="List View"
             >
-              <HiOutlineViewList className="w-16px h-16px" />
-              LIST
+              <HiOutlineViewList className="w-10px h-10px" />
             </button>
             <button
               className={clsx(
-                "px-16px py-8px flex items-center gap-8px",
-                "font-mono text-brutal-sm uppercase transition-colors",
-                "border-r-2 border-[var(--theme-border)]",
+                "w-[24px] h-[24px] flex items-center justify-center transition-colors",
+                "border-r border-[var(--theme-border)]",
                 viewMode === 'calendar' 
                   ? "bg-primary-brutalist text-event-horizon" 
                   : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
               )}
               onClick={() => setViewMode('calendar')}
+              title="Calendar View"
             >
-              <HiOutlineCalendar className="w-16px h-16px" />
-              CALENDAR
+              <HiOutlineCalendar className="w-10px h-10px" />
             </button>
             <button
               className={clsx(
-                "px-16px py-8px flex items-center gap-8px",
-                "font-mono text-brutal-sm uppercase transition-colors",
+                "w-[24px] h-[24px] flex items-center justify-center transition-colors",
                 viewMode === 'table' 
                   ? "bg-primary-brutalist text-event-horizon" 
                   : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
               )}
               onClick={() => setViewMode('table')}
+              title="Table View"
             >
-              <HiOutlineViewGrid className="w-16px h-16px" />
-              TABLE
+              <HiOutlineViewGrid className="w-10px h-10px" />
             </button>
           </div>
+          {/* Compact Filter Button */}
           <button 
             className={clsx(
-              "brutal-btn flex items-center gap-8px",
-              getActiveFilterCount() > 0 && "bg-primary-brutalist text-event-horizon"
+              "px-4px h-[24px] border border-[var(--theme-border)] flex items-center gap-2px transition-colors",
+              getActiveFilterCount() > 0 
+                ? "bg-primary-brutalist text-event-horizon" 
+                : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
             )}
             onClick={() => setIsFiltersOpen(true)}
+            title="Filter Tasks"
           >
-            <HiOutlineFilter className="w-16px h-16px" />
-            FILTER
+            <HiOutlineFilter className="w-10px h-10px" />
+            <span className="font-mono text-[10px] uppercase">FILTER</span>
             {getActiveFilterCount() > 0 && (
-              <span className="px-6px py-2px bg-[var(--theme-background-secondary)] text-primary-brutalist text-brutal-xs font-bold">
+              <span className="w-[12px] h-[12px] bg-[var(--theme-error)] text-white text-[8px] flex items-center justify-center">
                 {getActiveFilterCount()}
               </span>
             )}

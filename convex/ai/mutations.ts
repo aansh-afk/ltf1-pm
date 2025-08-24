@@ -223,3 +223,464 @@ export const updateAITaskStatus = mutation({
     })
   },
 })
+
+// Generate AI documentation
+export const generateDocumentation = mutation({
+  args: {
+    type: v.string(),
+    context: v.object({
+      projectName: v.string(),
+      projectDescription: v.optional(v.string()),
+      additionalContext: v.optional(v.string()),
+    }),
+  },
+  returns: v.object({
+    title: v.string(),
+    content: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    const { type, context } = args
+    
+    // Generate appropriate documentation based on type
+    let title = ""
+    let content = ""
+    
+    switch (type) {
+      case "pr":
+        title = `Pull Request: ${context.projectName}`
+        content = `## Summary
+Brief description of changes in this pull request for ${context.projectName}.
+
+## Changes Made
+- Feature: Added new functionality
+- Fix: Resolved existing issues
+- Refactor: Improved code structure
+
+## Testing
+- Unit tests added/updated
+- Manual testing completed
+- All tests passing
+
+## Screenshots
+[Add relevant screenshots if UI changes]
+
+## Checklist
+- [ ] Code follows project style guidelines
+- [ ] Self-review completed
+- [ ] Comments added for complex logic
+- [ ] Documentation updated
+- [ ] No console errors or warnings
+
+## Related Issues
+Closes #[issue_number]
+
+## Additional Notes
+${context.additionalContext || "No additional notes"}
+`
+        break
+        
+      case "prd":
+        title = `Product Requirements: ${context.projectName}`
+        content = `# Product Requirements Document
+## ${context.projectName}
+
+### Executive Summary
+${context.projectDescription || "Project description and goals."}
+
+### Problem Statement
+Clear description of the problem this product solves.
+
+### Goals and Objectives
+1. Primary Goal: Main objective
+2. Secondary Goals: Supporting objectives
+3. Success Metrics: How we measure success
+
+### User Stories
+**As a** [user type]
+**I want to** [action]
+**So that** [benefit]
+
+### Functional Requirements
+1. **Core Features**
+   - Feature 1: Description
+   - Feature 2: Description
+   - Feature 3: Description
+
+2. **User Interface**
+   - UI requirement 1
+   - UI requirement 2
+
+3. **Performance**
+   - Load time requirements
+   - Scalability needs
+
+### Non-Functional Requirements
+- Security requirements
+- Compliance needs
+- Accessibility standards
+- Browser compatibility
+
+### Technical Architecture
+- Frontend: Technology stack
+- Backend: API design
+- Database: Data structure
+- Infrastructure: Deployment strategy
+
+### Timeline and Milestones
+- Phase 1: Initial development
+- Phase 2: Beta testing
+- Phase 3: Production release
+
+### Risks and Mitigation
+| Risk | Impact | Mitigation Strategy |
+|------|--------|-------------------|
+| Technical debt | High | Regular refactoring |
+| Scope creep | Medium | Clear requirements |
+
+### Success Criteria
+- User adoption targets
+- Performance benchmarks
+- Quality metrics
+
+${context.additionalContext ? `\n### Additional Context\n${context.additionalContext}` : ""}`
+        break
+        
+      case "api":
+        title = `API Documentation: ${context.projectName}`
+        content = `# API Documentation
+## ${context.projectName} API
+
+### Base URL
+\`\`\`
+https://api.example.com/v1
+\`\`\`
+
+### Authentication
+All API requests require authentication using Bearer tokens:
+\`\`\`
+Authorization: Bearer <token>
+\`\`\`
+
+### Endpoints
+
+#### GET /resource
+Retrieve list of resources
+
+**Request:**
+\`\`\`http
+GET /resource?page=1&limit=10
+\`\`\`
+
+**Response:**
+\`\`\`json
+{
+  "data": [
+    {
+      "id": "123",
+      "name": "Resource Name",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 100
+  }
+}
+\`\`\`
+
+#### POST /resource
+Create new resource
+
+**Request:**
+\`\`\`json
+{
+  "name": "New Resource",
+  "description": "Resource description"
+}
+\`\`\`
+
+**Response:**
+\`\`\`json
+{
+  "id": "124",
+  "name": "New Resource",
+  "description": "Resource description",
+  "created_at": "2024-01-01T00:00:00Z"
+}
+\`\`\`
+
+### Error Handling
+| Code | Description |
+|------|------------|
+| 400 | Bad Request |
+| 401 | Unauthorized |
+| 404 | Not Found |
+| 500 | Internal Server Error |
+
+### Rate Limiting
+- 1000 requests per hour per API key
+- Rate limit headers included in response
+
+${context.additionalContext ? `\n### Additional Notes\n${context.additionalContext}` : ""}`
+        break
+        
+      case "readme":
+        title = `README: ${context.projectName}`
+        content = `# ${context.projectName}
+
+${context.projectDescription || "A brief description of what this project does and who it's for"}
+
+## Features
+- ✨ Feature 1: Description
+- 🚀 Feature 2: Description
+- 💡 Feature 3: Description
+- 🔧 Feature 4: Description
+
+## Installation
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Git
+
+### Setup
+\`\`\`bash
+# Clone the repository
+git clone https://github.com/username/${context.projectName.toLowerCase().replace(/\s+/g, '-')}.git
+
+# Navigate to project directory
+cd ${context.projectName.toLowerCase().replace(/\s+/g, '-')}
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+
+# Run development server
+npm run dev
+\`\`\`
+
+## Usage
+\`\`\`javascript
+import { Component } from '${context.projectName.toLowerCase().replace(/\s+/g, '-')}'
+
+// Example usage
+const example = new Component({
+  option1: 'value1',
+  option2: 'value2'
+})
+\`\`\`
+
+## Development
+
+### Available Scripts
+- \`npm run dev\` - Start development server
+- \`npm run build\` - Build for production
+- \`npm run test\` - Run tests
+- \`npm run lint\` - Run linter
+
+### Project Structure
+\`\`\`
+${context.projectName.toLowerCase().replace(/\s+/g, '-')}/
+├── src/
+│   ├── components/
+│   ├── utils/
+│   └── index.js
+├── tests/
+├── docs/
+└── package.json
+\`\`\`
+
+## Contributing
+1. Fork the repository
+2. Create your feature branch (\`git checkout -b feature/AmazingFeature\`)
+3. Commit your changes (\`git commit -m 'Add some AmazingFeature'\`)
+4. Push to the branch (\`git push origin feature/AmazingFeature\`)
+5. Open a Pull Request
+
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contact
+Project Link: [https://github.com/username/${context.projectName.toLowerCase().replace(/\s+/g, '-')}](https://github.com/username/${context.projectName.toLowerCase().replace(/\s+/g, '-')})
+
+${context.additionalContext ? `\n## Additional Information\n${context.additionalContext}` : ""}`
+        break
+        
+      case "tech-spec":
+        title = `Technical Specification: ${context.projectName}`
+        content = `# Technical Specification
+## ${context.projectName}
+
+### Overview
+${context.projectDescription || "Technical overview of the system architecture and implementation details."}
+
+### System Architecture
+
+#### High-Level Architecture
+\`\`\`
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Frontend  │────▶│   Backend   │────▶│   Database  │
+│   (React)   │     │   (Node.js) │     │ (PostgreSQL)│
+└─────────────┘     └─────────────┘     └─────────────┘
+\`\`\`
+
+### Technology Stack
+- **Frontend:** React 18, TypeScript, Tailwind CSS
+- **Backend:** Node.js, Express, GraphQL
+- **Database:** PostgreSQL, Redis
+- **Infrastructure:** Docker, Kubernetes, AWS
+
+### Data Models
+
+#### User Model
+\`\`\`typescript
+interface User {
+  id: string
+  email: string
+  name: string
+  role: UserRole
+  createdAt: Date
+  updatedAt: Date
+}
+\`\`\`
+
+#### Resource Model
+\`\`\`typescript
+interface Resource {
+  id: string
+  userId: string
+  name: string
+  data: JsonObject
+  status: ResourceStatus
+  createdAt: Date
+  updatedAt: Date
+}
+\`\`\`
+
+### API Design
+
+#### GraphQL Schema
+\`\`\`graphql
+type Query {
+  user(id: ID!): User
+  users(filter: UserFilter): [User!]!
+  resource(id: ID!): Resource
+  resources(filter: ResourceFilter): [Resource!]!
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+  deleteUser(id: ID!): Boolean!
+}
+\`\`\`
+
+### Security Considerations
+- Authentication: JWT tokens with refresh mechanism
+- Authorization: Role-based access control (RBAC)
+- Data encryption: AES-256 for sensitive data
+- API security: Rate limiting, CORS, input validation
+
+### Performance Requirements
+- Response time: < 200ms for API calls
+- Throughput: 1000 requests/second
+- Availability: 99.9% uptime
+- Data retention: 90 days for logs
+
+### Deployment Strategy
+1. **Development:** Local Docker environment
+2. **Staging:** Kubernetes cluster with auto-scaling
+3. **Production:** Multi-region deployment with load balancing
+
+### Testing Strategy
+- Unit tests: 80% code coverage minimum
+- Integration tests: API endpoint testing
+- E2E tests: Critical user flows
+- Performance tests: Load and stress testing
+
+### Monitoring and Logging
+- Application monitoring: Datadog
+- Error tracking: Sentry
+- Logging: ELK stack (Elasticsearch, Logstash, Kibana)
+- Metrics: Prometheus and Grafana
+
+${context.additionalContext ? `\n### Additional Technical Details\n${context.additionalContext}` : ""}`
+        break
+        
+      case "release-notes":
+        title = `Release Notes: ${context.projectName} v1.0.0`
+        content = `# Release Notes
+## ${context.projectName} - Version 1.0.0
+### Release Date: ${new Date().toLocaleDateString()}
+
+---
+
+### 🎉 New Features
+- **Feature Name**: Description of the new feature and its benefits
+- **Enhanced UI**: Improved user interface with modern design
+- **API Integration**: Added support for third-party integrations
+- **Performance**: Optimized loading times by 50%
+
+### 🐛 Bug Fixes
+- Fixed issue where users couldn't save preferences
+- Resolved memory leak in data processing module
+- Corrected timezone handling for international users
+- Fixed layout issues on mobile devices
+
+### 💡 Improvements
+- Improved error messages for better user guidance
+- Enhanced search functionality with filters
+- Optimized database queries for faster response
+- Updated documentation with new examples
+
+### ⚠️ Breaking Changes
+- API endpoint \`/v1/old-endpoint\` deprecated, use \`/v2/new-endpoint\`
+- Configuration file format changed from JSON to YAML
+- Minimum Node.js version updated to 18.0.0
+
+### 📦 Dependencies
+- Updated React to v18.2.0
+- Updated TypeScript to v5.0.0
+- Added new dependency: chart.js v4.0.0
+- Removed deprecated package: old-validator
+
+### 🔧 Known Issues
+- Minor UI glitch in Safari browser (fix coming in v1.0.1)
+- Performance degradation with datasets > 10,000 items
+
+### 📝 Migration Guide
+For users upgrading from v0.9.x:
+1. Update configuration files to new format
+2. Run migration script: \`npm run migrate\`
+3. Update API calls to new endpoints
+4. Clear browser cache
+
+### 👥 Contributors
+Special thanks to all contributors who made this release possible!
+
+### 📚 Documentation
+Full documentation available at: https://docs.example.com
+
+${context.additionalContext ? `\n### Additional Release Information\n${context.additionalContext}` : ""}}`
+        break
+        
+      default:
+        title = `Documentation: ${context.projectName}`
+        content = `# ${context.projectName}
+
+## Overview
+${context.projectDescription || "Project documentation"}
+
+## Details
+${context.additionalContext || "Add your documentation content here..."}
+
+## Summary
+Documentation generated for ${context.projectName}.`
+    }
+    
+    return { title, content }
+  },
+})

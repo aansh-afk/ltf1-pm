@@ -9,7 +9,7 @@ import clsx from 'clsx'
 
 interface UserDisplayProps {
   userId?: string
-  size?: 'xs' | 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   showName?: boolean
   showStatus?: boolean
   showTooltip?: boolean
@@ -42,6 +42,7 @@ export default function UserDisplay({
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
+    e.preventDefault()
     if (onClick) {
       onClick()
     } else if (userId) {
@@ -60,16 +61,18 @@ export default function UserDisplay({
       >
         <div className={clsx(
           'border-2 border-dashed border-[var(--theme-border)] flex items-center justify-center',
-          size === 'xs' && 'w-20px h-20px',
-          size === 'sm' && 'w-24px h-24px',
-          size === 'md' && 'w-32px h-32px',
-          size === 'lg' && 'w-40px h-40px'
+          size === 'xs' && 'w-5 h-5',
+          size === 'sm' && 'w-6 h-6',
+          size === 'md' && 'w-8 h-8',
+          size === 'lg' && 'w-10 h-10',
+          size === 'xl' && 'w-16 h-16'
         )}>
           <HiOutlineUser className={clsx(
-            size === 'xs' && 'w-10px h-10px',
-            size === 'sm' && 'w-12px h-12px',
-            size === 'md' && 'w-16px h-16px',
-            size === 'lg' && 'w-20px h-20px'
+            size === 'xs' && 'w-2.5 h-2.5',
+            size === 'sm' && 'w-3 h-3',
+            size === 'md' && 'w-4 h-4',
+            size === 'lg' && 'w-5 h-5',
+            size === 'xl' && 'w-8 h-8'
           )} />
         </div>
         {showName && (
@@ -88,10 +91,11 @@ export default function UserDisplay({
       )}>
         <div className={clsx(
           'bg-basalt-border',
-          size === 'xs' && 'w-20px h-20px',
-          size === 'sm' && 'w-24px h-24px',
-          size === 'md' && 'w-32px h-32px',
-          size === 'lg' && 'w-40px h-40px'
+          size === 'xs' && 'w-5 h-5',
+          size === 'sm' && 'w-6 h-6',
+          size === 'md' && 'w-8 h-8',
+          size === 'lg' && 'w-10 h-10',
+          size === 'xl' && 'w-16 h-16'
         )} />
         {showName && (
           <div className="h-14px bg-basalt-border w-64px" />
@@ -123,10 +127,11 @@ export default function UserDisplay({
           {showStatus && (
             <div className={clsx(
               'absolute -bottom-1px -right-1px',
-              size === 'xs' && 'w-8px h-8px',
-              size === 'sm' && 'w-10px h-10px',
-              size === 'md' && 'w-12px h-12px',
-              size === 'lg' && 'w-16px h-16px'
+              size === 'xs' && 'w-2 h-2',
+              size === 'sm' && 'w-2.5 h-2.5',
+              size === 'md' && 'w-3 h-3',
+              size === 'lg' && 'w-4 h-4',
+              size === 'xl' && 'w-5 h-5'
             )}>
               <DeveloperStatusIndicator
                 status={profile?.status}
@@ -145,7 +150,8 @@ export default function UserDisplay({
               size === 'xs' && 'text-brutal-xs',
               size === 'sm' && 'text-brutal-xs',
               size === 'md' && 'text-brutal-sm',
-              size === 'lg' && 'text-brutal-md'
+              size === 'lg' && 'text-brutal-md',
+              size === 'xl' && 'text-brutal-lg'
             )}>
               {user.name || 'UNNAMED'}
             </span>
@@ -161,10 +167,11 @@ export default function UserDisplay({
         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
           <HiOutlineInformationCircle className={clsx(
             'text-primary-brutalist',
-            size === 'xs' && 'w-12px h-12px',
-            size === 'sm' && 'w-14px h-14px',
-            size === 'md' && 'w-16px h-16px',
-            size === 'lg' && 'w-20px h-20px'
+            size === 'xs' && 'w-3 h-3',
+            size === 'sm' && 'w-3.5 h-3.5',
+            size === 'md' && 'w-4 h-4',
+            size === 'lg' && 'w-5 h-5',
+            size === 'xl' && 'w-6 h-6'
           )} />
         </div>
 

@@ -32,6 +32,7 @@ import CommandPalette from './components/shortcuts/CommandPalette'
 import ShortcutHelp from './components/shortcuts/ShortcutHelp'
 import OnboardingFlow from './components/onboarding/OnboardingFlow'
 import BrutalistLoader from './components/common/BrutalistLoader'
+import MobileWarning from './components/common/MobileWarning'
 
 function AppContent() {
   // Ensure user is synced with Convex
@@ -89,6 +90,9 @@ function AppContent() {
   
   return (
     <div className="min-h-screen bg-[var(--theme-background)]">
+      {/* Mobile Warning - Shows automatically on mobile devices */}
+      <MobileWarning />
+      
       <SignedIn>
         <DataMigrationBanner />
       </SignedIn>

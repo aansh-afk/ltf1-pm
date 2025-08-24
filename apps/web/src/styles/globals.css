@@ -251,7 +251,8 @@
     @apply bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)];
     @apply hover:translate-x-[2px] hover:translate-y-[2px];
     @apply transition-all duration-200 ease-brutal-out;
-    @apply px-24px py-16px font-semibold uppercase tracking-wider;
+    @apply px-6 py-3 h-[44px] font-semibold uppercase tracking-wider;
+    @apply flex items-center justify-center;
     box-shadow: var(--theme-box-shadow);
     border-radius: 0 !important;
   }
@@ -260,12 +261,56 @@
     box-shadow: var(--theme-box-shadow-hover);
   }
 
+  /* BRUTAL BUTTON SMALL */
+  .brutal-btn-sm {
+    @apply bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)];
+    @apply hover:translate-x-[1px] hover:translate-y-[1px];
+    @apply transition-all duration-200 ease-brutal-out;
+    @apply px-2 py-1 h-[28px] font-mono text-[11px] uppercase;
+    @apply flex items-center justify-center gap-1;
+    box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.1);
+    border-radius: 0 !important;
+  }
+  
+  .brutal-btn-sm:hover {
+    box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.15);
+  }
+
+  /* BRUTAL BUTTON MICRO */
+  .brutal-btn-micro {
+    @apply bg-[var(--theme-background)] text-[var(--theme-foreground)] border border-[var(--theme-border)];
+    @apply hover:bg-[var(--theme-background-secondary)];
+    @apply transition-all duration-200;
+    @apply px-2 py-1 h-[24px] font-mono text-[10px] uppercase;
+    @apply flex items-center justify-center gap-1;
+    border-radius: 0 !important;
+  }
+
+  /* BRUTAL FILTER BUTTON */
+  .brutal-filter-btn {
+    @apply bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)];
+    @apply hover:bg-[var(--theme-background-secondary)];
+    @apply transition-all duration-200;
+    @apply px-2 h-[28px] font-mono text-[11px] uppercase;
+    @apply flex items-center justify-center gap-1;
+    border-radius: 0 !important;
+  }
+
+  /* HIDE SCROLLBAR UTILITY */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+
   /* BRUTAL BUTTON SECONDARY */
   .brutal-btn-secondary {
     @apply bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)];
     @apply hover:translate-x-[2px] hover:translate-y-[2px];
     @apply transition-all duration-200 ease-brutal-out;
-    @apply px-24px py-16px font-semibold uppercase tracking-wider;
+    @apply px-6 py-4 font-semibold uppercase tracking-wider;
     box-shadow: var(--theme-box-shadow);
     border-radius: 0 !important;
   }

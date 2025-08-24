@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api' 
 import { HiOutlineX, HiOutlineUser, HiOutlineMail, HiOutlineCalendar, HiOutlineCode, HiOutlineClock, HiOutlineLocationMarker, HiOutlineGlobeAlt, HiOutlineLink, HiOutlineBadgeCheck } from 'react-icons/hi'
@@ -17,20 +18,53 @@ interface UserProfileModalProps {
 
 export default function UserProfileModal({ isOpen, onClose, userId }: UserProfileModalProps) {
   const [activeTab, setActiveTab] = useState<'profile' | 'activity' | 'skills'>('profile')
+  const [portalElement, setPortalElement] = useState<HTMLElement | null>(null)
 
   const user = useQuery(api.auth.users.getUserById, userId ? { userId: userId as any } : 'skip')
   const profile = useQuery(api.developers.queries.getDeveloperProfile, userId ? { userId: userId as any } : 'skip')
 
-  if (!isOpen) return null
+  useEffect(() => {
+    // Create or get portal container
+    let container = document.getElementById('modal-portal')
+    if (!container) {
+      container = document.createElement('div')
+      container.id = 'modal-portal'
+      container.style.position = 'fixed'
+      container.style.top = '0'
+      container.style.left = '0'
+      container.style.width = '100%'
+      container.style.height = '100%'
+      container.style.pointerEvents = 'none'
+      container.style.zIndex = '10000'
+      document.body.appendChild(container)
+    }
+    setPortalElement(container)
+    
+    return () => {
+      // Don't remove the container as other modals might use it
+    }
+  }, [])
 
-  return (
-    <>
+  if (!isOpen || !portalElement) return null
+
+  const modalContent = (
+    <div style={{ pointerEvents: 'auto' }}>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-[var(--theme-background-secondary)]/90 z-50" onClick={onClose} />
+      <div 
+        className="fixed inset-0 bg-[var(--theme-background-secondary)]/90" 
+        style={{ zIndex: 9998 }}
+        onClick={onClose} 
+      />
       
-      {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-24px">
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+      {/* Modal - Higher z-index to prevent conflicts */}
+      <div 
+        className="fixed inset-0 flex items-center justify-center p-24px" 
+        style={{ zIndex: 9999, pointerEvents: 'none' }}
+      >
+        <div 
+          className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal-lg max-w-2xl w-full max-h-[90vh] overflow-hidden" 
+          style={{ pointerEvents: 'auto' }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-24px border-b-2 border-[var(--theme-border)]">
             <h2 className="text-brutal-lg font-bold uppercase">USER PROFILE</h2>
@@ -276,8 +310,10 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
+
+  return createPortal(modalContent, portalElement)
 }
 
 function InfoItem({ icon: Icon, label, value, link }: {
