@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { HiOutlineDeviceMobile, HiOutlineDesktopComputer, HiOutlineClock } from 'react-icons/hi'
+import { useLocation } from 'react-router-dom'
 
 export default function MobileWarning() {
   const [isMobile, setIsMobile] = useState(false)
+  const location = useLocation()
+  
+  // Public pages that should be mobile-friendly
+  const publicPaths = ['/', '/pricing', '/contact', '/blog', '/sign-in', '/sign-up']
+  const isPublicPage = publicPaths.includes(location.pathname) || 
+                       location.pathname.startsWith('/join-project') ||
+                       location.pathname.startsWith('/api/auth')
 
   useEffect(() => {
     const checkMobile = () => {
@@ -27,7 +35,8 @@ export default function MobileWarning() {
     }
   }, [])
 
-  if (!isMobile) {
+  // Don't show mobile warning on public pages or if not mobile
+  if (!isMobile || isPublicPage) {
     return null
   }
 
