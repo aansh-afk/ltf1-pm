@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   format,
   startOfMonth,
@@ -33,6 +33,7 @@ interface BrutalCalendarProps {
   onDateSelect?: (date: Date) => void
   onEventClick?: (event: CalendarEvent) => void
   view?: 'month' | 'week'
+  currentDate?: Date
   className?: string
 }
 
@@ -42,10 +43,18 @@ export default function BrutalCalendar({
   onDateSelect,
   onEventClick,
   view = 'month',
+  currentDate: providedCurrentDate,
   className
 }: BrutalCalendarProps) {
-  const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState(providedCurrentDate || new Date())
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
+  
+  // Update currentDate when providedCurrentDate changes
+  React.useEffect(() => {
+    if (providedCurrentDate) {
+      setCurrentDate(providedCurrentDate)
+    }
+  }, [providedCurrentDate])
 
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(currentDate)

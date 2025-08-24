@@ -74,28 +74,172 @@ export default function FilterPresets({ workspaceId, currentFilters, onApplyPres
   }
 
   return (
-    <div className="space-y-16px">
-      <div className="flex items-center justify-between">
-        <h3 className="font-mono text-brutal-sm uppercase">FILTER PRESETS</h3>
+    <div className="space-y-2">
+      {/* Ultra-Compact 3-Tier Filter System with Responsive Wrapper */}
+      <div className="flex items-center gap-1 max-w-full overflow-x-auto md:overflow-x-visible scrollbar-hide"
+           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {/* Tier 1: Primary Filters (Always Visible) */}
+        <div className="flex items-center gap-[2px] flex-shrink-0">
+          <button
+            onClick={() => onApplyPreset(getEmptyFilters())}
+            className="h-[22px] px-2 border border-[var(--theme-border)] bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)] font-mono text-[9px] uppercase transition-colors"
+            title="Show all tasks"
+          >
+            ALL
+          </button>
+          <button
+            onClick={() => onApplyPreset({
+              ...getEmptyFilters(),
+              assigneeIds: currentUser?._id ? [currentUser._id] : []
+            })}
+            className="h-[22px] px-2 border border-[var(--theme-border)] bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)] font-mono text-[9px] uppercase transition-colors"
+            title="Show only my tasks"
+          >
+            MINE
+          </button>
+          <button
+            onClick={() => onApplyPreset({
+              ...getEmptyFilters(),
+              assigneeIds: ['unassigned']
+            })}
+            className="h-[22px] px-2 border border-[var(--theme-border)] bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)] font-mono text-[9px] uppercase transition-colors"
+            title="Show unassigned tasks"
+          >
+            NONE
+          </button>
+        </div>
+
+        {/* Visual Separator */}
+        <div className="w-[1px] h-[16px] bg-[var(--theme-border)] flex-shrink-0" />
+
+        {/* Tier 2: Status Filters (Color-coded) */}
+        <div className="flex items-center gap-[2px] flex-shrink-0">
+          <button
+            onClick={() => onApplyPreset({
+              ...getEmptyFilters(),
+              status: ['in_progress']
+            })}
+            className="h-[22px] px-2 border border-[var(--theme-border)] bg-blue-500/20 hover:bg-blue-500/30 font-mono text-[9px] uppercase transition-colors"
+            title="In progress tasks"
+          >
+            WIP
+          </button>
+          <button
+            onClick={() => onApplyPreset({
+              ...getEmptyFilters(),
+              status: ['blocked']
+            })}
+            className="h-[22px] px-2 border border-[var(--theme-border)] bg-red-500/20 hover:bg-red-500/30 font-mono text-[9px] uppercase transition-colors"
+            title="Blocked tasks"
+          >
+            BLOCK
+          </button>
+          <button
+            onClick={() => onApplyPreset({
+              ...getEmptyFilters(),
+              status: ['done'],
+              createdDateRange: {
+                start: getDateDaysAgo(7),
+                end: null
+              }
+            })}
+            className="h-[22px] px-2 border border-[var(--theme-border)] bg-green-500/20 hover:bg-green-500/30 font-mono text-[9px] uppercase transition-colors"
+            title="Recently completed"
+          >
+            DONE
+          </button>
+        </div>
+
+        {/* Visual Separator */}
+        <div className="w-[1px] h-[16px] bg-[var(--theme-border)] flex-shrink-0" />
+
+        {/* Tier 2.5: Priority Filters */}
+        <div className="flex items-center gap-[2px] flex-shrink-0">
+          <button
+            onClick={() => onApplyPreset({
+              ...getEmptyFilters(),
+              isOverdue: true
+            })}
+            className="h-[22px] px-2 border border-red-600 bg-red-600 text-white hover:bg-red-700 font-mono text-[9px] uppercase transition-colors"
+            title="Overdue tasks"
+          >
+            !DUE
+          </button>
+          <button
+            onClick={() => onApplyPreset({
+              ...getEmptyFilters(),
+              priority: ['urgent', 'high']
+            })}
+            className="h-[22px] px-2 border border-orange-500 bg-orange-500 text-white hover:bg-orange-600 font-mono text-[9px] uppercase transition-colors"
+            title="High priority tasks"
+          >
+            !PRI
+          </button>
+        </div>
+
+        {/* Tier 3: Advanced Options (Collapsible) */}
+        <details className="relative flex-shrink-0 ml-auto">
+          <summary className="h-[22px] px-2 border border-[var(--theme-border)] bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)] font-mono text-[9px] uppercase cursor-pointer transition-colors list-none flex items-center gap-1">
+            MORE
+            <span className="text-[7px]">▼</span>
+          </summary>
+          <div className="absolute top-[24px] right-0 z-10 bg-[var(--theme-background)] border border-[var(--theme-border)] shadow-lg min-w-[120px] p-1">
+            <button
+              onClick={() => onApplyPreset({
+                ...getEmptyFilters(),
+                dueDateRange: {
+                  start: new Date(),
+                  end: getDateDaysAgo(-7)
+                }
+              })}
+              className="w-full h-[22px] px-2 text-left hover:bg-[var(--theme-background-secondary)] font-mono text-[9px] uppercase transition-colors"
+            >
+              DUE THIS WEEK
+            </button>
+            <button
+              onClick={() => onApplyPreset({
+                ...getEmptyFilters(),
+                createdDateRange: {
+                  start: getDateDaysAgo(1),
+                  end: null
+                }
+              })}
+              className="w-full h-[22px] px-2 text-left hover:bg-[var(--theme-background-secondary)] font-mono text-[9px] uppercase transition-colors"
+            >
+              CREATED TODAY
+            </button>
+            <button
+              onClick={() => onApplyPreset({
+                ...getEmptyFilters(),
+                hasTimeTracked: true
+              })}
+              className="w-full h-[22px] px-2 text-left hover:bg-[var(--theme-background-secondary)] font-mono text-[9px] uppercase transition-colors"
+            >
+              TIME TRACKED
+            </button>
+          </div>
+        </details>
+
+        {/* Save Current Filter Button */}
         {hasActiveFilters() && !isCreating && (
           <button
             onClick={() => setIsCreating(true)}
-            className="brutal-btn-sm flex items-center gap-4px"
+            className="h-[22px] px-2 ml-1 border border-primary-brutalist bg-primary-brutalist text-event-horizon hover:bg-opacity-90 font-mono text-[9px] uppercase transition-colors flex-shrink-0"
+            title="Save current filter"
           >
-            <HiOutlinePlus className="w-12px h-12px" />
-            SAVE
+            +
           </button>
         )}
       </div>
 
-      {/* Create Preset Form */}
+      {/* Ultra-Compact Create Preset Form */}
       {isCreating && (
-        <div className="p-16px bg-[var(--theme-background-secondary)]/10 border-2 border-[var(--theme-border)] space-y-12px">
+        <div className="flex items-center gap-1 p-1 bg-[var(--theme-background-secondary)]/5 border border-[var(--theme-border)]">
           <input
             type="text"
-            placeholder="PRESET NAME..."
-            className="w-full px-12px py-8px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                     font-mono text-brutal-sm uppercase placeholder:text-neutral-600
+            placeholder="NAME..."
+            className="flex-1 min-w-[60px] px-2 h-[20px] bg-[var(--theme-background)] border border-[var(--theme-border)] 
+                     font-mono text-[9px] uppercase placeholder:text-neutral-600
                      focus:border-primary-brutalist focus:outline-none transition-colors"
             value={presetName}
             onChange={(e) => setPresetName(e.target.value)}
@@ -109,106 +253,74 @@ export default function FilterPresets({ workspaceId, currentFilters, onApplyPres
             }}
             autoFocus
           />
-          <div className="flex gap-8px">
-            <button
-              onClick={handleCreatePreset}
-              disabled={!presetName.trim()}
-              className="brutal-btn-sm flex items-center gap-4px"
-            >
-              <HiOutlineCheck className="w-12px h-12px" />
-              SAVE
-            </button>
-            <button
-              onClick={() => {
-                setIsCreating(false)
-                setPresetName('')
-              }}
-              className="brutal-btn-sm bg-neutral-600 border-neutral-600 hover:bg-neutral-700"
-            >
-              CANCEL
-            </button>
-          </div>
+          <button
+            onClick={handleCreatePreset}
+            disabled={!presetName.trim()}
+            className="h-[20px] px-2 border border-green-600 bg-green-600 text-white hover:bg-green-700 font-mono text-[9px] uppercase disabled:opacity-50 transition-colors"
+          >
+            ✓
+          </button>
+          <button
+            onClick={() => {
+              setIsCreating(false)
+              setPresetName('')
+            }}
+            className="h-[20px] px-2 border border-[var(--theme-border)] bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)] font-mono text-[9px] uppercase transition-colors"
+          >
+            ✕
+          </button>
         </div>
       )}
 
-      {/* Preset List */}
+      {/* Ultra-Compact Saved Presets */}
       {presets && presets.length > 0 && (
-        <div className="space-y-8px">
-          {presets.map(preset => (
-            <div
-              key={preset._id}
-              className="flex items-center justify-between p-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] hover:bg-[var(--theme-background-secondary)] transition-colors"
-            >
+        <div className="flex items-center gap-1">
+          <span className="font-mono text-[8px] uppercase text-neutral-500 mr-1">SAVED:</span>
+          {presets.slice(0, 4).map(preset => (
+            <div key={preset._id} className="flex items-center group">
               <button
                 onClick={() => onApplyPreset(preset.filters as TaskFilters)}
-                className="flex-1 text-left"
+                className="h-[20px] px-2 border border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/50 hover:bg-[var(--theme-background-secondary)] font-mono text-[9px] uppercase truncate max-w-[60px] transition-colors"
+                title={preset.name}
               >
-                <div className="flex items-center gap-8px">
-                  <HiOutlineBookmark className="w-16px h-16px text-primary-brutalist" />
-                  <span className="font-mono text-brutal-sm uppercase">{preset.name}</span>
-                </div>
-                <div className="text-brutal-xs text-neutral-500 mt-4px">
-                  {getPresetDescription(preset.filters as TaskFilters)}
-                </div>
+                {preset.name}
               </button>
               <button
                 onClick={() => handleDeletePreset(preset._id)}
-                className="brutal-hover p-4px text-neutral-500 hover:text-[var(--theme-error)]"
+                className="h-[20px] w-[16px] -ml-[1px] border border-[var(--theme-border)] bg-[var(--theme-background)] opacity-0 group-hover:opacity-100 hover:bg-red-600 hover:text-white flex items-center justify-center transition-all"
+                title="Delete"
               >
-                <HiOutlineTrash className="w-14px h-14px" />
+                <HiOutlineTrash className="w-[7px] h-[7px]" />
               </button>
             </div>
           ))}
+          {presets.length > 4 && (
+            <details className="relative inline-block">
+              <summary className="h-[20px] px-2 border border-[var(--theme-border)] bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)] font-mono text-[9px] uppercase cursor-pointer list-none transition-colors">
+                +{presets.length - 4}
+              </summary>
+              <div className="absolute top-[22px] left-0 z-10 bg-[var(--theme-background)] border border-[var(--theme-border)] shadow-lg min-w-[100px] p-1">
+                {presets.slice(4).map(preset => (
+                  <div key={preset._id} className="flex items-center justify-between hover:bg-[var(--theme-background-secondary)] px-1">
+                    <button
+                      onClick={() => onApplyPreset(preset.filters as TaskFilters)}
+                      className="flex-1 text-left h-[20px] font-mono text-[9px] uppercase truncate"
+                    >
+                      {preset.name}
+                    </button>
+                    <button
+                      onClick={() => handleDeletePreset(preset._id)}
+                      className="w-[16px] h-[16px] flex items-center justify-center text-neutral-500 hover:text-red-600"
+                    >
+                      <HiOutlineTrash className="w-[7px] h-[7px]" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
         </div>
       )}
-
-      {/* Quick Presets */}
-      <div>
-        <h4 className="font-mono text-brutal-xs uppercase text-neutral-500 mb-8px">QUICK FILTERS</h4>
-        <div className="space-y-4px">
-          <button
-            onClick={() => onApplyPreset({
-              ...getEmptyFilters(),
-              assigneeIds: currentUser?._id ? [currentUser._id] : [],
-              status: ['todo', 'in_progress']
-            })}
-            className="w-full text-left px-12px py-8px bg-[var(--theme-background)] border border-[var(--theme-border)] hover:bg-[var(--theme-background-secondary)] transition-colors"
-          >
-            <span className="font-mono text-brutal-xs uppercase">MY ACTIVE TASKS</span>
-          </button>
-          <button
-            onClick={() => onApplyPreset({
-              ...getEmptyFilters(),
-              isOverdue: true
-            })}
-            className="w-full text-left px-12px py-8px bg-[var(--theme-background)] border border-[var(--theme-border)] hover:bg-[var(--theme-background-secondary)] transition-colors"
-          >
-            <span className="font-mono text-brutal-xs uppercase text-[var(--theme-error)]">OVERDUE TASKS</span>
-          </button>
-          <button
-            onClick={() => onApplyPreset({
-              ...getEmptyFilters(),
-              priority: ['urgent', 'high']
-            })}
-            className="w-full text-left px-12px py-8px bg-[var(--theme-background)] border border-[var(--theme-border)] hover:bg-[var(--theme-background-secondary)] transition-colors"
-          >
-            <span className="font-mono text-brutal-xs uppercase text-[var(--theme-accent)]">HIGH PRIORITY</span>
-          </button>
-          <button
-            onClick={() => onApplyPreset({
-              ...getEmptyFilters(),
-              status: ['done'],
-              createdDateRange: {
-                start: getDateDaysAgo(7),
-                end: null
-              }
-            })}
-            className="w-full text-left px-12px py-8px bg-[var(--theme-background)] border border-[var(--theme-border)] hover:bg-[var(--theme-background-secondary)] transition-colors"
-          >
-            <span className="font-mono text-brutal-xs uppercase text-[var(--theme-success)]">COMPLETED THIS WEEK</span>
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
@@ -228,24 +340,9 @@ function getEmptyFilters(): TaskFilters {
   }
 }
 
-function getPresetDescription(filters: TaskFilters): string {
-  const parts: string[] = []
-  
-  if (filters.search) parts.push(`"${filters.search}"`)
-  if (filters.status.length > 0) parts.push(`${filters.status.length} status`)
-  if (filters.priority.length > 0) parts.push(`${filters.priority.length} priority`)
-  if (filters.type.length > 0) parts.push(`${filters.type.length} type`)
-  if (filters.assigneeIds.length > 0) parts.push(`${filters.assigneeIds.length} assignee`)
-  if (filters.labels.length > 0) parts.push(`${filters.labels.length} labels`)
-  if (filters.dueDateRange.start || filters.dueDateRange.end) parts.push('due date')
-  if (filters.hasTimeTracked) parts.push('time tracked')
-  if (filters.isOverdue) parts.push('overdue')
-  
-  return parts.length > 0 ? parts.join(', ') : 'no filters'
-}
-
-function getDateDaysAgo(days: number): string {
+function getDateDaysAgo(days: number): Date {
   const date = new Date()
   date.setDate(date.getDate() - days)
-  return date.toISOString().split('T')[0]
+  return date
 }
+

@@ -2,7 +2,7 @@ import { ImgHTMLAttributes } from 'react'
 import clsx from 'clsx'
 
 interface BrutalAvatarProps extends ImgHTMLAttributes<HTMLImageElement> {
-  size?: 'xs' | 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   name?: string
 }
 
@@ -15,10 +15,11 @@ export default function BrutalAvatar({
   ...props
 }: BrutalAvatarProps) {
   const sizeClasses = {
-    xs: 'w-20px h-20px text-[10px]',
-    sm: 'w-32px h-32px text-xs',
-    md: 'w-48px h-48px text-sm',
-    lg: 'w-64px h-64px text-base'
+    xs: 'w-5 h-5 text-[10px]',
+    sm: 'w-6 h-6 text-[10px]',
+    md: 'w-8 h-8 text-xs',
+    lg: 'w-10 h-10 text-sm',
+    xl: 'w-16 h-16 text-base'
   }
 
   // Generate initials from name

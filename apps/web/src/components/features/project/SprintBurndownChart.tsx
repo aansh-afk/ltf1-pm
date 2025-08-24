@@ -26,8 +26,8 @@ export default function SprintBurndownChart({ sprint, tasks, showPrediction = tr
   const sprintTasks = tasks.filter(t => t.sprintId === sprint._id)
   
   // Calculate burndown data
-  const startDate = parseISO(sprint.startDate)
-  const endDate = parseISO(sprint.endDate)
+  const startDate = new Date(sprint.startDate)
+  const endDate = new Date(sprint.endDate)
   const totalDays = differenceInDays(endDate, startDate) + 1
   const days = eachDayOfInterval({ start: startDate, end: endDate })
   
@@ -43,7 +43,9 @@ export default function SprintBurndownChart({ sprint, tasks, showPrediction = tr
     // Calculate remaining points up to this day
     const completedByDay = sprintTasks.filter(task => {
       if (task.status === 'done' && task.completedAt) {
-        const completedDate = parseISO(task.completedAt)
+        const completedDate = typeof task.completedAt === 'string' 
+          ? parseISO(task.completedAt) 
+          : new Date(task.completedAt)
         return completedDate <= dayEnd
       }
       return false

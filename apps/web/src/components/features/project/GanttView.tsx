@@ -122,18 +122,26 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
     
     ganttTasks.forEach(processTask)
     
-    // Add padding
-    const start = addDays(minDate, -7)
-    const end = addDays(maxDate, 7)
-    const days = differenceInDays(end, start)
+    // Add padding based on zoom level to optimize performance
+    const paddingDays = zoomLevel === 'day' ? 3 : 7
+    const start = addDays(minDate, -paddingDays)
     
-    return { startDate: start, endDate: end, totalDays: days }
-  }, [ganttTasks])
+    // Limit the visible range in day view for performance
+    const maxDaysInView = zoomLevel === 'day' ? 30 : 180
+    const calculatedEnd = addDays(maxDate, paddingDays)
+    const limitedEnd = differenceInDays(calculatedEnd, start) > maxDaysInView 
+      ? addDays(start, maxDaysInView)
+      : calculatedEnd
+    
+    const days = differenceInDays(limitedEnd, start)
+    
+    return { startDate: start, endDate: limitedEnd, totalDays: days }
+  }, [ganttTasks, zoomLevel])
   
   // Calculate column width based on zoom
   const columnWidth = useMemo(() => {
     switch (zoomLevel) {
-      case 'day': return 50
+      case 'day': return 60  // Increased for better visibility and performance
       case 'week': return 100
       case 'month': return 200
       case 'quarter': return 300
@@ -578,27 +586,31 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
             height={flatTasks.length * ROW_HEIGHT}
             className="relative"
           >
-            {/* Grid lines */}
-            {Array.from({ length: Math.ceil(totalDays / (zoomLevel === 'day' ? 1 : 7)) }).map((_, i) => (
-              <line
-                key={i}
-                x1={i * columnWidth}
-                y1={0}
-                x2={i * columnWidth}
-                y2={flatTasks.length * ROW_HEIGHT}
-                stroke="var(--theme-border)"
-                strokeWidth={1}
-                opacity={0.3}
-              />
-            ))}
+            {/* Grid lines - optimized to render fewer lines */}
+            {Array.from({ length: Math.min(Math.ceil(totalDays / (zoomLevel === 'day' ? 1 : 7)), 100) }).map((_, i) => {
+              // Skip every other line in day view for performance
+              if (zoomLevel === 'day' && i % 2 !== 0) return null
+              return (
+                <line
+                  key={i}
+                  x1={i * columnWidth}
+                  y1={0}
+                  x2={i * columnWidth}
+                  y2={flatTasks.length * ROW_HEIGHT}
+                  stroke="var(--theme-border)"
+                  strokeWidth={1}
+                  opacity={0.3}
+                />
+              )
+            })}
             
-            {/* Weekend highlighting */}
-            {zoomLevel === 'day' && Array.from({ length: totalDays }).map((_, i) => {
+            {/* Weekend highlighting - optimized to only render visible weekends */}
+            {zoomLevel === 'day' && Array.from({ length: Math.min(totalDays, 30) }).map((_, i) => {
               const date = addDays(startDate, i)
               if (isWeekend(date)) {
                 return (
                   <rect
-                    key={i}
+                    key={`weekend-${i}`}
                     x={i * columnWidth}
                     y={0}
                     width={columnWidth}
