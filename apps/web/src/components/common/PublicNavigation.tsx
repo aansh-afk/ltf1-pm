@@ -6,7 +6,7 @@ interface PublicNavigationProps {
   currentPage?: 'landing' | 'pricing' | 'blog' | 'contact'
 }
 
-export default function PublicNavigation({ currentPage }: PublicNavigationProps) {
+export default function PublicNavigation({ }: PublicNavigationProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
