@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { BrutalButton } from '../ui'
 
 interface EmptyStateProps {
