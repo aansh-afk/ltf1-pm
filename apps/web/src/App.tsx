@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { SignIn, SignUp, SignedIn, SignedOut } from '@clerk/clerk-react'
+import { SignIn, SignUp, SignedIn, SignedOut, useAuth } from '@clerk/clerk-react'
 import { Toaster } from 'react-hot-toast'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
-import { ConvexClientProvider } from './providers/ConvexClientProvider'
+import { OptionalConvexProvider } from './providers/OptionalConvexProvider'
 import { ShortcutProvider } from './contexts/ShortcutContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import DashboardLayout from './components/layout/DashboardLayout'
@@ -37,8 +37,8 @@ import OnboardingFlow from './components/onboarding/OnboardingFlow'
 import BrutalistLoader from './components/common/BrutalistLoader'
 import MobileWarning from './components/common/MobileWarning'
 
-function AppContent() {
-  // Ensure user is synced with Convex
+// Create a wrapper component that handles authentication state
+function AuthenticatedAppContent() {
   const { isLoading, isFirstTimeUser, user } = useEnsureUser()
   const [showOnboarding, setShowOnboarding] = useState(false)
   const updatePreferences = useMutation(api.auth.users.updateUserPreferences)
@@ -58,21 +58,17 @@ function AppContent() {
     if (isFirstTimeUser && user && !wasOnboardingDismissed) {
       setShowOnboarding(true)
     } else if (!isFirstTimeUser || wasOnboardingDismissed) {
-      // User has completed onboarding or dismissed it this session
       setShowOnboarding(false)
     }
   }, [isFirstTimeUser, user])
   
   const handleOnboardingComplete = () => {
-    // Close modal immediately
     setShowOnboarding(false)
     
-    // Mark as dismissed in session storage
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('ltf1_onboarding_dismissed', 'true')
     }
     
-    // Update preferences in the background
     if (user) {
       updatePreferences({ 
         preferences: { 
@@ -92,36 +88,57 @@ function AppContent() {
   }
   
   return (
-    <div className="min-h-screen bg-[var(--theme-background)]">
-      {/* Mobile Warning - Shows automatically on mobile devices */}
-      <MobileWarning />
-      
-      <SignedIn>
-        <DataMigrationBanner />
-      </SignedIn>
-      
-      {/* Onboarding Flow for First-Time Users */}
+    <>
+      <DataMigrationBanner />
       {showOnboarding && (
         <OnboardingFlow 
           isOpen={showOnboarding} 
           onComplete={handleOnboardingComplete} 
         />
       )}
+      <AppRoutes isAuthenticated={true} />
+    </>
+  )
+}
+
+// Unauthenticated version that doesn't use Convex hooks
+function UnauthenticatedAppContent() {
+  return <AppRoutes isAuthenticated={false} />
+}
+
+// Main app content that decides whether to use authenticated or unauthenticated version
+function AppContent() {
+  const { isSignedIn } = useAuth()
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  
+  // Use the appropriate content based on authentication state
+  if (isSignedIn) {
+    return <AuthenticatedAppContent />
+  }
+  
+  return <UnauthenticatedAppContent />
+}
+
+// Separate component for routes that can be used by both authenticated and unauthenticated users
+function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const { isSignedIn } = useAuth()
+  
+  return (
+    <div className="min-h-screen bg-[var(--theme-background)]">
+      {/* Mobile Warning - Shows automatically on mobile devices */}
+      <MobileWarning />
       
-      {/* Global Shortcut Components */}
-      <CommandPalette />
-      <ShortcutHelp />
+      {/* Global Shortcut Components - only if authenticated */}
+      {isAuthenticated && (
+        <>
+          <CommandPalette />
+          <ShortcutHelp />
+        </>
+      )}
       
       <Routes>
         <Route path="/" element={
-          <>
-            <SignedOut>
-              <LandingPage />
-            </SignedOut>
-            <SignedIn>
-              <Navigate to="/dashboard" replace />
-            </SignedIn>
-          </>
+          isSignedIn ? <Navigate to="/dashboard" replace /> : <LandingPage />
         } />
         
         <Route path="/pricing" element={<PricingPage />} />
@@ -147,16 +164,8 @@ function AppContent() {
         {/* GitHub OAuth Callback */}
         <Route path="/api/auth/github/callback" element={<GitHubCallbackPage />} />
 
-        <Route path="/" element={
-          <>
-            <SignedIn>
-              <DashboardLayout />
-            </SignedIn>
-            <SignedOut>
-              <Navigate to="/sign-in" replace />
-            </SignedOut>
-          </>
-        }>
+        {/* Protected routes - show without authentication requirement */}
+        <Route path="/" element={<DashboardLayout />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="profile" element={<MyProfilePage />} />
           <Route path="workspaces" element={<WorkspacesPage />} />
@@ -210,7 +219,7 @@ function AppContent() {
 
 function App() {
   return (
-    <ConvexClientProvider>
+    <OptionalConvexProvider>
       <Router>
         <ThemeProvider>
           <ShortcutProvider>
@@ -218,7 +227,7 @@ function App() {
           </ShortcutProvider>
         </ThemeProvider>
       </Router>
-    </ConvexClientProvider>
+    </OptionalConvexProvider>
   )
 }
 
