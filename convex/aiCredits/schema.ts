@@ -22,7 +22,8 @@ export const userAICredits = defineTable({
   subscriptionTier: v.union(
     v.literal("free"),
     v.literal("pro"),
-    v.literal("enterprise")
+    v.literal("enterprise"),
+    v.literal("max") // Max Intelligence tier with Gemini 2.5 Pro
   ),
   
   // Usage metrics

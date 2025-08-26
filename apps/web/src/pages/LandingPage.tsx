@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { HiOutlineCode, HiOutlineLightningBolt, HiOutlineUsers } from 'react-icons/hi'
 import BrutalFooterReveal from '../components/landing/BrutalFooterReveal'
 import PublicNavigation from '../components/common/PublicNavigation'
-import MarqueeBackground from '../components/common/MarqueeBackground'
+import StaticMarqueeBackground from '../components/common/StaticMarqueeBackground'
 import { useEffect, useState, useRef } from 'react'
 
 export default function LandingPage() {
@@ -117,8 +117,8 @@ export default function LandingPage() {
 
       {/* BRUTAL HERO */}
       <section className="min-h-[calc(100vh-60px)] md:min-h-[calc(100vh-80px)] flex items-center justify-center px-16px md:px-24px snap-start relative overflow-hidden">
-        {/* ANIMATED MARQUEE BACKGROUND */}
-        <MarqueeBackground />
+        {/* STATIC MARQUEE BACKGROUND */}
+        <StaticMarqueeBackground />
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
