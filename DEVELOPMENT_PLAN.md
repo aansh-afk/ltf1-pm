@@ -8,7 +8,7 @@ LTF1 is a comprehensive multi-role project management platform with AI capabilit
 - **Backend**: Convex
 - **Monorepo**: pnpm workspaces
 - **Authentication**: Clerk (supports multi-tenancy, social logins, enterprise SSO)
-- **AI**: OpenAI API / Anthropic Claude API
+- **AI**: OpenAI API
 - **Integrations**: GitHub API, Google Calendar API, Google Meet API
 
 ## Development Phases

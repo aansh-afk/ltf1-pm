@@ -29,6 +29,11 @@ import GitHubCallbackPage from './pages/GitHubCallbackPage'
 import TestCheckbox from './pages/TestCheckbox'
 import TestAI from './pages/TestAI'
 import NotFoundPage from './pages/NotFoundPage'
+import AutomationPage from './pages/AutomationPage'
+import WhiteboardPage from './pages/WhiteboardPage'
+import VideoPage from './pages/VideoPage'
+import CustomFieldsPage from './pages/CustomFieldsPage'
+import SlackPage from './pages/SlackPage'
 import { useEnsureUser } from './hooks/useEnsureUser'
 import { DataMigrationBanner } from './components/admin/DataMigrationBanner'
 import CommandPalette from './components/shortcuts/CommandPalette'
@@ -177,6 +182,12 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
           <Route path="meetings" element={<MeetingsPage />} />
           <Route path="sprints" element={<SprintPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="automation" element={<AutomationPage />} />
+          <Route path="whiteboard" element={<WhiteboardPage />} />
+          <Route path="video" element={<VideoPage />} />
+          <Route path="video/:meetingId" element={<VideoPage />} />
+          <Route path="custom-fields" element={<CustomFieldsPage />} />
+          <Route path="slack" element={<SlackPage />} />
           <Route path="test-checkbox" element={<TestCheckbox />} />
           <Route path="test-ai" element={<TestAI />} />
         </Route>

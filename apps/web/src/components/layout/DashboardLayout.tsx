@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import { Outlet, Link, useLocation, useParams } from 'react-router-dom'
 import { UserButton } from '@clerk/clerk-react'
 import { motion } from 'framer-motion'
-import { 
-  HiOutlineHome, 
-  HiOutlineBriefcase, 
-  HiOutlineFolder, 
+import {
+  HiOutlineHome,
+  HiOutlineBriefcase,
+  HiOutlineFolder,
   HiOutlineClipboardList,
   HiOutlineCalendar,
   HiOutlineCog,
@@ -17,7 +17,12 @@ import {
   HiOutlineChevronLeft,
   HiOutlineUserGroup,
   HiOutlineUser,
-  HiOutlineSearch
+  HiOutlineSearch,
+  HiOutlineLightningBolt,
+  HiOutlinePencilAlt,
+  HiOutlineVideoCamera,
+  HiOutlineViewGrid,
+  HiOutlineChatAlt2
 } from 'react-icons/hi'
 import clsx from 'clsx'
 import { useResourceMonitor } from '../../hooks/useResourceMonitor'
@@ -127,6 +132,11 @@ export default function DashboardLayout() {
     { path: '/team', label: 'TEAM', icon: HiOutlineUserGroup },
     { path: '/sprints', label: 'SPRINTS', icon: HiOutlinePlay },
     { path: '/meetings', label: 'MEETINGS', icon: HiOutlineCalendar },
+    { path: '/automation', label: 'AUTOMATION', icon: HiOutlineLightningBolt },
+    { path: '/whiteboard', label: 'WHITEBOARD', icon: HiOutlinePencilAlt },
+    { path: '/video', label: 'VIDEO ROOMS', icon: HiOutlineVideoCamera },
+    { path: '/custom-fields', label: 'CUSTOM FIELDS', icon: HiOutlineViewGrid },
+    { path: '/slack', label: 'SLACK', icon: HiOutlineChatAlt2 },
     { path: '/settings', label: 'SETTINGS', icon: HiOutlineCog },
   ]
 

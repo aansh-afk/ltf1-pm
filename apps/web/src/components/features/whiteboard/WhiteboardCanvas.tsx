@@ -2,10 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
-import { 
+import {
   HiOutlineCursorClick,
-  HiOutlineSquare,
-  HiOutlineCircle,
   HiOutlinePencil,
   HiOutlineAnnotation,
   HiOutlineArrowsExpand,
@@ -23,6 +21,20 @@ import {
   HiOutlineDotsVertical,
   HiOutlineX
 } from 'react-icons/hi'
+
+// Circle icon component (since HiOutlineCircle doesn't exist in hi package)
+const CircleIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <circle cx="12" cy="12" r="9" strokeWidth="2" />
+  </svg>
+)
+
+// Square icon component (since HiOutlineSquare doesn't exist in hi package)
+const SquareIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <rect x="4" y="4" width="16" height="16" strokeWidth="2" />
+  </svg>
+)
 
 // Element types
 const ELEMENT_TYPES = {
@@ -434,7 +446,7 @@ export default function WhiteboardCanvas({
           className={`p-2 border-2 ${activeTool === 'RECTANGLE' ? 'border-cyan-400 bg-cyan-400/20' : 'border-white'} hover:bg-white/10`}
           title="Rectangle"
         >
-          <HiOutlineSquare className="w-5 h-5 text-white" />
+          <SquareIcon className="w-5 h-5 text-white" />
         </button>
         
         <button
@@ -442,7 +454,7 @@ export default function WhiteboardCanvas({
           className={`p-2 border-2 ${activeTool === 'CIRCLE' ? 'border-cyan-400 bg-cyan-400/20' : 'border-white'} hover:bg-white/10`}
           title="Circle"
         >
-          <HiOutlineCircle className="w-5 h-5 text-white" />
+          <CircleIcon className="w-5 h-5 text-white" />
         </button>
         
         <button
