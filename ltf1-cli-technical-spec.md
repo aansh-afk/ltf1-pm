@@ -14,7 +14,7 @@
 ### Core Technologies
 - **Language**: Rust (for performance) with Python bindings (for plugins)
 - **Database**: SQLite for local storage + optional PostgreSQL sync
-- **AI/ML**: Local ONNX models + OpenAI API integration
+- **AI/ML**: Local ONNX models + OpenAI/Anthropic API integration
 - **Git Integration**: libgit2 bindings for deep Git operations
 - **CLI Framework**: Clap (Rust) for command parsing
 - **IPC**: gRPC for service communication
