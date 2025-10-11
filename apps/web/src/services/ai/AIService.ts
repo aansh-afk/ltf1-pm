@@ -5,7 +5,7 @@ import { api } from '../../../../../convex/_generated/api'
 import type { Id } from '../../../../../convex/_generated/dataModel'
 
 export interface AIConfig {
-  provider: 'openai' | 'local'
+  provider: 'claude' | 'openai' | 'local'
   apiKey?: string
   model?: string
   maxTokens?: number
@@ -62,8 +62,8 @@ class AIService {
 
   constructor(config?: AIConfig) {
     this.config = config || {
-      provider: 'openai',
-      model: 'gpt-4',
+      provider: 'claude',
+      model: 'claude-3-opus-20240229',
       maxTokens: 4000,
       temperature: 0.7
     }
