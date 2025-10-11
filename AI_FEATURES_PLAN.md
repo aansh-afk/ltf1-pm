@@ -14,7 +14,6 @@ src/services/ai/
 │   ├── PromptTemplates.ts   // Reusable prompts
 │   └── CacheManager.ts      // AI response caching
 ├── providers/
-│   ├── ClaudeProvider.ts    // Claude API integration
 │   ├── OpenAIProvider.ts    // GPT integration
 │   └── LocalProvider.ts     // Local model support
 └── utils/
@@ -195,7 +194,7 @@ interface TaskIntelligence {
 
 ### Phase 1: Foundation (Weeks 1-4)
 - [ ] Set up AI service architecture
-- [ ] Integrate Claude/GPT APIs
+- [ ] Integrate GPT APIs
 - [ ] Create prompt templates
 - [ ] Implement caching system
 
@@ -226,7 +225,6 @@ interface TaskIntelligence {
 ## TECHNICAL REQUIREMENTS
 
 ### APIs & Services
-- Claude API (Anthropic)
 - GPT-4 API (OpenAI)
 - Whisper API (Transcription)
 - Vector Database (Pinecone/Weaviate)

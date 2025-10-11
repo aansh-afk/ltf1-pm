@@ -16,6 +16,7 @@
     "@hello-pangea/dnd": "^18.0.1",
     "@ltf1/backend": "workspace:*",
     "@ltf1/types": "workspace:*",
+    "@types/simple-peer": "^9.11.8",
     "clsx": "^2.1.0",
     "convex": "^1.25.4",
     "date-fns": "^3.6.0",
@@ -25,7 +26,9 @@
     "react-hot-toast": "^2.4.1",
     "react-icons": "^4.12.0",
     "react-router-dom": "^6.21.0",
+    "reactflow": "^11.11.4",
     "recharts": "^3.1.2",
+    "simple-peer": "^9.11.1",
     "sonner": "^2.0.7",
     "zustand": "^4.4.7"
   },

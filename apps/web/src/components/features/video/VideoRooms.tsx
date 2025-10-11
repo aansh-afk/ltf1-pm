@@ -2,16 +2,13 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
-import { 
+import {
   HiOutlineVideoCamera,
-  HiOutlineVideoCameraSlash,
   HiOutlineMicrophone,
-  HiOutlineMicrophoneOff,
   HiOutlineDesktopComputer,
   HiOutlinePhone,
   HiOutlineUsers,
   HiOutlineDotsVertical,
-  HiOutlineRecord,
   HiOutlineStop,
   HiOutlineCog,
   HiOutlineLink,
@@ -25,6 +22,29 @@ import {
   HiOutlineHand
 } from 'react-icons/hi'
 import { HiVideoCamera } from 'react-icons/hi2'
+
+// Video camera slash icon component (since HiOutlineVideoCameraSlash doesn't exist in hi package)
+const VideoCameraSlashIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    <line x1="4" y1="4" x2="20" y2="20" strokeWidth={2} strokeLinecap="round" />
+  </svg>
+)
+
+// Microphone off icon component (since HiOutlineMicrophoneOff doesn't exist in hi package)
+const MicrophoneOffIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+    <line x1="4" y1="4" x2="20" y2="20" strokeWidth={2} strokeLinecap="round" />
+  </svg>
+)
+
+// Record icon component (since HiOutlineRecord doesn't exist in hi package)
+const RecordIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <circle cx="12" cy="12" r="8" fill="currentColor" strokeWidth="2" />
+  </svg>
+)
 
 interface VideoRoomsProps {
   workspaceId: Id<'workspaces'>
@@ -410,7 +430,7 @@ export default function VideoRooms({ workspaceId, meetingId }: VideoRoomsProps) 
                 </div>
                 {!isVideoOn && (
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                    <HiOutlineVideoCameraSlash className="w-16 h-16 text-gray-600" />
+                    <VideoCameraSlashIcon className="w-16 h-16 text-gray-600" />
                   </div>
                 )}
               </div>
@@ -482,7 +502,7 @@ export default function VideoRooms({ workspaceId, meetingId }: VideoRoomsProps) 
                   {isAudioOn ? (
                     <HiOutlineMicrophone className="w-6 h-6 text-white" />
                   ) : (
-                    <HiOutlineMicrophoneOff className="w-6 h-6 text-red-500" />
+                    <MicrophoneOffIcon className="w-6 h-6 text-red-500" />
                   )}
                 </button>
 
@@ -495,7 +515,7 @@ export default function VideoRooms({ workspaceId, meetingId }: VideoRoomsProps) 
                   {isVideoOn ? (
                     <HiOutlineVideoCamera className="w-6 h-6 text-white" />
                   ) : (
-                    <HiOutlineVideoCameraSlash className="w-6 h-6 text-red-500" />
+                    <VideoCameraSlashIcon className="w-6 h-6 text-red-500" />
                   )}
                 </button>
 
@@ -520,7 +540,7 @@ export default function VideoRooms({ workspaceId, meetingId }: VideoRoomsProps) 
                     {isRecording ? (
                       <HiOutlineStop className="w-6 h-6 text-red-500" />
                     ) : (
-                      <HiOutlineRecord className="w-6 h-6 text-white" />
+                      <RecordIcon className="w-6 h-6 text-white" />
                     )}
                   </button>
                 )}

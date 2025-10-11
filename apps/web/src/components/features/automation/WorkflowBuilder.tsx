@@ -21,6 +21,7 @@ import BrutalCard from '@/components/ui/BrutalCard'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalInput from '@/components/ui/BrutalInput'
 import BrutalModal from '@/components/ui/BrutalModal'
+import FlowCanvas from './FlowCanvas'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
 
@@ -86,8 +87,10 @@ const ACTION_TYPES = [
 ]
 
 export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuilderProps) {
+  const [viewMode, setViewMode] = useState<'list' | 'flow'>('list')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingWorkflow, setEditingWorkflow] = useState<any>(null)
+  const [selectedWorkflowForFlow, setSelectedWorkflowForFlow] = useState<any>(null)
   const [selectedTriggerType, setSelectedTriggerType] = useState('event')
   const [workflowName, setWorkflowName] = useState('')
   const [workflowDescription, setWorkflowDescription] = useState('')
@@ -221,17 +224,46 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-brutal-2xl font-bold">WORKFLOW AUTOMATION</h2>
-        <BrutalButton
-          onClick={() => setShowCreateModal(true)}
-          variant="primary"
-          icon={<HiOutlinePlus className="w-20px h-20px" />}
-        >
-          CREATE WORKFLOW
-        </BrutalButton>
+        <div className="flex items-center gap-12px">
+          {/* View Toggle */}
+          <div className="flex border-2 border-[var(--theme-border)]">
+            <button
+              onClick={() => setViewMode('list')}
+              className={clsx(
+                "px-16px py-8px text-xs font-bold uppercase transition-all",
+                viewMode === 'list'
+                  ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
+                  : "bg-[var(--theme-background)] text-[var(--theme-foreground)] hover:bg-[var(--theme-hover)]"
+              )}
+            >
+              LIST VIEW
+            </button>
+            <button
+              onClick={() => setViewMode('flow')}
+              className={clsx(
+                "px-16px py-8px text-xs font-bold uppercase border-l-2 border-[var(--theme-border)] transition-all",
+                viewMode === 'flow'
+                  ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
+                  : "bg-[var(--theme-background)] text-[var(--theme-foreground)] hover:bg-[var(--theme-hover)]"
+              )}
+            >
+              FLOW VIEW
+            </button>
+          </div>
+
+          <BrutalButton
+            onClick={() => setShowCreateModal(true)}
+            variant="primary"
+            icon={<HiOutlinePlus className="w-20px h-20px" />}
+          >
+            CREATE WORKFLOW
+          </BrutalButton>
+        </div>
       </div>
 
-      {/* Workflows List */}
-      <div className="grid gap-16px">
+      {/* List View */}
+      {viewMode === 'list' && (
+        <div className="grid gap-16px">
         {workflows.length === 0 ? (
           <BrutalCard className="p-48px text-center">
             <HiOutlineLightningBolt className="w-48px h-48px mx-auto mb-16px text-[var(--theme-muted)]" />
@@ -325,6 +357,18 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
 
                     <BrutalButton
                       onClick={() => {
+                        setSelectedWorkflowForFlow(workflow)
+                        setViewMode('flow')
+                      }}
+                      variant="secondary"
+                      size="sm"
+                      title="View in flow canvas"
+                    >
+                      FLOW
+                    </BrutalButton>
+
+                    <BrutalButton
+                      onClick={() => {
                         setEditingWorkflow(workflow)
                         setShowCreateModal(true)
                       }}
@@ -345,7 +389,62 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
             )
           })
         )}
-      </div>
+        </div>
+      )}
+
+      {/* Flow View */}
+      {viewMode === 'flow' && (
+        <div className="space-y-16px">
+          {workflows.length === 0 ? (
+            <BrutalCard className="p-48px text-center">
+              <HiOutlineLightningBolt className="w-48px h-48px mx-auto mb-16px text-[var(--theme-muted)]" />
+              <p className="text-brutal-lg font-bold mb-8px">NO WORKFLOWS TO VISUALIZE</p>
+              <p className="text-[var(--theme-muted)] mb-24px">
+                Create a workflow first to see it visualized in the flow canvas
+              </p>
+              <BrutalButton
+                onClick={() => setShowCreateModal(true)}
+                variant="primary"
+              >
+                CREATE FIRST WORKFLOW
+              </BrutalButton>
+            </BrutalCard>
+          ) : (
+            <>
+              {/* Workflow Selector */}
+              <div className="flex items-center gap-12px">
+                <label className="text-xs font-bold uppercase">SELECT WORKFLOW:</label>
+                <select
+                  value={selectedWorkflowForFlow?._id || ''}
+                  onChange={(e) => {
+                    const workflow = workflows.find((w: any) => w._id === e.target.value)
+                    setSelectedWorkflowForFlow(workflow)
+                  }}
+                  className="px-12px py-8px border-2 border-[var(--theme-border)] bg-[var(--theme-background)] text-brutal-sm font-bold"
+                >
+                  <option value="">Select a workflow...</option>
+                  {workflows.map((workflow: any) => (
+                    <option key={workflow._id} value={workflow._id}>
+                      {workflow.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Flow Canvas */}
+              {selectedWorkflowForFlow ? (
+                <FlowCanvas workflow={selectedWorkflowForFlow} />
+              ) : (
+                <BrutalCard className="p-48px text-center">
+                  <p className="text-[var(--theme-muted)]">
+                    Select a workflow above to visualize it in the flow canvas
+                  </p>
+                </BrutalCard>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Create/Edit Workflow Modal */}
       <BrutalModal
