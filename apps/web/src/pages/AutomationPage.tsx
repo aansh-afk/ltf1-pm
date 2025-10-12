@@ -9,7 +9,7 @@ export default function AutomationPage() {
   const { workspaceId, projectId } = useParams<{ workspaceId: string; projectId?: string }>()
 
   // Get current workspace from context or URL
-  const workspaces = useQuery(api.workspaces.listWorkspaces)
+  const workspaces = useQuery(api.workspaces.queries.getUserWorkspaces)
   const currentWorkspace = workspaces?.[0]
 
   if (!currentWorkspace) {

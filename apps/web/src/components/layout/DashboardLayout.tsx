@@ -132,10 +132,10 @@ export default function DashboardLayout() {
     { path: '/team', label: 'TEAM', icon: HiOutlineUserGroup },
     { path: '/sprints', label: 'SPRINTS', icon: HiOutlinePlay },
     { path: '/meetings', label: 'MEETINGS', icon: HiOutlineCalendar },
-    { path: '/automation', label: 'AUTOMATION', icon: HiOutlineLightningBolt },
+    // { path: '/automation', label: 'AUTOMATION', icon: HiOutlineLightningBolt }, // Out of scope - not replicating n8n
     { path: '/whiteboard', label: 'WHITEBOARD', icon: HiOutlinePencilAlt },
-    { path: '/video', label: 'VIDEO ROOMS', icon: HiOutlineVideoCamera },
-    { path: '/custom-fields', label: 'CUSTOM FIELDS', icon: HiOutlineViewGrid },
+    // { path: '/video', label: 'VIDEO ROOMS', icon: HiOutlineVideoCamera }, // Out of scope - not replicating Zoom
+    // { path: '/custom-fields', label: 'CUSTOM FIELDS', icon: HiOutlineViewGrid }, // Out of scope
     { path: '/slack', label: 'SLACK', icon: HiOutlineChatAlt2 },
     { path: '/settings', label: 'SETTINGS', icon: HiOutlineCog },
   ]

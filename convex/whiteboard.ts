@@ -706,6 +706,36 @@ export const exportAsImage = action({
   },
 })
 
+// Generate upload URL for image
+export const generateImageUploadUrl = mutation({
+  args: {},
+  returns: v.string(),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new Error("Unauthorized")
+    }
+
+    return await ctx.storage.generateUploadUrl()
+  },
+})
+
+// Get storage URL from storage ID
+export const getStorageUrl = query({
+  args: {
+    storageId: v.string(),
+  },
+  returns: v.union(v.string(), v.null()),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new Error("Unauthorized")
+    }
+
+    return await ctx.storage.getUrl(args.storageId)
+  },
+})
+
 // Clone whiteboard
 export const cloneWhiteboard = mutation({
   args: {

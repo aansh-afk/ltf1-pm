@@ -9,7 +9,7 @@ export default function VideoPage() {
   const { workspaceId, meetingId } = useParams<{ workspaceId: string; meetingId?: string }>()
 
   // Get current workspace
-  const workspaces = useQuery(api.workspaces.listWorkspaces)
+  const workspaces = useQuery(api.workspaces.queries.getUserWorkspaces)
   const currentWorkspace = workspaces?.[0]
 
   if (!currentWorkspace) {

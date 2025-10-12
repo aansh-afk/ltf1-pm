@@ -8,7 +8,7 @@ export default function SlackPage() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
 
   // Get current workspace
-  const workspaces = useQuery(api.workspaces.listWorkspaces)
+  const workspaces = useQuery(api.workspaces.queries.getUserWorkspaces)
   const currentWorkspace = workspaces?.[0]
 
   if (!currentWorkspace) {
