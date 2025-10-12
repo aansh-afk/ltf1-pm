@@ -387,3 +387,62 @@ export const getSlackIntegrationStatus = query({
     }
   },
 })
+
+export const getRecentStandups = query({
+  args: {
+    workspaceId: v.id("workspaces"),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(v.object({
+    _id: v.id("standups"),
+    _creationTime: v.number(),
+    workspaceId: v.id("workspaces"),
+    userId: v.id("users"),
+    date: v.number(),
+    yesterday: v.string(),
+    today: v.string(),
+    blockers: v.optional(v.string()),
+    slackUserId: v.optional(v.string()),
+    channelId: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    user: v.optional(v.object({
+      _id: v.id("users"),
+      name: v.string(),
+      email: v.string(),
+      avatarUrl: v.optional(v.string()),
+    })),
+  })),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      return []
+    }
+
+    const limit = args.limit || 10
+
+    const standups = await ctx.db
+      .query("standups")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+      .order("desc")
+      .take(limit)
+
+    // Fetch user data for each standup
+    const standupsWithUsers = await Promise.all(
+      standups.map(async (standup) => {
+        const user = await ctx.db.get(standup.userId)
+        return {
+          ...standup,
+          user: user ? {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            avatarUrl: user.avatarUrl,
+          } : undefined,
+        }
+      })
+    )
+
+    return standupsWithUsers
+  },
+})
