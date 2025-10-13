@@ -10,12 +10,25 @@ export default function LandingPage() {
   const [isAFK, setIsAFK] = useState(false)
   const [afkTime, setAfkTime] = useState(0)
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
+  const [scrollY, setScrollY] = useState(0)
   const lastActivityRef = useRef(Date.now())
   const afkTimerRef = useRef<NodeJS.Timeout | null>(null)
   const messageRotationRef = useRef<NodeJS.Timeout | null>(null)
-  
+
   const AFK_THRESHOLD = 35000 // 35 seconds
   const MESSAGE_ROTATION_INTERVAL = 10000 // 10 seconds
+
+  // Parallax scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      requestAnimationFrame(() => {
+        setScrollY(window.scrollY)
+      })
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
   
   const regularMessages = [
     "PRODUCTIVITY DECREASING",
@@ -111,20 +124,23 @@ export default function LandingPage() {
   }
   
   return (
-    <div className="min-h-screen bg-[#0A0A0A] snap-y snap-mandatory overflow-y-auto h-screen">
+    <div className="min-h-screen bg-[#0A0A0A] snap-y snap-proximity">
       {/* NAVIGATION */}
       <PublicNavigation currentPage="landing" />
 
       {/* BRUTAL HERO */}
-      <section className="min-h-[calc(100vh-60px)] md:min-h-[calc(100vh-80px)] flex items-center justify-center px-16px md:px-24px snap-start relative overflow-hidden">
+      <section className="min-h-screen flex items-center justify-center px-16px md:px-24px relative overflow-hidden">
         {/* STATIC MARQUEE BACKGROUND */}
         <StaticMarqueeBackground />
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
           className="max-w-5xl w-full relative z-10"
+          style={{
+            transform: `translateY(${scrollY * -0.5}px)`
+          }}
         >
           <div className="text-center mb-32px md:mb-48px">
             <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-16px md:mb-24px leading-[1.1] tracking-tight">
@@ -174,7 +190,12 @@ export default function LandingPage() {
       </section>
 
       {/* BRUTAL FEATURES */}
-      <section className="py-48px md:py-80px bg-[#000000] border-t-2 border-b-2 border-[#333333] snap-start min-h-screen flex items-center">
+      <section
+        className="py-48px md:py-80px bg-[#000000] border-t-2 border-b-2 border-[#333333] min-h-screen flex items-center"
+        style={{
+          transform: `translateY(${scrollY * 0.1}px)`
+        }}
+      >
         <div className="container mx-auto px-16px md:px-24px">
           <h2 className="text-5xl font-bold text-center mb-64px">
             BUILT FOR THE <span className="glitch-text">MODERN WORKFLOW</span>
@@ -230,9 +251,19 @@ export default function LandingPage() {
       </section>
 
       {/* BRUTAL STATS - Enhanced with dynamic animations */}
-      <section className="py-80px snap-start min-h-screen flex items-center relative overflow-hidden">
+      <section
+        className="py-80px min-h-screen flex items-center relative overflow-hidden snap-start snap-always"
+        style={{
+          transform: `translateY(${scrollY * 0.15}px)`
+        }}
+      >
         {/* BACKGROUND GRID PATTERN */}
-        <div className="absolute inset-0 opacity-10">
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            transform: `translateY(${scrollY * -0.1}px)`
+          }}
+        >
           <div className="absolute inset-0" style={{
             backgroundImage: `repeating-linear-gradient(
               0deg,

@@ -228,6 +228,7 @@ export default function PricingPage() {
                   transition={{ delay: 0.1 * index }}
                   className={`
                     brutal-card p-32px relative
+                    flex flex-col h-full
                     ${tier.popular ? 'border-4 border-[#00FF00]' : 'border-2 border-[#333333]'}
                     hover:border-[#FFFFFF] transition-none
                   `}
@@ -243,9 +244,9 @@ export default function PricingPage() {
 
                   {/* TIER ICON */}
                   <div className="mb-24px">
-                    <Icon 
+                    <Icon
                       className="w-48px h-48px mx-auto"
-                      style={{ 
+                      style={{
                         color: isGradient ? undefined : tier.color,
                         background: isGradient ? tier.color : undefined,
                         WebkitBackgroundClip: isGradient ? 'text' : undefined,
@@ -258,7 +259,7 @@ export default function PricingPage() {
                   <h3 className="text-2xl font-bold mb-8px text-[#FFFFFF]">
                     {tier.name}
                   </h3>
-                  
+
                   {/* TAGLINE */}
                   <p className="text-sm text-[#FFFFFF]/60 mb-24px">
                     {tier.tagline}
@@ -288,20 +289,8 @@ export default function PricingPage() {
                     )}
                   </div>
 
-                  {/* CTA BUTTON */}
-                  <Link 
-                    to={tier.enterprise ? '/contact' : '/sign-up'}
-                    className={`
-                      brutal-btn w-full mb-24px text-center block
-                      ${tier.popular ? 'bg-[#00FF00] text-[#000000]' : ''}
-                      ${tier.enterprise ? 'bg-gradient-to-r from-[#00FFFF] via-[#FF00FF] to-[#FFFF00] text-[#000000]' : ''}
-                    `}
-                  >
-                    {tier.enterprise ? 'CONTACT SALES' : tier.price === 0 ? 'START FREE' : 'START TRIAL'}
-                  </Link>
-
                   {/* FEATURES */}
-                  <div className="space-y-12px">
+                  <div className="space-y-12px mb-24px">
                     {tier.features.slice(0, 12).map((feature, idx) => (
                       <div key={idx} className="flex items-start gap-8px">
                         {feature.included ? (
@@ -315,6 +304,21 @@ export default function PricingPage() {
                       </div>
                     ))}
                   </div>
+
+                  {/* SPACER - Pushes button to bottom */}
+                  <div className="flex-grow"></div>
+
+                  {/* CTA BUTTON - Now at bottom */}
+                  <Link
+                    to={tier.enterprise ? '/contact' : '/sign-up'}
+                    className={`
+                      brutal-btn w-full text-center block mt-auto
+                      ${tier.popular ? 'bg-[#00FF00] text-[#000000]' : ''}
+                      ${tier.enterprise ? 'bg-gradient-to-r from-[#00FFFF] via-[#FF00FF] to-[#FFFF00] text-[#000000]' : ''}
+                    `}
+                  >
+                    {tier.enterprise ? 'CONTACT SALES' : tier.price === 0 ? 'START FREE' : 'START TRIAL'}
+                  </Link>
                 </motion.div>
               )
             })}
