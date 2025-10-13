@@ -251,10 +251,12 @@
     @apply bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)];
     @apply hover:translate-x-[2px] hover:translate-y-[2px];
     @apply transition-all duration-200 ease-brutal-out;
-    @apply px-6 py-3 h-[44px] font-semibold uppercase tracking-wider;
-    @apply flex items-center justify-center;
+    @apply px-6 py-3 min-h-[44px] font-semibold uppercase tracking-wider;
+    @apply inline-flex items-center justify-center;
     box-shadow: var(--theme-box-shadow);
     border-radius: 0 !important;
+    line-height: 1;
+    vertical-align: middle;
   }
   
   .brutal-btn:hover {
@@ -266,10 +268,12 @@
     @apply bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)];
     @apply hover:translate-x-[1px] hover:translate-y-[1px];
     @apply transition-all duration-200 ease-brutal-out;
-    @apply px-2 py-1 h-[28px] font-mono text-[11px] uppercase;
-    @apply flex items-center justify-center gap-1;
+    @apply px-2 py-1 min-h-[28px] font-mono text-[11px] uppercase;
+    @apply inline-flex items-center justify-center gap-1;
     box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.1);
     border-radius: 0 !important;
+    line-height: 1;
+    vertical-align: middle;
   }
   
   .brutal-btn-sm:hover {
@@ -281,9 +285,11 @@
     @apply bg-[var(--theme-background)] text-[var(--theme-foreground)] border border-[var(--theme-border)];
     @apply hover:bg-[var(--theme-background-secondary)];
     @apply transition-all duration-200;
-    @apply px-2 py-1 h-[24px] font-mono text-[10px] uppercase;
-    @apply flex items-center justify-center gap-1;
+    @apply px-2 py-1 min-h-[24px] font-mono text-[10px] uppercase;
+    @apply inline-flex items-center justify-center gap-1;
     border-radius: 0 !important;
+    line-height: 1;
+    vertical-align: middle;
   }
 
   /* BRUTAL FILTER BUTTON */
@@ -291,9 +297,11 @@
     @apply bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)];
     @apply hover:bg-[var(--theme-background-secondary)];
     @apply transition-all duration-200;
-    @apply px-2 h-[28px] font-mono text-[11px] uppercase;
-    @apply flex items-center justify-center gap-1;
+    @apply px-2 min-h-[28px] font-mono text-[11px] uppercase;
+    @apply inline-flex items-center justify-center gap-1;
     border-radius: 0 !important;
+    line-height: 1;
+    vertical-align: middle;
   }
 
   /* HIDE SCROLLBAR UTILITY */
@@ -311,8 +319,11 @@
     @apply hover:translate-x-[2px] hover:translate-y-[2px];
     @apply transition-all duration-200 ease-brutal-out;
     @apply px-6 py-4 font-semibold uppercase tracking-wider;
+    @apply inline-flex items-center justify-center;
     box-shadow: var(--theme-box-shadow);
     border-radius: 0 !important;
+    line-height: 1;
+    vertical-align: middle;
   }
   
   .brutal-btn-secondary:hover {
@@ -751,9 +762,14 @@ html {
   scroll-snap-type: y mandatory;
 }
 
+/* Proximity-based snap - more natural feeling */
+.snap-proximity {
+  scroll-snap-type: y proximity;
+}
+
 .snap-start {
   scroll-snap-align: start;
-  scroll-snap-stop: always; /* Force pause at each section */
+  scroll-snap-stop: normal; /* Smooth snap transition */
 }
 
 /* BRUTAL FOOTER REVEAL ANIMATION */
@@ -846,6 +862,8 @@ html {
   @apply transition-all duration-200 ease-brutal;
   @apply hover:border-[#00FFFF] hover:shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px];
   border-radius: 0 !important;
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .brutal-icon-btn:hover {

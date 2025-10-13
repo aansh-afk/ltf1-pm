@@ -1,16 +1,32 @@
 import { motion } from 'framer-motion'
 import { HiOutlineMail, HiOutlineGlobeAlt, HiOutlineTerminal } from 'react-icons/hi'
 import { FaGithub, FaTwitter, FaLinkedin } from 'react-icons/fa'
+import { useEffect, useState } from 'react'
 
 export default function BrutalFooterReveal() {
-  // Simplified component - removed complex scroll tracking
-  // Using simple fade-in animations instead
+  const [scrollY, setScrollY] = useState(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      requestAnimationFrame(() => {
+        setScrollY(window.scrollY)
+      })
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
-    <>
+    <div className="snap-y snap-proximity">
       {/* TRIGGER SECTION - Enhanced with underglow */}
-      <section className="snap-start relative overflow-hidden">
-        <motion.div 
+      <section
+        className="snap-start relative overflow-hidden"
+        style={{
+          transform: `translateY(${scrollY * 0.08}px)`
+        }}
+      >
+        <motion.div
           className="min-h-screen flex items-center justify-center bg-carbon-plate border-t-2 border-basalt-border relative"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -48,8 +64,13 @@ export default function BrutalFooterReveal() {
             }}
           />
           
-          <div className="container mx-auto px-24px text-center relative z-30">
-            <motion.h2 
+          <div
+            className="container mx-auto px-24px text-center relative z-30"
+            style={{
+              transform: `translateY(${scrollY * -0.05}px)`
+            }}
+          >
+            <motion.h2
               className="text-6xl md:text-8xl font-bold mb-24px"
               animate={{
                 textShadow: [
@@ -76,7 +97,12 @@ export default function BrutalFooterReveal() {
       </section>
 
       {/* BRUTAL FOOTER - Simplified container */}
-      <section className="snap-start relative bg-event-horizon overflow-hidden">
+      <section
+        className="snap-start relative bg-event-horizon overflow-hidden"
+        style={{
+          transform: `translateY(${scrollY * 0.05}px)`
+        }}
+      >
         {/* ENHANCED GLOWING BORDER EFFECT */}
         <motion.div
           className="absolute top-0 left-0 right-0 h-2 bg-glitch-flare z-10"
@@ -234,6 +260,6 @@ export default function BrutalFooterReveal() {
           </div>
         </footer>
       </section>
-    </>
+    </div>
   )
 }
