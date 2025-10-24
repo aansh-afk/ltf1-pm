@@ -108,17 +108,17 @@ export default function LandingPage() {
           animate={{ opacity: 1 }}
           className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-brutal-error/10 backdrop-blur-sm pointer-events-none"
         >
-          <div className="border-4 border-brutal-error bg-event-horizon p-48px max-w-2xl mx-auto shadow-brutal-lg">
+          <div className="border-4 border-brutal-error bg-event-horizon p-16px sm:p-32px md:p-48px max-w-2xl mx-auto shadow-brutal-lg">
             <motion.h1
               key={currentMessageIndex}
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl md:text-7xl font-bold text-brutal-error mb-24px text-center uppercase"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-brutal-error mb-16px md:mb-24px text-center uppercase"
             >
               {getCurrentMessage()}
             </motion.h1>
             <div className="text-center">
-              <p className="text-3xl text-cathode-white mb-16px">
+              <p className="text-lg sm:text-2xl md:text-3xl text-cathode-white mb-12px md:mb-16px">
                 {afkTime} SECONDS WASTED
               </p>
               <div className="border-t-2 border-brutal-error pt-16px">
@@ -172,21 +172,21 @@ export default function LandingPage() {
                  }}>
             </div>
 
-            <div className="relative p-48px md:p-64px">
-              <h1 className="text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-32px uppercase">
+            <div className="relative p-24px sm:p-32px md:p-48px lg:p-64px">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-9xl font-bold mb-16px sm:mb-24px md:mb-32px uppercase">
                 <span className="bg-glitch-flare bg-clip-text text-transparent">
                   LTF1
                 </span>
               </h1>
-              <p className="text-2xl md:text-3xl text-cathode-white mb-16px">
+              <p className="text-base sm:text-lg md:text-2xl lg:text-3xl text-cathode-white mb-12px md:mb-16px">
                 PROJECT MANAGEMENT THAT UNDERSTANDS YOUR CODE
               </p>
-              <p className="text-lg md:text-xl text-cathode-white mb-48px">
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-cathode-white mb-24px md:mb-48px">
                 GIT-NATIVE • REAL-TIME • DEVELOPER-FIRST
               </p>
               <Link
                 to="/sign-up"
-                className="brutal-btn bg-glitch-flare text-event-horizon font-bold text-xl px-64px py-24px shadow-brutal-lg uppercase inline-block"
+                className="brutal-btn bg-glitch-flare text-event-horizon font-bold text-base sm:text-lg md:text-xl px-32px sm:px-48px md:px-64px py-12px sm:py-16px md:py-24px shadow-brutal-lg uppercase inline-block"
               >
                 ENTER THE VOID
               </Link>
@@ -197,28 +197,28 @@ export default function LandingPage() {
 
       {/* SECTION 2: FEATURES */}
       <section className="h-screen snap-start flex items-center justify-center bg-event-horizon">
-        <div className="container mx-auto px-24px">
+        <div className="container mx-auto px-16px sm:px-20px md:px-24px">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-center mb-64px"
+            className="text-center mb-32px md:mb-48px lg:mb-64px"
           >
-            <h2 className="text-5xl md:text-6xl font-bold mb-16px uppercase text-cathode-white">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-12px md:mb-16px uppercase text-cathode-white">
               BUILT DIFFERENT
             </h2>
             <div className="w-256px h-2px bg-glitch-flare mx-auto"></div>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-32px max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16px md:gap-24px lg:gap-32px max-w-6xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0 }}
-              className="bg-carbon-plate border-2 border-basalt-border p-32px text-center"
+              className="bg-carbon-plate border-2 border-basalt-border p-16px sm:p-24px md:p-32px text-center"
             >
-              <HiOutlineTerminal className="w-64px h-64px mx-auto mb-24px text-brutal-info" />
+              <HiOutlineTerminal className="w-40px h-40px sm:w-48px sm:h-48px md:w-64px md:h-64px mx-auto mb-16px md:mb-24px text-brutal-info" />
               <h3 className="text-xl font-bold mb-16px uppercase text-cathode-white">GIT SYNC</h3>
               <p className="text-sm text-cathode-white/70">AUTO-TRACKS COMMITS</p>
             </motion.div>
@@ -228,9 +228,9 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="bg-carbon-plate border-2 border-basalt-border p-32px text-center"
+              className="bg-carbon-plate border-2 border-basalt-border p-16px sm:p-24px md:p-32px text-center"
             >
-              <HiOutlineLightningBolt className="w-64px h-64px mx-auto mb-24px text-brutal-warning" />
+              <HiOutlineLightningBolt className="w-40px h-40px sm:w-48px sm:h-48px md:w-64px md:h-64px mx-auto mb-16px md:mb-24px text-brutal-warning" />
               <h3 className="text-xl font-bold mb-16px uppercase text-cathode-white">WHITEBOARD</h3>
               <p className="text-sm text-cathode-white/70">REAL-TIME COLLAB</p>
             </motion.div>
@@ -240,9 +240,9 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="bg-carbon-plate border-2 border-basalt-border p-32px text-center"
+              className="bg-carbon-plate border-2 border-basalt-border p-16px sm:p-24px md:p-32px text-center"
             >
-              <HiOutlineChip className="w-64px h-64px mx-auto mb-24px text-primary-brutalist" />
+              <HiOutlineChip className="w-40px h-40px sm:w-48px sm:h-48px md:w-64px md:h-64px mx-auto mb-16px md:mb-24px text-primary-brutalist" />
               <h3 className="text-xl font-bold mb-16px uppercase text-cathode-white">AI POWERED</h3>
               <p className="text-sm text-cathode-white/70">SMART AUTOMATION</p>
             </motion.div>
@@ -252,9 +252,9 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.3 }}
-              className="bg-carbon-plate border-2 border-basalt-border p-32px text-center"
+              className="bg-carbon-plate border-2 border-basalt-border p-16px sm:p-24px md:p-32px text-center"
             >
-              <HiOutlineCode className="w-64px h-64px mx-auto mb-24px text-brutal-success" />
+              <HiOutlineCode className="w-40px h-40px sm:w-48px sm:h-48px md:w-64px md:h-64px mx-auto mb-16px md:mb-24px text-brutal-success" />
               <h3 className="text-xl font-bold mb-16px uppercase text-cathode-white">DEV FIRST</h3>
               <p className="text-sm text-cathode-white/70">ZERO FRICTION</p>
             </motion.div>
@@ -272,21 +272,21 @@ export default function LandingPage() {
             className="max-w-6xl mx-auto"
           >
             {/* Title */}
-            <div className="text-center mb-48px">
-              <h2 className="text-5xl md:text-6xl font-bold mb-16px uppercase">
+            <div className="text-center mb-32px md:mb-48px">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-12px md:mb-16px uppercase">
                 <span className="bg-glitch-flare bg-clip-text text-transparent">
                   SIMPLE PRICING
                 </span>
               </h2>
-              <p className="text-xl text-cathode-white/80 uppercase">
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-cathode-white/80 uppercase">
                 No hidden fees • No seat minimums
               </p>
             </div>
 
             {/* Pricing Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-24px mb-48px">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16px md:gap-20px lg:gap-24px mb-32px md:mb-48px">
               {/* LOCALHOST - FREE */}
-              <div className="border-2 border-basalt-border bg-event-horizon p-24px text-center">
+              <div className="border-2 border-basalt-border bg-event-horizon p-16px md:p-24px text-center">
                 <h3 className="text-lg font-bold text-cathode-white mb-16px">LOCALHOST</h3>
                 <p className="text-3xl font-bold text-brutal-info mb-8px">FREE</p>
                 <p className="text-sm text-cathode-white/60 mb-16px">1-5 users</p>
@@ -298,7 +298,7 @@ export default function LandingPage() {
               </div>
 
               {/* STARTUP - MOST POPULAR */}
-              <div className="border-4 border-brutal-success bg-event-horizon p-24px text-center relative">
+              <div className="border-4 border-brutal-success bg-event-horizon p-16px md:p-24px text-center relative">
                 <div className="absolute -top-12px left-1/2 -translate-x-1/2 bg-brutal-success text-event-horizon px-16px py-2px text-xs font-bold">
                   MOST POPULAR
                 </div>
@@ -313,7 +313,7 @@ export default function LandingPage() {
               </div>
 
               {/* SCALE */}
-              <div className="border-2 border-basalt-border bg-event-horizon p-24px text-center">
+              <div className="border-2 border-basalt-border bg-event-horizon p-16px md:p-24px text-center">
                 <h3 className="text-lg font-bold text-cathode-white mb-16px">SCALE</h3>
                 <p className="text-3xl font-bold text-cathode-white mb-8px">$49<span className="text-lg">/user</span></p>
                 <p className="text-sm text-brutal-warning mb-16px">10-500 users</p>
@@ -325,7 +325,7 @@ export default function LandingPage() {
               </div>
 
               {/* ENTERPRISE */}
-              <div className="border-2 border-basalt-border bg-event-horizon p-24px text-center">
+              <div className="border-2 border-basalt-border bg-event-horizon p-16px md:p-24px text-center">
                 <h3 className="text-lg font-bold text-cathode-white mb-16px">ENTERPRISE</h3>
                 <p className="text-3xl font-bold bg-glitch-flare bg-clip-text text-transparent mb-8px">$99<span className="text-lg text-cathode-white">/user</span></p>
                 <p className="text-sm text-cathode-white/60 mb-16px">50+ users</p>
@@ -341,7 +341,7 @@ export default function LandingPage() {
             <div className="text-center">
               <Link
                 to="/pricing"
-                className="brutal-btn bg-glitch-flare text-event-horizon text-xl px-64px py-24px shadow-brutal-lg font-bold uppercase"
+                className="brutal-btn bg-glitch-flare text-event-horizon text-base sm:text-lg md:text-xl px-32px sm:px-48px md:px-64px py-12px sm:py-16px md:py-24px shadow-brutal-lg font-bold uppercase"
               >
                 VIEW ALL FEATURES →
               </Link>
@@ -387,33 +387,33 @@ export default function LandingPage() {
             viewport={{ once: true }}
           >
             {/* Logo */}
-            <h2 className="text-7xl md:text-9xl font-bold mb-48px">
+            <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-9xl font-bold mb-24px sm:mb-32px md:mb-48px">
               <span className="bg-glitch-flare bg-clip-text text-transparent">
                 LTF1
               </span>
             </h2>
 
             {/* Social Links */}
-            <div className="flex justify-center gap-24px mb-64px">
+            <div className="flex justify-center gap-16px md:gap-24px mb-32px md:mb-48px lg:mb-64px">
               <a href="https://github.com" className="brutal-icon-btn">
-                <FaGithub className="w-32px h-32px" />
+                <FaGithub className="w-40px h-40px md:w-48px md:h-48px" />
               </a>
               <a href="https://twitter.com" className="brutal-icon-btn">
-                <FaTwitter className="w-32px h-32px" />
+                <FaTwitter className="w-40px h-40px md:w-48px md:h-48px" />
               </a>
               <a href="https://linkedin.com" className="brutal-icon-btn">
-                <FaLinkedin className="w-32px h-32px" />
+                <FaLinkedin className="w-40px h-40px md:w-48px md:h-48px" />
               </a>
               <a href="mailto:contact@ltf1.dev" className="brutal-icon-btn">
-                <HiOutlineMail className="w-32px h-32px" />
+                <HiOutlineMail className="w-40px h-40px md:w-48px md:h-48px" />
               </a>
               <a href="https://ltf1.dev" className="brutal-icon-btn">
-                <HiOutlineGlobeAlt className="w-32px h-32px" />
+                <HiOutlineGlobeAlt className="w-40px h-40px md:w-48px md:h-48px" />
               </a>
             </div>
 
             {/* Bottom Info */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-32px max-w-4xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-16px md:gap-24px lg:gap-32px max-w-4xl mx-auto">
               <div>
                 <p className="text-brutal-info text-sm mb-8px">STATUS</p>
                 <p className="text-cathode-white font-bold">OPERATIONAL</p>
