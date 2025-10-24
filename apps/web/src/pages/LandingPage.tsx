@@ -165,10 +165,13 @@ export default function LandingPage() {
             className="relative"
           >
             {/* Dark backdrop for text readability */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 bg-event-horizon/95 backdrop-blur-md w-[90%] md:w-[70%] h-[80%] md:h-[70%]"
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 bg-event-horizon/95 w-[90%] md:w-[70%] h-[80%] md:h-[70%]"
                  style={{
                    borderRadius: '50%',
-                   boxShadow: '0 0 28px 5px rgba(0,0,0,0.95), 0 0 56px 10px rgba(0,0,0,0.8)'
+                   boxShadow: '0 0 28px 5px rgba(0,0,0,0.95), 0 0 56px 10px rgba(0,0,0,0.8)',
+                   WebkitBackdropFilter: 'blur(8px)',
+                   backdropFilter: 'blur(8px)',
+                   backgroundColor: 'rgba(16, 9, 31, 0.95)' // Fallback for browsers without blur support
                  }}>
             </div>
 
@@ -372,8 +375,9 @@ export default function LandingPage() {
              style={{
                borderRadius: '50%',
                background: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.65) 60%, rgba(0, 0, 0, 0.3) 100%)',
+               WebkitBackdropFilter: 'blur(12px)',
                backdropFilter: 'blur(12px)',
-               WebkitBackdropFilter: 'blur(12px)'
+               backgroundColor: 'rgba(0, 0, 0, 0.75)' // Fallback for browsers without blur support
              }}>
         </div>
 
