@@ -214,9 +214,10 @@ export default function PricingPage() {
 
       {/* PRICING TIERS */}
       <section className="px-16px md:px-24px pb-48px md:pb-80px">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex lg:grid lg:grid-cols-4 gap-24px overflow-x-auto lg:overflow-x-visible pb-16px lg:pb-0 snap-x snap-mandatory lg:snap-none"
-               style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
+        <div className="max-w-full md:max-w-6xl mx-auto">
+          <div className="relative">
+            <div className="flex lg:grid lg:grid-cols-4 gap-24px overflow-x-auto lg:overflow-x-visible pb-16px lg:pb-0 snap-x snap-mandatory lg:snap-none"
+                 style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
             {tiers.map((tier, index) => {
               const Icon = tier.icon
               const isGradient = tier.color.includes('gradient')
@@ -323,13 +324,18 @@ export default function PricingPage() {
                 </motion.div>
               )
             })}
+            </div>
+            {/* Scroll Indicator for Pricing Tiers */}
+            <div className="absolute right-0 top-0 bottom-0 w-24px bg-gradient-to-l from-[#0A0A0A] to-transparent lg:hidden flex items-center justify-end pr-8px pointer-events-none">
+              <div className="text-[#00FFFF] text-xs animate-pulse">→</div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* WHAT IS AN AI OPERATION? */}
       <section className="py-80px border-t-2 border-[#333333] bg-[#000000]">
-        <div className="max-w-4xl mx-auto px-24px">
+        <div className="max-w-full md:max-w-4xl mx-auto px-16px md:px-24px">
           <h2 className="text-5xl font-bold text-center mb-48px">
             WHAT'S AN <span className="glitch-text">AI OPERATION?</span>
           </h2>
@@ -385,7 +391,7 @@ export default function PricingPage() {
 
       {/* ROI CALCULATOR */}
       <section className="py-80px">
-        <div className="max-w-4xl mx-auto px-24px text-center">
+        <div className="max-w-full md:max-w-4xl mx-auto px-16px md:px-24px text-center">
           <h2 className="text-5xl font-bold mb-48px">
             THE <span className="glitch-text">MATH</span>
           </h2>
@@ -439,7 +445,7 @@ export default function PricingPage() {
 
       {/* FAQ SECTION */}
       <section className="py-80px border-t-2 border-[#333333] bg-[#000000]">
-        <div className="max-w-4xl mx-auto px-24px">
+        <div className="max-w-full md:max-w-4xl mx-auto px-16px md:px-24px">
           <h2 className="text-5xl font-bold text-center mb-48px">
             ACTUALLY USEFUL <span className="glitch-text">FAQ</span>
           </h2>
