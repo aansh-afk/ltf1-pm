@@ -376,16 +376,6 @@ export default function LandingPage() {
           />
         </div>
 
-        {/* Shadow backdrop for readability */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-5 w-[60%] md:w-[45%] h-[50%] md:h-[40%] border-2 border-basalt-border"
-             style={{
-               borderRadius: '50%',
-               background: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.65) 60%, rgba(0, 0, 0, 0.3) 100%)',
-               backdropFilter: 'blur(12px)',
-               WebkitBackdropFilter: 'blur(12px)'
-             }}>
-        </div>
-
         {/* Animated gradient line */}
         <div className="absolute top-0 left-0 right-0 h-2px bg-glitch-flare animate-pulse z-10"></div>
 
@@ -395,57 +385,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
           >
-            {/* Logo */}
-            <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-9xl font-bold mb-24px sm:mb-32px md:mb-48px">
-              <span className="bg-glitch-flare bg-clip-text text-transparent">
-                LTF1
-              </span>
-            </h2>
-
-            {/* Social Links */}
-            <div className="flex justify-center gap-16px md:gap-24px mb-32px md:mb-48px lg:mb-64px">
-              <a href="https://github.com" className="brutal-icon-btn">
-                <FaGithub className="w-40px h-40px md:w-48px md:h-48px" />
-              </a>
-              <a href="https://twitter.com" className="brutal-icon-btn">
-                <FaTwitter className="w-40px h-40px md:w-48px md:h-48px" />
-              </a>
-              <a href="https://linkedin.com" className="brutal-icon-btn">
-                <FaLinkedin className="w-40px h-40px md:w-48px md:h-48px" />
-              </a>
-              <a href="mailto:contact@ltf1.dev" className="brutal-icon-btn">
-                <HiOutlineMail className="w-40px h-40px md:w-48px md:h-48px" />
-              </a>
-              <a href="https://ltf1.dev" className="brutal-icon-btn">
-                <HiOutlineGlobeAlt className="w-40px h-40px md:w-48px md:h-48px" />
-              </a>
-            </div>
-
-            {/* Bottom Info */}
-            <div className="flex md:grid md:grid-cols-4 gap-16px md:gap-24px lg:gap-32px max-w-4xl mx-auto overflow-x-auto md:overflow-x-visible pb-16px md:pb-0 snap-x snap-mandatory md:snap-none"
-                 style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
-              <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto">
-                <p className="text-brutal-info text-sm mb-8px">STATUS</p>
-                <p className="text-cathode-white font-bold">OPERATIONAL</p>
-              </div>
-              <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto">
-                <p className="text-brutal-warning text-sm mb-8px">VERSION</p>
-                <p className="text-cathode-white font-bold">1.0.0</p>
-              </div>
-              <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto">
-                <p className="text-primary-brutalist text-sm mb-8px">UPTIME</p>
-                <p className="text-cathode-white font-bold">99.9%</p>
-              </div>
-              <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto">
-                <p className="text-brutal-success text-sm mb-8px">LAUNCHED</p>
-                <p className="text-cathode-white font-bold">2024</p>
-              </div>
-            </div>
-
-            {/* Copyright */}
-            <p className="text-cathode-white/50 text-sm mt-64px uppercase">
-              © 2024 LTF1 • ALL RIGHTS RESERVED
-            </p>
+            {/* Footer content will go here */}
           </motion.div>
         </div>
       </footer>

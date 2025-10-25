@@ -40,7 +40,6 @@ import CommandPalette from './components/shortcuts/CommandPalette'
 import ShortcutHelp from './components/shortcuts/ShortcutHelp'
 import OnboardingFlow from './components/onboarding/OnboardingFlow'
 import BrutalistLoader from './components/common/BrutalistLoader'
-import MobileWarning from './components/common/MobileWarning'
 
 // Create a wrapper component that handles authentication state
 function AuthenticatedAppContent() {
@@ -130,9 +129,6 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
   
   return (
     <div className="min-h-screen bg-[var(--theme-background)]">
-      {/* Mobile Warning - Shows automatically on mobile devices */}
-      <MobileWarning />
-      
       {/* Global Shortcut Components - only if authenticated */}
       {isAuthenticated && (
         <>

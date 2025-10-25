@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unknown-property */
-import { useRef, useEffect, forwardRef } from 'react';
+import { useRef, useEffect, forwardRef, useMemo, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, wrapEffect } from '@react-three/postprocessing';
 import { Effect } from 'postprocessing';
@@ -27,6 +27,9 @@ uniform vec3 waveColor;
 uniform vec2 mousePos;
 uniform int enableMouseInteraction;
 uniform float mouseRadius;
+uniform sampler2D u_textTexture;
+uniform float u_isHovered;
+uniform float u_aspect;
 
 vec4 mod289(vec4 x) { return x - floor(x * (1.0/289.0)) * 289.0; }
 vec4 permute(vec4 x) { return mod289(((x * 34.0) + 1.0) * x); }
@@ -80,10 +83,13 @@ float pattern(vec2 p) {
 }
 
 void main() {
+  // --- 1. Standard UV and Wave Calculation ---
   vec2 uv = gl_FragCoord.xy / resolution.xy;
   uv -= 0.5;
   uv.x *= resolution.x / resolution.y;
   float f = pattern(uv);
+
+  // --- 2. Mouse Wave Interaction (Existing) ---
   if (enableMouseInteraction == 1) {
     vec2 mouseNDC = (mousePos / resolution - 0.5) * vec2(1.0, -1.0);
     mouseNDC.x *= resolution.x / resolution.y;
@@ -91,7 +97,34 @@ void main() {
     float effect = 1.0 - smoothstep(0.0, mouseRadius, dist);
     f -= 0.5 * effect;
   }
-  vec3 col = mix(vec3(0.0), waveColor, f);
+
+  // --- 3. Text Hover Fade-out Effect (New) ---
+  if (u_isHovered > 0.0) {
+    vec2 center_uv = uv; // Already centered
+    // Correct for aspect ratio to make the shape an oval
+    center_uv.x *= u_aspect;
+
+    float dist_to_center = length(center_uv);
+    float oval_radius = 0.3;
+    float fade_width = 0.2;
+
+    // Create a smooth mask that is 1.0 at the center and fades to 0.0
+    float fade_mask = 1.0 - smoothstep(oval_radius - fade_width, oval_radius, dist_to_center);
+
+    // Apply the fade effect, multiplied by the u_isHovered value for smooth animation
+    f *= (1.0 - fade_mask * u_isHovered);
+  }
+
+  // --- 4. Render Text from Texture (New) ---
+  // We need to re-calculate UVs for the texture lookup, from [0, 1] range
+  vec2 text_uv = gl_FragCoord.xy / resolution.xy;
+  float text_value = texture2D(u_textTexture, text_uv).r; // Sample red channel
+
+  // --- 5. Combine and Finalize Color ---
+  // Use max() to make the text (where text_value > 0) override the wave pattern
+  float final_f = max(f, text_value);
+
+  vec3 col = mix(vec3(0.0), waveColor, final_f);
   gl_FragColor = vec4(col, 1.0);
 }
 `;
@@ -175,6 +208,9 @@ interface WaveUniforms {
   mousePos: THREE.Uniform<THREE.Vector2>;
   enableMouseInteraction: THREE.Uniform<number>;
   mouseRadius: THREE.Uniform<number>;
+  u_textTexture: THREE.Uniform<THREE.Texture | null>;
+  u_isHovered: THREE.Uniform<number>;
+  u_aspect: THREE.Uniform<number>;
 }
 
 interface DitheredWavesProps {
@@ -203,6 +239,28 @@ function DitheredWaves({
   const mesh = useRef<THREE.Mesh>(null);
   const mouseRef = useRef(new THREE.Vector2());
   const { viewport, size, gl } = useThree();
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Create text texture using Canvas API with IBM Plex Mono font
+  const textTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    const canvasSize = 1024;
+    canvas.width = canvasSize;
+    canvas.height = canvasSize / 2;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Load and use IBM Plex Mono font
+    ctx.font = 'bold 180px "IBM Plex Mono", monospace';
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('LTF1', canvas.width / 2, canvas.height / 2);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+  }, []);
 
   const waveUniformsRef = useRef<WaveUniforms>({
     time: new THREE.Uniform(0),
@@ -213,7 +271,10 @@ function DitheredWaves({
     waveColor: new THREE.Uniform(new THREE.Color(...waveColor)),
     mousePos: new THREE.Uniform(new THREE.Vector2(0, 0)),
     enableMouseInteraction: new THREE.Uniform(enableMouseInteraction ? 1 : 0),
-    mouseRadius: new THREE.Uniform(mouseRadius)
+    mouseRadius: new THREE.Uniform(mouseRadius),
+    u_textTexture: new THREE.Uniform(textTexture),
+    u_isHovered: new THREE.Uniform(0.0),
+    u_aspect: new THREE.Uniform(1.0)
   });
 
   useEffect(() => {
@@ -249,6 +310,16 @@ function DitheredWaves({
     if (enableMouseInteraction) {
       u.mousePos.value.copy(mouseRef.current);
     }
+
+    // Smooth hover transition
+    u.u_isHovered.value = THREE.MathUtils.lerp(
+      u.u_isHovered.value,
+      isHovered ? 1.0 : 0.0,
+      0.1
+    );
+
+    // Update aspect ratio for oval shape
+    u.u_aspect.value = viewport.width / viewport.height;
   });
 
   const handlePointerMove = (e: any) => {
@@ -256,6 +327,33 @@ function DitheredWaves({
     const rect = gl.domElement.getBoundingClientRect();
     const dpr = gl.getPixelRatio();
     mouseRef.current.set((e.clientX - rect.left) * dpr, (e.clientY - rect.top) * dpr);
+
+    // Check if hovering over text area (centered box)
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+
+    // Define hover zone (centered rectangle where text appears)
+    const hoverZone = {
+      x: 0.25,
+      y: 0.35,
+      width: 0.5,
+      height: 0.3
+    };
+
+    if (
+      x > hoverZone.x &&
+      x < hoverZone.x + hoverZone.width &&
+      y > hoverZone.y &&
+      y < hoverZone.y + hoverZone.height
+    ) {
+      setIsHovered(true);
+    } else {
+      setIsHovered(false);
+    }
+  };
+
+  const handlePointerLeave = () => {
+    setIsHovered(false);
   };
 
   return (
@@ -275,6 +373,7 @@ function DitheredWaves({
 
       <mesh
         onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
         position={[0, 0, 0.01]}
         scale={[viewport.width, viewport.height, 1]}
         visible={false}
