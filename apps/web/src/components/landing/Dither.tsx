@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unknown-property */
-import { useRef, useEffect, forwardRef, useMemo, useState } from 'react';
+import { useRef, useEffect, forwardRef, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, wrapEffect } from '@react-three/postprocessing';
 import { Effect } from 'postprocessing';
@@ -28,8 +28,6 @@ uniform vec2 mousePos;
 uniform int enableMouseInteraction;
 uniform float mouseRadius;
 uniform sampler2D u_textTexture;
-uniform float u_isHovered;
-uniform float u_aspect;
 
 vec4 mod289(vec4 x) { return x - floor(x * (1.0/289.0)) * 289.0; }
 vec4 permute(vec4 x) { return mod289(((x * 34.0) + 1.0) * x); }
@@ -89,30 +87,28 @@ void main() {
   uv.x *= resolution.x / resolution.y;
   float f = pattern(uv);
 
-  // --- 2. Mouse Wave Interaction (Existing) ---
+  // --- 2. Text Oval Fade-out Effect (Always Active) ---
+  vec2 center_uv = uv; // Already centered
+  // Elongate horizontally by compressing y-axis
+  center_uv.y *= 2.5; // Makes oval wider horizontally
+
+  float dist_to_center = length(center_uv);
+  float oval_radius = 0.6;
+  float fade_width = 0.3;
+
+  // Create a smooth mask that is 1.0 at the center and fades to 0.0
+  float fade_mask = 1.0 - smoothstep(oval_radius - fade_width, oval_radius, dist_to_center);
+
+  // Apply the fade effect (always active)
+  f *= (1.0 - fade_mask);
+
+  // --- 3. Mouse Wave Interaction (Existing) ---
   if (enableMouseInteraction == 1) {
     vec2 mouseNDC = (mousePos / resolution - 0.5) * vec2(1.0, -1.0);
     mouseNDC.x *= resolution.x / resolution.y;
     float dist = length(uv - mouseNDC);
     float effect = 1.0 - smoothstep(0.0, mouseRadius, dist);
     f -= 0.5 * effect;
-  }
-
-  // --- 3. Text Hover Fade-out Effect (New) ---
-  if (u_isHovered > 0.0) {
-    vec2 center_uv = uv; // Already centered
-    // Correct for aspect ratio to make the shape an oval
-    center_uv.x *= u_aspect;
-
-    float dist_to_center = length(center_uv);
-    float oval_radius = 0.6; // Increased from 0.3 to 0.6
-    float fade_width = 0.3; // Increased from 0.2 to 0.3
-
-    // Create a smooth mask that is 1.0 at the center and fades to 0.0
-    float fade_mask = 1.0 - smoothstep(oval_radius - fade_width, oval_radius, dist_to_center);
-
-    // Apply the fade effect, multiplied by the u_isHovered value for smooth animation
-    f *= (1.0 - fade_mask * u_isHovered);
   }
 
   // --- 4. Render Text from Texture (New) ---
@@ -214,8 +210,6 @@ interface WaveUniforms {
   enableMouseInteraction: THREE.Uniform<number>;
   mouseRadius: THREE.Uniform<number>;
   u_textTexture: THREE.Uniform<THREE.Texture | null>;
-  u_isHovered: THREE.Uniform<number>;
-  u_aspect: THREE.Uniform<number>;
 }
 
 interface DitheredWavesProps {
@@ -244,7 +238,6 @@ function DitheredWaves({
   const mesh = useRef<THREE.Mesh>(null);
   const mouseRef = useRef(new THREE.Vector2());
   const { viewport, size, gl } = useThree();
-  const [isHovered, setIsHovered] = useState(false);
 
   // Create text texture using Canvas API with IBM Plex Mono font
   const textTexture = useMemo(() => {
@@ -277,9 +270,7 @@ function DitheredWaves({
     mousePos: new THREE.Uniform(new THREE.Vector2(0, 0)),
     enableMouseInteraction: new THREE.Uniform(enableMouseInteraction ? 1 : 0),
     mouseRadius: new THREE.Uniform(mouseRadius),
-    u_textTexture: new THREE.Uniform(textTexture),
-    u_isHovered: new THREE.Uniform(0.0),
-    u_aspect: new THREE.Uniform(1.0)
+    u_textTexture: new THREE.Uniform(textTexture)
   });
 
   useEffect(() => {
@@ -315,50 +306,36 @@ function DitheredWaves({
     if (enableMouseInteraction) {
       u.mousePos.value.copy(mouseRef.current);
     }
-
-    // Smooth hover transition
-    u.u_isHovered.value = THREE.MathUtils.lerp(
-      u.u_isHovered.value,
-      isHovered ? 1.0 : 0.0,
-      0.1
-    );
-
-    // Update aspect ratio for oval shape
-    u.u_aspect.value = viewport.width / viewport.height;
   });
 
   const handlePointerMove = (e: any) => {
     if (!enableMouseInteraction) return;
     const rect = gl.domElement.getBoundingClientRect();
-    const dpr = gl.getPixelRatio();
-    mouseRef.current.set((e.clientX - rect.left) * dpr, (e.clientY - rect.top) * dpr);
 
-    // Check if hovering over text area (centered box)
+    // Check if hovering over text area
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
 
-    // Define hover zone (larger to match increased oval size)
-    const hoverZone = {
+    // Define text zone (where wave interaction should be disabled)
+    const textZone = {
       x: 0.15,
-      y: 0.25,
+      y: 0.3,
       width: 0.7,
-      height: 0.5
+      height: 0.4
     };
 
-    if (
-      x > hoverZone.x &&
-      x < hoverZone.x + hoverZone.width &&
-      y > hoverZone.y &&
-      y < hoverZone.y + hoverZone.height
-    ) {
-      setIsHovered(true);
-    } else {
-      setIsHovered(false);
-    }
-  };
+    // If mouse is in text zone, don't update mouse position for wave interaction
+    const isInTextZone = (
+      x > textZone.x &&
+      x < textZone.x + textZone.width &&
+      y > textZone.y &&
+      y < textZone.y + textZone.height
+    );
 
-  const handlePointerLeave = () => {
-    setIsHovered(false);
+    if (!isInTextZone) {
+      const dpr = gl.getPixelRatio();
+      mouseRef.current.set((e.clientX - rect.left) * dpr, (e.clientY - rect.top) * dpr);
+    }
   };
 
   return (
@@ -378,7 +355,6 @@ function DitheredWaves({
 
       <mesh
         onPointerMove={handlePointerMove}
-        onPointerLeave={handlePointerLeave}
         position={[0, 0, 0.01]}
         scale={[viewport.width, viewport.height, 1]}
         visible={false}
