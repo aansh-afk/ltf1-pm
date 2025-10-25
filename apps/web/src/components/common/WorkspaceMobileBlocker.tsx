@@ -11,7 +11,7 @@ export default function WorkspaceMobileBlocker({ children }: { children: React.R
     const savedChoice = sessionStorage.getItem('ltf1_mobile_choice')
     if (savedChoice === 'urgent') {
       setChoice('urgent')
-      setShowWarning(false)
+      setShowWarning(true) // Always show warning for mobile users
     } else if (savedChoice === 'desktop') {
       setChoice('desktop')
     }
@@ -21,8 +21,7 @@ export default function WorkspaceMobileBlocker({ children }: { children: React.R
     sessionStorage.setItem('ltf1_mobile_choice', 'urgent')
     setChoice('urgent')
     setShowWarning(true)
-    // Auto-hide warning after 5 seconds
-    setTimeout(() => setShowWarning(false), 5000)
+    // Keep warning persistent - no auto-hide
   }
 
   const handleDesktopChoice = () => {
@@ -40,20 +39,36 @@ export default function WorkspaceMobileBlocker({ children }: { children: React.R
     return <>{children}</>
   }
 
-  // Don't block if user chose urgent access
+  // Don't block if user chose urgent access, but show persistent warning
   if (choice === 'urgent') {
     return (
       <>
         {showWarning && (
-          <div className="fixed top-0 left-0 right-0 z-50 bg-brutal-warning text-event-horizon p-16px border-b-4 border-event-horizon">
-            <div className="container mx-auto">
-              <p className="text-sm font-bold uppercase text-center">
-                ⚠️ YOU'VE BEEN WARNED → MOBILE UX IS BRUTAL
-              </p>
+          <div className="fixed top-0 left-0 right-0 z-50 bg-brutal-warning text-event-horizon border-b-4 border-event-horizon">
+            <div className="container mx-auto px-16px py-12px">
+              <div className="flex items-center justify-between gap-16px">
+                <div className="flex-1">
+                  <p className="text-xs md:text-sm font-bold uppercase">
+                    ⚠️ MOBILE UX WARNING → IOS/ANDROID APPS COMING SOON
+                  </p>
+                  <p className="text-xs text-event-horizon/80 mt-4px normal-case">
+                    You chose this. Desktop recommended for best experience.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowWarning(false)}
+                  className="text-event-horizon hover:text-event-horizon/60 font-bold text-sm px-8px"
+                  aria-label="Dismiss warning"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           </div>
         )}
-        {children}
+        <div className={showWarning ? 'pt-[72px] md:pt-[56px]' : ''}>
+          {children}
+        </div>
       </>
     )
   }
