@@ -210,7 +210,8 @@ export default function BlogPage() {
       {/* CATEGORIES */}
       <section className="py-24px md:py-32px px-16px md:px-24px border-b-2 border-[#333333] bg-[#000000]">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-wrap gap-8px md:gap-16px justify-center">
+          <div className="flex gap-8px md:gap-16px overflow-x-auto md:overflow-x-visible pb-12px md:pb-0 snap-x snap-mandatory md:snap-none justify-center md:justify-center"
+               style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
             {categories.map((category, index) => (
               <motion.button
                 key={category.name}
@@ -219,7 +220,7 @@ export default function BlogPage() {
                 transition={{ delay: index * 0.05 }}
                 onClick={() => setSelectedCategory(category.name)}
                 className={`
-                  brutal-btn px-24px py-12px
+                  snap-start flex-shrink-0 md:flex-shrink-auto brutal-btn px-24px py-12px
                   ${selectedCategory === category.name ? 'border-2' : ''}
                 `}
                 style={{
@@ -242,14 +243,15 @@ export default function BlogPage() {
               FEATURED <span className="text-[#00FFFF]">POSTS</span>
             </h2>
             
-            <div className="grid lg:grid-cols-3 gap-24px">
+            <div className="flex lg:grid lg:grid-cols-3 gap-24px overflow-x-auto lg:overflow-x-visible pb-16px lg:pb-0 snap-x snap-mandatory lg:snap-none"
+                 style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
               {blogPosts.filter(post => post.featured).map((post, index) => (
                 <motion.article
                   key={post.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="brutal-card p-24px hover:border-[#00FFFF] transition-none group"
+                  className="snap-start flex-shrink-0 lg:flex-shrink-auto w-[85vw] lg:w-auto brutal-card p-24px hover:border-[#00FFFF] transition-none group"
                 >
                   <div className="flex items-center gap-8px mb-16px">
                     <span className="text-xs font-bold text-[#00FFFF]">{post.category}</span>

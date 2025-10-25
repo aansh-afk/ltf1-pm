@@ -210,13 +210,14 @@ export default function LandingPage() {
             <div className="w-256px h-2px bg-glitch-flare mx-auto"></div>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16px md:gap-24px lg:gap-32px max-w-6xl mx-auto">
+          <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-16px md:gap-24px lg:gap-32px max-w-6xl mx-auto overflow-x-auto md:overflow-x-visible pb-16px md:pb-0 snap-x snap-mandatory md:snap-none"
+               style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0 }}
-              className="bg-carbon-plate border-2 border-basalt-border p-16px sm:p-24px md:p-32px text-center"
+              className="snap-start flex-shrink-0 md:flex-shrink-auto w-[85vw] md:w-auto bg-carbon-plate border-2 border-basalt-border p-16px sm:p-24px md:p-32px text-center"
             >
               <HiOutlineTerminal className="w-40px h-40px sm:w-48px sm:h-48px md:w-64px md:h-64px mx-auto mb-16px md:mb-24px text-brutal-info" />
               <h3 className="text-xl font-bold mb-16px uppercase text-cathode-white">GIT SYNC</h3>
@@ -228,7 +229,7 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="bg-carbon-plate border-2 border-basalt-border p-16px sm:p-24px md:p-32px text-center"
+              className="snap-start flex-shrink-0 md:flex-shrink-auto w-[85vw] md:w-auto bg-carbon-plate border-2 border-basalt-border p-16px sm:p-24px md:p-32px text-center"
             >
               <HiOutlineLightningBolt className="w-40px h-40px sm:w-48px sm:h-48px md:w-64px md:h-64px mx-auto mb-16px md:mb-24px text-brutal-warning" />
               <h3 className="text-xl font-bold mb-16px uppercase text-cathode-white">WHITEBOARD</h3>
@@ -240,7 +241,7 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="bg-carbon-plate border-2 border-basalt-border p-16px sm:p-24px md:p-32px text-center"
+              className="snap-start flex-shrink-0 md:flex-shrink-auto w-[85vw] md:w-auto bg-carbon-plate border-2 border-basalt-border p-16px sm:p-24px md:p-32px text-center"
             >
               <HiOutlineChip className="w-40px h-40px sm:w-48px sm:h-48px md:w-64px md:h-64px mx-auto mb-16px md:mb-24px text-primary-brutalist" />
               <h3 className="text-xl font-bold mb-16px uppercase text-cathode-white">AI POWERED</h3>
@@ -252,7 +253,7 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.3 }}
-              className="bg-carbon-plate border-2 border-basalt-border p-16px sm:p-24px md:p-32px text-center"
+              className="snap-start flex-shrink-0 md:flex-shrink-auto w-[85vw] md:w-auto bg-carbon-plate border-2 border-basalt-border p-16px sm:p-24px md:p-32px text-center"
             >
               <HiOutlineCode className="w-40px h-40px sm:w-48px sm:h-48px md:w-64px md:h-64px mx-auto mb-16px md:mb-24px text-brutal-success" />
               <h3 className="text-xl font-bold mb-16px uppercase text-cathode-white">DEV FIRST</h3>
@@ -413,20 +414,21 @@ export default function LandingPage() {
             </div>
 
             {/* Bottom Info */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-16px md:gap-24px lg:gap-32px max-w-4xl mx-auto">
-              <div>
+            <div className="flex md:grid md:grid-cols-4 gap-16px md:gap-24px lg:gap-32px max-w-4xl mx-auto overflow-x-auto md:overflow-x-visible pb-16px md:pb-0 snap-x snap-mandatory md:snap-none"
+                 style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
+              <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto">
                 <p className="text-brutal-info text-sm mb-8px">STATUS</p>
                 <p className="text-cathode-white font-bold">OPERATIONAL</p>
               </div>
-              <div>
+              <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto">
                 <p className="text-brutal-warning text-sm mb-8px">VERSION</p>
                 <p className="text-cathode-white font-bold">1.0.0</p>
               </div>
-              <div>
+              <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto">
                 <p className="text-primary-brutalist text-sm mb-8px">UPTIME</p>
                 <p className="text-cathode-white font-bold">99.9%</p>
               </div>
-              <div>
+              <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto">
                 <p className="text-brutal-success text-sm mb-8px">LAUNCHED</p>
                 <p className="text-cathode-white font-bold">2024</p>
               </div>

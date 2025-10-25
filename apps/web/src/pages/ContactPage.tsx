@@ -277,17 +277,18 @@ export default function ContactPage() {
                 <HiChat className="text-[#FF00FF]" />
                 COMMUNITY
               </h3>
-              <div className="grid grid-cols-2 gap-16px">
-                <a href="https://github.com/ltf1" className="brutal-btn text-center flex items-center justify-center gap-8px">
+              <div className="flex md:grid md:grid-cols-2 gap-16px overflow-x-auto md:overflow-x-visible pb-12px md:pb-0 snap-x snap-mandatory md:snap-none"
+                   style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
+                <a href="https://github.com/ltf1" className="snap-start flex-shrink-0 md:flex-shrink-auto w-[160px] md:w-auto brutal-btn text-center flex items-center justify-center gap-8px">
                   <FaGithub /> GITHUB
                 </a>
-                <a href="https://discord.gg/ltf1" className="brutal-btn text-center flex items-center justify-center gap-8px">
+                <a href="https://discord.gg/ltf1" className="snap-start flex-shrink-0 md:flex-shrink-auto w-[160px] md:w-auto brutal-btn text-center flex items-center justify-center gap-8px">
                   <FaDiscord /> DISCORD
                 </a>
-                <a href="https://ltf1.slack.com" className="brutal-btn text-center flex items-center justify-center gap-8px">
+                <a href="https://ltf1.slack.com" className="snap-start flex-shrink-0 md:flex-shrink-auto w-[160px] md:w-auto brutal-btn text-center flex items-center justify-center gap-8px">
                   <FaSlack /> SLACK
                 </a>
-                <a href="https://twitter.com/ltf1dev" className="brutal-btn text-center flex items-center justify-center gap-8px">
+                <a href="https://twitter.com/ltf1dev" className="snap-start flex-shrink-0 md:flex-shrink-auto w-[160px] md:w-auto brutal-btn text-center flex items-center justify-center gap-8px">
                   <FaTwitter /> TWITTER
                 </a>
               </div>
@@ -332,26 +333,27 @@ export default function ContactPage() {
             ON-PREMISE DEPLOYMENT. CUSTOM INTEGRATIONS. DEDICATED SUPPORT.
           </p>
 
-          <div className="grid md:grid-cols-4 gap-24px mb-48px">
-            <div className="brutal-card p-24px">
+          <div className="flex md:grid md:grid-cols-4 gap-24px mb-48px overflow-x-auto md:overflow-x-visible pb-16px md:pb-0 snap-x snap-mandatory md:snap-none"
+               style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
+            <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto brutal-card p-24px">
               <HiShieldCheck className="w-48px h-48px text-[#00FFFF] mx-auto mb-16px" />
               <h3 className="text-lg font-bold mb-8px">99.99% SLA</h3>
               <p className="text-sm text-[#FFFFFF]/60">Guaranteed uptime</p>
             </div>
-            
-            <div className="brutal-card p-24px">
+
+            <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto brutal-card p-24px">
               <HiGlobe className="w-48px h-48px text-[#FF00FF] mx-auto mb-16px" />
               <h3 className="text-lg font-bold mb-8px">ON-PREMISE</h3>
               <p className="text-sm text-[#FFFFFF]/60">Your infrastructure</p>
             </div>
-            
-            <div className="brutal-card p-24px">
+
+            <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto brutal-card p-24px">
               <HiPhone className="w-48px h-48px text-[#FFFF00] mx-auto mb-16px" />
               <h3 className="text-lg font-bold mb-8px">24/7 PHONE</h3>
               <p className="text-sm text-[#FFFFFF]/60">Direct support line</p>
             </div>
-            
-            <div className="brutal-card p-24px">
+
+            <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto brutal-card p-24px">
               <HiLightningBolt className="w-48px h-48px text-[#00FF00] mx-auto mb-16px" />
               <h3 className="text-lg font-bold mb-8px">INSTANT</h3>
               <p className="text-sm text-[#FFFFFF]/60">15-min response</p>

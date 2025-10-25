@@ -215,7 +215,8 @@ export default function PricingPage() {
       {/* PRICING TIERS */}
       <section className="px-16px md:px-24px pb-48px md:pb-80px">
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-4 gap-24px">
+          <div className="flex lg:grid lg:grid-cols-4 gap-24px overflow-x-auto lg:overflow-x-visible pb-16px lg:pb-0 snap-x snap-mandatory lg:snap-none"
+               style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
             {tiers.map((tier, index) => {
               const Icon = tier.icon
               const isGradient = tier.color.includes('gradient')
@@ -227,7 +228,7 @@ export default function PricingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 * index }}
                   className={`
-                    brutal-card p-32px relative
+                    snap-start flex-shrink-0 lg:flex-shrink-auto w-[85vw] lg:w-auto brutal-card p-32px relative
                     flex flex-col h-full
                     ${tier.popular ? 'border-4 border-[#00FF00]' : 'border-2 border-[#333333]'}
                     hover:border-[#FFFFFF] transition-none
@@ -333,8 +334,9 @@ export default function PricingPage() {
             WHAT'S AN <span className="glitch-text">AI OPERATION?</span>
           </h2>
 
-          <div className="grid md:grid-cols-2 gap-16px md:gap-24px mb-32px md:mb-48px">
-            <div className="brutal-card p-32px">
+          <div className="flex md:grid md:grid-cols-2 gap-16px md:gap-24px mb-32px md:mb-48px overflow-x-auto md:overflow-x-visible pb-16px md:pb-0 snap-x snap-mandatory md:snap-none"
+               style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
+            <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[85vw] md:w-auto brutal-card p-32px">
               <h3 className="text-xl font-bold mb-16px text-[#00FFFF]">
                 COUNTS AS 1 OPERATION:
               </h3>
@@ -348,7 +350,7 @@ export default function PricingPage() {
               </ul>
             </div>
 
-            <div className="brutal-card p-32px">
+            <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[85vw] md:w-auto brutal-card p-32px">
               <h3 className="text-xl font-bold mb-16px text-[#FF00FF]">
                 DOESN'T COUNT:
               </h3>
