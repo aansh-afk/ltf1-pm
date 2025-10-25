@@ -56,8 +56,8 @@ export default function ContactPage() {
       <PublicNavigation currentPage="contact" />
 
       {/* HERO SECTION */}
-      <section className="py-80px px-24px border-b-2 border-[#333333]">
-        <div className="max-w-7xl mx-auto text-center">
+      <section className="py-80px px-16px md:px-24px border-b-2 border-[#333333]">
+        <div className="max-w-full md:max-w-7xl mx-auto text-center">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -78,8 +78,8 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-24px py-80px">
-        <div className="grid lg:grid-cols-2 gap-48px">
+      <div className="max-w-full md:max-w-7xl mx-auto px-16px md:px-24px py-80px">
+        <div className="grid lg:grid-cols-2 gap-24px md:gap-48px">
           {/* CONTACT FORM */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
@@ -324,7 +324,7 @@ export default function ContactPage() {
 
       {/* ENTERPRISE SECTION */}
       <section className="py-80px border-t-2 border-[#333333] bg-[#000000]">
-        <div className="max-w-5xl mx-auto px-24px text-center">
+        <div className="max-w-full md:max-w-5xl mx-auto px-16px md:px-24px text-center">
           <h2 className="text-5xl font-bold mb-24px">
             <span className="glitch-text">ENTERPRISE</span> SOLUTIONS
           </h2>

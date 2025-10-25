@@ -209,9 +209,8 @@ export default function BlogPage() {
 
       {/* CATEGORIES */}
       <section className="py-24px md:py-32px px-16px md:px-24px border-b-2 border-[#333333] bg-[#000000]">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex gap-8px md:gap-16px overflow-x-auto md:overflow-x-visible pb-12px md:pb-0 snap-x snap-mandatory md:snap-none justify-center md:justify-center"
-               style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
+        <div className="max-w-full md:max-w-7xl mx-auto">
+          <div className="flex flex-wrap gap-8px md:gap-16px justify-center">
             {categories.map((category, index) => (
               <motion.button
                 key={category.name}
@@ -220,7 +219,7 @@ export default function BlogPage() {
                 transition={{ delay: index * 0.05 }}
                 onClick={() => setSelectedCategory(category.name)}
                 className={`
-                  snap-start flex-shrink-0 md:flex-shrink-auto brutal-btn px-24px py-12px
+                  brutal-btn px-24px py-12px
                   ${selectedCategory === category.name ? 'border-2' : ''}
                 `}
                 style={{
@@ -238,13 +237,14 @@ export default function BlogPage() {
       {/* FEATURED POSTS */}
       {selectedCategory === 'ALL' && (
         <section className="py-32px md:py-48px px-16px md:px-24px">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-full md:max-w-7xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold mb-24px md:mb-32px text-[#FFFFFF]">
               FEATURED <span className="text-[#00FFFF]">POSTS</span>
             </h2>
-            
-            <div className="flex lg:grid lg:grid-cols-3 gap-24px overflow-x-auto lg:overflow-x-visible pb-16px lg:pb-0 snap-x snap-mandatory lg:snap-none"
-                 style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
+
+            <div className="relative">
+              <div className="flex lg:grid lg:grid-cols-3 gap-24px overflow-x-auto lg:overflow-x-visible pb-16px lg:pb-0 snap-x snap-mandatory lg:snap-none"
+                   style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
               {blogPosts.filter(post => post.featured).map((post, index) => (
                 <motion.article
                   key={post.id}
@@ -282,14 +282,19 @@ export default function BlogPage() {
                   </div>
                 </motion.article>
               ))}
+              </div>
+              {/* Scroll Indicator for Featured Posts */}
+              <div className="absolute right-0 top-0 bottom-0 w-24px bg-gradient-to-l from-[#0A0A0A] to-transparent lg:hidden flex items-center justify-end pr-8px pointer-events-none">
+                <div className="text-[#00FFFF] text-xs animate-pulse">→</div>
+              </div>
             </div>
           </div>
         </section>
       )}
 
       {/* ALL POSTS */}
-      <section className="py-48px px-24px">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-48px px-16px md:px-24px">
+        <div className="max-w-full md:max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold mb-32px text-[#FFFFFF]">
             {selectedCategory === 'ALL' ? 'ALL' : selectedCategory} <span className="text-[#FF00FF]">POSTS</span>
           </h2>
@@ -362,7 +367,7 @@ export default function BlogPage() {
 
       {/* NEWSLETTER */}
       <section className="py-48px md:py-80px border-t-2 border-[#333333] bg-[#000000]">
-        <div className="max-w-3xl mx-auto px-16px md:px-24px text-center">
+        <div className="max-w-full md:max-w-3xl mx-auto px-16px md:px-24px text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-16px md:mb-24px">
             NEVER MISS AN <span className="glitch-text">UPDATE</span>
           </h2>
