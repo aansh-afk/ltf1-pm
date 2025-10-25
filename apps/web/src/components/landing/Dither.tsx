@@ -105,8 +105,8 @@ void main() {
     center_uv.x *= u_aspect;
 
     float dist_to_center = length(center_uv);
-    float oval_radius = 0.3;
-    float fade_width = 0.2;
+    float oval_radius = 0.6; // Increased from 0.3 to 0.6
+    float fade_width = 0.3; // Increased from 0.2 to 0.3
 
     // Create a smooth mask that is 1.0 at the center and fades to 0.0
     float fade_mask = 1.0 - smoothstep(oval_radius - fade_width, oval_radius, dist_to_center);
@@ -121,10 +121,15 @@ void main() {
   float text_value = texture2D(u_textTexture, text_uv).r; // Sample red channel
 
   // --- 5. Combine and Finalize Color ---
-  // Use max() to make the text (where text_value > 0) override the wave pattern
-  float final_f = max(f, text_value);
-
-  vec3 col = mix(vec3(0.0), waveColor, final_f);
+  // Make text solid white, waves use waveColor
+  vec3 col;
+  if (text_value > 0.1) {
+    // Text areas are solid white
+    col = vec3(1.0, 1.0, 1.0);
+  } else {
+    // Wave pattern uses waveColor
+    col = mix(vec3(0.0), waveColor, f);
+  }
   gl_FragColor = vec4(col, 1.0);
 }
 `;
@@ -250,8 +255,8 @@ function DitheredWaves({
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    // Load and use IBM Plex Mono font
-    ctx.font = 'bold 180px "IBM Plex Mono", monospace';
+    // Load and use IBM Plex Mono font - reduced size
+    ctx.font = 'bold 120px "IBM Plex Mono", monospace';
     ctx.fillStyle = 'white';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -332,12 +337,12 @@ function DitheredWaves({
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
 
-    // Define hover zone (centered rectangle where text appears)
+    // Define hover zone (larger to match increased oval size)
     const hoverZone = {
-      x: 0.25,
-      y: 0.35,
-      width: 0.5,
-      height: 0.3
+      x: 0.15,
+      y: 0.25,
+      width: 0.7,
+      height: 0.5
     };
 
     if (
