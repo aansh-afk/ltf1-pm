@@ -32,6 +32,7 @@ import { GitHubMonitor } from '../features/github/GitHubMonitor'
 import CommandTerminal from '../terminal/CommandTerminal'
 import GlobalSearchModal from '../features/search/GlobalSearchModal'
 import WorkspaceMobileBlocker from '../common/WorkspaceMobileBlocker'
+import ProductionAccessGate from '../common/ProductionAccessGate'
 // ThemeSwitcher moved to Settings page
 
 
@@ -332,9 +333,11 @@ export default function DashboardLayout() {
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="h-full"
           >
-            <WorkspaceMobileBlocker>
-              <Outlet />
-            </WorkspaceMobileBlocker>
+            <ProductionAccessGate>
+              <WorkspaceMobileBlocker>
+                <Outlet />
+              </WorkspaceMobileBlocker>
+            </ProductionAccessGate>
           </motion.div>
         </main>
 
