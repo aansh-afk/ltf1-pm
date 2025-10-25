@@ -31,7 +31,9 @@ import { ProfileCompletionBanner } from '../features/profile/ProfileCompletionBa
 import { GitHubMonitor } from '../features/github/GitHubMonitor'
 import CommandTerminal from '../terminal/CommandTerminal'
 import GlobalSearchModal from '../features/search/GlobalSearchModal'
+import WorkspaceMobileBlocker from '../common/WorkspaceMobileBlocker'
 // ThemeSwitcher moved to Settings page
+
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile sidebar
@@ -330,7 +332,9 @@ export default function DashboardLayout() {
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="h-full"
           >
-            <Outlet />
+            <WorkspaceMobileBlocker>
+              <Outlet />
+            </WorkspaceMobileBlocker>
           </motion.div>
         </main>
 
