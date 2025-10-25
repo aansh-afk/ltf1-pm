@@ -265,12 +265,12 @@ export default function LandingPage() {
 
       {/* SECTION 3: PRICING */}
       <section className="relative h-screen snap-start flex items-center justify-center bg-event-horizon overflow-hidden">
-        <div className="container mx-auto px-24px">
+        <div className="container mx-auto px-16px md:px-24px">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="max-w-6xl mx-auto"
+            className="max-w-full md:max-w-6xl mx-auto"
           >
             {/* Title */}
             <div className="text-center mb-32px md:mb-48px">
@@ -285,9 +285,11 @@ export default function LandingPage() {
             </div>
 
             {/* Pricing Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16px md:gap-20px lg:gap-24px mb-32px md:mb-48px">
-              {/* LOCALHOST - FREE */}
-              <div className="border-2 border-basalt-border bg-event-horizon p-16px md:p-24px text-center">
+            <div className="relative mb-32px md:mb-48px">
+              <div className="flex lg:grid lg:grid-cols-4 gap-16px md:gap-20px lg:gap-24px overflow-x-auto lg:overflow-x-visible pb-16px lg:pb-0 snap-x snap-mandatory lg:snap-none"
+                   style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
+                {/* LOCALHOST - FREE */}
+                <div className="snap-start flex-shrink-0 lg:flex-shrink-auto w-[85vw] lg:w-auto border-2 border-basalt-border bg-event-horizon p-16px md:p-24px text-center">
                 <h3 className="text-lg font-bold text-cathode-white mb-16px">LOCALHOST</h3>
                 <p className="text-3xl font-bold text-brutal-info mb-8px">FREE</p>
                 <p className="text-sm text-cathode-white/60 mb-16px">1-5 users</p>
@@ -299,7 +301,7 @@ export default function LandingPage() {
               </div>
 
               {/* STARTUP - MOST POPULAR */}
-              <div className="border-4 border-brutal-success bg-event-horizon p-16px md:p-24px text-center relative">
+              <div className="snap-start flex-shrink-0 lg:flex-shrink-auto w-[85vw] lg:w-auto border-4 border-brutal-success bg-event-horizon p-16px md:p-24px text-center relative">
                 <div className="absolute -top-12px left-1/2 -translate-x-1/2 bg-brutal-success text-event-horizon px-16px py-2px text-xs font-bold">
                   MOST POPULAR
                 </div>
@@ -314,7 +316,7 @@ export default function LandingPage() {
               </div>
 
               {/* SCALE */}
-              <div className="border-2 border-basalt-border bg-event-horizon p-16px md:p-24px text-center">
+              <div className="snap-start flex-shrink-0 lg:flex-shrink-auto w-[85vw] lg:w-auto border-2 border-basalt-border bg-event-horizon p-16px md:p-24px text-center">
                 <h3 className="text-lg font-bold text-cathode-white mb-16px">SCALE</h3>
                 <p className="text-3xl font-bold text-cathode-white mb-8px">$49<span className="text-lg">/user</span></p>
                 <p className="text-sm text-brutal-warning mb-16px">10-500 users</p>
@@ -326,7 +328,7 @@ export default function LandingPage() {
               </div>
 
               {/* ENTERPRISE */}
-              <div className="border-2 border-basalt-border bg-event-horizon p-16px md:p-24px text-center">
+              <div className="snap-start flex-shrink-0 lg:flex-shrink-auto w-[85vw] lg:w-auto border-2 border-basalt-border bg-event-horizon p-16px md:p-24px text-center">
                 <h3 className="text-lg font-bold text-cathode-white mb-16px">ENTERPRISE</h3>
                 <p className="text-3xl font-bold bg-glitch-flare bg-clip-text text-transparent mb-8px">$99<span className="text-lg text-cathode-white">/user</span></p>
                 <p className="text-sm text-cathode-white/60 mb-16px">50+ users</p>
@@ -335,6 +337,12 @@ export default function LandingPage() {
                   <li>• On-premise</li>
                   <li>• 24/7 support</li>
                 </ul>
+              </div>
+            </div>
+
+              {/* Scroll Indicator for Simple Pricing */}
+              <div className="absolute right-0 top-0 bottom-0 w-24px bg-gradient-to-l from-[#0A0A0A] to-transparent lg:hidden flex items-center justify-end pr-8px pointer-events-none">
+                <div className="text-[#00FFFF] text-xs animate-pulse">→</div>
               </div>
             </div>
 
