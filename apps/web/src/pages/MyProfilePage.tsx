@@ -1,75 +1,68 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
-import { useNavigate } from 'react-router-dom'
-import { 
-  HiOutlineUser, 
+import { useNavigate, useLocation } from 'react-router-dom'
+import {
+  HiOutlineUser,
   HiOutlinePencil,
   HiOutlineExclamationCircle,
   HiOutlineCheckCircle,
   HiOutlineCode,
   HiOutlineBriefcase,
   HiOutlineClock,
-  HiOutlineGlobeAlt,
-  HiOutlineChartBar
+  HiOutlineGlobeAlt
 } from 'react-icons/hi'
 import DeveloperStatusIndicator from '../components/features/developer/DeveloperStatusIndicator'
 import { EditDeveloperProfileModal } from '../components/features/profile/EditDeveloperProfileModal'
 import { GitHubProfileSection } from '../components/features/profile/GitHubProfileSection'
 import clsx from 'clsx'
 
+import { useProfileCompletion } from '../hooks/useProfileCompletion'
+
 export default function MyProfilePage() {
   const [showEditModal, setShowEditModal] = useState(false)
-  const [showOnboardingModal, setShowOnboardingModal] = useState(false)
   const navigate = useNavigate()
-  
+  const location = useLocation()
+
+  // Check for edit query param
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search)
+    if (searchParams.get('edit') === 'true') {
+      setShowEditModal(true)
+      // Clean up the URL without reloading
+      const newUrl = window.location.pathname
+      window.history.replaceState({}, '', newUrl)
+    }
+  }, [location])
+
   // Get current user
   const currentUser = useQuery(api.auth.users.getCurrentUser)
-  
+
   // Get developer profile
   const developerProfile = useQuery(
     api.developers.queries.getDeveloperProfile,
     currentUser ? { userId: currentUser._id } : 'skip'
   )
-  
-  // Get GitHub stats to check if connected
-  const githubStats = useQuery(
-    api.integrations.github.queries.getDeveloperGitHubStats,
-    currentUser ? { userId: currentUser._id } : 'skip'
-  )
 
-  // Check if profile is complete
-  const isProfileComplete = () => {
-    if (!developerProfile?.profile) return false
-    
-    const profile = developerProfile.profile
-    return !!(
-      profile.role &&
-      profile.technologies &&
-      profile.technologies.length > 0 &&
-      profile.timezone &&
-      githubStats !== null // GitHub must be connected
-    )
-  }
+  const { profileComplete, missingFields } = useProfileCompletion()
 
   // Show onboarding modal for users without profiles
   useEffect(() => {
     if (currentUser && developerProfile === null) {
-      setShowOnboardingModal(true)
       setShowEditModal(true)
     }
   }, [currentUser, developerProfile])
 
   // Check for redirect after profile completion
   useEffect(() => {
-    if (isProfileComplete()) {
+    if (profileComplete) {
       const redirectPath = sessionStorage.getItem('profile-completion-redirect')
       if (redirectPath) {
         sessionStorage.removeItem('profile-completion-redirect')
         navigate(redirectPath)
       }
     }
-  }, [developerProfile])
+  }, [profileComplete, navigate])
 
   if (!currentUser) {
     return (
@@ -79,20 +72,19 @@ export default function MyProfilePage() {
     )
   }
 
-  const profileComplete = isProfileComplete()
-
   return (
     <div className="p-24px max-w-4xl mx-auto">
       {/* Profile Completion Banner */}
       {!profileComplete && (
-        <div className="mb-24px p-16px bg-brutal-error border-2 border-[var(--theme-border)] flex items-center justify-between">
+        <div className="mb-24px p-16px bg-brutal-error border-2 border-event-horizon flex items-center justify-between">
           <div className="flex items-center gap-16px">
             <HiOutlineExclamationCircle className="w-24px h-24px text-event-horizon" />
             <div>
               <h3 className="text-brutal-md font-bold text-event-horizon">COMPLETE YOUR PROFILE</h3>
               <p className="text-brutal-sm text-event-horizon/80">
-                A complete profile helps your team find the right person for tasks and code reviews.
-                {!githubStats && " Don't forget to connect your GitHub account!"}
+                {missingFields.length > 0
+                  ? `Missing: ${missingFields.join(', ')}. Complete these to help your team find you.`
+                  : "A complete profile helps your team find the right person for tasks and code reviews."}
               </p>
             </div>
           </div>
@@ -171,19 +163,19 @@ export default function MyProfilePage() {
                 </div>
                 <p className="font-mono text-brutal-sm">{developerProfile.profile?.timezone || 'NOT SET'}</p>
               </div>
-              
+
               <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
                 <div className="flex items-center gap-8px mb-8px">
                   <HiOutlineClock className="w-16px h-16px text-primary-brutalist" />
                   <span className="font-mono text-brutal-xs">WORKING HOURS</span>
                 </div>
                 <p className="font-mono text-brutal-sm">
-                  {developerProfile.profile?.workingHours 
+                  {developerProfile.profile?.workingHours
                     ? `${developerProfile.profile.workingHours.start} - ${developerProfile.profile.workingHours.end}`
                     : 'NOT SET'}
                 </p>
               </div>
-              
+
               <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
                 <div className="flex items-center gap-8px mb-8px">
                   <HiOutlineBriefcase className="w-16px h-16px text-primary-brutalist" />
@@ -200,7 +192,7 @@ export default function MyProfilePage() {
               <HiOutlineCode className="w-20px h-20px text-primary-brutalist" />
               TECHNICAL EXPERTISE
             </h3>
-            
+
             {developerProfile.profile?.technologies && developerProfile.profile.technologies.length > 0 ? (
               <div className="flex flex-wrap gap-8px">
                 {developerProfile.profile.technologies.map((tech: any) => (
@@ -244,7 +236,7 @@ export default function MyProfilePage() {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Interests */}
                 {developerProfile.profile?.interests?.length > 0 && (
                   <div>
@@ -277,7 +269,7 @@ export default function MyProfilePage() {
                     </p>
                   </div>
                 )}
-                
+
                 {developerProfile.profile?.workStyle && (
                   <div>
                     <h3 className="text-brutal-md font-bold mb-8px">WORK STYLE</h3>
@@ -291,8 +283,8 @@ export default function MyProfilePage() {
           )}
 
           {/* GitHub Stats */}
-          <GitHubProfileSection 
-            userId={currentUser._id} 
+          <GitHubProfileSection
+            userId={currentUser._id}
             isProfileComplete={profileComplete}
             onConnect={() => {
               // Refresh profile data after connecting GitHub
@@ -323,7 +315,6 @@ export default function MyProfilePage() {
           userId={currentUser._id}
           onClose={() => {
             setShowEditModal(false)
-            setShowOnboardingModal(false)
           }}
         />
       )}

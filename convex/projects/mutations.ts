@@ -63,7 +63,7 @@ export const createProject = mutation({
         autoAssignLead: true,
       },
       metadata: {
-        color: "#" + Math.floor(Math.random()*16777215).toString(16),
+        color: "#" + Math.floor(Math.random() * 16777215).toString(16),
         icon: "📁",
         tags: [],
       },
@@ -326,7 +326,7 @@ export const ensureProjectInviteCode = mutation({
 
     // Generate new invite code for existing projects
     const newInviteCode = crypto.randomUUID();
-    
+
     await ctx.db.patch(args.projectId, {
       inviteCode: newInviteCode,
       teamSettings: project.teamSettings || {
@@ -364,7 +364,7 @@ export const generateProjectInviteCode = mutation({
     await requireProjectPermission(ctx.db, user._id, args.projectId, "project.team.invite");
 
     const newInviteCode = crypto.randomUUID();
-    
+
     await ctx.db.patch(args.projectId, {
       inviteCode: newInviteCode,
       updatedAt: Date.now(),
@@ -404,6 +404,8 @@ export const joinProjectByCode = mutation({
     }
 
     // Check if invite code has already been used (single-use)
+    // REMOVED: Invite codes are now persistent
+    /*
     const existingInvite = await ctx.db
       .query("projectInvitations")
       .withIndex("by_invite_code", (q) => q.eq("inviteCode", args.inviteCode))
@@ -413,6 +415,7 @@ export const joinProjectByCode = mutation({
     if (existingInvite) {
       throw new Error("This invite code has already been used");
     }
+    */
 
     // Check if user is already a member
     const existingMember = await ctx.db
@@ -438,8 +441,8 @@ export const joinProjectByCode = mutation({
       .filter((q) => q.eq(q.field("status"), "active"))
       .collect();
 
-    if (project.teamSettings?.maxMembers && 
-        currentMemberCount.length >= project.teamSettings.maxMembers) {
+    if (project.teamSettings?.maxMembers &&
+      currentMemberCount.length >= project.teamSettings.maxMembers) {
       throw new Error("Project has reached maximum member limit");
     }
 
@@ -467,11 +470,14 @@ export const joinProjectByCode = mutation({
     });
 
     // Generate new invite code for the project (single-use means we need a new one)
+    // REMOVED: Invite codes are now persistent
+    /*
     const newInviteCode = crypto.randomUUID();
     await ctx.db.patch(project._id, {
       inviteCode: newInviteCode,
       updatedAt: now,
     });
+    */
 
     // Log team member joined activity
     await ctx.runMutation(internal.activities.mutations.logActivity, {
@@ -572,7 +578,7 @@ export const addProjectMember = mutation({
       targetName: targetUser.name || targetUser.email,
       description: `added ${targetUser.name || targetUser.email} to the project`,
       metadata: {
-        extra: { 
+        extra: {
           targetUserId: args.userId,
           targetUserName: targetUser.name,
           role: args.role
@@ -646,7 +652,7 @@ export const removeProjectMember = mutation({
       targetName: targetUser?.name || targetUser?.email || "Unknown User",
       description: `removed ${targetUser?.name || targetUser?.email || "a user"} from the project`,
       metadata: {
-        extra: { 
+        extra: {
           targetUserId: args.userId,
           targetUserName: targetUser?.name,
           previousRole: member.role
@@ -718,7 +724,7 @@ export const updateProjectMemberRole = mutation({
       metadata: {
         oldValue: previousRole,
         newValue: args.role,
-        extra: { 
+        extra: {
           targetUserId: args.userId,
           targetUserName: targetUser?.name
         }
@@ -727,4 +733,69 @@ export const updateProjectMemberRole = mutation({
 
     return { success: true };
   },
+});export const assignTeam = mutation({
+    args: {
+        projectId: v.id("projects"),
+        teamId: v.id("teams"),
+    },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) {
+            throw new Error("Unauthorized");
+        }
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+            .first();
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        await requireProjectPermission(ctx.db, user._id, args.projectId, "project.team.manage");
+
+        const project = await ctx.db.get(args.projectId);
+        if (!project) {
+            throw new Error("Project not found");
+        }
+
+        const team = await ctx.db.get(args.teamId);
+        if (!team) {
+            throw new Error("Team not found");
+        }
+
+        // Ensure team belongs to same workspace
+        if (team.workspaceId !== project.workspaceId) {
+            throw new Error("Team must belong to the same workspace as the project");
+        }
+
+        const currentTeamIds = project.teamIds || [];
+        if (currentTeamIds.includes(args.teamId)) {
+            throw new Error("Team is already assigned to this project");
+        }
+
+        await ctx.db.patch(args.projectId, {
+            teamIds: [...currentTeamIds, args.teamId],
+            updatedAt: Date.now(),
+        });
+
+        // Log activity
+        await ctx.runMutation(internal.activities.mutations.logActivity, {
+            type: "project_updated",
+            projectId: args.projectId,
+            workspaceId: project.workspaceId,
+            actorId: user._id,
+            actorName: user.name || user.email,
+            targetType: "project",
+            targetId: args.projectId,
+            targetName: project.name,
+            description: `assigned team "${team.name}" to project "${project.name}"`,
+            metadata: {
+                extra: { teamId: args.teamId, teamName: team.name }
+            }
+        });
+
+        return { success: true };
+    },
 });

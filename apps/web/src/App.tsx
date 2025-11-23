@@ -34,6 +34,8 @@ import WhiteboardPage from './pages/WhiteboardPage'
 import VideoPage from './pages/VideoPage'
 import CustomFieldsPage from './pages/CustomFieldsPage'
 import SlackPage from './pages/SlackPage'
+import TeamsPage from './pages/TeamsPage'
+import ComingSoonPage from './pages/ComingSoonPage'
 import { useEnsureUser } from './hooks/useEnsureUser'
 import { DataMigrationBanner } from './components/admin/DataMigrationBanner'
 import CommandPalette from './components/shortcuts/CommandPalette'
@@ -46,7 +48,7 @@ function AuthenticatedAppContent() {
   const { isLoading, isFirstTimeUser, user } = useEnsureUser()
   const [showOnboarding, setShowOnboarding] = useState(false)
   const updatePreferences = useMutation(api.auth.users.updateUserPreferences)
-  
+
   // Check session storage to see if we've already shown/completed onboarding this session
   const getOnboardingDismissed = () => {
     if (typeof window !== 'undefined') {
@@ -54,31 +56,31 @@ function AuthenticatedAppContent() {
     }
     return false
   }
-  
+
   // Show onboarding for first-time users (only if not dismissed this session)
   React.useEffect(() => {
     const wasOnboardingDismissed = getOnboardingDismissed()
-    
+
     if (isFirstTimeUser && user && !wasOnboardingDismissed) {
       setShowOnboarding(true)
     } else if (!isFirstTimeUser || wasOnboardingDismissed) {
       setShowOnboarding(false)
     }
   }, [isFirstTimeUser, user])
-  
+
   const handleOnboardingComplete = () => {
     setShowOnboarding(false)
-    
+
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('ltf1_onboarding_dismissed', 'true')
     }
-    
+
     if (user) {
-      updatePreferences({ 
-        preferences: { 
+      updatePreferences({
+        preferences: {
           ...user.preferences,
-          hasCompletedOnboarding: true 
-        } 
+          hasCompletedOnboarding: true
+        }
       }).then(() => {
         console.log('Onboarding preferences saved successfully')
       }).catch(error => {
@@ -86,18 +88,28 @@ function AuthenticatedAppContent() {
       })
     }
   }
-  
+
   if (isLoading) {
     return <BrutalistLoader />
   }
-  
+
+  // Check for waitlist status
+  if (user?.status === 'waitlisted') {
+    return (
+      <Routes>
+        <Route path="/coming-soon" element={<ComingSoonPage />} />
+        <Route path="*" element={<Navigate to="/coming-soon" replace />} />
+      </Routes>
+    )
+  }
+
   return (
     <>
       <DataMigrationBanner />
       {showOnboarding && (
-        <OnboardingFlow 
-          isOpen={showOnboarding} 
-          onComplete={handleOnboardingComplete} 
+        <OnboardingFlow
+          isOpen={showOnboarding}
+          onComplete={handleOnboardingComplete}
         />
       )}
       <AppRoutes isAuthenticated={true} />
@@ -114,19 +126,19 @@ function UnauthenticatedAppContent() {
 function AppContent() {
   const { isSignedIn } = useAuth()
   const [showOnboarding, setShowOnboarding] = useState(false)
-  
+
   // Use the appropriate content based on authentication state
   if (isSignedIn) {
     return <AuthenticatedAppContent />
   }
-  
+
   return <UnauthenticatedAppContent />
 }
 
 // Separate component for routes that can be used by both authenticated and unauthenticated users
 function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
   const { isSignedIn } = useAuth()
-  
+
   return (
     <div className="min-h-screen bg-[var(--theme-background)]">
       {/* Global Shortcut Components - only if authenticated */}
@@ -136,32 +148,35 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
           <ShortcutHelp />
         </>
       )}
-      
+
       <Routes>
         <Route path="/" element={
           isSignedIn ? <Navigate to="/dashboard" replace /> : <LandingPage />
         } />
-        
+
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/blog" element={<BlogPage />} />
-        
+
         <Route path="/sign-in/*" element={
           <div className="flex items-center justify-center min-h-screen">
             <SignIn routing="path" path="/sign-in" />
           </div>
         } />
-        
+
         <Route path="/sign-up/*" element={
           <div className="flex items-center justify-center min-h-screen">
             <SignUp routing="path" path="/sign-up" />
           </div>
         } />
 
+        {/* Public Coming Soon Page */}
+        <Route path="/coming-soon" element={<ComingSoonPage />} />
+
         {/* Join Project Routes - accessible by anyone */}
         <Route path="/join-project" element={<JoinProjectPage />} />
         <Route path="/join-project/:inviteCode" element={<JoinProjectPage />} />
-        
+
         {/* GitHub OAuth Callback */}
         <Route path="/api/auth/github/callback" element={<GitHubCallbackPage />} />
 
@@ -174,7 +189,9 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
           <Route path="workspace/:workspaceId/project/:projectId" element={<ProjectManagementPage />} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="tasks" element={<TasksPage />} />
-          <Route path="team" element={<TeamPage />} />
+          <Route path="tasks" element={<TasksPage />} />
+          <Route path="teams" element={<TeamsPage />} />
+          <Route path="team" element={<TeamPage />} /> {/* Keeping existing TeamPage for now, might be redundant */}
           <Route path="meetings" element={<MeetingsPage />} />
           <Route path="sprints" element={<SprintPage />} />
           <Route path="settings" element={<SettingsPage />} />
@@ -191,7 +208,7 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
         {/* 404 Page - Catch all unmatched routes */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-      
+
       <Toaster
         position="bottom-right"
         toastOptions={{

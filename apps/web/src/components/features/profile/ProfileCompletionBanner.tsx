@@ -12,7 +12,7 @@ export function ProfileCompletionBanner() {
 
   // Get current user
   const currentUser = useQuery(api.auth.users.getCurrentUser)
-  
+
   // Get developer profile
   const developerProfile = useQuery(
     api.developers.queries.getDeveloperProfile,
@@ -22,7 +22,7 @@ export function ProfileCompletionBanner() {
   // Check if profile is complete
   const isProfileComplete = () => {
     if (!developerProfile?.profile) return false
-    
+
     const profile = developerProfile.profile
     return !!(
       profile.role &&
@@ -60,14 +60,14 @@ export function ProfileCompletionBanner() {
           <div className="flex-1">
             <p className="font-mono text-brutal-sm text-event-horizon">
               <span className="font-bold">PROFILE INCOMPLETE:</span> {' '}
-              {missingFields.length === 1 && missingFields[0] === 'profile' 
+              {missingFields.length === 1 && missingFields[0] === 'profile'
                 ? 'Create your developer profile to enable smart task assignments and team collaboration.'
                 : `Add your ${missingFields.join(', ')} to help your team find the right person for tasks.`
               }
             </p>
           </div>
           <Link
-            to="/profile"
+            to="/profile?edit=true"
             className="px-16px py-8px bg-[var(--theme-background-secondary)] text-brutal-warning border-2 border-event-horizon
                      font-mono text-brutal-xs uppercase tracking-wider font-bold
                      hover:bg-brutal-warning/90 transition-colors flex-shrink-0"

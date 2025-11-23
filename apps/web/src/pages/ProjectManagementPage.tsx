@@ -112,9 +112,9 @@ export default function ProjectManagementPage() {
     isOverdue: undefined
   })
 
-  // Move mutations to top level to follow React hooks rules
   const deleteTask = useMutation(api.tasks.mutations.deleteTask)
   const createTask = useMutation(api.tasks.mutations.createTask)
+  const assignTeam = useMutation(api.projects.mutations.assignTeam)
 
   // Move task handlers to top level
   const handleEditTask = (task: any) => {
@@ -157,25 +157,25 @@ export default function ProjectManagementPage() {
     api.projects.queries.getProject,
     projectId ? { projectId: projectId as any } : 'skip'
   )
-  
+
   // Get current user from Convex
   const currentUser = useQuery(
     api.auth.users.getCurrentUser,
     clerkUser ? {} : 'skip'
   )
-  
+
   // Query tasks for this project - moved here to follow hooks rules
   const tasks = useQuery(
     api.tasks.queries.getProjectTasks,
     projectId ? { projectId: projectId as any } : 'skip'
   )
-  
+
   // Get current sprint for this project
   const activeSprint = useQuery(
     api.sprints.queries.getCurrentSprint,
     projectId ? { projectId: projectId as any } : 'skip'
   )
-  
+
   // Get all sprints for this project
   const allSprints = useQuery(
     api.sprints.queries.getProjectSprints,
@@ -192,6 +192,12 @@ export default function ProjectManagementPage() {
   const team = useQuery(
     api.projects.members.getProjectMembers,
     projectId ? { projectId: projectId as any } : 'skip'
+  )
+
+  // Get available teams
+  const availableTeams = useQuery(
+    api.teams.getTeams,
+    workspaceId ? { workspaceId: workspaceId as any } : 'skip'
   )
 
   // Keyboard shortcuts
@@ -333,7 +339,7 @@ export default function ProjectManagementPage() {
   const renderOverviewTab = () => {
     // Get active sprint
     const activeSprint = allSprints?.find(s => s.status === 'active')
-    
+
     return (
       <div className="space-y-24px">
         {/* Project Info - Compact */}
@@ -353,10 +359,10 @@ export default function ProjectManagementPage() {
             <p className="text-brutal-sm text-primary-brutalist/80 mt-12px pt-12px border-t border-[var(--theme-border)]">{project.description}</p>
           )}
         </div>
-        
+
         {/* Natural Language Task Creator */}
         <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-          <NaturalLanguageTaskCreator 
+          <NaturalLanguageTaskCreator
             projectId={project._id}
             sprintId={activeSprint?._id}
             onTasksCreated={() => {
@@ -364,24 +370,24 @@ export default function ProjectManagementPage() {
             }}
           />
         </div>
-        
+
         {/* AI Insights and Daily Standup Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16px">
-          <AIInsightsPanel 
-            projectId={project._id} 
+          <AIInsightsPanel
+            projectId={project._id}
             sprintId={activeSprint?._id}
             compact={true}
           />
-          <DailyStandupSummary 
+          <DailyStandupSummary
             projectId={project._id}
             compact={true}
           />
         </div>
-        
+
         {/* Health Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16px">
           {healthCards.map((card) => (
-            <div 
+            <div
               key={card.title}
               className={clsx(
                 "border-2 p-16px transition-all",
@@ -399,9 +405,9 @@ export default function ProjectManagementPage() {
             </div>
           ))}
         </div>
-        
+
         {/* Smart Task Generator */}
-        <SmartTaskGenerator 
+        <SmartTaskGenerator
           projectId={project._id}
           sprintId={activeSprint?._id}
           onTasksCreated={() => {
@@ -410,32 +416,32 @@ export default function ProjectManagementPage() {
           }}
           compact={true}
         />
-        
+
         {/* Sprint Burndown Chart */}
         {activeSprint && (
           <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-            <SprintBurndownChart 
+            <SprintBurndownChart
               sprint={activeSprint}
               tasks={tasks || []}
               showPrediction={true}
             />
           </div>
         )}
-        
+
         {/* Activity Heatmap */}
         <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-          <GitHubStyleHeatmap 
+          <GitHubStyleHeatmap
             tasks={tasks || []}
             weeks={12}
           />
         </div>
-        
+
         {/* Task Distribution Charts */}
-        <TaskDistributionCharts 
+        <TaskDistributionCharts
           tasks={tasks || []}
           team={team || []}
         />
-        
+
         {/* Developer Timeline */}
         <DeveloperTimeline projectId={project._id} />
       </div>
@@ -454,7 +460,7 @@ export default function ProjectManagementPage() {
 
     // Apply filters
     let filteredTasks = tasks || []
-    
+
     // Filter by selected sprint
     if (selectedSprintId && selectedSprintId !== 'all') {
       filteredTasks = filteredTasks.filter((t: any) => t.sprintId === selectedSprintId)
@@ -462,42 +468,42 @@ export default function ProjectManagementPage() {
       // Show only tasks without a sprint (backlog)
       filteredTasks = filteredTasks.filter((t: any) => !t.sprintId)
     }
-    
+
     // Apply advanced filters first
     if (taskFilters.search) {
       const searchLower = taskFilters.search.toLowerCase()
-      filteredTasks = filteredTasks.filter((t: any) => 
+      filteredTasks = filteredTasks.filter((t: any) =>
         t.title?.toLowerCase().includes(searchLower) ||
         t.description?.toLowerCase().includes(searchLower) ||
         t.key?.toLowerCase().includes(searchLower)
       )
     }
-    
+
     if (taskFilters.status.length > 0) {
       filteredTasks = filteredTasks.filter((t: any) => taskFilters.status.includes(t.status))
     }
-    
+
     if (taskFilters.priority.length > 0) {
       filteredTasks = filteredTasks.filter((t: any) => taskFilters.priority.includes(t.priority))
     }
-    
+
     if (taskFilters.type.length > 0) {
       filteredTasks = filteredTasks.filter((t: any) => taskFilters.type.includes(t.type))
     }
-    
+
     if (taskFilters.assigneeIds.length > 0) {
-      filteredTasks = filteredTasks.filter((t: any) => 
+      filteredTasks = filteredTasks.filter((t: any) =>
         t.assigneeId && taskFilters.assigneeIds.includes(t.assigneeId) ||
         (t.assigneeIds && t.assigneeIds.some((id: string) => taskFilters.assigneeIds.includes(id)))
       )
     }
-    
+
     if (taskFilters.labels.length > 0) {
-      filteredTasks = filteredTasks.filter((t: any) => 
+      filteredTasks = filteredTasks.filter((t: any) =>
         t.labels && t.labels.some((label: string) => taskFilters.labels.includes(label))
       )
     }
-    
+
     if (taskFilters.dueDateRange.start || taskFilters.dueDateRange.end) {
       filteredTasks = filteredTasks.filter((t: any) => {
         if (!t.dueDate) return false
@@ -507,24 +513,24 @@ export default function ProjectManagementPage() {
         return true
       })
     }
-    
+
     if (taskFilters.hasTimeTracked !== undefined) {
-      filteredTasks = filteredTasks.filter((t: any) => 
+      filteredTasks = filteredTasks.filter((t: any) =>
         taskFilters.hasTimeTracked ? (t.timeTracked && t.timeTracked > 0) : (!t.timeTracked || t.timeTracked === 0)
       )
     }
-    
+
     if (taskFilters.isOverdue !== undefined && taskFilters.isOverdue) {
-      filteredTasks = filteredTasks.filter((t: any) => 
+      filteredTasks = filteredTasks.filter((t: any) =>
         t.dueDate && new Date(t.dueDate) < new Date()
       )
     }
-    
+
     // Apply quick filters on top of advanced filters
     if (quickFilter) {
       switch (quickFilter) {
         case 'my-tasks':
-          filteredTasks = filteredTasks.filter((t: any) => 
+          filteredTasks = filteredTasks.filter((t: any) =>
             t.assigneeId === currentUser?._id ||
             (t.assigneeIds && t.assigneeIds.includes(currentUser?._id))
           )
@@ -535,17 +541,17 @@ export default function ProjectManagementPage() {
         case 'due-soon':
           const threeDaysFromNow = new Date()
           threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
-          filteredTasks = filteredTasks.filter((t: any) => 
+          filteredTasks = filteredTasks.filter((t: any) =>
             t.dueDate && new Date(t.dueDate) <= threeDaysFromNow
           )
           break
         case 'overdue':
-          filteredTasks = filteredTasks.filter((t: any) => 
+          filteredTasks = filteredTasks.filter((t: any) =>
             t.dueDate && new Date(t.dueDate) < new Date()
           )
           break
         case 'high-priority':
-          filteredTasks = filteredTasks.filter((t: any) => 
+          filteredTasks = filteredTasks.filter((t: any) =>
             t.priority === 'urgent' || t.priority === 'high'
           )
           break
@@ -577,52 +583,52 @@ export default function ProjectManagementPage() {
       <div className="space-y-24px">
         {/* Filter Info Bar */}
         {(quickFilter || taskFilters.search || taskFilters.status.length > 0 || taskFilters.priority.length > 0 ||
-         taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
-         taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== undefined ||
-         taskFilters.isOverdue !== undefined) && (
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-12px flex items-center justify-between">
-            <div className="font-mono text-brutal-sm">
-              SHOWING <span className="font-bold text-primary-brutalist">{filteredTasks.length}</span> OF <span className="font-bold">{tasks?.length || 0}</span> TASKS
-              {quickFilter && (
-                <span className="ml-16px text-[var(--theme-foreground)]/60">
-                  QUICK: <span className="text-primary-brutalist">{quickFilter.replace('-', ' ').toUpperCase()}</span>
-                </span>
-              )}
+          taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
+          taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== undefined ||
+          taskFilters.isOverdue !== undefined) && (
+            <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-12px flex items-center justify-between">
+              <div className="font-mono text-brutal-sm">
+                SHOWING <span className="font-bold text-primary-brutalist">{filteredTasks.length}</span> OF <span className="font-bold">{tasks?.length || 0}</span> TASKS
+                {quickFilter && (
+                  <span className="ml-16px text-[var(--theme-foreground)]/60">
+                    QUICK: <span className="text-primary-brutalist">{quickFilter.replace('-', ' ').toUpperCase()}</span>
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  setQuickFilter(null)
+                  setTaskFilters({
+                    search: '',
+                    status: [],
+                    priority: [],
+                    type: [],
+                    assigneeIds: [],
+                    labels: [],
+                    dueDateRange: { start: null, end: null },
+                    createdDateRange: { start: null, end: null },
+                    hasTimeTracked: undefined,
+                    isOverdue: undefined
+                  })
+                }}
+                className="text-xs font-mono uppercase text-brutal-error hover:underline"
+              >
+                CLEAR ALL FILTERS
+              </button>
             </div>
-            <button
-              onClick={() => {
-                setQuickFilter(null)
-                setTaskFilters({
-                  search: '',
-                  status: [],
-                  priority: [],
-                  type: [],
-                  assigneeIds: [],
-                  labels: [],
-                  dueDateRange: { start: null, end: null },
-                  createdDateRange: { start: null, end: null },
-                  hasTimeTracked: undefined,
-                  isOverdue: undefined
-                })
-              }}
-              className="text-xs font-mono uppercase text-brutal-error hover:underline"
-            >
-              CLEAR ALL FILTERS
-            </button>
-          </div>
-        )}
-        
+          )}
+
         {/* Header Controls - Compact */}
         <div className="flex items-center justify-between overflow-x-auto">
           <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
-            <button 
+            <button
               onClick={() => setShowCreateTaskModal(true)}
               className="h-[24px] px-3 flex items-center gap-1 bg-primary-brutalist text-event-horizon border border-primary-brutalist hover:bg-opacity-90 font-mono text-[10px] uppercase transition-colors"
             >
               <HiOutlinePlus className="w-[12px] h-[12px]" />
               NEW
             </button>
-            
+
             {/* Compact Sprint Selector */}
             <select
               value={selectedSprintId || 'all'}
@@ -637,27 +643,27 @@ export default function ProjectManagementPage() {
                 </option>
               ))}
             </select>
-            
+
             {/* Compact Filter Buttons - 3-Tier System */}
             <div className="flex items-center gap-1">
               {/* Tier 1: Primary Filters */}
-              <button 
+              <button
                 onClick={() => setQuickFilter(quickFilter === 'my-tasks' ? null : 'my-tasks')}
                 className={clsx(
                   "h-[22px] px-2 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
-                  quickFilter === 'my-tasks' 
-                    ? "bg-primary-brutalist text-event-horizon" 
+                  quickFilter === 'my-tasks'
+                    ? "bg-primary-brutalist text-event-horizon"
                     : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
                 )}
                 title="Show only my tasks"
               >
                 MINE
               </button>
-              <button 
+              <button
                 onClick={() => setQuickFilter(quickFilter === 'unassigned' ? null : 'unassigned')}
                 className={clsx(
                   "h-[22px] px-2 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
-                  quickFilter === 'unassigned' 
+                  quickFilter === 'unassigned'
                     ? "bg-primary-brutalist text-event-horizon"
                     : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
                 )}
@@ -665,12 +671,12 @@ export default function ProjectManagementPage() {
               >
                 NONE
               </button>
-              
+
               {/* Separator */}
               <div className="w-[1px] h-[16px] bg-[var(--theme-border)]" />
-              
+
               {/* Tier 2: Status Filters */}
-              <button 
+              <button
                 onClick={() => {
                   setTaskFilters(prev => ({
                     ...prev,
@@ -683,7 +689,7 @@ export default function ProjectManagementPage() {
               >
                 WIP
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setTaskFilters(prev => ({
                     ...prev,
@@ -696,12 +702,12 @@ export default function ProjectManagementPage() {
               >
                 BLOCK
               </button>
-              
+
               {/* Separator */}
               <div className="w-[1px] h-[16px] bg-[var(--theme-border)]" />
-              
+
               {/* Tier 3: Priority/Time Filters */}
-              <button 
+              <button
                 onClick={() => setQuickFilter(quickFilter === 'overdue' ? null : 'overdue')}
                 className={clsx(
                   "h-[22px] px-2 border border-red-600 font-mono text-[9px] uppercase transition-colors",
@@ -713,7 +719,7 @@ export default function ProjectManagementPage() {
               >
                 !DUE
               </button>
-              <button 
+              <button
                 onClick={() => setQuickFilter(quickFilter === 'high-priority' ? null : 'high-priority')}
                 className={clsx(
                   "h-[22px] px-2 border border-orange-500 font-mono text-[9px] uppercase transition-colors",
@@ -725,7 +731,7 @@ export default function ProjectManagementPage() {
               >
                 !PRI
               </button>
-              <button 
+              <button
                 onClick={() => setQuickFilter(quickFilter === 'due-soon' ? null : 'due-soon')}
                 className={clsx(
                   "h-[22px] px-2 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
@@ -738,10 +744,10 @@ export default function ProjectManagementPage() {
                 SOON
               </button>
             </div>
-            
+
             {/* Compact View Mode Selector */}
             <div className="flex items-center bg-[var(--theme-background)] border border-[var(--theme-border)]">
-              <button 
+              <button
                 onClick={() => setTaskView('sprint')}
                 className={clsx(
                   "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors",
@@ -750,7 +756,7 @@ export default function ProjectManagementPage() {
               >
                 SPRINT
               </button>
-              <button 
+              <button
                 onClick={() => setTaskView('kanban')}
                 className={clsx(
                   "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors border-x border-[var(--theme-border)]",
@@ -759,7 +765,7 @@ export default function ProjectManagementPage() {
               >
                 BOARD
               </button>
-              <button 
+              <button
                 onClick={() => setTaskView('list')}
                 className={clsx(
                   "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors border-r border-[var(--theme-border)]",
@@ -768,7 +774,7 @@ export default function ProjectManagementPage() {
               >
                 LIST
               </button>
-              <button 
+              <button
                 onClick={() => setTaskView('gantt')}
                 className={clsx(
                   "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors border-r border-[var(--theme-border)]",
@@ -777,7 +783,7 @@ export default function ProjectManagementPage() {
               >
                 GANTT
               </button>
-              <button 
+              <button
                 onClick={() => setTaskView('calendar')}
                 className={clsx(
                   "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors",
@@ -787,14 +793,14 @@ export default function ProjectManagementPage() {
                 CAL
               </button>
             </div>
-            
+
             {taskView === 'kanban' && (
-              <button 
+              <button
                 onClick={() => setIsCompactView(!isCompactView)}
                 className={clsx(
                   "h-[22px] px-2 flex items-center gap-1 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
-                  isCompactView 
-                    ? "bg-primary-brutalist text-event-horizon" 
+                  isCompactView
+                    ? "bg-primary-brutalist text-event-horizon"
                     : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
                 )}
                 title={isCompactView ? "Switch to normal view" : "Switch to compact view"}
@@ -803,30 +809,30 @@ export default function ProjectManagementPage() {
                 {isCompactView ? 'NORM' : 'COMP'}
               </button>
             )}
-            
-            <button 
+
+            <button
               onClick={() => setShowAdvancedFilters(true)}
               className={clsx(
                 "h-[22px] px-2 flex items-center gap-1 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
                 (taskFilters.search || taskFilters.status.length > 0 || taskFilters.priority.length > 0 ||
-                 taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
-                 taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== null ||
-                 taskFilters.isOverdue !== null) 
-                  ? "bg-primary-brutalist text-event-horizon" 
+                  taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
+                  taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== null ||
+                  taskFilters.isOverdue !== null)
+                  ? "bg-primary-brutalist text-event-horizon"
                   : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
               )}
             >
               <HiOutlineFilter className="w-[10px] h-[10px]" />
               ADV
               {(taskFilters.search || taskFilters.status.length > 0 || taskFilters.priority.length > 0 ||
-               taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
-               taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== null ||
-               taskFilters.isOverdue !== null) && (
-                <span className="px-1 bg-red-600 text-white text-[7px] font-bold">!</span>
-              )}
+                taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
+                taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== null ||
+                taskFilters.isOverdue !== null) && (
+                  <span className="px-1 bg-red-600 text-white text-[7px] font-bold">!</span>
+                )}
             </button>
           </div>
-          
+
           <div className="flex items-center gap-2 font-mono text-[10px]">
             <span className="text-primary-brutalist/60">CONTEXT:</span>
             <span className="text-primary-brutalist font-bold">{currentContext || 'NONE'}</span>
@@ -848,7 +854,7 @@ export default function ProjectManagementPage() {
               </span>
             </div>
             <div className="w-full h-8px bg-basalt-border">
-              <div 
+              <div
                 className="h-full bg-primary-brutalist transition-all duration-300"
                 style={{ width: `${sprintProgress.percentage}%` }}
               />
@@ -861,8 +867,8 @@ export default function ProjectManagementPage() {
 
         {/* Task View */}
         {taskView === 'sprint' && activeSprint && (
-          <SprintBoard 
-            sprint={activeSprint} 
+          <SprintBoard
+            sprint={activeSprint}
             projectId={projectId as string}
             tasks={filteredTasks.filter((t: any) => t.sprintId === activeSprint._id)}
             onTaskEdit={handleEditTask}
@@ -870,9 +876,9 @@ export default function ProjectManagementPage() {
             onTaskDuplicate={handleDuplicateTask}
           />
         )}
-        
+
         {taskView === 'kanban' && (
-          <TaskBoard 
+          <TaskBoard
             tasks={filteredTasks}
             projectId={projectId as string}
             onTaskEdit={handleEditTask}
@@ -882,9 +888,9 @@ export default function ProjectManagementPage() {
             onCompactToggle={setIsCompactView}
           />
         )}
-        
+
         {taskView === 'list' && (
-          <TaskList 
+          <TaskList
             tasks={filteredTasks}
             projectId={projectId as string}
             onTaskEdit={handleEditTask}
@@ -892,26 +898,26 @@ export default function ProjectManagementPage() {
             onTaskDuplicate={handleDuplicateTask}
           />
         )}
-        
+
         {taskView === 'gantt' && (
-          <GanttView 
+          <GanttView
             projectId={projectId as string}
             workspaceId={workspaceId as string}
           />
         )}
-        
+
         {taskView === 'calendar' && (
-          <CalendarView 
+          <CalendarView
             projectId={projectId as string}
             workspaceId={workspaceId as string}
           />
         )}
-        
+
         {taskView === 'sprint' && !activeSprint && (
           <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-48px text-center">
             <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO ACTIVE SPRINT</h3>
             <p className="text-[var(--theme-foreground)]/60 mb-24px">Create a sprint to start organizing your tasks</p>
-            <button 
+            <button
               onClick={() => setShowCreateSprintModal(true)}
               className="brutal-btn"
             >
@@ -970,9 +976,9 @@ export default function ProjectManagementPage() {
             <HiOutlineDotsVertical className="w-16px h-16px text-primary-brutalist/60" />
           </button>
         </div>
-        
+
         <h4 className="text-brutal-sm mb-8px line-clamp-2">{task.title}</h4>
-        
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8px">
             {task.assigneeId && (
@@ -982,9 +988,9 @@ export default function ProjectManagementPage() {
             )}
             <span className="font-mono text-brutal-xs text-primary-brutalist/60">{task.points || 0} pts</span>
           </div>
-          
+
           {task.status === 'in_progress' && task.timeTracking?.isRunning && (
-            <button 
+            <button
               onClick={() => onContextSwitch(task.key || `TASK-${task.number}`)}
               className="text-brutal-xs font-mono text-brutal-info hover:text-brutal-info/80"
             >
@@ -999,14 +1005,14 @@ export default function ProjectManagementPage() {
   const renderTeamTab = () => {
     const members = project?.members || []
     const allTasks = tasks || []
-    
+
     // Calculate real stats for each member
     const memberStats = members.map((member: any) => {
-      const memberTasks = allTasks.filter((task: any) => 
-        task.assigneeId === member._id || 
+      const memberTasks = allTasks.filter((task: any) =>
+        task.assigneeId === member._id ||
         (task.assigneeIds && task.assigneeIds.includes(member._id))
       )
-      
+
       return {
         ...member,
         tasksAssigned: memberTasks.length,
@@ -1028,7 +1034,7 @@ export default function ProjectManagementPage() {
       values: memberStats.map((m: any) => m.tasksAssigned),
       max: Math.max(20, ...memberStats.map((m: any) => m.tasksAssigned))
     }
-    
+
     // Calculate team totals
     const teamTotals = {
       totalTasks: memberStats.reduce((sum, m) => sum + m.tasksAssigned, 0),
@@ -1045,14 +1051,14 @@ export default function ProjectManagementPage() {
           <div className="flex items-center justify-between mb-16px">
             <h2 className="text-brutal-lg font-bold uppercase">PROJECT TEAM</h2>
             <div className="flex items-center gap-12px">
-              <button 
+              <button
                 onClick={() => setShowExpertiseMatrix(true)}
                 className="brutal-btn-secondary flex items-center gap-8px"
               >
                 <HiOutlineChartBar className="w-16px h-16px" />
                 EXPERTISE MATRIX
               </button>
-              <button 
+              <button
                 onClick={() => setShowProjectInviteModal(true)}
                 className="brutal-btn-secondary flex items-center gap-8px"
               >
@@ -1076,7 +1082,7 @@ export default function ProjectManagementPage() {
             <div className="text-brutal-2xl font-bold">{members.length}</div>
             <div className="font-mono text-brutal-xs text-primary-brutalist/60">MEMBERS</div>
           </div>
-          
+
           <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
             <div className="flex items-center justify-between mb-8px">
               <HiOutlineClipboardList className="w-20px h-20px text-brutal-info" />
@@ -1085,7 +1091,7 @@ export default function ProjectManagementPage() {
             <div className="text-brutal-2xl font-bold">{teamTotals.totalTasks}</div>
             <div className="font-mono text-brutal-xs text-primary-brutalist/60">ACROSS TEAM</div>
           </div>
-          
+
           <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
             <div className="flex items-center justify-between mb-8px">
               <HiOutlineClock className="w-20px h-20px text-brutal-warning" />
@@ -1094,7 +1100,7 @@ export default function ProjectManagementPage() {
             <div className="text-brutal-2xl font-bold">{Math.round(teamTotals.hoursTracked)}</div>
             <div className="font-mono text-brutal-xs text-primary-brutalist/60">TOTAL HOURS</div>
           </div>
-          
+
           <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
             <div className="flex items-center justify-between mb-8px">
               <HiOutlineChartBar className="w-20px h-20px text-brutal-success" />
@@ -1141,17 +1147,17 @@ export default function ProjectManagementPage() {
                 const isHighLoad = taskCount > 15
                 const isMediumLoad = taskCount > 10
                 const isLowProductivity = completionRate < 40
-                
+
                 return (
                   <div key={member._id} className={clsx(
                     "group relative bg-[var(--theme-background-secondary)] border-2 p-20px transition-all duration-200 hover:shadow-brutal-sm",
-                    isHighLoad ? "border-brutal-error" : 
-                    isMediumLoad ? "border-brutal-warning" : "border-[var(--theme-border)]"
+                    isHighLoad ? "border-brutal-error" :
+                      isMediumLoad ? "border-brutal-warning" : "border-[var(--theme-border)]"
                   )}>
                     {/* Member Info Header */}
                     <div className="flex items-center justify-between mb-16px">
                       <div className="flex items-center gap-16px">
-                        <UserDisplay 
+                        <UserDisplay
                           userId={member._id}
                           size="sm"
                           showName={true}
@@ -1162,7 +1168,7 @@ export default function ProjectManagementPage() {
                           <span className="font-bold uppercase">{member.role || 'DEVELOPER'}</span>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-16px">
                         {/* Status Indicators */}
                         {isHighLoad && (
@@ -1177,16 +1183,16 @@ export default function ProjectManagementPage() {
                             <span className="font-mono text-brutal-xs text-brutal-warning font-bold">LOW VELOCITY</span>
                           </div>
                         )}
-                        
+
                         {/* Action Buttons */}
                         <div className="flex items-center gap-8px opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
+                          <button
                             className="brutal-btn-secondary text-xs px-8px py-4px"
                             title="Reassign tasks"
                           >
                             BALANCE
                           </button>
-                          <button 
+                          <button
                             className="brutal-btn-secondary text-xs px-8px py-4px"
                             title="View task details"
                           >
@@ -1210,13 +1216,13 @@ export default function ProjectManagementPage() {
                             <div className="absolute h-full border-r-2 border-brutal-warning/30" style={{ left: '66.7%' }} title="High load threshold"></div>
                             <div className="absolute h-full border-r-2 border-brutal-error/30" style={{ left: '83.3%' }} title="Overload threshold"></div>
                           </div>
-                          
+
                           {/* Progress fill */}
-                          <div 
+                          <div
                             className={clsx(
                               "absolute inset-y-0 left-0 transition-all duration-500 flex items-center justify-center",
-                              isHighLoad ? "bg-brutal-error" : 
-                              isMediumLoad ? "bg-brutal-warning" : "bg-brutal-success"
+                              isHighLoad ? "bg-brutal-error" :
+                                isMediumLoad ? "bg-brutal-warning" : "bg-brutal-success"
                             )}
                             style={{ width: `${Math.min(100, (taskCount / workloadData.max) * 100)}%` }}
                           >
@@ -1276,7 +1282,7 @@ export default function ProjectManagementPage() {
                   <div className="text-brutal-xs text-primary-brutalist/60">AVG VELOCITY</div>
                 </div>
               </div>
-              
+
               {/* Smart Recommendations */}
               <div className="mt-16px">
                 {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && (
@@ -1374,23 +1380,23 @@ export default function ProjectManagementPage() {
                     <div className={clsx(
                       "font-mono text-brutal-sm font-bold",
                       member.productivity >= 90 ? "text-brutal-success" :
-                      member.productivity >= 70 ? "text-brutal-warning" : "text-brutal-error"
+                        member.productivity >= 70 ? "text-brutal-warning" : "text-brutal-error"
                     )}>
                       {member.productivity}%
                     </div>
                   </div>
-                  
+
                   <div className="h-8px bg-basalt-border mb-8px">
-                    <div 
+                    <div
                       className={clsx(
                         "h-full transition-all duration-500 ease-out",
                         member.productivity >= 90 ? "bg-brutal-success" :
-                        member.productivity >= 70 ? "bg-brutal-warning" : "bg-brutal-error"
+                          member.productivity >= 70 ? "bg-brutal-warning" : "bg-brutal-error"
                       )}
                       style={{ width: `${member.productivity}%` }}
                     />
                   </div>
-                  
+
                   <div className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
                     LAST ACTIVE: {member.lastActive || 'UNKNOWN'}
                   </div>
@@ -1398,7 +1404,7 @@ export default function ProjectManagementPage() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-12px">
-                  <button 
+                  <button
                     onClick={() => {
                       setActiveTab('tasks')
                       setTaskFilters(prev => ({
@@ -1410,7 +1416,7 @@ export default function ProjectManagementPage() {
                   >
                     VIEW TASKS
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       setShowCreateTaskModal(true)
                       toast.info('Creating task for ' + (member.name || 'team member'))
@@ -1423,7 +1429,7 @@ export default function ProjectManagementPage() {
               </div>
             </div>
           ))}
-          
+
           {/* Add New Member Card */}
           <div className="bg-[var(--theme-background)] border-2 border-dashed border-[var(--theme-border)] hover:border-primary-brutalist transition-all duration-200 cursor-pointer group">
             <div className="p-40px text-center">
@@ -1441,7 +1447,7 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Team Activity Timeline */}
-        <TeamActivityFeed 
+        <TeamActivityFeed
           projectId={projectId}
           workspaceId={workspaceId}
           limit={20}
@@ -1459,12 +1465,12 @@ export default function ProjectManagementPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="p-24px">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-16px">
               {/* Add Member Action */}
               <div className="group relative">
-                <button 
+                <button
                   onClick={() => setShowProjectInviteModal(true)}
                   className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
                 >
@@ -1485,7 +1491,7 @@ export default function ProjectManagementPage() {
 
               {/* Bulk Reassign Action */}
               <div className="group relative">
-                <button 
+                <button
                   onClick={() => {
                     const overloadedMembers = memberStats.filter((m: any) => m.tasksAssigned > 15)
                     if (overloadedMembers.length > 0) {
@@ -1513,7 +1519,7 @@ export default function ProjectManagementPage() {
                   <div className="text-center">
                     <div className="font-mono text-brutal-sm font-bold">BULK REASSIGN</div>
                     <div className="font-mono text-brutal-xs text-primary-brutalist/60 mt-4px">
-                      {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 
+                      {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0
                         ? `${memberStats.filter((m: any) => m.tasksAssigned > 15).length} OVERLOADED`
                         : 'BALANCE WORKLOAD'
                       }
@@ -1532,7 +1538,7 @@ export default function ProjectManagementPage() {
 
               {/* Export Report Action */}
               <div className="group relative">
-                <button 
+                <button
                   onClick={() => {
                     // Generate and download team performance report
                     const reportData = {
@@ -1551,7 +1557,7 @@ export default function ProjectManagementPage() {
                         hoursTracked: m.hoursTracked
                       }))
                     }
-                    
+
                     const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' })
                     const url = URL.createObjectURL(blob)
                     const a = document.createElement('a')
@@ -1581,7 +1587,7 @@ export default function ProjectManagementPage() {
 
               {/* Team Settings Action */}
               <div className="group relative">
-                <button 
+                <button
                   onClick={() => {
                     // Open team settings modal
                     console.log('Opening team settings modal')
@@ -1605,7 +1611,7 @@ export default function ProjectManagementPage() {
 
               {/* Find Expert Action */}
               <div className="group relative">
-                <button 
+                <button
                   onClick={() => setShowExpertiseSearch(true)}
                   className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
                 >
@@ -1634,7 +1640,7 @@ export default function ProjectManagementPage() {
                 </div>
                 <div className="flex items-center gap-8px">
                   {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && (
-                    <button 
+                    <button
                       onClick={() => {
                         // Quick balance action
                         console.log('Quick balancing overloaded members')
@@ -1645,7 +1651,7 @@ export default function ProjectManagementPage() {
                     </button>
                   )}
                   {memberStats.filter((m: any) => m.tasksAssigned === 0).length > 0 && (
-                    <button 
+                    <button
                       onClick={() => {
                         // Assign tasks to idle members
                         console.log('Assigning tasks to idle members')
@@ -1677,7 +1683,7 @@ export default function ProjectManagementPage() {
           <HiOutlineCode className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
           <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO REPOSITORY CONNECTED</h3>
           <p className="text-[var(--theme-foreground)]/60 mb-24px">Connect a GitHub repository to enable code tracking and PR management</p>
-          <button 
+          <button
             onClick={() => setShowConnectRepoModal(true)}
             className="brutal-btn"
           >
@@ -1686,7 +1692,7 @@ export default function ProjectManagementPage() {
         </div>
       )
     }
-    
+
     const repository = project.repository
 
     // Note: Real GitHub integration would require GitHub API calls with access tokens
@@ -1725,7 +1731,7 @@ export default function ProjectManagementPage() {
               </div>
             </div>
             <div className="flex items-center gap-12px">
-              <button 
+              <button
                 onClick={() => {
                   const cloneUrl = repository.url.endsWith('.git') ? repository.url : `${repository.url}.git`
                   navigator.clipboard.writeText(cloneUrl)
@@ -1735,7 +1741,7 @@ export default function ProjectManagementPage() {
               >
                 CLONE
               </button>
-              <button 
+              <button
                 onClick={() => window.open(repository.url, '_blank')}
                 className="brutal-btn-sm"
               >
@@ -1743,7 +1749,7 @@ export default function ProjectManagementPage() {
               </button>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-16px">
             <div className="border-2 border-[var(--theme-border)] p-16px">
               <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-4px">DEFAULT BRANCH</div>
@@ -1772,7 +1778,7 @@ export default function ProjectManagementPage() {
               <button className="font-mono text-brutal-xs uppercase text-primary-brutalist/60 hover:text-primary-brutalist">
                 FILTER ▼
               </button>
-              <button 
+              <button
                 onClick={() => {
                   const createPrUrl = `${repository.url}/compare`
                   window.open(createPrUrl, '_blank')
@@ -1783,7 +1789,7 @@ export default function ProjectManagementPage() {
               </button>
             </div>
           </div>
-          
+
           <div className="space-y-12px">
             {pullRequests.length > 0 ? pullRequests.map((pr) => (
               <div key={pr.id} className="border-2 border-[var(--theme-border)] p-16px hover:border-primary-brutalist transition-all">
@@ -1813,7 +1819,7 @@ export default function ProjectManagementPage() {
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-24px">
                     {/* Review Status */}
@@ -1837,21 +1843,21 @@ export default function ProjectManagementPage() {
                         </>
                       )}
                     </div>
-                    
+
                     {/* Checks Status */}
                     <div className="flex items-center gap-8px font-mono text-brutal-xs">
                       <span className="text-brutal-success">{pr.checks.passed} ✓</span>
                       {pr.checks.failed > 0 && <span className="text-brutal-error">{pr.checks.failed} ✗</span>}
                       {pr.checks.pending > 0 && <span className="text-primary-brutalist/60">{pr.checks.pending} ⋯</span>}
                     </div>
-                    
+
                     {/* Comments */}
                     <div className="flex items-center gap-4px font-mono text-brutal-xs text-primary-brutalist/60">
                       <HiOutlineChat className="w-14px h-14px" />
                       {pr.comments}
                     </div>
                   </div>
-                  
+
                   <button className="brutal-btn-sm">VIEW PR</button>
                 </div>
               </div>
@@ -1875,7 +1881,7 @@ export default function ProjectManagementPage() {
             <h3 className="text-brutal-lg font-bold uppercase">BRANCH MANAGEMENT</h3>
             <button className="brutal-btn-sm">CREATE BRANCH</button>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full font-mono text-brutal-sm">
               <thead>
@@ -1950,7 +1956,7 @@ export default function ProjectManagementPage() {
                 <span className="font-bold text-brutal-success">{codeReviewStats.completedThisWeek}</span>
               </div>
             </div>
-            
+
             <div className="mt-16px pt-16px border-t-2 border-[var(--theme-border)]">
               <h4 className="font-mono text-brutal-xs text-primary-brutalist/60 uppercase mb-8px">TOP REVIEWERS</h4>
               {codeReviewStats.topReviewers.map((reviewer, index) => (
@@ -1983,7 +1989,7 @@ export default function ProjectManagementPage() {
                 </div>
               ))}
             </div>
-            
+
             <div className="mt-16px flex items-center gap-12px">
               <button className="brutal-btn-sm flex-1">VIEW LOGS</button>
               <button className="brutal-btn-sm bg-brutal-error border-brutal-error">CANCEL PIPELINE</button>
@@ -1999,7 +2005,7 @@ export default function ProjectManagementPage() {
               VIEW ALL →
             </button>
           </div>
-          
+
           <div className="space-y-8px font-mono text-brutal-sm">
             <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
               <span className="text-brutal-xs text-primary-brutalist/60">7a8f9d2</span>
@@ -2042,17 +2048,17 @@ export default function ProjectManagementPage() {
             <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
               <div className="flex items-center justify-between mb-16px">
                 <h2 className="text-brutal-lg font-bold uppercase">PROJECT MEETINGS</h2>
-                <button 
+                <button
                   onClick={() => setShowScheduleMeetingModal(true)}
                   className="brutal-btn"
                 >
                   SCHEDULE MEETING
                 </button>
               </div>
-              
+
               {/* Quick Actions */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-12px">
-                <button 
+                <button
                   onClick={() => {
                     setShowScheduleMeetingModal(true)
                     // Auto-select standup type
@@ -2061,7 +2067,7 @@ export default function ProjectManagementPage() {
                 >
                   🏃 DAILY STANDUP
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setShowScheduleMeetingModal(true)
                     // Auto-select retrospective type
@@ -2070,7 +2076,7 @@ export default function ProjectManagementPage() {
                 >
                   🔄 RETROSPECTIVE
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setShowScheduleMeetingModal(true)
                     // Auto-select planning type
@@ -2079,7 +2085,7 @@ export default function ProjectManagementPage() {
                 >
                   📋 SPRINT PLANNING
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setShowScheduleMeetingModal(true)
                     // Auto-select review type
@@ -2156,7 +2162,7 @@ export default function ProjectManagementPage() {
                   <p className="text-[var(--theme-foreground)]/60 mb-24px">
                     Schedule standup meetings, sprint reviews, and planning sessions for your team
                   </p>
-                  <button 
+                  <button
                     onClick={() => setShowScheduleMeetingModal(true)}
                     className="brutal-btn"
                   >
@@ -2169,14 +2175,14 @@ export default function ProjectManagementPage() {
         )
       case 'docs':
         return (
-          <AIDocumentationHub 
+          <AIDocumentationHub
             projectId={projectId}
             workspaceId={workspaceId}
           />
         )
       case 'logs':
         return (
-          <TeamActivityFeed 
+          <TeamActivityFeed
             projectId={projectId}
             workspaceId={workspaceId}
             limit={50}
@@ -2187,7 +2193,7 @@ export default function ProjectManagementPage() {
         return (
           <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
             <h2 className="text-brutal-lg font-bold uppercase mb-24px">PROJECT SETTINGS</h2>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-24px">
               {/* General Settings */}
               <div className="space-y-24px">
@@ -2196,15 +2202,15 @@ export default function ProjectManagementPage() {
                   <div className="space-y-16px">
                     <div>
                       <label className="block text-brutal-xs uppercase mb-8px">PROJECT NAME</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         defaultValue={project.name}
                         className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm"
                       />
                     </div>
                     <div>
                       <label className="block text-brutal-xs uppercase mb-8px">DESCRIPTION</label>
-                      <textarea 
+                      <textarea
                         defaultValue={project.description}
                         rows={3}
                         className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm resize-none"
@@ -2212,8 +2218,8 @@ export default function ProjectManagementPage() {
                     </div>
                     <div>
                       <label className="block text-brutal-xs uppercase mb-8px">PROJECT KEY</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         defaultValue={project.key}
                         disabled
                         className="w-full px-16px py-12px bg-basalt-border border-2 border-[var(--theme-border)] font-mono text-brutal-sm text-[var(--theme-foreground)]/60"
@@ -2222,14 +2228,14 @@ export default function ProjectManagementPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Workflow Settings */}
                 <div>
                   <h3 className="text-brutal-sm font-bold uppercase mb-16px">WORKFLOW</h3>
                   <div className="space-y-16px">
                     <div>
                       <label className="block text-brutal-xs uppercase mb-8px">WORKFLOW TYPE</label>
-                      <select 
+                      <select
                         defaultValue={project.settings?.workflowType || 'kanban'}
                         className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm"
                       >
@@ -2241,7 +2247,60 @@ export default function ProjectManagementPage() {
                   </div>
                 </div>
               </div>
-              
+
+
+
+              {/* Team Assignment */}
+              <div>
+                <h3 className="text-brutal-sm font-bold uppercase mb-16px">TEAM ASSIGNMENT</h3>
+                <div className="space-y-16px">
+                  <div>
+                    <label className="block text-brutal-xs uppercase mb-8px">ASSIGNED TEAMS</label>
+                    <div className="flex flex-wrap gap-8px mb-12px">
+                      {project.teamIds && project.teamIds.length > 0 ? (
+                        project.teamIds.map((teamId: string) => {
+                          const team = availableTeams?.find(t => t._id === teamId)
+                          return (
+                            <span key={teamId} className="px-12px py-6px bg-primary-brutalist/10 border border-primary-brutalist text-brutal-xs font-mono uppercase flex items-center gap-8px">
+                              {team?.name || 'Unknown Team'}
+                              {/* <button className="hover:text-brutal-error">×</button> */}
+                            </span>
+                          )
+                        })
+                      ) : (
+                        <span className="text-brutal-xs font-mono text-[var(--theme-foreground)]/60">No teams assigned</span>
+                      )}
+                    </div>
+
+                    <div className="flex gap-8px">
+                      <select
+                        className="flex-1 px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm"
+                        onChange={async (e) => {
+                          if (e.target.value) {
+                            try {
+                              await assignTeam({
+                                projectId: project._id,
+                                teamId: e.target.value as any
+                              })
+                              toast.success('Team assigned successfully')
+                            } catch (error) {
+                              toast.error('Failed to assign team')
+                              console.error(error)
+                            }
+                            e.target.value = ''
+                          }
+                        }}
+                      >
+                        <option value="">SELECT TEAM TO ASSIGN...</option>
+                        {availableTeams?.filter(t => !project.teamIds?.includes(t._id)).map(team => (
+                          <option key={team._id} value={team._id}>{team.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Danger Zone */}
               <div className="space-y-24px">
                 <div>
@@ -2258,12 +2317,12 @@ export default function ProjectManagementPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex justify-end gap-16px mt-32px pt-24px border-t-2 border-[var(--theme-border)]">
               <button className="brutal-btn-secondary">CANCEL</button>
               <button className="brutal-btn">SAVE CHANGES</button>
             </div>
-          </div>
+          </div >
         )
       default:
         return null
@@ -2277,7 +2336,7 @@ export default function ProjectManagementPage() {
         <div className="border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)] px-32px py-12px">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-16px">
-              <button 
+              <button
                 onClick={() => navigate(`/workspace/${workspaceId}`)}
                 className="text-brutal-xs font-mono text-primary-brutalist/60 hover:text-primary-brutalist transition-colors flex items-center gap-4px"
               >
@@ -2303,151 +2362,151 @@ export default function ProjectManagementPage() {
           </div>
         </div>
 
-      {/* Tab Navigation - Streamlined */}
-      <div className="bg-[var(--theme-background-secondary)] border-b-2 border-[var(--theme-border)]">
-        <div className="px-32px">
-          <div className="flex items-center">
-            {tabs.map((tab, index) => (
-              <div key={tab.id} className="flex items-center">
-                <button
-                  onClick={() => setActiveTab(tab.id as TabType)}
-                  className={clsx(
-                    "px-16px py-12px flex items-center gap-8px",
-                    "font-mono text-brutal-xs uppercase transition-all duration-200",
-                    "relative hover:bg-basalt-border/10",
-                    activeTab === tab.id
-                      ? "text-primary-brutalist bg-[var(--theme-background)]"
-                      : "text-primary-brutalist/60 hover:text-primary-brutalist"
-                  )}
-                >
-                  {/* Active indicator */}
-                  {activeTab === tab.id && (
-                    <div className="absolute bottom-0 left-0 right-0 h-4px bg-primary-brutalist"></div>
-                  )}
-                  
-                  <span className={clsx(
-                    "transition-all duration-200",
-                    activeTab === tab.id ? "text-primary-brutalist" : ""
-                  )}>
-                    {tab.icon}
-                  </span>
-                  <span className="font-bold tracking-wider">{tab.label}</span>
-                  
-                  {/* Badge for tasks count */}
-                  {tab.id === 'tasks' && (
-                    <span className="px-8px py-2px bg-primary-brutalist text-event-horizon text-brutal-xs font-bold">
-                      42
+        {/* Tab Navigation - Streamlined */}
+        <div className="bg-[var(--theme-background-secondary)] border-b-2 border-[var(--theme-border)]">
+          <div className="px-32px">
+            <div className="flex items-center">
+              {tabs.map((tab, index) => (
+                <div key={tab.id} className="flex items-center">
+                  <button
+                    onClick={() => setActiveTab(tab.id as TabType)}
+                    className={clsx(
+                      "px-16px py-12px flex items-center gap-8px",
+                      "font-mono text-brutal-xs uppercase transition-all duration-200",
+                      "relative hover:bg-basalt-border/10",
+                      activeTab === tab.id
+                        ? "text-primary-brutalist bg-[var(--theme-background)]"
+                        : "text-primary-brutalist/60 hover:text-primary-brutalist"
+                    )}
+                  >
+                    {/* Active indicator */}
+                    {activeTab === tab.id && (
+                      <div className="absolute bottom-0 left-0 right-0 h-4px bg-primary-brutalist"></div>
+                    )}
+
+                    <span className={clsx(
+                      "transition-all duration-200",
+                      activeTab === tab.id ? "text-primary-brutalist" : ""
+                    )}>
+                      {tab.icon}
                     </span>
+                    <span className="font-bold tracking-wider">{tab.label}</span>
+
+                    {/* Badge for tasks count */}
+                    {tab.id === 'tasks' && (
+                      <span className="px-8px py-2px bg-primary-brutalist text-event-horizon text-brutal-xs font-bold">
+                        42
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Tab separator */}
+                  {index < tabs.length - 1 && (
+                    <div className="h-32px w-1px bg-basalt-border/30"></div>
                   )}
-                </button>
-                
-                {/* Tab separator */}
-                {index < tabs.length - 1 && (
-                  <div className="h-32px w-1px bg-basalt-border/30"></div>
-                )}
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
+        </div>
+
+        {/* Tab Content */}
+        <div className="p-24px">
+          {renderTabContent()}
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="p-24px">
-        {renderTabContent()}
-      </div>
-    </div>
-    
-    {/* Create Task Modal - Rendered outside main container for proper positioning */}
-    {projectId && (
-      <CreateTaskModal
-        isOpen={showCreateTaskModal}
-        onClose={() => setShowCreateTaskModal(false)}
-        projectId={projectId}
-        onSuccess={() => {
-          // Tasks will automatically refresh via Convex reactivity
-        }}
-      />
-    )}
-    
-    {/* Edit Task Modal */}
-    {selectedTask && (
-      <EditTaskModal
-        isOpen={showEditTaskModal}
-        onClose={() => {
-          setShowEditTaskModal(false)
-          setSelectedTask(null)
-        }}
-        task={selectedTask}
-        onDelete={async () => {
-          await handleDeleteTask(selectedTask)
-          setShowEditTaskModal(false)
-          setSelectedTask(null)
-        }}
-      />
-    )}
-    
-    {/* Advanced Filters Panel */}
-    {workspaceId && (
-      <TaskFilters
-        isOpen={showAdvancedFilters}
-        onClose={() => setShowAdvancedFilters(false)}
-        filters={taskFilters}
-        onFiltersChange={setTaskFilters}
-        workspaceId={workspaceId}
-      />
-    )}
-    
-    {/* Create Sprint Modal */}
-    {projectId && (
-      <CreateSprintModal
-        isOpen={showCreateSprintModal}
-        onClose={() => setShowCreateSprintModal(false)}
-        projectId={projectId}
-        onSuccess={() => {
-          setShowCreateSprintModal(false)
-          // Sprint will automatically refresh via Convex reactivity
-        }}
-      />
-    )}
+      {/* Create Task Modal - Rendered outside main container for proper positioning */}
+      {projectId && (
+        <CreateTaskModal
+          isOpen={showCreateTaskModal}
+          onClose={() => setShowCreateTaskModal(false)}
+          projectId={projectId}
+          onSuccess={() => {
+            // Tasks will automatically refresh via Convex reactivity
+          }}
+        />
+      )}
 
-    {projectId && workspaceId && (
-      <ScheduleMeetingModal
-        isOpen={showScheduleMeetingModal}
-        onClose={() => setShowScheduleMeetingModal(false)}
-        projectId={projectId}
-        workspaceId={workspaceId}
-        onSuccess={() => {
-          setShowScheduleMeetingModal(false)
-          // Meetings will automatically refresh via Convex reactivity
-        }}
-      />
-    )}
+      {/* Edit Task Modal */}
+      {selectedTask && (
+        <EditTaskModal
+          isOpen={showEditTaskModal}
+          onClose={() => {
+            setShowEditTaskModal(false)
+            setSelectedTask(null)
+          }}
+          task={selectedTask}
+          onDelete={async () => {
+            await handleDeleteTask(selectedTask)
+            setShowEditTaskModal(false)
+            setSelectedTask(null)
+          }}
+        />
+      )}
 
-    {projectId && project && (
-      <ProjectInviteModal
-        isOpen={showProjectInviteModal}
-        onClose={() => setShowProjectInviteModal(false)}
-        projectId={projectId}
-        projectName={project.name}
-      />
-    )}
+      {/* Advanced Filters Panel */}
+      {workspaceId && (
+        <TaskFilters
+          isOpen={showAdvancedFilters}
+          onClose={() => setShowAdvancedFilters(false)}
+          filters={taskFilters}
+          onFiltersChange={setTaskFilters}
+          workspaceId={workspaceId}
+        />
+      )}
 
-    {/* Expertise Search Modal */}
-    {showExpertiseSearch && (
-      <ExpertiseSearchModal
-        onClose={() => setShowExpertiseSearch(false)}
-        workspaceId={workspaceId}
-      />
-    )}
+      {/* Create Sprint Modal */}
+      {projectId && (
+        <CreateSprintModal
+          isOpen={showCreateSprintModal}
+          onClose={() => setShowCreateSprintModal(false)}
+          projectId={projectId}
+          onSuccess={() => {
+            setShowCreateSprintModal(false)
+            // Sprint will automatically refresh via Convex reactivity
+          }}
+        />
+      )}
 
-    {/* Expertise Matrix Modal */}
-    {showExpertiseMatrix && workspaceId && (
-      <TeamExpertiseMatrix
-        workspaceId={workspaceId}
-        onClose={() => setShowExpertiseMatrix(false)}
-        isModal={true}
-      />
-    )}
-  </>
+      {projectId && workspaceId && (
+        <ScheduleMeetingModal
+          isOpen={showScheduleMeetingModal}
+          onClose={() => setShowScheduleMeetingModal(false)}
+          projectId={projectId}
+          workspaceId={workspaceId}
+          onSuccess={() => {
+            setShowScheduleMeetingModal(false)
+            // Meetings will automatically refresh via Convex reactivity
+          }}
+        />
+      )}
+
+      {projectId && project && (
+        <ProjectInviteModal
+          isOpen={showProjectInviteModal}
+          onClose={() => setShowProjectInviteModal(false)}
+          projectId={projectId}
+          projectName={project.name}
+        />
+      )}
+
+      {/* Expertise Search Modal */}
+      {showExpertiseSearch && (
+        <ExpertiseSearchModal
+          onClose={() => setShowExpertiseSearch(false)}
+          workspaceId={workspaceId}
+        />
+      )}
+
+      {/* Expertise Matrix Modal */}
+      {showExpertiseMatrix && workspaceId && (
+        <TeamExpertiseMatrix
+          workspaceId={workspaceId}
+          onClose={() => setShowExpertiseMatrix(false)}
+          isModal={true}
+        />
+      )}
+    </>
   )
 }

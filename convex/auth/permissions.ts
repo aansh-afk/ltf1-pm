@@ -1,7 +1,7 @@
 import { DatabaseReader } from "../_generated/server";
 import { Doc, Id } from "../_generated/dataModel";
 
-export type Permission = 
+export type Permission =
   | "workspace.view"
   | "workspace.edit"
   | "workspace.delete"
@@ -58,7 +58,7 @@ const rolePermissions: Record<string, Permission[]> = {
 // Project-level role permissions
 const projectRolePermissions: Record<string, Permission[]> = {
   lead: [
-    "project.view", "project.edit", 
+    "project.view", "project.edit",
     "project.team.manage", "project.team.invite", "project.team.remove", "project.team.view",
     "task.create", "task.view", "task.edit", "task.delete", "task.assign",
     "meeting.create", "meeting.view", "meeting.edit", "meeting.delete",
@@ -103,7 +103,7 @@ export async function hasPermission(
   permission: Permission
 ): Promise<boolean> {
   const member = await getUserWorkspaceRole(db, userId, workspaceId);
-  
+
   if (!member) {
     return false;
   }
@@ -122,7 +122,7 @@ export async function requirePermission(
   permission: Permission
 ): Promise<void> {
   const hasAccess = await hasPermission(db, userId, workspaceId, permission);
-  
+
   if (!hasAccess) {
     throw new Error(`Permission denied: ${permission}`);
   }
@@ -200,14 +200,38 @@ export async function hasProjectPermission(
     return true;
   }
 
-  // Then check project-level permissions
+  // Then check project-level permissions (direct membership)
   const projectMember = await getUserProjectRole(db, userId, projectId);
-  if (!projectMember) {
-    return false;
+  if (projectMember) {
+    const projectPerms = projectRolePermissions[projectMember.role] || [];
+    if (projectPerms.includes(permission)) {
+      return true;
+    }
   }
 
-  const projectPerms = projectRolePermissions[projectMember.role] || [];
-  return projectPerms.includes(permission);
+  // Finally, check team-based permissions
+  if (project.teamIds && project.teamIds.length > 0) {
+    // Find if user is in any of the assigned teams
+    const teamMember = await db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) =>
+        q.or(
+          ...project.teamIds!.map(teamId => q.eq(q.field("teamId"), teamId))
+        )
+      )
+      .first();
+
+    if (teamMember) {
+      // Team members inherit "member" role permissions for the project
+      // Team leads inherit "lead" role permissions (optional, keeping simple for now)
+      const teamRole = teamMember.role === "lead" ? "lead" : "member";
+      const teamPerms = projectRolePermissions[teamRole] || [];
+      return teamPerms.includes(permission);
+    }
+  }
+
+  return false;
 }
 
 export async function requireProjectPermission(
@@ -217,7 +241,7 @@ export async function requireProjectPermission(
   permission: Permission
 ): Promise<void> {
   const hasAccess = await hasProjectPermission(db, userId, projectId, permission);
-  
+
   if (!hasAccess) {
     throw new Error(`Permission denied: ${permission} for project ${projectId}`);
   }

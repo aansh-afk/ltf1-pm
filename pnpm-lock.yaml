@@ -217,6 +217,9 @@ importers:
       '@react-three/postprocessing':
         specifier: ^2.19.1
         version: 2.19.1(@react-three/fiber@8.18.0)(@types/three@0.180.0)(react@18.3.1)(three@0.170.0)
+      '@types/lodash':
+        specifier: ^4.17.21
+        version: 4.17.21
       '@types/simple-peer':
         specifier: ^9.11.8
         version: 9.11.8
@@ -232,6 +235,15 @@ importers:
       framer-motion:
         specifier: ^10.17.0
         version: 10.18.0(react-dom@18.3.1)(react@18.3.1)
+      konva:
+        specifier: ^9.3.22
+        version: 9.3.22
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+      lucide-react:
+        specifier: ^0.554.0
+        version: 0.554.0(react@18.3.1)
       ogl:
         specifier: ^1.0.11
         version: 1.0.11
@@ -250,6 +262,9 @@ importers:
       react-icons:
         specifier: ^4.12.0
         version: 4.12.0(react@18.3.1)
+      react-konva:
+        specifier: ^18.2.10
+        version: 18.2.10(@types/react@18.3.23)(konva@9.3.22)(react-dom@18.3.1)(react@18.3.1)
       react-router-dom:
         specifier: ^6.21.0
         version: 6.30.1(react-dom@18.3.1)(react@18.3.1)
@@ -268,6 +283,9 @@ importers:
       three:
         specifier: ^0.170.0
         version: 0.170.0
+      use-image:
+        specifier: ^1.1.4
+        version: 1.1.4(react-dom@18.3.1)(react@18.3.1)
       zustand:
         specifier: ^4.4.7
         version: 4.5.7(@types/react@18.3.23)(react@18.3.1)
@@ -4672,6 +4690,10 @@ packages:
     resolution: {integrity: sha512-lZuNAY9xeJt7Bx4t4dx0rYCDqGPW8RXhQZK1td7d4H6E9zYbLoOtjBvfwdTKpsyxQI/2jv+armjX/RW+ZNpXOQ==}
     dev: false
 
+  /@types/lodash@4.17.21:
+    resolution: {integrity: sha512-FOvQ0YPD5NOfPgMzJihoT+Za5pdkDJWcbpuj1DjaKZIr/gxodQjY/uWEFlTNqW2ugXHUiL8lRQgw63dzKHZdeQ==}
+    dev: false
+
   /@types/mime@1.3.5:
     resolution: {integrity: sha512-/pyBZWSLD2n0dcHE3hq8s8ZvcETHtEuF+3E7XVt0Ig2nvsVQXdghHVcEkIWjy9A0wKfTn97a/PSDYohKIlnP/w==}
     dev: false
@@ -8612,6 +8634,10 @@ packages:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
 
+  /konva@9.3.22:
+    resolution: {integrity: sha512-yQI5d1bmELlD/fowuyfOp9ff+oamg26WOCkyqUyc+nczD/lhRa3EvD2MZOoc4c1293TAubW9n34fSQLgSeEgSw==}
+    dev: false
+
   /lazystream@1.0.1:
     resolution: {integrity: sha512-b94GiNHQNy6JNTrt5w6zNyffMrNkXZb3KTkCZJb2V1xaEGCk093vkZ2jk3tpaeP33/OiXC+WvK9AxUebnf5nbw==}
     engines: {node: '>= 0.6.3'}
@@ -8890,6 +8916,14 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       yallist: 4.0.0
+    dev: false
+
+  /lucide-react@0.554.0(react@18.3.1):
+    resolution: {integrity: sha512-St+z29uthEJVx0Is7ellNkgTEhaeSoA42I7JjOCBCrc5X6LYMGSv0P/2uS5HDLTExP5tpiqRD2PyUEOS6s9UXA==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    dependencies:
+      react: 18.3.1
     dev: false
 
   /maath@0.6.0(@types/three@0.180.0)(three@0.170.0):
@@ -10349,6 +10383,24 @@ packages:
     resolution: {integrity: sha512-tr41fA15Vn8p4X9ntI+yCyeGSf1TlYaY5vlTZfQmeLBrFo3psOPX6HhTDnFNL9uj3EhP0KAQ80cugCl4b4BERA==}
     dev: false
 
+  /react-konva@18.2.10(@types/react@18.3.23)(konva@9.3.22)(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-ohcX1BJINL43m4ynjZ24MxFI1syjBdrXhqVxYVDw2rKgr3yuS0x/6m1Y2Z4sl4T/gKhfreBx8KHisd0XC6OT1g==}
+    peerDependencies:
+      konva: ^8.0.1 || ^7.2.5 || ^9.0.0
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+    dependencies:
+      '@types/react-reconciler': 0.28.9(@types/react@18.3.23)
+      its-fine: 1.2.5(@types/react@18.3.23)(react@18.3.1)
+      konva: 9.3.22
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-reconciler: 0.29.2(react@18.3.1)
+      scheduler: 0.23.2
+    transitivePeerDependencies:
+      - '@types/react'
+    dev: false
+
   /react-native-calendars@1.1313.0(react-native@0.72.6)(react@18.2.0):
     resolution: {integrity: sha512-YQ7Vg57rBRVymolamYDTxZ0lPOELTDHQbTukTWdxR47aRBYJwKI6ocRbwcY5gYgyDwNgJS4uLGu5AvmYS74LYQ==}
     engines: {node: '>=18'}
@@ -10664,6 +10716,17 @@ packages:
       loose-envify: 1.4.0
       react: 18.3.1
       scheduler: 0.21.0
+    dev: false
+
+  /react-reconciler@0.29.2(react@18.3.1):
+    resolution: {integrity: sha512-zZQqIiYgDCTP/f1N/mAR10nJGrPD2ZR+jDSEsKWJHYC7Cm2wodlwbR3upZRdC3cjIjSlTLNVyO7Iu0Yy7t2AYg==}
+    engines: {node: '>=0.10.0'}
+    peerDependencies:
+      react: ^18.3.1
+    dependencies:
+      loose-envify: 1.4.0
+      react: 18.3.1
+      scheduler: 0.23.2
     dev: false
 
   /react-redux@9.2.0(@types/react@18.3.23)(react@18.3.1)(redux@5.0.1):
@@ -12409,6 +12472,16 @@ packages:
     dependencies:
       punycode: 1.4.1
       qs: 6.14.0
+    dev: false
+
+  /use-image@1.1.4(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-P+swhszzHHgEb2X2yQ+vQNPCq/8Ks3hyfdXAVN133pvnvK7UK++bUaZUa5E+A3S02Mw8xOCBr9O6CLhk2fjrWA==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
     dev: false
 
   /use-latest-callback@0.2.4(react@18.2.0):
