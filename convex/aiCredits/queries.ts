@@ -2,6 +2,7 @@ import { v } from "convex/values"
 import { query } from "../_generated/server"
 
 // Get user's AI credits and settings
+// Updated to fix validation error
 export const getUserAICredits = query({
   args: {},
   returns: v.union(
@@ -15,20 +16,20 @@ export const getUserAICredits = query({
       hasOwnKey: v.boolean(),
       subscriptionTier: v.union(v.literal("free"), v.literal("pro"), v.literal("enterprise")),
       totalRequests: v.number(),
-      hasApiKey: v.optional(v.boolean())
+      hasApiKey: v.optional(v.boolean()),
     })
   ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
-    
+
     const userId = identity.subject
-    
+
     const userCredits = await ctx.db
       .query("userAICredits")
       .withIndex("by_user", q => q.eq("userId", userId))
       .first()
-    
+
     if (!userCredits) {
       return {
         hasSetup: false,
@@ -41,15 +42,17 @@ export const getUserAICredits = query({
         totalRequests: 0
       }
     }
-    
-    // Don't send the encrypted API key to the client
-    const { encryptedApiKey, ...safeCredits } = userCredits
-    
+
     return {
-      ...safeCredits,
       hasSetup: true,
+      freeCredits: userCredits.freeCredits,
+      purchasedCredits: userCredits.purchasedCredits,
       creditsRemaining: userCredits.freeCredits + userCredits.purchasedCredits - userCredits.monthlyCreditsUsed,
-      hasApiKey: !!encryptedApiKey
+      monthlyCreditsUsed: userCredits.monthlyCreditsUsed,
+      hasOwnKey: userCredits.hasOwnKey,
+      subscriptionTier: userCredits.subscriptionTier,
+      totalRequests: userCredits.totalRequests,
+      hasApiKey: !!userCredits.encryptedApiKey
     }
   }
 })
@@ -78,16 +81,16 @@ export const getUserAIUsage = query({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return []
-    
+
     const userId = identity.subject
     const limit = args.limit || 50
-    
+
     const usage = await ctx.db
       .query("aiUsageLogs")
       .withIndex("by_user", q => q.eq("userId", userId))
       .order("desc")
       .take(limit)
-    
+
     return usage
   }
 })
@@ -115,26 +118,26 @@ export const getMonthlyUsageStats = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
-    
+
     const userId = identity.subject
     const startOfMonth = new Date()
     startOfMonth.setDate(1)
     startOfMonth.setHours(0, 0, 0, 0)
-    
+
     const logs = await ctx.db
       .query("aiUsageLogs")
       .withIndex("by_user", q => q.eq("userId", userId))
       .filter(q => q.gte(q.field("timestamp"), startOfMonth.toISOString()))
       .collect()
-    
+
     const stats = {
       totalRequests: logs.length,
       successfulRequests: logs.filter(l => l.success).length,
       failedRequests: logs.filter(l => !l.success).length,
       totalTokensUsed: logs.reduce((sum, l) => sum + l.totalTokens, 0),
       totalCreditsUsed: logs.reduce((sum, l) => sum + l.creditsUsed, 0),
-      averageResponseTime: logs.length > 0 
-        ? logs.reduce((sum, l) => sum + l.responseTime, 0) / logs.length 
+      averageResponseTime: logs.length > 0
+        ? logs.reduce((sum, l) => sum + l.responseTime, 0) / logs.length
         : 0,
       requestsByType: {} as Record<string, number>,
       keyTypeBreakdown: {
@@ -143,12 +146,12 @@ export const getMonthlyUsageStats = query({
         free: logs.filter(l => l.keyType === 'free').length
       }
     }
-    
+
     // Count requests by type
     logs.forEach(log => {
       stats.requestsByType[log.requestType] = (stats.requestsByType[log.requestType] || 0) + 1
     })
-    
+
     return stats
   }
 })
@@ -168,37 +171,37 @@ export const canMakeAIRequest = query({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return { canMakeRequest: false, reason: "Not authenticated" }
-    
+
     const userId = identity.subject
-    
+
     const userCredits = await ctx.db
       .query("userAICredits")
       .withIndex("by_user", q => q.eq("userId", userId))
       .first()
-    
+
     if (!userCredits) {
-      return { 
-        canMakeRequest: false, 
+      return {
+        canMakeRequest: false,
         reason: "AI features not set up. Please configure in Settings."
       }
     }
-    
+
     // If user has their own key, always allow
     if (userCredits.hasOwnKey) {
       return { canMakeRequest: true, usingOwnKey: true }
     }
-    
+
     // Check if user has enough credits
     const creditsRemaining = userCredits.freeCredits + userCredits.purchasedCredits - userCredits.monthlyCreditsUsed
-    
+
     if (creditsRemaining < args.estimatedCredits) {
-      return { 
-        canMakeRequest: false, 
+      return {
+        canMakeRequest: false,
         reason: `Insufficient credits. You need ${args.estimatedCredits} credits but only have ${creditsRemaining} remaining.`,
         creditsRemaining
       }
     }
-    
+
     // Check rate limits for free tier
     if (userCredits.subscriptionTier === 'free') {
       // Get requests in last hour
@@ -208,17 +211,17 @@ export const canMakeAIRequest = query({
         .withIndex("by_user", q => q.eq("userId", userId))
         .filter(q => q.gte(q.field("timestamp"), oneHourAgo))
         .collect()
-      
+
       if (recentRequests.length >= 10) {
-        return { 
-          canMakeRequest: false, 
+        return {
+          canMakeRequest: false,
           reason: "Rate limit exceeded. Free tier is limited to 10 requests per hour."
         }
       }
     }
-    
-    return { 
-      canMakeRequest: true, 
+
+    return {
+      canMakeRequest: true,
       creditsRemaining,
       usingPlatformKey: true
     }
@@ -240,7 +243,7 @@ export const getPricingTiers = query({
   })),
   handler: async (ctx) => {
     const tiers = await ctx.db.query("aiPricingTiers").collect()
-    
+
     if (tiers.length === 0) {
       // Return default tiers if not in database
       return [
@@ -293,7 +296,7 @@ export const getPricingTiers = query({
         }
       ]
     }
-    
+
     return tiers
   }
 })

@@ -42,6 +42,8 @@ export const createOrUpdateUser = internalMutation({
           },
         },
         lastSeenAt: now,
+        status: "waitlisted",
+        waitlistPosition: now, // Use timestamp as simple position for now
         createdAt: now,
         updatedAt: now,
       });
@@ -138,10 +140,12 @@ export const ensureUserExists = internalMutation({
           },
         },
         lastSeenAt: now,
+        status: "waitlisted",
+        waitlistPosition: now, // Use timestamp as simple position for now
         createdAt: now,
         updatedAt: now,
       });
-      
+
       user = await ctx.db.get(userId);
     }
 
@@ -204,7 +208,7 @@ export const createCurrentUser = mutation({
     const user: any = await ctx.runMutation(internal.auth.users.ensureUserExists, {
       clerkId: identity.subject,
       email: identity.email || "unknown@example.com",
-      name: identity.name || identity.email?.split('@')[0] || "Unknown User", 
+      name: identity.name || identity.email?.split('@')[0] || "Unknown User",
       avatarUrl: identity.pictureUrl,
     });
 
@@ -299,8 +303,8 @@ export const updateUserPreferences = mutation({
     const updatedPreferences: any = {
       ...user.preferences,
       theme: args.preferences.theme !== undefined ? args.preferences.theme : user.preferences?.theme,
-      hasCompletedOnboarding: args.preferences.hasCompletedOnboarding !== undefined 
-        ? args.preferences.hasCompletedOnboarding 
+      hasCompletedOnboarding: args.preferences.hasCompletedOnboarding !== undefined
+        ? args.preferences.hasCompletedOnboarding
         : user.preferences?.hasCompletedOnboarding,
       notifications: notifications || {
         email: true,
@@ -316,7 +320,7 @@ export const updateUserPreferences = mutation({
         ...args.preferences.defaults,
       },
     };
-    
+
     // Only include defaultWorkspaceId if it's provided and not undefined
     if (args.preferences.defaultWorkspaceId !== undefined) {
       updatedPreferences.defaultWorkspaceId = args.preferences.defaultWorkspaceId;

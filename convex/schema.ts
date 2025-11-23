@@ -8,6 +8,8 @@ export default defineSchema({
     name: v.string(),
     avatarUrl: v.optional(v.string()),
     role: v.union(v.literal("admin"), v.literal("user")),
+    status: v.optional(v.union(v.literal("active"), v.literal("waitlisted"))),
+    waitlistPosition: v.optional(v.number()),
     preferences: v.optional(v.object({
       theme: v.optional(v.string()),
       hasCompletedOnboarding: v.optional(v.boolean()),
@@ -83,6 +85,27 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_workspace_user", ["workspaceId", "userId"]),
 
+  teams: defineTable({
+    workspaceId: v.id("workspaces"),
+    name: v.string(),
+    slug: v.string(),
+    description: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_workspace_slug", ["workspaceId", "slug"]),
+
+  teamMembers: defineTable({
+    teamId: v.id("teams"),
+    userId: v.id("users"),
+    role: v.union(v.literal("lead"), v.literal("member")),
+    joinedAt: v.number(),
+  })
+    .index("by_team", ["teamId"])
+    .index("by_user", ["userId"])
+    .index("by_team_user", ["teamId", "userId"]),
+
   projectMembers: defineTable({
     projectId: v.id("projects"),
     userId: v.id("users"),
@@ -118,6 +141,7 @@ export default defineSchema({
     description: v.optional(v.string()),
     leadId: v.optional(v.id("users")),
     members: v.optional(v.array(v.id("users"))), // Array of user IDs who are members
+    teamIds: v.optional(v.array(v.id("teams"))), // Array of Team IDs assigned to this project
     status: v.union(v.literal("planning"), v.literal("active"), v.literal("on_hold"), v.literal("completed"), v.literal("archived")),
     visibility: v.union(v.literal("public"), v.literal("private")),
     inviteCode: v.optional(v.string()), // UUID for project joining
@@ -245,9 +269,9 @@ export default defineSchema({
     title: v.string(),
     description: v.optional(v.string()),
     type: v.union(
-      v.literal("standup"), 
-      v.literal("retrospective"), 
-      v.literal("planning"), 
+      v.literal("standup"),
+      v.literal("retrospective"),
+      v.literal("planning"),
       v.literal("review"),
       v.literal("custom")
     ),
@@ -446,7 +470,7 @@ export default defineSchema({
   // Developer profiles - optional for backward compatibility
   developerProfiles: defineTable({
     userId: v.id("users"),
-    
+
     // Profile information (from frontend form)
     profile: v.optional(v.object({
       role: v.optional(v.string()),
@@ -473,7 +497,7 @@ export default defineSchema({
       timezone: v.optional(v.string()),
       availability: v.optional(v.string()),
     })),
-    
+
     // Work status
     status: v.optional(v.union(
       v.literal("LOCKED_IN"),
@@ -672,32 +696,32 @@ export default defineSchema({
   // AI Credits and BYOK System
   userAICredits: defineTable({
     userId: v.string(),
-    
+
     // Credit system
     freeCredits: v.number(), // Free monthly credits
     purchasedCredits: v.number(), // Additional purchased credits
     totalCreditsUsed: v.number(), // Lifetime usage
     monthlyCreditsUsed: v.number(), // Current month usage
     lastResetDate: v.string(), // Last monthly reset
-    
+
     // BYOK (Bring Your Own Key)
     hasOwnKey: v.boolean(),
     encryptedApiKey: v.optional(v.string()), // Encrypted Gemini API key
     keyAddedAt: v.optional(v.string()),
     keyLastUsed: v.optional(v.string()),
-    
+
     // Subscription status
     subscriptionTier: v.union(
       v.literal("free"),
       v.literal("pro"),
       v.literal("enterprise")
     ),
-    
+
     // Usage metrics
     totalRequests: v.number(),
     totalTokensUsed: v.number(),
     lastUsedAt: v.optional(v.string()),
-    
+
     createdAt: v.string(),
     updatedAt: v.string(),
   })
@@ -706,29 +730,29 @@ export default defineSchema({
   // AI usage logs for tracking and billing
   aiUsageLogs: defineTable({
     userId: v.string(),
-    
+
     // Request details
     requestType: v.string(), // e.g., "task_generation", "code_review", "meeting_summary"
     model: v.string(), // e.g., "gemini-2.0-flash-exp"
-    
+
     // Usage metrics
     promptTokens: v.number(),
     completionTokens: v.number(),
     totalTokens: v.number(),
     creditsUsed: v.number(),
-    
+
     // Key used
     keyType: v.union(
       v.literal("platform"), // Our key
       v.literal("user"), // User's BYOK
       v.literal("free") // Free tier
     ),
-    
+
     // Response info
     success: v.boolean(),
     error: v.optional(v.string()),
     responseTime: v.number(), // in ms
-    
+
     timestamp: v.string(),
   })
     .index("by_user", ["userId"])
@@ -737,22 +761,22 @@ export default defineSchema({
   // Pricing tiers and limits
   aiPricingTiers: defineTable({
     tier: v.string(),
-    
+
     // Credits
     monthlyFreeCredits: v.number(),
     creditPrice: v.number(), // Price per 1000 credits
-    
+
     // Rate limits
     requestsPerMinute: v.number(),
     requestsPerDay: v.number(),
     maxTokensPerRequest: v.number(),
-    
+
     // Features
     features: v.array(v.string()),
-    
+
     // BYOK
     allowsBYOK: v.boolean(),
-    
+
     createdAt: v.string(),
     updatedAt: v.string(),
   })
@@ -1239,7 +1263,8 @@ export default defineSchema({
         v.literal("line"),
         v.literal("image"),
         v.literal("sticky"),
-        v.literal("drawing")
+        v.literal("drawing"),
+        v.literal("arrow")
       ),
       data: v.any(), // Element-specific data
       position: v.object({
