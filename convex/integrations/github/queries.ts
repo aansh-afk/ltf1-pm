@@ -1,11 +1,12 @@
 import { v } from "convex/values";
 import { query, internalQuery } from "../../_generated/server";
 
-// Get GitHub installations for a workspace
+// Get GitHub installations for a workspace (supports multi-installation)
 export const getWorkspaceInstallations = query({
   args: {
     workspaceId: v.id("workspaces"),
   },
+  returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
@@ -20,7 +21,7 @@ export const getWorkspaceInstallations = query({
     // Check workspace membership
     const membership = await ctx.db
       .query("workspaceMembers")
-      .withIndex("by_workspace_user", (q) => 
+      .withIndex("by_workspace_user", (q) =>
         q.eq("workspaceId", args.workspaceId).eq("userId", user._id)
       )
       .first();
@@ -30,22 +31,61 @@ export const getWorkspaceInstallations = query({
     const workspace = await ctx.db.get(args.workspaceId);
     if (!workspace) throw new Error("Workspace not found");
 
-    const installations = [];
-    if (workspace.settings?.integrations?.githubInstallationId) {
-      const installationId = workspace.settings.integrations.githubInstallationId;
-      const installation = await ctx.db
-        .query("githubInstallations")
-        .withIndex("by_installation_id", (q) => 
-          q.eq("installationId", installationId)
-        )
-        .first();
+    const installationsResult: Array<any> = [];
+    const seenInstallationIds = new Set<number>();
 
-      if (installation) {
-        installations.push(installation);
+    // 1. Get installations from junction table (new multi-installation support)
+    const junctionLinks = await ctx.db
+      .query("workspaceGitHubInstallations")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+      .collect();
+
+    for (const link of junctionLinks) {
+      if (!seenInstallationIds.has(link.installationId)) {
+        const installation = await ctx.db
+          .query("githubInstallations")
+          .withIndex("by_installation_id", (q) =>
+            q.eq("installationId", link.installationId)
+          )
+          .first();
+
+        if (installation) {
+          seenInstallationIds.add(link.installationId);
+          installationsResult.push({
+            ...installation,
+            linkedAt: link.addedAt,
+            linkedById: link.addedBy,
+            isPrimary: link.isPrimary,
+            nickname: link.nickname,
+            syncSettings: link.syncSettings,
+          });
+        }
       }
     }
 
-    return installations;
+    // 2. Backward compatibility: also check legacy single installation field
+    if (workspace.settings?.integrations?.githubInstallationId) {
+      const legacyInstallationId = workspace.settings.integrations.githubInstallationId;
+      if (!seenInstallationIds.has(legacyInstallationId)) {
+        const installation = await ctx.db
+          .query("githubInstallations")
+          .withIndex("by_installation_id", (q) =>
+            q.eq("installationId", legacyInstallationId)
+          )
+          .first();
+
+        if (installation) {
+          seenInstallationIds.add(legacyInstallationId);
+          installationsResult.push({
+            ...installation,
+            linkedAt: installation.installedAt,
+            isPrimary: installationsResult.length === 0, // Primary if first
+          });
+        }
+      }
+    }
+
+    return installationsResult;
   },
 });
 
@@ -54,6 +94,7 @@ export const getInstallationRepositories = query({
   args: {
     installationId: v.number(),
   },
+  returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
@@ -81,6 +122,7 @@ export const getProjectGitHubActivity = query({
     projectId: v.id("projects"),
     limit: v.optional(v.number()),
   },
+  returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
@@ -112,6 +154,7 @@ export const getDeveloperGitHubStats = query({
   args: {
     userId: v.id("users"),
   },
+  returns: v.union(v.any(), v.null()),
   handler: async (ctx, args) => {
     const profile = await ctx.db
       .query("developerProfiles")
@@ -137,6 +180,7 @@ export const getTaskPullRequests = query({
   args: {
     taskId: v.id("tasks"),
   },
+  returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const task = await ctx.db.get(args.taskId);
     if (!task) throw new Error("Task not found");
@@ -171,6 +215,7 @@ export const getTaskCommits = query({
   args: {
     taskId: v.id("tasks"),
   },
+  returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const task = await ctx.db.get(args.taskId);
     if (!task) throw new Error("Task not found");
@@ -208,6 +253,7 @@ export const searchRepositories = query({
     installationId: v.number(),
     query: v.string(),
   },
+  returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const repos = await ctx.db
       .query("githubRepositories")
@@ -229,7 +275,41 @@ export const getRepositoryById = internalQuery({
   args: {
     repositoryId: v.id("githubRepositories"),
   },
+  returns: v.union(v.any(), v.null()),
   handler: async (ctx, args) => {
     return await ctx.db.get(args.repositoryId);
+  },
+});
+
+// Debug query to check database state
+export const debugGitHubState = query({
+  args: {},
+  returns: v.object({
+    installationsCount: v.number(),
+    repositoriesCount: v.number(),
+    installations: v.array(v.any()),
+    repositories: v.array(v.any()),
+  }),
+  handler: async (ctx) => {
+    const installations = await ctx.db.query("githubInstallations").collect();
+    const repositories = await ctx.db.query("githubRepositories").take(20);
+
+    return {
+      installationsCount: installations.length,
+      repositoriesCount: (await ctx.db.query("githubRepositories").collect()).length,
+      installations: installations.map(i => ({
+        id: i._id,
+        installationId: i.installationId,
+        accountName: i.accountName,
+        repositorySelection: i.repositorySelection,
+        installedAt: i.installedAt,
+      })),
+      repositories: repositories.map(r => ({
+        id: r._id,
+        name: r.name,
+        fullName: r.fullName,
+        installationId: r.installationId,
+      })),
+    };
   },
 });

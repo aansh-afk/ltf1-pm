@@ -1,4 +1,3 @@
-import { useRef, useState } from 'react'
 import clsx from 'clsx'
 
 interface BrutalSliderProps {
@@ -27,22 +26,22 @@ export default function BrutalSlider({
   const percentage = ((value - min) / (max - min)) * 100
 
   return (
-    <div className="space-y-8px">
+    <div className="space-y-2">
       {(label || showValue) && (
-        <div className="flex justify-between items-center mb-8px">
+        <div className="flex justify-between items-center mb-2">
           {label && (
-            <label className="text-brutal-sm uppercase tracking-wider text-[var(--theme-foreground)]">
+            <label className="text-sm font-bold uppercase tracking-wider text-[var(--theme-foreground)] font-mono">
               {label}
             </label>
           )}
           {showValue && (
-            <span className="text-brutal-md font-mono text-[var(--theme-foreground)]">
+            <span className="text-base font-bold font-mono text-[var(--theme-foreground)]">
               {value}{unit}
             </span>
           )}
         </div>
       )}
-      
+
       <div className="relative">
         <input
           type="range"
@@ -53,7 +52,7 @@ export default function BrutalSlider({
           onChange={(e) => !disabled && onChange(parseFloat(e.target.value))}
           disabled={disabled}
           className={clsx(
-            'brutal-slider w-full h-8px appearance-none cursor-pointer',
+            'w-full h-2 appearance-none cursor-pointer',
             'border-2 focus:outline-none',
             disabled && 'cursor-not-allowed opacity-50'
           )}
@@ -63,13 +62,13 @@ export default function BrutalSlider({
             background: `linear-gradient(to right, var(--theme-primary) 0%, var(--theme-primary) ${percentage}%, var(--theme-background-secondary) ${percentage}%, var(--theme-background-secondary) 100%)`
           }}
         />
-        
+
         {/* Min/Max labels */}
-        <div className="flex justify-between mt-4px">
-          <span className="text-brutal-xs font-mono text-[var(--theme-foreground)]/60">
+        <div className="flex justify-between mt-1">
+          <span className="text-xs font-mono text-[var(--theme-foreground)]/60">
             {min}{unit}
           </span>
-          <span className="text-brutal-xs font-mono text-[var(--theme-foreground)]/60">
+          <span className="text-xs font-mono text-[var(--theme-foreground)]/60">
             {max}{unit}
           </span>
         </div>

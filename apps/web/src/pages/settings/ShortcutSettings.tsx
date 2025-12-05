@@ -3,13 +3,16 @@ import { useShortcuts } from '../../contexts/ShortcutContext'
 import type { Shortcut, KeyCombo, ShortcutCategory } from '../../types/shortcuts'
 import { defaultShortcutGroups } from '../../config/defaultShortcuts'
 import ShortcutRecorder from '../../components/shortcuts/ShortcutRecorder'
-import { BrutalCheckbox } from '../../components/ui'
-import { 
-  HiOutlineSearch, 
-  HiOutlinePencil, 
+import { BrutalCard, BrutalButton, BrutalBadge } from '@/components/ui'
+import {
+  HiOutlineSearch,
+  HiOutlinePencil,
   HiOutlineRefresh,
   HiOutlineDownload,
-  HiOutlineUpload
+  HiOutlineUpload,
+  HiOutlineTerminal,
+  HiOutlineCheck,
+  HiOutlineX
 } from 'react-icons/hi'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
@@ -45,7 +48,7 @@ export default function ShortcutSettings() {
     // Filter by search
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(s => 
+      filtered = filtered.filter(s =>
         s.name.toLowerCase().includes(query) ||
         s.description.toLowerCase().includes(query) ||
         formatKeyCombo(s.customKeys || s.defaultKeys).toLowerCase().includes(query)
@@ -58,7 +61,7 @@ export default function ShortcutSettings() {
   // Group shortcuts by category
   const groupedShortcuts = useMemo(() => {
     const groups = new Map<ShortcutCategory, Shortcut[]>()
-    
+
     filteredShortcuts.forEach(shortcut => {
       if (!groups.has(shortcut.category)) {
         groups.set(shortcut.category, [])
@@ -76,30 +79,30 @@ export default function ShortcutSettings() {
   const handleUpdateShortcut = (id: string, keys: KeyCombo) => {
     const conflicts = updateShortcut(id, keys)
     if (conflicts.length === 0) {
-      toast.success('Shortcut updated')
+      toast.success('SHORTCUT_UPDATED')
       setEditingShortcut(null)
     }
   }
 
   const handleResetShortcut = (id: string) => {
     resetShortcut(id)
-    toast.success('Shortcut reset to default')
+    toast.success('SHORTCUT_RESET')
   }
 
   const handleResetAll = () => {
-    if (confirm('Are you sure you want to reset all shortcuts to defaults?')) {
+    if (confirm('RESET ALL SHORTCUTS TO DEFAULT?')) {
       resetAllShortcuts()
-      toast.success('All shortcuts reset to defaults')
+      toast.success('ALL_SHORTCUTS_RESET')
     }
   }
 
   const handleToggleShortcut = (shortcut: Shortcut) => {
     if (shortcut.enabled) {
       disableShortcut(shortcut.id)
-      toast.success('Shortcut disabled')
+      toast.success('SHORTCUT_DISABLED')
     } else {
       enableShortcut(shortcut.id)
-      toast.success('Shortcut enabled')
+      toast.success('SHORTCUT_ENABLED')
     }
   }
 
@@ -114,21 +117,21 @@ export default function ShortcutSettings() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    toast.success('Settings exported')
+    toast.success('SETTINGS_EXPORTED')
   }
 
   const handleImport = () => {
     if (!importJson) {
-      toast.error('Please paste settings JSON')
+      toast.error('NO_JSON_DATA')
       return
     }
 
     if (importSettings(importJson)) {
-      toast.success('Settings imported successfully')
+      toast.success('SETTINGS_IMPORTED')
       setShowImportExport(false)
       setImportJson('')
     } else {
-      toast.error('Failed to import settings. Invalid format.')
+      toast.error('IMPORT_FAILED_INVALID_FORMAT')
     }
   }
 
@@ -145,62 +148,64 @@ export default function ShortcutSettings() {
   }
 
   const categories: Array<{ value: ShortcutCategory | 'all', label: string }> = [
-    { value: 'all', label: 'ALL CATEGORIES' },
-    { value: 'navigation', label: 'NAVIGATION' },
-    { value: 'quick-actions', label: 'QUICK ACTIONS' },
-    { value: 'task-operations', label: 'TASK OPERATIONS' },
-    { value: 'meeting-operations', label: 'MEETING OPERATIONS' },
+    { value: 'all', label: 'ALL' },
+    { value: 'navigation', label: 'NAV' },
+    { value: 'quick-actions', label: 'ACTIONS' },
+    { value: 'task-operations', label: 'TASKS' },
+    { value: 'meeting-operations', label: 'MEETINGS' },
     { value: 'general', label: 'GENERAL' }
   ]
 
   return (
-    <div className="h-full flex flex-col bg-[var(--theme-background-secondary)] overflow-hidden">
-      {/* Header */}
-      <div className="bg-[var(--theme-background)] border-b-4 border-[var(--theme-border)] p-24px flex-shrink-0">
-        <div className="flex items-center justify-between mb-24px">
-          <h1 className="text-2xl font-mono uppercase">KEYBOARD SHORTCUTS</h1>
-          
-          <div className="flex items-center gap-12px">
-            <button
-              onClick={() => setShowImportExport(!showImportExport)}
-              className="brutal-btn-sm"
-            >
-              <HiOutlineDownload className="w-16px h-16px mr-4px" />
-              IMPORT/EXPORT
-            </button>
-            <button
-              onClick={handleResetAll}
-              className="brutal-btn-sm bg-brutal-error"
-            >
-              <HiOutlineRefresh className="w-16px h-16px mr-4px" />
-              RESET ALL
-            </button>
-          </div>
+    <div className="space-y-6">
+      {/* Header Controls */}
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+        <h2 className="text-xl font-bold uppercase">KEYBIND_CONFIG</h2>
+        <div className="flex gap-2">
+          <BrutalButton
+            size="sm"
+            variant="secondary"
+            onClick={() => setShowImportExport(!showImportExport)}
+            className="flex items-center gap-2"
+          >
+            <HiOutlineDownload className="w-4 h-4" />
+            IMPORT/EXPORT
+          </BrutalButton>
+          <BrutalButton
+            size="sm"
+            variant="destructive"
+            onClick={handleResetAll}
+            className="flex items-center gap-2"
+          >
+            <HiOutlineRefresh className="w-4 h-4" />
+            RESET_ALL
+          </BrutalButton>
         </div>
+      </div>
 
-        {/* Search and Filter */}
-        <div className="flex items-center gap-16px">
-          <div className="relative flex-1 max-w-400px">
-            <HiOutlineSearch className="absolute left-12px top-1/2 -translate-y-1/2 w-16px h-16px text-[var(--theme-foreground)]/60" />
+      {/* Search and Filter */}
+      <BrutalCard className="p-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--theme-foreground)]/60" />
             <input
               type="text"
-              placeholder="SEARCH SHORTCUTS..."
+              placeholder="SEARCH_BINDINGS..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="brutal-input pl-36px w-full"
+              className="w-full pl-10 pr-4 py-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
             />
           </div>
-
-          <div className="flex items-center gap-4px">
+          <div className="flex flex-wrap gap-2">
             {categories.map(cat => (
               <button
                 key={cat.value}
                 onClick={() => setSelectedCategory(cat.value)}
                 className={clsx(
-                  "px-16px py-10px font-mono text-brutal-xs uppercase transition-colors",
+                  "px-3 py-2 font-mono text-xs font-bold uppercase transition-all border-2",
                   selectedCategory === cat.value
-                    ? "bg-primary-brutalist text-event-horizon"
-                    : "bg-[var(--theme-background)] border-2 border-[var(--theme-border)] hover:border-primary-brutalist"
+                    ? "bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]"
+                    : "bg-transparent border-[var(--theme-border)] text-[var(--theme-foreground)] hover:border-[var(--theme-foreground)]"
                 )}
               >
                 {cat.label}
@@ -208,29 +213,30 @@ export default function ShortcutSettings() {
             ))}
           </div>
         </div>
-      </div>
+      </BrutalCard>
 
       {/* Import/Export Panel */}
       {showImportExport && (
-        <div className="bg-[var(--theme-background)] border-b-2 border-[var(--theme-border)] p-24px flex-shrink-0">
-          <div className="grid grid-cols-2 gap-24px">
+        <BrutalCard className="p-6 border-dashed">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-mono text-brutal-sm uppercase mb-12px">EXPORT SETTINGS</h3>
-              <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mb-12px">
-                Download your custom keyboard shortcuts as a JSON file
+              <h3 className="font-bold uppercase text-sm mb-2">EXPORT_CONFIG</h3>
+              <p className="text-xs text-[var(--theme-foreground)]/60 mb-4 font-mono">
+                Download your custom keybindings as a JSON file.
               </p>
-              <button
+              <BrutalButton
+                variant="primary"
                 onClick={handleExport}
-                className="brutal-btn-primary"
+                className="w-full flex items-center justify-center gap-2"
               >
-                <HiOutlineDownload className="w-16px h-16px mr-8px" />
-                DOWNLOAD SETTINGS
-              </button>
+                <HiOutlineDownload className="w-4 h-4" />
+                DOWNLOAD_JSON
+              </BrutalButton>
             </div>
 
             <div>
-              <h3 className="font-mono text-brutal-sm uppercase mb-12px">IMPORT SETTINGS</h3>
-              <div className="space-y-12px">
+              <h3 className="font-bold uppercase text-sm mb-2">IMPORT_CONFIG</h3>
+              <div className="space-y-3">
                 <input
                   type="file"
                   accept=".json"
@@ -240,140 +246,136 @@ export default function ShortcutSettings() {
                 />
                 <label
                   htmlFor="import-file"
-                  className="brutal-btn-secondary inline-block cursor-pointer"
+                  className="flex items-center justify-center gap-2 w-full p-2 border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:bg-[var(--theme-background)] cursor-pointer font-mono text-xs font-bold uppercase transition-colors"
                 >
-                  <HiOutlineUpload className="w-16px h-16px mr-8px inline" />
-                  CHOOSE FILE
+                  <HiOutlineUpload className="w-4 h-4" />
+                  SELECT_FILE
                 </label>
-                
+
                 <textarea
                   value={importJson}
                   onChange={(e) => setImportJson(e.target.value)}
-                  placeholder="OR PASTE JSON HERE..."
-                  className="w-full h-100px p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-xs resize-none focus:border-primary-brutalist focus:outline-none"
+                  placeholder="PASTE_JSON_DATA..."
+                  className="w-full h-24 p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-xs resize-none focus:border-[var(--theme-primary)] outline-none"
                 />
-                
-                <button
+
+                <BrutalButton
+                  variant="secondary"
                   onClick={handleImport}
                   disabled={!importJson}
-                  className="brutal-btn"
+                  className="w-full"
                 >
-                  IMPORT SETTINGS
-                </button>
+                  APPLY_IMPORT
+                </BrutalButton>
               </div>
             </div>
           </div>
-        </div>
+        </BrutalCard>
       )}
 
       {/* Shortcuts List */}
-      <div className="flex-1 overflow-y-auto p-24px">
+      <div className="space-y-6">
         {groupedShortcuts.length === 0 ? (
-          <div className="text-center py-48px">
-            <p className="text-[var(--theme-foreground)]/60 font-mono text-brutal-sm uppercase">
-              NO SHORTCUTS FOUND
+          <BrutalCard className="p-12 text-center border-dashed">
+            <HiOutlineTerminal className="w-12 h-12 mx-auto mb-4 text-[var(--theme-foreground)]/40" />
+            <p className="text-[var(--theme-foreground)]/60 font-mono text-sm uppercase">
+              NO_BINDINGS_FOUND
             </p>
-          </div>
+          </BrutalCard>
         ) : (
-          <div className="space-y-32px">
-            {groupedShortcuts.map(({ category, shortcuts, info }) => (
-              <div key={category}>
-                <div className="mb-16px">
-                  <h2 className="font-mono text-lg uppercase text-primary-brutalist">
-                    {info?.name || category}
-                  </h2>
-                  {info?.description && (
-                    <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-4px">
-                      {info.description}
-                    </p>
-                  )}
-                </div>
+          groupedShortcuts.map(({ category, shortcuts, info }) => (
+            <div key={category}>
+              <h3 className="font-bold uppercase text-sm mb-3 pl-2 border-l-4 border-[var(--theme-primary)]">
+                {info?.name || category}
+              </h3>
 
-                <div className="space-y-1px">
-                  {shortcuts.map(shortcut => (
-                    <div
-                      key={shortcut.id}
-                      className={clsx(
-                        "bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px",
-                        !shortcut.enabled && "opacity-50"
-                      )}
-                    >
-                      {editingShortcut === shortcut.id ? (
-                        <ShortcutRecorder
-                          currentKeys={shortcut.customKeys || shortcut.defaultKeys}
-                          onRecord={(keys) => handleUpdateShortcut(shortcut.id, keys)}
-                          onCancel={() => setEditingShortcut(null)}
-                          excludeId={shortcut.id}
-                        />
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-12px">
-                              <BrutalCheckbox
-                                checked={shortcut.enabled}
-                                onChange={() => handleToggleShortcut(shortcut)}
-                                size="md"
-                              />
-                              <div>
-                                <h3 className="font-mono text-brutal-sm uppercase">
-                                  {shortcut.name}
-                                </h3>
-                                <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-2px">
-                                  {shortcut.description}
-                                </p>
-                              </div>
+              <div className="grid gap-3">
+                {shortcuts.map(shortcut => (
+                  <BrutalCard
+                    key={shortcut.id}
+                    className={clsx(
+                      "p-4 transition-all",
+                      !shortcut.enabled && "opacity-60 grayscale"
+                    )}
+                  >
+                    {editingShortcut === shortcut.id ? (
+                      <ShortcutRecorder
+                        currentKeys={shortcut.customKeys || shortcut.defaultKeys}
+                        onRecord={(keys) => handleUpdateShortcut(shortcut.id, keys)}
+                        onCancel={() => setEditingShortcut(null)}
+                        excludeId={shortcut.id}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4 flex-1">
+                          <button
+                            onClick={() => handleToggleShortcut(shortcut)}
+                            className={clsx(
+                              "w-5 h-5 border-2 flex items-center justify-center transition-colors",
+                              shortcut.enabled
+                                ? "bg-[var(--theme-primary)] border-[var(--theme-primary)] text-[var(--theme-background)]"
+                                : "bg-transparent border-[var(--theme-foreground)] text-transparent"
+                            )}
+                          >
+                            <HiOutlineCheck className="w-3 h-3" />
+                          </button>
+
+                          <div>
+                            <div className="font-bold uppercase text-sm">{shortcut.name}</div>
+                            <div className="text-xs text-[var(--theme-foreground)]/60 font-mono mt-1">
+                              {shortcut.description}
                             </div>
                           </div>
+                        </div>
 
-                          <div className="flex items-center gap-12px">
-                            {/* Shortcut Display */}
-                            <div className="px-16px py-8px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]">
-                              <span className="font-mono text-brutal-sm">
-                                {formatKeyCombo(shortcut.customKeys || shortcut.defaultKeys)}
-                              </span>
-                            </div>
-
-                            {/* Custom Indicator */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
                             {shortcut.customKeys && (
-                              <span className="px-8px py-4px bg-primary-brutalist text-event-horizon font-mono text-brutal-xs uppercase">
+                              <BrutalBadge variant="outline" className="text-[10px] text-[var(--theme-primary)] border-[var(--theme-primary)]">
                                 CUSTOM
-                              </span>
+                              </BrutalBadge>
                             )}
+                            <code className="px-3 py-1 bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-xs font-bold">
+                              {formatKeyCombo(shortcut.customKeys || shortcut.defaultKeys)}
+                            </code>
+                          </div>
 
-                            {/* Actions */}
-                            <button
+                          <div className="flex gap-1">
+                            <BrutalButton
+                              size="sm"
+                              variant="ghost"
                               onClick={() => setEditingShortcut(shortcut.id)}
-                              className="p-8px hover:bg-primary-brutalist/20 transition-colors"
-                              title="Edit shortcut"
+                              title="EDIT_BINDING"
                             >
-                              <HiOutlinePencil className="w-16px h-16px" />
-                            </button>
+                              <HiOutlinePencil className="w-4 h-4" />
+                            </BrutalButton>
 
                             {shortcut.customKeys && (
-                              <button
+                              <BrutalButton
+                                size="sm"
+                                variant="ghost"
                                 onClick={() => handleResetShortcut(shortcut.id)}
-                                className="p-8px hover:bg-brutal-warning/20 transition-colors"
-                                title="Reset to default"
+                                title="RESET_DEFAULT"
+                                className="text-brutal-warning hover:text-brutal-warning"
                               >
-                                <HiOutlineRefresh className="w-16px h-16px" />
-                              </button>
+                                <HiOutlineRefresh className="w-4 h-4" />
+                              </BrutalButton>
                             )}
                           </div>
                         </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                      </div>
+                    )}
+                  </BrutalCard>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))
         )}
       </div>
 
-      {/* Help Text */}
-      <div className="bg-[var(--theme-background)] border-t-2 border-[var(--theme-border)] p-16px flex-shrink-0">
-        <p className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60 text-center">
-          PRESS ? TO SHOW KEYBOARD SHORTCUTS HELP • CTRL+K TO OPEN COMMAND PALETTE
+      <div className="text-center py-4 border-t-2 border-[var(--theme-border)]">
+        <p className="font-mono text-xs text-[var(--theme-foreground)]/60 uppercase">
+          PRESS <span className="font-bold text-[var(--theme-foreground)]">?</span> FOR QUICK_HELP • <span className="font-bold text-[var(--theme-foreground)]">CTRL+K</span> FOR COMMAND_PALETTE
         </p>
       </div>
     </div>

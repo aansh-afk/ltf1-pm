@@ -2,9 +2,9 @@ import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isSameDay, addDays, addWeeks, addMonths, subMonths, differenceInMinutes } from 'date-fns'
-import { 
-  HiOutlineCalendar, 
-  HiOutlineViewList, 
+import {
+  HiOutlineCalendar,
+  HiOutlineViewList,
   HiOutlineViewGrid,
   HiOutlinePlus,
   HiOutlineSearch,
@@ -12,7 +12,10 @@ import {
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
   HiOutlineCheck,
-  HiOutlineX
+  HiOutlineX,
+  HiOutlineClock,
+  HiOutlineLocationMarker,
+  HiOutlineVideoCamera
 } from 'react-icons/hi'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useShortcut } from '../contexts/ShortcutContext'
@@ -23,6 +26,7 @@ import MeetingNotesModal from '../components/features/meetings/MeetingNotesModal
 import BulkScheduleModal from '../components/features/meetings/BulkScheduleModal'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
+import { BrutalCard, BrutalButton, BrutalBadge } from '@/components/ui'
 
 type ViewMode = 'calendar' | 'list' | 'dashboard'
 type CalendarView = 'month' | 'week' | 'day'
@@ -35,11 +39,11 @@ type MeetingFilter = {
 }
 
 const meetingTypeColors = {
-  standup: 'bg-brutal-info border-brutal-info',
-  retrospective: 'bg-brutal-warning border-brutal-warning',
-  planning: 'bg-primary-brutalist border-primary-brutalist',
-  review: 'bg-brutal-success border-brutal-success',
-  custom: 'bg-neutral-600 border-neutral-600',
+  standup: 'bg-brutal-info text-event-horizon',
+  retrospective: 'bg-brutal-warning text-event-horizon',
+  planning: 'bg-primary-brutalist text-event-horizon',
+  review: 'bg-brutal-success text-event-horizon',
+  custom: 'bg-[var(--theme-foreground)] text-[var(--theme-background)]',
 }
 
 export default function MeetingsPage() {
@@ -128,7 +132,7 @@ export default function MeetingsPage() {
   // Group meetings by date for list view
   const groupedMeetings = useMemo(() => {
     const groups = new Map<string, any[]>()
-    
+
     filteredMeetings.forEach(meeting => {
       const date = format(new Date(meeting.startTime), 'yyyy-MM-dd')
       if (!groups.has(date)) {
@@ -208,77 +212,6 @@ export default function MeetingsPage() {
     }
   }
 
-  // Keyboard shortcuts integration
-  useEffect(() => {
-    const handleCommand = (event: CustomEvent) => {
-      const { command } = event.detail
-      
-      switch (command) {
-        case 'toggleCalendarView':
-          // Cycle through view modes
-          const modes: ViewMode[] = ['calendar', 'list', 'dashboard']
-          const currentIndex = modes.indexOf(viewMode)
-          const nextIndex = (currentIndex + 1) % modes.length
-          setViewMode(modes[nextIndex])
-          break
-        
-        case 'calendarToday':
-          setCurrentDate(new Date())
-          break
-        
-        case 'calendarNext':
-          navigateCalendar('next')
-          break
-        
-        case 'calendarPrevious':
-          navigateCalendar('prev')
-          break
-        
-        case 'joinMeeting':
-          // Join the next upcoming meeting if exists
-          if (upcomingMeetings && upcomingMeetings.length > 0) {
-            const nextMeeting = upcomingMeetings[0]
-            if (nextMeeting.meetingLink) {
-              window.open(nextMeeting.meetingLink, '_blank')
-              toast.success('Joining meeting...')
-            } else {
-              toast.error('No meeting link available')
-            }
-          } else {
-            toast.error('No upcoming meetings')
-          }
-          break
-        
-        case 'rsvpMeeting':
-          // RSVP to the next meeting requiring response
-          if (upcomingMeetings && upcomingMeetings.length > 0) {
-            const needsResponse = upcomingMeetings.find((m: any) => {
-              const userAttendee = m.attendees?.find((a: any) => a.userId === currentUser?._id)
-              return userAttendee && userAttendee.status === 'pending'
-            })
-            if (needsResponse) {
-              setViewingMeeting(needsResponse)
-            } else {
-              toast.error('No meetings require RSVP')
-            }
-          }
-          break
-      }
-    }
-    
-    const handleNewMeeting = () => {
-      setShowScheduleModal(true)
-    }
-    
-    window.addEventListener('meeting-command' as any, handleCommand)
-    window.addEventListener('open-new-meeting' as any, handleNewMeeting)
-    
-    return () => {
-      window.removeEventListener('meeting-command' as any, handleCommand)
-      window.removeEventListener('open-new-meeting' as any, handleNewMeeting)
-    }
-  }, [viewMode, upcomingMeetings, currentUser])
-
   // Use specific shortcuts
   useShortcut('newMeeting', () => setShowScheduleModal(true))
 
@@ -304,108 +237,121 @@ export default function MeetingsPage() {
   }, [meetings, currentUser])
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col p-6 bg-[var(--theme-background)]">
       {/* Header */}
-      <div className="bg-[var(--theme-background)] border-b-2 border-[var(--theme-border)] p-16px">
-        <div className="flex items-center justify-between mb-16px">
-          <div className="flex items-center gap-16px">
-            <h1 className="text-2xl font-mono uppercase">Meetings</h1>
-            
-            {/* View Toggle */}
-            <div className="flex items-center gap-4px bg-[var(--theme-background-secondary)]">
-              <button
-                onClick={() => setViewMode('calendar')}
-                className={clsx(
-                  "px-12px py-8px font-mono text-brutal-xs uppercase transition-colors",
-                  viewMode === 'calendar' ? 'bg-primary-brutalist text-event-horizon' : 'hover:bg-primary-brutalist/20'
-                )}
-              >
-                <HiOutlineCalendar className="w-16px h-16px" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={clsx(
-                  "px-12px py-8px font-mono text-brutal-xs uppercase transition-colors",
-                  viewMode === 'list' ? 'bg-primary-brutalist text-event-horizon' : 'hover:bg-primary-brutalist/20'
-                )}
-              >
-                <HiOutlineViewList className="w-16px h-16px" />
-              </button>
-              <button
-                onClick={() => setViewMode('dashboard')}
-                className={clsx(
-                  "px-12px py-8px font-mono text-brutal-xs uppercase transition-colors",
-                  viewMode === 'dashboard' ? 'bg-primary-brutalist text-event-horizon' : 'hover:bg-primary-brutalist/20'
-                )}
-              >
-                <HiOutlineViewGrid className="w-16px h-16px" />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-12px">
-            {/* Search */}
-            <div className="relative">
-              <HiOutlineSearch className="absolute left-12px top-1/2 -translate-y-1/2 w-16px h-16px text-[var(--theme-foreground)]/60" />
-              <input
-                type="text"
-                placeholder="SEARCH MEETINGS..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="brutal-input pl-36px w-200px"
-              />
-            </div>
-
-            {/* Filter Toggle */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={clsx(
-                "brutal-btn-sm",
-                showFilters && "bg-primary-brutalist text-event-horizon"
-              )}
-            >
-              <HiOutlineFilter className="w-16px h-16px" />
-            </button>
-
-            {/* Bulk Actions */}
-            {selectedMeetings.size > 0 && (
-              <div className="flex items-center gap-8px">
-                <span className="text-brutal-xs text-[var(--theme-foreground)]/60">
-                  {selectedMeetings.size} SELECTED
-                </span>
-                <button
-                  onClick={handleBulkDelete}
-                  className="brutal-btn-sm bg-brutal-error"
-                >
-                  DELETE
-                </button>
-                <button
-                  onClick={() => setSelectedMeetings(new Set())}
-                  className="brutal-btn-sm"
-                >
-                  CLEAR
-                </button>
-              </div>
-            )}
-
-            {/* New Meeting */}
-            <button
-              onClick={() => setShowScheduleModal(true)}
-              className="brutal-btn-primary"
-            >
-              <HiOutlinePlus className="w-16px h-16px mr-8px" />
-              NEW MEETING
-            </button>
-          </div>
+      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 flex items-center gap-3">
+            <HiOutlineCalendar className="w-8 h-8 md:w-10 md:h-10 text-[var(--theme-primary)]" />
+            SCHEDULE GRID
+          </h1>
+          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 uppercase tracking-wide">
+            {currentWorkspace?.name || 'Loading...'} • {format(currentDate, 'MMMM yyyy')}
+          </p>
         </div>
 
-        {/* Filters */}
-        {showFilters && (
-          <div className="flex items-center gap-12px py-12px border-t border-[var(--theme-border)]">
+        <div className="flex flex-wrap items-center gap-4">
+          {/* View Toggle */}
+          <div className="flex border-2 border-[var(--theme-border)] bg-[var(--theme-background)]">
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={clsx(
+                "px-4 py-2 flex items-center gap-2 font-mono text-xs font-bold uppercase transition-colors",
+                "border-r-2 border-[var(--theme-border)]",
+                viewMode === 'calendar'
+                  ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
+                  : "text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
+              )}
+            >
+              <HiOutlineCalendar className="w-4 h-4" />
+              Grid
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={clsx(
+                "px-4 py-2 flex items-center gap-2 font-mono text-xs font-bold uppercase transition-colors",
+                "border-r-2 border-[var(--theme-border)]",
+                viewMode === 'list'
+                  ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
+                  : "text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
+              )}
+            >
+              <HiOutlineViewList className="w-4 h-4" />
+              List
+            </button>
+            <button
+              onClick={() => setViewMode('dashboard')}
+              className={clsx(
+                "px-4 py-2 flex items-center gap-2 font-mono text-xs font-bold uppercase transition-colors",
+                viewMode === 'dashboard'
+                  ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
+                  : "text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
+              )}
+            >
+              <HiOutlineViewGrid className="w-4 h-4" />
+              Dash
+            </button>
+          </div>
+
+          <BrutalButton
+            variant="primary"
+            onClick={() => setShowScheduleModal(true)}
+            className="flex items-center gap-2"
+          >
+            <HiOutlinePlus className="w-4 h-4" />
+            New Meeting
+          </BrutalButton>
+        </div>
+      </div>
+
+      {/* Controls Bar */}
+      <BrutalCard className="mb-6 p-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-4 flex-1">
+          <div className="relative flex-1 max-w-md">
+            <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--theme-foreground)]/60" />
+            <input
+              type="text"
+              placeholder="SEARCH MEETINGS..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-[var(--theme-foreground)] placeholder-[var(--theme-foreground)]/40 font-mono text-xs uppercase focus:border-[var(--theme-primary)] focus:outline-none transition-colors"
+            />
+          </div>
+
+          <BrutalButton
+            variant="secondary"
+            onClick={() => setShowFilters(!showFilters)}
+            className={clsx("flex items-center gap-2", showFilters && "bg-[var(--theme-primary)] text-[var(--theme-background)]")}
+          >
+            <HiOutlineFilter className="w-4 h-4" />
+            Filter
+          </BrutalButton>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <BrutalButton variant="ghost" onClick={() => navigateCalendar('prev')}>
+            <HiOutlineChevronLeft className="w-4 h-4" />
+          </BrutalButton>
+          <button
+            onClick={() => setCurrentDate(new Date())}
+            className="font-mono text-sm font-bold uppercase hover:text-[var(--theme-primary)] transition-colors"
+          >
+            Today
+          </button>
+          <BrutalButton variant="ghost" onClick={() => navigateCalendar('next')}>
+            <HiOutlineChevronRight className="w-4 h-4" />
+          </BrutalButton>
+        </div>
+      </BrutalCard>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <BrutalCard className="mb-6 p-4 border-t-0 -mt-6">
+          <div className="flex items-center gap-4">
             <select
               value={filters.type || ''}
               onChange={(e) => setFilters({ ...filters, type: e.target.value || undefined })}
-              className="brutal-select"
+              className="px-4 py-2 bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-[var(--theme-foreground)] font-mono text-xs uppercase focus:border-[var(--theme-primary)] focus:outline-none transition-colors cursor-pointer"
             >
               <option value="">ALL TYPES</option>
               <option value="standup">STANDUP</option>
@@ -417,26 +363,24 @@ export default function MeetingsPage() {
 
             <button
               onClick={() => setFilters({})}
-              className="brutal-btn-sm"
+              className="text-xs font-mono uppercase text-[var(--theme-foreground)]/60 hover:text-[var(--theme-error)] transition-colors"
             >
               CLEAR FILTERS
             </button>
           </div>
-        )}
-      </div>
+        </BrutalCard>
+      )}
 
-      {/* Content */}
-      <div className="flex-1 overflow-hidden">
+      {/* Content Area */}
+      <div className="flex-1 overflow-hidden border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
         {viewMode === 'calendar' && (
           <CalendarView
             currentDate={currentDate}
             calendarView={calendarView}
             setCalendarView={setCalendarView}
-            navigateCalendar={navigateCalendar}
             getCalendarDays={getCalendarDays}
             getMeetingsForDay={getMeetingsForDay}
             onMeetingClick={setViewingMeeting}
-            setCurrentDate={setCurrentDate}
           />
         )}
 
@@ -530,95 +474,53 @@ export default function MeetingsPage() {
 }
 
 // Calendar View Component
-function CalendarView({ 
-  currentDate, 
-  calendarView, 
-  setCalendarView, 
-  navigateCalendar, 
+function CalendarView({
+  currentDate,
+  calendarView,
+  setCalendarView,
   getCalendarDays,
   getMeetingsForDay,
   onMeetingClick,
-  setCurrentDate
 }: any) {
   const days = getCalendarDays()
   const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
   return (
-    <div className="h-full flex flex-col bg-[var(--theme-background-secondary)]">
+    <div className="h-full flex flex-col">
       {/* Calendar Header */}
-      <div className="bg-[var(--theme-background)] border-b-2 border-[var(--theme-border)] p-16px flex items-center justify-between">
-        <div className="flex items-center gap-16px">
-          <div className="flex items-center gap-8px">
+      <div className="bg-[var(--theme-background)] border-b-2 border-[var(--theme-border)] p-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {['month', 'week', 'day'].map((view) => (
             <button
-              onClick={() => navigateCalendar('prev')}
-              className="brutal-btn-sm"
+              key={view}
+              onClick={() => setCalendarView(view as CalendarView)}
+              className={clsx(
+                "px-3 py-1 font-mono text-xs font-bold uppercase transition-colors border-2",
+                calendarView === view
+                  ? "border-[var(--theme-primary)] bg-[var(--theme-primary)] text-[var(--theme-background)]"
+                  : "border-transparent hover:border-[var(--theme-border)]"
+              )}
             >
-              <HiOutlineChevronLeft className="w-16px h-16px" />
+              {view}
             </button>
-            <h2 className="font-mono text-lg uppercase min-w-200px text-center">
-              {format(currentDate, calendarView === 'day' ? 'MMMM d, yyyy' : 'MMMM yyyy')}
-            </h2>
-            <button
-              onClick={() => navigateCalendar('next')}
-              className="brutal-btn-sm"
-            >
-              <HiOutlineChevronRight className="w-16px h-16px" />
-            </button>
-          </div>
-
-          <button
-            onClick={() => setCurrentDate(new Date())}
-            className="brutal-btn-sm"
-          >
-            TODAY
-          </button>
-        </div>
-
-        <div className="flex items-center gap-4px">
-          <button
-            onClick={() => setCalendarView('month')}
-            className={clsx(
-              "px-12px py-6px font-mono text-brutal-xs uppercase",
-              calendarView === 'month' ? 'bg-primary-brutalist text-event-horizon' : 'hover:bg-primary-brutalist/20'
-            )}
-          >
-            MONTH
-          </button>
-          <button
-            onClick={() => setCalendarView('week')}
-            className={clsx(
-              "px-12px py-6px font-mono text-brutal-xs uppercase",
-              calendarView === 'week' ? 'bg-primary-brutalist text-event-horizon' : 'hover:bg-primary-brutalist/20'
-            )}
-          >
-            WEEK
-          </button>
-          <button
-            onClick={() => setCalendarView('day')}
-            className={clsx(
-              "px-12px py-6px font-mono text-brutal-xs uppercase",
-              calendarView === 'day' ? 'bg-primary-brutalist text-event-horizon' : 'hover:bg-primary-brutalist/20'
-            )}
-          >
-            DAY
-          </button>
+          ))}
         </div>
       </div>
 
       {/* Calendar Grid */}
       {calendarView === 'month' && (
-        <div className="flex-1 p-16px">
+        <div className="flex-1 flex flex-col">
           {/* Week Days Header */}
-          <div className="grid grid-cols-7 gap-1px mb-1px">
+          <div className="grid grid-cols-7 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)]">
             {weekDays.map((day: string) => (
-              <div key={day} className="bg-[var(--theme-background)] p-8px text-center font-mono text-brutal-xs uppercase">
+              <div key={day} className="p-2 text-center font-mono text-xs font-bold uppercase border-r-2 border-[var(--theme-border)] last:border-r-0">
                 {day}
               </div>
             ))}
           </div>
 
           {/* Days Grid */}
-          <div className="grid grid-cols-7 gap-1px h-[calc(100%-40px)]">
+          <div className="grid grid-cols-7 flex-1 bg-[var(--theme-border)] gap-[2px]">
             {days.map((day: Date, index: number) => {
               const dayMeetings = getMeetingsForDay(day)
               const isCurrentMonth = day.getMonth() === currentDate.getMonth()
@@ -628,29 +530,31 @@ function CalendarView({
                 <div
                   key={index}
                   className={clsx(
-                    "bg-[var(--theme-background)] p-8px min-h-100px border-2",
-                    isCurrentMonth ? 'border-[var(--theme-border)]' : 'border-transparent opacity-50',
-                    isTodayDate && 'border-primary-brutalist'
+                    "bg-[var(--theme-background)] p-2 min-h-[100px] flex flex-col transition-colors hover:bg-[var(--theme-background-secondary)]",
+                    !isCurrentMonth && "opacity-50 bg-[var(--theme-background-secondary)]"
                   )}
                 >
-                  <div className="font-mono text-brutal-xs mb-4px">
+                  <div className={clsx(
+                    "font-mono text-xs mb-2 w-6 h-6 flex items-center justify-center",
+                    isTodayDate && "bg-[var(--theme-primary)] text-[var(--theme-background)] font-bold"
+                  )}>
                     {format(day, 'd')}
                   </div>
-                  <div className="space-y-2px">
+                  <div className="space-y-1 flex-1">
                     {dayMeetings.slice(0, 3).map((meeting: any) => (
                       <button
                         key={meeting._id}
                         onClick={() => onMeetingClick(meeting)}
                         className={clsx(
-                          "w-full text-left px-4px py-2px text-brutal-xs truncate hover:opacity-80",
-                          meetingTypeColors[meeting.type as keyof typeof meetingTypeColors]
+                          "w-full text-left px-2 py-1 text-[10px] font-mono uppercase truncate border-l-2 hover:brightness-110 transition-all",
+                          meetingTypeColors[meeting.type as keyof typeof meetingTypeColors] || meetingTypeColors.custom
                         )}
                       >
                         {format(new Date(meeting.startTime), 'HH:mm')} {meeting.title}
                       </button>
                     ))}
                     {dayMeetings.length > 3 && (
-                      <div className="text-brutal-xs text-[var(--theme-foreground)]/60 px-4px">
+                      <div className="text-[10px] font-mono text-[var(--theme-foreground)]/60 px-1">
                         +{dayMeetings.length - 3} MORE
                       </div>
                     )}
@@ -662,52 +566,57 @@ function CalendarView({
         </div>
       )}
 
-      {calendarView === 'week' && (
-        <WeekView
-          currentDate={currentDate}
-          getMeetingsForDay={getMeetingsForDay}
-          onMeetingClick={onMeetingClick}
-        />
-      )}
-
-      {calendarView === 'day' && (
-        <DayView
-          meetings={getMeetingsForDay(currentDate)}
-          onMeetingClick={onMeetingClick}
-        />
+      {/* Placeholder for Week/Day views if needed, or fallback to Month view logic */}
+      {calendarView !== 'month' && (
+        <div className="flex-1 flex items-center justify-center bg-[var(--theme-background)]">
+          <div className="text-center">
+            <HiOutlineCalendar className="w-12 h-12 text-[var(--theme-foreground)]/20 mx-auto mb-4" />
+            <p className="font-mono text-sm text-[var(--theme-foreground)]/60">
+              {calendarView.toUpperCase()} VIEW COMING SOON
+            </p>
+            <button
+              onClick={() => setCalendarView('month')}
+              className="mt-4 text-xs font-bold uppercase text-[var(--theme-primary)] hover:underline"
+            >
+              Switch to Month View
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )
 }
 
 // List View Component
-function ListView({ 
-  groupedMeetings, 
-  currentUserId, 
-  selectedMeetings, 
+function ListView({
+  groupedMeetings,
+  currentUserId,
+  selectedMeetings,
   setSelectedMeetings,
   onEdit,
-  onViewNotes
+  onViewNotes,
+  onView
 }: any) {
   return (
-    <div className="h-full overflow-y-auto bg-[var(--theme-background-secondary)] p-16px">
+    <div className="h-full overflow-y-auto p-6 bg-[var(--theme-background)]">
       {groupedMeetings.length === 0 ? (
-        <div className="text-center py-48px">
-          <p className="text-[var(--theme-foreground)]/60 mb-16px">NO MEETINGS FOUND</p>
+        <div className="text-center py-12 border-2 border-dashed border-[var(--theme-border)]">
+          <p className="text-[var(--theme-foreground)]/60 font-mono text-sm uppercase">NO MEETINGS FOUND</p>
         </div>
       ) : (
-        <div className="space-y-24px">
+        <div className="space-y-8">
           {groupedMeetings.map(({ date, meetings }: any) => (
             <div key={date}>
-              <h3 className="font-mono text-brutal-sm uppercase mb-12px text-primary-brutalist">
-                {format(new Date(date), 'EEEE, MMMM d, yyyy')}
-                {isToday(new Date(date)) && (
-                  <span className="ml-8px text-brutal-success">(TODAY)</span>
-                )}
-              </h3>
-              <div className="space-y-12px">
+              <div className="flex items-center gap-4 mb-4">
+                <h3 className="font-mono text-sm font-bold uppercase text-[var(--theme-primary)]">
+                  {format(new Date(date), 'EEEE, MMMM d, yyyy')}
+                </h3>
+                <div className="h-[2px] flex-1 bg-[var(--theme-border)]"></div>
+              </div>
+
+              <div className="space-y-4">
                 {meetings.map((meeting: any) => (
-                  <div key={meeting._id} className="flex items-start gap-12px">
+                  <div key={meeting._id} className="flex items-start gap-4 group">
                     <input
                       type="checkbox"
                       checked={selectedMeetings.has(meeting._id)}
@@ -720,9 +629,9 @@ function ListView({
                         }
                         setSelectedMeetings(newSelected)
                       }}
-                      className="mt-4px"
+                      className="mt-6 w-4 h-4 border-2 border-[var(--theme-border)] bg-[var(--theme-background)] checked:bg-[var(--theme-primary)] cursor-pointer"
                     />
-                    <div className="flex-1">
+                    <div className="flex-1 cursor-pointer" onClick={() => onView(meeting)}>
                       <MeetingCard
                         meeting={meeting}
                         currentUserId={currentUserId}
@@ -742,220 +651,85 @@ function ListView({
 }
 
 // Dashboard View Component
-function DashboardView({ 
-  stats, 
-  upcomingMeetings, 
+function DashboardView({
+  stats,
+  upcomingMeetings,
   onMeetingClick,
   onQuickRSVP
 }: any) {
   return (
-    <div className="h-full overflow-y-auto bg-[var(--theme-background-secondary)] p-16px">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-16px">
+    <div className="h-full overflow-y-auto p-6 bg-[var(--theme-background)]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Stats Cards */}
-        <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-16px">
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-            <div className="text-brutal-xs text-[var(--theme-foreground)]/60 uppercase mb-8px">Upcoming</div>
-            <div className="text-2xl font-mono">{stats?.upcoming || 0}</div>
-          </div>
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-            <div className="text-brutal-xs text-[var(--theme-foreground)]/60 uppercase mb-8px">Today</div>
-            <div className="text-2xl font-mono">{stats?.today || 0}</div>
-          </div>
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-            <div className="text-brutal-xs text-[var(--theme-foreground)]/60 uppercase mb-8px">Hours This Month</div>
-            <div className="text-2xl font-mono">{stats?.totalHours || 0}h</div>
-          </div>
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-            <div className="text-brutal-xs text-[var(--theme-foreground)]/60 uppercase mb-8px">Acceptance Rate</div>
-            <div className="text-2xl font-mono">{stats?.acceptanceRate || 0}%</div>
-          </div>
-        </div>
-
-        {/* Next Meetings */}
-        <div className="lg:col-span-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-          <h3 className="font-mono text-brutal-sm uppercase mb-16px">UPCOMING MEETINGS</h3>
-          {upcomingMeetings.length === 0 ? (
-            <p className="text-[var(--theme-foreground)]/60 text-brutal-xs">NO UPCOMING MEETINGS</p>
-          ) : (
-            <div className="space-y-12px">
-              {upcomingMeetings.slice(0, 5).map((meeting: any) => (
-                <div 
-                  key={meeting._id}
-                  className="flex items-center justify-between p-12px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] hover:border-primary-brutalist transition-colors cursor-pointer"
-                  onClick={() => onMeetingClick(meeting)}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-8px mb-4px">
-                      <span className={clsx(
-                        "px-6px py-2px text-brutal-xs uppercase",
-                        meetingTypeColors[meeting.type as keyof typeof meetingTypeColors]
-                      )}>
-                        {meeting.type}
-                      </span>
-                      <span className="font-mono text-brutal-xs">
-                        {format(new Date(meeting.startTime), 'MMM d, HH:mm')}
-                      </span>
-                    </div>
-                    <h4 className="font-mono text-brutal-sm">{meeting.title}</h4>
-                  </div>
-                  
-                  {/* Quick RSVP */}
-                  <div className="flex items-center gap-4px">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onQuickRSVP(meeting._id, 'accepted')
-                      }}
-                      className="p-4px hover:bg-brutal-success/20 transition-colors"
-                      title="Accept"
-                    >
-                      <HiOutlineCheck className="w-16px h-16px text-brutal-success" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onQuickRSVP(meeting._id, 'declined')
-                      }}
-                      className="p-4px hover:bg-brutal-error/20 transition-colors"
-                      title="Decline"
-                    >
-                      <HiOutlineX className="w-16px h-16px text-brutal-error" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Today's Schedule */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-          <h3 className="font-mono text-brutal-sm uppercase mb-16px">TODAY'S SCHEDULE</h3>
-          <TodaySchedule />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Week View Component
-function WeekView({ currentDate, getMeetingsForDay, onMeetingClick }: any) {
-  const weekStart = startOfWeek(currentDate)
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
-  const hours = Array.from({ length: 24 }, (_, i) => i)
-
-  return (
-    <div className="flex-1 overflow-auto p-16px">
-      <div className="grid grid-cols-8 gap-1px min-w-800px">
-        {/* Time column */}
-        <div className="bg-[var(--theme-background)]">
-          <div className="h-40px border-b border-[var(--theme-border)]"></div>
-          {hours.map(hour => (
-            <div key={hour} className="h-60px border-b border-[var(--theme-border)] p-4px text-brutal-xs text-[var(--theme-foreground)]/60">
-              {format(new Date().setHours(hour, 0, 0, 0), 'HH:mm')}
-            </div>
+        <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { label: 'Upcoming', value: stats?.upcoming || 0 },
+            { label: 'Today', value: stats?.today || 0 },
+            { label: 'Hours (Month)', value: `${stats?.totalHours || 0}h` },
+            { label: 'Acceptance Rate', value: `${stats?.acceptanceRate || 0}%` },
+          ].map((stat) => (
+            <BrutalCard key={stat.label} className="p-4 text-center hover:border-[var(--theme-primary)] transition-colors">
+              <div className="text-[10px] font-mono uppercase text-[var(--theme-foreground)]/60 mb-2">{stat.label}</div>
+              <div className="text-3xl font-bold font-mono">{stat.value}</div>
+            </BrutalCard>
           ))}
         </div>
 
-        {/* Day columns */}
-        {weekDays.map(day => (
-          <div key={day.toISOString()} className="bg-[var(--theme-background)]">
-            <div className="h-40px border-b border-[var(--theme-border)] p-4px">
-              <div className="font-mono text-brutal-xs uppercase">{format(day, 'EEE')}</div>
-              <div className={clsx(
-                "font-mono text-brutal-sm",
-                isToday(day) && "text-primary-brutalist"
-              )}>
-                {format(day, 'd')}
-              </div>
-            </div>
-            <div className="relative">
-              {hours.map(hour => (
-                <div key={hour} className="h-60px border-b border-[var(--theme-border)]"></div>
-              ))}
-              {/* Meetings */}
-              {getMeetingsForDay(day).map((meeting: any) => {
-                const startHour = new Date(meeting.startTime).getHours()
-                const startMinute = new Date(meeting.startTime).getMinutes()
-                const duration = differenceInMinutes(new Date(meeting.endTime), new Date(meeting.startTime))
-                
-                return (
-                  <button
+        {/* Next Meetings */}
+        <div className="lg:col-span-2">
+          <BrutalCard className="p-6 h-full">
+            <h3 className="font-mono text-sm font-bold uppercase mb-6 flex items-center gap-2">
+              <HiOutlineClock className="w-4 h-4 text-[var(--theme-primary)]" />
+              UPCOMING MEETINGS
+            </h3>
+            {upcomingMeetings.length === 0 ? (
+              <p className="text-[var(--theme-foreground)]/60 font-mono text-xs uppercase text-center py-8">NO UPCOMING MEETINGS</p>
+            ) : (
+              <div className="space-y-3">
+                {upcomingMeetings.slice(0, 5).map((meeting: any) => (
+                  <div
                     key={meeting._id}
+                    className="flex items-center justify-between p-3 bg-[var(--theme-background-secondary)] border-l-4 border-[var(--theme-border)] hover:border-[var(--theme-primary)] transition-all cursor-pointer group"
                     onClick={() => onMeetingClick(meeting)}
-                    className={clsx(
-                      "absolute left-0 right-0 mx-1px p-2px text-brutal-xs truncate hover:opacity-80 z-10",
-                      meetingTypeColors[meeting.type as keyof typeof meetingTypeColors]
-                    )}
-                    style={{
-                      top: `${(startHour * 60 + startMinute) * (60 / 60)}px`,
-                      height: `${duration * (60 / 60)}px`,
-                      minHeight: '20px'
-                    }}
                   >
-                    {meeting.title}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// Day View Component
-function DayView({ meetings, onMeetingClick }: any) {
-  const hours = Array.from({ length: 24 }, (_, i) => i)
-
-  return (
-    <div className="flex-1 overflow-auto p-16px">
-      <div className="max-w-800px mx-auto">
-        {hours.map(hour => {
-          const hourMeetings = meetings.filter((m: any) => 
-            new Date(m.startTime).getHours() === hour
-          )
-
-          return (
-            <div key={hour} className="flex gap-16px mb-1px">
-              <div className="w-60px text-right font-mono text-brutal-xs text-[var(--theme-foreground)]/60 py-8px">
-                {format(new Date().setHours(hour, 0, 0, 0), 'HH:mm')}
-              </div>
-              <div className="flex-1 min-h-60px bg-[var(--theme-background)] border border-[var(--theme-border)] p-8px">
-                {hourMeetings.map((meeting: any) => (
-                  <button
-                    key={meeting._id}
-                    onClick={() => onMeetingClick(meeting)}
-                    className={clsx(
-                      "w-full text-left p-8px mb-4px text-brutal-xs hover:opacity-80",
-                      meetingTypeColors[meeting.type as keyof typeof meetingTypeColors]
-                    )}
-                  >
-                    <div className="font-mono">
-                      {format(new Date(meeting.startTime), 'HH:mm')} - {format(new Date(meeting.endTime), 'HH:mm')}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className={clsx(
+                          "px-2 py-[2px] text-[10px] font-bold uppercase",
+                          meetingTypeColors[meeting.type as keyof typeof meetingTypeColors] || meetingTypeColors.custom
+                        )}>
+                          {meeting.type}
+                        </span>
+                        <span className="font-mono text-xs text-[var(--theme-foreground)]/60">
+                          {format(new Date(meeting.startTime), 'MMM d, HH:mm')}
+                        </span>
+                      </div>
+                      <h4 className="font-mono text-sm font-bold group-hover:text-[var(--theme-primary)] transition-colors">{meeting.title}</h4>
                     </div>
-                    <div className="font-bold">{meeting.title}</div>
-                  </button>
+                    <HiOutlineChevronRight className="w-4 h-4 text-[var(--theme-foreground)]/40 group-hover:text-[var(--theme-primary)] transition-colors" />
+                  </div>
                 ))}
               </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
+            )}
+          </BrutalCard>
+        </div>
 
-// Today's Schedule Component
-function TodaySchedule({ }: any) {
-  // Today's schedule would normally be queried here
-  
-  // This would normally query today's meetings
-  return (
-    <div className="space-y-8px">
-      <div className="text-brutal-xs text-[var(--theme-foreground)]/60">
-        YOUR SCHEDULE IS CLEAR TODAY
+        {/* Quick Actions or Info */}
+        <div className="lg:col-span-1">
+          <BrutalCard className="p-6 h-full bg-[var(--theme-background-secondary)] border-dashed">
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
+              <div className="w-12 h-12 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] flex items-center justify-center">
+                <HiOutlineVideoCamera className="w-6 h-6 text-[var(--theme-primary)]" />
+              </div>
+              <div>
+                <h4 className="font-bold font-mono uppercase mb-1">Quick Join</h4>
+                <p className="text-xs text-[var(--theme-foreground)]/60 max-w-[200px]">
+                  Join your next meeting directly from here when it starts.
+                </p>
+              </div>
+            </div>
+          </BrutalCard>
+        </div>
       </div>
     </div>
   )

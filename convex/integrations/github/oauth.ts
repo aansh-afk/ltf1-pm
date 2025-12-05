@@ -7,6 +7,7 @@ export const createOAuthState = mutation({
   args: {
     returnUrl: v.optional(v.string()),
   },
+  returns: v.object({ state: v.string() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -14,7 +15,7 @@ export const createOAuthState = mutation({
     }
 
     const state = Math.random().toString(36).substring(2, 15);
-    
+
     await ctx.db.insert("githubOAuthStates", {
       state,
       clerkId: identity.subject,
@@ -32,33 +33,35 @@ export const getOAuthState = query({
   args: {
     state: v.string(),
   },
+  returns: v.array(v.any()),
   handler: async (ctx, args) => {
     const states = await ctx.db
       .query("githubOAuthStates")
       .withIndex("by_state", (q) => q.eq("state", args.state))
       .collect();
-    
+
     return states;
   },
 });
 
 // Store GitHub connection after OAuth
+// Updated to allow null values from GitHub API
 export const storeGitHubConnection = mutation({
   args: {
     state: v.string(),
     githubId: v.number(),
     githubUsername: v.string(),
-    githubEmail: v.optional(v.string()),
+    githubEmail: v.optional(v.union(v.string(), v.null())),
     accessToken: v.string(),
     scope: v.string(),
     tokenType: v.string(),
     githubProfile: v.optional(v.object({
-      name: v.optional(v.string()),
-      bio: v.optional(v.string()),
-      company: v.optional(v.string()),
-      location: v.optional(v.string()),
-      blog: v.optional(v.string()),
-      twitter_username: v.optional(v.string()),
+      name: v.optional(v.union(v.string(), v.null())),
+      bio: v.optional(v.union(v.string(), v.null())),
+      company: v.optional(v.union(v.string(), v.null())),
+      location: v.optional(v.union(v.string(), v.null())),
+      blog: v.optional(v.union(v.string(), v.null())),
+      twitter_username: v.optional(v.union(v.string(), v.null())),
       public_repos: v.number(),
       public_gists: v.number(),
       followers: v.number(),
@@ -68,6 +71,11 @@ export const storeGitHubConnection = mutation({
       html_url: v.string(),
     })),
   },
+  returns: v.object({
+    success: v.boolean(),
+    returnUrl: v.optional(v.string()),
+    githubUsername: v.string(),
+  }),
   handler: async (ctx, args) => {
     // Verify state
     const oauthState = await ctx.db
@@ -155,6 +163,46 @@ export const storeGitHubConnection = mutation({
       });
     }
 
+    // Create/update GitHub user mappings for all workspaces the user belongs to
+    const workspaceMemberships = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    for (const membership of workspaceMemberships) {
+      // Check if mapping already exists
+      const existingMapping = await ctx.db
+        .query("githubUserMappings")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .filter((q) => q.eq(q.field("workspaceId"), membership.workspaceId))
+        .first();
+
+      if (existingMapping) {
+        // Update existing mapping
+        await ctx.db.patch(existingMapping._id, {
+          githubId: args.githubId,
+          githubUsername: args.githubUsername,
+          githubEmail: args.githubEmail || undefined,
+          mappingType: "oauth" as const,
+          verified: true,
+          updatedAt: Date.now(),
+        });
+      } else {
+        // Create new mapping
+        await ctx.db.insert("githubUserMappings", {
+          workspaceId: membership.workspaceId,
+          userId: user._id,
+          githubId: args.githubId,
+          githubUsername: args.githubUsername,
+          githubEmail: args.githubEmail || undefined,
+          mappingType: "oauth" as const,
+          verified: true,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      }
+    }
+
     return {
       success: true,
       returnUrl: oauthState.returnUrl,
@@ -165,6 +213,8 @@ export const storeGitHubConnection = mutation({
 
 // Get current GitHub connection (includes token for actions)
 export const getGitHubConnection = query({
+  args: {},
+  returns: v.union(v.any(), v.null()),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
@@ -190,6 +240,16 @@ export const getGitHubConnection = query({
 
 // Get GitHub connection info (safe for client)
 export const getGitHubConnectionInfo = query({
+  args: {},
+  returns: v.union(
+    v.object({
+      githubUsername: v.string(),
+      githubId: v.number(),
+      scope: v.string(),
+      connectedAt: v.number(),
+    }),
+    v.null()
+  ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
@@ -220,6 +280,8 @@ export const getGitHubConnectionInfo = query({
 
 // Disconnect GitHub
 export const disconnectGitHub = mutation({
+  args: {},
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -273,28 +335,5 @@ export const disconnectGitHub = mutation({
   },
 });
 
-// Fetch user repositories
-export const fetchUserRepositories = query({
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) return [];
-
-    const connection = await ctx.db
-      .query("githubConnections")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .first();
-
-    if (!connection) return [];
-
-    // This would need to be an action to make external API calls
-    // For now, return empty array
-    return [];
-  },
-});
+// NOTE: fetchUserRepositories was removed - use fetchAvailableRepositories action instead
+// Queries cannot make external API calls, so repository fetching must be done via actions

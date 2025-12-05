@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../../../../convex/_generated/api';
 import type { Id } from '../../../../../../convex/_generated/dataModel';
-import { 
+import {
   FaGithub,
   FaSlack,
   FaJira,
@@ -13,7 +13,8 @@ import {
   FaTimesCircle,
   FaExclamationCircle,
   FaCog,
-  FaSync
+  FaSync,
+  FaClock
 } from 'react-icons/fa';
 import { 
   HiOutlineLink,

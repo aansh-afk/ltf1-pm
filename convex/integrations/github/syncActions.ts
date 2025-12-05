@@ -5,6 +5,42 @@ import { internal } from "../../_generated/api";
 import { v } from "convex/values";
 import { Octokit } from "@octokit/rest";
 
+// Process repository sync for all active installations (called by cron)
+export const processRepositorySyncQueue = internalAction({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    try {
+      // Get all active installations
+      const installations = await ctx.runQuery(internal.integrations.github.sync.getInstallationsToSync, {});
+
+      console.log(`[Repo Sync] Processing ${installations.length} installations`);
+
+      // Sync each installation's repositories
+      for (const installation of installations) {
+        try {
+          console.log(`[Repo Sync] Syncing installation ${installation.installationId} (${installation.accountName})`);
+
+          await ctx.runAction(internal.integrations.github.syncActions.syncInstallationRepositories, {
+            installationId: installation.installationId,
+          });
+
+          console.log(`[Repo Sync] Completed sync for ${installation.accountName}`);
+        } catch (error) {
+          console.error(`[Repo Sync] Error syncing installation ${installation.installationId}:`, error);
+          // Continue with other installations even if one fails
+        }
+      }
+
+      console.log(`[Repo Sync] Finished processing all installations`);
+      return null;
+    } catch (error) {
+      console.error("[Repo Sync] Error in processRepositorySyncQueue:", error);
+      return null;
+    }
+  },
+});
+
 // Sync GitHub stats for a developer
 export const syncDeveloperGitHubStats = internalAction({
   args: {

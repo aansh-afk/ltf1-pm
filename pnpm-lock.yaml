@@ -29,6 +29,9 @@ importers:
       exceljs:
         specifier: ^4.4.0
         version: 4.4.0
+      jose:
+        specifier: ^6.1.2
+        version: 6.1.2
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
@@ -8455,6 +8458,10 @@ packages:
 
   /join-component@1.1.0:
     resolution: {integrity: sha512-bF7vcQxbODoGK1imE2P9GS9aw4zD0Sd+Hni68IMZLj7zRnquH7dXUmMw9hDI5S/Jzt7q+IyTXN0rSg2GI0IKhQ==}
+    dev: false
+
+  /jose@6.1.2:
+    resolution: {integrity: sha512-MpcPtHLE5EmztuFIqB0vzHAWJPpmN1E6L4oo+kze56LIs3MyXIj9ZHMDxqOvkP38gBR7K1v3jqd4WU2+nrfONQ==}
     dev: false
 
   /js-cookie@3.0.1:

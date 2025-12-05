@@ -49,10 +49,10 @@ export default function DashboardLayout() {
   const location = useLocation()
   const params = useParams()
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  
+
   // Real-time resource monitoring
   const { stats, formatMemory } = useResourceMonitor()
-  
+
   // AFK detection for automatic status updates
   useAfkDetection({
     afkTimeout: 5 * 60 * 1000, // 5 minutes
@@ -72,7 +72,7 @@ export default function DashboardLayout() {
     }
 
     window.addEventListener('open-terminal', handleOpenTerminal)
-    
+
     return () => {
       window.removeEventListener('open-terminal', handleOpenTerminal)
     }
@@ -133,7 +133,6 @@ export default function DashboardLayout() {
     { path: '/projects', label: 'PROJECTS', icon: HiOutlineFolder },
     { path: '/tasks', label: 'TASKS', icon: HiOutlineClipboardList },
     { path: '/team', label: 'TEAM', icon: HiOutlineUserGroup },
-    { path: '/sprints', label: 'SPRINTS', icon: HiOutlinePlay },
     { path: '/meetings', label: 'MEETINGS', icon: HiOutlineCalendar },
     // { path: '/automation', label: 'AUTOMATION', icon: HiOutlineLightningBolt }, // Out of scope - not replicating n8n
     { path: '/whiteboard', label: 'WHITEBOARD', icon: HiOutlinePencilAlt },
@@ -150,14 +149,14 @@ export default function DashboardLayout() {
         'fixed inset-0 z-[40] lg:hidden',
         sidebarOpen ? 'block' : 'hidden'
       )}>
-        <div 
+        <div
           className="absolute inset-0 bg-[var(--theme-background)]/90"
           onClick={() => setSidebarOpen(false)}
         />
       </div>
 
       {/* BRUTAL SIDEBAR */}
-      <aside 
+      <aside
         className={clsx(
           'fixed inset-y-0 left-0 z-[50] bg-[var(--theme-background-secondary)] border-r-2 border-[var(--theme-border)] transform lg:relative lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
@@ -192,7 +191,7 @@ export default function DashboardLayout() {
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = location.pathname === item.path
-            
+
             return (
               <Link
                 key={item.path}
@@ -228,7 +227,7 @@ export default function DashboardLayout() {
                     </span>
                   </div>
                 </div>
-                
+
                 {/* Tooltip for collapsed state */}
                 {!isExpanded && (
                   <div className="absolute left-full ml-8px px-8px py-4px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 whitespace-nowrap z-[60]">
@@ -282,7 +281,7 @@ export default function DashboardLayout() {
           >
             <HiOutlineMenuAlt2 className="w-24px h-24px" />
           </button>
-          
+
           {/* Mobile hamburger to open sidebar */}
           <button
             onClick={() => setSidebarOpen(true)}
@@ -290,7 +289,7 @@ export default function DashboardLayout() {
           >
             <HiOutlineMenuAlt2 className="w-24px h-24px" />
           </button>
-          
+
           <div className="flex-1 flex items-center justify-center">
             <h2 className="text-brutal-md uppercase">
               {navItems.find(item => item.path === location.pathname)?.label || 'DASHBOARD'}
@@ -298,7 +297,7 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-16px">
-            <button 
+            <button
               className="brutal-btn flex items-center gap-8px"
               onClick={() => setSearchOpen(true)}
               title="Global Search (Ctrl+K or /)"
@@ -306,7 +305,7 @@ export default function DashboardLayout() {
               <HiOutlineSearch className="w-20px h-20px" />
               <span>SEARCH</span>
             </button>
-            <button 
+            <button
               className="brutal-btn flex items-center gap-8px"
               onClick={() => setTerminalOpen(true)}
               title="Open Terminal"
@@ -361,13 +360,13 @@ export default function DashboardLayout() {
                 </span>
               )}
             </span>
-            
+
             <span className="transition-all duration-200">
               <span className="text-[var(--theme-info)]">CPU:</span>{' '}
               <span className={clsx(
                 "transition-colors duration-300",
-                stats.cpu.usage > 70 ? "text-[var(--theme-error)]" : 
-                stats.cpu.usage > 40 ? "text-[var(--theme-warning)]" : "text-[var(--theme-foreground)]"
+                stats.cpu.usage > 70 ? "text-[var(--theme-error)]" :
+                  stats.cpu.usage > 40 ? "text-[var(--theme-warning)]" : "text-[var(--theme-foreground)]"
               )}>
                 {stats.cpu.usage}%
               </span>
@@ -380,7 +379,7 @@ export default function DashboardLayout() {
                 </span>
               )}
             </span>
-            
+
             <span className="transition-all duration-200">
               <span className="text-[var(--theme-warning)]">TASKS:</span>{' '}
               <span className="text-[var(--theme-foreground)]">{stats.tasks.total}</span>
@@ -388,25 +387,25 @@ export default function DashboardLayout() {
                 ({stats.tasks.active} active)
               </span>
             </span>
-            
-            <GitHubMonitor 
+
+            <GitHubMonitor
               workspaceId={params.workspaceId}
               projectId={params.projectId}
               compact={true}
             />
-            
+
             <span className="ml-auto transition-all duration-300">
               <span className={clsx(
                 "transition-colors duration-500",
                 stats.system.status === 'NOMINAL' ? "text-[var(--theme-success)]" :
-                stats.system.status === 'DEGRADED' ? "text-[var(--theme-warning)]" : "text-[var(--theme-error)]"
+                  stats.system.status === 'DEGRADED' ? "text-[var(--theme-warning)]" : "text-[var(--theme-error)]"
               )}>
                 SYSTEM:
               </span>
               <span className={clsx(
                 "ml-4px transition-all duration-500",
                 stats.system.status === 'NOMINAL' ? "text-[var(--theme-success)]" :
-                stats.system.status === 'DEGRADED' ? "text-[var(--theme-warning)] animate-pulse" : "text-[var(--theme-error)] animate-pulse"
+                  stats.system.status === 'DEGRADED' ? "text-[var(--theme-warning)] animate-pulse" : "text-[var(--theme-error)] animate-pulse"
               )}>
                 {stats.system.status}
               </span>
@@ -424,9 +423,9 @@ export default function DashboardLayout() {
       </div>
 
       {/* Command Terminal */}
-      <CommandTerminal 
-        isOpen={terminalOpen} 
-        onClose={() => setTerminalOpen(false)} 
+      <CommandTerminal
+        isOpen={terminalOpen}
+        onClose={() => setTerminalOpen(false)}
       />
 
       {/* Global Search Modal */}

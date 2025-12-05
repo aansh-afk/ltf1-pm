@@ -17,21 +17,28 @@ http.route({
   method: "POST",
   handler: httpAction(async (ctx, request) => {
     try {
+      console.log("[Webhook] Received GitHub webhook");
+
       // Get webhook payload
       const payload = await request.text();
       const signature = request.headers.get("x-hub-signature-256");
       const event = request.headers.get("x-github-event");
-      
+
+      console.log("[Webhook] Event type:", event);
+
       if (!signature || !event) {
+        console.log("[Webhook] Missing headers - signature:", !!signature, "event:", !!event);
         return new Response("Missing required headers", { status: 400 });
       }
 
       // Verify webhook signature
       const secret = process.env.GITHUB_WEBHOOK_SECRET;
       if (!secret) {
-        console.error("GitHub webhook secret not configured");
+        console.error("[Webhook] GitHub webhook secret not configured");
         return new Response("Server configuration error", { status: 500 });
       }
+
+      console.log("[Webhook] Verifying signature...");
 
       const isValid = await ctx.runAction(internal.integrations.github.nodeActions.verifyWebhookSignature, {
         payload,
@@ -40,16 +47,23 @@ http.route({
       });
 
       if (!isValid) {
+        console.log("[Webhook] Invalid signature");
         return new Response("Invalid signature", { status: 401 });
       }
+
+      console.log("[Webhook] Signature valid, parsing payload...");
 
       // Parse payload
       const data = JSON.parse(payload);
 
+      console.log("[Webhook] Handling event:", event);
+
       // Handle different webhook events
       switch (event) {
         case "installation":
+          console.log("[Webhook] Processing installation event, action:", data.action);
           await handleInstallationEvent(ctx, data);
+          console.log("[Webhook] Installation event processed successfully");
           break;
           
         case "installation_repositories":

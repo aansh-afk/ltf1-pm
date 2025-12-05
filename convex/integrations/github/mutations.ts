@@ -8,6 +8,7 @@ export const connectRepositoryToProject = mutation({
     projectId: v.id("projects"),
     repositoryId: v.id("githubRepositories"),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
@@ -25,7 +26,7 @@ export const connectRepositoryToProject = mutation({
     // Check project permissions
     const member = await ctx.db
       .query("projectMembers")
-      .withIndex("by_project_user", (q) => 
+      .withIndex("by_project_user", (q) =>
         q.eq("projectId", args.projectId).eq("userId", user._id)
       )
       .first();
@@ -59,7 +60,7 @@ export const connectRepositoryToProject = mutation({
       targetName: project.name,
       description: `connected GitHub repository ${repository.fullName} to project`,
       metadata: {
-        extra: { 
+        extra: {
           repositoryFullName: repository.fullName,
           repositoryId: repository._id,
         }
@@ -75,6 +76,7 @@ export const syncRepository = mutation({
   args: {
     repositoryId: v.id("githubRepositories"),
   },
+  returns: v.object({ scheduled: v.boolean() }),
   handler: async (ctx, args) => {
     const repository = await ctx.db.get(args.repositoryId);
     if (!repository) throw new Error("Repository not found");
@@ -105,13 +107,63 @@ export const updateRepositoryData = internalMutation({
       pushedAt: v.optional(v.string()),
     }),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.patch(args.repositoryId, {
       ...args.data,
       syncedAt: Date.now(),
     });
+    return null;
   },
 });
+
+// Helper function to resolve GitHub user to LTF1 user
+async function resolveGitHubUserInWorkspace(
+  ctx: any,
+  workspaceId: any,
+  githubUsername: string,
+  githubEmail?: string
+): Promise<{ userId: any; verified: boolean } | null> {
+  // First try by username
+  const mapping = await ctx.db
+    .query("githubUserMappings")
+    .withIndex("by_workspace_username", (q: any) =>
+      q.eq("workspaceId", workspaceId).eq("githubUsername", githubUsername)
+    )
+    .first();
+
+  if (mapping) {
+    return { userId: mapping.userId, verified: mapping.verified };
+  }
+
+  // Try by email if provided
+  if (githubEmail) {
+    const mappingsByWorkspace = await ctx.db
+      .query("githubUserMappings")
+      .withIndex("by_workspace", (q: any) => q.eq("workspaceId", workspaceId))
+      .collect();
+
+    const emailMapping = mappingsByWorkspace.find(
+      (m: any) => m.githubEmail?.toLowerCase() === githubEmail.toLowerCase()
+    );
+
+    if (emailMapping) {
+      return { userId: emailMapping.userId, verified: emailMapping.verified };
+    }
+
+    // Try to match by email in users table
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q: any) => q.eq("email", githubEmail.toLowerCase()))
+      .first();
+
+    if (user) {
+      return { userId: user._id, verified: false };
+    }
+  }
+
+  return null;
+}
 
 // Link commit to tasks
 export const linkCommitToTasks = internalMutation({
@@ -130,9 +182,10 @@ export const linkCommitToTasks = internalMutation({
     branch: v.string(),
     taskRefs: v.array(v.string()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     // Store commit
-    const commitId = await ctx.db.insert("githubCommits", {
+    await ctx.db.insert("githubCommits", {
       repositoryFullName: args.repositoryFullName,
       sha: args.commit.sha,
       message: args.commit.message,
@@ -147,7 +200,7 @@ export const linkCommitToTasks = internalMutation({
     // Find and update tasks
     for (const taskRef of args.taskRefs) {
       const [projectKey, taskNumber] = taskRef.split("-");
-      
+
       const project = await ctx.db
         .query("projects")
         .withIndex("by_key", (q) => q.eq("key", projectKey))
@@ -156,7 +209,7 @@ export const linkCommitToTasks = internalMutation({
       if (project) {
         const task = await ctx.db
           .query("tasks")
-          .withIndex("by_project_number", (q) => 
+          .withIndex("by_project_number", (q) =>
             q.eq("projectId", project._id).eq("number", parseInt(taskNumber))
           )
           .first();
@@ -174,11 +227,41 @@ export const linkCommitToTasks = internalMutation({
             });
           }
 
-          // Note: We can't get actorId in webhook context, would need to map GitHub user to LTF1 user
-          // For now, skipping activity logging until we implement user mapping
+          // Resolve GitHub user to LTF1 user for activity logging
+          const resolvedUser = await resolveGitHubUserInWorkspace(
+            ctx,
+            project.workspaceId,
+            args.commit.author.name,
+            args.commit.author.email
+          );
+
+          // Log activity with resolved user
+          await ctx.runMutation(internal.activities.mutations.logActivity, {
+            type: "task_updated",
+            projectId: project._id,
+            workspaceId: project.workspaceId,
+            actorId: resolvedUser?.userId || null,
+            actorName: resolvedUser?.userId
+              ? undefined
+              : `${args.commit.author.name} (GitHub)`,
+            targetType: "task",
+            targetId: task._id,
+            targetName: `${projectKey}-${taskNumber}`,
+            description: `pushed commit ${args.commit.sha.substring(0, 7)} linked to task`,
+            metadata: {
+              extra: {
+                commitSha: args.commit.sha,
+                commitMessage: args.commit.message,
+                branch: args.branch,
+                githubAuthor: args.commit.author.name,
+                resolvedUser: resolvedUser?.verified ? "verified" : resolvedUser?.userId ? "inferred" : "unknown",
+              }
+            }
+          });
         }
       }
     }
+    return null;
   },
 });
 
@@ -201,32 +284,35 @@ export const linkPullRequestToTasks = internalMutation({
     taskRefs: v.array(v.string()),
     action: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     // Store or update pull request
     const existing = await ctx.db
       .query("githubPullRequests")
-      .withIndex("by_repository_number", (q) => 
+      .withIndex("by_repository_number", (q) =>
         q.eq("repositoryFullName", args.repositoryFullName)
-         .eq("number", args.pullRequest.number)
+          .eq("number", args.pullRequest.number)
       )
       .first();
 
-    const pullRequestId = existing
-      ? await ctx.db.patch(existing._id, {
-          ...args.pullRequest,
-          linkedTaskKeys: args.taskRefs,
-          updatedAt: args.pullRequest.updatedAt,
-        })
-      : await ctx.db.insert("githubPullRequests", {
-          repositoryFullName: args.repositoryFullName,
-          ...args.pullRequest,
-          linkedTaskKeys: args.taskRefs,
-        });
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        ...args.pullRequest,
+        linkedTaskKeys: args.taskRefs,
+        updatedAt: args.pullRequest.updatedAt,
+      });
+    } else {
+      await ctx.db.insert("githubPullRequests", {
+        repositoryFullName: args.repositoryFullName,
+        ...args.pullRequest,
+        linkedTaskKeys: args.taskRefs,
+      });
+    }
 
     // Update tasks
     for (const taskRef of args.taskRefs) {
       const [projectKey, taskNumber] = taskRef.split("-");
-      
+
       const project = await ctx.db
         .query("projects")
         .withIndex("by_key", (q) => q.eq("key", projectKey))
@@ -235,32 +321,78 @@ export const linkPullRequestToTasks = internalMutation({
       if (project) {
         const task = await ctx.db
           .query("tasks")
-          .withIndex("by_project_number", (q) => 
+          .withIndex("by_project_number", (q) =>
             q.eq("projectId", project._id).eq("number", parseInt(taskNumber))
           )
           .first();
 
         if (task) {
+          // Determine PR status for task
+          let prStatus: "open" | "merged" | "closed" = "open";
+          if (args.pullRequest.mergedAt) {
+            prStatus = "merged";
+          } else if (args.pullRequest.state === "closed") {
+            prStatus = "closed";
+          }
+
           await ctx.db.patch(task._id, {
             git: {
               branch: task.git?.branch || "main",
               commits: task.git?.commits || [],
               pullRequestUrl: args.pullRequest.url,
-              pullRequestStatus: args.pullRequest.state as "open" | "merged" | "closed",
+              pullRequestStatus: prStatus,
             },
             updatedAt: Date.now(),
           });
 
-          // Update task status based on PR action
+          // Resolve GitHub user to LTF1 user for activity logging
+          const resolvedUser = await resolveGitHubUserInWorkspace(
+            ctx,
+            project.workspaceId,
+            args.pullRequest.author,
+            undefined
+          );
+
+          // Get action description
+          let actionDescription = `${args.action} pull request #${args.pullRequest.number}`;
           if (args.action === "closed" && args.pullRequest.mergedAt) {
+            actionDescription = `merged pull request #${args.pullRequest.number}`;
+            // Update task status to done on merge
             await ctx.db.patch(task._id, {
               status: "done",
               completedAt: Date.now(),
             });
           }
+
+          // Log activity with resolved user
+          await ctx.runMutation(internal.activities.mutations.logActivity, {
+            type: args.action === "closed" && args.pullRequest.mergedAt ? "task_completed" : "task_updated",
+            projectId: project._id,
+            workspaceId: project.workspaceId,
+            actorId: resolvedUser?.userId || null,
+            actorName: resolvedUser?.userId
+              ? undefined
+              : `${args.pullRequest.author} (GitHub)`,
+            targetType: "task",
+            targetId: task._id,
+            targetName: `${projectKey}-${taskNumber}`,
+            description: actionDescription,
+            metadata: {
+              extra: {
+                prNumber: args.pullRequest.number,
+                prTitle: args.pullRequest.title,
+                prUrl: args.pullRequest.url,
+                prState: args.pullRequest.state,
+                action: args.action,
+                githubAuthor: args.pullRequest.author,
+                resolvedUser: resolvedUser?.verified ? "verified" : resolvedUser?.userId ? "inferred" : "unknown",
+              }
+            }
+          });
         }
       }
     }
+    return null;
   },
 });
 
@@ -272,6 +404,7 @@ export const logGitHubActivity = internalMutation({
     actor: v.string(),
     metadata: v.any(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.insert("githubActivities", {
       type: args.type,
@@ -280,6 +413,7 @@ export const logGitHubActivity = internalMutation({
       metadata: args.metadata,
       timestamp: Date.now(),
     });
+    return null;
   },
 });
 
@@ -298,6 +432,7 @@ export const storeCommit = internalMutation({
       url: v.string(),
     }),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     // Check if commit already exists
     const existing = await ctx.db
@@ -318,6 +453,7 @@ export const storeCommit = internalMutation({
         createdAt: Date.now(),
       });
     }
+    return null;
   },
 });
 // Sync GitHub issue to LTF1
@@ -339,20 +475,20 @@ export const syncGitHubIssue = internalMutation({
     action: v.string(),
     taskRefs: v.array(v.string()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     // Store or update issue
     const existing = await ctx.db
       .query("githubIssues")
-      .withIndex("by_repository_number", (q) => 
+      .withIndex("by_repository_number", (q) =>
         q.eq("repositoryFullName", args.repositoryFullName)
-         .eq("number", args.issue.number)
+          .eq("number", args.issue.number)
       )
       .first();
 
     if (existing) {
       await ctx.db.patch(existing._id, {
         ...args.issue,
-        updatedAt: args.issue.updatedAt,
       });
     } else {
       await ctx.db.insert("githubIssues", {
@@ -361,11 +497,129 @@ export const syncGitHubIssue = internalMutation({
       });
     }
 
-    // Optionally create task if configured
-    if (args.action === "opened" && !existing) {
-      // This could be expanded to auto-create tasks from issues
-      // For now, just log the activity
+    // Find projects that have this repository connected for sync
+    const projects = await ctx.db
+      .query("projects")
+      .collect();
+
+    const linkedProject = projects.find(
+      (p) => p.repository?.url === `https://github.com/${args.repositoryFullName}`
+    );
+
+    if (!linkedProject) {
+      return null; // No project linked to this repo
     }
+
+    // Check if there's an existing task linked to this issue
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_project", (q) => q.eq("projectId", linkedProject._id))
+      .collect();
+
+    const linkedTask = tasks.find(
+      (t) => t.githubIssue?.issueNumber === args.issue.number &&
+        t.githubIssue?.repositoryFullName === args.repositoryFullName
+    );
+
+    // Queue sync operations based on action
+    if (args.action === "opened" && !existing) {
+      // New issue - queue for task creation
+      await ctx.db.insert("githubIssueSyncQueue", {
+        workspaceId: linkedProject.workspaceId,
+        direction: "from_github" as const,
+        repositoryFullName: args.repositoryFullName,
+        githubIssueNumber: args.issue.number,
+        operation: "create" as const,
+        status: "pending" as const,
+        retryCount: 0,
+        createdAt: Date.now(),
+        payload: {
+          issueTitle: args.issue.title,
+          issueBody: args.issue.body,
+          issueLabels: args.issue.labels,
+          issueAuthor: args.issue.author,
+        },
+      });
+    } else if (args.action === "edited" && linkedTask) {
+      // Issue edited - queue for task update
+      await ctx.db.insert("githubIssueSyncQueue", {
+        workspaceId: linkedProject.workspaceId,
+        direction: "from_github" as const,
+        taskId: linkedTask._id,
+        repositoryFullName: args.repositoryFullName,
+        githubIssueNumber: args.issue.number,
+        operation: "update" as const,
+        status: "pending" as const,
+        retryCount: 0,
+        createdAt: Date.now(),
+        payload: {
+          issueTitle: args.issue.title,
+          issueBody: args.issue.body,
+          issueLabels: args.issue.labels,
+          issueAuthor: args.issue.author,
+        },
+      });
+    } else if (args.action === "closed" && linkedTask) {
+      // Issue closed - queue for task close
+      await ctx.db.insert("githubIssueSyncQueue", {
+        workspaceId: linkedProject.workspaceId,
+        direction: "from_github" as const,
+        taskId: linkedTask._id,
+        repositoryFullName: args.repositoryFullName,
+        githubIssueNumber: args.issue.number,
+        operation: "close" as const,
+        status: "pending" as const,
+        retryCount: 0,
+        createdAt: Date.now(),
+        payload: {
+          issueTitle: args.issue.title,
+          issueBody: args.issue.body,
+          issueLabels: args.issue.labels,
+          issueAuthor: args.issue.author,
+        },
+      });
+    } else if (args.action === "reopened" && linkedTask) {
+      // Issue reopened - queue for task reopen
+      await ctx.db.insert("githubIssueSyncQueue", {
+        workspaceId: linkedProject.workspaceId,
+        direction: "from_github" as const,
+        taskId: linkedTask._id,
+        repositoryFullName: args.repositoryFullName,
+        githubIssueNumber: args.issue.number,
+        operation: "reopen" as const,
+        status: "pending" as const,
+        retryCount: 0,
+        createdAt: Date.now(),
+        payload: {
+          issueTitle: args.issue.title,
+          issueBody: args.issue.body,
+          issueLabels: args.issue.labels,
+          issueAuthor: args.issue.author,
+        },
+      });
+    } else if (args.action === "labeled" || args.action === "unlabeled") {
+      // Labels changed - treat as update if task exists
+      if (linkedTask) {
+        await ctx.db.insert("githubIssueSyncQueue", {
+          workspaceId: linkedProject.workspaceId,
+          direction: "from_github" as const,
+          taskId: linkedTask._id,
+          repositoryFullName: args.repositoryFullName,
+          githubIssueNumber: args.issue.number,
+          operation: "update" as const,
+          status: "pending" as const,
+          retryCount: 0,
+          createdAt: Date.now(),
+          payload: {
+            issueTitle: args.issue.title,
+            issueBody: args.issue.body,
+            issueLabels: args.issue.labels,
+            issueAuthor: args.issue.author,
+          },
+        });
+      }
+    }
+    return null;
   },
 });
 
@@ -383,6 +637,7 @@ export const addGitHubComment = internalMutation({
     }),
     taskRefs: v.array(v.string()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     // Log the comment activity
     await ctx.runMutation(internal.integrations.github.mutations.logGitHubActivity, {
@@ -396,5 +651,6 @@ export const addGitHubComment = internalMutation({
         taskRefs: args.taskRefs,
       },
     });
+    return null;
   },
 });

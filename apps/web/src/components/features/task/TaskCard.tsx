@@ -3,6 +3,7 @@ import { HiOutlineClock, HiOutlineChat, HiOutlineDotsVertical, HiOutlinePencil, 
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
 import BrutalBadge from '../../ui/BrutalBadge'
+import BrutalCard from '../../ui/BrutalCard'
 import UserDisplay from '../user/UserDisplay'
 import toast from 'react-hot-toast'
 
@@ -19,12 +20,12 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
-  const cardRef = useRef<HTMLElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        menuRef.current && 
+        menuRef.current &&
         buttonRef.current &&
         !menuRef.current.contains(event.target as Node) &&
         !buttonRef.current.contains(event.target as Node)
@@ -76,13 +77,13 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
   }
 
   return (
-    <article 
+    <BrutalCard
       ref={cardRef}
+      variant="elevated"
+      padding={isCompact ? 'sm' : 'md'}
+      hoverable={true}
       className={clsx(
-        'bg-[var(--theme-background)] border-2 shadow-brutal',
-        'hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px]',
-        'transition-all duration-200 ease-brutal-out cursor-pointer',
-        'relative overflow-hidden',
+        'relative overflow-hidden transition-all duration-200',
         priorityColors[task.priority as keyof typeof priorityColors]
       )}
       style={{ borderRadius: '0 !important' }}
@@ -93,14 +94,14 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
       onClick={onViewDetails}
     >
       {/* Status indicator bar */}
-      <div 
+      <div
         className={clsx(
           'absolute top-0 left-0 w-full',
           isCompact ? 'h-1px' : 'h-2px',
           statusIndicators[task.status as keyof typeof statusIndicators]?.color
         )}
       />
-      
+
       <div className={clsx(
         isCompact ? "p-8px space-y-4px" : "p-16px space-y-12px"
       )}>
@@ -130,7 +131,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
               </span>
             )}
           </div>
-          
+
           {/* Three dots menu */}
           <div className="relative">
             <button
@@ -143,7 +144,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
             >
               <HiOutlineDotsVertical className="w-16px h-16px" />
             </button>
-            
+
             {showMenu && (
               <div
                 ref={menuRef}
@@ -218,7 +219,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
             <h4 className="font-bold text-sm uppercase tracking-wider text-[var(--theme-foreground)] break-words line-clamp-1">
               {task.title}
             </h4>
-            
+
             {/* Compact tags, user, and status */}
             <div className="flex items-center justify-between gap-8px">
               <div className="flex items-center gap-6px flex-1 min-w-0">
@@ -228,7 +229,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
                   showStatus={false}
                   compact={true}
                 />
-                
+
                 {task.labels && task.labels.length > 0 && (
                   <div className="flex gap-4px overflow-hidden">
                     {task.labels.slice(0, 1).map((label: string) => (
@@ -285,7 +286,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
                 showStatus={true}
                 compact={true}
               />
-              
+
               {task.commentCount > 0 && (
                 <div className="flex items-center gap-4px text-xs font-mono uppercase text-[var(--theme-foreground)]/60">
                   <HiOutlineChat className="w-12px h-12px" />
@@ -318,6 +319,6 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
           </div>
         )}
       </div>
-    </article>
+    </BrutalCard>
   )
 }

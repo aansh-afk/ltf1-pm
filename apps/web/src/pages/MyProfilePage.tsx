@@ -10,12 +10,18 @@ import {
   HiOutlineCode,
   HiOutlineBriefcase,
   HiOutlineClock,
-  HiOutlineGlobeAlt
+  HiOutlineGlobeAlt,
+  HiOutlineIdentification,
+  HiOutlineChip,
+  HiOutlineTerminal
 } from 'react-icons/hi'
 import DeveloperStatusIndicator from '../components/features/developer/DeveloperStatusIndicator'
 import { EditDeveloperProfileModal } from '../components/features/profile/EditDeveloperProfileModal'
 import { GitHubProfileSection } from '../components/features/profile/GitHubProfileSection'
 import clsx from 'clsx'
+import BrutalCard from '../components/ui/BrutalCard'
+import BrutalButton from '../components/ui/BrutalButton'
+import BrutalBadge from '../components/ui/BrutalBadge'
 
 import { useProfileCompletion } from '../hooks/useProfileCompletion'
 
@@ -66,247 +72,212 @@ export default function MyProfilePage() {
 
   if (!currentUser) {
     return (
-      <div className="p-24px">
-        <div className="text-brutal-lg">Loading...</div>
+      <div className="p-6 flex items-center justify-center min-h-[50vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[var(--theme-primary)] border-t-transparent rounded-full animate-spin" />
+          <p className="font-mono text-sm animate-pulse">Loading Profile...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="p-24px max-w-4xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto min-h-screen bg-[var(--theme-background)]">
       {/* Profile Completion Banner */}
       {!profileComplete && (
-        <div className="mb-24px p-16px bg-brutal-error border-2 border-event-horizon flex items-center justify-between">
-          <div className="flex items-center gap-16px">
-            <HiOutlineExclamationCircle className="w-24px h-24px text-event-horizon" />
-            <div>
-              <h3 className="text-brutal-md font-bold text-event-horizon">COMPLETE YOUR PROFILE</h3>
-              <p className="text-brutal-sm text-event-horizon/80">
-                {missingFields.length > 0
-                  ? `Missing: ${missingFields.join(', ')}. Complete these to help your team find you.`
-                  : "A complete profile helps your team find the right person for tasks and code reviews."}
-              </p>
+        <div className="mb-8">
+          <BrutalCard variant="glitch" className="bg-[var(--theme-error)]/10 border-[var(--theme-error)]">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <HiOutlineExclamationCircle className="w-8 h-8 text-[var(--theme-error)] animate-pulse" />
+                <div>
+                  <h3 className="font-bold text-[var(--theme-error)] uppercase tracking-wider">Profile Incomplete</h3>
+                  <p className="font-mono text-xs text-[var(--theme-foreground)]/80">
+                    {missingFields.length > 0
+                      ? `Missing data: ${missingFields.join(', ')}`
+                      : "Please complete your profile to access all features."}
+                  </p>
+                </div>
+              </div>
+              <BrutalButton
+                variant="danger"
+                size="sm"
+                onClick={() => setShowEditModal(true)}
+              >
+                COMPLETE PROFILE
+              </BrutalButton>
             </div>
-          </div>
-          <button
-            onClick={() => setShowEditModal(true)}
-            className="px-24px py-12px bg-[var(--theme-background-secondary)] text-brutal-error border-2 border-event-horizon
-                     font-mono text-brutal-sm uppercase tracking-wider
-                     hover:bg-brutal-error/90 transition-colors"
-          >
-            COMPLETE NOW
-          </button>
+          </BrutalCard>
         </div>
       )}
 
       {/* Page Header */}
-      <div className="flex items-center justify-between mb-32px">
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8 border-b-2 border-[var(--theme-border)] pb-6 gap-4">
         <div>
-          <h1 className="text-brutal-2xl font-bold mb-8px">MY DEVELOPER PROFILE</h1>
-          <p className="text-brutal-sm text-primary-brutalist/80">
-            Manage your professional profile and expertise
+          <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2 flex items-center gap-4">
+            <HiOutlineIdentification className="w-12 h-12 md:w-16 md:h-16 text-[var(--theme-primary)]" />
+            MY PROFILE
+          </h1>
+          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 uppercase tracking-widest pl-2">
+            USER ID: <span className="text-[var(--theme-primary)]">{currentUser._id}</span>
           </p>
         </div>
-        <button
+        <BrutalButton
+          variant="secondary"
           onClick={() => setShowEditModal(true)}
-          className="brutal-btn flex items-center gap-8px"
+          className="flex items-center gap-2"
         >
-          <HiOutlinePencil className="w-16px h-16px" />
+          <HiOutlinePencil className="w-4 h-4" />
           EDIT PROFILE
-        </button>
+        </BrutalButton>
       </div>
 
       {/* Profile Content */}
       {developerProfile ? (
-        <div className="space-y-24px">
-          {/* Status and Basic Info */}
-          <div className="brutal-card p-24px">
-            <div className="flex items-start justify-between mb-24px">
-              <div className="flex items-center gap-16px">
-                <div className="w-64px h-64px bg-primary-brutalist/20 border-2 border-primary-brutalist flex items-center justify-center">
-                  <HiOutlineUser className="w-32px h-32px text-primary-brutalist" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+          {/* LEFT COLUMN - IDENTITY & STATUS (4 cols) */}
+          <div className="lg:col-span-4 space-y-6">
+            <BrutalCard variant="bordered" className="relative overflow-hidden">
+              <div className="flex flex-col items-center text-center mb-6 relative z-10 pt-6">
+                <div className="w-32 h-32 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-primary)] flex items-center justify-center mb-4 relative group overflow-hidden rounded-full">
+                  <HiOutlineUser className="w-16 h-16 text-[var(--theme-primary)] group-hover:scale-110 transition-transform duration-300" />
+                  <div className="absolute inset-0 bg-[var(--theme-primary)]/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div>
-                  <h2 className="text-brutal-lg font-bold">{currentUser.name || 'UNNAMED DEVELOPER'}</h2>
-                  <p className="text-brutal-sm text-primary-brutalist/80">
-                    {developerProfile.profile?.role || 'No role set'}
-                  </p>
-                  <div className="mt-8px">
-                    <DeveloperStatusIndicator userId={currentUser._id} size="md" showLabel={true} />
-                  </div>
+
+                <h2 className="text-2xl font-bold uppercase tracking-wider mb-1">{currentUser.name || 'UNKNOWN AGENT'}</h2>
+                <p className="font-mono text-sm text-[var(--theme-primary)] mb-4">
+                  {developerProfile.profile?.role?.toUpperCase() || 'UNASSIGNED ROLE'}
+                </p>
+
+                <div className="w-full border-t border-[var(--theme-border)] my-4" />
+
+                <div className="w-full flex justify-between items-center px-4">
+                  <span className="font-mono text-xs opacity-60">CURRENT STATUS</span>
+                  <DeveloperStatusIndicator userId={currentUser._id} size="sm" showLabel={true} />
                 </div>
               </div>
-              {profileComplete && (
-                <div className="flex items-center gap-8px text-brutal-success">
-                  <HiOutlineCheckCircle className="w-20px h-20px" />
-                  <span className="font-mono text-brutal-sm">PROFILE COMPLETE</span>
+            </BrutalCard>
+
+            {/* Availability Matrix */}
+            <BrutalCard variant="default">
+              <h3 className="font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                <HiOutlineClock className="w-5 h-5" /> Availability
+              </h3>
+              <div className="space-y-3 font-mono text-xs">
+                <div className="flex justify-between items-center p-2 border border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+                  <span className="flex items-center gap-2"><HiOutlineGlobeAlt /> TIMEZONE</span>
+                  <span className="text-[var(--theme-info)]">{developerProfile.profile?.timezone || 'N/A'}</span>
                 </div>
-              )}
-            </div>
+                <div className="flex justify-between items-center p-2 border border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+                  <span className="flex items-center gap-2"><HiOutlineClock /> HOURS</span>
+                  <span>
+                    {developerProfile.profile?.workingHours
+                      ? `${developerProfile.profile.workingHours.start} - ${developerProfile.profile.workingHours.end}`
+                      : 'N/A'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-2 border border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+                  <span className="flex items-center gap-2"><HiOutlineBriefcase /> STATUS</span>
+                  <span className="text-[var(--theme-success)]">{developerProfile.profile?.availability || 'N/A'}</span>
+                </div>
+              </div>
+            </BrutalCard>
+          </div>
+
+          {/* RIGHT COLUMN - DETAILS & STATS (8 cols) */}
+          <div className="lg:col-span-8 space-y-6">
 
             {/* Bio Section */}
-            {developerProfile.profile?.bio && (
-              <div className="mb-24px">
-                <h3 className="font-mono text-brutal-xs font-bold mb-8px">ABOUT ME</h3>
-                <p className="text-brutal-sm text-[var(--theme-foreground)]/80 whitespace-pre-wrap">
-                  {developerProfile.profile.bio}
-                </p>
-              </div>
-            )}
-
-            {/* Quick Info Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-16px">
-              <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
-                <div className="flex items-center gap-8px mb-8px">
-                  <HiOutlineGlobeAlt className="w-16px h-16px text-primary-brutalist" />
-                  <span className="font-mono text-brutal-xs">TIMEZONE</span>
-                </div>
-                <p className="font-mono text-brutal-sm">{developerProfile.profile?.timezone || 'NOT SET'}</p>
-              </div>
-
-              <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
-                <div className="flex items-center gap-8px mb-8px">
-                  <HiOutlineClock className="w-16px h-16px text-primary-brutalist" />
-                  <span className="font-mono text-brutal-xs">WORKING HOURS</span>
-                </div>
-                <p className="font-mono text-brutal-sm">
-                  {developerProfile.profile?.workingHours
-                    ? `${developerProfile.profile.workingHours.start} - ${developerProfile.profile.workingHours.end}`
-                    : 'NOT SET'}
-                </p>
-              </div>
-
-              <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
-                <div className="flex items-center gap-8px mb-8px">
-                  <HiOutlineBriefcase className="w-16px h-16px text-primary-brutalist" />
-                  <span className="font-mono text-brutal-xs">AVAILABILITY</span>
-                </div>
-                <p className="font-mono text-brutal-sm">{developerProfile.profile?.availability || 'NOT SET'}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Expertise Section */}
-          <div className="brutal-card p-24px">
-            <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
-              <HiOutlineCode className="w-20px h-20px text-primary-brutalist" />
-              TECHNICAL EXPERTISE
-            </h3>
-
-            {developerProfile.profile?.technologies && developerProfile.profile.technologies.length > 0 ? (
-              <div className="flex flex-wrap gap-8px">
-                {developerProfile.profile.technologies.map((tech: any) => (
-                  <div
-                    key={tech.name}
-                    className={clsx(
-                      "px-16px py-8px border-2 font-mono text-brutal-sm font-bold",
-                      tech.level === 'expert' && "bg-brutal-success border-brutal-success text-event-horizon",
-                      tech.level === 'proficient' && "bg-brutal-info border-brutal-info text-event-horizon",
-                      tech.level === 'learning' && "bg-brutal-warning border-brutal-warning text-event-horizon"
-                    )}
-                  >
-                    {tech.name} ({tech.level.toUpperCase()})
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-brutal-sm text-primary-brutalist/60">
-                No expertise added yet. Add your skills to help your team find you for the right tasks.
+            <BrutalCard variant="elevated">
+              <h3 className="font-bold uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-[var(--theme-border)] pb-2">
+                <HiOutlineTerminal className="w-5 h-5" /> Bio
+              </h3>
+              <p className="font-mono text-sm leading-relaxed text-[var(--theme-foreground)]/80 whitespace-pre-wrap">
+                {developerProfile.profile?.bio || '// NO BIOGRAPHICAL DATA AVAILABLE'}
               </p>
-            )}
+            </BrutalCard>
+
+            {/* Tech Stack Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <BrutalCard variant="default">
+                <h3 className="font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <HiOutlineChip className="w-5 h-5" /> Technologies
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {developerProfile.profile?.technologies && developerProfile.profile.technologies.length > 0 ? (
+                    developerProfile.profile.technologies.map((tech: any) => (
+                      <BrutalBadge
+                        key={tech.name}
+                        variant={
+                          tech.level === 'expert' ? 'success' :
+                            tech.level === 'proficient' ? 'info' : 'warning'
+                        }
+                      >
+                        {tech.name} [{tech.level.substring(0, 3).toUpperCase()}]
+                      </BrutalBadge>
+                    ))
+                  ) : (
+                    <span className="font-mono text-xs opacity-50">// NO TECH STACK DEFINED</span>
+                  )}
+                </div>
+              </BrutalCard>
+
+              <BrutalCard variant="default">
+                <h3 className="font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <HiOutlineCode className="w-5 h-5" /> Skills & Interests
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="font-mono text-[10px] opacity-60 mb-2">SKILLS</div>
+                    <div className="flex flex-wrap gap-2">
+                      {developerProfile.profile?.skills?.map((skill: string) => (
+                        <span key={skill} className="px-2 py-1 border border-[var(--theme-border)] text-[10px] font-mono uppercase hover:bg-[var(--theme-primary)] hover:text-black transition-colors cursor-default">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-mono text-[10px] opacity-60 mb-2">INTERESTS</div>
+                    <div className="flex flex-wrap gap-2">
+                      {developerProfile.profile?.interests?.map((interest: string) => (
+                        <span key={interest} className="px-2 py-1 border border-[var(--theme-border)] text-[10px] font-mono uppercase hover:bg-[var(--theme-info)] hover:text-black transition-colors cursor-default">
+                          {interest}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </BrutalCard>
+            </div>
+
+            {/* GitHub Stats */}
+            <GitHubProfileSection
+              userId={currentUser._id}
+              isProfileComplete={profileComplete}
+              onConnect={() => {
+                window.location.reload();
+              }}
+            />
+
           </div>
-
-          {/* Skills & Interests */}
-          {(developerProfile.profile?.skills?.length > 0 || developerProfile.profile?.interests?.length > 0) && (
-            <div className="brutal-card p-24px">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-24px">
-                {/* Skills */}
-                {developerProfile.profile?.skills?.length > 0 && (
-                  <div>
-                    <h3 className="text-brutal-md font-bold mb-16px">SKILLS</h3>
-                    <div className="flex flex-wrap gap-8px">
-                      {developerProfile.profile.skills.map((skill: string) => (
-                        <span
-                          key={skill}
-                          className="px-12px py-6px font-mono text-brutal-xs bg-primary-brutalist/20 border-2 border-primary-brutalist text-primary-brutalist font-bold"
-                        >
-                          {skill.toUpperCase()}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Interests */}
-                {developerProfile.profile?.interests?.length > 0 && (
-                  <div>
-                    <h3 className="text-brutal-md font-bold mb-16px">INTERESTS</h3>
-                    <div className="flex flex-wrap gap-8px">
-                      {developerProfile.profile.interests.map((interest: string) => (
-                        <span
-                          key={interest}
-                          className="px-12px py-6px font-mono text-brutal-xs bg-brutal-info/20 border-2 border-brutal-info text-brutal-info font-bold"
-                        >
-                          {interest.toUpperCase()}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Career & Work Style */}
-          {(developerProfile.profile?.careerGoals || developerProfile.profile?.workStyle) && (
-            <div className="brutal-card p-24px">
-              <div className="space-y-24px">
-                {developerProfile.profile?.careerGoals && (
-                  <div>
-                    <h3 className="text-brutal-md font-bold mb-8px">CAREER GOALS</h3>
-                    <p className="text-brutal-sm text-[var(--theme-foreground)]/80 whitespace-pre-wrap">
-                      {developerProfile.profile.careerGoals}
-                    </p>
-                  </div>
-                )}
-
-                {developerProfile.profile?.workStyle && (
-                  <div>
-                    <h3 className="text-brutal-md font-bold mb-8px">WORK STYLE</h3>
-                    <p className="text-brutal-sm text-[var(--theme-foreground)]/80 whitespace-pre-wrap">
-                      {developerProfile.profile.workStyle}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* GitHub Stats */}
-          <GitHubProfileSection
-            userId={currentUser._id}
-            isProfileComplete={profileComplete}
-            onConnect={() => {
-              // Refresh profile data after connecting GitHub
-              window.location.reload();
-            }}
-          />
         </div>
       ) : (
         // No Profile State
-        <div className="brutal-card p-48px text-center">
-          <HiOutlineUser className="w-64px h-64px text-primary-brutalist/40 mx-auto mb-24px" />
-          <h2 className="text-brutal-lg font-bold mb-16px">NO PROFILE FOUND</h2>
-          <p className="text-brutal-sm text-primary-brutalist/60 mb-24px max-w-md mx-auto">
-            Create your developer profile to help your team understand your expertise and availability.
+        <BrutalCard variant="glitch" className="p-12 text-center border-dashed">
+          <HiOutlineUser className="w-24 h-24 text-[var(--theme-foreground)]/20 mx-auto mb-6" />
+          <h2 className="text-2xl font-bold mb-4">PROFILE NOT FOUND</h2>
+          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 mb-8 max-w-md mx-auto">
+            Create your developer profile to initialize your identity within the system. This is required for team assignment.
           </p>
-          <button
+          <BrutalButton
+            variant="primary"
             onClick={() => setShowEditModal(true)}
-            className="brutal-btn mx-auto"
           >
-            CREATE YOUR PROFILE
-          </button>
-        </div>
+            CREATE PROFILE
+          </BrutalButton>
+        </BrutalCard>
       )}
 
       {/* Edit Modal */}

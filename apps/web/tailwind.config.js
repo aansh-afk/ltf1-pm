@@ -78,6 +78,8 @@ export default {
         'marquee2': 'marquee2 25s linear infinite',
         'marquee-slow': 'marquee 50s linear infinite',
         'marquee-fast': 'marquee 15s linear infinite',
+        'scanline': 'scanline 8s linear infinite',
+        'crt-flicker': 'crt-flicker 0.15s infinite',
       },
       keyframes: {
         brutalFade: {
@@ -106,6 +108,15 @@ export default {
         marquee2: {
           '0%': { transform: 'translateX(100%)' },
           '100%': { transform: 'translateX(0%)' },
+        },
+        'scanline': {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(100%)' },
+        },
+        'crt-flicker': {
+          '0%': { opacity: '0.9' },
+          '50%': { opacity: '1.0' },
+          '100%': { opacity: '0.9' },
         },
       },
       borderRadius: {
