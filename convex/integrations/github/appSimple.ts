@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { action, internalMutation } from "../../_generated/server";
+import { internal } from "../../_generated/api";
 
 // Simplified GitHub App actions without JWT (for OAuth flow)
 // In production, implement proper JWT signing
@@ -105,7 +106,9 @@ export const storeInstallation = internalMutation({
       private: v.boolean(),
     }))),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
+    console.log("[storeInstallation] Starting for installation:", args.installationId);
     // Check if installation already exists
     const existing = await ctx.db
       .query("githubInstallations")
@@ -147,7 +150,7 @@ export const storeInstallation = internalMutation({
           .query("githubRepositories")
           .withIndex("by_repo_id", (q) => q.eq("repoId", repo.id))
           .first();
-        
+
         if (!existingRepo) {
           await ctx.db.insert("githubRepositories", {
             installationId: args.installationId,
@@ -169,8 +172,18 @@ export const storeInstallation = internalMutation({
         }
       }
     }
-    
-    console.log(`GitHub App installed for ${args.account.login}`);
+
+    // If "all repositories" is selected, trigger immediate sync to fetch all repos
+    // This is necessary because GitHub webhooks only send a subset of repos
+    if (args.repositorySelection === "all") {
+      await ctx.scheduler.runAfter(0, internal.integrations.github.syncActions.syncInstallationRepositories, {
+        installationId: args.installationId,
+      });
+      console.log(`Scheduled repository sync for installation ${args.installationId} (all repos selected)`);
+    }
+
+    console.log(`[storeInstallation] GitHub App installed for ${args.account.login}`);
+    return null;
   },
 });
 

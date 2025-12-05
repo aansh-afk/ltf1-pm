@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
-import { 
-  HiOutlineX, 
-  HiOutlinePlus, 
-  HiOutlineTrash, 
+import {
+  HiOutlineX,
+  HiOutlinePlus,
+  HiOutlineTrash,
   HiOutlineSave,
   HiOutlineRefresh,
   HiOutlineCode,
@@ -14,6 +14,7 @@ import {
   HiOutlineGlobeAlt
 } from 'react-icons/hi'
 import clsx from 'clsx'
+import { BrutalButton, BrutalCard, BrutalBadge } from '@/components/ui'
 
 interface EditDeveloperProfileModalProps {
   userId: Id<"users">
@@ -57,14 +58,14 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
     return techStack.map(tech => ({
       name: tech.name,
       level: tech.level === 'learning' ? 2 :
-             tech.level === 'proficient' ? 5 :
-             tech.level === 'expert' ? 9 : 5
+        tech.level === 'proficient' ? 5 :
+          tech.level === 'expert' ? 9 : 5
     }))
   }
 
   // Load profile data when available (only once)
   const [hasLoadedProfile, setHasLoadedProfile] = useState(false)
-  
+
   useEffect(() => {
     if (profile && !hasLoadedProfile) {
       setFormData({
@@ -94,9 +95,9 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
   const convertTechLevels = (techStack: Array<{ name: string; level: number }>) => {
     return techStack.map(tech => ({
       name: tech.name,
-      level: tech.level <= 3 ? 'learning' : 
-             tech.level <= 7 ? 'proficient' : 
-             'expert'
+      level: tech.level <= 3 ? 'learning' :
+        tech.level <= 7 ? 'proficient' :
+          'expert'
     }))
   }
 
@@ -109,7 +110,7 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
         techStack: convertTechLevels(formData.techStack),
         userId
       }
-      
+
       await updateProfile(dataToSave)
       onClose()
     } catch (error) {
@@ -136,7 +137,7 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
   const updateTechStack = (index: number, field: 'name' | 'level', value: string | number) => {
     setFormData(prev => ({
       ...prev,
-      techStack: prev.techStack.map((tech, i) => 
+      techStack: prev.techStack.map((tech, i) =>
         i === index ? { ...tech, [field]: value } : tech
       )
     }))
@@ -181,17 +182,19 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
   ] as const
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background-secondary)]/80">
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal w-full max-w-4xl max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background-secondary)]/80 backdrop-blur-sm">
+      <BrutalCard className="w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0">
         {/* Header */}
-        <div className="flex items-center justify-between p-24px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
-          <h2 className="text-brutal-lg font-bold">EDIT DEVELOPER PROFILE</h2>
-          <button
+        <div className="flex items-center justify-between p-6 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+          <h2 className="text-xl font-bold uppercase">EDIT DEVELOPER PROFILE</h2>
+          <BrutalButton
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="brutal-btn-secondary p-8px"
+            className="p-2"
           >
-            <HiOutlineX className="w-20px h-20px" />
-          </button>
+            <HiOutlineX className="w-5 h-5" />
+          </BrutalButton>
         </div>
 
         {/* Tab Navigation */}
@@ -203,13 +206,13 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={clsx(
-                  "flex items-center gap-8px px-24px py-16px font-mono text-brutal-sm font-bold transition-all border-r-2 border-[var(--theme-border)] last:border-r-0",
+                  "flex items-center gap-2 px-6 py-4 font-mono text-sm font-bold uppercase transition-all border-r-2 border-[var(--theme-border)] last:border-r-0",
                   activeTab === tab.id
-                    ? "bg-primary-brutalist text-event-horizon"
-                    : "bg-[var(--theme-background)] text-primary-brutalist/80 hover:bg-[var(--theme-background-secondary)] hover:text-primary-brutalist"
+                    ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
+                    : "bg-[var(--theme-background)] text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
                 )}
               >
-                <Icon className="w-16px h-16px" />
+                <Icon className="w-4 h-4" />
                 {tab.label}
               </button>
             )
@@ -217,80 +220,75 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
         </div>
 
         {/* Content */}
-        <div className="p-24px overflow-y-auto max-h-[60vh]">
+        <div className="p-6 overflow-y-auto flex-1">
           {activeTab === 'basic' && (
-            <div className="space-y-24px">
+            <div className="space-y-6">
               {/* Personal Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-16px">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                  <label className="block font-mono text-xs font-bold uppercase mb-2">
                     FULL NAME
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="brutal-input w-full"
-                    placeholder="Enter your full name"
+                    className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
+                    placeholder="ENTER_NAME"
                   />
                 </div>
                 <div>
-                  <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                  <label className="block font-mono text-xs font-bold uppercase mb-2">
                     ROLE/TITLE
                   </label>
                   <input
                     type="text"
                     value={formData.role}
                     onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
-                    className="brutal-input w-full"
-                    placeholder="e.g., Senior Frontend Developer"
+                    className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
+                    placeholder="ENTER_ROLE"
                   />
                 </div>
               </div>
 
               {/* Bio */}
               <div>
-                <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                <label className="block font-mono text-xs font-bold uppercase mb-2">
                   BIO
                 </label>
                 <textarea
                   value={formData.bio}
                   onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                  className="brutal-input w-full min-h-[80px] resize-vertical whitespace-pre-wrap break-words"
-                  placeholder="Tell us about yourself..."
+                  className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none min-h-[80px] resize-none"
+                  placeholder="ENTER_BIO..."
                   rows={3}
-                  style={{ 
-                    overflowWrap: 'break-word',
-                    wordWrap: 'break-word',
-                    wordBreak: 'break-word'
-                  }}
                 />
               </div>
 
               {/* Location & Contact */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-16px">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                  <label className="block font-mono text-xs font-bold uppercase mb-2">
                     LOCATION
                   </label>
                   <input
                     type="text"
                     value={formData.location}
                     onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                    className="brutal-input w-full"
-                    placeholder="City, Country"
+                    className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
+                    placeholder="CITY_COUNTRY"
                   />
                 </div>
                 <div>
-                  <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                  <label className="block font-mono text-xs font-bold uppercase mb-2">
                     TIMEZONE
                   </label>
                   <select
                     value={formData.timezone}
                     onChange={(e) => setFormData(prev => ({ ...prev, timezone: e.target.value }))}
-                    className="brutal-input w-full"
+                    className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
                   >
-                    <option value="">Select timezone</option>
+                    <option value="">SELECT_TIMEZONE</option>
                     <option value="UTC">UTC</option>
                     <option value="America/New_York">Eastern Time</option>
                     <option value="America/Chicago">Central Time</option>
@@ -306,37 +304,37 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
               </div>
 
               {/* Contact Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-16px">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                  <label className="block font-mono text-xs font-bold uppercase mb-2">
                     PHONE (OPTIONAL)
                   </label>
                   <input
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                    className="brutal-input w-full"
+                    className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
                 <div>
-                  <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                  <label className="block font-mono text-xs font-bold uppercase mb-2">
                     GITHUB USERNAME
                   </label>
                   <input
                     type="text"
                     value={formData.githubUsername}
                     onChange={(e) => setFormData(prev => ({ ...prev, githubUsername: e.target.value }))}
-                    className="brutal-input w-full"
-                    placeholder="your-username"
+                    className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
+                    placeholder="USERNAME"
                   />
                 </div>
               </div>
 
               {/* Experience */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-16px">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                  <label className="block font-mono text-xs font-bold uppercase mb-2">
                     YEARS OF EXPERIENCE
                   </label>
                   <input
@@ -345,23 +343,23 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
                     max="50"
                     value={formData.yearsExperience}
                     onChange={(e) => setFormData(prev => ({ ...prev, yearsExperience: parseInt(e.target.value) || 0 }))}
-                    className="brutal-input w-full"
+                    className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                  <label className="block font-mono text-xs font-bold uppercase mb-2">
                     CAREER LEVEL
                   </label>
                   <select
                     value={formData.careerLevel}
                     onChange={(e) => setFormData(prev => ({ ...prev, careerLevel: e.target.value as any }))}
-                    className="brutal-input w-full"
+                    className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
                   >
-                    <option value="junior">Junior</option>
-                    <option value="mid">Mid-Level</option>
-                    <option value="senior">Senior</option>
-                    <option value="lead">Lead</option>
-                    <option value="principal">Principal</option>
+                    <option value="junior">JUNIOR</option>
+                    <option value="mid">MID_LEVEL</option>
+                    <option value="senior">SENIOR</option>
+                    <option value="lead">LEAD</option>
+                    <option value="principal">PRINCIPAL</option>
                   </select>
                 </div>
               </div>
@@ -369,58 +367,62 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
           )}
 
           {activeTab === 'expertise' && (
-            <div className="space-y-24px">
+            <div className="space-y-6">
               {/* Tech Stack */}
               <div>
-                <div className="flex items-center justify-between mb-16px">
-                  <label className="font-mono text-brutal-xs font-bold">
+                <div className="flex items-center justify-between mb-4">
+                  <label className="font-mono text-xs font-bold uppercase">
                     TECHNOLOGY STACK
                   </label>
-                  <button
+                  <BrutalButton
+                    size="sm"
+                    variant="secondary"
                     onClick={addTechStack}
-                    className="brutal-btn-secondary flex items-center gap-8px px-12px py-6px"
+                    className="flex items-center gap-2"
                   >
-                    <HiOutlinePlus className="w-16px h-16px" />
-                    ADD TECH
-                  </button>
+                    <HiOutlinePlus className="w-4 h-4" />
+                    ADD_TECH
+                  </BrutalButton>
                 </div>
-                <div className="space-y-12px">
+                <div className="space-y-3">
                   {formData.techStack.map((tech, index) => (
-                    <div key={index} className="flex items-center gap-12px p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]">
+                    <div key={index} className="flex items-center gap-3 p-3 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]">
                       <input
                         type="text"
                         value={tech.name}
                         onChange={(e) => updateTechStack(index, 'name', e.target.value)}
-                        className="brutal-input flex-1"
-                        placeholder="Technology name"
+                        className="flex-1 p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
+                        placeholder="TECH_NAME"
                       />
-                      <div className="flex items-center gap-8px">
-                        <span className="font-mono text-brutal-xs">LEVEL:</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold uppercase hidden md:inline">LEVEL:</span>
                         <input
                           type="range"
                           min="1"
                           max="10"
                           value={tech.level}
                           onChange={(e) => updateTechStack(index, 'level', parseInt(e.target.value))}
-                          className="w-80px"
+                          className="w-24"
                         />
-                        <span className="font-mono text-brutal-xs min-w-[80px]">
-                          {tech.level <= 3 ? 'LEARNING' : 
-                           tech.level <= 7 ? 'PROFICIENT' : 
-                           'EXPERT'} ({tech.level})
+                        <span className="font-mono text-xs font-bold uppercase w-24 text-right">
+                          {tech.level <= 3 ? 'LEARNING' :
+                            tech.level <= 7 ? 'PROFICIENT' :
+                              'EXPERT'} ({tech.level})
                         </span>
                       </div>
-                      <button
+                      <BrutalButton
+                        size="sm"
+                        variant="ghost"
                         onClick={() => removeTechStack(index)}
-                        className="brutal-btn-secondary p-6px text-brutal-error"
+                        className="text-brutal-error hover:text-brutal-error"
                       >
-                        <HiOutlineTrash className="w-16px h-16px" />
-                      </button>
+                        <HiOutlineTrash className="w-4 h-4" />
+                      </BrutalButton>
                     </div>
                   ))}
                   {formData.techStack.length === 0 && (
-                    <div className="text-center py-24px text-primary-brutalist/60">
-                      No technologies added yet. Click "ADD TECH" to get started.
+                    <div className="text-center py-6 border-2 border-dashed border-[var(--theme-border)]">
+                      <p className="text-sm font-mono text-[var(--theme-foreground)]/60 uppercase">NO_TECH_ADDED</p>
                     </div>
                   )}
                 </div>
@@ -428,30 +430,31 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
 
               {/* Skills */}
               <div>
-                <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                <label className="block font-mono text-xs font-bold uppercase mb-2">
                   SKILLS
                 </label>
-                <div className="flex flex-wrap gap-8px mb-16px">
+                <div className="flex flex-wrap gap-2 mb-4">
                   {formData.skills.map((skill, index) => (
-                    <span
+                    <BrutalBadge
                       key={index}
-                      className="flex items-center gap-8px px-12px py-6px font-mono text-brutal-xs bg-primary-brutalist/20 border-2 border-primary-brutalist text-primary-brutalist font-bold"
+                      variant="outline"
+                      className="flex items-center gap-2 pr-1"
                     >
                       {skill}
                       <button
                         onClick={() => removeSkill(skill)}
-                        className="text-brutal-error hover:bg-brutal-error hover:text-event-horizon rounded-full w-16px h-16px flex items-center justify-center"
+                        className="hover:text-brutal-error"
                       >
-                        <HiOutlineX className="w-12px h-12px" />
+                        <HiOutlineX className="w-3 h-3" />
                       </button>
-                    </span>
+                    </BrutalBadge>
                   ))}
                 </div>
-                <div className="flex gap-8px">
+                <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Add a skill and press Enter"
-                    className="brutal-input flex-1"
+                    placeholder="ADD_SKILL_ENTER"
+                    className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         addSkill(e.currentTarget.value)
@@ -464,29 +467,30 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
 
               {/* Interests */}
               <div>
-                <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                <label className="block font-mono text-xs font-bold uppercase mb-2">
                   INTERESTS
                 </label>
-                <div className="flex flex-wrap gap-8px mb-16px">
+                <div className="flex flex-wrap gap-2 mb-4">
                   {formData.interests.map((interest, index) => (
-                    <span
+                    <BrutalBadge
                       key={index}
-                      className="flex items-center gap-8px px-12px py-6px font-mono text-brutal-xs bg-brutal-info/20 border-2 border-brutal-info text-brutal-info font-bold"
+                      variant="secondary"
+                      className="flex items-center gap-2 pr-1"
                     >
                       {interest}
                       <button
                         onClick={() => removeInterest(interest)}
-                        className="text-brutal-error hover:bg-brutal-error hover:text-event-horizon rounded-full w-16px h-16px flex items-center justify-center"
+                        className="hover:text-brutal-error"
                       >
-                        <HiOutlineX className="w-12px h-12px" />
+                        <HiOutlineX className="w-3 h-3" />
                       </button>
-                    </span>
+                    </BrutalBadge>
                   ))}
                 </div>
                 <input
                   type="text"
-                  placeholder="Add an interest and press Enter"
-                  className="brutal-input w-full"
+                  placeholder="ADD_INTEREST_ENTER"
+                  className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       addInterest(e.currentTarget.value)
@@ -499,15 +503,15 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
           )}
 
           {activeTab === 'preferences' && (
-            <div className="space-y-24px">
+            <div className="space-y-6">
               {/* Working Hours */}
               <div>
-                <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                <label className="block font-mono text-xs font-bold uppercase mb-2">
                   WORKING HOURS
                 </label>
-                <div className="grid grid-cols-2 gap-16px">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-mono text-brutal-xs mb-8px">START TIME</label>
+                    <label className="block font-mono text-xs mb-2 uppercase">START TIME</label>
                     <input
                       type="time"
                       value={formData.workingHours.start}
@@ -515,11 +519,11 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
                         ...prev,
                         workingHours: { ...prev.workingHours, start: e.target.value }
                       }))}
-                      className="brutal-input w-full"
+                      className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block font-mono text-brutal-xs mb-8px">END TIME</label>
+                    <label className="block font-mono text-xs mb-2 uppercase">END TIME</label>
                     <input
                       type="time"
                       value={formData.workingHours.end}
@@ -527,7 +531,7 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
                         ...prev,
                         workingHours: { ...prev.workingHours, end: e.target.value }
                       }))}
-                      className="brutal-input w-full"
+                      className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
                     />
                   </div>
                 </div>
@@ -535,44 +539,44 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
 
               {/* Communication Preferences */}
               <div>
-                <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                <label className="block font-mono text-xs font-bold uppercase mb-2">
                   PREFERRED COMMUNICATION METHOD
                 </label>
                 <select
                   value={formData.communicationPrefs}
                   onChange={(e) => setFormData(prev => ({ ...prev, communicationPrefs: e.target.value as any }))}
-                  className="brutal-input w-full"
+                  className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
                 >
-                  <option value="email">Email</option>
-                  <option value="slack">Slack</option>
-                  <option value="teams">Microsoft Teams</option>
-                  <option value="discord">Discord</option>
+                  <option value="email">EMAIL</option>
+                  <option value="slack">SLACK</option>
+                  <option value="teams">TEAMS</option>
+                  <option value="discord">DISCORD</option>
                 </select>
               </div>
 
               {/* Work Style */}
               <div>
-                <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                <label className="block font-mono text-xs font-bold uppercase mb-2">
                   WORK STYLE DESCRIPTION
                 </label>
                 <textarea
                   value={formData.workStyle}
                   onChange={(e) => setFormData(prev => ({ ...prev, workStyle: e.target.value }))}
-                  className="brutal-input w-full min-h-[60px]"
-                  placeholder="Describe your preferred work style, methodology, etc."
+                  className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none min-h-[60px] resize-none"
+                  placeholder="DESCRIBE_WORK_STYLE..."
                 />
               </div>
 
               {/* Career Goals */}
               <div>
-                <label className="block font-mono text-brutal-xs font-bold mb-8px">
+                <label className="block font-mono text-xs font-bold uppercase mb-2">
                   CAREER GOALS
                 </label>
                 <textarea
                   value={formData.careerGoals}
                   onChange={(e) => setFormData(prev => ({ ...prev, careerGoals: e.target.value }))}
-                  className="brutal-input w-full min-h-[60px]"
-                  placeholder="What are your professional goals and aspirations?"
+                  className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none min-h-[60px] resize-none"
+                  placeholder="CAREER_ASPIRATIONS..."
                 />
               </div>
             </div>
@@ -580,33 +584,33 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-24px border-t-2 border-[var(--theme-border)]">
-          <div className="font-mono text-brutal-xs text-primary-brutalist/60">
-            Changes will be saved immediately
+        <div className="flex items-center justify-between p-6 border-t-2 border-[var(--theme-border)] bg-[var(--theme-background)]">
+          <div className="font-mono text-xs text-[var(--theme-foreground)]/60 uppercase">
+            CHANGES_SAVED_IMMEDIATELY
           </div>
-          <div className="flex items-center gap-12px">
-            <button
+          <div className="flex items-center gap-4">
+            <BrutalButton
+              variant="secondary"
               onClick={onClose}
-              className="brutal-btn-secondary"
               disabled={isSaving}
             >
               CANCEL
-            </button>
-            <button
+            </BrutalButton>
+            <BrutalButton
               onClick={handleSave}
-              className="brutal-btn flex items-center gap-8px"
               disabled={isSaving}
+              className="flex items-center gap-2"
             >
               {isSaving ? (
-                <HiOutlineRefresh className="w-16px h-16px animate-spin" />
+                <HiOutlineRefresh className="w-4 h-4 animate-spin" />
               ) : (
-                <HiOutlineSave className="w-16px h-16px" />
+                <HiOutlineSave className="w-4 h-4" />
               )}
-              {isSaving ? 'SAVING...' : 'SAVE PROFILE'}
-            </button>
+              {isSaving ? 'SAVING...' : 'SAVE_PROFILE'}
+            </BrutalButton>
           </div>
         </div>
-      </div>
+      </BrutalCard>
     </div>
   )
 }

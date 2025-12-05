@@ -9,6 +9,12 @@ export const verifyInstallationAccess = query({
   args: {
     installationId: v.number(),
   },
+  returns: v.object({
+    hasAccess: v.boolean(),
+    reason: v.optional(v.string()),
+    workspaceId: v.optional(v.id("workspaces")),
+    projectId: v.optional(v.id("projects")),
+  }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -82,6 +88,7 @@ export const linkGitHubAccount = mutation({
     githubUsername: v.string(),
     accessToken: v.optional(v.string()),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -131,6 +138,8 @@ export const linkGitHubAccount = mutation({
 
 // Get available GitHub installations for a user
 export const getUserInstallations = query({
+  args: {},
+  returns: v.array(v.any()),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];

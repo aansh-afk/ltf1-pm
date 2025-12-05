@@ -34,16 +34,16 @@
   :root {
     /* BRUTALIST PROTOCOL VARIABLES */
     --grid-unit: 8px; /* 1.4 THE GRID CAGE - ATOMIC STRUCTURE */
-    --border-width: 1px; /* INTERFACE MEMBRANE THICKNESS */
-    --shadow-brutal: 5px 5px 0 var(--theme-shadow); /* 1.5 THE SHADOW DECREE */
-    --shadow-brutal-sm: 3px 3px 0 var(--theme-shadow);
+    --border-width: 2px; /* INTERFACE MEMBRANE THICKNESS - THICKER IS BETTER */
+    --shadow-brutal: 4px 4px 0 var(--theme-shadow); /* 1.5 THE SHADOW DECREE */
+    --shadow-brutal-sm: 2px 2px 0 var(--theme-shadow);
     --shadow-brutal-lg: 8px 8px 0 var(--theme-shadow);
     --shadow-brutal-xl: 12px 12px 0 var(--theme-shadow);
     
     /* Accessibility Settings */
     --font-scale: 1;
-    --line-height: 1.4;
-    --letter-spacing: normal;
+    --line-height: 1.5;
+    --letter-spacing: -0.02em; /* Tighter tracking for modern feel */
     --focus-width: 2px;
   }
   

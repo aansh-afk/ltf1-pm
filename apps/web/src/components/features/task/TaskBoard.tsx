@@ -8,6 +8,7 @@ import CreateTaskModal from './CreateTaskModal'
 import TaskDetailModal from './TaskDetailModal'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
+import { BrutalCard, BrutalButton } from '../../ui'
 
 interface TaskBoardProps {
   tasks: any[]
@@ -40,7 +41,7 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
   const [isCompactView, setIsCompactView] = useState(isCompact)
   const [showTaskDetail, setShowTaskDetail] = useState(false)
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
-  
+
   const moveTask = useMutation(api.tasks.mutations.moveTask)
 
   // Sync internal state with prop
@@ -68,11 +69,11 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
   const handleDragOverTask = (e: React.DragEvent, taskId: string, columnId: string, index: number) => {
     e.preventDefault()
     if (!draggedTask || draggedTask._id === taskId) return
-    
+
     const rect = e.currentTarget.getBoundingClientRect()
     const midpoint = rect.top + rect.height / 2
     const insertIndex = e.clientY < midpoint ? index : index + 1
-    
+
     // Only update if position actually changed to reduce re-renders
     if (!dropPosition || dropPosition.column !== columnId || dropPosition.index !== insertIndex) {
       setDropPosition({ column: columnId, index: insertIndex })
@@ -91,7 +92,7 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
 
   const handleDrop = async (e: React.DragEvent, newStatus: string) => {
     e.preventDefault()
-    
+
     if (!draggedTask) {
       setDraggedTask(null)
       setDropPosition(null)
@@ -109,12 +110,12 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
         status: newStatus as any,
         position: targetPosition,
       })
-      
+
       onTaskUpdate?.()
     } catch (error) {
       toast.error('Failed to move task')
     }
-    
+
     setDraggedTask(null)
     setDropPosition(null)
     setDraggedOverTask(null)
@@ -169,13 +170,14 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
         {columns.map((column) => {
           const columnTasks = getTasksByStatus(column.id)
           const taskCount = columnTasks.length
-          
+
           return (
-            <div
+            <BrutalCard
               key={column.id}
+              variant="default"
+              padding="none"
               className={clsx(
-                "flex flex-col bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal relative",
-                "transition-all duration-200",
+                "flex flex-col relative h-full",
                 hoveredColumn === column.id && draggedTask && "border-primary-brutalist bg-primary-brutalist/5",
                 draggedTask && !hoveredColumn && "border-opacity-50"
               )}
@@ -204,9 +206,9 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
                   <span className={clsx(
                     "px-8px py-2px text-brutal-xs font-mono font-bold",
                     "border-2",
-                    taskCount === 0 
+                    taskCount === 0
                       ? "border-[var(--theme-border)] text-[var(--theme-foreground)]/40"
-                      : taskCount > 10 
+                      : taskCount > 10
                         ? "border-brutal-warning text-brutal-warning bg-brutal-warning/10"
                         : "border-primary-brutalist text-primary-brutalist bg-primary-brutalist/10"
                   )}>
@@ -219,7 +221,7 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
               <div className={clsx("h-4px", column.bgColor)} />
 
               {/* Task List Container */}
-              <div 
+              <div
                 ref={(el) => columnRefs.current[column.id] = el}
                 className={clsx(
                   "flex-1 overflow-y-auto custom-scrollbar",
@@ -237,94 +239,92 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
                 }}
               >
                 <AnimatePresence>
-                {columnTasks.map((task, index) => {
-                  // Show drop indicator before this task
-                  const showDropIndicatorBefore = dropPosition?.column === column.id && dropPosition?.index === index
-                  
-                  return (
-                    <React.Fragment key={task._id}>
-                      {/* Drop Position Indicator */}
-                      {showDropIndicatorBefore && draggedTask && (
-                        <div 
-                          className="relative mb-8px transition-all duration-150"
-                          style={{ height: isCompactView ? 64 : 136 }}
-                        >
-                          <div className="absolute inset-0 border-2 border-dashed border-primary-brutalist bg-primary-brutalist/10 flex items-center justify-center animate-pulse">
-                            <span className="text-brutal-xs font-mono uppercase text-primary-brutalist">
-                              DROP HERE
-                            </span>
+                  {columnTasks.map((task, index) => {
+                    // Show drop indicator before this task
+                    const showDropIndicatorBefore = dropPosition?.column === column.id && dropPosition?.index === index
+
+                    return (
+                      <React.Fragment key={task._id}>
+                        {/* Drop Position Indicator */}
+                        {showDropIndicatorBefore && draggedTask && (
+                          <div
+                            className="relative mb-8px transition-all duration-150"
+                            style={{ height: isCompactView ? 64 : 136 }}
+                          >
+                            <div className="absolute inset-0 border-2 border-dashed border-primary-brutalist bg-primary-brutalist/10 flex items-center justify-center animate-pulse">
+                              <span className="text-brutal-xs font-mono uppercase text-primary-brutalist">
+                                DROP HERE
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ 
-                          opacity: draggedTask?._id === task._id ? 0.5 : 1
-                        }}
-                        exit={{ opacity: 0 }}
-                        whileHover={{ 
-                          scale: 1.02,
-                          transition: { duration: 0.1 }
-                        }}
-                        whileDrag={{ 
-                          scale: 1.05,
-                          cursor: "grabbing"
-                        }}
-                        transition={{ 
-                          duration: 0.2
-                        }}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, task)}
-                        onDragOver={(e) => handleDragOverTask(e, task._id, column.id, index)}
-                        onDragLeave={handleDragLeaveTask}
-                        className="cursor-move"
-                      >
-                        <TaskCard 
-                          task={task}
-                          onEdit={() => onTaskEdit?.(task)}
-                          onDelete={() => onTaskDelete?.(task)}
-                          onDuplicate={() => onTaskDuplicate?.(task)}
-                          onViewDetails={() => {
-                            setSelectedTaskId(task._id)
-                            setShowTaskDetail(true)
+                        )}
+
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{
+                            opacity: draggedTask?._id === task._id ? 0.5 : 1
                           }}
-                          isCompact={isCompactView}
-                        />
-                      </motion.div>
-                    </React.Fragment>
-                  )
-                })}
-                
-                {/* Drop indicator at the end of the column */}
-                {dropPosition?.column === column.id && dropPosition?.index === columnTasks.length && draggedTask && (
-                  <div 
-                    className="relative transition-all duration-150"
-                    style={{ height: isCompactView ? 64 : 136 }}
-                  >
-                    <div className="absolute inset-0 border-2 border-dashed border-primary-brutalist bg-primary-brutalist/10 flex items-center justify-center animate-pulse">
-                      <span className="text-brutal-xs font-mono uppercase text-primary-brutalist">
-                        DROP HERE
-                      </span>
+                          exit={{ opacity: 0 }}
+                          whileHover={{
+                            scale: 1.02,
+                            transition: { duration: 0.1 }
+                          }}
+                          whileDrag={{
+                            scale: 1.05,
+                            cursor: "grabbing"
+                          }}
+                          transition={{
+                            duration: 0.2
+                          }}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, task)}
+                          onDragOver={(e) => handleDragOverTask(e, task._id, column.id, index)}
+                          onDragLeave={handleDragLeaveTask}
+                          className="cursor-move"
+                        >
+                          <TaskCard
+                            task={task}
+                            onEdit={() => onTaskEdit?.(task)}
+                            onDelete={() => onTaskDelete?.(task)}
+                            onDuplicate={() => onTaskDuplicate?.(task)}
+                            onViewDetails={() => {
+                              setSelectedTaskId(task._id)
+                              setShowTaskDetail(true)
+                            }}
+                            isCompact={isCompactView}
+                          />
+                        </motion.div>
+                      </React.Fragment>
+                    )
+                  })}
+
+                  {/* Drop indicator at the end of the column */}
+                  {dropPosition?.column === column.id && dropPosition?.index === columnTasks.length && draggedTask && (
+                    <div
+                      className="relative transition-all duration-150"
+                      style={{ height: isCompactView ? 64 : 136 }}
+                    >
+                      <div className="absolute inset-0 border-2 border-dashed border-primary-brutalist bg-primary-brutalist/10 flex items-center justify-center animate-pulse">
+                        <span className="text-brutal-xs font-mono uppercase text-primary-brutalist">
+                          DROP HERE
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                )}
-                </AnimatePresence>
-                
-                {/* Add Task Button */}
-                <button
-                  onClick={() => openCreateModal(column.id)}
-                  className={clsx(
-                    "w-full border-2 border-dashed border-[var(--theme-border)]",
-                    "text-[var(--theme-foreground)]/50 hover:text-[var(--theme-foreground)] hover:border-primary-brutalist",
-                    "transition-all flex items-center justify-center gap-8px",
-                    "uppercase text-brutal-xs font-mono font-bold",
-                    isCompactView ? "p-8px" : "p-16px"
                   )}
-                >
-                  <HiOutlinePlus className="w-16px h-16px" />
-                  {!isCompactView && <span>ADD TASK</span>}
-                </button>
+                </AnimatePresence>
+
+                {/* Add Task Button */}
+                <div className={clsx(isCompactView ? "p-8px" : "p-16px")}>
+                  <BrutalButton
+                    onClick={() => openCreateModal(column.id)}
+                    variant="outline"
+                    className="w-full border-dashed flex items-center justify-center gap-8px"
+                    size={isCompactView ? "sm" : "md"}
+                  >
+                    <HiOutlinePlus className="w-16px h-16px" />
+                    {!isCompactView && <span>ADD TASK</span>}
+                  </BrutalButton>
+                </div>
               </div>
 
               {/* Scroll Indicator */}
@@ -333,7 +333,7 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
                   <div className="w-24px h-2px bg-primary-brutalist/40 animate-pulse" />
                 </div>
               )}
-            </div>
+            </BrutalCard>
           )
         })}
       </div>
@@ -345,7 +345,7 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
         defaultStatus={createStatus}
         onSuccess={onTaskUpdate}
       />
-      
+
       {selectedTaskId && (
         <TaskDetailModal
           isOpen={showTaskDetail}

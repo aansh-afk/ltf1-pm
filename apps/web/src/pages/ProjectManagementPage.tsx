@@ -28,6 +28,7 @@ import {
   HiOutlinePause,
   HiOutlineBan,
   HiOutlineLink,
+  HiOutlineChip,
   HiOutlineUser,
   HiOutlineDotsVertical,
   HiOutlineArrowRight,
@@ -37,7 +38,7 @@ import {
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import CreateTaskModal from '@/components/features/task/CreateTaskModal'
 import EditTaskModal from '@/components/features/task/EditTaskModal'
-import TaskBoard from '@/components/features/task/TaskBoard'
+import KanbanBoard from '@/components/features/kanban/KanbanBoard'
 import TaskList from '@/components/features/task/TaskList'
 import { GitHubProjectTab } from '@/components/features/github/GitHubProjectTab'
 import SprintBoard from '@/components/features/sprint/SprintBoard'
@@ -66,6 +67,8 @@ import type { TaskFilters as TaskFiltersType } from '@/components/features/task/
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 import { formatDistanceToNow } from 'date-fns'
+import { BrutalCard, BrutalButton, BrutalBadge } from '@/components/ui'
+import { motion } from 'framer-motion'
 
 type TabType = 'overview' | 'tasks' | 'team' | 'github' | 'meetings' | 'docs' | 'logs' | 'settings'
 
@@ -319,9 +322,9 @@ export default function ProjectManagementPage() {
     },
     {
       title: 'BLOCKERS',
-      status: tasks?.filter(t => t.isBlocked || t.status === 'blocked').length > 0 ? 'error' : 'success',
-      value: tasks?.filter(t => t.isBlocked || t.status === 'blocked').length || 0,
-      subtitle: tasks?.filter(t => t.isBlocked || t.status === 'blocked').length > 0 ? 'Critical issues' : 'No blockers',
+      status: tasks?.filter(t => t.status === 'blocked').length > 0 ? 'error' : 'success',
+      value: tasks?.filter(t => t.status === 'blocked').length || 0,
+      subtitle: tasks?.filter(t => t.status === 'blocked').length > 0 ? 'Critical issues' : 'No blockers',
       icon: <HiOutlineExclamationCircle className="w-20px h-20px" />
     }
   ]
@@ -341,27 +344,119 @@ export default function ProjectManagementPage() {
     const activeSprint = allSprints?.find(s => s.status === 'active')
 
     return (
-      <div className="space-y-24px">
-        {/* Project Info - Compact */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-16px font-mono text-brutal-xs">
-            <div>
-              <span className="text-primary-brutalist/60">WORKFLOW:</span> <span className="font-bold uppercase">{project.settings?.workflowType || 'KANBAN'}</span>
+      <div className="space-y-8">
+        {/* Mission Brief & Stats Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Project Overview */}
+          <BrutalCard variant="default" className="lg:col-span-2">
+            <div className="flex items-center gap-4 mb-6 border-b-2 border-[var(--theme-border)] pb-4">
+              <HiOutlineChip className="w-6 h-6 text-[var(--theme-primary)]" />
+              <h3 className="text-lg font-bold uppercase tracking-tight">Project Overview</h3>
             </div>
-            <div>
-              <span className="text-primary-brutalist/60">LEAD:</span> <span className="font-bold">{project.lead?.name || 'UNASSIGNED'}</span>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className="bg-[var(--theme-background-secondary)] p-4 border border-[var(--theme-border)]">
+                <span className="block text-xs font-mono text-[var(--theme-foreground)]/60 mb-1">PROJECT LEAD</span>
+                <span className="block font-bold text-lg truncate">{project.lead?.name || 'Unassigned'}</span>
+              </div>
+              <div className="bg-[var(--theme-background-secondary)] p-4 border border-[var(--theme-border)]">
+                <span className="block text-xs font-mono text-[var(--theme-foreground)]/60 mb-1">TEAM SIZE</span>
+                <span className="block font-bold text-lg">{project.members?.length || 0} Members</span>
+              </div>
+              <div className="bg-[var(--theme-background-secondary)] p-4 border border-[var(--theme-border)]">
+                <span className="block text-xs font-mono text-[var(--theme-foreground)]/60 mb-1">WORKFLOW</span>
+                <span className="block font-bold text-lg uppercase">{project.settings?.workflowType || 'Kanban'}</span>
+              </div>
             </div>
-            <div>
-              <span className="text-primary-brutalist/60">TEAM SIZE:</span> <span className="font-bold">{project.members?.length || 0} MEMBERS</span>
-            </div>
+
+            {project.description && (
+              <div className="font-mono text-sm text-[var(--theme-foreground)]/80 leading-relaxed border-l-4 border-[var(--theme-primary)] pl-4">
+                {project.description}
+              </div>
+            )}
+          </BrutalCard>
+
+          {/* System Status (Health Cards) */}
+          <div className="space-y-4">
+            {healthCards.map((card) => (
+              <BrutalCard
+                key={card.title}
+                variant="bordered"
+                className={clsx(
+                  "transition-all hover:translate-x-1",
+                  card.status === 'error' && "border-[var(--theme-error)]",
+                  card.status === 'warning' && "border-[var(--theme-warning)]",
+                  card.status === 'success' && "border-[var(--theme-success)]"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs font-mono text-[var(--theme-foreground)]/60 uppercase mb-1">{card.title}</div>
+                    <div className="text-2xl font-bold">{card.value}</div>
+                  </div>
+                  <div className={clsx(
+                    "p-2 border-2",
+                    card.status === 'error' ? "border-[var(--theme-error)] text-[var(--theme-error)]" :
+                      card.status === 'warning' ? "border-[var(--theme-warning)] text-[var(--theme-warning)]" :
+                        card.status === 'success' ? "border-[var(--theme-success)] text-[var(--theme-success)]" :
+                          "border-[var(--theme-primary)] text-[var(--theme-primary)]"
+                  )}>
+                    {card.icon}
+                  </div>
+                </div>
+              </BrutalCard>
+            ))}
           </div>
-          {project.description && (
-            <p className="text-brutal-sm text-primary-brutalist/80 mt-12px pt-12px border-t border-[var(--theme-border)]">{project.description}</p>
-          )}
         </div>
 
-        {/* Natural Language Task Creator */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
+        {/* Analytics & Insights */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <BrutalCard variant="default" className="min-h-[300px]">
+            <div className="flex items-center gap-3 mb-4">
+              <HiOutlineLightningBolt className="w-5 h-5 text-[var(--theme-primary)]" />
+              <h3 className="font-bold uppercase">AI Insights</h3>
+            </div>
+            <AIInsightsPanel
+              projectId={project._id}
+              sprintId={activeSprint?._id}
+              compact={true}
+            />
+          </BrutalCard>
+
+          <div className="space-y-8">
+            <BrutalCard variant="default">
+              <div className="flex items-center gap-3 mb-4">
+                <HiOutlineChartBar className="w-5 h-5 text-[var(--theme-primary)]" />
+                <h3 className="font-bold uppercase">Velocity</h3>
+              </div>
+              {activeSprint ? (
+                <SprintBurndownChart
+                  sprint={activeSprint}
+                  tasks={tasks || []}
+                  showPrediction={true}
+                />
+              ) : (
+                <div className="h-40 flex items-center justify-center border-2 border-dashed border-[var(--theme-border)]">
+                  <span className="font-mono text-xs text-[var(--theme-foreground)]/40">No Active Sprint Data</span>
+                </div>
+              )}
+            </BrutalCard>
+
+            <BrutalCard variant="default">
+              <div className="flex items-center gap-3 mb-4">
+                <HiOutlineClock className="w-5 h-5 text-[var(--theme-primary)]" />
+                <h3 className="font-bold uppercase">Activity</h3>
+              </div>
+              <GitHubStyleHeatmap
+                tasks={tasks || []}
+                weeks={12}
+              />
+            </BrutalCard>
+          </div>
+        </div>
+
+        {/* Task Generator */}
+        <BrutalCard variant="bordered" className="border-dashed">
           <NaturalLanguageTaskCreator
             projectId={project._id}
             sprintId={activeSprint?._id}
@@ -369,81 +464,7 @@ export default function ProjectManagementPage() {
               // Refresh tasks will happen automatically via Convex subscriptions
             }}
           />
-        </div>
-
-        {/* AI Insights and Daily Standup Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16px">
-          <AIInsightsPanel
-            projectId={project._id}
-            sprintId={activeSprint?._id}
-            compact={true}
-          />
-          <DailyStandupSummary
-            projectId={project._id}
-            compact={true}
-          />
-        </div>
-
-        {/* Health Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16px">
-          {healthCards.map((card) => (
-            <div
-              key={card.title}
-              className={clsx(
-                "border-2 p-16px transition-all",
-                getStatusColor(card.status)
-              )}
-            >
-              <div className="flex items-start justify-between mb-8px">
-                <h3 className="font-mono text-brutal-xs uppercase">{card.title}</h3>
-                {card.icon}
-              </div>
-              <div className="text-brutal-xl font-bold mb-4px">{card.value}</div>
-              {card.subtitle && (
-                <div className="font-mono text-brutal-xs opacity-80">{card.subtitle}</div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Smart Task Generator */}
-        <SmartTaskGenerator
-          projectId={project._id}
-          sprintId={activeSprint?._id}
-          onTasksCreated={() => {
-            // Refresh tasks will happen automatically via Convex subscriptions
-            toast.success('Tasks created successfully!')
-          }}
-          compact={true}
-        />
-
-        {/* Sprint Burndown Chart */}
-        {activeSprint && (
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-            <SprintBurndownChart
-              sprint={activeSprint}
-              tasks={tasks || []}
-              showPrediction={true}
-            />
-          </div>
-        )}
-
-        {/* Activity Heatmap */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-          <GitHubStyleHeatmap
-            tasks={tasks || []}
-            weeks={12}
-          />
-        </div>
-
-        {/* Task Distribution Charts */}
-        <TaskDistributionCharts
-          tasks={tasks || []}
-          team={team || []}
-        />
-
-        {/* Developer Timeline */}
-        <DeveloperTimeline projectId={project._id} />
+        </BrutalCard>
       </div>
     )
   }
@@ -580,7 +601,10 @@ export default function ProjectManagementPage() {
     } : null
 
     return (
-      <div className="space-y-24px">
+      <div className={clsx(
+        "space-y-24px",
+        taskView === 'kanban' && "h-full flex flex-col space-y-0 gap-6"
+      )}>
         {/* Filter Info Bar */}
         {(quickFilter || taskFilters.search || taskFilters.status.length > 0 || taskFilters.priority.length > 0 ||
           taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
@@ -878,15 +902,15 @@ export default function ProjectManagementPage() {
         )}
 
         {taskView === 'kanban' && (
-          <TaskBoard
-            tasks={filteredTasks}
-            projectId={projectId as string}
-            onTaskEdit={handleEditTask}
-            onTaskDelete={handleDeleteTask}
-            onTaskDuplicate={handleDuplicateTask}
-            isCompact={isCompactView}
-            onCompactToggle={setIsCompactView}
-          />
+          <div className="flex-1 min-h-0">
+            <KanbanBoard
+              tasks={filteredTasks}
+              projectId={projectId as string}
+              onTaskUpdate={() => {
+                // Task updates are handled by optimistic updates in the component
+              }}
+            />
+          </div>
         )}
 
         {taskView === 'list' && (
@@ -2118,11 +2142,11 @@ export default function ProjectManagementPage() {
                               currentUserId={currentUser?._id}
                               onEdit={(m) => {
                                 // TODO: Open edit modal
-                                toast.info('Edit meeting functionality coming soon')
+                                toast('Edit meeting functionality coming soon', { icon: '🚧' })
                               }}
                               onViewNotes={(m) => {
                                 // TODO: Open notes modal
-                                toast.info('Meeting notes functionality coming soon')
+                                toast('Meeting notes functionality coming soon', { icon: '📝' })
                               }}
                             />
                           ))}
@@ -2330,105 +2354,109 @@ export default function ProjectManagementPage() {
   }
 
   return (
-    <>
-      <div className="min-h-screen">
-        {/* Project Header - Minimal Design */}
-        <div className="border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)] px-32px py-12px">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-16px">
-              <button
-                onClick={() => navigate(`/workspace/${workspaceId}`)}
-                className="text-brutal-xs font-mono text-primary-brutalist/60 hover:text-primary-brutalist transition-colors flex items-center gap-4px"
-              >
-                ← BACK
-              </button>
-              <div className="w-2px h-20px bg-basalt-border"></div>
-              <h1 className="text-brutal-lg font-bold uppercase flex items-center gap-8px">
-                {project.name}
-                <span className="font-mono text-brutal-sm text-primary-brutalist/60">[{project.key}]</span>
-              </h1>
-              {project.status !== 'active' && (
-                <span className={clsx(
-                  "px-8px py-2px text-brutal-xs font-mono uppercase border",
-                  project.status === 'planning' && "bg-brutal-info/10 border-brutal-info text-brutal-info",
-                  project.status === 'on_hold' && "bg-brutal-warning/10 border-brutal-warning text-brutal-warning",
-                  project.status === 'completed' && "bg-primary-brutalist/10 border-primary-brutalist text-primary-brutalist",
-                  project.status === 'archived' && "bg-cathode-white/10 border-cathode-white/20 text-[var(--theme-foreground)]/40"
-                )}>
+    <div className="min-h-screen bg-[var(--theme-background)] flex flex-col">
+      {/* Project Header */}
+      <div className="border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)] sticky top-0 z-40">
+        <div className="px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => navigate(`/workspace/${workspaceId}`)}
+              className="group flex items-center gap-2 font-mono text-xs text-[var(--theme-foreground)]/60 hover:text-[var(--theme-primary)] transition-colors"
+            >
+              <HiOutlineArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" />
+              BACK TO WORKSPACE
+            </button>
+
+            <div className="h-8 w-[2px] bg-[var(--theme-border)]" />
+
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-bold uppercase tracking-tight flex items-center gap-3">
+                  {project.name}
+                </h1>
+                <BrutalBadge variant={
+                  project.status === 'active' ? 'default' :
+                    project.status === 'completed' ? 'success' :
+                      project.status === 'on_hold' ? 'warning' : 'outline'
+                }>
                   {project.status}
-                </span>
+                </BrutalBadge>
+              </div>
+              <div className="font-mono text-xs text-[var(--theme-foreground)]/60 flex items-center gap-2">
+                <span>ID: {project.key}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <BrutalButton size="sm" variant="ghost" onClick={() => setShowProjectInviteModal(true)}>
+              <HiOutlineUserGroup className="w-4 h-4 mr-2" />
+              INVITE
+            </BrutalButton>
+            <BrutalButton size="sm" variant="primary" onClick={() => setShowCreateTaskModal(true)}>
+              <HiOutlinePlus className="w-4 h-4 mr-2" />
+              NEW TASK
+            </BrutalButton>
+          </div>
+        </div>
+
+        {/* Project Navigation Tabs */}
+        <div className="px-6 flex items-end gap-1 overflow-x-auto no-scrollbar border-t border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/30">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as TabType)}
+              className={clsx(
+                "relative px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider transition-all",
+                "border-r border-[var(--theme-border)]",
+                activeTab === tab.id
+                  ? "bg-[var(--theme-background)] text-[var(--theme-primary)] border-t-2 border-t-[var(--theme-primary)]"
+                  : "text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Navigation - Streamlined */}
-        <div className="bg-[var(--theme-background-secondary)] border-b-2 border-[var(--theme-border)]">
-          <div className="px-32px">
-            <div className="flex items-center">
-              {tabs.map((tab, index) => (
-                <div key={tab.id} className="flex items-center">
-                  <button
-                    onClick={() => setActiveTab(tab.id as TabType)}
-                    className={clsx(
-                      "px-16px py-12px flex items-center gap-8px",
-                      "font-mono text-brutal-xs uppercase transition-all duration-200",
-                      "relative hover:bg-basalt-border/10",
-                      activeTab === tab.id
-                        ? "text-primary-brutalist bg-[var(--theme-background)]"
-                        : "text-primary-brutalist/60 hover:text-primary-brutalist"
-                    )}
-                  >
-                    {/* Active indicator */}
-                    {activeTab === tab.id && (
-                      <div className="absolute bottom-0 left-0 right-0 h-4px bg-primary-brutalist"></div>
-                    )}
-
-                    <span className={clsx(
-                      "transition-all duration-200",
-                      activeTab === tab.id ? "text-primary-brutalist" : ""
-                    )}>
-                      {tab.icon}
-                    </span>
-                    <span className="font-bold tracking-wider">{tab.label}</span>
-
-                    {/* Badge for tasks count */}
-                    {tab.id === 'tasks' && (
-                      <span className="px-8px py-2px bg-primary-brutalist text-event-horizon text-brutal-xs font-bold">
-                        42
-                      </span>
-                    )}
-                  </button>
-
-                  {/* Tab separator */}
-                  {index < tabs.length - 1 && (
-                    <div className="h-32px w-1px bg-basalt-border/30"></div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Content */}
-        <div className="p-24px">
-          {renderTabContent()}
+            >
+              <div className="flex items-center gap-2">
+                {tab.icon}
+                {tab.label}
+                {tab.id === 'tasks' && (
+                  <span className={clsx(
+                    "ml-1 px-1.5 py-0.5 text-[10px]",
+                    activeTab === tab.id ? "bg-[var(--theme-primary)] text-[var(--theme-background)]" : "bg-[var(--theme-border)]"
+                  )}>
+                    {tasks?.length || 0}
+                  </span>
+                )}
+              </div>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Create Task Modal - Rendered outside main container for proper positioning */}
+      {/* Main Viewport */}
+      <main className={clsx(
+        "flex-1 p-6",
+        (activeTab === 'tasks' && taskView === 'kanban') ? "overflow-hidden flex flex-col" : "overflow-y-auto"
+      )}>
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className={clsx((activeTab === 'tasks' && taskView === 'kanban') && "h-full flex flex-col")}
+        >
+          {renderTabContent()}
+        </motion.div>
+      </main>
+
+      {/* Modals */}
       {projectId && (
         <CreateTaskModal
           isOpen={showCreateTaskModal}
           onClose={() => setShowCreateTaskModal(false)}
           projectId={projectId}
-          onSuccess={() => {
-            // Tasks will automatically refresh via Convex reactivity
-          }}
+          onSuccess={() => { }}
         />
       )}
 
-      {/* Edit Task Modal */}
       {selectedTask && (
         <EditTaskModal
           isOpen={showEditTaskModal}
@@ -2445,7 +2473,6 @@ export default function ProjectManagementPage() {
         />
       )}
 
-      {/* Advanced Filters Panel */}
       {workspaceId && (
         <TaskFilters
           isOpen={showAdvancedFilters}
@@ -2456,16 +2483,12 @@ export default function ProjectManagementPage() {
         />
       )}
 
-      {/* Create Sprint Modal */}
       {projectId && (
         <CreateSprintModal
           isOpen={showCreateSprintModal}
           onClose={() => setShowCreateSprintModal(false)}
           projectId={projectId}
-          onSuccess={() => {
-            setShowCreateSprintModal(false)
-            // Sprint will automatically refresh via Convex reactivity
-          }}
+          onSuccess={() => setShowCreateSprintModal(false)}
         />
       )}
 
@@ -2475,10 +2498,7 @@ export default function ProjectManagementPage() {
           onClose={() => setShowScheduleMeetingModal(false)}
           projectId={projectId}
           workspaceId={workspaceId}
-          onSuccess={() => {
-            setShowScheduleMeetingModal(false)
-            // Meetings will automatically refresh via Convex reactivity
-          }}
+          onSuccess={() => setShowScheduleMeetingModal(false)}
         />
       )}
 
@@ -2491,7 +2511,6 @@ export default function ProjectManagementPage() {
         />
       )}
 
-      {/* Expertise Search Modal */}
       {showExpertiseSearch && (
         <ExpertiseSearchModal
           onClose={() => setShowExpertiseSearch(false)}
@@ -2499,7 +2518,6 @@ export default function ProjectManagementPage() {
         />
       )}
 
-      {/* Expertise Matrix Modal */}
       {showExpertiseMatrix && workspaceId && (
         <TeamExpertiseMatrix
           workspaceId={workspaceId}
@@ -2507,6 +2525,6 @@ export default function ProjectManagementPage() {
           isModal={true}
         />
       )}
-    </>
+    </div>
   )
 }

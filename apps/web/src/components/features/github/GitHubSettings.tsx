@@ -27,7 +27,6 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
   
   // Mutations
   const linkGitHub = useMutation(api.integrations.github.auth.linkGitHubAccount);
-  const syncGitHubStats = useMutation(api.integrations.github.mutations.syncDeveloperGitHubStats);
   
   const handleConnectGitHub = async () => {
     try {
@@ -52,17 +51,11 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
   
   const handleSyncStats = async () => {
     if (!currentUser) return;
-    
-    try {
-      setIsSyncing(true);
-      await syncGitHubStats({ userId: currentUser._id });
-      toast.success('GitHub stats synced successfully!');
-    } catch (error) {
-      console.error('Error syncing stats:', error);
-      toast.error('Failed to sync GitHub stats');
-    } finally {
-      setIsSyncing(false);
-    }
+
+    // GitHub stats are synced automatically via webhook and cron jobs
+    // Show info message about automatic syncing
+    toast.success('Stats sync happens automatically via webhooks');
+    setIsSyncing(false);
   };
   
   const handleInstallApp = () => {

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import clsx from 'clsx'
 
 interface BrutalToggleProps {
@@ -17,20 +16,20 @@ export default function BrutalToggle({
   size = 'md'
 }: BrutalToggleProps) {
   const sizes = {
-    sm: { width: 'w-40px', height: 'h-20px', thumb: 'w-16px h-16px', translate: 'translate-x-20px' },
-    md: { width: 'w-56px', height: 'h-28px', thumb: 'w-24px h-24px', translate: 'translate-x-28px' },
-    lg: { width: 'w-72px', height: 'h-36px', thumb: 'w-32px h-32px', translate: 'translate-x-36px' },
+    sm: { width: 'w-10', height: 'h-5', thumb: 'w-4 h-4', translate: 'translate-x-5' },
+    md: { width: 'w-14', height: 'h-7', thumb: 'w-6 h-6', translate: 'translate-x-7' },
+    lg: { width: 'w-18', height: 'h-9', thumb: 'w-8 h-8', translate: 'translate-x-9' },
   }
 
   const sizeConfig = sizes[size]
 
   return (
     <label className={clsx(
-      'flex items-center gap-12px cursor-pointer',
+      'flex items-center gap-3 cursor-pointer',
       disabled && 'cursor-not-allowed opacity-50'
     )}>
       {label && (
-        <span className="text-brutal-sm uppercase tracking-wider">
+        <span className="text-sm font-bold uppercase tracking-wider font-mono">
           {label}
         </span>
       )}

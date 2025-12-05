@@ -8,22 +8,42 @@ export default defineSchema({
     name: v.string(),
     avatarUrl: v.optional(v.string()),
     role: v.union(v.literal("admin"), v.literal("user")),
+    status: v.optional(v.union(v.literal("waitlisted"), v.literal("active"))),
+    waitlistPosition: v.optional(v.number()),
     preferences: v.optional(v.object({
       theme: v.optional(v.string()),
+      hasCompletedOnboarding: v.optional(v.boolean()),
       notifications: v.optional(v.object({
         email: v.boolean(),
         push: v.boolean(),
         slack: v.boolean(),
       })),
       defaultWorkspaceId: v.optional(v.id("workspaces")),
+      accessibility: v.optional(v.object({
+        fontScale: v.optional(v.number()),
+        lineHeight: v.optional(v.number()),
+        letterSpacing: v.optional(v.string()),
+        reducedMotion: v.optional(v.boolean()),
+        highContrast: v.optional(v.boolean()),
+        focusWidth: v.optional(v.number()),
+      })),
+      defaults: v.optional(v.object({
+        projectView: v.optional(v.string()),
+        taskPriority: v.optional(v.string()),
+        taskType: v.optional(v.string()),
+        autoAssignSelf: v.optional(v.boolean()),
+      })),
     })),
     githubUsername: v.optional(v.string()),
+    githubTokenValidated: v.optional(v.boolean()),
+    bio: v.optional(v.string()),
     lastSeenAt: v.number(),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_clerk_id", ["clerkId"])
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .index("by_status", ["status"]),
 
   workspaces: defineTable({
     name: v.string(),

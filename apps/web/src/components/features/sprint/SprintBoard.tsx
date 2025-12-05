@@ -69,7 +69,7 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
     return grouped
   })
 
-  const updateTask = useMutation(api.tasks.mutations.updateTask)
+  const moveTask = useMutation(api.tasks.mutations.moveTask)
   const removeTaskFromSprint = useMutation(api.sprints.mutations.removeTaskFromSprint)
   const updateSprint = useMutation(api.sprints.mutations.updateSprint)
 
@@ -83,8 +83,8 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
     }
 
     const sourceColumn = [...tasksByStatus[source.droppableId]]
-    const destColumn = source.droppableId === destination.droppableId 
-      ? sourceColumn 
+    const destColumn = source.droppableId === destination.droppableId
+      ? sourceColumn
       : [...tasksByStatus[destination.droppableId]]
 
     const [removed] = sourceColumn.splice(source.index, 1)
@@ -100,13 +100,13 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
 
     try {
       const newStatus = destination.droppableId === 'todo' ? 'backlog' : destination.droppableId
-      await updateTask({
+      await moveTask({
         taskId: draggableId as any,
-        status: newStatus,
+        status: newStatus as any, // Cast to any or appropriate union type if strict
         position: destination.index
       })
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update task')
+      toast.error(error.message || 'Failed to move task')
       setTasksByStatus(tasksByStatus)
     }
   }
@@ -250,9 +250,9 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
                                   new Date(task.dueDate) < new Date() ? "text-[var(--theme-error)]" : "text-neutral-500"
                                 )}>
                                   <HiOutlineClock className="w-12px h-12px" />
-                                  {new Date(task.dueDate).toLocaleDateString('en-US', { 
-                                    month: 'short', 
-                                    day: 'numeric' 
+                                  {new Date(task.dueDate).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric'
                                   })}
                                 </div>
                               )}

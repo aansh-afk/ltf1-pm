@@ -1,4 +1,6 @@
 import { ReactNode } from 'react'
+import { BrutalCard, BrutalButton } from '@/components/ui'
+import { HiOutlineRefresh } from 'react-icons/hi'
 
 interface SettingsSectionProps {
   title: string
@@ -14,39 +16,29 @@ export default function SettingsSection({
   onReset
 }: SettingsSectionProps) {
   return (
-    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px mb-24px">
-      <div className="flex items-start justify-between mb-24px">
+    <div className="mb-8">
+      <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <h3 className="text-brutal-lg mb-8px">{title.toUpperCase()}</h3>
+          <h3 className="text-lg font-bold uppercase tracking-wide">{title}</h3>
           {description && (
-            <p className="text-brutal-sm max-w-2xl" style={{ color: 'var(--theme-foreground-secondary)' }}>
+            <p className="text-sm text-[var(--theme-foreground)]/60 max-w-2xl mt-1 font-mono">
               {description}
             </p>
           )}
         </div>
         {onReset && (
-          <button
+          <BrutalButton
+            variant="ghost"
+            size="sm"
             onClick={onReset}
-            className="px-16px py-8px border-2 font-mono text-brutal-sm uppercase tracking-wider transition-colors hover:translate-x-[-2px] hover:translate-y-[-2px]"
-            style={{
-              borderColor: 'var(--theme-border)',
-              backgroundColor: 'transparent',
-              color: 'var(--theme-foreground)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--theme-background-secondary)';
-              e.currentTarget.style.boxShadow = '4px 4px 0 var(--theme-shadow)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
+            className="text-xs flex items-center gap-1"
           >
+            <HiOutlineRefresh className="w-3 h-3" />
             RESET
-          </button>
+          </BrutalButton>
         )}
       </div>
-      <div className="space-y-16px">
+      <div className="space-y-4">
         {children}
       </div>
     </div>

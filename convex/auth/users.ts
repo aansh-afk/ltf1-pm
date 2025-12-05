@@ -85,6 +85,8 @@ export const ensureUserExists = internalMutation({
     name: v.string(),
     avatarUrl: v.optional(v.string()),
     role: v.union(v.literal("admin"), v.literal("user")),
+    status: v.optional(v.union(v.literal("waitlisted"), v.literal("active"))),
+    waitlistPosition: v.optional(v.number()),
     preferences: v.optional(v.object({
       theme: v.optional(v.string()),
       hasCompletedOnboarding: v.optional(v.boolean()),
@@ -167,6 +169,8 @@ export const createCurrentUser = mutation({
     name: v.string(),
     avatarUrl: v.optional(v.string()),
     role: v.union(v.literal("admin"), v.literal("user")),
+    status: v.optional(v.union(v.literal("waitlisted"), v.literal("active"))),
+    waitlistPosition: v.optional(v.number()),
     preferences: v.optional(v.object({
       theme: v.optional(v.string()),
       hasCompletedOnboarding: v.optional(v.boolean()),

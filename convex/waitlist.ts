@@ -1,14 +1,20 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { requirePermission } from "./auth/permissions";
 
 export const getWaitlistStats = query({
     args: {},
+    returns: v.object({
+        totalCount: v.number(),
+        graphData: v.array(v.object({
+            date: v.string(),
+            count: v.number(),
+        })),
+    }),
     handler: async (ctx) => {
-        // Count total waitlisted users
+        // Count total waitlisted users using index instead of filter
         const waitlistedUsers = await ctx.db
             .query("users")
-            .filter((q) => q.eq(q.field("status"), "waitlisted"))
+            .withIndex("by_status", (q) => q.eq("status", "waitlisted"))
             .collect();
 
         const totalCount = waitlistedUsers.length;
@@ -59,6 +65,9 @@ export const joinWaitlist = mutation({
     args: {
         email: v.string(),
     },
+    returns: v.object({
+        status: v.union(v.literal("waitlisted"), v.literal("active")),
+    }),
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
         if (!identity) {
@@ -76,18 +85,18 @@ export const joinWaitlist = mutation({
 
         // If already active, don't change status
         if (user.status === "active") {
-            return { status: "active" };
+            return { status: "active" as const };
         }
 
         // Update to waitlisted if not already
         if (user.status !== "waitlisted") {
             await ctx.db.patch(user._id, {
-                status: "waitlisted",
+                status: "waitlisted" as const,
                 waitlistPosition: Date.now(),
                 updatedAt: Date.now(),
             });
         }
 
-        return { status: "waitlisted" };
+        return { status: "waitlisted" as const };
     },
 });

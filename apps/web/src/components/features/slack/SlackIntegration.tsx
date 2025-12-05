@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useQuery, useMutation, useAction } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
-import { 
+import {
   HiOutlineChat,
   HiOutlineBell,
   HiOutlineLink,
@@ -23,8 +23,12 @@ import {
   HiOutlineVolumeUp,
   HiOutlineOfficeBuilding,
   HiOutlineLightningBolt,
-  HiOutlineInformationCircle
+  HiOutlineInformationCircle,
+  HiOutlineTerminal
 } from 'react-icons/hi'
+import { BrutalCard, BrutalButton, BrutalBadge } from '@/components/ui'
+import clsx from 'clsx'
+import toast from 'react-hot-toast'
 
 interface SlackIntegrationProps {
   workspaceId: Id<'workspaces'>
@@ -51,14 +55,14 @@ interface NotificationSettings {
 }
 
 const SYNC_EVENTS = [
-  { id: 'task_created', label: 'Task Created', icon: <HiOutlinePlus /> },
-  { id: 'task_completed', label: 'Task Completed', icon: <HiOutlineCheckCircle /> },
-  { id: 'task_assigned', label: 'Task Assigned', icon: <HiOutlineUsers /> },
-  { id: 'comment_added', label: 'Comment Added', icon: <HiOutlineChat /> },
-  { id: 'sprint_started', label: 'Sprint Started', icon: <HiOutlineLightningBolt /> },
-  { id: 'sprint_completed', label: 'Sprint Completed', icon: <HiOutlineCheckCircle /> },
-  { id: 'meeting_scheduled', label: 'Meeting Scheduled', icon: <HiOutlineCalendar /> },
-  { id: 'file_uploaded', label: 'File Uploaded', icon: <HiOutlinePaperClip /> },
+  { id: 'task_created', label: 'TASK_CREATED', icon: <HiOutlinePlus /> },
+  { id: 'task_completed', label: 'TASK_COMPLETED', icon: <HiOutlineCheckCircle /> },
+  { id: 'task_assigned', label: 'TASK_ASSIGNED', icon: <HiOutlineUsers /> },
+  { id: 'comment_added', label: 'COMMENT_ADDED', icon: <HiOutlineChat /> },
+  { id: 'sprint_started', label: 'SPRINT_STARTED', icon: <HiOutlineLightningBolt /> },
+  { id: 'sprint_completed', label: 'SPRINT_COMPLETED', icon: <HiOutlineCheckCircle /> },
+  { id: 'meeting_scheduled', label: 'MEETING_SCHEDULED', icon: <HiOutlineCalendar /> },
+  { id: 'file_uploaded', label: 'FILE_UPLOADED', icon: <HiOutlinePaperClip /> },
 ]
 
 export default function SlackIntegration({ workspaceId }: SlackIntegrationProps) {
@@ -97,9 +101,9 @@ export default function SlackIntegration({ workspaceId }: SlackIntegrationProps)
   const slackIntegration = useQuery(api.integrations.slack.queries.getSlackIntegration, { workspaceId })
   const slackChannels = useQuery(api.integrations.slack.queries.getSlackChannels, { workspaceId })
   const projects = useQuery(api.projects.queries.getWorkspaceProjects, { workspaceId })
-  const standups = useQuery(api.integrations.slack.queries.getRecentStandups, { 
-    workspaceId, 
-    limit: 10 
+  const standups = useQuery(api.integrations.slack.queries.getRecentStandups, {
+    workspaceId,
+    limit: 10
   })
 
   // Mutations
@@ -116,7 +120,7 @@ export default function SlackIntegration({ workspaceId }: SlackIntegrationProps)
     const clientId = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID
     const redirectUri = `${window.location.origin}/api/slack/callback`
     const scope = 'channels:read,channels:write,chat:write,commands,files:read,files:write,groups:read,groups:write,im:read,im:write,incoming-webhook,team:read,users:read,users:read.email'
-    
+
     const authUrl = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scope}&redirect_uri=${redirectUri}&state=${workspaceId}`
     window.location.href = authUrl
   }
@@ -142,19 +146,22 @@ export default function SlackIntegration({ workspaceId }: SlackIntegrationProps)
       projectId: undefined,
       syncEvents: [],
     })
+    toast.success('CHANNEL_CONNECTED')
   }
 
   // Handle disconnect channel
   const handleDisconnectChannel = async (channelId: string) => {
-    if (confirm('Are you sure you want to disconnect this channel?')) {
+    if (confirm('DISCONNECT CHANNEL?')) {
       await disconnectChannel({ workspaceId, channelId })
+      toast.success('CHANNEL_DISCONNECTED')
     }
   }
 
   // Handle disconnect Slack
   const handleDisconnectSlack = async () => {
-    if (confirm('Are you sure you want to disconnect Slack integration? All channels will be disconnected.')) {
+    if (confirm('TERMINATE SLACK CONNECTION? ALL CHANNELS WILL BE LOST.')) {
       await disconnectSlack({ workspaceId })
+      toast.success('CONNECTION_TERMINATED')
     }
   }
 
@@ -167,6 +174,7 @@ export default function SlackIntegration({ workspaceId }: SlackIntegrationProps)
       active: channel.active,
     })
     setSelectedChannel(null)
+    toast.success('SETTINGS_UPDATED')
   }
 
   // Handle save notification settings
@@ -177,6 +185,7 @@ export default function SlackIntegration({ workspaceId }: SlackIntegrationProps)
         notifications: notificationSettings,
       }
     })
+    toast.success('NOTIFICATIONS_UPDATED')
   }
 
   // Handle save standup settings
@@ -189,94 +198,105 @@ export default function SlackIntegration({ workspaceId }: SlackIntegrationProps)
         dailyStandup: standupSettings.enabled,
       }
     })
+    toast.success('STANDUP_CONFIG_SAVED')
   }
 
   // Handle test message
   const handleSendTestMessage = async () => {
     if (!slackIntegration?.incomingWebhookChannel) return
-    
+
     await sendTestMessage({
       workspaceId,
       channel: slackIntegration.incomingWebhookChannel,
-      message: 'Test message from LTF1 workspace!'
+      message: 'SYSTEM TEST: CONNECTION ESTABLISHED.'
     })
+    toast.success('TEST_PACKET_SENT')
   }
 
   // Handle sync users
   const handleSyncUsers = async () => {
     await syncSlackUsers({ workspaceId })
+    toast.success('USER_DB_SYNCED')
   }
 
   const isConnected = slackIntegration?.active === true
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto font-mono">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-purple-500/20 border-2 border-purple-500 rounded">
-              <HiOutlineChat className="w-8 h-8 text-purple-500" />
+      <BrutalCard className="mb-6 p-6 border-l-4 border-l-[#36C5F0]">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-[#36C5F0]/10 border-2 border-[#36C5F0] text-[#36C5F0]">
+              <HiOutlineTerminal className="w-8 h-8" />
             </div>
             <div>
-              <h2 className="text-white text-2xl font-bold">Slack Integration</h2>
-              <p className="text-gray-400">
+              <h2 className="text-2xl font-bold uppercase tracking-wider">Slack Terminal</h2>
+              <div className="text-xs uppercase mt-1 flex items-center gap-2">
+                <span className="text-[var(--theme-foreground)]/60">STATUS:</span>
                 {isConnected ? (
-                  <span className="flex items-center">
-                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                    Connected to {slackIntegration.teamName}
+                  <span className="text-brutal-success font-bold flex items-center gap-2">
+                    <span className="w-2 h-2 bg-brutal-success animate-pulse"></span>
+                    ONLINE :: {slackIntegration.teamName}
                   </span>
                 ) : (
-                  <span className="flex items-center">
-                    <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
-                    Not connected
+                  <span className="text-[var(--theme-foreground)]/40 font-bold flex items-center gap-2">
+                    <span className="w-2 h-2 bg-[var(--theme-foreground)]/40"></span>
+                    OFFLINE
                   </span>
                 )}
-              </p>
+              </div>
             </div>
           </div>
 
           {isConnected ? (
-            <button
+            <BrutalButton
+              variant="destructive"
               onClick={handleDisconnectSlack}
-              className="px-4 py-2 bg-red-500/20 text-red-500 font-bold border-2 border-red-500 hover:bg-red-500/30"
+              className="flex items-center gap-2"
             >
-              <HiOutlineTrash className="inline mr-2" />
-              Disconnect
-            </button>
+              <HiOutlineTrash className="w-4 h-4" />
+              TERMINATE
+            </BrutalButton>
           ) : (
-            <button
+            <BrutalButton
+              variant="primary"
               onClick={handleConnectSlack}
-              className="px-4 py-2 bg-purple-500 text-white font-bold border-2 border-white hover:bg-purple-600"
+              className="flex items-center gap-2 bg-[#36C5F0] border-[#36C5F0] text-black hover:bg-[#36C5F0]/80"
             >
-              <HiOutlineLink className="inline mr-2" />
-              Connect to Slack
-            </button>
+              <HiOutlineLink className="w-4 h-4" />
+              INITIALIZE CONNECTION
+            </BrutalButton>
           )}
         </div>
 
         {/* Tabs */}
         {isConnected && (
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2 border-t-2 border-[var(--theme-border)] pt-4">
             {[
-              { id: 'overview', label: 'Overview', icon: <HiOutlineInformationCircle /> },
-              { id: 'channels', label: 'Channels', icon: <HiOutlineHashtag /> },
-              { id: 'notifications', label: 'Notifications', icon: <HiOutlineBell /> },
-              { id: 'standup', label: 'Standups', icon: <HiOutlineCalendar /> },
-              { id: 'settings', label: 'Settings', icon: <HiOutlineCog /> },
+              { id: 'overview', label: 'SYS_OVERVIEW', icon: <HiOutlineInformationCircle /> },
+              { id: 'channels', label: 'CHANNELS', icon: <HiOutlineHashtag /> },
+              { id: 'notifications', label: 'ALERTS', icon: <HiOutlineBell /> },
+              { id: 'standup', label: 'STANDUP_BOT', icon: <HiOutlineCalendar /> },
+              { id: 'settings', label: 'CONFIG', icon: <HiOutlineCog /> },
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-4 py-2 border-2 ${activeTab === tab.id ? 'border-cyan-400 bg-cyan-400/20' : 'border-white'} hover:bg-white/10 flex items-center space-x-2`}
+                className={clsx(
+                  "px-4 py-2 border-2 flex items-center gap-2 text-xs font-bold uppercase transition-all",
+                  activeTab === tab.id
+                    ? "bg-[var(--theme-foreground)] text-[var(--theme-background)] border-[var(--theme-foreground)]"
+                    : "bg-transparent border-[var(--theme-border)] hover:border-[var(--theme-foreground)] text-[var(--theme-foreground)]"
+                )}
               >
                 {tab.icon}
-                <span className="text-white font-mono">{tab.label}</span>
+                <span>{tab.label}</span>
               </button>
             ))}
           </div>
         )}
-      </div>
+      </BrutalCard>
 
       {/* Content */}
       {isConnected ? (
@@ -285,80 +305,79 @@ export default function SlackIntegration({ workspaceId }: SlackIntegrationProps)
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Stats */}
-              <div className="grid grid-cols-4 gap-4">
-                <div className="p-4 bg-black border-2 border-white">
-                  <p className="text-gray-400 text-sm">Connected Channels</p>
-                  <p className="text-white text-2xl font-bold">{slackChannels?.filter(c => c.active).length || 0}</p>
-                </div>
-                <div className="p-4 bg-black border-2 border-white">
-                  <p className="text-gray-400 text-sm">Active Projects</p>
-                  <p className="text-white text-2xl font-bold">
-                    {slackChannels?.filter(c => c.projectId && c.active).length || 0}
-                  </p>
-                </div>
-                <div className="p-4 bg-black border-2 border-white">
-                  <p className="text-gray-400 text-sm">Today's Standups</p>
-                  <p className="text-white text-2xl font-bold">
-                    {standups?.filter(s => 
-                      new Date(s.date).toDateString() === new Date().toDateString()
-                    ).length || 0}
-                  </p>
-                </div>
-                <div className="p-4 bg-black border-2 border-white">
-                  <p className="text-gray-400 text-sm">Notifications Sent</p>
-                  <p className="text-white text-2xl font-bold">0</p>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: 'CONNECTED_CHANNELS', value: slackChannels?.filter(c => c.active).length || 0 },
+                  { label: 'ACTIVE_PROJECTS', value: slackChannels?.filter(c => c.projectId && c.active).length || 0 },
+                  { label: 'STANDUPS_TODAY', value: standups?.filter(s => new Date(s.date).toDateString() === new Date().toDateString()).length || 0 },
+                  { label: 'PACKETS_SENT', value: '0' }
+                ].map((stat, i) => (
+                  <BrutalCard key={i} className="p-4">
+                    <p className="text-[var(--theme-foreground)]/60 text-[10px] uppercase mb-1">{stat.label}</p>
+                    <p className="text-2xl font-bold">{stat.value}</p>
+                  </BrutalCard>
+                ))}
               </div>
 
               {/* Quick Actions */}
-              <div className="p-4 bg-black border-2 border-white">
-                <h3 className="text-white font-bold mb-4">Quick Actions</h3>
-                <div className="flex space-x-2">
-                  <button
+              <BrutalCard className="p-6">
+                <h3 className="text-lg font-bold uppercase mb-4 flex items-center gap-2">
+                  <HiOutlineLightningBolt className="w-5 h-5 text-brutal-warning" />
+                  QUICK_ACTIONS
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  <BrutalButton
+                    variant="secondary"
                     onClick={handleSendTestMessage}
-                    className="px-4 py-2 bg-black text-white border-2 border-white hover:bg-white/10"
+                    className="flex items-center gap-2"
                   >
-                    <HiOutlineVolumeUp className="inline mr-2" />
-                    Send Test Message
-                  </button>
-                  <button
+                    <HiOutlineVolumeUp className="w-4 h-4" />
+                    PING_TEST
+                  </BrutalButton>
+                  <BrutalButton
+                    variant="secondary"
                     onClick={handleSyncUsers}
-                    className="px-4 py-2 bg-black text-white border-2 border-white hover:bg-white/10"
+                    className="flex items-center gap-2"
                   >
-                    <HiOutlineRefresh className="inline mr-2" />
-                    Sync Users
-                  </button>
-                  <button
+                    <HiOutlineRefresh className="w-4 h-4" />
+                    SYNC_USERS
+                  </BrutalButton>
+                  <BrutalButton
+                    variant="primary"
                     onClick={() => setShowAddChannel(true)}
-                    className="px-4 py-2 bg-cyan-400 text-black font-bold border-2 border-white hover:bg-cyan-300"
+                    className="flex items-center gap-2"
                   >
-                    <HiOutlinePlus className="inline mr-2" />
-                    Add Channel
-                  </button>
+                    <HiOutlinePlus className="w-4 h-4" />
+                    ADD_CHANNEL
+                  </BrutalButton>
                 </div>
-              </div>
+              </BrutalCard>
 
               {/* Recent Activity */}
-              <div className="p-4 bg-black border-2 border-white">
-                <h3 className="text-white font-bold mb-4">Recent Standups</h3>
+              <BrutalCard className="p-6">
+                <h3 className="text-lg font-bold uppercase mb-4">RECENT_STANDUPS_LOG</h3>
                 <div className="space-y-2">
                   {standups?.slice(0, 5).map(standup => (
-                    <div key={standup._id} className="p-2 border-2 border-white/50">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-white font-mono text-sm">{standup.user?.name}</p>
-                          <p className="text-gray-400 text-xs">
-                            {new Date(standup.date).toLocaleDateString()}
-                          </p>
-                        </div>
-                        {standup.blockers && (
-                          <HiOutlineExclamationCircle className="text-yellow-400" title="Has blockers" />
-                        )}
+                    <div key={standup._id} className="p-3 border border-[var(--theme-border)] bg-[var(--theme-background-secondary)] font-mono text-xs">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-[var(--theme-primary)]">@{standup.user?.name}</span>
+                        <span className="text-[var(--theme-foreground)]/40">
+                          {new Date(standup.date).toLocaleDateString()}
+                        </span>
                       </div>
+                      {standup.blockers && (
+                        <div className="flex items-center gap-2 text-brutal-error mt-1">
+                          <HiOutlineExclamationCircle className="w-3 h-3" />
+                          <span>BLOCKER_DETECTED</span>
+                        </div>
+                      )}
                     </div>
                   ))}
+                  {(!standups || standups.length === 0) && (
+                    <div className="text-[var(--theme-foreground)]/40 text-xs uppercase italic">NO_DATA_FOUND</div>
+                  )}
                 </div>
-              </div>
+              </BrutalCard>
             </div>
           )}
 
@@ -366,63 +385,72 @@ export default function SlackIntegration({ workspaceId }: SlackIntegrationProps)
           {activeTab === 'channels' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-white text-lg font-bold">Connected Channels</h3>
-                <button
+                <h3 className="text-lg font-bold uppercase">CHANNEL_MATRIX</h3>
+                <BrutalButton
+                  variant="primary"
                   onClick={() => setShowAddChannel(true)}
-                  className="px-4 py-2 bg-cyan-400 text-black font-bold border-2 border-white hover:bg-cyan-300"
+                  className="flex items-center gap-2"
                 >
-                  <HiOutlinePlus className="inline mr-2" />
-                  Add Channel
-                </button>
+                  <HiOutlinePlus className="w-4 h-4" />
+                  ADD_CHANNEL
+                </BrutalButton>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {slackChannels?.map(channel => (
-                  <div
+                  <BrutalCard
                     key={channel._id}
-                    className={`p-4 border-2 ${channel.active ? 'border-white' : 'border-gray-600'} bg-black`}
+                    className={clsx(
+                      "p-4 transition-all hover:border-[var(--theme-primary)]",
+                      !channel.active && "opacity-60 border-dashed"
+                    )}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <HiOutlineHashtag className="text-gray-400" />
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+                          <HiOutlineHashtag className="w-5 h-5 text-[var(--theme-foreground)]/60" />
+                        </div>
                         <div>
-                          <p className="text-white font-mono">{channel.channelName}</p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <span className={`text-xs px-2 py-1 border ${
-                              channel.channelType === 'project' ? 'border-blue-500 text-blue-500' :
-                              channel.channelType === 'alerts' ? 'border-red-500 text-red-500' :
-                              'border-gray-500 text-gray-500'
-                            }`}>
-                              {channel.channelType}
-                            </span>
+                          <p className="font-bold uppercase text-sm">{channel.channelName}</p>
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            <BrutalBadge variant="outline" className={clsx(
+                              "text-[10px]",
+                              channel.channelType === 'project' ? 'text-brutal-info border-brutal-info' :
+                                channel.channelType === 'alerts' ? 'text-brutal-error border-brutal-error' :
+                                  'text-[var(--theme-foreground)]/60 border-[var(--theme-foreground)]/60'
+                            )}>
+                              {channel.channelType.toUpperCase()}
+                            </BrutalBadge>
                             {channel.projectId && (
-                              <span className="text-gray-400 text-xs">
-                                {projects?.find(p => p._id === channel.projectId)?.name}
+                              <span className="text-[10px] text-[var(--theme-foreground)]/60 uppercase">
+                                PROJ: {projects?.find(p => p._id === channel.projectId)?.name}
                               </span>
                             )}
-                            <span className="text-gray-400 text-xs">
-                              {channel.syncEvents.length} events synced
+                            <span className="text-[10px] text-[var(--theme-foreground)]/60 uppercase">
+                              SYNC: {channel.syncEvents.length}
                             </span>
                           </div>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <button
+
+                      <div className="flex items-center gap-2">
+                        <BrutalButton
+                          size="sm"
+                          variant="secondary"
                           onClick={() => setSelectedChannel(channel)}
-                          className="p-2 text-white hover:text-cyan-400"
                         >
-                          <HiOutlineCog />
-                        </button>
-                        <button
+                          <HiOutlineCog className="w-4 h-4" />
+                        </BrutalButton>
+                        <BrutalButton
+                          size="sm"
+                          variant="destructive"
                           onClick={() => handleDisconnectChannel(channel.channelId)}
-                          className="p-2 text-white hover:text-red-500"
                         >
-                          <HiOutlineTrash />
-                        </button>
+                          <HiOutlineTrash className="w-4 h-4" />
+                        </BrutalButton>
                       </div>
                     </div>
-                  </div>
+                  </BrutalCard>
                 ))}
               </div>
             </div>
@@ -431,14 +459,14 @@ export default function SlackIntegration({ workspaceId }: SlackIntegrationProps)
           {/* Notifications Tab */}
           {activeTab === 'notifications' && (
             <div className="space-y-4">
-              <h3 className="text-white text-lg font-bold mb-4">Notification Settings</h3>
-              
-              <div className="p-4 bg-black border-2 border-white">
-                <div className="space-y-3">
+              <h3 className="text-lg font-bold uppercase mb-4">ALERT_PROTOCOLS</h3>
+
+              <BrutalCard className="p-6">
+                <div className="space-y-4">
                   {Object.entries(notificationSettings).map(([key, value]) => (
-                    <label key={key} className="flex items-center justify-between">
-                      <span className="text-white">
-                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                    <label key={key} className="flex items-center justify-between p-3 border border-[var(--theme-border)] hover:bg-[var(--theme-background-secondary)] cursor-pointer transition-colors">
+                      <span className="uppercase text-sm font-bold">
+                        {key.replace(/([A-Z])/g, '_$1').toUpperCase()}
                       </span>
                       <input
                         type="checkbox"
@@ -447,31 +475,33 @@ export default function SlackIntegration({ workspaceId }: SlackIntegrationProps)
                           ...prev,
                           [key]: e.target.checked
                         }))}
-                        className="w-5 h-5"
+                        className="w-5 h-5 border-2 border-[var(--theme-foreground)] bg-transparent checked:bg-[var(--theme-primary)]"
                       />
                     </label>
                   ))}
                 </div>
-                
-                <button
-                  onClick={handleSaveNotificationSettings}
-                  className="mt-4 px-4 py-2 bg-cyan-400 text-black font-bold border-2 border-white hover:bg-cyan-300"
-                >
-                  Save Settings
-                </button>
-              </div>
+
+                <div className="mt-6 flex justify-end">
+                  <BrutalButton
+                    variant="primary"
+                    onClick={handleSaveNotificationSettings}
+                  >
+                    SAVE_PROTOCOLS
+                  </BrutalButton>
+                </div>
+              </BrutalCard>
             </div>
           )}
 
           {/* Standup Tab */}
           {activeTab === 'standup' && (
             <div className="space-y-4">
-              <h3 className="text-white text-lg font-bold mb-4">Daily Standup Configuration</h3>
-              
-              <div className="p-4 bg-black border-2 border-white">
-                <div className="space-y-4">
-                  <label className="flex items-center justify-between">
-                    <span className="text-white">Enable Daily Standup</span>
+              <h3 className="text-lg font-bold uppercase mb-4">STANDUP_BOT_CONFIG</h3>
+
+              <BrutalCard className="p-6">
+                <div className="space-y-6">
+                  <label className="flex items-center justify-between p-4 border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+                    <span className="font-bold uppercase">ENABLE_DAILY_STANDUP</span>
                     <input
                       type="checkbox"
                       checked={standupSettings.enabled}
@@ -479,34 +509,49 @@ export default function SlackIntegration({ workspaceId }: SlackIntegrationProps)
                         ...prev,
                         enabled: e.target.checked
                       }))}
-                      className="w-5 h-5"
+                      className="w-6 h-6 border-2 border-[var(--theme-foreground)] bg-transparent checked:bg-[var(--theme-primary)]"
                     />
                   </label>
-                  
-                  <div>
-                    <label className="text-white text-sm">Standup Time</label>
-                    <input
-                      type="time"
-                      value={standupSettings.time}
-                      onChange={(e) => setStandupSettings(prev => ({
-                        ...prev,
-                        time: e.target.value
-                      }))}
-                      className="w-full p-2 bg-black text-white border-2 border-white font-mono"
-                    />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-xs font-bold uppercase mb-2 block text-[var(--theme-foreground)]/60">Standup Time</label>
+                      <input
+                        type="time"
+                        value={standupSettings.time}
+                        onChange={(e) => setStandupSettings(prev => ({
+                          ...prev,
+                          time: e.target.value
+                        }))}
+                        className="w-full p-3 bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)] font-mono focus:border-[var(--theme-primary)] outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold uppercase mb-2 block text-[var(--theme-foreground)]/60">Reminder Time</label>
+                      <input
+                        type="time"
+                        value={standupSettings.remindAt}
+                        onChange={(e) => setStandupSettings(prev => ({
+                          ...prev,
+                          remindAt: e.target.value
+                        }))}
+                        className="w-full p-3 bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)] font-mono focus:border-[var(--theme-primary)] outline-none"
+                      />
+                    </div>
                   </div>
-                  
+
                   <div>
-                    <label className="text-white text-sm">Standup Channel</label>
+                    <label className="text-xs font-bold uppercase mb-2 block text-[var(--theme-foreground)]/60">Target Channel</label>
                     <select
                       value={standupSettings.channel}
                       onChange={(e) => setStandupSettings(prev => ({
                         ...prev,
                         channel: e.target.value
                       }))}
-                      className="w-full p-2 bg-black text-white border-2 border-white font-mono"
+                      className="w-full p-3 bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)] font-mono focus:border-[var(--theme-primary)] outline-none"
                     >
-                      <option value="">Select Channel</option>
+                      <option value="">SELECT_CHANNEL</option>
                       {slackChannels?.map(channel => (
                         <option key={channel.channelId} value={channel.channelId}>
                           #{channel.channelName}
@@ -514,211 +559,178 @@ export default function SlackIntegration({ workspaceId }: SlackIntegrationProps)
                       ))}
                     </select>
                   </div>
-                  
+
                   <div>
-                    <label className="text-white text-sm">Reminder Time</label>
-                    <input
-                      type="time"
-                      value={standupSettings.remindAt}
-                      onChange={(e) => setStandupSettings(prev => ({
-                        ...prev,
-                        remindAt: e.target.value
-                      }))}
-                      className="w-full p-2 bg-black text-white border-2 border-white font-mono"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="text-white text-sm mb-2">Standup Questions</label>
-                    <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase mb-2 block text-[var(--theme-foreground)]/60">Questions Protocol</label>
+                    <div className="space-y-3">
                       {standupSettings.questions.map((q, index) => (
-                        <input
-                          key={index}
-                          type="text"
-                          value={q}
-                          onChange={(e) => {
-                            const newQuestions = [...standupSettings.questions]
-                            newQuestions[index] = e.target.value
-                            setStandupSettings(prev => ({
-                              ...prev,
-                              questions: newQuestions
-                            }))
-                          }}
-                          className="w-full p-2 bg-black text-white border-2 border-white font-mono"
-                        />
+                        <div key={index} className="flex items-center gap-3">
+                          <span className="text-[var(--theme-foreground)]/40 font-bold">0{index + 1}</span>
+                          <input
+                            type="text"
+                            value={q}
+                            onChange={(e) => {
+                              const newQuestions = [...standupSettings.questions]
+                              newQuestions[index] = e.target.value
+                              setStandupSettings(prev => ({
+                                ...prev,
+                                questions: newQuestions
+                              }))
+                            }}
+                            className="flex-1 p-2 bg-[var(--theme-background)] text-[var(--theme-foreground)] border-b-2 border-[var(--theme-border)] font-mono focus:border-[var(--theme-primary)] outline-none"
+                          />
+                        </div>
                       ))}
                     </div>
                   </div>
                 </div>
-                
-                <button
-                  onClick={handleSaveStandupSettings}
-                  className="mt-4 px-4 py-2 bg-cyan-400 text-black font-bold border-2 border-white hover:bg-cyan-300"
-                >
-                  Save Standup Settings
-                </button>
-              </div>
 
-              {/* Recent Standups */}
-              <div className="p-4 bg-black border-2 border-white">
-                <h3 className="text-white font-bold mb-4">Recent Standups</h3>
-                <div className="space-y-2">
-                  {standups?.map(standup => (
-                    <div key={standup._id} className="p-3 border-2 border-white/50">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-white font-mono">{standup.user?.name}</p>
-                        <p className="text-gray-400 text-sm">
-                          {new Date(standup.date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="space-y-1 text-sm">
-                        <p className="text-gray-400">
-                          <span className="text-cyan-400">Yesterday:</span> {standup.yesterday}
-                        </p>
-                        <p className="text-gray-400">
-                          <span className="text-cyan-400">Today:</span> {standup.today}
-                        </p>
-                        {standup.blockers && (
-                          <p className="text-gray-400">
-                            <span className="text-red-400">Blockers:</span> {standup.blockers}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                <div className="mt-8 flex justify-end">
+                  <BrutalButton
+                    variant="primary"
+                    onClick={handleSaveStandupSettings}
+                  >
+                    UPDATE_CONFIG
+                  </BrutalButton>
                 </div>
-              </div>
+              </BrutalCard>
             </div>
           )}
 
           {/* Settings Tab */}
           {activeTab === 'settings' && (
             <div className="space-y-4">
-              <h3 className="text-white text-lg font-bold mb-4">Integration Settings</h3>
-              
-              <div className="p-4 bg-black border-2 border-white">
-                <h4 className="text-white font-bold mb-3">Workspace Info</h4>
-                <div className="space-y-2">
+              <h3 className="text-lg font-bold uppercase mb-4">SYSTEM_INFO</h3>
+
+              <BrutalCard className="p-6 mb-4">
+                <h4 className="text-sm font-bold uppercase mb-4 border-b-2 border-[var(--theme-border)] pb-2">Workspace Data</h4>
+                <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Team Name</span>
-                    <span className="text-white font-mono">{slackIntegration.teamName}</span>
+                    <span className="text-[var(--theme-foreground)]/60">TEAM_NAME</span>
+                    <span className="font-bold">{slackIntegration.teamName}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Team ID</span>
-                    <span className="text-white font-mono text-sm">{slackIntegration.teamId}</span>
+                    <span className="text-[var(--theme-foreground)]/60">TEAM_ID</span>
+                    <span className="font-mono">{slackIntegration.teamId}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Bot User ID</span>
-                    <span className="text-white font-mono text-sm">{slackIntegration.botUserId}</span>
+                    <span className="text-[var(--theme-foreground)]/60">BOT_ID</span>
+                    <span className="font-mono">{slackIntegration.botUserId}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Connected Since</span>
-                    <span className="text-white">
+                    <span className="text-[var(--theme-foreground)]/60">ESTABLISHED</span>
+                    <span>
                       {new Date(slackIntegration.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
-              </div>
-              
-              <div className="p-4 bg-black border-2 border-white">
-                <h4 className="text-white font-bold mb-3">Permissions</h4>
+              </BrutalCard>
+
+              <BrutalCard className="p-6">
+                <h4 className="text-sm font-bold uppercase mb-4 border-b-2 border-[var(--theme-border)] pb-2">Scope Permissions</h4>
                 <div className="flex flex-wrap gap-2">
                   {slackIntegration.scopes.map(scope => (
                     <span
                       key={scope}
-                      className="px-2 py-1 bg-cyan-400/20 border border-cyan-400 text-cyan-400 text-xs font-mono"
+                      className="px-2 py-1 bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-[10px] font-mono uppercase"
                     >
                       {scope}
                     </span>
                   ))}
                 </div>
-              </div>
+              </BrutalCard>
             </div>
           )}
         </>
       ) : (
-        <div className="text-center py-12">
-          <HiOutlineChat className="w-24 h-24 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-white text-xl mb-2">Connect Your Slack Workspace</h3>
-          <p className="text-gray-400 mb-6 max-w-md mx-auto">
-            Integrate Slack to receive notifications, sync tasks, run standups, and collaborate seamlessly.
+        <BrutalCard className="text-center py-16 border-dashed">
+          <div className="w-20 h-20 bg-[var(--theme-background-secondary)] rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-[var(--theme-border)]">
+            <HiOutlineChat className="w-10 h-10 text-[var(--theme-foreground)]/40" />
+          </div>
+          <h3 className="text-2xl font-bold uppercase mb-2">Connection Required</h3>
+          <p className="text-[var(--theme-foreground)]/60 mb-8 max-w-md mx-auto font-mono text-sm">
+            Initialize Slack integration to enable real-time packet transmission, task syncing, and automated standup protocols.
           </p>
-          <button
+          <BrutalButton
+            variant="primary"
             onClick={handleConnectSlack}
-            className="px-6 py-3 bg-purple-500 text-white font-bold border-2 border-white hover:bg-purple-600"
+            className="flex items-center gap-2 mx-auto bg-[#36C5F0] border-[#36C5F0] text-black hover:bg-[#36C5F0]/80"
           >
-            <HiOutlineLink className="inline mr-2" />
-            Connect to Slack
-          </button>
-        </div>
+            <HiOutlineLink className="w-4 h-4" />
+            INITIALIZE_CONNECTION
+          </BrutalButton>
+        </BrutalCard>
       )}
 
       {/* Add Channel Modal */}
       {showAddChannel && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-black border-2 border-white p-6 w-full max-w-md">
-            <h3 className="text-white text-xl font-bold mb-4">Add Slack Channel</h3>
-            
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <BrutalCard className="w-full max-w-md p-6 border-2 border-[var(--theme-primary)] shadow-brutal-lg">
+            <h3 className="text-xl font-bold uppercase mb-6 flex items-center gap-2">
+              <HiOutlinePlus className="w-5 h-5 text-[var(--theme-primary)]" />
+              ADD_CHANNEL
+            </h3>
+
             <div className="space-y-4">
               <div>
-                <label className="text-white text-sm">Channel ID</label>
+                <label className="text-xs font-bold uppercase mb-1 block">Channel ID</label>
                 <input
                   type="text"
                   value={newChannel.channelId}
                   onChange={(e) => setNewChannel(prev => ({ ...prev, channelId: e.target.value }))}
-                  className="w-full p-2 bg-black text-white border-2 border-white font-mono"
+                  className="w-full p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
                   placeholder="C1234567890"
                 />
               </div>
-              
+
               <div>
-                <label className="text-white text-sm">Channel Name</label>
+                <label className="text-xs font-bold uppercase mb-1 block">Channel Name</label>
                 <input
                   type="text"
                   value={newChannel.channelName}
                   onChange={(e) => setNewChannel(prev => ({ ...prev, channelName: e.target.value }))}
-                  className="w-full p-2 bg-black text-white border-2 border-white font-mono"
+                  className="w-full p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
                   placeholder="general"
                 />
               </div>
-              
+
               <div>
-                <label className="text-white text-sm">Channel Type</label>
+                <label className="text-xs font-bold uppercase mb-1 block">Channel Type</label>
                 <select
                   value={newChannel.channelType}
                   onChange={(e) => setNewChannel(prev => ({ ...prev, channelType: e.target.value as any }))}
-                  className="w-full p-2 bg-black text-white border-2 border-white font-mono"
+                  className="w-full p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
                 >
-                  <option value="general">General</option>
-                  <option value="project">Project</option>
-                  <option value="alerts">Alerts</option>
+                  <option value="general">GENERAL</option>
+                  <option value="project">PROJECT</option>
+                  <option value="alerts">ALERTS</option>
                 </select>
               </div>
-              
+
               {newChannel.channelType === 'project' && (
                 <div>
-                  <label className="text-white text-sm">Project</label>
+                  <label className="text-xs font-bold uppercase mb-1 block">Project Link</label>
                   <select
                     value={newChannel.projectId || ''}
-                    onChange={(e) => setNewChannel(prev => ({ 
-                      ...prev, 
-                      projectId: e.target.value as Id<'projects'> 
+                    onChange={(e) => setNewChannel(prev => ({
+                      ...prev,
+                      projectId: e.target.value as Id<'projects'>
                     }))}
-                    className="w-full p-2 bg-black text-white border-2 border-white font-mono"
+                    className="w-full p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
                   >
-                    <option value="">Select Project</option>
+                    <option value="">SELECT_PROJECT</option>
                     {projects?.map(project => (
                       <option key={project._id} value={project._id}>{project.name}</option>
                     ))}
                   </select>
                 </div>
               )}
-              
+
               <div>
-                <label className="text-white text-sm mb-2">Sync Events</label>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
+                <label className="text-xs font-bold uppercase mb-2 block">Sync Protocols</label>
+                <div className="space-y-2 max-h-48 overflow-y-auto border-2 border-[var(--theme-border)] p-2 bg-[var(--theme-background-secondary)]">
                   {SYNC_EVENTS.map(event => (
-                    <label key={event.id} className="flex items-center text-white">
+                    <label key={event.id} className="flex items-center gap-2 cursor-pointer hover:bg-[var(--theme-background)] p-1">
                       <input
                         type="checkbox"
                         checked={newChannel.syncEvents.includes(event.id)}
@@ -735,49 +747,50 @@ export default function SlackIntegration({ workspaceId }: SlackIntegrationProps)
                             }))
                           }
                         }}
-                        className="mr-2"
+                        className="w-4 h-4 border-2 border-[var(--theme-foreground)] bg-transparent checked:bg-[var(--theme-primary)]"
                       />
-                      {event.icon}
-                      <span className="ml-2">{event.label}</span>
+                      <span className="text-[10px] uppercase font-bold">{event.label}</span>
                     </label>
                   ))}
                 </div>
               </div>
             </div>
-            
-            <div className="mt-6 flex space-x-2">
-              <button
+
+            <div className="mt-8 flex gap-3">
+              <BrutalButton
+                variant="primary"
                 onClick={handleAddChannel}
                 disabled={!newChannel.channelId || !newChannel.channelName}
-                className="flex-1 p-2 bg-cyan-400 text-black font-bold border-2 border-white hover:bg-cyan-300 disabled:opacity-50"
+                className="flex-1"
               >
-                Add Channel
-              </button>
-              <button
+                CONFIRM
+              </BrutalButton>
+              <BrutalButton
+                variant="secondary"
                 onClick={() => setShowAddChannel(false)}
-                className="flex-1 p-2 bg-black text-white font-bold border-2 border-white hover:bg-white/10"
+                className="flex-1"
               >
-                Cancel
-              </button>
+                CANCEL
+              </BrutalButton>
             </div>
-          </div>
+          </BrutalCard>
         </div>
       )}
 
       {/* Edit Channel Modal */}
       {selectedChannel && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-black border-2 border-white p-6 w-full max-w-md">
-            <h3 className="text-white text-xl font-bold mb-4">
-              Edit Channel: #{selectedChannel.channelName}
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <BrutalCard className="w-full max-w-md p-6 border-2 border-[var(--theme-primary)] shadow-brutal-lg">
+            <h3 className="text-xl font-bold uppercase mb-6">
+              EDIT_CHANNEL: #{selectedChannel.channelName}
             </h3>
-            
+
             <div className="space-y-4">
               <div>
-                <label className="text-white text-sm mb-2">Sync Events</label>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
+                <label className="text-xs font-bold uppercase mb-2 block">Sync Protocols</label>
+                <div className="space-y-2 max-h-64 overflow-y-auto border-2 border-[var(--theme-border)] p-2 bg-[var(--theme-background-secondary)]">
                   {SYNC_EVENTS.map(event => (
-                    <label key={event.id} className="flex items-center text-white">
+                    <label key={event.id} className="flex items-center gap-2 cursor-pointer hover:bg-[var(--theme-background)] p-1">
                       <input
                         type="checkbox"
                         checked={selectedChannel.syncEvents.includes(event.id)}
@@ -794,44 +807,32 @@ export default function SlackIntegration({ workspaceId }: SlackIntegrationProps)
                             }))
                           }
                         }}
-                        className="mr-2"
+                        className="w-4 h-4 border-2 border-[var(--theme-foreground)] bg-transparent checked:bg-[var(--theme-primary)]"
                       />
-                      {event.icon}
-                      <span className="ml-2">{event.label}</span>
+                      <span className="text-[10px] uppercase font-bold">{event.label}</span>
                     </label>
                   ))}
                 </div>
               </div>
-              
-              <label className="flex items-center text-white">
-                <input
-                  type="checkbox"
-                  checked={selectedChannel.active}
-                  onChange={(e) => setSelectedChannel(prev => ({
-                    ...prev!,
-                    active: e.target.checked
-                  }))}
-                  className="mr-2"
-                />
-                Channel Active
-              </label>
             </div>
-            
-            <div className="mt-6 flex space-x-2">
-              <button
+
+            <div className="mt-8 flex gap-3">
+              <BrutalButton
+                variant="primary"
                 onClick={() => handleUpdateChannelSettings(selectedChannel)}
-                className="flex-1 p-2 bg-cyan-400 text-black font-bold border-2 border-white hover:bg-cyan-300"
+                className="flex-1"
               >
-                Save Changes
-              </button>
-              <button
+                UPDATE
+              </BrutalButton>
+              <BrutalButton
+                variant="secondary"
                 onClick={() => setSelectedChannel(null)}
-                className="flex-1 p-2 bg-black text-white font-bold border-2 border-white hover:bg-white/10"
+                className="flex-1"
               >
-                Cancel
-              </button>
+                CANCEL
+              </BrutalButton>
             </div>
-          </div>
+          </BrutalCard>
         </div>
       )}
     </div>

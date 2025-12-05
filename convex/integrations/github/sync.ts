@@ -1,8 +1,32 @@
 import { v } from "convex/values";
-import { internalMutation } from "../../_generated/server";
+import { internalMutation, internalQuery } from "../../_generated/server";
 import { internal } from "../../_generated/api";
 
 // Note: GitHub sync actions that require Node.js APIs are in syncActions.ts
+
+// Get all active installations that need repository sync
+export const getInstallationsToSync = internalQuery({
+  args: {},
+  returns: v.array(v.object({
+    installationId: v.number(),
+    accountName: v.string(),
+    repositorySelection: v.string(),
+  })),
+  handler: async (ctx) => {
+    const installations = await ctx.db
+      .query("githubInstallations")
+      .collect();
+
+    // Only return non-suspended installations
+    return installations
+      .filter((inst) => !inst.suspendedAt)
+      .map((inst) => ({
+        installationId: inst.installationId,
+        accountName: inst.accountName,
+        repositorySelection: inst.repositorySelection,
+      }));
+  },
+});
 
 // Update developer GitHub stats
 export const updateDeveloperGitHubStats = internalMutation({
@@ -20,6 +44,7 @@ export const updateDeveloperGitHubStats = internalMutation({
       lastSynced: v.number(),
     }),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const profile = await ctx.db
       .query("developerProfiles")
@@ -32,6 +57,7 @@ export const updateDeveloperGitHubStats = internalMutation({
         updatedAt: Date.now(),
       });
     }
+    return null;
   },
 });
 
@@ -60,6 +86,7 @@ export const upsertRepository = internalMutation({
       pushedAt: v.optional(v.string()),
     }),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("githubRepositories")
@@ -79,6 +106,7 @@ export const upsertRepository = internalMutation({
         syncedAt: Date.now(),
       });
     }
+    return null;
   },
 });
 

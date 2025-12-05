@@ -27,7 +27,7 @@ const statusConfig = {
     description: 'Reviewing code',
   },
   AFK: {
-    color: 'bg-primary-brutalist/30',
+    color: 'bg-[var(--theme-primary)]/30',
     label: 'AFK',
     description: 'Away from keyboard',
   },
@@ -53,7 +53,7 @@ export default function DeveloperStatusIndicator({
     // Map common status values to our enum
     const statusMapping: { [key: string]: DeveloperStatus } = {
       'online': 'AVAILABLE',
-      'busy': 'LOCKED_IN', 
+      'busy': 'LOCKED_IN',
       'away': 'AFK',
       'offline': 'AFK',
       'available': 'AVAILABLE',
@@ -66,30 +66,30 @@ export default function DeveloperStatusIndicator({
   }
 
   const config = statusConfig[normalizedStatus as DeveloperStatus] || {
-    color: 'bg-cathode-white/40',
+    color: 'bg-[var(--theme-foreground)]/40',
     label: 'OFFLINE',
     description: 'Status unknown',
   }
-  
+
   const sizeClasses = {
-    xs: 'w-6px h-6px',
-    sm: 'w-8px h-8px',
-    md: 'w-12px h-12px',
-    lg: 'w-16px h-16px',
+    xs: 'w-1.5 h-1.5',
+    sm: 'w-2 h-2',
+    md: 'w-3 h-3',
+    lg: 'w-4 h-4',
   }
 
   return (
-    <div className={clsx('flex items-center gap-8px', className)}>
+    <div className={clsx('flex items-center gap-2', className)}>
       <div
         className={clsx(
           sizeClasses[size],
           config.color,
-          'border-2 border-event-horizon'
+          'border-2 border-[var(--theme-border)]'
         )}
         title={config.description}
       />
       {showLabel && (
-        <span className="font-mono text-brutal-sm uppercase">
+        <span className="font-mono text-sm font-bold uppercase">
           {config.label}
         </span>
       )}

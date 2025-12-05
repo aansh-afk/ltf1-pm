@@ -42,7 +42,8 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_clerk_id", ["clerkId"])
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .index("by_status", ["status"]),
 
   workspaces: defineTable({
     name: v.string(),
@@ -212,6 +213,14 @@ export default defineSchema({
       commits: v.array(v.string()),
       pullRequestUrl: v.optional(v.string()),
       pullRequestStatus: v.optional(v.union(v.literal("open"), v.literal("merged"), v.literal("closed"))),
+    })),
+    // GitHub Issue sync (bi-directional)
+    githubIssue: v.optional(v.object({
+      repositoryFullName: v.string(),
+      issueNumber: v.number(),
+      issueUrl: v.string(),
+      syncEnabled: v.boolean(),
+      lastSyncedAt: v.optional(v.number()),
     })),
     gitlabIssueId: v.optional(v.number()), // GitLab issue ID if synced
     gitlabIssueUrl: v.optional(v.string()), // GitLab issue URL
@@ -681,6 +690,107 @@ export default defineSchema({
     .index("by_repository", ["repositoryFullName"])
     .index("by_repository_number", ["repositoryFullName", "number"])
     .index("by_linked_task", ["linkedTaskId"]),
+
+  // GitHub User Mappings - Map GitHub users to LTF1 users
+  githubUserMappings: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.id("users"),
+    githubId: v.number(),
+    githubUsername: v.string(),
+    githubEmail: v.optional(v.string()),
+    mappingType: v.union(
+      v.literal("oauth"),      // Auto-created from OAuth connection
+      v.literal("manual"),     // Manually linked by admin
+      v.literal("inferred")    // Inferred from email match
+    ),
+    verified: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_user", ["userId"])
+    .index("by_github_id", ["githubId"])
+    .index("by_workspace_username", ["workspaceId", "githubUsername"]),
+
+  // Workspace GitHub Installations - Junction table for multi-installation support
+  workspaceGitHubInstallations: defineTable({
+    workspaceId: v.id("workspaces"),
+    installationId: v.number(),
+    isPrimary: v.boolean(), // Primary installation for this workspace
+    nickname: v.optional(v.string()), // User-friendly name (e.g., "Production Org")
+    accountLogin: v.string(), // GitHub account login name
+    accountType: v.union(v.literal("user"), v.literal("organization")),
+    syncSettings: v.object({
+      autoSyncIssues: v.boolean(),
+      bidirectionalSync: v.boolean(),
+      createTasksFromIssues: v.boolean(),
+      syncLabels: v.boolean(),
+      defaultProjectId: v.optional(v.id("projects")),
+    }),
+    addedBy: v.id("users"),
+    addedAt: v.number(),
+    lastSyncAt: v.optional(v.number()),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_installation", ["installationId"])
+    .index("by_workspace_primary", ["workspaceId", "isPrimary"]),
+
+  // GitHub Team Mappings - Map LTF1 teams to GitHub org teams
+  githubTeamMappings: defineTable({
+    workspaceId: v.id("workspaces"),
+    teamId: v.id("teams"),
+    installationId: v.number(),
+    githubOrgName: v.string(),
+    githubTeamSlug: v.string(),
+    githubTeamId: v.number(),
+    syncDirection: v.union(
+      v.literal("github_to_ltf1"),   // GitHub is source of truth
+      v.literal("ltf1_to_github"),   // LTF1 is source of truth
+      v.literal("bidirectional")     // Sync both ways
+    ),
+    syncMembers: v.boolean(),
+    lastSyncAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_team", ["teamId"])
+    .index("by_github_team", ["githubOrgName", "githubTeamSlug"]),
+
+  // GitHub Issue Sync Queue - Queue for bi-directional issue sync
+  githubIssueSyncQueue: defineTable({
+    workspaceId: v.id("workspaces"),
+    direction: v.union(
+      v.literal("to_github"),    // LTF1 task → GitHub issue
+      v.literal("from_github")   // GitHub issue → LTF1 task
+    ),
+    taskId: v.optional(v.id("tasks")),
+    githubIssueNumber: v.optional(v.number()),
+    repositoryFullName: v.string(),
+    operation: v.union(
+      v.literal("create"),
+      v.literal("update"),
+      v.literal("close"),
+      v.literal("reopen"),
+      v.literal("sync_comments")
+    ),
+    payload: v.any(), // Operation-specific data
+    status: v.union(
+      v.literal("pending"),
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("failed")
+    ),
+    retryCount: v.number(),
+    lastError: v.optional(v.string()),
+    scheduledFor: v.optional(v.number()), // For delayed processing
+    createdAt: v.number(),
+    processedAt: v.optional(v.number()),
+  })
+    .index("by_status", ["status"])
+    .index("by_task", ["taskId"])
+    .index("by_workspace", ["workspaceId"])
+    .index("by_scheduled", ["status", "scheduledFor"]),
 
   // GitHub webhook events storage
   webhookEvents: defineTable({
@@ -1313,4 +1423,36 @@ export default defineSchema({
   })
     .index("by_whiteboard", ["whiteboardId"])
     .index("by_version", ["whiteboardId", "version"]),
+
+  // GitHub Rate Limiting
+  githubRateLimits: defineTable({
+    installationId: v.number(),
+    apiType: v.union(v.literal("core"), v.literal("search"), v.literal("graphql")),
+    remaining: v.number(),
+    reset: v.number(), // Unix timestamp
+    limit: v.number(),
+    lastUpdated: v.number(),
+  })
+    .index("by_installation_api", ["installationId", "apiType"])
+    .index("by_installation", ["installationId"]),
+
+  // GitHub Operation Logs
+  githubOperationLogs: defineTable({
+    timestamp: v.number(),
+    level: v.union(v.literal("debug"), v.literal("info"), v.literal("warn"), v.literal("error")),
+    operation: v.string(),
+    installationId: v.optional(v.number()),
+    workspaceId: v.optional(v.id("workspaces")),
+    duration: v.optional(v.number()),
+    rateLimitRemaining: v.optional(v.number()),
+    error: v.optional(v.object({
+      code: v.string(),
+      message: v.string(),
+      retryable: v.boolean(),
+    })),
+    metadata: v.optional(v.any()),
+  })
+    .index("by_timestamp", ["timestamp"])
+    .index("by_level", ["level"])
+    .index("by_installation", ["installationId"]),
 });

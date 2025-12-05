@@ -1,9 +1,19 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { SignIn, SignUp, SignedIn, SignedOut, useAuth } from '@clerk/clerk-react'
 import { Toaster } from 'react-hot-toast'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
+
+// Helper to detect if we're in a production environment
+// Returns true for production deployments (including .vercel.app domains)
+// Returns false for localhost development
+function isProductionEnvironment(): boolean {
+  if (typeof window === 'undefined') return false
+  const hostname = window.location.hostname
+  // Allow localhost and 127.0.0.1 to bypass waitlist
+  return hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.startsWith('192.168.')
+}
 import { OptionalConvexProvider } from './providers/OptionalConvexProvider'
 import { ShortcutProvider } from './contexts/ShortcutContext'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -89,12 +99,16 @@ function AuthenticatedAppContent() {
     }
   }
 
+  // Memoize environment check to avoid re-calculating on every render
+  const isProduction = useMemo(() => isProductionEnvironment(), [])
+
   if (isLoading) {
     return <BrutalistLoader />
   }
 
-  // Check for waitlist status
-  if (user?.status === 'waitlisted') {
+  // Check for waitlist status - only redirect on production environments
+  // On localhost, users can access the app regardless of waitlist status
+  if (isProduction && user?.status === 'waitlisted') {
     return (
       <Routes>
         <Route path="/coming-soon" element={<ComingSoonPage />} />
