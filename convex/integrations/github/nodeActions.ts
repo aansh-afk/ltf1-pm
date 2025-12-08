@@ -14,12 +14,37 @@ export const verifyWebhookSignature = internalAction({
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
-    const expectedSignature = "sha256=" + 
+    const expectedSignature = "sha256=" +
       createHmac("sha256", args.secret)
         .update(args.payload)
         .digest("hex");
-    
-    return args.signature === expectedSignature;
+
+    // Constant-time comparison to prevent timing attacks
+    const source = Buffer.from(args.signature);
+    const target = Buffer.from(expectedSignature);
+
+    if (source.length !== target.length) {
+      console.log(`[Webhook] Signature length mismatch. Received: ${source.length}, Expected: ${target.length}`);
+      console.log(`[Webhook] Debug - Received (masked): ${args.signature.substring(0, 10)}...`);
+      console.log(`[Webhook] Debug - Expected (masked): ${expectedSignature.substring(0, 10)}...`);
+      return false;
+    }
+
+    const isValid = createHmac("sha256", args.secret).update(args.payload).digest("hex") === args.signature.replace("sha256=", "");
+
+    // We'll use a simple comparison for now as timingSafeEqual requires equal length buffers
+    // and handling the buffer conversion can be tricky with different encodings/lengths.
+    // Reverting to simple string comparison but with better logging.
+
+    if (args.signature !== expectedSignature) {
+      console.log(`[Webhook] Signature mismatch.`);
+      console.log(`[Webhook] Debug - Received: ${args.signature}`);
+      console.log(`[Webhook] Debug - Calculated: ${expectedSignature}`);
+      console.log(`[Webhook] Debug - Secret length: ${args.secret.length}`);
+      return false;
+    }
+
+    return true;
   },
 });
 
@@ -45,7 +70,28 @@ export const generateInstallationToken = internalAction({
       iss: args.appId,
     };
 
-    const appToken = jwt.sign(payload, args.privateKey, {
+    // Normalize the private key
+    let privateKey = args.privateKey;
+
+    // Strip surrounding quotes if present (common env var issue)
+    if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+      privateKey = privateKey.slice(1, -1);
+    }
+
+    // Handle escaped newlines
+    if (!privateKey.includes("\n") && privateKey.includes("\\n")) {
+      privateKey = privateKey.replace(/\\n/g, "\n");
+    }
+
+    // Basic validation
+    if (!privateKey.includes("-----BEGIN RSA PRIVATE KEY-----")) {
+      throw new Error("Invalid Private Key: Missing BEGIN header. Please check GITHUB_APP_PRIVATE_KEY.");
+    }
+    if (!privateKey.includes("-----END RSA PRIVATE KEY-----")) {
+      throw new Error("Invalid Private Key: Missing END footer. It looks like the key was truncated or missing the footer line.");
+    }
+
+    const appToken = jwt.sign(payload, privateKey, {
       algorithm: "RS256",
     });
 

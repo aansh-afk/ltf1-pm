@@ -11,11 +11,16 @@ export default function GitHubCallbackPage() {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [error, setError] = useState<string | null>(null);
-  
+
   const handleCallback = useAction(api.integrations.github.actions.handleOAuthCallback);
+  const processedRef = useRef(false);
 
   useEffect(() => {
     const processCallback = async () => {
+      // Prevent double-invocation (React Strict Mode / re-renders)
+      if (processedRef.current) return;
+      processedRef.current = true;
+
       const code = searchParams.get('code');
       const state = searchParams.get('state');
       const error = searchParams.get('error');
@@ -39,11 +44,11 @@ export default function GitHubCallbackPage() {
 
       try {
         const result = await handleCallback({ code, state });
-        
+
         if (result.success) {
           setStatus('success');
           toast.success(`Successfully connected GitHub account: @${result.githubUsername}`);
-          
+
           // Redirect to the return URL or profile
           setTimeout(() => {
             navigate(result.returnUrl || '/profile');

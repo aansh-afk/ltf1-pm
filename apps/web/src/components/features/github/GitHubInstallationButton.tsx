@@ -6,31 +6,32 @@ interface GitHubInstallationButtonProps {
   onInstallComplete?: () => void;
 }
 
-export function GitHubInstallationButton({ 
-  workspaceId, 
-  onInstallComplete 
+export function GitHubInstallationButton({
+  workspaceId,
+  onInstallComplete
 }: GitHubInstallationButtonProps) {
   const handleInstall = () => {
     // GitHub App installation URL
     // Replace 'ltf1-integration' with your actual GitHub App slug
-    const appSlug = import.meta.env.VITE_GITHUB_APP_SLUG || 'ltf1-integration';
+    const rawSlug = import.meta.env.VITE_GITHUB_APP_SLUG || 'ltf1-github';
+    const appSlug = rawSlug.replace('https://github.com/apps/', '');
     const installUrl = `https://github.com/apps/${appSlug}/installations/new`;
-    
+
     // Store workspace ID in session storage for post-install redirect
     sessionStorage.setItem('github_install_workspace', workspaceId);
-    
+
     // Open GitHub installation flow in new window
     const width = 800;
     const height = 600;
     const left = (window.screen.width - width) / 2;
     const top = (window.screen.height - height) / 2;
-    
+
     const installWindow = window.open(
       installUrl,
       'github-install',
       `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`
     );
-    
+
     // Poll for window close
     const checkInterval = setInterval(() => {
       if (installWindow?.closed) {

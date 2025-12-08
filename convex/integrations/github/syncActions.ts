@@ -54,7 +54,7 @@ export const syncDeveloperGitHubStats = internalAction({
       // Get installation token
       const tokenData = await ctx.runAction(internal.integrations.github.nodeActions.generateInstallationToken, {
         appId: process.env.GITHUB_APP_ID!,
-        privateKey: process.env.GITHUB_PRIVATE_KEY!,
+        privateKey: process.env.GITHUB_APP_PRIVATE_KEY!,
         installationId: args.installationId,
       });
 
@@ -69,7 +69,7 @@ export const syncDeveloperGitHubStats = internalAction({
 
       // Fetch contribution statistics
       const contributionStats = await fetchContributionStats(octokit, args.githubUsername);
-      
+
       // Fetch language statistics from user's repositories
       const languageStats = await fetchLanguageStats(octokit, args.githubUsername);
 
@@ -105,7 +105,7 @@ export const syncInstallationRepositories = internalAction({
       // Get installation token
       const tokenData = await ctx.runAction(internal.integrations.github.nodeActions.generateInstallationToken, {
         appId: process.env.GITHUB_APP_ID!,
-        privateKey: process.env.GITHUB_PRIVATE_KEY!,
+        privateKey: process.env.GITHUB_APP_PRIVATE_KEY!,
         installationId: args.installationId,
       });
 
@@ -166,14 +166,14 @@ export const performRepositorySync = internalAction({
       // Get installation token
       const tokenData = await ctx.runAction(internal.integrations.github.nodeActions.generateInstallationToken, {
         appId: process.env.GITHUB_APP_ID!,
-        privateKey: process.env.GITHUB_PRIVATE_KEY!,
+        privateKey: process.env.GITHUB_APP_PRIVATE_KEY!,
         installationId: args.installationId,
       });
 
       const octokit = new Octokit({
         auth: tokenData.token,
       });
-      
+
       // Fetch latest repository data
       const { data } = await octokit.request("GET /repos/{owner}/{repo}", {
         owner: repository.owner,

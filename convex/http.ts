@@ -32,7 +32,7 @@ http.route({
       }
 
       // Verify webhook signature
-      const secret = process.env.GITHUB_WEBHOOK_SECRET;
+      const secret = process.env.GITHUB_WEBHOOK_SECRET?.trim();
       if (!secret) {
         console.error("[Webhook] GitHub webhook secret not configured");
         return new Response("Server configuration error", { status: 500 });
@@ -65,27 +65,27 @@ http.route({
           await handleInstallationEvent(ctx, data);
           console.log("[Webhook] Installation event processed successfully");
           break;
-          
+
         case "installation_repositories":
           await handleInstallationRepositoriesEvent(ctx, data);
           break;
-          
+
         case "push":
           await handlePushEvent(ctx, data);
           break;
-          
+
         case "pull_request":
           await handlePullRequestEvent(ctx, data);
           break;
-          
+
         case "issues":
           await handleIssuesEvent(ctx, data);
           break;
-          
+
         case "issue_comment":
           await handleIssueCommentEvent(ctx, data);
           break;
-          
+
         default:
           console.log(`Unhandled webhook event: ${event}`);
       }
@@ -173,15 +173,15 @@ async function handleInstallationRepositoriesEvent(ctx: any, data: any) {
 
 async function handlePushEvent(ctx: any, data: any) {
   const { repository, commits, ref, pusher } = data;
-  
+
   // Extract branch name from ref (refs/heads/branch-name)
   const branch = ref.replace("refs/heads/", "");
-  
+
   // Process each commit
   for (const commit of commits) {
     // Extract task references from commit message
     const taskRefs = extractTaskReferences(commit.message);
-    
+
     if (taskRefs.length > 0) {
       await ctx.runMutation(internal.integrations.github.mutations.linkCommitToTasks, {
         repositoryFullName: repository.full_name,
@@ -215,7 +215,7 @@ async function handlePushEvent(ctx: any, data: any) {
 
 async function handlePullRequestEvent(ctx: any, data: any) {
   const { action, pull_request, repository } = data;
-  
+
   // Extract task references from PR title and body
   const taskRefs = [
     ...extractTaskReferences(pull_request.title),
@@ -255,7 +255,7 @@ async function handlePullRequestEvent(ctx: any, data: any) {
 
 async function handleIssuesEvent(ctx: any, data: any) {
   const { action, issue, repository } = data;
-  
+
   // Extract task references from issue title and body
   const taskRefs = [
     ...extractTaskReferences(issue.title),
@@ -283,11 +283,11 @@ async function handleIssuesEvent(ctx: any, data: any) {
 
 async function handleIssueCommentEvent(ctx: any, data: any) {
   const { action, issue, comment, repository } = data;
-  
+
   if (action === "created") {
     // Extract task references from comment body
     const taskRefs = extractTaskReferences(comment.body);
-    
+
     await ctx.runMutation(internal.integrations.github.mutations.addGitHubComment, {
       repositoryFullName: repository.full_name,
       issueNumber: issue.number,
@@ -308,11 +308,11 @@ function extractTaskReferences(text: string): string[] {
   const taskRefs: string[] = [];
   const regex = /\b([A-Z]{2,})-(\d+)\b/g;
   let match;
-  
+
   while ((match = regex.exec(text)) !== null) {
     taskRefs.push(match[0]);
   }
-  
+
   return taskRefs;
 }
 

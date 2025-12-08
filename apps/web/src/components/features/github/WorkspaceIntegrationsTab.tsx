@@ -16,7 +16,7 @@ import {
   FaSync,
   FaClock
 } from 'react-icons/fa';
-import { 
+import {
   HiOutlineLink,
   HiOutlineExternalLink,
   HiOutlineTrash,
@@ -42,16 +42,16 @@ interface Integration {
 
 export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTabProps) {
   const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
-  
+
   // Get GitHub installations for this workspace
   const installations = useQuery(
     api.integrations.github.queries.getWorkspaceInstallations,
     workspace?._id ? { workspaceId: workspace._id } : 'skip'
   );
-  
+
   // Mutations
   const updateWorkspaceSettings = useMutation(api.workspaces.mutations.updateWorkspaceSettings);
-  
+
   const integrations: Integration[] = [
     {
       id: 'github',
@@ -111,17 +111,18 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
       ]
     }
   ];
-  
+
   const handleGitHubConnect = () => {
-    const appSlug = import.meta.env.VITE_GITHUB_APP_SLUG || 'ltf1-integration';
+    const rawSlug = import.meta.env.VITE_GITHUB_APP_SLUG || 'ltf1-github';
+    const appSlug = rawSlug.replace('https://github.com/apps/', '');
     window.open(`https://github.com/apps/${appSlug}/installations/new`, 'github-install', 'width=800,height=600');
   };
-  
+
   const handleGitHubDisconnect = async () => {
     if (!confirm('Are you sure you want to disconnect GitHub? This will stop syncing repository data.')) {
       return;
     }
-    
+
     try {
       await updateWorkspaceSettings({
         workspaceId: workspace._id,
@@ -138,11 +139,11 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
       toast.error('Failed to disconnect GitHub');
     }
   };
-  
+
   const renderIntegrationDetail = (integration: Integration) => {
     if (integration.id === 'github' && installations && installations.length > 0) {
       const installation = installations[0];
-      
+
       return (
         <div className="space-y-24px">
           <div className="flex items-center justify-between">
@@ -171,7 +172,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
               </BrutalButton>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-16px">
             <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
               <div className="text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-4px">Installation ID</div>
@@ -184,7 +185,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
               </div>
             </div>
           </div>
-          
+
           <div>
             <h4 className="font-mono text-brutal-sm font-bold mb-12px">ENABLED FEATURES</h4>
             <div className="space-y-8px">
@@ -196,17 +197,17 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
               ))}
             </div>
           </div>
-          
+
           <div className="p-16px bg-brutal-warning/10 border border-brutal-warning">
             <p className="text-brutal-sm">
-              <strong>Note:</strong> Repository data syncs automatically via webhooks. 
+              <strong>Note:</strong> Repository data syncs automatically via webhooks.
               Manual sync can be triggered from individual project settings.
             </p>
           </div>
         </div>
       );
     }
-    
+
     return (
       <div className="text-center py-48px">
         <integration.icon className="w-64px h-64px mx-auto mb-24px" style={{ color: integration.color }} />
@@ -214,7 +215,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
         <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mb-24px max-w-md mx-auto">
           {integration.description}
         </p>
-        
+
         {integration.features && (
           <div className="mb-32px">
             <h4 className="font-mono text-brutal-xs font-bold mb-12px uppercase">Key Features</h4>
@@ -228,7 +229,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
             </div>
           </div>
         )}
-        
+
         {integration.status === 'not_connected' ? (
           <BrutalButton onClick={integration.id === 'github' ? handleGitHubConnect : undefined}>
             CONNECT {integration.name.toUpperCase()}
@@ -242,7 +243,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
       </div>
     );
   };
-  
+
   return (
     <div className="p-32px">
       <div className="mb-32px">
@@ -251,7 +252,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
           Connect external services to enhance your workflow and automate tasks.
         </p>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-24px">
         {/* Integration List */}
         <div className="lg:col-span-1 space-y-16px">
@@ -259,23 +260,22 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
             <button
               key={integration.id}
               onClick={() => setSelectedIntegration(integration.id)}
-              className={`w-full p-24px border-2 transition-all text-left ${
-                selectedIntegration === integration.id
-                  ? 'bg-[var(--theme-background-secondary)] border-primary-brutalist'
-                  : 'bg-[var(--theme-background)] border-[var(--theme-border)] hover:border-primary-brutalist'
-              }`}
+              className={`w-full p-24px border-2 transition-all text-left ${selectedIntegration === integration.id
+                ? 'bg-[var(--theme-background-secondary)] border-primary-brutalist'
+                : 'bg-[var(--theme-background)] border-[var(--theme-border)] hover:border-primary-brutalist'
+                }`}
             >
               <div className="flex items-center justify-between mb-12px">
                 <div className="flex items-center gap-16px">
-                  <integration.icon 
-                    className="w-32px h-32px" 
+                  <integration.icon
+                    className="w-32px h-32px"
                     style={{ color: integration.status === 'connected' ? integration.color : undefined }}
                   />
                   <div>
                     <h3 className="font-bold text-brutal-md">{integration.name}</h3>
                     <p className="text-brutal-xs text-[var(--theme-foreground)]/60">
-                      {integration.status === 'connected' ? 'Connected' : 
-                       integration.status === 'coming_soon' ? 'Coming Soon' : 'Not Connected'}
+                      {integration.status === 'connected' ? 'Connected' :
+                        integration.status === 'coming_soon' ? 'Coming Soon' : 'Not Connected'}
                     </p>
                   </div>
                 </div>
@@ -289,7 +289,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
             </button>
           ))}
         </div>
-        
+
         {/* Integration Details */}
         <div className="lg:col-span-2">
           <BrutalCard className="p-32px min-h-[400px]">
@@ -306,7 +306,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
           </BrutalCard>
         </div>
       </div>
-      
+
       {/* Webhooks Section */}
       <div className="mt-48px">
         <BrutalCard className="p-32px">
@@ -325,7 +325,7 @@ export function WorkspaceIntegrationsTab({ workspace }: WorkspaceIntegrationsTab
               ADD WEBHOOK
             </BrutalButton>
           </div>
-          
+
           <div className="text-center py-32px border-2 border-dashed border-[var(--theme-border)]">
             <p className="text-brutal-sm text-[var(--theme-foreground)]/40">
               Custom webhooks coming soon. You'll be able to send events to your own endpoints.
