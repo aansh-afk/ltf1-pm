@@ -1,6 +1,7 @@
 "use node";
 
 import { internalAction } from "../../_generated/server";
+import { internal } from "../../_generated/api";
 import { v } from "convex/values";
 import { createHmac } from "crypto";
 import jwt from "jsonwebtoken";
@@ -139,5 +140,108 @@ export const createAppJWT = internalAction({
     return jwt.sign(payload, args.privateKey, {
       algorithm: "RS256",
     });
+  },
+});
+
+// Backfill repository data (commits, PRs, stats)
+export const backfillRepositoryData = internalAction({
+  args: {
+    repositoryId: v.id("githubRepositories"),
+    installationId: v.number(),
+    repositoryFullName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // 1. Get Installation Token
+    const tokenResult = await ctx.runAction(internal.integrations.github.nodeActions.generateInstallationToken, {
+      appId: process.env.VITE_GITHUB_CLIENT_ID!,
+      privateKey: process.env.GITHUB_APP_PRIVATE_KEY!,
+      installationId: args.installationId,
+    });
+
+    const headers = {
+      Authorization: `Bearer ${tokenResult.token}`,
+      Accept: "application/vnd.github.v3+json",
+    };
+
+    // 2. Fetch Repository Details (Stats)
+    const repoResponse = await fetch(`https://api.github.com/repos/${args.repositoryFullName}`, { headers });
+    if (repoResponse.ok) {
+      const repoData = await repoResponse.json();
+      await ctx.runMutation(internal.integrations.github.mutations.updateRepositoryData, {
+        repositoryId: args.repositoryId,
+        data: {
+          description: repoData.description,
+          defaultBranch: repoData.default_branch,
+          language: repoData.language,
+          topics: repoData.topics || [],
+          stargazersCount: repoData.stargazers_count,
+          forksCount: repoData.forks_count,
+          openIssuesCount: repoData.open_issues_count,
+          updatedAt: repoData.updated_at,
+          pushedAt: repoData.pushed_at,
+        },
+      });
+    }
+
+    // 3. Fetch Recent Commits (Limit 20)
+    const commitsResponse = await fetch(`https://api.github.com/repos/${args.repositoryFullName}/commits?per_page=20`, { headers });
+    if (commitsResponse.ok) {
+      const commits = await commitsResponse.json();
+      // Reverse to add oldest first if we care about order, but for activity feed mostly newest matters
+      for (const commit of commits) {
+        await ctx.runMutation(internal.integrations.github.mutations.storeCommit, {
+          repositoryFullName: args.repositoryFullName,
+          commit: {
+            sha: commit.sha,
+            message: commit.commit.message,
+            author: {
+              name: commit.commit.author.name,
+              email: commit.commit.author.email,
+              date: commit.commit.author.date,
+            },
+            url: commit.html_url,
+          },
+        });
+
+        // Log activity for the latest 5 commits to populate the feed
+        if (commits.indexOf(commit) < 5) {
+          await ctx.runMutation(internal.integrations.github.mutations.logGitHubActivity, {
+            type: "commit",
+            repositoryFullName: args.repositoryFullName,
+            actor: commit.commit.author.name,
+            metadata: {
+              sha: commit.sha,
+              title: commit.commit.message.split('\n')[0],
+              ref: `refs/heads/${repoResponse.ok ? (await repoResponse.json()).default_branch : 'main'}`,
+            },
+          });
+        }
+      }
+    }
+
+    // 4. Fetch Recent Pull Requests (Limit 10, State: all)
+    const prsResponse = await fetch(`https://api.github.com/repos/${args.repositoryFullName}/pulls?state=all&per_page=10`, { headers });
+    if (prsResponse.ok) {
+      const prs = await prsResponse.json();
+      for (const pr of prs) {
+        await ctx.runMutation(internal.integrations.github.mutations.linkPullRequestToTasks, {
+          repositoryFullName: args.repositoryFullName,
+          pullRequest: {
+            number: pr.number,
+            title: pr.title,
+            state: pr.state,
+            draft: pr.draft,
+            url: pr.html_url,
+            createdAt: pr.created_at,
+            updatedAt: pr.updated_at,
+            closedAt: pr.closed_at,
+            mergedAt: pr.merged_at,
+            author: pr.user.login,
+          },
+          taskRefs: [],
+          action: pr.state === "open" ? "opened" : (pr.merged_at ? "closed" : "closed"),
+        });
+      }
+    }
   },
 });

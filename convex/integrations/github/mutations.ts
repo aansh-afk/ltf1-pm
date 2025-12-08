@@ -43,7 +43,10 @@ export const connectRepositoryToProject = mutation({
       repository: {
         provider: "github",
         url: `https://github.com/${repository.fullName}`,
+        name: repository.fullName.split('/')[1],
+        owner: repository.fullName.split('/')[0],
         defaultBranch: repository.defaultBranch,
+        connectedAt: Date.now(),
       },
       updatedAt: Date.now(),
     });
