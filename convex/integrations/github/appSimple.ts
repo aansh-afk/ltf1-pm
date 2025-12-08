@@ -26,13 +26,13 @@ export const getUserInstallations = action({
         Accept: "application/vnd.github.v3+json",
       },
     });
-    
+
     if (!response.ok) {
       throw new Error(`Failed to list installations: ${response.statusText}`);
     }
-    
+
     const data = await response.json();
-    
+
     return data.installations.map((inst: any) => ({
       id: inst.id,
       account: {
@@ -68,13 +68,13 @@ export const getInstallationRepos = action({
         },
       }
     );
-    
+
     if (!response.ok) {
       throw new Error(`Failed to list repositories: ${response.statusText}`);
     }
-    
+
     const data = await response.json();
-    
+
     return data.repositories.map((repo: any) => ({
       id: repo.id,
       name: repo.name,
@@ -114,14 +114,14 @@ export const storeInstallation = internalMutation({
       .query("githubInstallations")
       .withIndex("by_installation_id", (q) => q.eq("installationId", args.installationId))
       .first();
-    
+
     if (existing) {
       // Update existing installation
       await ctx.db.patch(existing._id, {
         accountName: args.account.login,
-        accountType: args.account.type as "user" | "organization",
+        accountType: args.account.type.toLowerCase() as "user" | "organization",
         accountId: args.account.id,
-        targetType: args.targetType as "user" | "organization",
+        targetType: args.targetType.toLowerCase() as "user" | "organization",
         permissions: args.permissions,
         events: args.events,
         repositorySelection: args.repositorySelection as "all" | "selected",
@@ -132,9 +132,9 @@ export const storeInstallation = internalMutation({
       await ctx.db.insert("githubInstallations", {
         installationId: args.installationId,
         accountName: args.account.login,
-        accountType: args.account.type as "user" | "organization",
+        accountType: args.account.type.toLowerCase() as "user" | "organization",
         accountId: args.account.id,
-        targetType: args.targetType as "user" | "organization",
+        targetType: args.targetType.toLowerCase() as "user" | "organization",
         permissions: args.permissions,
         events: args.events,
         repositorySelection: args.repositorySelection as "all" | "selected",
@@ -142,7 +142,7 @@ export const storeInstallation = internalMutation({
         updatedAt: Date.now(),
       });
     }
-    
+
     // Store repositories if provided
     if (args.repositories) {
       for (const repo of args.repositories) {
@@ -197,18 +197,18 @@ export const removeInstallation = internalMutation({
       .query("githubInstallations")
       .withIndex("by_installation_id", (q) => q.eq("installationId", args.installationId))
       .first();
-    
+
     if (installation) {
       // Remove associated repositories
       const repos = await ctx.db
         .query("githubRepositories")
         .withIndex("by_installation", (q) => q.eq("installationId", args.installationId))
         .collect();
-      
+
       for (const repo of repos) {
         await ctx.db.delete(repo._id);
       }
-      
+
       await ctx.db.delete(installation._id);
       console.log(`GitHub App installation removed: ${args.installationId}`);
     }
@@ -225,7 +225,7 @@ export const suspendInstallation = internalMutation({
       .query("githubInstallations")
       .withIndex("by_installation_id", (q) => q.eq("installationId", args.installationId))
       .first();
-    
+
     if (installation) {
       await ctx.db.patch(installation._id, {
         suspendedAt: Date.now(),
@@ -246,7 +246,7 @@ export const unsuspendInstallation = internalMutation({
       .query("githubInstallations")
       .withIndex("by_installation_id", (q) => q.eq("installationId", args.installationId))
       .first();
-    
+
     if (installation) {
       await ctx.db.patch(installation._id, {
         suspendedAt: undefined,
@@ -274,7 +274,7 @@ export const addInstallationRepositories = internalMutation({
       .query("githubInstallations")
       .withIndex("by_installation_id", (q) => q.eq("installationId", args.installationId))
       .first();
-    
+
     if (installation) {
       // Store repositories in githubRepositories table
       for (const repo of args.repositories) {
@@ -282,7 +282,7 @@ export const addInstallationRepositories = internalMutation({
           .query("githubRepositories")
           .withIndex("by_repo_id", (q) => q.eq("repoId", repo.id))
           .first();
-        
+
         if (!existing) {
           await ctx.db.insert("githubRepositories", {
             installationId: args.installationId,
@@ -303,11 +303,11 @@ export const addInstallationRepositories = internalMutation({
           });
         }
       }
-      
+
       await ctx.db.patch(installation._id, {
         updatedAt: Date.now(),
       });
-      
+
       console.log(`Added ${args.repositories.length} repositories to installation ${args.installationId}`);
     }
   },
@@ -324,7 +324,7 @@ export const removeInstallationRepositories = internalMutation({
       .query("githubInstallations")
       .withIndex("by_installation_id", (q) => q.eq("installationId", args.installationId))
       .first();
-    
+
     if (installation) {
       // Remove repositories from githubRepositories table
       for (const repoId of args.repositoryIds) {
@@ -332,16 +332,16 @@ export const removeInstallationRepositories = internalMutation({
           .query("githubRepositories")
           .withIndex("by_repo_id", (q) => q.eq("repoId", repoId))
           .first();
-        
+
         if (repo && repo.installationId === args.installationId) {
           await ctx.db.delete(repo._id);
         }
       }
-      
+
       await ctx.db.patch(installation._id, {
         updatedAt: Date.now(),
       });
-      
+
       console.log(`Removed ${args.repositoryIds.length} repositories from installation ${args.installationId}`);
     }
   },

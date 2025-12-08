@@ -16,6 +16,9 @@ import type {
 import type * as activities_mutations from "../activities/mutations.js";
 import type * as activities_queries from "../activities/queries.js";
 import type * as admin_clearOldActivities from "../admin/clearOldActivities.js";
+import type * as admin_inspect_links from "../admin/inspect_links.js";
+import type * as admin_inspect_workspaces from "../admin/inspect_workspaces.js";
+import type * as admin_link_latest from "../admin/link_latest.js";
 import type * as admin_migrationStatus from "../admin/migrationStatus.js";
 import type * as admin_one_off_cleanup from "../admin/one_off_cleanup.js";
 import type * as ai_mutations from "../ai/mutations.js";
@@ -106,6 +109,9 @@ declare const fullApi: ApiFromModules<{
   "activities/mutations": typeof activities_mutations;
   "activities/queries": typeof activities_queries;
   "admin/clearOldActivities": typeof admin_clearOldActivities;
+  "admin/inspect_links": typeof admin_inspect_links;
+  "admin/inspect_workspaces": typeof admin_inspect_workspaces;
+  "admin/link_latest": typeof admin_link_latest;
   "admin/migrationStatus": typeof admin_migrationStatus;
   "admin/one_off_cleanup": typeof admin_one_off_cleanup;
   "ai/mutations": typeof ai_mutations;

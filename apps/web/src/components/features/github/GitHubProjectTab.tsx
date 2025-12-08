@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../../../../convex/_generated/api';
 import type { Id } from '../../../../../../convex/_generated/dataModel';
-import { 
+import {
   FaGithub,
   FaCodeBranch,
   FaCodeBranch as FaCodePullRequest,
@@ -28,67 +28,86 @@ interface GitHubProjectTabProps {
 export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps) {
   const [showConnectRepoModal, setShowConnectRepoModal] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<'all' | 'commits' | 'prs' | 'issues'>('all');
-  
+
   // Get GitHub activity for the project
   const githubActivity = useQuery(
     api.integrations.github.queries.getProjectGitHubActivity,
     project?._id ? { projectId: project._id, limit: 50 } : 'skip'
   );
-  
+
   // Get workspace GitHub installations
   const installations = useQuery(
     api.integrations.github.queries.getWorkspaceInstallations,
     { workspaceId }
   );
-  
+
   // Check if workspace has GitHub configured
   const hasGitHubInstallation = installations && installations.length > 0;
-  
+
   if (!project?.repository) {
     return (
       <div className="space-y-24px">
-        <BrutalCard className="p-48px text-center">
-          <FaGithub className="w-64px h-64px text-[var(--theme-foreground)]/20 mx-auto mb-24px" />
-          <h3 className="text-brutal-lg font-bold mb-16px">NO REPOSITORY CONNECTED</h3>
-          <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mb-24px max-w-md mx-auto">
-            Connect a GitHub repository to enable automatic code tracking, PR management, and task linking.
-          </p>
-          
-          {!hasGitHubInstallation ? (
-            <div className="space-y-16px">
-              <p className="text-brutal-xs text-brutal-warning">
-                ⚠️ GitHub App not installed for this workspace
-              </p>
+        <BrutalCard className="p-0 overflow-hidden border-2 border-dashed border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/50 hover:bg-[var(--theme-background-secondary)] transition-colors group">
+          <div className="p-32px flex flex-col items-center justify-center text-center">
+            <div className="w-64px h-64px rounded-full bg-[var(--theme-background)] border-2 border-[var(--theme-border)] flex items-center justify-center mb-24px group-hover:scale-110 transition-transform">
+              <FaGithub className="w-32px h-32px text-[var(--theme-foreground)]" />
+            </div>
+
+            <h3 className="text-brutal-lg font-bold mb-8px uppercase">Link Repository</h3>
+            <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mb-32px max-w-md">
+              Link this project to a GitHub repository to automatically sync commits, pull requests, and enable task linking.
+            </p>
+
+            {!hasGitHubInstallation ? (
+              <div className="flex flex-col items-center gap-16px">
+                <p className="text-brutal-xs font-mono text-brutal-warning bg-brutal-warning/10 px-12px py-6px border border-brutal-warning/20">
+                  ⚠️ Workspace not connected to GitHub
+                </p>
+                <BrutalButton
+                  onClick={() => {
+                    console.log('Opening GitHub App installation...');
+                    const appSlug = import.meta.env.VITE_GITHUB_APP_SLUG || 'ltf1-github';
+                    const rawSlug = appSlug.replace('https://github.com/apps/', '');
+                    window.open(`https://github.com/apps/${rawSlug}/installations/new`, 'github-install');
+                  }}
+                  className="flex items-center gap-12px"
+                >
+                  <FaLink className="w-16px h-16px" />
+                  INSTALL GITHUB APP
+                </BrutalButton>
+              </div>
+            ) : (
               <BrutalButton
                 onClick={() => {
-                  const appSlug = import.meta.env.VITE_GITHUB_APP_SLUG || 'ltf1-integration';
-                  window.open(`https://github.com/apps/${appSlug}/installations/new`, 'github-install');
+                  console.log('Connect Repository button clicked');
+                  setShowConnectRepoModal(true);
                 }}
+                className="flex items-center gap-12px bg-primary-brutalist text-event-horizon hover:opacity-90"
               >
-                INSTALL GITHUB APP
+                <FaLink className="w-16px h-16px" />
+                CONNECT REPOSITORY
               </BrutalButton>
-            </div>
-          ) : (
-            <BrutalButton onClick={() => setShowConnectRepoModal(true)}>
-              CONNECT REPOSITORY
-            </BrutalButton>
-          )}
+            )}
+          </div>
         </BrutalCard>
-        
-        {showConnectRepoModal && (
-          <ConnectRepositoryModal
-            projectId={project._id}
-            onClose={() => setShowConnectRepoModal(false)}
-          />
-        )}
+
+        <ConnectRepositoryModal
+          projectId={project._id}
+          workspaceId={workspaceId}
+          isOpen={showConnectRepoModal}
+          onClose={() => {
+            console.log('Closing Connect Repository modal');
+            setShowConnectRepoModal(false);
+          }}
+        />
       </div>
     );
   }
-  
+
   const repository = project.repository;
   const repoUrl = repository.url;
   const repoName = repoUrl.replace('https://github.com/', '').replace('.git', '');
-  
+
   // Filter activities based on selection
   const filteredActivities = githubActivity?.filter(activity => {
     if (selectedActivity === 'all') return true;
@@ -97,7 +116,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
     if (selectedActivity === 'issues') return activity.type === 'issue';
     return false;
   }) || [];
-  
+
   // Group activities by task
   const activitiesByTask = filteredActivities.reduce((acc, activity) => {
     if (activity.metadata?.taskKeys) {
@@ -108,7 +127,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
     }
     return acc;
   }, {} as Record<string, any[]>);
-  
+
   return (
     <div className="space-y-24px">
       {/* Repository Overview */}
@@ -118,9 +137,9 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
             <FaGithub className="w-32px h-32px" />
             <div>
               <h2 className="text-brutal-lg font-bold">GITHUB REPOSITORY</h2>
-              <a 
-                href={repoUrl} 
-                target="_blank" 
+              <a
+                href={repoUrl}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="font-mono text-brutal-sm text-primary-brutalist hover:underline flex items-center gap-4px"
               >
@@ -129,7 +148,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
               </a>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-12px">
             <BrutalButton
               variant="secondary"
@@ -150,7 +169,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
             </BrutalButton>
           </div>
         </div>
-        
+
         {/* Repository Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-16px">
           <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
@@ -177,29 +196,28 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
           </div>
         </div>
       </BrutalCard>
-      
+
       {/* Activity Feed */}
       <BrutalCard className="p-24px">
         <div className="flex items-center justify-between mb-24px">
           <h3 className="text-brutal-md font-bold">REPOSITORY ACTIVITY</h3>
-          
+
           <div className="flex items-center gap-8px">
             {(['all', 'commits', 'prs', 'issues'] as const).map(filter => (
               <button
                 key={filter}
                 onClick={() => setSelectedActivity(filter)}
-                className={`px-16px py-8px font-mono text-brutal-xs uppercase border ${
-                  selectedActivity === filter
-                    ? 'bg-primary-brutalist text-event-horizon border-primary-brutalist'
-                    : 'bg-[var(--theme-background-secondary)] border-[var(--theme-border)] hover:border-primary-brutalist'
-                }`}
+                className={`px-16px py-8px font-mono text-brutal-xs uppercase border ${selectedActivity === filter
+                  ? 'bg-primary-brutalist text-event-horizon border-primary-brutalist'
+                  : 'bg-[var(--theme-background-secondary)] border-[var(--theme-border)] hover:border-primary-brutalist'
+                  }`}
               >
                 {filter}
               </button>
             ))}
           </div>
         </div>
-        
+
         {filteredActivities.length === 0 ? (
           <div className="text-center py-32px">
             <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
@@ -209,7 +227,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
         ) : (
           <div className="space-y-12px max-h-[600px] overflow-y-auto">
             {filteredActivities.map((activity) => (
-              <div 
+              <div
                 key={activity._id}
                 className="p-16px border border-[var(--theme-border)] hover:border-primary-brutalist transition-colors"
               >
@@ -220,7 +238,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                     {activity.type === 'pull_request' && <FaCodePullRequest className="w-16px h-16px text-brutal-success" />}
                     {activity.type === 'issue' && <FaExclamationCircle className="w-16px h-16px text-brutal-warning" />}
                   </div>
-                  
+
                   {/* Activity Content */}
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-8px">
@@ -230,7 +248,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                           {activity.type === 'pull_request' && `PR #${activity.metadata?.number}: ${activity.title}`}
                           {activity.type === 'issue' && `Issue #${activity.metadata?.number}: ${activity.title}`}
                         </h4>
-                        
+
                         {/* Linked Tasks */}
                         {activity.metadata?.taskKeys && activity.metadata.taskKeys.length > 0 && (
                           <div className="flex items-center gap-8px mt-4px">
@@ -243,15 +261,14 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Activity Metadata */}
                       <div className="text-right">
                         {activity.type === 'pull_request' && activity.metadata?.state && (
-                          <span className={`inline-flex items-center gap-4px font-mono text-brutal-xs ${
-                            activity.metadata.state === 'open' ? 'text-brutal-success' :
+                          <span className={`inline-flex items-center gap-4px font-mono text-brutal-xs ${activity.metadata.state === 'open' ? 'text-brutal-success' :
                             activity.metadata.state === 'merged' ? 'text-brutal-info' :
-                            'text-brutal-error'
-                          }`}>
+                              'text-brutal-error'
+                            }`}>
                             {activity.metadata.state === 'open' && <FaClock className="w-12px h-12px" />}
                             {activity.metadata.state === 'merged' && <FaCheckCircle className="w-12px h-12px" />}
                             {activity.metadata.state === 'closed' && <FaTimesCircle className="w-12px h-12px" />}
@@ -260,7 +277,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-16px font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
                       <span>by {activity.actorUsername}</span>
                       <span>•</span>
@@ -279,7 +296,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
           </div>
         )}
       </BrutalCard>
-      
+
       {/* Task-Code Linking */}
       {Object.keys(activitiesByTask).length > 0 && (
         <BrutalCard className="p-24px">
@@ -318,13 +335,13 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
           </div>
         </BrutalCard>
       )}
-      
-      {showConnectRepoModal && (
-        <ConnectRepositoryModal
-          projectId={project._id}
-          onClose={() => setShowConnectRepoModal(false)}
-        />
-      )}
+
+      <ConnectRepositoryModal
+        projectId={project._id}
+        workspaceId={workspaceId}
+        isOpen={showConnectRepoModal}
+        onClose={() => setShowConnectRepoModal(false)}
+      />
     </div>
   );
 }
