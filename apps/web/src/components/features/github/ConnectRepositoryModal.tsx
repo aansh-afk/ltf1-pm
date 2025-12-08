@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useMutation, useAction, useQuery } from 'convex/react'
+import { formatDistanceToNow } from 'date-fns'
+import { useMutation, useAction } from 'convex/react'
 import { api } from '@convex/_generated/api'
 import type { Id } from '@convex/_generated/dataModel'
 import toast from 'react-hot-toast'
 import BrutalModal from '../../ui/BrutalModal'
-import { HiOutlineInformationCircle, HiOutlineSearch, HiOutlineLockClosed, HiOutlineGlobeAlt, HiOutlineExternalLink, HiOutlineStar, HiOutlineRefresh } from 'react-icons/hi'
+import { HiOutlineSearch, HiOutlineLockClosed, HiOutlineGlobeAlt, HiOutlineRefresh } from 'react-icons/hi'
 import { VscGithub } from 'react-icons/vsc'
 
 interface ConnectRepositoryModalProps {
@@ -44,18 +45,11 @@ export default function ConnectRepositoryModal({
   const [provider, setProvider] = useState<'github' | 'gitlab' | 'bitbucket'>('github')
   const [isConnecting, setIsConnecting] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [repositories, setRepositories] = useState<Repository[]>([])
-  const [sources, setSources] = useState<{
-    hasOAuth: boolean
-    hasInstallation: boolean
-    installationName?: string
-  } | null>(null)
 
   const connectRepository = useMutation(api.projects.mutations.connectRepository)
   const fetchAvailableRepositories = useAction(api.integrations.github.actions.fetchAvailableRepositories)
-  const githubConnection = useQuery(api.integrations.github.oauth.getGitHubConnectionInfo)
 
   // Load repositories when modal opens
   useEffect(() => {
@@ -71,15 +65,10 @@ export default function ConnectRepositoryModal({
         workspaceId: workspaceId as Id<'workspaces'> | undefined,
       })
       setRepositories(result.repositories)
-      setSources(result.sources)
 
-      // If no repositories available, switch to manual mode
-      if (result.repositories.length === 0) {
-        setMode('manual')
-      }
+      // If no repositories available, switch to manual mode might be aggressive, let's just show empty state
     } catch (error) {
       console.error('Failed to fetch repositories:', error)
-      setMode('manual')
     } finally {
       setIsLoading(false)
     }
@@ -88,13 +77,7 @@ export default function ConnectRepositoryModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    let repositoryUrl = ''
-    let repositoryProvider: 'github' | 'gitlab' | 'bitbucket' = 'github'
-
-    if (mode === 'picker' && selectedRepo) {
-      repositoryUrl = selectedRepo.htmlUrl
-      repositoryProvider = 'github'
-    } else if (mode === 'manual') {
+    if (mode === 'manual') {
       if (!url.trim()) {
         toast.error('Repository URL is required')
         return
@@ -106,35 +89,27 @@ export default function ConnectRepositoryModal({
         return
       }
 
-      repositoryUrl = url.trim()
-      repositoryProvider = provider
-    } else {
-      toast.error('Please select a repository')
-      return
-    }
+      setIsConnecting(true)
 
-    setIsConnecting(true)
+      try {
+        await connectRepository({
+          projectId: projectId as Id<'projects'>,
+          repositoryUrl: url.trim(),
+          provider: provider,
+        })
 
-    try {
-      await connectRepository({
-        projectId: projectId as Id<'projects'>,
-        repositoryUrl,
-        provider: repositoryProvider,
-      })
+        toast.success('Repository connected successfully')
+        onSuccess?.()
+        onClose()
 
-      toast.success('Repository connected successfully')
-      onSuccess?.()
-      onClose()
-
-      // Reset form
-      setUrl('')
-      setProvider('github')
-      setSelectedRepo(null)
-      setSearchQuery('')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to connect repository')
-    } finally {
-      setIsConnecting(false)
+        // Reset form
+        setUrl('')
+        setProvider('github')
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to connect repository')
+      } finally {
+        setIsConnecting(false)
+      }
     }
   }
 
@@ -147,12 +122,6 @@ export default function ConnectRepositoryModal({
       (repo.description?.toLowerCase().includes(query) || false)
     )
   })
-
-  const exampleUrls = {
-    github: 'https://github.com/username/repository',
-    gitlab: 'https://gitlab.com/username/repository',
-    bitbucket: 'https://bitbucket.org/username/repository'
-  }
 
   const getLanguageColor = (language: string | null) => {
     const colors: Record<string, string> = {
@@ -170,245 +139,192 @@ export default function ConnectRepositoryModal({
     return colors[language || ''] || 'bg-gray-400'
   }
 
+  const handleConnectRepo = async (repo: Repository) => {
+    setIsConnecting(true)
+    try {
+      await connectRepository({
+        projectId: projectId as Id<'projects'>,
+        repositoryUrl: repo.htmlUrl,
+        provider: 'github',
+      })
+      toast.success('Repository connected successfully')
+      onSuccess?.()
+      onClose()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to connect repository')
+    } finally {
+      setIsConnecting(false)
+    }
+  }
+
   return (
     <BrutalModal
       isOpen={isOpen}
       onClose={onClose}
-      title="CONNECT REPOSITORY"
+      title="UNKNOWN" // We hide the default header in BrutalModal or just ignore it if we provide our own UI structure inside
+      size="xl"
     >
-      <div className="space-y-24px">
-        {/* Mode Tabs */}
-        <div className="flex border-2 border-[var(--theme-border)]">
-          <button
-            type="button"
-            onClick={() => setMode('picker')}
-            className={`flex-1 px-16px py-12px text-brutal-xs uppercase font-mono transition-colors ${
-              mode === 'picker'
-                ? 'bg-primary-brutalist text-event-horizon'
-                : 'bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)] hover:bg-[var(--theme-background-tertiary)]'
-            }`}
-          >
-            SELECT FROM LIST
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('manual')}
-            className={`flex-1 px-16px py-12px text-brutal-xs uppercase font-mono transition-colors border-l-2 border-[var(--theme-border)] ${
-              mode === 'manual'
-                ? 'bg-primary-brutalist text-event-horizon'
-                : 'bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)] hover:bg-[var(--theme-background-tertiary)]'
-            }`}
-          >
-            ENTER URL
-          </button>
-        </div>
-
-        {/* Information Banner */}
-        <div className="bg-[var(--theme-background-secondary)] border-2 border-brutal-info p-16px flex gap-12px">
-          <HiOutlineInformationCircle className="w-20px h-20px text-brutal-info flex-shrink-0 mt-2px" />
-          <div className="text-brutal-xs text-[var(--theme-foreground)]/80">
-            Connect your repository to enable pull request tracking, commit history, and automated workflows.
-            {mode === 'picker' && sources && (
-              <div className="mt-8px text-[var(--theme-foreground)]/60">
-                {sources.hasOAuth && <span className="mr-12px">Personal repos available</span>}
-                {sources.hasInstallation && <span>Organization repos via {sources.installationName}</span>}
-              </div>
-            )}
+      <div className="flex flex-col h-[70vh]">
+        {/* Header - Vercel Style */}
+        <div className="px-32px py-24px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)] flex items-center justify-between shrink-0">
+          <div>
+            <h2 className="text-brutal-xl font-bold uppercase mb-4px">Import Git Repository</h2>
+            <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
+              Select a repository to link to your project.
+            </p>
+          </div>
+          {/* Custom Close / Mode Switcher */}
+          <div className="flex bg-[var(--theme-background-secondary)] rounded-lg p-4px border-2 border-[var(--theme-border)]">
+            <button
+              type="button"
+              onClick={() => setMode('picker')}
+              className={`px-16px py-6px text-brutal-xs font-bold uppercase rounded-md transition-all ${mode === 'picker' ? 'bg-[var(--theme-foreground)] text-[var(--theme-background)]' : 'text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)]'
+                }`}
+            >
+              Select
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('manual')}
+              className={`px-16px py-6px text-brutal-xs font-bold uppercase rounded-md transition-all ${mode === 'manual' ? 'bg-[var(--theme-foreground)] text-[var(--theme-background)]' : 'text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)]'
+                }`}
+            >
+              URL
+            </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-24px">
+        {/* Content Area */}
+        <div className="flex-1 overflow-hidden bg-[var(--theme-background-secondary)]/30 relative">
           {mode === 'picker' ? (
-            <>
-              {/* Search */}
-              <div className="relative">
-                <HiOutlineSearch className="absolute left-12px top-1/2 -translate-y-1/2 w-16px h-16px text-[var(--theme-foreground)]/40" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search repositories..."
-                  className="w-full pl-40px pr-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]
-                           font-mono text-brutal-sm placeholder:text-neutral-600
-                           focus:border-primary-brutalist focus:outline-none transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={loadRepositories}
-                  disabled={isLoading}
-                  className="absolute right-8px top-1/2 -translate-y-1/2 p-8px hover:bg-[var(--theme-background-tertiary)] rounded transition-colors"
-                  title="Refresh repositories"
-                >
-                  <HiOutlineRefresh className={`w-16px h-16px text-[var(--theme-foreground)]/60 ${isLoading ? 'animate-spin' : ''}`} />
-                </button>
+            <div className="h-full flex flex-col max-w-4xl mx-auto w-full">
+              {/* Search Bar - Sticky */}
+              <div className="p-24px pb-12px shrink-0">
+                <div className="relative group">
+                  <HiOutlineSearch className="absolute left-16px top-1/2 -translate-y-1/2 w-20px h-20px text-[var(--theme-foreground)]/40 group-focus-within:text-[var(--theme-foreground)] transition-colors" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search..."
+                    className="w-full pl-48px pr-16px py-16px bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
+                              font-sans text-brutal-md placeholder:text-[var(--theme-foreground)]/30
+                              focus:border-[var(--theme-foreground)] focus:outline-none transition-all shadow-sm"
+                    autoFocus
+                  />
+                  {isLoading && (
+                    <div className="absolute right-16px top-1/2 -translate-y-1/2">
+                      <HiOutlineRefresh className="w-20px h-20px animate-spin text-[var(--theme-foreground)]/40" />
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Repository List */}
-              <div className="max-h-300px overflow-y-auto border-2 border-[var(--theme-border)]">
-                {isLoading ? (
-                  <div className="p-32px text-center text-[var(--theme-foreground)]/60">
-                    <HiOutlineRefresh className="w-24px h-24px animate-spin mx-auto mb-12px" />
-                    <p className="text-brutal-xs">Loading repositories...</p>
+              {/* List */}
+              <div className="flex-1 overflow-y-auto px-24px pb-24px scrollbar-thin scrollbar-thumb-[var(--theme-border)]">
+                {isLoading && filteredRepos.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-[var(--theme-foreground)]/60 space-y-16px">
+                    <div className="w-48px h-48px border-4 border-[var(--theme-border)] border-t-primary-brutalist rounded-full animate-spin" />
+                    <p className="text-brutal-sm font-mono animate-pulse">FETCHING REPOSITORIES...</p>
                   </div>
                 ) : filteredRepos.length === 0 ? (
-                  <div className="p-32px text-center text-[var(--theme-foreground)]/60">
-                    {repositories.length === 0 ? (
-                      <>
-                        <VscGithub className="w-32px h-32px mx-auto mb-12px opacity-40" />
-                        <p className="text-brutal-sm mb-8px">No repositories found</p>
-                        <p className="text-brutal-xs">
-                          {!githubConnection ?
-                            'Connect your GitHub account to see your repositories' :
-                            'Try entering a repository URL manually'
-                          }
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-brutal-sm">No matching repositories</p>
-                    )}
+                  <div className="h-full flex flex-col items-center justify-center text-center opacity-60">
+                    <VscGithub className="w-48px h-48px mb-16px" />
+                    <p className="font-bold">No repositories found.</p>
                   </div>
                 ) : (
-                  <div className="divide-y-2 divide-[var(--theme-border)]">
+                  <div className="border-2 border-[var(--theme-border)] bg-[var(--theme-background)] rounded-lg overflow-hidden">
                     {filteredRepos.map((repo) => (
-                      <button
+                      <div
                         key={repo.id}
-                        type="button"
-                        onClick={() => setSelectedRepo(repo)}
-                        className={`w-full p-16px text-left transition-colors ${
-                          selectedRepo?.id === repo.id
-                            ? 'bg-primary-brutalist/10 border-l-4 border-primary-brutalist'
-                            : 'hover:bg-[var(--theme-background-secondary)]'
-                        }`}
+                        className="flex items-center justify-between p-20px border-b-2 border-[var(--theme-border)] last:border-b-0 hover:bg-[var(--theme-background-secondary)]/50 transition-colors group"
                       >
-                        <div className="flex items-start justify-between gap-12px">
-                          <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-16px min-w-0">
+                          <div className="w-40px h-40px bg-[var(--theme-background-secondary)] rounded-md border-2 border-[var(--theme-border)] flex items-center justify-center shrink-0">
+                            {repo.private ? <HiOutlineLockClosed className="text-[var(--theme-foreground)]/60" /> : <HiOutlineGlobeAlt className="text-[var(--theme-foreground)]/60" />}
+                          </div>
+                          <div className="min-w-0">
                             <div className="flex items-center gap-8px">
-                              {repo.private ? (
-                                <HiOutlineLockClosed className="w-14px h-14px text-[var(--theme-foreground)]/60 flex-shrink-0" />
-                              ) : (
-                                <HiOutlineGlobeAlt className="w-14px h-14px text-[var(--theme-foreground)]/60 flex-shrink-0" />
-                              )}
-                              <span className="text-brutal-sm font-mono font-semibold truncate">
-                                {repo.fullName}
-                              </span>
+                              <span className="font-bold text-brutal-md truncate block">{repo.name}</span>
+                              {repo.source === 'installation' && <span className="bg-[var(--theme-border)] px-6px py-2px text-[10px] uppercase font-bold rounded-sm text-[var(--theme-foreground)]/60">ORG</span>}
                             </div>
-                            {repo.description && (
-                              <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-4px line-clamp-2">
-                                {repo.description}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-12px mt-8px">
+                            <div className="flex items-center gap-12px text-brutal-xs text-[var(--theme-foreground)]/50 mt-2px font-mono">
+                              <span className="truncate">{repo.fullName}</span>
                               {repo.language && (
-                                <span className="flex items-center gap-4px text-brutal-xs text-[var(--theme-foreground)]/60">
-                                  <span className={`w-8px h-8px rounded-full ${getLanguageColor(repo.language)}`} />
-                                  {repo.language}
-                                </span>
+                                <>
+                                  <span>•</span>
+                                  <span className="flex items-center gap-4px">
+                                    <span className={`w-6px h-6px rounded-full ${getLanguageColor(repo.language)}`} />
+                                    {repo.language}
+                                  </span>
+                                </>
                               )}
-                              <span className="flex items-center gap-4px text-brutal-xs text-[var(--theme-foreground)]/60">
-                                <HiOutlineStar className="w-12px h-12px" />
-                                {repo.stargazersCount}
-                              </span>
-                              <span className="text-brutal-xs text-[var(--theme-foreground)]/40 uppercase">
-                                {repo.source === 'installation' ? 'org' : 'personal'}
-                              </span>
+                              <span>•</span>
+                              <span>{formatDistanceToNow(new Date(repo.updatedAt))} ago</span>
                             </div>
                           </div>
-                          {selectedRepo?.id === repo.id && (
-                            <span className="text-primary-brutalist text-brutal-xs font-mono">SELECTED</span>
-                          )}
                         </div>
-                      </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleConnectRepo(repo)}
+                          disabled={isConnecting}
+                          className="opacity-0 group-hover:opacity-100 focus:opacity-100 px-24px py-10px bg-[var(--theme-foreground)] text-[var(--theme-background)] font-bold uppercase text-brutal-sm rounded-md hover:opacity-90 disabled:opacity-50 transition-all transform translate-x-4 group-hover:translate-x-0"
+                        >
+                          Connect
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}
               </div>
+            </div>
+          ) : (
+            <div className="max-w-2xl mx-auto pt-48px px-24px">
+              <form onSubmit={handleSubmit} className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-32px rounded-lg">
+                <h3 className="text-brutal-lg font-bold mb-24px">Link External Repository</h3>
 
-              {/* Selected Repository Preview */}
-              {selectedRepo && (
-                <div className="bg-[var(--theme-background-secondary)] border-2 border-primary-brutalist p-16px">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-brutal-xs text-[var(--theme-foreground)]/60 uppercase mb-4px">Selected Repository</p>
-                      <p className="text-brutal-sm font-mono font-semibold">{selectedRepo.fullName}</p>
+                <div className="space-y-24px">
+                  <div>
+                    <label className="block text-brutal-xs font-bold uppercase mb-8px text-[var(--theme-foreground)]/60">Git Provider</label>
+                    <div className="flex gap-12px">
+                      {(['github', 'gitlab', 'bitbucket'] as const).map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => setProvider(p)}
+                          className={`flex-1 py-12px border-2 font-bold uppercase text-brutal-xs transition-colors rounded-md ${provider === p ? 'border-[var(--theme-foreground)] bg-[var(--theme-foreground)] text-[var(--theme-background)]' : 'border-[var(--theme-border)] hover:border-[var(--theme-foreground)]'
+                            }`}
+                        >
+                          {p}
+                        </button>
+                      ))}
                     </div>
-                    <a
-                      href={selectedRepo.htmlUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-8px hover:bg-[var(--theme-background-tertiary)] rounded transition-colors"
-                    >
-                      <HiOutlineExternalLink className="w-16px h-16px text-[var(--theme-foreground)]/60" />
-                    </a>
+                  </div>
+
+                  <div>
+                    <label className="block text-brutal-xs font-bold uppercase mb-8px text-[var(--theme-foreground)]/60">Repository URL</label>
+                    <input
+                      type="url"
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                      className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm focus:border-[var(--theme-foreground)] focus:outline-none rounded-md"
+                      placeholder="https://github.com/username/repo"
+                      required
+                    />
                   </div>
                 </div>
-              )}
-            </>
-          ) : (
-            <>
-              {/* Provider Selection */}
-              <div>
-                <label className="block text-brutal-sm uppercase mb-8px">
-                  PROVIDER
-                </label>
-                <div className="grid grid-cols-3 gap-8px">
-                  {(['github', 'gitlab', 'bitbucket'] as const).map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => setProvider(p)}
-                      className={`px-16px py-12px border-2 text-brutal-xs uppercase font-mono transition-colors ${
-                        provider === p
-                          ? 'bg-primary-brutalist border-primary-brutalist text-event-horizon'
-                          : 'bg-[var(--theme-background-secondary)] border-[var(--theme-border)] text-[var(--theme-foreground)] hover:border-primary-brutalist'
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  ))}
+
+                <div className="mt-32px flex justify-end gap-16px">
+                  <button onClick={onClose} type="button" className="text-brutal-sm font-bold uppercase text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)]">Cancel</button>
+                  <button type="submit" disabled={isConnecting} className="px-24px py-12px bg-[var(--theme-foreground)] text-[var(--theme-background)] font-bold uppercase text-brutal-sm rounded-md hover:opacity-90 disabled:opacity-50">
+                    {isConnecting ? 'Connecting...' : 'Connect'}
+                  </button>
                 </div>
-              </div>
-
-              {/* Repository URL */}
-              <div>
-                <label className="block text-brutal-sm uppercase mb-8px">
-                  REPOSITORY URL
-                </label>
-                <input
-                  type="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder={exampleUrls[provider]}
-                  className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]
-                           font-mono text-brutal-sm placeholder:text-neutral-600
-                           focus:border-primary-brutalist focus:outline-none transition-colors"
-                  required={mode === 'manual'}
-                />
-                <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-8px">
-                  Enter the HTTPS URL of your repository (e.g., {exampleUrls[provider]})
-                </p>
-              </div>
-            </>
+              </form>
+            </div>
           )}
-
-          {/* Action Buttons */}
-          <div className="flex gap-16px justify-end pt-24px border-t-2 border-[var(--theme-border)]">
-            <button
-              type="button"
-              onClick={onClose}
-              className="brutal-btn-secondary"
-              disabled={isConnecting}
-            >
-              CANCEL
-            </button>
-            <button
-              type="submit"
-              className="brutal-btn"
-              disabled={isConnecting || (mode === 'picker' && !selectedRepo)}
-            >
-              {isConnecting ? 'CONNECTING...' : 'CONNECT REPOSITORY'}
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </BrutalModal>
   )

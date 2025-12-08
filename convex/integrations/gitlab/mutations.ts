@@ -10,7 +10,7 @@ export const storeOAuthState = mutation({
     if (!identity) {
       throw new Error("Unauthorized")
     }
-    
+
     // Store OAuth state with expiry (5 minutes)
     await ctx.db.insert("gitlabOAuthStates", {
       state: args.state,
@@ -38,13 +38,13 @@ export const storeAccessToken = mutation({
     if (!identity) {
       throw new Error("Unauthorized")
     }
-    
+
     // Check if user already has GitLab integration
     const existing = await ctx.db
       .query("gitlabIntegrations")
       .withIndex("by_user", (q) => q.eq("userId", identity.subject))
       .first()
-    
+
     if (existing) {
       // Update existing integration
       await ctx.db.patch(existing._id, {
@@ -88,22 +88,22 @@ export const disconnectGitLab = mutation({
     if (!identity || identity.subject !== args.userId) {
       throw new Error("Unauthorized")
     }
-    
+
     // Find and delete GitLab integration
     const integration = await ctx.db
       .query("gitlabIntegrations")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first()
-    
+
     if (integration) {
       await ctx.db.delete(integration._id)
-      
+
       // Also remove any GitLab project connections
       const projects = await ctx.db
         .query("gitlabProjects")
         .withIndex("by_user", (q) => q.eq("userId", args.userId))
         .collect()
-      
+
       for (const project of projects) {
         await ctx.db.delete(project._id)
       }
@@ -123,23 +123,23 @@ export const connectProjectToGitLab = mutation({
     if (!identity) {
       throw new Error("Unauthorized")
     }
-    
+
     // Check if user has GitLab integration
     const integration = await ctx.db
       .query("gitlabIntegrations")
       .withIndex("by_user", (q) => q.eq("userId", identity.subject))
       .first()
-    
+
     if (!integration) {
       throw new Error("GitLab not connected")
     }
-    
+
     // Check if project already connected
     const existing = await ctx.db
       .query("gitlabProjects")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .first()
-    
+
     if (existing) {
       // Update existing connection
       await ctx.db.patch(existing._id, {
@@ -160,13 +160,16 @@ export const connectProjectToGitLab = mutation({
         updatedAt: Date.now(),
       })
     }
-    
+
     // Update project with GitLab info
     await ctx.db.patch(args.projectId, {
       repository: {
         provider: "gitlab",
         url: args.gitlabProjectUrl,
+        name: args.gitlabProjectPath.split('/').pop() || '',
+        owner: args.gitlabProjectPath.split('/').slice(0, -1).join('/'),
         defaultBranch: "main", // Will be updated by sync
+        connectedAt: Date.now(),
       },
     })
   },
@@ -205,17 +208,17 @@ export const syncGitLabIssues = mutation({
     if (!identity) {
       throw new Error("Unauthorized")
     }
-    
+
     // Get the internal user record
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
       .first()
-    
+
     if (!user) {
       throw new Error("User not found")
     }
-    
+
     // Process each issue
     for (const issue of args.issues) {
       // Check if task already exists for this issue
@@ -224,7 +227,7 @@ export const syncGitLabIssues = mutation({
         .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
         .filter((q) => q.eq(q.field("gitlabIssueId"), issue.id))
         .first()
-      
+
       if (existingTask) {
         // Update existing task
         await ctx.db.patch(existingTask._id, {
@@ -296,17 +299,17 @@ export const syncGitLabMergeRequests = mutation({
     if (!identity) {
       throw new Error("Unauthorized")
     }
-    
+
     // Store merge requests
     for (const mr of args.mergeRequests) {
       // Check if MR already exists
       const existing = await ctx.db
         .query("gitlabMergeRequests")
-        .withIndex("by_project_and_mr", (q) => 
+        .withIndex("by_project_and_mr", (q) =>
           q.eq("projectId", args.projectId).eq("gitlabMrId", mr.id)
         )
         .first()
-      
+
       if (existing) {
         // Update existing MR
         await ctx.db.patch(existing._id, {

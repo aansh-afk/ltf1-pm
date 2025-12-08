@@ -1,4 +1,4 @@
-import { defineSchema, defineTable } from "convex/server";
+import { defineSchema, defineTable } from "convex/server"; // Updated schema
 import { v } from "convex/values";
 
 export default defineSchema({
@@ -149,7 +149,10 @@ export default defineSchema({
     repository: v.optional(v.object({
       provider: v.union(v.literal("github"), v.literal("gitlab"), v.literal("bitbucket")),
       url: v.string(),
+      name: v.string(),
+      owner: v.string(),
       defaultBranch: v.string(),
+      connectedAt: v.number(),
     })),
     settings: v.object({
       taskPrefix: v.string(),

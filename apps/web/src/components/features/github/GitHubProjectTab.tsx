@@ -281,7 +281,15 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                     <div className="flex items-center gap-16px font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
                       <span>by {activity.actorUsername}</span>
                       <span>•</span>
-                      <span>{formatDistanceToNow(new Date(activity.createdAt))} ago</span>
+                      <span>
+                        {(() => {
+                          try {
+                            return activity.createdAt ? formatDistanceToNow(new Date(activity.createdAt)) : 'just now';
+                          } catch (e) {
+                            return 'recently';
+                          }
+                        })()} ago
+                      </span>
                       {activity.metadata?.sha && (
                         <>
                           <span>•</span>
