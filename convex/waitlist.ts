@@ -17,7 +17,11 @@ export const getWaitlistStats = query({
             .withIndex("by_status", (q) => q.eq("status", "waitlisted"))
             .collect();
 
-        const totalCount = waitlistedUsers.length;
+        const wishlistEntries = await ctx.db
+            .query("wishlist")
+            .collect();
+
+        const totalCount = waitlistedUsers.length + wishlistEntries.length;
 
         // Group by day for the graph
         // We'll use the createdAt timestamp to group them
@@ -33,9 +37,20 @@ export const getWaitlistStats = query({
             dailyStats.set(dateString, 0);
         }
 
+        // Add users to stats
         waitlistedUsers.forEach(user => {
             if (user.createdAt > thirtyDaysAgo) {
                 const date = new Date(user.createdAt);
+                const dateString = date.toISOString().split('T')[0];
+                const current = dailyStats.get(dateString) || 0;
+                dailyStats.set(dateString, current + 1);
+            }
+        });
+
+        // Add wishlist entries to stats
+        wishlistEntries.forEach(entry => {
+            if (entry.createdAt > thirtyDaysAgo) {
+                const date = new Date(entry.createdAt);
                 const dateString = date.toISOString().split('T')[0];
                 const current = dailyStats.get(dateString) || 0;
                 dailyStats.set(dateString, current + 1);
@@ -98,5 +113,76 @@ export const joinWaitlist = mutation({
         }
 
         return { status: "waitlisted" as const };
+    },
+});
+
+export const subscribeToNewsletter = mutation({
+    args: {
+        email: v.string(),
+        source: v.optional(v.union(v.literal("coming_soon"), v.literal("landing"), v.literal("blog"))),
+    },
+    returns: v.object({
+        success: v.boolean(),
+        message: v.string(),
+    }),
+    handler: async (ctx, args) => {
+        // Validate email format basic check
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(args.email)) {
+            throw new Error("Invalid email address format.");
+        }
+
+        const existing = await ctx.db
+            .query("newsletter")
+            .withIndex("by_email", (q) => q.eq("email", args.email))
+            .first();
+
+        if (existing) {
+            // Already subscribed, maybe update status if unsubscribed?
+            if (existing.status === "unsubscribed") {
+                await ctx.db.patch(existing._id, {
+                    status: "active",
+                    source: args.source || "coming_soon" // Update source if re-subscribing?
+                });
+                return { success: true, message: "Welcome back! You've been resubscribed." };
+            }
+            return { success: true, message: "You are already subscribed!" };
+        }
+
+        await ctx.db.insert("newsletter", {
+            email: args.email,
+            source: args.source || "coming_soon",
+            status: "active",
+            verified: false, // Default to false until we add verification
+            createdAt: Date.now(),
+        });
+
+        return { success: true, message: "Successfully subscribed to the newsletter!" };
+    },
+});
+
+export const addToWishlist = mutation({
+    args: {
+        fingerprint: v.optional(v.string()),
+    },
+    returns: v.boolean(),
+    handler: async (ctx, args) => {
+        if (args.fingerprint) {
+            const existing = await ctx.db
+                .query("wishlist")
+                .withIndex("by_fingerprint", (q) => q.eq("fingerprint", args.fingerprint))
+                .first();
+
+            if (existing) {
+                return false;
+            }
+        }
+
+        await ctx.db.insert("wishlist", {
+            fingerprint: args.fingerprint,
+            type: "interest",
+            createdAt: Date.now(),
+        });
+        return true;
     },
 });

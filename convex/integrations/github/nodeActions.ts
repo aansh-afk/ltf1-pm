@@ -165,8 +165,9 @@ export const backfillRepositoryData = internalAction({
 
     // 2. Fetch Repository Details (Stats)
     const repoResponse = await fetch(`https://api.github.com/repos/${args.repositoryFullName}`, { headers });
+    let repoData: any = null;
     if (repoResponse.ok) {
-      const repoData = await repoResponse.json();
+      repoData = await repoResponse.json();
       await ctx.runMutation(internal.integrations.github.mutations.updateRepositoryData, {
         repositoryId: args.repositoryId,
         data: {
@@ -212,7 +213,7 @@ export const backfillRepositoryData = internalAction({
             metadata: {
               sha: commit.sha,
               title: commit.commit.message.split('\n')[0],
-              ref: `refs/heads/${repoResponse.ok ? (await repoResponse.json()).default_branch : 'main'}`,
+              ref: `refs/heads/${repoData?.default_branch || 'main'}`,
             },
           });
         }

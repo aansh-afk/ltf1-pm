@@ -795,6 +795,26 @@ export default defineSchema({
     .index("by_workspace", ["workspaceId"])
     .index("by_scheduled", ["status", "scheduledFor"]),
 
+  newsletter: defineTable({
+    email: v.string(),
+    source: v.union(v.literal("coming_soon"), v.literal("landing"), v.literal("blog")),
+    status: v.union(v.literal("active"), v.literal("unsubscribed")),
+    ipAddress: v.optional(v.string()), // For anti-spam
+    userAgent: v.optional(v.string()), // For analytics
+    verified: v.boolean(), // For double-opt-in later
+    createdAt: v.number(),
+  })
+    .index("by_email", ["email"])
+    .index("by_status", ["status"]),
+
+  wishlist: defineTable({
+    fingerprint: v.optional(v.string()), // Optional browser fingerprint/IP hash
+    type: v.union(v.literal("interest"), v.literal("hype")),
+    createdAt: v.number(),
+  })
+    .index("by_created", ["createdAt"])
+    .index("by_fingerprint", ["fingerprint"]),
+
   // GitHub webhook events storage
   webhookEvents: defineTable({
     type: v.string(),

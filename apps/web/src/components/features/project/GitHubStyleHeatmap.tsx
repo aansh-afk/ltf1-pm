@@ -15,71 +15,58 @@ interface GitHubStyleHeatmapProps {
   weeks?: number // Number of weeks to show (default 12)
 }
 
-export default function GitHubStyleHeatmap({ 
-  tasks, 
+export default function GitHubStyleHeatmap({
+  tasks,
   userId,
-  weeks = 12 
+  weeks = 16
 }: GitHubStyleHeatmapProps) {
-  
+
   // Calculate activity data for the past N weeks
   const heatmapData = useMemo(() => {
     const today = new Date()
-    const startDate = subDays(today, weeks * 7)
-    const endDate = today
-    
+    // Align to the end of the current week (Saturday)
+    const endDate = endOfWeek(today)
+    // Go back N weeks and start on Sunday
+    const startDate = startOfWeek(subDays(today, (weeks - 1) * 7))
+
     // Get all days in range
     const days = eachDayOfInterval({ start: startDate, end: endDate })
-    
-    // Group by weeks (starting from Sunday)
-    const weeksData: Date[][] = []
-    let currentWeek: Date[] = []
-    
-    days.forEach(day => {
-      if (getDay(day) === 0 && currentWeek.length > 0) {
-        weeksData.push(currentWeek)
-        currentWeek = [day]
-      } else {
-        currentWeek.push(day)
-      }
-    })
-    if (currentWeek.length > 0) {
-      weeksData.push(currentWeek)
-    }
-    
+
     // Calculate activity for each day
     const activityMap = new Map<string, number>()
-    
+
     tasks.forEach(task => {
       // Filter by user if specified
       if (userId && task.assigneeId !== userId) return
-      
+
       // Count task creation
       const createdDate = format(new Date(task.createdAt), 'yyyy-MM-dd')
       activityMap.set(createdDate, (activityMap.get(createdDate) || 0) + 1)
-      
+
       // Count task completion
       if (task.completedAt) {
         const completedDate = format(new Date(task.completedAt), 'yyyy-MM-dd')
         activityMap.set(completedDate, (activityMap.get(completedDate) || 0) + 2) // Weight completion higher
       }
-      
+
       // Count task updates
       if (task.updatedAt !== task.createdAt) {
         const updatedDate = format(new Date(task.updatedAt), 'yyyy-MM-dd')
         activityMap.set(updatedDate, (activityMap.get(updatedDate) || 0) + 0.5)
       }
     })
-    
+
     // Find max activity for normalization
     const maxActivity = Math.max(...Array.from(activityMap.values()), 1)
-    
+
     return {
-      weeks: weeksData,
+      days,
       activityMap,
-      maxActivity
+      maxActivity,
+      startDate
     }
   }, [tasks, userId, weeks])
-  
+
   // Get color intensity based on activity level
   function getActivityLevel(count: number): number {
     if (count === 0) return 0
@@ -89,140 +76,118 @@ export default function GitHubStyleHeatmap({
     if (normalized <= 0.75) return 3
     return 4
   }
-  
-  // Get color class for activity level
+
+  // Get color class for activity level - GITHUB PALETTE
   function getActivityColor(level: number): string {
-    // Using CSS variables that match GitHub's contribution graph
     switch (level) {
       case 0:
-        return 'bg-[#161b22] dark:bg-[#161b22]' // No activity
+        return 'bg-[#161b22]' // Empty (dimmed)
       case 1:
-        return 'bg-[#0e4429] dark:bg-[#0e4429]' // Low
+        return 'bg-[#0e4429]' // Low
       case 2:
-        return 'bg-[#006d32] dark:bg-[#006d32]' // Medium-low
+        return 'bg-[#006d32]' // Medium-Low
       case 3:
-        return 'bg-[#26a641] dark:bg-[#26a641]' // Medium-high
+        return 'bg-[#26a641]' // Medium-High
       case 4:
-        return 'bg-[#39d353] dark:bg-[#39d353]' // High
+        return 'bg-[#39d353]' // High
       default:
-        return 'bg-[#161b22] dark:bg-[#161b22]'
+        return 'bg-[#161b22]'
     }
   }
-  
-  // Get month labels
-  const monthLabels = useMemo(() => {
-    const labels: { month: string; weekIndex: number }[] = []
-    let lastMonth = ''
-    
-    heatmapData.weeks.forEach((week, index) => {
-      const firstDay = week[0]
-      if (firstDay) {
-        const month = format(firstDay, 'MMM')
-        if (month !== lastMonth) {
-          labels.push({ month, weekIndex: index })
-          lastMonth = month
-        }
-      }
-    })
-    
-    return labels
-  }, [heatmapData.weeks])
-  
-  // Day labels
-  const dayLabels = ['', 'Mon', '', 'Wed', '', 'Fri', '']
-  
+
+  // Generate CSS Grid explanation:
+  // We want columns for weeks and rows for days (Mon-Sun or Sun-Sat).
+  // Standard contribution graph is 7 rows.
+
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-16px">
-        <h3 className="text-brutal-md font-bold uppercase">Activity Heatmap</h3>
+    <div className="w-full overflow-x-auto pb-4px">
+      <div className="flex items-center justify-between mb-16px sticky left-0">
+        <h3 className="text-brutal-md font-bold uppercase tracking-tight">Activity</h3>
         <div className="flex items-center gap-16px">
           {/* Legend */}
-          <div className="flex items-center gap-8px text-brutal-xs">
-            <span className="text-[var(--theme-foreground-secondary)]">Less</span>
-            <div className="flex items-center gap-4px">
-              {[0, 1, 2, 3, 4].map(level => (
-                <div
-                  key={level}
-                  className={`w-16px h-16px ${getActivityColor(level)} border border-[var(--theme-border)]`}
-                  title={`Level ${level}`}
-                />
-              ))}
-            </div>
-            <span className="text-[var(--theme-foreground-secondary)]">More</span>
+          <div className="flex items-center gap-4px text-[10px] text-[#8b949e]">
+            <span className="mr-4px">Less</span>
+            {[0, 1, 2, 3, 4].map(level => (
+              <div
+                key={level}
+                className={`w-[10px] h-[10px] rounded-none ${getActivityColor(level)}`}
+                title={`Level ${level}`}
+              />
+            ))}
+            <span className="ml-4px">More</span>
           </div>
         </div>
       </div>
-      
-      <div className="w-full">
-        <div className="w-full">
-          {/* Month labels */}
-          <div className="flex mb-4px">
-            <div className="w-32px" /> {/* Space for day labels */}
-            {monthLabels.map((label, index) => (
-              <div
-                key={index}
-                className="text-brutal-xs text-[var(--theme-foreground-secondary)]"
-                style={{
-                  marginLeft: index === 0 ? '0' : `${(label.weekIndex - (monthLabels[index - 1]?.weekIndex || 0)) * 13 - 13}px`,
-                  minWidth: '30px'
-                }}
-              >
-                {label.month}
+
+      <div className="min-w-max p-4 bg-[#0d1117] border border-[#30363d] rounded-none">
+        <div className="flex">
+          {/* Day Labels - Fixed width */}
+          <div className="flex flex-col gap-[3px] mr-2 pt-[14px]">
+            {['Mon', 'Wed', 'Fri'].map((day, i) => (
+              <div key={day} className="h-[10px] text-[9px] text-[#8b949e] leading-none flex items-center h-[10px] mt-[13px] first:mt-0">
+                {day}
               </div>
             ))}
           </div>
-          
-          {/* Grid */}
-          <div className="flex gap-4px">
-            {/* Day labels */}
-            <div className="flex flex-col gap-4px mr-8px">
-              {dayLabels.map((label, index) => (
-                <div
-                  key={index}
-                  className="h-20px flex items-center justify-end pr-4px"
-                >
-                  <span className="text-brutal-xs text-[var(--theme-foreground-secondary)]">
-                    {label}
-                  </span>
-                </div>
-              ))}
+
+          {/* Grid Container */}
+          <div className="flex flex-col">
+            {/* Month Labels */}
+            <div className="flex mb-2 relative h-[12px]">
+              {heatmapData.days.filter((d, i) => {
+                return getDay(d) === 0 && format(d, 'd') <= '7'
+              }).map(d => {
+                const weeksDiff = Math.floor((d.getTime() - heatmapData.startDate.getTime()) / (7 * 24 * 60 * 60 * 1000))
+                return (
+                  <div
+                    key={d.toISOString()}
+                    className="absolute text-[10px] text-[#8b949e]"
+                    style={{ left: `${weeksDiff * 13}px` }}
+                  >
+                    {format(d, 'MMM')}
+                  </div>
+                )
+              })}
             </div>
-            
-            {/* Weeks */}
-            {heatmapData.weeks.map((week, weekIndex) => (
-              <div key={weekIndex} className="flex flex-col gap-4px">
-                {[0, 1, 2, 3, 4, 5, 6].map(dayIndex => {
-                  const day = week.find(d => getDay(d) === dayIndex)
-                  if (!day) {
-                    return <div key={dayIndex} className="w-20px h-20px" />
-                  }
-                  
-                  const dateStr = format(day, 'yyyy-MM-dd')
-                  const activity = heatmapData.activityMap.get(dateStr) || 0
-                  const level = getActivityLevel(activity)
-                  const isToday = isSameDay(day, new Date())
-                  
-                  return (
-                    <div
-                      key={dayIndex}
-                      className={`w-20px h-20px ${getActivityColor(level)} border-2 ${
-                        isToday 
-                          ? 'border-[var(--theme-primary)]' 
-                          : 'border-[var(--theme-border)]'
-                      } hover:border-[var(--theme-primary)] transition-all cursor-pointer`}
-                      title={`${format(day, 'MMM d, yyyy')}
-${activity.toFixed(1)} contributions`}
-                    />
-                  )
-                })}
-              </div>
-            ))}
+
+            {/* The Heatmap Grid */}
+            <div
+              className="grid grid-rows-7 gap-[3px] grid-flow-col"
+              style={{
+                gridTemplateColumns: `repeat(${weeks}, 10px)`
+              }}
+            >
+              {heatmapData.days.map(day => {
+                const dateStr = format(day, 'yyyy-MM-dd')
+                const activity = heatmapData.activityMap.get(dateStr) || 0
+                const level = getActivityLevel(activity)
+                const isToday = isSameDay(day, new Date())
+
+                return (
+                  <div
+                    key={dateStr}
+                    className={`
+                                w-[10px] h-[10px] 
+                                rounded-none
+                                ${getActivityColor(level)}
+                                ${isToday ? 'ring-1 ring-white z-10' : ''}
+                                hover:ring-1 hover:ring-[rgba(255,255,255,0.5)] hover:z-20
+                                transition-colors
+                            `}
+                    title={`${format(day, 'yyyy-MM-dd')}: ${activity} contributions`}
+                  />
+                )
+              })}
+            </div>
           </div>
-          
-          {/* Summary */}
-          <div className="mt-12px text-brutal-xs text-[var(--theme-foreground-secondary)]">
-            {Array.from(heatmapData.activityMap.values()).reduce((a, b) => a + b, 0).toFixed(0)} contributions in the last {weeks} weeks
-          </div>
+        </div>
+
+        {/* Summary Footer */}
+        <div className="mt-4 pt-4 border-t border-[#30363d] text-[10px] text-[#8b949e] flex justify-between">
+          <span>Last {weeks} Weeks</span>
+          <span>
+            <span className="text-white font-bold">{Array.from(heatmapData.activityMap.values()).reduce((a, b) => a + b, 0).toFixed(0)}</span> contributions
+          </span>
         </div>
       </div>
     </div>
