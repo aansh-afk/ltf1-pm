@@ -287,6 +287,23 @@ export const connectRepository = mutation({
       }
     });
 
+    // Trigger data backfill if it's a GitHub repository
+    if (args.provider === "github") {
+      const fullName = `${owner}/${repoName}`;
+      const githubRepo = await ctx.db
+        .query("githubRepositories")
+        .withIndex("by_full_name", (q) => q.eq("fullName", fullName))
+        .first();
+
+      if (githubRepo) {
+        await ctx.scheduler.runAfter(0, internal.integrations.github.nodeActions.backfillRepositoryData, {
+          repositoryId: githubRepo._id,
+          installationId: githubRepo.installationId,
+          repositoryFullName: fullName,
+        });
+      }
+    }
+
     return args.projectId;
   },
 });
@@ -733,69 +750,69 @@ export const updateProjectMemberRole = mutation({
 
     return { success: true };
   },
-});export const assignTeam = mutation({
-    args: {
-        projectId: v.id("projects"),
-        teamId: v.id("teams"),
-    },
-    handler: async (ctx, args) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            throw new Error("Unauthorized");
-        }
+}); export const assignTeam = mutation({
+  args: {
+    projectId: v.id("projects"),
+    teamId: v.id("teams"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthorized");
+    }
 
-        const user = await ctx.db
-            .query("users")
-            .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-            .first();
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
 
-        if (!user) {
-            throw new Error("User not found");
-        }
+    if (!user) {
+      throw new Error("User not found");
+    }
 
-        await requireProjectPermission(ctx.db, user._id, args.projectId, "project.team.manage");
+    await requireProjectPermission(ctx.db, user._id, args.projectId, "project.team.manage");
 
-        const project = await ctx.db.get(args.projectId);
-        if (!project) {
-            throw new Error("Project not found");
-        }
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error("Project not found");
+    }
 
-        const team = await ctx.db.get(args.teamId);
-        if (!team) {
-            throw new Error("Team not found");
-        }
+    const team = await ctx.db.get(args.teamId);
+    if (!team) {
+      throw new Error("Team not found");
+    }
 
-        // Ensure team belongs to same workspace
-        if (team.workspaceId !== project.workspaceId) {
-            throw new Error("Team must belong to the same workspace as the project");
-        }
+    // Ensure team belongs to same workspace
+    if (team.workspaceId !== project.workspaceId) {
+      throw new Error("Team must belong to the same workspace as the project");
+    }
 
-        const currentTeamIds = project.teamIds || [];
-        if (currentTeamIds.includes(args.teamId)) {
-            throw new Error("Team is already assigned to this project");
-        }
+    const currentTeamIds = project.teamIds || [];
+    if (currentTeamIds.includes(args.teamId)) {
+      throw new Error("Team is already assigned to this project");
+    }
 
-        await ctx.db.patch(args.projectId, {
-            teamIds: [...currentTeamIds, args.teamId],
-            updatedAt: Date.now(),
-        });
+    await ctx.db.patch(args.projectId, {
+      teamIds: [...currentTeamIds, args.teamId],
+      updatedAt: Date.now(),
+    });
 
-        // Log activity
-        await ctx.runMutation(internal.activities.mutations.logActivity, {
-            type: "project_updated",
-            projectId: args.projectId,
-            workspaceId: project.workspaceId,
-            actorId: user._id,
-            actorName: user.name || user.email,
-            targetType: "project",
-            targetId: args.projectId,
-            targetName: project.name,
-            description: `assigned team "${team.name}" to project "${project.name}"`,
-            metadata: {
-                extra: { teamId: args.teamId, teamName: team.name }
-            }
-        });
+    // Log activity
+    await ctx.runMutation(internal.activities.mutations.logActivity, {
+      type: "project_updated",
+      projectId: args.projectId,
+      workspaceId: project.workspaceId,
+      actorId: user._id,
+      actorName: user.name || user.email,
+      targetType: "project",
+      targetId: args.projectId,
+      targetName: project.name,
+      description: `assigned team "${team.name}" to project "${project.name}"`,
+      metadata: {
+        extra: { teamId: args.teamId, teamName: team.name }
+      }
+    });
 
-        return { success: true };
-    },
+    return { success: true };
+  },
 });

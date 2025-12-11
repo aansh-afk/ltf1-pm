@@ -149,6 +149,29 @@ export const getProjectGitHubActivity = query({
   },
 });
 
+// Get full repository details for a project
+export const getProjectRepository = query({
+  args: {
+    projectId: v.id("projects"),
+  },
+  returns: v.union(v.any(), v.null()),
+  handler: async (ctx, args) => {
+    const project = await ctx.db.get(args.projectId);
+    if (!project?.repository?.url) return null;
+
+    const repoFullName = project.repository.url
+      .replace("https://github.com/", "")
+      .replace(".git", "");
+
+    const repository = await ctx.db
+      .query("githubRepositories")
+      .withIndex("by_full_name", (q) => q.eq("fullName", repoFullName))
+      .first();
+
+    return repository;
+  },
+});
+
 // Get GitHub stats for a developer
 export const getDeveloperGitHubStats = query({
   args: {
@@ -201,8 +224,8 @@ export const getTaskPullRequests = query({
       .query("githubPullRequests")
       .withIndex("by_repository", (q) => q.eq("repositoryFullName", repoFullName))
       .collect();
-      
-    const pullRequests = allPullRequests.filter(pr => 
+
+    const pullRequests = allPullRequests.filter(pr =>
       pr.linkedTaskKeys.includes(taskKey)
     );
 
@@ -236,8 +259,8 @@ export const getTaskCommits = query({
       .query("githubCommits")
       .withIndex("by_repository", (q) => q.eq("repositoryFullName", repoFullName))
       .collect();
-      
-    const commits = allCommits.filter(commit => 
+
+    const commits = allCommits.filter(commit =>
       commit.linkedTaskKeys.includes(taskKey)
     );
 
@@ -259,9 +282,9 @@ export const searchRepositories = query({
       .query("githubRepositories")
       .withIndex("by_installation", (q) => q.eq("installationId", args.installationId))
       .collect()
-      
+
     // Filter in memory for case-insensitive search
-    const filtered = repos.filter(repo => 
+    const filtered = repos.filter(repo =>
       repo.name.toLowerCase().includes(args.query.toLowerCase()) ||
       repo.fullName.toLowerCase().includes(args.query.toLowerCase())
     ).slice(0, 10);

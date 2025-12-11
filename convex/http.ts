@@ -209,6 +209,7 @@ async function handlePushEvent(ctx: any, data: any) {
     metadata: {
       branch,
       commitCount: commits.length,
+      message: `Pushed ${commits.length} commit${commits.length !== 1 ? 's' : ''} to ${branch}`,
     },
   });
 }
