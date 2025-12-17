@@ -6,7 +6,8 @@ import toast from 'react-hot-toast'
 import BrutalModal from '../../ui/BrutalModal'
 import MultiSelect from '../../ui/MultiSelect'
 import { TaskAssignmentHelper } from '../task/TaskAssignmentHelper'
-import { HiOutlineSwitchHorizontal, HiOutlineLightBulb } from 'react-icons/hi'
+import { HiOutlineSwitchHorizontal, HiOutlineLightBulb, HiSparkles } from 'react-icons/hi'
+import { useAI } from '../../../hooks/useAI'
 
 interface CreateTaskModalProps {
   isOpen: boolean
@@ -39,6 +40,28 @@ export default function CreateTaskModal({
 
   const createTask = useMutation(api.tasks.mutations.createTask)
   const project = useQuery(api.projects.queries.getProject, { projectId })
+  const { generateTaskDetails, loading: aiLoading } = useAI()
+
+  const handleAIMagic = async () => {
+    if (!description.trim() && !title.trim()) {
+      toast.error('Please enter a description or title first')
+      return
+    }
+
+    try {
+      const textToAnalyze = description || title
+      const details = await generateTaskDetails(textToAnalyze)
+
+      if (!title) setTitle(details.title)
+      setPriority(details.priority as any)
+      if (details.points) setEstimateHours(details.points.toString()) // Mapping points to hours roughly for now, or just filling the field
+      if (details.labels && details.labels.length > 0) setLabels(details.labels.join(', '))
+
+      toast.success('Task details generated!')
+    } catch (error) {
+      // Error handled in hook
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -112,9 +135,20 @@ export default function CreateTaskModal({
 
         {/* DESCRIPTION */}
         <div>
-          <label className="block text-brutal-sm mb-8px">
-            DESCRIPTION (OPTIONAL)
-          </label>
+          <div className="flex justify-between items-center mb-8px">
+            <label className="block text-brutal-sm">
+              DESCRIPTION (OPTIONAL)
+            </label>
+            <button
+              type="button"
+              onClick={handleAIMagic}
+              disabled={aiLoading || (!description && !title)}
+              className="flex items-center gap-2 text-xs font-mono text-primary-brutalist hover:text-brutal-info disabled:opacity-50"
+            >
+              <HiSparkles className={aiLoading ? "animate-spin" : ""} />
+              {aiLoading ? "GENERATING..." : "AUTO-FILL WITH AI"}
+            </button>
+          </div>
           <textarea
             placeholder="ADD A DESCRIPTION..."
             className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 

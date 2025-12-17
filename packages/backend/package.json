@@ -23,8 +23,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "convex": "^1.13.0",
     "@clerk/nextjs": "^4.29.0",
+    "@google/generative-ai": "^0.24.1",
+    "convex": "^1.13.0",
     "svix": "^1.15.0"
   },
   "devDependencies": {

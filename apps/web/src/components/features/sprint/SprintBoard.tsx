@@ -11,11 +11,14 @@ import {
   HiOutlineDotsVertical,
   HiOutlinePencil,
   HiOutlineTrash,
-  HiOutlineDuplicate
+  HiOutlineDuplicate,
+  HiSparkles
 } from 'react-icons/hi'
 import TaskCard from '../task/TaskCard'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
+import { useAI } from '../../../hooks/useAI'
+import BrutalModal from '../../ui/BrutalModal'
 
 interface SprintBoardProps {
   sprint: any
@@ -69,9 +72,24 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
     return grouped
   })
 
+  const [isAnalysisOpen, setIsAnalysisOpen] = useState(false)
+  const [analysisResult, setAnalysisResult] = useState<any>(null)
+
   const moveTask = useMutation(api.tasks.mutations.moveTask)
   const removeTaskFromSprint = useMutation(api.sprints.mutations.removeTaskFromSprint)
   const updateSprint = useMutation(api.sprints.mutations.updateSprint)
+  const { analyzeSprint, loading: aiLoading } = useAI()
+
+  const handleAnalyzeSprint = async () => {
+    try {
+      setIsAnalysisOpen(true)
+      const result = await analyzeSprint(sprint._id)
+      setAnalysisResult(result)
+    } catch (error) {
+      setIsAnalysisOpen(false)
+      // Error handled in hook
+    }
+  }
 
   const handleDragEnd = async (result: any) => {
     if (!result.destination) return
@@ -141,6 +159,13 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
       {/* Sprint Actions */}
       <div className="flex justify-end gap-16px">
         <button
+          onClick={handleAnalyzeSprint}
+          className="brutal-btn flex items-center gap-8px bg-white hover:bg-neutral-200 text-black"
+        >
+          <HiSparkles className="w-16px h-16px" />
+          ANALYZE SPRINT
+        </button>
+        <button
           onClick={handleCompleteSprint}
           className="brutal-btn flex items-center gap-8px"
         >
@@ -148,6 +173,61 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
           COMPLETE SPRINT
         </button>
       </div>
+
+      {/* Analysis Modal */}
+      <BrutalModal
+        isOpen={isAnalysisOpen}
+        onClose={() => setIsAnalysisOpen(false)}
+        title="SPRINT ANALYSIS"
+        size="lg"
+      >
+        <div className="space-y-6">
+          {aiLoading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-12 h-12 border-4 border-primary-brutalist border-t-transparent rounded-full animate-spin mb-4" />
+              <p className="font-mono text-brutal-sm">ANALYZING SPRINT DATA...</p>
+            </div>
+          ) : analysisResult ? (
+            <div className="space-y-8 font-mono">
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="border-2 border-[var(--theme-border)] p-4">
+                  <div className="text-brutal-xs text-neutral-500 mb-1">HEALTH SCORE</div>
+                  <div className="text-brutal-xl font-bold">{analysisResult.healthScore}/100</div>
+                </div>
+                <div className="border-2 border-[var(--theme-border)] p-4">
+                  <div className="text-brutal-xs text-neutral-500 mb-1">VELOCITY</div>
+                  <div className="text-brutal-xl font-bold">{analysisResult.velocity} pts</div>
+                </div>
+              </div>
+
+              {/* Risks */}
+              <div>
+                <h3 className="text-brutal-sm font-bold mb-4 uppercase text-[var(--theme-error)]">Identified Risks</h3>
+                <ul className="space-y-3">
+                  {analysisResult.risks.map((risk: any, i: number) => (
+                    <li key={i} className="bg-[var(--theme-error)]/10 border-l-4 border-[var(--theme-error)] p-3 text-sm">
+                      <div className="font-bold">{risk.title || risk.severity}</div>
+                      <div>{risk.description}</div>
+                    </li>
+                  ))}
+                  {analysisResult.risks.length === 0 && <p className="text-neutral-500 italic">No significant risks detected.</p>}
+                </ul>
+              </div>
+
+              {/* Recommendations */}
+              <div>
+                <h3 className="text-brutal-sm font-bold mb-4 uppercase text-primary-brutalist">Recommendations</h3>
+                <ul className="list-disc pl-5 space-y-2">
+                  {analysisResult.recommendations.map((rec: string, i: number) => (
+                    <li key={i} className="text-sm">{rec}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </BrutalModal>
 
       {/* Board */}
       <DragDropContext onDragEnd={handleDragEnd}>
