@@ -279,19 +279,19 @@ export default function CreateTaskModal({
               />
               <div>
                 <label className="block text-brutal-sm mb-8px">
-                  ESTIMATE (HOURS)
+                  STORY POINTS
                 </label>
                 <input
                   type="number"
                   placeholder="0"
-                  className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+                  className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
                            font-mono text-brutal-md placeholder:text-neutral-600
                            focus:border-primary-brutalist focus:outline-none transition-colors
                            disabled:opacity-50 disabled:cursor-not-allowed"
                   value={estimateHours}
                   onChange={(e) => setEstimateHours(e.target.value)}
                   min="0"
-                  step="0.5"
+                  step="1"
                   disabled={isCreating}
                 />
               </div>
@@ -317,19 +317,19 @@ export default function CreateTaskModal({
 
               <div>
                 <label className="block text-brutal-sm mb-8px">
-                  ESTIMATE (HOURS)
+                  STORY POINTS
                 </label>
                 <input
                   type="number"
                   placeholder="0"
-                  className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+                  className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
                            font-mono text-brutal-md placeholder:text-neutral-600
                            focus:border-primary-brutalist focus:outline-none transition-colors
                            disabled:opacity-50 disabled:cursor-not-allowed"
                   value={estimateHours}
                   onChange={(e) => setEstimateHours(e.target.value)}
                   min="0"
-                  step="0.5"
+                  step="1"
                   disabled={isCreating}
                 />
               </div>

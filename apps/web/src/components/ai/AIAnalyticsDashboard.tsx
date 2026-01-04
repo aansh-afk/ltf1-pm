@@ -324,9 +324,9 @@ function SessionsTab({ sessions, loading }: any) {
                 <span className="text-xs uppercase text-gray-400">{session.type}</span>
                 <span className={clsx(
                   'px-2 py-0.5 text-xs font-bold uppercase',
-                  session.model === 'gemini-2.5-flash' ? 'bg-yellow-500 text-black' : 'bg-green-500 text-black'
+                  session.model === 'gemini-2.0-flash-exp' ? 'bg-yellow-500 text-black' : 'bg-green-500 text-black'
                 )}>
-                  {session.model === 'gemini-2.5-flash' ? 'Flash' : 'Flash Lite'}
+                  {session.model === 'gemini-2.0-flash-exp' ? 'Flash 2.0' : 'Flash 1.5 8B'}
                 </span>
                 {session.cached && (
                   <span className="px-2 py-0.5 bg-blue-500 text-white text-xs font-bold uppercase">

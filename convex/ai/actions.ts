@@ -7,10 +7,10 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { SYSTEM_PROMPTS } from "./prompts";
 import { api } from "../_generated/api";
 
-// Model routing strategy
+// Model routing strategy - using valid Gemini API model names
 enum AIModel {
-  FLASH = 'gemini-2.5-flash-latest',
-  FLASH_LITE = 'gemini-2.5-flash-8b-latest'
+  FLASH = 'gemini-2.0-flash-exp',
+  FLASH_LITE = 'gemini-1.5-flash-8b'
 }
 
 // Helpers
@@ -57,28 +57,38 @@ export const generateTaskDetails = action({
     description: v.string(),
   },
   handler: async (ctx, args) => {
+    const model = getGeminiModel(AIModel.FLASH_LITE);
+    const { totalTokens: inputTokens } = await model.countTokens(args.description);
+
     const details = await generateJSON(
       args.description,
       SYSTEM_PROMPTS.TASK_DETAILS_JSON,
       AIModel.FLASH_LITE
     );
 
+    const outputTokens = 100; // Estimated for structured response
     await ctx.runMutation(api.ai.mutations.trackAISession, {
         type: 'task.details.generate',
         input: args.description,
         output: JSON.stringify(details),
         model: AIModel.FLASH_LITE,
-        tokens: { input: args.description.length / 4, output: 100, total: 0 },
+        tokens: { input: inputTokens, output: outputTokens, total: inputTokens + outputTokens },
         cost: 0,
         latency: 0,
         cached: false
     });
 
+    // Validate AI response fields
+    const validPriorities = ['urgent', 'high', 'medium', 'low'] as const;
+    const priority = validPriorities.includes(details.priority?.toLowerCase())
+      ? details.priority.toLowerCase()
+      : 'medium';
+
     return {
       title: details.title || "",
-      points: details.points || 0,
-      priority: (details.priority || "medium").toLowerCase(),
-      labels: details.labels || [],
+      points: Math.max(0, Math.min(details.points || 0, 100)),
+      priority,
+      labels: Array.isArray(details.labels) ? details.labels.filter((l: unknown) => typeof l === 'string') : [],
     };
   },
 });

@@ -11,7 +11,12 @@ export const trackAISession = mutation({
     type: v.string(),
     input: v.string(),
     output: v.string(),
-    model: v.union(v.literal("gemini-2.5-flash"), v.literal("gemini-2.5-flash-lite")),
+    model: v.union(
+      v.literal("gemini-2.0-flash-exp"),
+      v.literal("gemini-1.5-flash-8b"),
+      v.literal("gemini-2.5-flash"),
+      v.literal("gemini-2.5-flash-lite")
+    ),
     tokens: v.object({
       input: v.number(),
       output: v.number(),

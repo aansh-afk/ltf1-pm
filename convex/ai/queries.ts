@@ -83,8 +83,8 @@ export const getWorkspaceAIStats = query({
         ? sessions.filter(s => s.cached).length / sessions.length
         : 0,
       modelUsage: {
-        flash: sessions.filter(s => s.model === "gemini-2.5-flash").length,
-        flashLite: sessions.filter(s => s.model === "gemini-2.5-flash-lite").length,
+        flash: sessions.filter(s => s.model === "gemini-2.0-flash-exp" || s.model === "gemini-2.5-flash").length,
+        flashLite: sessions.filter(s => s.model === "gemini-1.5-flash-8b" || s.model === "gemini-2.5-flash-lite").length,
       },
       typeBreakdown: sessions.reduce((acc, s) => {
         acc[s.type] = (acc[s.type] || 0) + 1

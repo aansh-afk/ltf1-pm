@@ -5,14 +5,14 @@ import { GoogleGenerativeAI, GenerativeModel, SafetySetting, HarmCategory, HarmB
 
 export interface GeminiConfig {
   apiKey: string
-  defaultModel?: 'gemini-2.5-flash' | 'gemini-2.5-flash-lite'
+  defaultModel?: 'gemini-2.0-flash-exp' | 'gemini-1.5-flash-8b'
   maxRetries?: number
   timeout?: number
 }
 
 export interface GeminiRequest {
   prompt: string
-  model?: 'gemini-2.5-flash' | 'gemini-2.5-flash-lite' | 'auto'
+  model?: 'gemini-2.0-flash-exp' | 'gemini-1.5-flash-8b' | 'auto'
   temperature?: number
   maxTokens?: number
   topP?: number
@@ -38,17 +38,17 @@ export interface GeminiResponse<T = any> {
 export interface TaskComplexity {
   score: number // 0-1
   reasoning: string
-  recommendedModel: 'gemini-2.5-flash' | 'gemini-2.5-flash-lite'
+  recommendedModel: 'gemini-2.0-flash-exp' | 'gemini-1.5-flash-8b'
   estimatedTokens: number
 }
 
 // Cost per 1M tokens (example rates - adjust based on actual pricing)
 const PRICING = {
-  'gemini-2.5-flash': {
+  'gemini-2.0-flash-exp': {
     input: 0.35,  // $0.35 per 1M input tokens
     output: 1.05  // $1.05 per 1M output tokens
   },
-  'gemini-2.5-flash-lite': {
+  'gemini-1.5-flash-8b': {
     input: 0.10,  // $0.10 per 1M input tokens
     output: 0.30  // $0.30 per 1M output tokens
   }
@@ -56,12 +56,12 @@ const PRICING = {
 
 // Token limits
 const MODEL_LIMITS = {
-  'gemini-2.5-flash': {
+  'gemini-2.0-flash-exp': {
     maxInput: 128000,
     maxOutput: 8192,
     rateLimit: 100 // requests per minute
   },
-  'gemini-2.5-flash-lite': {
+  'gemini-1.5-flash-8b': {
     maxInput: 32000,
     maxOutput: 4096,
     rateLimit: 200 // requests per minute
@@ -84,7 +84,7 @@ export class GeminiProvider {
   private initializeModels() {
     // Initialize Gemini 2.5 Flash
     const flashModel = this.genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash-exp',
       generationConfig: {
         temperature: 0.7,
         topK: 40,
@@ -93,11 +93,11 @@ export class GeminiProvider {
       },
       safetySettings: this.getSafetySettings()
     })
-    this.models.set('gemini-2.5-flash', flashModel)
+    this.models.set('gemini-2.0-flash-exp', flashModel)
 
     // Initialize Gemini 2.5 Flash Lite
     const flashLiteModel = this.genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash-lite',
+      model: 'gemini-1.5-flash-8b',
       generationConfig: {
         temperature: 0.7,
         topK: 40,
@@ -106,7 +106,7 @@ export class GeminiProvider {
       },
       safetySettings: this.getSafetySettings()
     })
-    this.models.set('gemini-2.5-flash-lite', flashLiteModel)
+    this.models.set('gemini-1.5-flash-8b', flashLiteModel)
   }
 
   private getSafetySettings(): SafetySetting[] {
@@ -183,7 +183,7 @@ export class GeminiProvider {
     score = Math.max(0, Math.min(1, score))
 
     // Determine recommended model
-    const recommendedModel = score > 0.4 ? 'gemini-2.5-flash' : 'gemini-2.5-flash-lite'
+    const recommendedModel = score > 0.4 ? 'gemini-2.0-flash-exp' : 'gemini-1.5-flash-8b'
 
     return {
       score,
@@ -194,7 +194,7 @@ export class GeminiProvider {
   }
 
   async smartRoute(request: GeminiRequest): Promise<GeminiResponse> {
-    let selectedModel: 'gemini-2.5-flash' | 'gemini-2.5-flash-lite'
+    let selectedModel: 'gemini-2.0-flash-exp' | 'gemini-1.5-flash-8b'
 
     if (request.model === 'auto' || !request.model) {
       // Analyze complexity and auto-select model
@@ -203,13 +203,13 @@ export class GeminiProvider {
       
       console.log(`[AI Router] Complexity: ${complexity.score.toFixed(2)} | Model: ${selectedModel} | Reason: ${complexity.reasoning}`)
     } else {
-      selectedModel = request.model === 'gemini-2.5-flash' ? 'gemini-2.5-flash' : 'gemini-2.5-flash-lite'
+      selectedModel = request.model === 'gemini-2.0-flash-exp' ? 'gemini-2.0-flash-exp' : 'gemini-1.5-flash-8b'
     }
 
     // Check rate limits
     if (!this.checkRateLimit(selectedModel)) {
       // Fallback to other model if rate limited
-      selectedModel = selectedModel === 'gemini-2.5-flash' ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash'
+      selectedModel = selectedModel === 'gemini-2.0-flash-exp' ? 'gemini-1.5-flash-8b' : 'gemini-2.0-flash-exp'
       console.log(`[AI Router] Rate limited, falling back to ${selectedModel}`)
     }
 
@@ -224,10 +224,10 @@ export class GeminiProvider {
     // Use Flash Lite for quick suggestions
     return this.executeRequest({
       prompt,
-      model: 'gemini-2.5-flash-lite',
+      model: 'gemini-1.5-flash-8b',
       temperature: 0.5,
       maxTokens: 500
-    }, 'gemini-2.5-flash-lite')
+    }, 'gemini-1.5-flash-8b')
   }
 
   async complexAnalysis(prompt: string, systemPrompt?: string): Promise<GeminiResponse<any>> {
@@ -235,11 +235,11 @@ export class GeminiProvider {
     return this.executeRequest({
       prompt,
       systemPrompt,
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash-exp',
       temperature: 0.7,
       maxTokens: 4000,
       jsonMode: true
-    }, 'gemini-2.5-flash')
+    }, 'gemini-2.0-flash-exp')
   }
 
   async batchProcess<T>(items: string[], processor: (item: string) => string): Promise<GeminiResponse<T[]>> {
@@ -253,10 +253,10 @@ export class GeminiProvider {
       const prompt = processor(item)
       const response = await this.executeRequest({
         prompt,
-        model: 'gemini-2.5-flash-lite',
+        model: 'gemini-1.5-flash-8b',
         temperature: 0.3,
         maxTokens: 200
-      }, 'gemini-2.5-flash-lite')
+      }, 'gemini-1.5-flash-8b')
 
       if (response.success && response.data) {
         results.push(response.data)
@@ -270,7 +270,7 @@ export class GeminiProvider {
     return {
       success: true,
       data: results,
-      model: 'gemini-2.5-flash-lite',
+      model: 'gemini-1.5-flash-8b',
       tokens: totalTokens,
       cost: totalCost,
       latency: Date.now() - startTime
@@ -346,7 +346,7 @@ Include: description, parameters, return value, examples, and edge cases.`
 
   private async executeRequest(
     request: GeminiRequest,
-    modelName: 'gemini-2.5-flash' | 'gemini-2.5-flash-lite'
+    modelName: 'gemini-2.0-flash-exp' | 'gemini-1.5-flash-8b'
   ): Promise<GeminiResponse> {
     const startTime = Date.now()
     
@@ -438,9 +438,9 @@ Include: description, parameters, return value, examples, and edge cases.`
       console.error(`[AI] Error with ${modelName}:`, error)
       
       // Try fallback model
-      if (modelName === 'gemini-2.5-flash' && request.model === 'auto') {
+      if (modelName === 'gemini-2.0-flash-exp' && request.model === 'auto') {
         console.log('[AI] Falling back to Flash Lite')
-        return this.executeRequest(request, 'gemini-2.5-flash-lite')
+        return this.executeRequest(request, 'gemini-1.5-flash-8b')
       }
 
       return {
@@ -519,5 +519,5 @@ Include: description, parameters, return value, examples, and edge cases.`
 // Export singleton instance with smart defaults
 export const gemini = new GeminiProvider({
   apiKey: process.env.VITE_GEMINI_API_KEY || '',
-  defaultModel: 'gemini-2.5-flash-lite' // Start with lite for cost savings
+  defaultModel: 'gemini-1.5-flash-8b' // Start with lite for cost savings
 })

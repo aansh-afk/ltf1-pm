@@ -22,11 +22,17 @@ export function TaskGitHubActivity({ taskId }: TaskGitHubActivityProps) {
   const handleSummarize = async (pr: any) => {
     try {
       setSummarizingId(pr._id);
-      // In a real scenario, we would fetch the PR diff/details here.
-      // For now, we simulate sending context.
+      // Use PR body as context - full diff requires additional GitHub API call
+      const prContext = [
+        `PR #${pr.number}: ${pr.title}`,
+        `State: ${pr.state}`,
+        `Author: ${pr.author}`,
+        pr.body ? `\nDescription:\n${pr.body}` : '',
+      ].filter(Boolean).join('\n');
+
       const summary = await generatePRSummary(
-        "Loading diff not implemented in this view yet.",
-        `PR Title: ${pr.title}\nDescription: ${pr.body || ''}`
+        prContext,
+        `Summarize this pull request based on available metadata. Note: Full code diff unavailable.`
       );
       toast((t) => (
         <div className="font-mono text-sm max-h-[300px] overflow-y-auto">
