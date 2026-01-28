@@ -14,6 +14,7 @@ import { registerAICommands } from '../commands/ai/index.js';
 import { registerGitCommands } from '../commands/git/index.js';
 import { registerDaemonCommands } from '../commands/daemon/index.js';
 import output from '../lib/output.js';
+import { startDashboard } from '../tui/index.js';
 
 const program = new Command();
 
@@ -44,6 +45,15 @@ program
   .option('--no-color', 'Disable colored output')
   .option('--debug', 'Enable debug mode');
 
+// Dashboard command
+program
+  .command('dashboard')
+  .alias('d')
+  .description('Launch the interactive TUI dashboard')
+  .action(async () => {
+    await startDashboard();
+  });
+
 // Handle unknown commands
 program.on('command:*', () => {
   output.error(`Unknown command: ${program.args.join(' ')}`);
@@ -52,8 +62,8 @@ program.on('command:*', () => {
   process.exit(1);
 });
 
-// Default action (no command)
-program.action(() => {
+// Default action (no command) - Launch dashboard
+program.action(async () => {
   // Only show welcome box if running interactively (not in watch mode)
   // tsx watch passes extra args, and we want to skip the banner on restarts
   const isWatchMode = process.env.TSX_DEV || process.argv.includes('--watch');
@@ -64,17 +74,8 @@ program.action(() => {
     return;
   }
 
-  // Show welcome message and quick status
-  output.box(
-    `${output.colors.primary('LTF CLI')} v0.1.0\n\n` +
-      'Terminal interface for iceberg project management\n\n' +
-      output.colors.muted('Quick Start:\n') +
-      '  ltf auth login      Authenticate\n' +
-      '  ltf project select  Select a project\n' +
-      '  ltf task list       View tasks\n' +
-      '  ltf --help          Show all commands',
-    'Welcome'
-  );
+  // Launch the TUI dashboard
+  await startDashboard();
 });
 
 // Parse and execute
