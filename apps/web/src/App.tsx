@@ -46,6 +46,7 @@ import CustomFieldsPage from './pages/CustomFieldsPage'
 import SlackPage from './pages/SlackPage'
 import TeamsPage from './pages/TeamsPage'
 import ComingSoonPage from './pages/ComingSoonPage'
+import CLIAuthPage from './pages/CLIAuthPage'
 import { useEnsureUser } from './hooks/useEnsureUser'
 import { DataMigrationBanner } from './components/admin/DataMigrationBanner'
 import CommandPalette from './components/shortcuts/CommandPalette'
@@ -193,6 +194,9 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
 
         {/* GitHub OAuth Callback */}
         <Route path="/api/auth/github/callback" element={<GitHubCallbackPage />} />
+
+        {/* CLI Authentication */}
+        <Route path="/cli-auth" element={<CLIAuthPage />} />
 
         {/* Protected routes - show without authentication requirement */}
         <Route path="/" element={<DashboardLayout />}>
