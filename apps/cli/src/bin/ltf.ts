@@ -5,28 +5,28 @@
  * Main entry point that sets up Commander.js and registers all commands.
  */
 
-import { Command } from 'commander';
-import { registerAuthCommands } from '../commands/auth/index.js';
-import { registerProjectCommands } from '../commands/project/index.js';
-import { registerTaskCommands } from '../commands/task/index.js';
-import { registerSprintCommands } from '../commands/sprint/index.js';
-import { registerAICommands } from '../commands/ai/index.js';
-import { registerGitCommands } from '../commands/git/index.js';
-import { registerDaemonCommands } from '../commands/daemon/index.js';
-import output from '../lib/output.js';
-import { startDashboard } from '../tui/index.js';
+import { Command } from "commander";
+import { registerAuthCommands } from "../commands/auth/index.js";
+import { registerProjectCommands } from "../commands/project/index.js";
+import { registerTaskCommands } from "../commands/task/index.js";
+import { registerSprintCommands } from "../commands/sprint/index.js";
+import { registerAICommands } from "../commands/ai/index.js";
+import { registerGitCommands } from "../commands/git/index.js";
+import { registerDaemonCommands } from "../commands/daemon/index.js";
+import output from "../lib/output.js";
+import { startDashboard } from "../tui/index.js";
 
 const program = new Command();
 
 // CLI metadata
 program
-  .name('ltf')
-  .description('LTF CLI - Terminal interface for iceberg project management')
-  .version('0.1.0')
+  .name("ltf")
+  .description("LTF CLI - Terminal interface for iceberg project management")
+  .version("0.1.0")
   .configureOutput({
     // Custom error handling
-    outputError: (str, write) => {
-      output.error(str.replace('error: ', ''));
+    outputError: (str) => {
+      output.error(str.replace("error: ", ""));
     },
   });
 
@@ -41,24 +41,24 @@ registerDaemonCommands(program);
 
 // Global options
 program
-  .option('--json', 'Output in JSON format')
-  .option('--no-color', 'Disable colored output')
-  .option('--debug', 'Enable debug mode');
+  .option("--json", "Output in JSON format")
+  .option("--no-color", "Disable colored output")
+  .option("--debug", "Enable debug mode");
 
 // Dashboard command
 program
-  .command('dashboard')
-  .alias('d')
-  .description('Launch the interactive TUI dashboard')
+  .command("dashboard")
+  .alias("d")
+  .description("Launch the interactive TUI dashboard")
   .action(async () => {
     await startDashboard();
   });
 
 // Handle unknown commands
-program.on('command:*', () => {
-  output.error(`Unknown command: ${program.args.join(' ')}`);
-  output.log('');
-  output.log('Run `ltf --help` to see available commands');
+program.on("command:*", () => {
+  output.error(`Unknown command: ${program.args.join(" ")}`);
+  output.log("");
+  output.log("Run `ltf --help` to see available commands");
   process.exit(1);
 });
 
@@ -66,11 +66,13 @@ program.on('command:*', () => {
 program.action(async () => {
   // Only show welcome box if running interactively (not in watch mode)
   // tsx watch passes extra args, and we want to skip the banner on restarts
-  const isWatchMode = process.env.TSX_DEV || process.argv.includes('--watch');
+  const isWatchMode = process.env.TSX_DEV || process.argv.includes("--watch");
 
   if (isWatchMode) {
     // In dev mode, just show a minimal message
-    console.log(output.colors.muted('LTF CLI ready. Run `ltf --help` for commands.'));
+    console.log(
+      output.colors.muted("LTF CLI ready. Run `ltf --help` for commands."),
+    );
     return;
   }
 

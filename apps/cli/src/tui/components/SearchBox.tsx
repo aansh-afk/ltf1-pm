@@ -11,35 +11,32 @@ interface SearchBoxProps {
   onChange: (value: string) => void;
   placeholder?: string;
   focused?: boolean;
+  width: number;
+}
+
+function pad(str: string, len: number): string {
+  if (str.length >= len) return str.slice(0, len);
+  return str + ' '.repeat(len - str.length);
 }
 
 export function SearchBox({
   value,
-  onChange,
-  placeholder = 'Type to search tasks...',
+  placeholder = 'Type to search...',
   focused = false,
+  width,
 }: SearchBoxProps) {
   const borderColor = focused ? theme.colors.borderFocus : theme.colors.border;
   const displayText = value || placeholder;
   const textColor = value ? theme.colors.text : theme.colors.dim;
 
+  const w = Math.min(width, 32);
+  const inner = w - 2;
+
   return (
     <Box flexDirection="column">
-      <Text color={borderColor}>
-        {theme.box.topLeft}
-        {theme.box.horizontal.repeat(43)}
-        {theme.box.topRight}
-      </Text>
-      <Box>
-        <Text color={borderColor}>{theme.box.vertical} </Text>
-        <Text color={textColor}>{displayText.padEnd(41)}</Text>
-        <Text color={borderColor}> {theme.box.vertical}</Text>
-      </Box>
-      <Text color={borderColor}>
-        {theme.box.bottomLeft}
-        {theme.box.horizontal.repeat(43)}
-        {theme.box.bottomRight}
-      </Text>
+      <Text color={borderColor}>{'┌' + '─'.repeat(inner) + '┐'}</Text>
+      <Text color={borderColor}>│<Text color={textColor}>{pad(displayText, inner)}</Text>│</Text>
+      <Text color={borderColor}>{'└' + '─'.repeat(inner) + '┘'}</Text>
     </Box>
   );
 }

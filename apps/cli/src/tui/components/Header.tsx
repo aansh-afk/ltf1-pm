@@ -2,24 +2,24 @@
  * Header Component - Date, Sprint Progress, Day
  */
 
-import React from 'react';
-import { Box, Text } from 'ink';
-import { theme } from '../styles/theme.js';
+import React from "react";
+import { Box, Text } from "ink";
+import { theme } from "../styles/theme.js";
 
 function formatDate(date: Date): string {
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const year = date.getFullYear().toString().slice(-2);
   return `${day}.${month}.${year}`;
 }
 
 function getDayName(date: Date): string {
-  return date.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+  return date.toLocaleDateString("en-US", { weekday: "long" }).toUpperCase();
 }
 
 function generateWaveform(progress: number, width: number = 25): string {
-  const chars = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
-  let wave = '';
+  const chars = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
+  let wave = "";
 
   for (let i = 0; i < width; i++) {
     // Create a wave pattern that peaks based on progress
@@ -53,7 +53,7 @@ export function Header({
   sprintDaysLeft = 4,
   sprintTotal = 12,
   sprintProgress = 0.67,
-  sprintName = 'SPRINT 12',
+  sprintName = "SPRINT 12",
 }: HeaderProps) {
   const now = new Date();
   const dateStr = formatDate(now);
@@ -61,17 +61,25 @@ export function Header({
   const waveform = generateWaveform(sprintProgress);
 
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" width="100%">
       {/* Top row - Date, Waveform, Day */}
-      <Box justifyContent="space-between">
+      <Box justifyContent="space-between" width="100%">
         <Box flexDirection="column">
           <Text color={theme.colors.text} bold>
             {dateStr}
           </Text>
           <Text color={theme.colors.dim}>───────</Text>
-          <Text color={theme.colors.muted}>  DAY: {sprintDay.toString().padStart(2, '0')}</Text>
-          <Text color={theme.colors.muted}> LEFT: {sprintDaysLeft.toString().padStart(2, '0')}</Text>
-          <Text color={theme.colors.muted}>TOTAL: {sprintTotal.toString().padStart(2, '0')}</Text>
+          <Text color={theme.colors.muted}>
+            {" "}
+            DAY: {sprintDay.toString().padStart(2, "0")}
+          </Text>
+          <Text color={theme.colors.muted}>
+            {" "}
+            LEFT: {sprintDaysLeft.toString().padStart(2, "0")}
+          </Text>
+          <Text color={theme.colors.muted}>
+            TOTAL: {sprintTotal.toString().padStart(2, "0")}
+          </Text>
         </Box>
 
         <Box flexDirection="column" alignItems="center">
@@ -88,7 +96,9 @@ export function Header({
               {theme.progress.filled.repeat(Math.floor(sprintProgress * 18))}
             </Text>
             <Text color={theme.colors.dim}>
-              {theme.progress.empty.repeat(18 - Math.floor(sprintProgress * 18))}
+              {theme.progress.empty.repeat(
+                18 - Math.floor(sprintProgress * 18),
+              )}
             </Text>
             <Text color={theme.colors.dim}> │</Text>
           </Box>

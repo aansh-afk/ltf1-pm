@@ -1,5 +1,6 @@
 /**
- * BorderBox Component - Styled container with border and title
+ * BorderBox Component - Character-based container with border and title
+ * Uses explicit string building for reliable terminal layout
  */
 
 import React from 'react';
@@ -9,74 +10,81 @@ import { theme } from '../styles/theme.js';
 interface BorderBoxProps {
   title?: string;
   children: React.ReactNode;
-  width?: number | string;
-  height?: number;
+  width: number;
   focused?: boolean;
+}
+
+// Utility to create a line of exact width
+function line(char: string, length: number): string {
+  return char.repeat(Math.max(0, length));
+}
+
+// Utility to pad/truncate string to exact width
+function fixedWidth(str: string, width: number, align: 'left' | 'right' = 'left'): string {
+  if (str.length > width) {
+    return str.slice(0, width);
+  }
+  if (align === 'right') {
+    return str.padStart(width);
+  }
+  return str.padEnd(width);
 }
 
 export function BorderBox({
   title,
   children,
   width,
-  height,
   focused = false,
 }: BorderBoxProps) {
   const borderColor = focused ? theme.colors.borderFocus : theme.colors.border;
   const titleColor = focused ? theme.colors.primary : theme.colors.muted;
 
-  // Calculate the width for the border
-  const boxWidth = typeof width === 'number' ? width : 40;
-  const innerWidth = boxWidth - 2;
+  // Inner width = total width - 2 border chars
+  const innerWidth = Math.max(0, width - 2);
 
   // Build top border with title
-  let topBorder = theme.box.topLeft;
+  let topBorderContent: React.ReactNode;
   if (title) {
-    const titleStr = ` ${title} `;
-    const remainingWidth = innerWidth - titleStr.length;
-    const leftDashes = Math.floor(remainingWidth / 2);
-    const rightDashes = remainingWidth - leftDashes;
-    topBorder += theme.box.horizontal.repeat(Math.max(0, leftDashes));
-    topBorder += titleStr;
-    topBorder += theme.box.horizontal.repeat(Math.max(0, rightDashes));
+    const titleText = ` ${title} `;
+    const dashesNeeded = innerWidth - titleText.length;
+    const leftDashes = Math.max(0, Math.floor(dashesNeeded / 2));
+    const rightDashes = Math.max(0, dashesNeeded - leftDashes);
+    topBorderContent = (
+      <>
+        {line('─', leftDashes)}
+        <Text color={titleColor}>{titleText}</Text>
+        {line('─', rightDashes)}
+      </>
+    );
   } else {
-    topBorder += theme.box.horizontal.repeat(innerWidth);
+    topBorderContent = line('─', innerWidth);
   }
-  topBorder += theme.box.topRight;
-
-  // Build bottom border
-  const bottomBorder =
-    theme.box.bottomLeft +
-    theme.box.horizontal.repeat(innerWidth) +
-    theme.box.bottomRight;
 
   return (
-    <Box flexDirection="column" width={width}>
+    <Box flexDirection="column">
       {/* Top border */}
       <Text color={borderColor}>
-        {theme.box.topLeft}
-        {theme.box.horizontal}
-        {title && <Text color={titleColor}> {title} </Text>}
-        {theme.box.horizontal.repeat(
-          Math.max(0, innerWidth - (title ? title.length + 4 : 0))
-        )}
-        {theme.box.topRight}
+        ┌{topBorderContent}┐
       </Text>
 
-      {/* Content with side borders */}
-      <Box flexDirection="row">
-        <Text color={borderColor}>{theme.box.vertical}</Text>
-        <Box flexDirection="column" flexGrow={1} height={height}>
-          {children}
-        </Box>
-        <Text color={borderColor}>{theme.box.vertical}</Text>
+      {/* Content rows - each child should handle its own width */}
+      <Box flexDirection="column">
+        {React.Children.map(children, (child) => (
+          <Box>
+            <Text color={borderColor}>│</Text>
+            <Box width={innerWidth}>{child}</Box>
+            <Text color={borderColor}>│</Text>
+          </Box>
+        ))}
       </Box>
 
       {/* Bottom border */}
       <Text color={borderColor}>
-        {theme.box.bottomLeft}
-        {theme.box.horizontal.repeat(innerWidth)}
-        {theme.box.bottomRight}
+        └{line('─', innerWidth)}┘
       </Text>
     </Box>
   );
 }
+
+// Export utilities for child components
+export { fixedWidth, line };
