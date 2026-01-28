@@ -20,6 +20,7 @@ export const colors = {
   muted: chalk.dim,
   highlight: chalk.bold.white,
   link: chalk.cyan.underline,
+  bold: chalk.bold,
 };
 
 // Status colors for tasks
