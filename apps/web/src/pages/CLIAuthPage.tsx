@@ -53,12 +53,13 @@ export default function CLIAuthPage() {
       if (!isSignedIn) return
 
       try {
-        // Get the session token
-        const token = await getToken()
+        // Get the session token with Convex template
+        // This ensures the JWT has the correct issuer and audience for Convex
+        const token = await getToken({ template: 'convex' })
 
         if (!token) {
           setStatus('error')
-          setErrorMessage('Failed to get authentication token.')
+          setErrorMessage('Failed to get authentication token. Make sure the Convex JWT template is configured in Clerk.')
           return
         }
 
