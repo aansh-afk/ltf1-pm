@@ -38,6 +38,7 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
           <!DOCTYPE html>
           <html>
             <head>
+              <meta charset="UTF-8">
               <title>LTF CLI - Error</title>
               <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -94,7 +95,7 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
         `;
 
         if (error) {
-          res.writeHead(400, { 'Content-Type': 'text/html' });
+          res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
           res.end(errorPage('Authentication Failed', error));
           server.close();
           reject(new Error(error));
@@ -102,7 +103,7 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
         }
 
         if (!token) {
-          res.writeHead(400, { 'Content-Type': 'text/html' });
+          res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
           res.end(errorPage('Missing Token', 'No authentication token received.'));
           server.close();
           reject(new Error('No token received'));
@@ -110,11 +111,12 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
         }
 
         // Success response - brutalist style matching the web app
-        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(`
           <!DOCTYPE html>
           <html>
             <head>
+              <meta charset="UTF-8">
               <title>LTF CLI - Authenticated</title>
               <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
