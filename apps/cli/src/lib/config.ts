@@ -1,0 +1,190 @@
+/**
+ * Configuration management for the LTF CLI
+ * Stores auth tokens, active workspace/project, and user preferences
+ */
+
+import Conf from 'conf';
+// Type import not directly used but kept for reference
+// import type { Id } from '../../../../convex/_generated/dataModel.js';
+
+export interface AuthConfig {
+  token?: string;
+  tokenType: 'clerk' | 'api';
+  userId?: string;
+  email?: string;
+  expiresAt?: number;
+}
+
+export interface ProjectContext {
+  workspaceId?: string;
+  workspaceName?: string;
+  projectId?: string;
+  projectKey?: string;
+  projectName?: string;
+}
+
+export interface CLIConfig {
+  auth?: AuthConfig;
+  context?: ProjectContext;
+  preferences?: {
+    defaultFormat?: 'table' | 'json' | 'compact';
+    colorOutput?: boolean;
+    autoSync?: boolean;
+  };
+  daemon?: {
+    enabled?: boolean;
+    pid?: number;
+    logFile?: string;
+  };
+  gitHooks?: {
+    installed?: boolean;
+    installedAt?: string;
+  };
+}
+
+const config = new Conf<CLIConfig>({
+  projectName: 'ltf',
+  projectVersion: '0.1.0',
+  schema: {
+    auth: {
+      type: 'object',
+      properties: {
+        token: { type: 'string' },
+        tokenType: { type: 'string', enum: ['clerk', 'api'] },
+        userId: { type: 'string' },
+        email: { type: 'string' },
+        expiresAt: { type: 'number' },
+      },
+    },
+    context: {
+      type: 'object',
+      properties: {
+        workspaceId: { type: 'string' },
+        workspaceName: { type: 'string' },
+        projectId: { type: 'string' },
+        projectKey: { type: 'string' },
+        projectName: { type: 'string' },
+      },
+    },
+    preferences: {
+      type: 'object',
+      properties: {
+        defaultFormat: { type: 'string', enum: ['table', 'json', 'compact'] },
+        colorOutput: { type: 'boolean' },
+        autoSync: { type: 'boolean' },
+      },
+    },
+    daemon: {
+      type: 'object',
+      properties: {
+        enabled: { type: 'boolean' },
+        pid: { type: 'number' },
+        logFile: { type: 'string' },
+      },
+    },
+    gitHooks: {
+      type: 'object',
+      properties: {
+        installed: { type: 'boolean' },
+        installedAt: { type: 'string' },
+      },
+    },
+  },
+  defaults: {
+    preferences: {
+      defaultFormat: 'table',
+      colorOutput: true,
+      autoSync: true,
+    },
+  },
+});
+
+// Auth helpers
+export function getAuth(): AuthConfig | undefined {
+  return config.get('auth');
+}
+
+export function setAuth(auth: AuthConfig): void {
+  config.set('auth', auth);
+}
+
+export function clearAuth(): void {
+  config.delete('auth');
+}
+
+export function isAuthenticated(): boolean {
+  const auth = getAuth();
+  if (!auth?.token) return false;
+  if (auth.expiresAt && auth.expiresAt < Date.now()) {
+    clearAuth();
+    return false;
+  }
+  return true;
+}
+
+// Context helpers
+export function getContext(): ProjectContext | undefined {
+  return config.get('context');
+}
+
+export function setContext(context: Partial<ProjectContext>): void {
+  const current = getContext() || {};
+  config.set('context', { ...current, ...context });
+}
+
+export function clearContext(): void {
+  config.delete('context');
+}
+
+export function hasProjectContext(): boolean {
+  const ctx = getContext();
+  return !!(ctx?.workspaceId && ctx?.projectId);
+}
+
+// Preferences helpers
+export function getPreferences() {
+  return config.get('preferences');
+}
+
+export function setPreference<K extends keyof NonNullable<CLIConfig['preferences']>>(
+  key: K,
+  value: NonNullable<CLIConfig['preferences']>[K]
+): void {
+  const prefs = getPreferences() || {};
+  config.set('preferences', { ...prefs, [key]: value });
+}
+
+// Daemon helpers
+export function getDaemonConfig() {
+  return config.get('daemon');
+}
+
+export function setDaemonConfig(daemon: Partial<NonNullable<CLIConfig['daemon']>>): void {
+  const current = getDaemonConfig() || {};
+  config.set('daemon', { ...current, ...daemon });
+}
+
+// Git hooks helpers
+export function getGitHooksConfig() {
+  return config.get('gitHooks');
+}
+
+export function setGitHooksConfig(hooks: Partial<NonNullable<CLIConfig['gitHooks']>>): void {
+  const current = getGitHooksConfig() || {};
+  config.set('gitHooks', { ...current, ...hooks });
+}
+
+// Full config access
+export function getConfig(): CLIConfig {
+  return config.store;
+}
+
+export function getConfigPath(): string {
+  return config.path;
+}
+
+export function resetConfig(): void {
+  config.clear();
+}
+
+export { config };
