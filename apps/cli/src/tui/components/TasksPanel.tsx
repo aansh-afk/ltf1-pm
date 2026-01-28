@@ -5,7 +5,6 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import { theme } from '../styles/theme.js';
-import { BorderBox } from './BorderBox.js';
 
 interface Task {
   id: string;
@@ -16,6 +15,7 @@ interface Task {
 
 interface TasksPanelProps {
   tasks?: Task[];
+  width: number;
 }
 
 const defaultTasks: Task[] = [
@@ -26,36 +26,16 @@ const defaultTasks: Task[] = [
   { id: 'ICE-270', title: 'Write unit tests', priority: 'low', status: 'todo' },
 ];
 
+function pad(str: string, len: number): string {
+  if (str.length >= len) return str.slice(0, len);
+  return str + ' '.repeat(len - str.length);
+}
+
 function getStatusIcon(status: Task['status']): string {
   switch (status) {
-    case 'done':
-      return theme.icons.done;
-    case 'in_progress':
-      return theme.icons.inProgress;
-    default:
-      return theme.icons.todo;
-  }
-}
-
-function getStatusColor(status: Task['status']): string {
-  switch (status) {
-    case 'done':
-      return theme.colors.success;
-    case 'in_progress':
-      return theme.colors.warning;
-    default:
-      return theme.colors.muted;
-  }
-}
-
-function getPriorityColor(priority: Task['priority']): string {
-  switch (priority) {
-    case 'high':
-      return theme.colors.high;
-    case 'medium':
-      return theme.colors.medium;
-    default:
-      return theme.colors.low;
+    case 'done': return '✓';
+    case 'in_progress': return '●';
+    default: return '○';
   }
 }
 
@@ -63,71 +43,59 @@ function getPriorityLabel(priority: Task['priority']): string {
   return priority.toUpperCase();
 }
 
-export function TasksPanel({ tasks = defaultTasks }: TasksPanelProps) {
+export function TasksPanel({ tasks = defaultTasks, width }: TasksPanelProps) {
   const inProgressTasks = tasks.filter((t) => t.status === 'in_progress');
   const todoTasks = tasks.filter((t) => t.status === 'todo');
   const doneTasks = tasks.filter((t) => t.status === 'done');
 
+  // Fixed width of 50 characters for consistency
+  const w = Math.min(width, 50);
+  const inner = w - 2;
+
+  const renderTask = (task: Task) => {
+    const icon = getStatusIcon(task.status);
+    const pri = getPriorityLabel(task.priority);
+    // Format: "● ICE-234 Fix auth redirect      HIGH"
+    const prefix = `${icon} ${task.id} `;
+    const titleSpace = inner - prefix.length - pri.length - 1;
+    const title = task.title.length > titleSpace
+      ? task.title.slice(0, titleSpace - 2) + '..'
+      : task.title;
+    const row = prefix + pad(title, titleSpace) + ' ' + pri;
+    return (
+      <Text key={task.id} color={theme.colors.border}>
+        │<Text color={theme.colors.text}>{pad(row, inner)}</Text>│
+      </Text>
+    );
+  };
+
+  const sectionRow = (label: string) => (
+    <Text color={theme.colors.border}>│<Text color={theme.colors.muted}>{pad(label, inner)}</Text>│</Text>
+  );
+
   return (
-    <BorderBox title="MY TASKS" width={60}>
-      <Box flexDirection="column" paddingX={1}>
-        {/* In Progress Section */}
-        {inProgressTasks.length > 0 && (
-          <>
-            <Text color={theme.colors.muted} bold>
-              IN PROGRESS
-            </Text>
-            {inProgressTasks.map((task) => (
-              <Box key={task.id} justifyContent="space-between">
-                <Box>
-                  <Text color={getStatusColor(task.status)}>
-                    {getStatusIcon(task.status)}{' '}
-                  </Text>
-                  <Text color={theme.colors.primary}>{task.id}</Text>
-                  <Text color={theme.colors.text}>  {task.title}</Text>
-                </Box>
-                <Text color={getPriorityColor(task.priority)}>
-                  {getPriorityLabel(task.priority)}
-                </Text>
-              </Box>
-            ))}
-          </>
-        )}
+    <Box flexDirection="column">
+      <Text color={theme.colors.border}>{'┌─ MY TASKS ' + '─'.repeat(inner - 11) + '┐'}</Text>
 
-        {/* Todo Section */}
-        {todoTasks.length > 0 && (
-          <>
-            <Box marginTop={1}>
-              <Text color={theme.colors.muted} bold>
-                TODO
-              </Text>
-            </Box>
-            {todoTasks.map((task) => (
-              <Box key={task.id} justifyContent="space-between">
-                <Box>
-                  <Text color={getStatusColor(task.status)}>
-                    {getStatusIcon(task.status)}{' '}
-                  </Text>
-                  <Text color={theme.colors.primary}>{task.id}</Text>
-                  <Text color={theme.colors.text}>  {task.title}</Text>
-                </Box>
-                <Text color={getPriorityColor(task.priority)}>
-                  {getPriorityLabel(task.priority)}
-                </Text>
-              </Box>
-            ))}
-          </>
-        )}
+      {inProgressTasks.length > 0 && (
+        <>
+          {sectionRow('IN PROGRESS')}
+          {inProgressTasks.map(renderTask)}
+        </>
+      )}
 
-        {/* Done Section (collapsed) */}
-        {doneTasks.length > 0 && (
-          <Box marginTop={1}>
-            <Text color={theme.colors.dim}>
-              {doneTasks.length} completed tasks (press 'd' to show)
-            </Text>
-          </Box>
-        )}
-      </Box>
-    </BorderBox>
+      {todoTasks.length > 0 && (
+        <>
+          {sectionRow('TODO')}
+          {todoTasks.map(renderTask)}
+        </>
+      )}
+
+      {doneTasks.length > 0 && (
+        <Text color={theme.colors.border}>│<Text color={theme.colors.dim}>{pad(`${doneTasks.length} completed`, inner)}</Text>│</Text>
+      )}
+
+      <Text color={theme.colors.border}>{'└' + '─'.repeat(inner) + '┘'}</Text>
+    </Box>
   );
 }

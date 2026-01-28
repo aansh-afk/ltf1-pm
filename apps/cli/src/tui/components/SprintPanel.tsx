@@ -2,10 +2,8 @@
  * Sprint Panel Component
  */
 
-import React from 'react';
-import { Box, Text } from 'ink';
-import { theme } from '../styles/theme.js';
-import { BorderBox } from './BorderBox.js';
+import { Box, Text } from "ink";
+import { theme } from "../styles/theme.js";
 
 interface SprintPanelProps {
   name?: string;
@@ -15,46 +13,60 @@ interface SprintPanelProps {
   tasksDone?: number;
   tasksInProgress?: number;
   tasksTodo?: number;
+  width: number;
+}
+
+function pad(str: string, len: number): string {
+  if (str.length >= len) return str.slice(0, len);
+  return str + " ".repeat(len - str.length);
 }
 
 export function SprintPanel({
-  name = 'Sprint 12',
+  name = "Sprint 12",
   daysLeft = 4,
   progress = 0.67,
   tasksTotal = 21,
   tasksDone = 14,
   tasksInProgress = 4,
   tasksTodo = 3,
+  width,
 }: SprintPanelProps) {
-  const progressWidth = 30;
-  const filledWidth = Math.floor(progress * progressWidth);
+  // Fixed width of 50 characters for consistency
+  const w = Math.min(width, 50);
+  const inner = w - 2; // content between │ and │
+
+  const daysText = `${daysLeft} days left`;
+  const row1 = pad(name, inner - daysText.length) + daysText;
+
+  const pct = `${Math.round(progress * 100)}%`;
+  const barLen = inner - pct.length - 1;
+  const filled = Math.floor(progress * barLen);
+  const row2 = "█".repeat(filled) + "░".repeat(barLen - filled) + " " + pct;
+
+  const summary = `${tasksDone}/${tasksTotal} done · ${tasksInProgress} in progress · ${tasksTodo} todo`;
+  const row3 = pad(summary, inner);
 
   return (
-    <BorderBox title="SPRINT" width={50}>
-      <Box flexDirection="column" paddingX={1}>
-        <Box justifyContent="space-between">
-          <Text color={theme.colors.text}>{name}</Text>
-          <Text color={theme.colors.muted}>{daysLeft} days left</Text>
-        </Box>
-
-        <Box marginTop={1}>
-          <Text color={theme.colors.primary}>
-            {theme.progress.filled.repeat(filledWidth)}
-          </Text>
-          <Text color={theme.colors.dim}>
-            {theme.progress.empty.repeat(progressWidth - filledWidth)}
-          </Text>
-          <Text color={theme.colors.muted}> {Math.round(progress * 100)}%</Text>
-        </Box>
-
-        <Box marginTop={1}>
-          <Text color={theme.colors.success}>{tasksDone}/{tasksTotal} done</Text>
-          <Text color={theme.colors.muted}> · </Text>
-          <Text color={theme.colors.warning}>{tasksInProgress} in progress</Text>
-          <Text color={theme.colors.muted}> · </Text>
-          <Text color={theme.colors.muted}>{tasksTodo} todo</Text>
-        </Box>
-      </Box>
-    </BorderBox>
+    <Box flexDirection="column">
+      <Text color={theme.colors.border}>
+        {"┌─ SPRINT " + "─".repeat(inner - 9) + "┐"}
+      </Text>
+      <Text color={theme.colors.border}>
+        {"│"}
+        <Text color={theme.colors.text}>{row1}</Text>
+        {"│"}
+      </Text>
+      <Text color={theme.colors.border}>
+        {"│"}
+        <Text color={theme.colors.text}>{row2}</Text>
+        {"│"}
+      </Text>
+      <Text color={theme.colors.border}>
+        {"│"}
+        <Text color={theme.colors.muted}>{row3}</Text>
+        {"│"}
+      </Text>
+      <Text color={theme.colors.border}>{"└" + "─".repeat(inner) + "┘"}</Text>
+    </Box>
   );
 }
