@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "TSX_DEV=1 tsx watch src/bin/ltf.ts",
-    "build": "tsup src/bin/ltf.ts --format esm --outDir dist/bin --clean && tsup src/index.ts --format esm --outDir dist --dts",
+    "build": "tsup src/bin/ltf.ts --format esm --outDir dist/bin --clean --loader '.tsx=tsx' && tsup src/index.ts --format esm --outDir dist --dts",
     "start": "node dist/bin/ltf.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
@@ -28,12 +28,15 @@
     "chokidar": "^4.0.1",
     "date-fns": "^4.1.0",
     "express": "^4.21.0",
-    "simple-git": "^3.27.0"
+    "simple-git": "^3.27.0",
+    "ink": "^5.0.1",
+    "react": "^18.3.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
     "@types/inquirer": "^9.0.7",
     "@types/node": "^20.19.9",
+    "@types/react": "^18.3.3",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
     "typescript": "^5.3.0"
