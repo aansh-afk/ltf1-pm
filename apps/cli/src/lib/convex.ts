@@ -16,47 +16,47 @@ import { getErrorMessage } from './errors.js';
 export const api = {
   workspaces: {
     queries: {
-      getUserWorkspaces: makeFunctionReference<'query'>('workspaces/queries.js:getUserWorkspaces'),
-      getWorkspaceById: makeFunctionReference<'query'>('workspaces/queries.js:getWorkspaceById'),
-      getWorkspaceMembers: makeFunctionReference<'query'>('workspaces/queries.js:getWorkspaceMembers'),
-      getWorkspaceStats: makeFunctionReference<'query'>('workspaces/queries.js:getWorkspaceStats'),
+      getUserWorkspaces: makeFunctionReference<'query'>('workspaces/queries:getUserWorkspaces'),
+      getWorkspaceById: makeFunctionReference<'query'>('workspaces/queries:getWorkspaceById'),
+      getWorkspaceMembers: makeFunctionReference<'query'>('workspaces/queries:getWorkspaceMembers'),
+      getWorkspaceStats: makeFunctionReference<'query'>('workspaces/queries:getWorkspaceStats'),
     },
     mutations: {
-      createWorkspace: makeFunctionReference<'mutation'>('workspaces/mutations.js:createWorkspace'),
+      createWorkspace: makeFunctionReference<'mutation'>('workspaces/mutations:createWorkspace'),
     },
   },
   projects: {
     queries: {
-      getWorkspaceProjects: makeFunctionReference<'query'>('projects/queries.js:getWorkspaceProjects'),
-      getProject: makeFunctionReference<'query'>('projects/queries.js:getProject'),
-      getUserProjects: makeFunctionReference<'query'>('projects/queries.js:getUserProjects'),
-      getProjectTeamMembers: makeFunctionReference<'query'>('projects/queries.js:getProjectTeamMembers'),
+      getWorkspaceProjects: makeFunctionReference<'query'>('projects/queries:getWorkspaceProjects'),
+      getProject: makeFunctionReference<'query'>('projects/queries:getProject'),
+      getUserProjects: makeFunctionReference<'query'>('projects/queries:getUserProjects'),
+      getProjectTeamMembers: makeFunctionReference<'query'>('projects/queries:getProjectTeamMembers'),
     },
   },
   tasks: {
     queries: {
-      getProjectTasks: makeFunctionReference<'query'>('tasks/queries.js:getProjectTasks'),
-      getTask: makeFunctionReference<'query'>('tasks/queries.js:getTask'),
-      getMyTasks: makeFunctionReference<'query'>('tasks/queries.js:getMyTasks'),
-      getFilteredTasks: makeFunctionReference<'query'>('tasks/queries.js:getFilteredTasks'),
-      getTasksByWorkspace: makeFunctionReference<'query'>('tasks/queries.js:getTasksByWorkspace'),
+      getProjectTasks: makeFunctionReference<'query'>('tasks/queries:getProjectTasks'),
+      getTask: makeFunctionReference<'query'>('tasks/queries:getTask'),
+      getMyTasks: makeFunctionReference<'query'>('tasks/queries:getMyTasks'),
+      getFilteredTasks: makeFunctionReference<'query'>('tasks/queries:getFilteredTasks'),
+      getTasksByWorkspace: makeFunctionReference<'query'>('tasks/queries:getTasksByWorkspace'),
     },
     mutations: {
-      createTask: makeFunctionReference<'mutation'>('tasks/mutations.js:createTask'),
-      updateTask: makeFunctionReference<'mutation'>('tasks/mutations.js:updateTask'),
+      createTask: makeFunctionReference<'mutation'>('tasks/mutations:createTask'),
+      updateTask: makeFunctionReference<'mutation'>('tasks/mutations:updateTask'),
     },
   },
   sprints: {
     queries: {
-      getProjectSprints: makeFunctionReference<'query'>('sprints/queries.js:getProjectSprints'),
-      getCurrentSprint: makeFunctionReference<'query'>('sprints/queries.js:getCurrentSprint'),
-      getSprintById: makeFunctionReference<'query'>('sprints/queries.js:getSprintById'),
-      getBacklogTasks: makeFunctionReference<'query'>('sprints/queries.js:getBacklogTasks'),
+      getProjectSprints: makeFunctionReference<'query'>('sprints/queries:getProjectSprints'),
+      getCurrentSprint: makeFunctionReference<'query'>('sprints/queries:getCurrentSprint'),
+      getSprintById: makeFunctionReference<'query'>('sprints/queries:getSprintById'),
+      getBacklogTasks: makeFunctionReference<'query'>('sprints/queries:getBacklogTasks'),
     },
   },
   ai: {
     actions: {
-      analyzeTask: makeFunctionReference<'action'>('ai/actions.js:analyzeTask'),
+      analyzeTask: makeFunctionReference<'action'>('ai/actions:analyzeTask'),
     },
   },
 };
@@ -69,7 +69,7 @@ const CONVEX_URL = (() => {
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       return 'https://tangible-butterfly-366.convex.cloud';
     }
-    return parsed.toString();
+    return parsed.toString().replace(/\/+$/, '');
   } catch {
     return 'https://tangible-butterfly-366.convex.cloud';
   }

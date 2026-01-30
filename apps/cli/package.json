@@ -1,6 +1,6 @@
 {
   "name": "@vvg-ltf1/cli",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.2",
   "description": "LTF1 CLI - Terminal interface for project management by Vivid Verse Global",
   "type": "module",
   "bin": {

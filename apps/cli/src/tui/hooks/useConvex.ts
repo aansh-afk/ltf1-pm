@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ConvexHttpClient } from 'convex/browser';
 import type { FunctionReference, FunctionArgs, FunctionReturnType } from 'convex/server';
 import { getClient } from '../../lib/convex.js';
-import { getAuth, isAuthenticated } from '../../lib/config.js';
+import { getAuth, isAuthenticated, clearAuth } from '../../lib/config.js';
 import type { ConnectionStatus } from '../types.js';
 
 export interface ConvexQueryResult<T> {
@@ -41,6 +41,7 @@ export function useConvexQuery<Q extends FunctionReference<'query'>>(
   const fetchData = useCallback(async () => {
     if (argsKey === null) {
       setLoading(false);
+      setConnectionStatus('disconnected');
       return;
     }
 
@@ -68,10 +69,13 @@ export function useConvexQuery<Q extends FunctionReference<'query'>>(
       setConnectionStatus('connected');
       retryCount.current = 0;
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
-      if (msg.includes('Unauthenticated') || msg.includes('auth')) {
-        setError('Authentication expired');
-        setConnectionStatus('error');
+      const msg = (err instanceof Error ? err.message : 'Unknown error') || 'Connection failed';
+      if (msg.includes('Unauthenticated') || msg.includes('OIDC') || msg.includes('expired')) {
+        // Token is expired or invalid — clear auth so login screen appears
+        clearAuth();
+        clientRef.current = null;
+        setError('Session expired — please log in again');
+        setConnectionStatus('disconnected');
       } else {
         setError(msg);
         setConnectionStatus('error');

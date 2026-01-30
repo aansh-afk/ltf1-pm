@@ -103,6 +103,7 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
         const token = url.searchParams.get('token');
         const userId = url.searchParams.get('userId');
         const email = url.searchParams.get('email');
+        const sessionId = url.searchParams.get('sessionId');
         const error = url.searchParams.get('error');
 
         // Error page template
@@ -264,13 +265,27 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
 
         server.close();
 
+        // Parse JWT exp claim for real expiry (fallback to 1 hour)
+        let expiresAt = Date.now() + 60 * 60 * 1000;
+        try {
+          const parts = token.split('.');
+          if (parts.length === 3) {
+            const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+            if (payload.exp) {
+              expiresAt = payload.exp * 1000;
+            }
+          }
+        } catch {
+          // fallback already set
+        }
+
         const authConfig: AuthConfig = {
           token,
           tokenType: 'clerk',
           userId: userId || undefined,
           email: email || undefined,
-          // Token expires in 24 hours (we'll refresh before that)
-          expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+          expiresAt,
+          sessionId: sessionId || undefined,
         };
 
         resolve(authConfig);
@@ -349,6 +364,68 @@ export async function login(options: { token?: string } = {}): Promise<void> {
 }
 
 /**
+ * Silently refresh the auth token using Clerk session ID.
+ * Calls the Convex HTTP endpoint which uses Clerk Backend SDK
+ * to mint a fresh JWT — no browser needed (works for ~7 days).
+ * Returns true on success, false if browser re-auth is needed.
+ */
+export async function refreshToken(): Promise<boolean> {
+  const auth = getAuth();
+  if (!auth?.sessionId) {
+    return false; // No session ID — need browser login
+  }
+
+  // Derive the Convex site URL from the cloud URL
+  const convexUrl = process.env.CONVEX_URL || 'https://tangible-butterfly-366.convex.cloud';
+  const siteUrl = convexUrl.replace('.convex.cloud', '.convex.site');
+
+  try {
+    const response = await fetch(`${siteUrl}/api/cli-refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: auth.sessionId }),
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const data = await response.json() as { token?: string; error?: string };
+    if (!data.token) {
+      return false;
+    }
+
+    // Parse JWT exp claim for real expiry
+    let expiresAt = Date.now() + 60 * 60 * 1000;
+    try {
+      const parts = data.token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+        if (payload.exp) {
+          expiresAt = payload.exp * 1000;
+        }
+      }
+    } catch {
+      // fallback already set
+    }
+
+    // Update stored auth with fresh token (preserve sessionId)
+    setAuth({
+      ...auth,
+      token: data.token,
+      expiresAt,
+    });
+
+    // Reset the Convex client to pick up new token
+    resetClient();
+
+    return true;
+  } catch {
+    return false; // Network error — fall back to browser
+  }
+}
+
+/**
  * Logout and clear stored credentials
  */
 export function logout(): void {
@@ -402,6 +479,7 @@ export default {
   login,
   loginWithBrowser,
   loginWithToken,
+  refreshToken,
   logout,
   getAuthStatus,
   requireAuth,

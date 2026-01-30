@@ -33,6 +33,7 @@ import type * as auth_users from "../auth/users.js";
 import type * as automation from "../automation.js";
 import type * as chat from "../chat.js";
 import type * as clerk from "../clerk.js";
+import type * as cliRefresh from "../cliRefresh.js";
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as crons from "../crons.js";
 import type * as customFields from "../customFields.js";
@@ -126,6 +127,7 @@ declare const fullApi: ApiFromModules<{
   automation: typeof automation;
   chat: typeof chat;
   clerk: typeof clerk;
+  cliRefresh: typeof cliRefresh;
   "comments/mutations": typeof comments_mutations;
   crons: typeof crons;
   customFields: typeof customFields;
