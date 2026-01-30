@@ -4,7 +4,7 @@
  */
 
 import type { Segment, Row } from './types.js';
-import { WHITE, LIGHT, GRAY, DIM, DARK } from './theme.js';
+import { BG, WHITE, LIGHT, GRAY, DIM, DARK } from './theme.js';
 
 /** Repeat a character n times (clamped to 0) */
 export const rep = (ch: string, n: number): string => ch.repeat(Math.max(0, n));
@@ -27,17 +27,17 @@ export const truncate = (t: string, n: number): string =>
 /** Create a single-segment row */
 export const row = (text: string, color: string, bgColor?: string): Row => ({
   segments: [{ text, color }],
-  bgColor,
+  bgColor: bgColor ?? BG,
 });
 
 /** Create a multi-segment row */
 export const segRow = (segments: Segment[], bgColor?: string): Row => ({
   segments,
-  bgColor,
+  bgColor: bgColor ?? BG,
 });
 
 /** Blank row of given width */
-export const blank = (w: number): Row => row(pad('', w), WHITE);
+export const blank = (w: number): Row => row(pad('', w), WHITE, BG);
 
 /** Pad segments array to fill width */
 export const padSegs = (segs: Segment[], w: number): Segment[] => {

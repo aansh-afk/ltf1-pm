@@ -1,17 +1,19 @@
 /**
  * Dashboard Page - Real workspace/project/task hierarchy
  * Shows: Workspace > Project context, workspace stats, my tasks, sprint summary
+ * Includes interactive workspace/project selectors when context is missing
  */
 
 import { useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
 import { useConfig } from '../hooks/useConfig.js';
 import { useConvexQuery } from '../hooks/useConvex.js';
+import { useParticleField } from '../hooks/useParticles.js';
 import { api } from '../../lib/convex.js';
-import type { Row, Task, ConnectionStatus } from '../types.js';
+import type { Row, Task, ConnectionStatus, DashboardMode } from '../types.js';
 import { BG, WHITE, LIGHT, GRAY, DIM, DARK, STATUS_ICONS } from '../theme.js';
 import {
-  row, segRow, blank, padSegs, fillTo, rep, pad, center, section,
+  row, segRow, blank, padSegs, fillTo, rep, pad, center,
 } from '../helpers.js';
 
 // World map ASCII art for auth screen (content lines only, ~80 chars wide)
@@ -38,23 +40,67 @@ const WORLD_MAP: string[] = [
 ];
 const MAP_WIDTH = 80;
 
+/**
+ * Renders a wave loading animation between heading and label.
+ * Each position oscillates independently via sine; the wave propagates across.
+ */
+function renderLoadingAnimation(rows: Row[], label: string, W: number): void {
+  // 9 height levels: space at 0, full block at 8
+  const blocks = [' ', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
+  const barW = 44;
+  const t = Date.now() / 120;               // scroll speed
+  let bar = '';
+  for (let j = 0; j < barW; j++) {
+    // Sine wave: each char rises/falls on its own; phase shifts across positions
+    const val = Math.sin(j / 5 - t);        // wavelength ~31 chars
+    const idx = Math.round((val + 1) / 2 * (blocks.length - 1));
+    bar += blocks[idx];
+  }
+  rows.push(segRow(padSegs([
+    { text: center(bar, W), color: LIGHT },
+  ], W)));
+  rows.push(blank(W));
+  rows.push(row(center(label, W), GRAY));
+  rows.push(blank(W));
+}
+
 export type LoginState = 'idle' | 'authenticating' | 'success' | 'error';
+
+export interface SelectableItem {
+  id: string;
+  name: string;
+  key?: string;
+}
 
 export interface DashboardPageProps {
   width: number;
   height: number;
   timeStr: string;
   selectedIndex: number;
+  selectorIndex: number;
   loginState?: LoginState;
   loginError?: string;
 }
 
-export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, loginState = 'idle', loginError = '' }: DashboardPageProps): {
+export interface DashboardResult {
   rows: Row[];
   connectionStatus: ConnectionStatus;
-} {
+  dashboardMode: DashboardMode;
+  selectorItemCount: number;
+  selectableItems: SelectableItem[];
+}
+
+export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, selectorIndex, loginState = 'idle', loginError = '' }: DashboardPageProps): DashboardResult {
   const auth = useAuth();
   const config = useConfig();
+  const particleRows = useParticleField(W);
+
+  // Fetch user's workspaces (enabled when authenticated but no workspace selected)
+  const workspacesQuery = useConvexQuery(
+    api.workspaces.queries.getUserWorkspaces,
+    auth.isAuthenticated && !config.workspaceId ? {} : null,
+    30000,
+  );
 
   // Fetch workspace stats (totalProjects, activeProjects, totalTasks, completedTasks, etc.)
   const workspaceStatsQuery = useConvexQuery(
@@ -83,6 +129,18 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
     config.projectId ? { projectId: config.projectId as never } : null,
     30000,
   );
+
+  // Workspace list
+  const workspaces = useMemo(() => {
+    const data = workspacesQuery.data as Array<{
+      _id: string;
+      name: string;
+      role?: string;
+      memberCount?: number;
+      projectCount?: number;
+    }> | null;
+    return data || [];
+  }, [workspacesQuery.data]);
 
   // Workspace stats from backend
   const wsStats = workspaceStatsQuery.data as {
@@ -128,6 +186,25 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
     ? 'disconnected'
     : workspaceStatsQuery.connectionStatus !== 'connecting' ? workspaceStatsQuery.connectionStatus
     : tasksQuery.connectionStatus;
+
+  // Determine dashboard mode
+  const dashboardMode: DashboardMode = !auth.isAuthenticated ? 'normal'
+    : !config.workspaceId ? 'workspace_selector'
+    : !config.projectId ? 'project_selector'
+    : 'normal';
+
+  // Build selectable items for current mode
+  const selectableItems: SelectableItem[] = useMemo(() => {
+    if (dashboardMode === 'workspace_selector') {
+      return workspaces.map(w => ({ id: w._id, name: w.name }));
+    }
+    if (dashboardMode === 'project_selector') {
+      return projects.map(p => ({ id: p._id, name: p.name, key: p.key }));
+    }
+    return [];
+  }, [dashboardMode, workspaces, projects]);
+
+  const selectorItemCount = selectableItems.length;
 
   const rows: Row[] = [];
 
@@ -243,11 +320,11 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
       ], W)));
     }
 
-    return { rows, connectionStatus };
+    return { rows, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
   }
 
   // ══════════════════════════════════════════════════════════════
-  // AUTHENTICATED: Normal dashboard
+  // AUTHENTICATED: Header (shared across all modes)
   // ══════════════════════════════════════════════════════════════
 
   // ── Header: Workspace > Project > Status ──
@@ -284,7 +361,201 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
   ], W)));
   rows.push(row(rep('─', W), DARK));
 
-  // ── Determine layout based on context ──
+  // ══════════════════════════════════════════════════════════════
+  // WORKSPACE SELECTOR
+  // ══════════════════════════════════════════════════════════════
+  if (dashboardMode === 'workspace_selector') {
+    const logoTop = Math.max(3, Math.floor((H - 28) / 2));
+    for (let i = 0; i < logoTop; i++) rows.push(blank(W));
+
+    // Logo
+    rows.push(row(center('L   T   F   1', W), WHITE));
+    rows.push(blank(W));
+    const sepW = 34;
+    const sepL = Math.floor((W - sepW) / 2);
+    rows.push(row(pad(rep(' ', sepL) + rep('─', sepW), W), DARK));
+    rows.push(blank(W));
+
+    rows.push(row(center('Select a Workspace', W), LIGHT));
+    rows.push(blank(W));
+
+    if (workspacesQuery.loading && workspaces.length === 0) {
+      renderLoadingAnimation(rows, 'Loading workspaces', W);
+    } else if (workspaces.length === 0) {
+      rows.push(row(center('No workspaces found', W), GRAY));
+      rows.push(blank(W));
+      rows.push(row(center('Create a workspace at app.ltf1.com', W), DIM));
+    } else {
+      // Centered list layout
+      const wlw = 56;
+      const wll = Math.floor((W - wlw) / 2);
+
+      rows.push(row(pad(rep(' ', wll) + rep('─', wlw), W), DARK));
+
+      for (let i = 0; i < workspaces.length; i++) {
+        const ws = workspaces[i];
+        const isSelected = i === selectorIndex;
+        const pointer = isSelected ? '>' : ' ';
+        const role = (ws.role || 'member').padEnd(8);
+        const projCount = ws.projectCount != null ? `${ws.projectCount} proj` : '';
+        const memCount = ws.memberCount != null ? `${ws.memberCount} mem` : '';
+        const meta = [projCount, memCount].filter(Boolean).join('  ');
+
+        const nameMax = wlw - 4 - role.length - meta.length - 4;
+        const displayName = ws.name.length > nameMax ? ws.name.slice(0, nameMax - 1) + '…' : ws.name.padEnd(nameMax);
+        const inner = ` ${pointer} ${displayName} ${role}${meta} `;
+
+        if (isSelected) {
+          rows.push({
+            segments: padSegs([
+              { text: rep(' ', wll) + pad(inner, wlw), color: BG },
+            ], W),
+            bgColor: WHITE,
+          });
+        } else {
+          rows.push(segRow(padSegs([
+            { text: rep(' ', wll) + ` ${pointer} `, color: WHITE },
+            { text: displayName, color: LIGHT },
+            { text: ' ', color: WHITE },
+            { text: role, color: GRAY },
+            { text: meta, color: DIM },
+            { text: ' ', color: WHITE },
+          ], W)));
+        }
+      }
+
+      rows.push(row(pad(rep(' ', wll) + rep('─', wlw), W), DARK));
+    }
+
+    rows.push(blank(W));
+
+    // Fill blank rows, then insert particle band just above footer
+    const wsTarget = H - 2;
+    const wsAvail = wsTarget - rows.length;
+    if (wsAvail > 0) {
+      const wsBand = particleRows.slice(particleRows.length - Math.min(wsAvail, particleRows.length));
+      fillTo(rows, wsTarget - wsBand.length, W);
+      rows.push(...wsBand);
+    }
+    fillTo(rows, wsTarget, W);
+
+    rows.push(row(rep('─', W), DARK));
+    rows.push(segRow(padSegs([
+      { text: '  ', color: GRAY },
+      { text: '↑↓', color: LIGHT },
+      { text: ' Navigate   ', color: DIM },
+      { text: 'Enter', color: LIGHT },
+      { text: ' Select   ', color: DIM },
+      { text: 'Q', color: LIGHT },
+      { text: ' Quit', color: DIM },
+    ], W)));
+
+    return { rows, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // PROJECT SELECTOR
+  // ══════════════════════════════════════════════════════════════
+  if (dashboardMode === 'project_selector') {
+    const logoTop = Math.max(2, Math.floor((H - 30) / 2));
+    for (let i = 0; i < logoTop; i++) rows.push(blank(W));
+
+    // Logo
+    rows.push(row(center('L T F 1', W), WHITE));
+    rows.push(blank(W));
+    const sepW = 34;
+    const sepL = Math.floor((W - sepW) / 2);
+    rows.push(row(pad(rep(' ', sepL) + rep('─', sepW), W), DARK));
+    rows.push(blank(W));
+
+    rows.push(row(center('Select a Project', W), LIGHT));
+    rows.push(blank(W));
+
+    // Workspace stats line
+    if (wsStats) {
+      const wsLine = `${wsStats.totalProjects || 0} projects  |  ${wsStats.totalMembers || 0} members  |  ${wsStats.totalTasks || 0} tasks`;
+      rows.push(row(center(wsLine, W), GRAY));
+      rows.push(blank(W));
+    }
+
+    if (projectsQuery.loading && projects.length === 0) {
+      renderLoadingAnimation(rows, 'Loading projects', W);
+    } else if (projects.length === 0) {
+      rows.push(row(center('No projects found', W), GRAY));
+      rows.push(blank(W));
+      rows.push(row(center('Create a project in your workspace first', W), DIM));
+    } else {
+      // Centered list layout
+      const plw = 56;
+      const pll = Math.floor((W - plw) / 2);
+
+      rows.push(row(pad(rep(' ', pll) + rep('─', plw), W), DARK));
+
+      for (let i = 0; i < projects.length; i++) {
+        const p = projects[i];
+        const isSelected = i === selectorIndex;
+        const pointer = isSelected ? '>' : ' ';
+        const statusStr = (p.status || '').padEnd(8);
+        const keyStr = p.key.padEnd(6);
+
+        const nameMax = plw - 4 - keyStr.length - statusStr.length - 2;
+        const displayName = p.name.length > nameMax ? p.name.slice(0, nameMax - 1) + '…' : p.name.padEnd(nameMax);
+        const inner = ` ${pointer} ${keyStr}${displayName} ${statusStr}`;
+
+        if (isSelected) {
+          rows.push({
+            segments: padSegs([
+              { text: rep(' ', pll) + pad(inner, plw), color: BG },
+            ], W),
+            bgColor: WHITE,
+          });
+        } else {
+          const statusClr = p.status === 'active' ? LIGHT : p.status === 'on_hold' ? GRAY : DIM;
+          rows.push(segRow(padSegs([
+            { text: rep(' ', pll) + ` ${pointer} `, color: WHITE },
+            { text: keyStr, color: GRAY },
+            { text: displayName, color: LIGHT },
+            { text: ' ', color: WHITE },
+            { text: statusStr, color: statusClr },
+          ], W)));
+        }
+      }
+
+      rows.push(row(pad(rep(' ', pll) + rep('─', plw), W), DARK));
+    }
+
+    rows.push(blank(W));
+
+    // Fill blank rows, then insert particle band just above footer
+    const psTarget = H - 2;
+    const psAvail = psTarget - rows.length;
+    if (psAvail > 0) {
+      const psBand = particleRows.slice(particleRows.length - Math.min(psAvail, particleRows.length));
+      fillTo(rows, psTarget - psBand.length, W);
+      rows.push(...psBand);
+    }
+    fillTo(rows, psTarget, W);
+
+    rows.push(row(rep('─', W), DARK));
+    rows.push(segRow(padSegs([
+      { text: '  ', color: GRAY },
+      { text: '↑↓', color: LIGHT },
+      { text: ' Navigate   ', color: DIM },
+      { text: 'Enter', color: LIGHT },
+      { text: ' Select   ', color: DIM },
+      { text: 'B', color: LIGHT },
+      { text: ' Back   ', color: DIM },
+      { text: 'Q', color: LIGHT },
+      { text: ' Quit', color: DIM },
+    ], W)));
+
+    return { rows, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // NORMAL DASHBOARD
+  // ══════════════════════════════════════════════════════════════
+
   const hasWorkspace = !!config.workspaceId;
   const hasProject = hasWorkspace && !!config.projectId;
   const hasData = hasProject && taskStats.total > 0;
@@ -300,38 +571,7 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
   rows.push(row(pad(rep(' ', sepL) + rep('─', sepW), W), DARK));
   rows.push(blank(W));
 
-  // ── Context-dependent content ──
-  if (!config.workspaceId) {
-    rows.push(row(center('No workspace selected', W), GRAY));
-    rows.push(blank(W));
-    rows.push(row(center('Run  ltf workspace select  to choose a workspace', W), DIM));
-  } else if (!config.projectId) {
-    // Show workspace info and projects list
-    if (wsStats) {
-      const wsLine = `${wsStats.totalProjects || 0} projects  |  ${wsStats.totalMembers || 0} members  |  ${wsStats.totalTasks || 0} tasks`;
-      rows.push(row(center(wsLine, W), GRAY));
-      rows.push(blank(W));
-    }
-    rows.push(row(center('No project selected', W), LIGHT));
-    rows.push(blank(W));
-
-    if (projects.length > 0) {
-      rows.push(section('Projects', W));
-      rows.push(blank(W));
-      for (const p of projects.slice(0, 6)) {
-        const statusColor2 = p.status === 'active' ? WHITE : p.status === 'on_hold' ? GRAY : DIM;
-        rows.push(segRow(padSegs([
-          { text: '    ', color: WHITE },
-          { text: p.key.padEnd(8), color: LIGHT },
-          { text: p.name, color: statusColor2 },
-          { text: rep(' ', Math.max(1, W - 14 - p.key.length - p.name.length - p.status.length)), color: WHITE },
-          { text: p.status, color: DIM },
-        ], W)));
-      }
-      rows.push(blank(W));
-    }
-    rows.push(row(center('Run  ltf project select  to choose a project', W), DIM));
-  } else if (hasData) {
+  if (hasData) {
     // ── Project stats ──
     const statsStr = `${taskStats.total} tasks  |  ${taskStats.todo + taskStats.backlog} open  |  ${taskStats.inProgress} active  |  ${taskStats.done} done`;
     rows.push(row(center(statsStr, W), GRAY));
@@ -428,7 +668,15 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
 
   rows.push(row(pad(rep(' ', ml) + rep('─', mw), W), DARK));
 
-  fillTo(rows, H - 2, W);
+  // Fill blank rows, then insert particle band just above footer
+  const ndTarget = H - 2;
+  const ndAvail = ndTarget - rows.length;
+  if (ndAvail > 0) {
+    const ndBand = particleRows.slice(particleRows.length - Math.min(ndAvail, particleRows.length));
+    fillTo(rows, ndTarget - ndBand.length, W);
+    rows.push(...ndBand);
+  }
+  fillTo(rows, ndTarget, W);
 
   rows.push(row(rep('─', W), DARK));
   rows.push(segRow(padSegs([
@@ -437,9 +685,13 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
     { text: ' Navigate   ', color: DIM },
     { text: 'Enter', color: LIGHT },
     { text: ' Select   ', color: DIM },
+    { text: 'W', color: LIGHT },
+    { text: ' Workspace   ', color: DIM },
+    { text: 'P', color: LIGHT },
+    { text: ' Project   ', color: DIM },
     { text: 'Q', color: LIGHT },
     { text: ' Quit', color: DIM },
   ], W)));
 
-  return { rows, connectionStatus };
+  return { rows, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
 }
