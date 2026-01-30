@@ -9,6 +9,7 @@ import { getAuthenticatedClient, mutation, query } from '../../lib/convex.js';
 import { getContext, hasProjectContext } from '../../lib/config.js';
 import output from '../../lib/output.js';
 import { resolveTaskId } from './utils.js';
+import { getErrorMessage } from '../../lib/errors.js';
 
 interface User {
   _id: string;
@@ -232,8 +233,7 @@ export function assignTaskCommand(program: Command): void {
 
       } catch (err) {
         spin.stop();
-        const error = err as Error;
-        output.error('Failed to update assignment', error.message);
+        output.error('Failed to update assignment', getErrorMessage(err));
         process.exit(1);
       }
     });

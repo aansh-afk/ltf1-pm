@@ -9,6 +9,7 @@
 import { Command } from 'commander';
 import { getAuthenticatedClient, query } from '../../lib/convex.js';
 import output from '../../lib/output.js';
+import { getErrorMessage } from '../../lib/errors.js';
 import { getContext, hasProjectContext, getGitHooksConfig } from '../../lib/config.js';
 import { requireAuth } from '../../lib/auth.js';
 import {
@@ -296,8 +297,7 @@ async function showGitStatus(options: StatusOptions): Promise<void> {
 
   } catch (err) {
     spin.fail('Failed to load status');
-    const error = err as Error;
-    output.error(error.message);
+    output.error(getErrorMessage(err));
     process.exit(1);
   }
 }

@@ -4,7 +4,7 @@
  */
 
 import fs from 'node:fs';
-import { warning, info, keyValue, colors, header } from '../../lib/output.js';
+import { warning, info, log, newline, keyValue, colors, header } from '../../lib/output.js';
 import { getDaemonConfig } from '../../lib/config.js';
 import { getRepoRoot, getCurrentBranch } from '../../lib/git.js';
 import { readPidFile, isProcessRunning, PID_FILE } from './start.js';
@@ -155,34 +155,34 @@ export async function showDaemonStatus(): Promise<void> {
   if (isRunning) {
     const recentLogs = readRecentLogs(5);
     if (recentLogs.length > 0) {
-      console.log('');
+      newline();
       header('Recent Activity');
 
-      for (const log of recentLogs) {
+      for (const logLine of recentLogs) {
         // Color-code log levels
-        const coloredLog = log
+        const coloredLog = logLine
           .replace(/\[INFO\]/g, colors.info('[INFO]'))
           .replace(/\[WARN\]/g, colors.warning('[WARN]'))
           .replace(/\[ERROR\]/g, colors.error('[ERROR]'))
           .replace(/\[DEBUG\]/g, colors.muted('[DEBUG]'));
-        console.log(`  ${coloredLog}`);
+        log(`  ${coloredLog}`);
       }
     }
   }
 
   // Show helpful commands
-  console.log('');
+  newline();
   if (isRunning) {
     info('Commands:');
-    console.log(`  ${colors.muted('ltf daemon stop')}     Stop the daemon`);
-    console.log(`  ${colors.muted('ltf daemon logs -f')} Follow live logs`);
+    log(`  ${colors.muted('ltf daemon stop')}     Stop the daemon`);
+    log(`  ${colors.muted('ltf daemon logs -f')} Follow live logs`);
   } else {
     info('Commands:');
-    console.log(`  ${colors.muted('ltf daemon start')}   Start the daemon`);
+    log(`  ${colors.muted('ltf daemon start')}   Start the daemon`);
 
     // Check for stale PID file
     if (filePid && !isRunning) {
-      console.log('');
+      newline();
       warning('Stale PID file detected. Running `ltf daemon stop` will clean it up.');
     }
   }

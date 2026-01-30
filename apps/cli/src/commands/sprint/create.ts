@@ -7,6 +7,7 @@ import { getAuthenticatedClient, mutation } from '../../lib/convex.js';
 import output from '../../lib/output.js';
 import { getContext, hasProjectContext } from '../../lib/config.js';
 import { requireAuth } from '../../lib/auth.js';
+import { getErrorMessage } from '../../lib/errors.js';
 
 interface CreateOptions {
   start?: string;
@@ -102,8 +103,7 @@ export async function createSprint(name: string, options: CreateOptions): Promis
 
   } catch (err) {
     spin.stop();
-    const error = err as Error;
-    output.error('Failed to create sprint', error.message);
+    output.error('Failed to create sprint', getErrorMessage(err));
     process.exit(1);
   }
 }

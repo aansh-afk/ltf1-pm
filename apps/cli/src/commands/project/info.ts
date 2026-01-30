@@ -7,6 +7,7 @@ import { requireAuth } from '../../lib/auth.js';
 import { getAuthenticatedClient, query } from '../../lib/convex.js';
 import { getContext, hasProjectContext } from '../../lib/config.js';
 import output from '../../lib/output.js';
+import { getErrorMessage } from '../../lib/errors.js';
 
 interface User {
   _id: string;
@@ -194,8 +195,7 @@ export async function showProjectInfo(options: InfoOptions): Promise<void> {
     output.log(output.colors.muted('  ltf sprint list     View sprints'));
   } catch (error) {
     spin.stop();
-    const err = error as Error;
-    output.error('Failed to fetch project info', err.message);
+    output.error('Failed to fetch project info', getErrorMessage(error));
     process.exit(1);
   }
 }

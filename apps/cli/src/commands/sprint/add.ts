@@ -7,6 +7,7 @@ import { getAuthenticatedClient, query, mutation } from '../../lib/convex.js';
 import output from '../../lib/output.js';
 import { getContext, hasProjectContext } from '../../lib/config.js';
 import { requireAuth } from '../../lib/auth.js';
+import { getErrorMessage } from '../../lib/errors.js';
 
 interface Task {
   _id: string;
@@ -155,8 +156,7 @@ export async function addTaskToSprint(taskRef: string, options: AddOptions): Pro
 
   } catch (err) {
     spin.stop();
-    const error = err as Error;
-    output.error('Failed to add task to sprint', error.message);
+    output.error('Failed to add task to sprint', getErrorMessage(err));
     process.exit(1);
   }
 }

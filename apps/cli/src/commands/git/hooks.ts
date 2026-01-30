@@ -9,6 +9,7 @@
 
 import { Command } from 'commander';
 import output from '../../lib/output.js';
+import { getErrorMessage } from '../../lib/errors.js';
 import { getGitHooksConfig, setGitHooksConfig } from '../../lib/config.js';
 import {
   isGitRepo,
@@ -76,8 +77,7 @@ async function installGitHooks(): Promise<void> {
 
   } catch (err) {
     spin.fail('Failed to install hooks');
-    const error = err as Error;
-    output.error(error.message);
+    output.error(getErrorMessage(err));
     process.exit(1);
   }
 }
@@ -119,8 +119,7 @@ async function uninstallGitHooks(): Promise<void> {
 
   } catch (err) {
     spin.fail('Failed to uninstall hooks');
-    const error = err as Error;
-    output.error(error.message);
+    output.error(getErrorMessage(err));
     process.exit(1);
   }
 }
@@ -191,8 +190,7 @@ async function showHooksStatus(): Promise<void> {
 
   } catch (err) {
     spin.fail('Failed to check hooks status');
-    const error = err as Error;
-    output.error(error.message);
+    output.error(getErrorMessage(err));
     process.exit(1);
   }
 }

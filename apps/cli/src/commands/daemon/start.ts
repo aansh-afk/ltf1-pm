@@ -34,7 +34,29 @@ function ensurePidDir(): void {
 }
 
 /**
- * Write PID to file
+ * Write PID to file atomically (exclusive create to prevent race conditions)
+ * Returns true if written successfully, false if file already exists
+ */
+function writePidFileAtomic(pid: number): boolean {
+  ensurePidDir();
+  try {
+    const fd = fs.openSync(PID_FILE, 'wx');
+    try {
+      fs.writeSync(fd, pid.toString());
+    } finally {
+      fs.closeSync(fd);
+    }
+    return true;
+  } catch (err) {
+    if (err instanceof Error && 'code' in err && (err as NodeJS.ErrnoException).code === 'EEXIST') {
+      return false;
+    }
+    throw err;
+  }
+}
+
+/**
+ * Write PID to file (overwriting any existing file)
  */
 function writePidFile(pid: number): void {
   ensurePidDir();
@@ -127,8 +149,22 @@ async function startForeground(options: StartDaemonOptions): Promise<void> {
     process.env.LTF_DAEMON_FOREGROUND = 'true';
   }
 
-  // Write current PID
-  writePidFile(process.pid);
+  // Write current PID atomically to prevent double-start
+  if (!writePidFileAtomic(process.pid)) {
+    // PID file already exists — check if it's a live process
+    const existingPid = readPidFile();
+    if (existingPid && isProcessRunning(existingPid)) {
+      if (!isBackgroundSpawn) {
+        error('Daemon is already running');
+        info(`PID: ${existingPid}`);
+      }
+      writeLog('warn', `Daemon already running with PID ${existingPid}`);
+      process.exit(1);
+    }
+    // Stale PID file — remove and retry
+    removePidFile();
+    writePidFile(process.pid);
+  }
   setDaemonConfig({
     enabled: true,
     pid: process.pid,
@@ -218,83 +254,87 @@ async function startBackground(options: StartDaemonOptions): Promise<void> {
   }
 
   const out = fs.openSync(logFile, 'a');
-  const errFile = fs.openSync(logFile, 'a');
+  const errFd = fs.openSync(logFile, 'a');
 
-  // Build the command arguments
-  const args: Array<string> = ['daemon', 'start', '--foreground'];
-  if (options.verbose) {
-    args.push('--verbose');
-  }
-
-  // Find the ltf executable
-  // We try several locations: npm global, local node_modules, or the current script
-  let ltfPath = 'ltf';
-
-  // Check if we can find the ltf binary
   try {
-    const { execSync } = await import('node:child_process');
-    ltfPath = execSync('which ltf', { encoding: 'utf-8' }).trim();
-  } catch {
-    // Try to use the current script's location
-    const scriptDir = path.dirname(import.meta.url.replace('file://', ''));
-    const possiblePaths = [
-      path.resolve(scriptDir, '../../../dist/bin/ltf.js'),
-      path.resolve(scriptDir, '../../bin/ltf.js'),
-      'ltf',
-    ];
+    // Build the command arguments
+    const args: Array<string> = ['daemon', 'start', '--foreground'];
+    if (options.verbose) {
+      args.push('--verbose');
+    }
 
-    for (const p of possiblePaths) {
-      if (fs.existsSync(p)) {
-        ltfPath = p;
-        break;
+    // Find the ltf executable
+    // We try several locations: npm global, local node_modules, or the current script
+    let ltfPath = 'ltf';
+
+    // Check if we can find the ltf binary
+    try {
+      const { execSync } = await import('node:child_process');
+      ltfPath = execSync('which ltf', { encoding: 'utf-8' }).trim();
+    } catch {
+      // Try to use the current script's location
+      const scriptDir = path.dirname(import.meta.url.replace('file://', ''));
+      const possiblePaths = [
+        path.resolve(scriptDir, '../../../dist/bin/ltf.js'),
+        path.resolve(scriptDir, '../../bin/ltf.js'),
+        'ltf',
+      ];
+
+      for (const p of possiblePaths) {
+        if (fs.existsSync(p)) {
+          ltfPath = p;
+          break;
+        }
       }
     }
-  }
 
-  writeLog('info', `Starting background daemon with: ${ltfPath} ${args.join(' ')}`);
+    writeLog('info', `Starting background daemon with: ${ltfPath} ${args.join(' ')}`);
 
-  const child: ChildProcess = spawn('node', [ltfPath, ...args], {
-    detached: true,
-    stdio: ['ignore', out, errFile],
-    cwd: repoRoot,
-    env: {
-      ...process.env,
-      LTF_DAEMON: 'true',
-      LTF_DAEMON_BACKGROUND: 'true',
-    },
-  });
+    const child: ChildProcess = spawn('node', [ltfPath, ...args], {
+      detached: true,
+      stdio: ['ignore', out, errFd],
+      cwd: repoRoot,
+      env: {
+        ...process.env,
+        LTF_DAEMON: 'true',
+        LTF_DAEMON_BACKGROUND: 'true',
+      },
+    });
 
-  if (child.pid) {
-    // Detach from the child process
-    child.unref();
+    if (child.pid) {
+      // Detach from the child process
+      child.unref();
 
-    // Give it a moment to start and write its PID
-    await new Promise(resolve => setTimeout(resolve, 1000));
+      // Poll for the child to start and write its PID (up to 5s, every 200ms)
+      let actualPid: number | null = null;
+      for (let i = 0; i < 25; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        actualPid = readPidFile();
+        if (actualPid && isProcessRunning(actualPid)) break;
+      }
 
-    // Check if it's still running by reading the PID file (child writes its own PID)
-    const actualPid = readPidFile();
-
-    if (actualPid && isProcessRunning(actualPid)) {
-      sp.succeed('Daemon started successfully');
-      info(`PID: ${actualPid}`);
-      info(`Log file: ${logFile}`);
-      info('Use `ltf daemon status` to check status');
-      info('Use `ltf daemon logs -f` to follow logs');
+      if (actualPid && isProcessRunning(actualPid)) {
+        sp.succeed('Daemon started successfully');
+        info(`PID: ${actualPid}`);
+        info(`Log file: ${logFile}`);
+        info('Use `ltf daemon status` to check status');
+        info('Use `ltf daemon logs -f` to follow logs');
+      } else {
+        sp.fail('Daemon failed to start');
+        error('Check logs for details: `ltf daemon logs`');
+        removePidFile();
+        removeRepoFile();
+        setDaemonConfig({ enabled: false, pid: undefined });
+      }
     } else {
-      sp.fail('Daemon failed to start');
-      error('Check logs for details: `ltf daemon logs`');
-      removePidFile();
-      removeRepoFile();
-      setDaemonConfig({ enabled: false, pid: undefined });
+      sp.fail('Failed to spawn daemon process');
+      error('Could not start background process');
     }
-  } else {
-    sp.fail('Failed to spawn daemon process');
-    error('Could not start background process');
+  } finally {
+    // Close the file descriptors in the parent process
+    fs.closeSync(out);
+    fs.closeSync(errFd);
   }
-
-  // Close the file descriptors in the parent process
-  fs.closeSync(out);
-  fs.closeSync(errFile);
 }
 
 /**

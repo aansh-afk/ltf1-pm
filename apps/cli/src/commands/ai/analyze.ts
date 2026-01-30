@@ -7,6 +7,7 @@ import output from '../../lib/output.js';
 import { getAuthenticatedClient, action, query } from '../../lib/convex.js';
 import { requireAuth } from '../../lib/auth.js';
 import { getContext, hasProjectContext } from '../../lib/config.js';
+import { getErrorMessage } from '../../lib/errors.js';
 
 interface AnalyzeOptions {
   sprint?: string;
@@ -182,8 +183,7 @@ export async function analyzeCommand(options: AnalyzeOptions): Promise<void> {
 
   } catch (err) {
     spin.stop();
-    const error = err as Error;
-    output.error('Failed to analyze sprint', error.message);
+    output.error('Failed to analyze sprint', getErrorMessage(err));
     process.exit(1);
   }
 }

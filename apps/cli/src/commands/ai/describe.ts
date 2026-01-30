@@ -8,6 +8,7 @@ import { getAuthenticatedClient, action, mutation } from '../../lib/convex.js';
 import { requireAuth } from '../../lib/auth.js';
 import { getContext, hasProjectContext } from '../../lib/config.js';
 import readline from 'node:readline';
+import { getErrorMessage } from '../../lib/errors.js';
 
 interface DescribeOptions {
   create?: boolean;
@@ -104,8 +105,7 @@ export async function describeCommand(
 
   } catch (err) {
     spin.stop();
-    const error = err as Error;
-    output.error('Failed to generate task details', error.message);
+    output.error('Failed to generate task details', getErrorMessage(err));
     process.exit(1);
   }
 }
@@ -196,7 +196,6 @@ async function createTask(
 
   } catch (err) {
     spin.stop();
-    const error = err as Error;
-    output.error('Failed to create task', error.message);
+    output.error('Failed to create task', getErrorMessage(err));
   }
 }

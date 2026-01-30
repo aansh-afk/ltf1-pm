@@ -8,6 +8,7 @@ import { getAuthenticatedClient, action } from '../../lib/convex.js';
 import { requireAuth } from '../../lib/auth.js';
 import { getContext, hasProjectContext } from '../../lib/config.js';
 import { getRecentCommits, getCurrentBranch, isGitRepo } from '../../lib/git.js';
+import { getErrorMessage } from '../../lib/errors.js';
 
 interface SuggestOptions {
   count?: string;
@@ -151,8 +152,7 @@ export async function suggestCommand(options: SuggestOptions): Promise<void> {
 
   } catch (err) {
     spin.stop();
-    const error = err as Error;
-    output.error('Failed to analyze commits', error.message);
+    output.error('Failed to analyze commits', getErrorMessage(err));
     process.exit(1);
   }
 }

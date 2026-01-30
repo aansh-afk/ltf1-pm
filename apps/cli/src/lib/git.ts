@@ -6,6 +6,7 @@
 import simpleGit, { type SimpleGit } from 'simple-git';
 import path from 'node:path';
 import fs from 'node:fs';
+import os from 'node:os';
 
 let gitInstance: SimpleGit | null = null;
 
@@ -249,7 +250,13 @@ export async function getHooksPath(): Promise<string | null> {
     const git = getGit();
     const customPath = await git.raw(['config', '--get', 'core.hooksPath']);
     if (customPath.trim()) {
-      return path.resolve(repoRoot, customPath.trim());
+      const resolved = path.resolve(repoRoot, customPath.trim());
+      // Validate the resolved path is within repo root or user home
+      const homeDir = os.homedir();
+      if (!resolved.startsWith(repoRoot) && !resolved.startsWith(homeDir)) {
+        return null;
+      }
+      return resolved;
     }
   } catch {
     // No custom hooks path set

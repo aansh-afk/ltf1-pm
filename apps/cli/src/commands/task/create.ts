@@ -8,6 +8,7 @@ import { requireAuth } from '../../lib/auth.js';
 import { getAuthenticatedClient, mutation } from '../../lib/convex.js';
 import { getContext, hasProjectContext } from '../../lib/config.js';
 import output from '../../lib/output.js';
+import { getErrorMessage } from '../../lib/errors.js';
 
 type TaskType = 'feature' | 'bug' | 'improvement' | 'task' | 'epic';
 type TaskPriority = 'urgent' | 'high' | 'medium' | 'low';
@@ -143,8 +144,7 @@ export function createTaskCommand(program: Command): void {
 
       } catch (err) {
         spin.stop();
-        const error = err as Error;
-        output.error('Failed to create task', error.message);
+        output.error('Failed to create task', getErrorMessage(err));
         process.exit(1);
       }
     });
