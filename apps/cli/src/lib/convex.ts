@@ -8,6 +8,7 @@ import type { FunctionReference, FunctionArgs, FunctionReturnType } from 'convex
 import { makeFunctionReference } from 'convex/server';
 import { getAuth, isAuthenticated } from './config.js';
 import output from './output.js';
+import { getErrorMessage } from './errors.js';
 
 // API helper to create function references with correct path format
 // Convex HTTP API expects paths like 'workspaces/queries.js:getUserWorkspaces'
@@ -61,7 +62,18 @@ export const api = {
 };
 
 // Convex deployment URL - should match the web app
-const CONVEX_URL = process.env.CONVEX_URL || 'https://tangible-butterfly-366.convex.cloud';
+const CONVEX_URL = (() => {
+  const raw = process.env.CONVEX_URL || 'https://tangible-butterfly-366.convex.cloud';
+  try {
+    const parsed = new URL(raw);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return 'https://tangible-butterfly-366.convex.cloud';
+    }
+    return parsed.toString();
+  } catch {
+    return 'https://tangible-butterfly-366.convex.cloud';
+  }
+})();
 
 let clientInstance: ConvexHttpClient | null = null;
 
@@ -137,8 +149,8 @@ export async function query<Query extends FunctionReference<'query'>>(
   try {
     return await client.query(functionReference, args);
   } catch (err) {
-    const error = err as Error;
-    if (error.message?.includes('Unauthenticated')) {
+    const errorMsg = getErrorMessage(err);
+    if (errorMsg.includes('Unauthenticated')) {
       output.error('Authentication expired', 'Run `ltf auth login` to re-authenticate');
       process.exit(1);
     }
@@ -158,8 +170,8 @@ export async function mutation<Mutation extends FunctionReference<'mutation'>>(
   try {
     return await client.mutation(functionReference, args);
   } catch (err) {
-    const error = err as Error;
-    if (error.message?.includes('Unauthenticated')) {
+    const errorMsg = getErrorMessage(err);
+    if (errorMsg.includes('Unauthenticated')) {
       output.error('Authentication expired', 'Run `ltf auth login` to re-authenticate');
       process.exit(1);
     }
@@ -179,8 +191,8 @@ export async function action<Action extends FunctionReference<'action'>>(
   try {
     return await client.action(functionReference, args);
   } catch (err) {
-    const error = err as Error;
-    if (error.message?.includes('Unauthenticated')) {
+    const errorMsg = getErrorMessage(err);
+    if (errorMsg.includes('Unauthenticated')) {
       output.error('Authentication expired', 'Run `ltf auth login` to re-authenticate');
       process.exit(1);
     }

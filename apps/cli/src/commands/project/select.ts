@@ -9,6 +9,7 @@ import { requireAuth } from '../../lib/auth.js';
 import { getAuthenticatedClient, query } from '../../lib/convex.js';
 import { getContext, setContext } from '../../lib/config.js';
 import output from '../../lib/output.js';
+import { getErrorMessage } from '../../lib/errors.js';
 
 interface Workspace {
   _id: string;
@@ -195,8 +196,7 @@ export async function selectProject(
     }
   } catch (error) {
     spin.stop();
-    const err = error as Error;
-    output.error('Failed to select project', err.message);
+    output.error('Failed to select project', getErrorMessage(error));
     process.exit(1);
   }
 }

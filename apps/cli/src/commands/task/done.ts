@@ -9,6 +9,7 @@ import { getAuthenticatedClient, mutation, query } from '../../lib/convex.js';
 import { getContext, hasProjectContext } from '../../lib/config.js';
 import output from '../../lib/output.js';
 import { resolveTaskId } from './utils.js';
+import { getErrorMessage } from '../../lib/errors.js';
 
 interface TaskBasic {
   _id: string;
@@ -97,8 +98,7 @@ export function doneTaskCommand(program: Command): void {
 
       } catch (err) {
         spin.stop();
-        const error = err as Error;
-        output.error('Failed to mark task as done', error.message);
+        output.error('Failed to mark task as done', getErrorMessage(err));
         process.exit(1);
       }
     });

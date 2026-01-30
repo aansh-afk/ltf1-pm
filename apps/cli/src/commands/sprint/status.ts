@@ -7,6 +7,7 @@ import { getAuthenticatedClient, query } from '../../lib/convex.js';
 import output from '../../lib/output.js';
 import { getContext, hasProjectContext } from '../../lib/config.js';
 import { requireAuth } from '../../lib/auth.js';
+import { getErrorMessage } from '../../lib/errors.js';
 
 interface Task {
   _id: string;
@@ -166,8 +167,7 @@ export async function sprintStatus(options: StatusOptions): Promise<void> {
 
   } catch (err) {
     spin.stop();
-    const error = err as Error;
-    output.error('Failed to fetch sprint status', error.message);
+    output.error('Failed to fetch sprint status', getErrorMessage(err));
     process.exit(1);
   }
 }

@@ -31,7 +31,7 @@ export async function loginAction(options: { token?: string }): Promise<void> {
       spin.stop();
 
       output.newline();
-      console.log(output.colors.success('  ✓ ') + output.colors.bold('AUTHENTICATED'));
+      output.log(output.colors.success('  ✓ ') + output.colors.bold('AUTHENTICATED'));
       output.newline();
       output.keyValue([
         ['Method', 'API Token'],
@@ -49,7 +49,7 @@ export async function loginAction(options: { token?: string }): Promise<void> {
 
       // Clear the line and show success
       output.newline();
-      console.log(output.colors.success('  ✓ ') + output.colors.bold('AUTHENTICATED'));
+      output.log(output.colors.success('  ✓ ') + output.colors.bold('AUTHENTICATED'));
       output.newline();
       output.keyValue([
         ['Email', authConfig.email || 'N/A'],

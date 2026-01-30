@@ -5,7 +5,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { info, colors, header, success } from '../../lib/output.js';
+import { info, log, newline, colors, header, success } from '../../lib/output.js';
 import { getLogFilePath, clearLogFile, readRecentLogs } from './watcher.js';
 
 export interface LogsOptions {
@@ -35,12 +35,12 @@ function formatLogLine(line: string): string {
 async function followLogs(logFile: string): Promise<void> {
   info(`Following ${logFile}`);
   info('Press Ctrl+C to stop');
-  console.log('');
+  newline();
 
   // First, show recent lines
   const recentLines = readRecentLogs(10);
   for (const line of recentLines) {
-    console.log(formatLogLine(line));
+    log(formatLogLine(line));
   }
 
   // Track file position
@@ -70,7 +70,7 @@ async function followLogs(logFile: string): Promise<void> {
           const newContent = buffer.toString('utf-8');
           const lines = newContent.split('\n').filter(line => line.trim());
           for (const line of lines) {
-            console.log(formatLogLine(line));
+            log(formatLogLine(line));
           }
 
           filePosition = newSize;
@@ -100,7 +100,7 @@ async function followLogs(logFile: string): Promise<void> {
         const newContent = buffer.toString('utf-8');
         const lines = newContent.split('\n').filter(line => line.trim());
         for (const line of lines) {
-          console.log(formatLogLine(line));
+          log(formatLogLine(line));
         }
 
         filePosition = newSize;
@@ -114,7 +114,7 @@ async function followLogs(logFile: string): Promise<void> {
   const cleanup = (): void => {
     watcher.close();
     clearInterval(pollInterval);
-    console.log('');
+    newline();
     info('Stopped following logs');
   };
 
@@ -152,13 +152,13 @@ function showRecentLogs(lines: number): void {
   }
 
   header(`Daemon Logs (last ${recentLines.length} entries)`);
-  console.log('');
+  newline();
 
   for (const line of recentLines) {
-    console.log(formatLogLine(line));
+    log(formatLogLine(line));
   }
 
-  console.log('');
+  newline();
   info(`Log file: ${logFile}`);
   info('Use `ltf daemon logs -f` to follow in real-time');
 }

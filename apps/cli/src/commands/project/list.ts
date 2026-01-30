@@ -7,6 +7,7 @@ import { requireAuth } from '../../lib/auth.js';
 import { getAuthenticatedClient, query, api } from '../../lib/convex.js';
 import { getContext } from '../../lib/config.js';
 import output from '../../lib/output.js';
+import { getErrorMessage } from '../../lib/errors.js';
 
 interface Workspace {
   _id: string;
@@ -162,8 +163,7 @@ export async function listProjects(options: ListOptions): Promise<void> {
     }
   } catch (error) {
     spin.stop();
-    const err = error as Error;
-    output.error('Failed to fetch projects', err.message);
+    output.error('Failed to fetch projects', getErrorMessage(error));
     process.exit(1);
   }
 }

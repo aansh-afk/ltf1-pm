@@ -3,6 +3,7 @@
  * Supports browser OAuth flow and API token authentication
  */
 
+import crypto from 'node:crypto';
 import http from 'node:http';
 import { URL } from 'node:url';
 import open from 'open';
@@ -13,21 +14,92 @@ import { resetClient } from './convex.js';
 // Auth configuration
 const AUTH_PORT = 9876;
 const AUTH_CALLBACK_PATH = '/callback';
+const MAX_CALLBACK_REQUESTS = 10;
+
+/**
+ * Validate a URL string - must be parseable and use http/https protocol
+ */
+function validateUrl(urlStr: string): string {
+  try {
+    const parsed = new URL(urlStr);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      throw new Error(`Invalid URL protocol: ${parsed.protocol}`);
+    }
+    return parsed.toString();
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith('Invalid URL protocol')) {
+      throw err;
+    }
+    throw new Error(`Invalid URL: ${urlStr}`);
+  }
+}
+
+/**
+ * Escape HTML special characters to prevent XSS in callback pages
+ */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+/**
+ * Validate token format - JWT (3 base64url parts) or opaque (20+ alphanumeric)
+ */
+export function isValidTokenFormat(token: string): boolean {
+  if (!token) return false;
+  // JWT format: three base64url-encoded segments separated by dots
+  const jwtPattern = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
+  if (jwtPattern.test(token)) return true;
+  // Opaque token: at least 20 alphanumeric characters
+  const opaquePattern = /^[A-Za-z0-9_-]{20,}$/;
+  return opaquePattern.test(token);
+}
 
 // Web app URL - defaults to localhost for development, can be overridden for production
-const WEB_APP_URL = process.env.LTF_WEB_URL || process.env.WEB_APP_URL || 'http://localhost:3000';
+const WEB_APP_URL = (() => {
+  const raw = process.env.LTF_WEB_URL || process.env.WEB_APP_URL || 'http://localhost:3000';
+  try {
+    return validateUrl(raw);
+  } catch {
+    return 'http://localhost:3000';
+  }
+})();
 
 /**
  * Start browser-based OAuth login flow
  * Opens browser to Clerk auth page, waits for callback
  */
 export async function loginWithBrowser(): Promise<AuthConfig> {
+  // Generate CSRF state parameter
+  const csrfState = crypto.randomBytes(32).toString('hex');
+  let requestCount = 0;
+
   return new Promise((resolve, reject) => {
     // Create callback server
     const server = http.createServer(async (req, res) => {
+      // Rate limit: cap requests to prevent abuse
+      requestCount++;
+      if (requestCount > MAX_CALLBACK_REQUESTS) {
+        res.writeHead(429, { 'Content-Type': 'text/plain' });
+        res.end('Too many requests');
+        return;
+      }
+
       const url = new URL(req.url || '/', `http://localhost:${AUTH_PORT}`);
 
       if (url.pathname === AUTH_CALLBACK_PATH) {
+        // Verify CSRF state parameter
+        const returnedState = url.searchParams.get('state');
+        if (returnedState !== csrfState) {
+          res.writeHead(403, { 'Content-Type': 'text/plain' });
+          res.end('Invalid state parameter');
+          return;
+        }
+
         const token = url.searchParams.get('token');
         const userId = url.searchParams.get('userId');
         const email = url.searchParams.get('email');
@@ -86,8 +158,8 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
             <body>
               <div class="card">
                 <div class="icon">✕</div>
-                <h1>${title}</h1>
-                <p class="message">${message}</p>
+                <h1>${escapeHtml(title)}</h1>
+                <p class="message">${escapeHtml(message)}</p>
                 <p class="hint">Close this window and try again</p>
               </div>
             </body>
@@ -178,7 +250,7 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
               <div class="card">
                 <div class="icon">✓</div>
                 <h1>Authenticated</h1>
-                ${email ? `<div class="email">${email}</div>` : ''}
+                ${email ? `<div class="email">${escapeHtml(email)}</div>` : ''}
                 <p class="message">
                   Return to your terminal to continue.<br>
                   This window will close automatically.
@@ -211,7 +283,7 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
     server.listen(AUTH_PORT, () => {
       // Build auth URL with callback
       const callbackUrl = `http://localhost:${AUTH_PORT}${AUTH_CALLBACK_PATH}`;
-      const authUrl = `${WEB_APP_URL}/cli-auth?callback=${encodeURIComponent(callbackUrl)}`;
+      const authUrl = `${WEB_APP_URL}/cli-auth?callback=${encodeURIComponent(callbackUrl)}&state=${csrfState}`;
 
       output.info(`Opening browser for authentication...`);
       output.log(output.colors.muted(`If browser doesn't open, visit: ${authUrl}`));
@@ -240,7 +312,7 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
  */
 export async function loginWithToken(token: string): Promise<AuthConfig> {
   // Validate token format
-  if (!token || token.length < 10) {
+  if (!token || !isValidTokenFormat(token)) {
     throw new Error('Invalid token format');
   }
 

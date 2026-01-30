@@ -9,6 +9,7 @@ import { getAuthenticatedClient, query } from '../../lib/convex.js';
 import { getContext, hasProjectContext } from '../../lib/config.js';
 import output from '../../lib/output.js';
 import { resolveTaskId } from './utils.js';
+import { getErrorMessage } from '../../lib/errors.js';
 
 interface User {
   _id: string;
@@ -254,8 +255,7 @@ export function viewTaskCommand(program: Command): void {
 
       } catch (err) {
         spin.stop();
-        const error = err as Error;
-        output.error('Failed to fetch task', error.message);
+        output.error('Failed to fetch task', getErrorMessage(err));
         process.exit(1);
       }
     });

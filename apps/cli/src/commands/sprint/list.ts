@@ -7,6 +7,7 @@ import { getAuthenticatedClient, query } from '../../lib/convex.js';
 import output from '../../lib/output.js';
 import { getContext, hasProjectContext } from '../../lib/config.js';
 import { requireAuth } from '../../lib/auth.js';
+import { getErrorMessage } from '../../lib/errors.js';
 
 interface SprintWithStats {
   _id: string;
@@ -134,8 +135,7 @@ export async function listSprints(options: ListOptions): Promise<void> {
     ));
   } catch (err) {
     spin.stop();
-    const error = err as Error;
-    output.error('Failed to fetch sprints', error.message);
+    output.error('Failed to fetch sprints', getErrorMessage(err));
     process.exit(1);
   }
 }

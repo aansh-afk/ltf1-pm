@@ -10,6 +10,7 @@
 import { Command } from 'commander';
 import { getAuthenticatedClient, query } from '../../lib/convex.js';
 import output from '../../lib/output.js';
+import { getErrorMessage } from '../../lib/errors.js';
 import { getContext, hasProjectContext } from '../../lib/config.js';
 import { requireAuth } from '../../lib/auth.js';
 import { getRemoteUrl, parseRemoteUrl, isGitRepo } from '../../lib/git.js';
@@ -230,8 +231,7 @@ async function syncGitHub(options: SyncOptions): Promise<void> {
 
   } catch (err) {
     spin.fail('Sync failed');
-    const error = err as Error;
-    output.error(error.message);
+    output.error(getErrorMessage(err));
     process.exit(1);
   }
 }
