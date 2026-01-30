@@ -22,6 +22,7 @@ export default function CLIAuthPage() {
   const [errorMessage, setErrorMessage] = useState<string>('')
 
   const callbackUrl = searchParams.get('callback')
+  const state = searchParams.get('state')
 
   useEffect(() => {
     async function handleAuth() {
@@ -66,6 +67,9 @@ export default function CLIAuthPage() {
         // Build callback URL with token
         const redirectUrl = new URL(callbackUrl)
         redirectUrl.searchParams.set('token', token)
+        if (state) {
+          redirectUrl.searchParams.set('state', state)
+        }
         if (user?.id) {
           redirectUrl.searchParams.set('userId', user.id)
         }
@@ -85,7 +89,7 @@ export default function CLIAuthPage() {
     }
 
     handleAuth()
-  }, [isLoaded, isSignedIn, getToken, user, callbackUrl])
+  }, [isLoaded, isSignedIn, getToken, user, callbackUrl, state])
 
   // Not loaded yet
   if (!isLoaded) {
@@ -94,7 +98,7 @@ export default function CLIAuthPage() {
 
   // Not signed in - redirect to sign-in with return URL
   if (!isSignedIn) {
-    const returnUrl = `/cli-auth?callback=${encodeURIComponent(callbackUrl || '')}`
+    const returnUrl = `/cli-auth?callback=${encodeURIComponent(callbackUrl || '')}${state ? `&state=${encodeURIComponent(state)}` : ''}`
     return <Navigate to={`/sign-in?redirect_url=${encodeURIComponent(returnUrl)}`} replace />
   }
 

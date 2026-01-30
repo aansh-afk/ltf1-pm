@@ -25,7 +25,7 @@ function validateUrl(urlStr: string): string {
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       throw new Error(`Invalid URL protocol: ${parsed.protocol}`);
     }
-    return parsed.toString();
+    return parsed.toString().replace(/\/+$/, '');
   } catch (err) {
     if (err instanceof Error && err.message.startsWith('Invalid URL protocol')) {
       throw err;
