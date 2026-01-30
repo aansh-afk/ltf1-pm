@@ -12,12 +12,14 @@ import { MIN_WIDTH, MIN_HEIGHT } from './types.js';
 import { BG, WHITE, LIGHT, GRAY, DIM, DARK } from './theme.js';
 import { row, segRow, padSegs, rep, pad, center } from './helpers.js';
 import { useAuth } from './hooks/useAuth.js';
+import { useConfig } from './hooks/useConfig.js';
 import { useDashboardPage } from './pages/Dashboard.js';
 import type { LoginState } from './pages/Dashboard.js';
 import { useTasksPage } from './pages/Tasks.js';
 import { useSprintPage } from './pages/Sprint.js';
 import { useGitPage } from './pages/Git.js';
 import { login } from '../lib/auth.js';
+import { setContext, clearContext } from '../lib/config.js';
 
 interface AppProps {
   initialView?: Page;
@@ -30,6 +32,7 @@ export function App({ initialView = 'dashboard' }: AppProps) {
   const [height, setHeight] = useState(stdout?.rows || 30);
   const [view, setView] = useState<Page>(initialView);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectorIndex, setSelectorIndex] = useState(0);
   const [time, setTime] = useState(new Date());
 
   // Login flow state
@@ -37,7 +40,7 @@ export function App({ initialView = 'dashboard' }: AppProps) {
   const [loginError, setLoginError] = useState('');
 
   useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
+    const timer = setInterval(() => setTime(new Date()), 100);
     return () => clearInterval(timer);
   }, []);
 
@@ -53,6 +56,7 @@ export function App({ initialView = 'dashboard' }: AppProps) {
   }, [stdout]);
 
   const auth = useAuth();
+  const config = useConfig();
 
   // Trigger browser login flow
   const startLogin = useCallback(() => {
@@ -73,6 +77,63 @@ export function App({ initialView = 'dashboard' }: AppProps) {
       });
   }, [loginState, auth]);
 
+  const tooSmall = width < MIN_WIDTH || height < MIN_HEIGHT;
+  const W = Math.max(width, MIN_WIDTH);
+  const H = Math.max(height, MIN_HEIGHT);
+  const timeStr = time.toLocaleTimeString('en-GB', { hour12: false });
+
+  // Call all page hooks unconditionally (React rules of hooks)
+  const dashboardResult = useDashboardPage({ width: W, height: H, timeStr, selectedIndex, selectorIndex, loginState, loginError });
+  const tasksRows = useTasksPage({ width: W, height: H, timeStr, isActive: view === 'tasks' });
+  const sprintRows = useSprintPage({ width: W, height: H, timeStr });
+  const gitRows = useGitPage({ width: W, height: H, timeStr, isActive: view === 'git' });
+
+  const { dashboardMode, selectorItemCount, selectableItems } = dashboardResult;
+
+  // Selection handlers
+  const handleWorkspaceSelect = useCallback(() => {
+    const item = selectableItems[selectorIndex];
+    if (!item) return;
+    setContext({
+      workspaceId: item.id,
+      workspaceName: item.name,
+      projectId: undefined,
+      projectKey: undefined,
+      projectName: undefined,
+    });
+    config.refresh();
+    setSelectorIndex(0);
+  }, [selectableItems, selectorIndex, config]);
+
+  const handleProjectSelect = useCallback(() => {
+    const item = selectableItems[selectorIndex];
+    if (!item) return;
+    setContext({
+      projectId: item.id,
+      projectKey: item.key,
+      projectName: item.name,
+    });
+    config.refresh();
+    setSelectorIndex(0);
+    setSelectedIndex(0);
+  }, [selectableItems, selectorIndex, config]);
+
+  const handleBackToWorkspaceSelector = useCallback(() => {
+    clearContext();
+    config.refresh();
+    setSelectorIndex(0);
+  }, [config]);
+
+  const handleSwitchToProjectSelector = useCallback(() => {
+    setContext({
+      projectId: undefined,
+      projectKey: undefined,
+      projectName: undefined,
+    });
+    config.refresh();
+    setSelectorIndex(0);
+  }, [config]);
+
   // Global keyboard handling
   useInput((input, key) => {
     if (input === 'q' || (key.ctrl && input === 'c')) exit();
@@ -86,6 +147,24 @@ export function App({ initialView = 'dashboard' }: AppProps) {
     }
 
     if (view === 'dashboard') {
+      // ── Workspace selector mode ──
+      if (dashboardMode === 'workspace_selector') {
+        if (key.upArrow) setSelectorIndex(i => Math.max(0, i - 1));
+        if (key.downArrow) setSelectorIndex(i => Math.min(Math.max(0, selectorItemCount - 1), i + 1));
+        if (key.return && selectorItemCount > 0) handleWorkspaceSelect();
+        return;
+      }
+
+      // ── Project selector mode ──
+      if (dashboardMode === 'project_selector') {
+        if (key.upArrow) setSelectorIndex(i => Math.max(0, i - 1));
+        if (key.downArrow) setSelectorIndex(i => Math.min(Math.max(0, selectorItemCount - 1), i + 1));
+        if (key.return && selectorItemCount > 0) handleProjectSelect();
+        if (input === 'b') handleBackToWorkspaceSelector();
+        return;
+      }
+
+      // ── Normal dashboard mode ──
       if (key.upArrow) setSelectedIndex(i => Math.max(0, i - 1));
       if (key.downArrow) setSelectedIndex(i => Math.min(3, i + 1));
       if (key.return) {
@@ -96,6 +175,8 @@ export function App({ initialView = 'dashboard' }: AppProps) {
       if (input === 't' || input === '1') setView('tasks');
       if (input === 's' || input === '2') setView('sprint');
       if (input === 'g' || input === '3') setView('git');
+      if (input === 'w') handleBackToWorkspaceSelector();
+      if (input === 'p') handleSwitchToProjectSelector();
     } else {
       if (key.escape || input === 'b') setView('dashboard');
       if (input === 't') setView('tasks');
@@ -104,17 +185,6 @@ export function App({ initialView = 'dashboard' }: AppProps) {
       if (input === 'd') setView('dashboard');
     }
   });
-
-  const tooSmall = width < MIN_WIDTH || height < MIN_HEIGHT;
-  const W = Math.max(width, MIN_WIDTH);
-  const H = Math.max(height, MIN_HEIGHT);
-  const timeStr = time.toLocaleTimeString('en-GB', { hour12: false });
-
-  // Call all page hooks unconditionally (React rules of hooks)
-  const dashboardResult = useDashboardPage({ width: W, height: H, timeStr, selectedIndex, loginState, loginError });
-  const tasksRows = useTasksPage({ width: W, height: H, timeStr, isActive: view === 'tasks' });
-  const sprintRows = useSprintPage({ width: W, height: H, timeStr });
-  const gitRows = useGitPage({ width: W, height: H, timeStr, isActive: view === 'git' });
 
   // ── Resize prompt (too small) ──
   if (tooSmall) {
@@ -129,9 +199,9 @@ export function App({ initialView = 'dashboard' }: AppProps) {
     tRows.push(row(center('L T F 1', sw), WHITE));
     tRows.push(row(rep(' ', sw), WHITE));
 
-    const sepW = Math.min(34, sw - 4);
-    const sepL = Math.floor((sw - sepW) / 2);
-    tRows.push(row(pad(rep(' ', sepL) + rep('─', sepW), sw), DARK));
+    const rSepW = Math.min(34, sw - 4);
+    const rSepL = Math.floor((sw - rSepW) / 2);
+    tRows.push(row(pad(rep(' ', rSepL) + rep('─', rSepW), sw), DARK));
     tRows.push(row(rep(' ', sw), WHITE));
 
     tRows.push(row(center('Resize to continue', sw), GRAY));

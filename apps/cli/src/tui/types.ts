@@ -6,6 +6,8 @@ export type Page = 'dashboard' | 'tasks' | 'sprint' | 'git';
 
 export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
 
+export type DashboardMode = 'normal' | 'workspace_selector' | 'project_selector';
+
 export interface TUIState {
   page: Page;
   selectedIndex: number;

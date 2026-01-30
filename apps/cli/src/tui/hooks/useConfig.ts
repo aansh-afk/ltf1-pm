@@ -4,7 +4,7 @@
  * Only triggers re-render when values actually change
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getContext, hasProjectContext } from '../../lib/config.js';
 
 export interface ConfigState {
@@ -28,24 +28,25 @@ function readConfig(): ConfigState {
   };
 }
 
-export function useConfig(): ConfigState {
+export function useConfig(): ConfigState & { refresh: () => void } {
   const [state, setState] = useState<ConfigState>(readConfig);
   const keyRef = useRef('');
 
+  const refresh = useCallback(() => {
+    const next = readConfig();
+    const nextKey = JSON.stringify(next);
+    if (nextKey !== keyRef.current) {
+      keyRef.current = nextKey;
+      setState(next);
+    }
+  }, []);
+
   useEffect(() => {
-    // Serialize for cheap equality check
     keyRef.current = JSON.stringify(state);
 
-    const interval = setInterval(() => {
-      const next = readConfig();
-      const nextKey = JSON.stringify(next);
-      if (nextKey !== keyRef.current) {
-        keyRef.current = nextKey;
-        setState(next);
-      }
-    }, 10000);
+    const interval = setInterval(refresh, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  return state;
+  return { ...state, refresh };
 }

@@ -17,6 +17,12 @@ const CURSOR_HOME = `${ESC}[H`;
 const CURSOR_HIDE = `${ESC}[?25l`;
 const CURSOR_SHOW = `${ESC}[?25h`;
 
+// Ink's clearTerminal sequence: erase screen + erase scrollback + cursor home.
+// When output height >= terminal rows, ink writes this before every frame,
+// causing a visible flash of the default background. We replace it with just
+// cursor-home so ink overwrites content in-place without clearing first.
+const INK_CLEAR_TERMINAL = `${ESC}[2J${ESC}[3J${ESC}[H`;
+
 export async function startDashboard() {
   // Check if we're in a TTY environment
   if (!process.stdin.isTTY) {
@@ -31,8 +37,26 @@ export async function startDashboard() {
   process.stdout.write(CURSOR_HOME);
   process.stdout.write(CURSOR_HIDE);
 
+  // Prevent ink's full-screen clear from causing background flicker.
+  // When ink's rendered output fills the terminal, it calls clearTerminal
+  // (erase screen + erase scrollback + cursor home) before writing each frame.
+  // This flashes the default background. We intercept stdout.write and replace
+  // the clearTerminal sequence with cursor-home only, so content is overwritten
+  // in-place without any visible flash.
+  const origWrite = process.stdout.write;
+  process.stdout.write = function (
+    chunk: unknown,
+    ...args: unknown[]
+  ): boolean {
+    if (typeof chunk === 'string' && chunk.includes(INK_CLEAR_TERMINAL)) {
+      chunk = chunk.replace(INK_CLEAR_TERMINAL, CURSOR_HOME);
+    }
+    return (origWrite as Function).apply(this, [chunk, ...args]);
+  } as typeof process.stdout.write;
+
   // Cleanup function to restore terminal
   const cleanup = () => {
+    process.stdout.write = origWrite;
     process.stdout.write(CURSOR_SHOW);
     process.stdout.write(ALTERNATE_SCREEN_OFF);
   };
