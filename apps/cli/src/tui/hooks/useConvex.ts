@@ -88,6 +88,8 @@ export function useConvexQuery<Q extends FunctionReference<'query'>>(
   }, [fetchData]);
 
   useEffect(() => {
+    setLoading(true);
+    setData(null);
     fetchData();
     const interval = setInterval(fetchData, intervalMs);
     return () => clearInterval(interval);
