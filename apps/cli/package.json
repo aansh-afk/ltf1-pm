@@ -1,18 +1,30 @@
 {
-  "name": "@iceberg/cli",
-  "version": "0.1.0",
-  "description": "LTF CLI - Terminal interface for iceberg project management",
+  "name": "@vvg-ltf1/cli",
+  "version": "0.1.0-beta.1",
+  "description": "LTF1 CLI - Terminal interface for project management by Vivid Verse Global",
   "type": "module",
   "bin": {
     "ltf": "./dist/bin/ltf.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "TSX_DEV=1 tsx watch src/bin/ltf.ts",
     "build": "tsup src/bin/ltf.ts --format esm --outDir dist/bin --clean --loader '.tsx=tsx' && tsup src/index.ts --format esm --outDir dist --dts",
     "start": "node dist/bin/ltf.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
-    "link": "pnpm build && npm link"
+    "link": "pnpm build && npm link",
+    "prepublishOnly": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vividverseglobal/iceberg",
+    "directory": "apps/cli"
   },
   "dependencies": {
     "chalk": "^5.3.0",
@@ -48,8 +60,10 @@
     "cli",
     "project-management",
     "task-management",
-    "git"
+    "git",
+    "ltf",
+    "vivid-verse-global"
   ],
-  "author": "Iceberg Team",
+  "author": "Vivid Verse Global",
   "license": "MIT"
 }

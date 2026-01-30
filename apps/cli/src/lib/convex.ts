@@ -11,11 +11,14 @@ import output from './output.js';
 
 // API helper to create function references with correct path format
 // Convex HTTP API expects paths like 'workspaces/queries.js:getUserWorkspaces'
+// NOTE: Function names must match actual exports in the convex/ backend
 export const api = {
   workspaces: {
     queries: {
       getUserWorkspaces: makeFunctionReference<'query'>('workspaces/queries.js:getUserWorkspaces'),
       getWorkspaceById: makeFunctionReference<'query'>('workspaces/queries.js:getWorkspaceById'),
+      getWorkspaceMembers: makeFunctionReference<'query'>('workspaces/queries.js:getWorkspaceMembers'),
+      getWorkspaceStats: makeFunctionReference<'query'>('workspaces/queries.js:getWorkspaceStats'),
     },
     mutations: {
       createWorkspace: makeFunctionReference<'mutation'>('workspaces/mutations.js:createWorkspace'),
@@ -24,13 +27,18 @@ export const api = {
   projects: {
     queries: {
       getWorkspaceProjects: makeFunctionReference<'query'>('projects/queries.js:getWorkspaceProjects'),
-      getProjectById: makeFunctionReference<'query'>('projects/queries.js:getProjectById'),
+      getProject: makeFunctionReference<'query'>('projects/queries.js:getProject'),
+      getUserProjects: makeFunctionReference<'query'>('projects/queries.js:getUserProjects'),
+      getProjectTeamMembers: makeFunctionReference<'query'>('projects/queries.js:getProjectTeamMembers'),
     },
   },
   tasks: {
     queries: {
-      getTasksByProject: makeFunctionReference<'query'>('tasks/queries.js:getTasksByProject'),
-      getTaskById: makeFunctionReference<'query'>('tasks/queries.js:getTaskById'),
+      getProjectTasks: makeFunctionReference<'query'>('tasks/queries.js:getProjectTasks'),
+      getTask: makeFunctionReference<'query'>('tasks/queries.js:getTask'),
+      getMyTasks: makeFunctionReference<'query'>('tasks/queries.js:getMyTasks'),
+      getFilteredTasks: makeFunctionReference<'query'>('tasks/queries.js:getFilteredTasks'),
+      getTasksByWorkspace: makeFunctionReference<'query'>('tasks/queries.js:getTasksByWorkspace'),
     },
     mutations: {
       createTask: makeFunctionReference<'mutation'>('tasks/mutations.js:createTask'),
@@ -40,7 +48,9 @@ export const api = {
   sprints: {
     queries: {
       getProjectSprints: makeFunctionReference<'query'>('sprints/queries.js:getProjectSprints'),
-      getActiveSprint: makeFunctionReference<'query'>('sprints/queries.js:getActiveSprint'),
+      getCurrentSprint: makeFunctionReference<'query'>('sprints/queries.js:getCurrentSprint'),
+      getSprintById: makeFunctionReference<'query'>('sprints/queries.js:getSprintById'),
+      getBacklogTasks: makeFunctionReference<'query'>('sprints/queries.js:getBacklogTasks'),
     },
   },
   ai: {
