@@ -621,7 +621,9 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
     // Authenticated with project but no tasks yet
     rows.push(row(center('L E G A C Y   T A S K   F R A M E W O R K', W), GRAY));
     rows.push(blank(W));
-    if (taskStats.total === 0 && !tasksQuery.loading) {
+    if (tasksQuery.loading) {
+      renderLoadingAnimation(rows, 'Loading project data', W);
+    } else if (taskStats.total === 0) {
       rows.push(row(center('No tasks yet — press T to create your first task', W), DIM));
     }
   }
