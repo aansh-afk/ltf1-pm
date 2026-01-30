@@ -16,7 +16,7 @@ import BrutalistLoader from '../components/common/BrutalistLoader'
 
 export default function CLIAuthPage() {
   const [searchParams] = useSearchParams()
-  const { isSignedIn, isLoaded, getToken } = useAuth()
+  const { isSignedIn, isLoaded, getToken, sessionId } = useAuth()
   const { user } = useUser()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [errorMessage, setErrorMessage] = useState<string>('')
@@ -76,6 +76,9 @@ export default function CLIAuthPage() {
         if (user?.primaryEmailAddress?.emailAddress) {
           redirectUrl.searchParams.set('email', user.primaryEmailAddress.emailAddress)
         }
+        if (sessionId) {
+          redirectUrl.searchParams.set('sessionId', sessionId)
+        }
 
         setStatus('success')
 
@@ -89,7 +92,7 @@ export default function CLIAuthPage() {
     }
 
     handleAuth()
-  }, [isLoaded, isSignedIn, getToken, user, callbackUrl, state])
+  }, [isLoaded, isSignedIn, getToken, user, callbackUrl, state, sessionId])
 
   // Not loaded yet
   if (!isLoaded) {

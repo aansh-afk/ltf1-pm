@@ -80,6 +80,8 @@ export interface DashboardPageProps {
   selectorIndex: number;
   loginState?: LoginState;
   loginError?: string;
+  pressed?: boolean;
+  pressedAction?: string;
 }
 
 export interface DashboardResult {
@@ -90,7 +92,7 @@ export interface DashboardResult {
   selectableItems: SelectableItem[];
 }
 
-export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, selectorIndex, loginState = 'idle', loginError = '' }: DashboardPageProps): DashboardResult {
+export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, selectorIndex, loginState = 'idle', loginError = '', pressed = false, pressedAction = '' }: DashboardPageProps): DashboardResult {
   const auth = useAuth();
   const config = useConfig();
   const particleRows = useParticleField(W);
@@ -181,9 +183,11 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
     return (mine.length > 0 ? mine : active).slice(0, 5);
   }, [tasksQuery.data, auth.userId]);
 
-  // Connection status
+  // Connection status — pick from whichever query is actually active
   const connectionStatus: ConnectionStatus = !auth.isAuthenticated
     ? 'disconnected'
+    : !config.workspaceId ? workspacesQuery.connectionStatus
+    : !config.projectId ? (projectsQuery.connectionStatus !== 'connecting' ? projectsQuery.connectionStatus : workspaceStatsQuery.connectionStatus)
     : workspaceStatsQuery.connectionStatus !== 'connecting' ? workspaceStatsQuery.connectionStatus
     : tasksQuery.connectionStatus;
 
@@ -381,6 +385,10 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
 
     if (workspacesQuery.loading && workspaces.length === 0) {
       renderLoadingAnimation(rows, 'Loading workspaces', W);
+    } else if (workspacesQuery.error && workspaces.length === 0) {
+      rows.push(row(center('Failed to load workspaces', W), GRAY));
+      rows.push(blank(W));
+      rows.push(row(center(workspacesQuery.error.length > 60 ? workspacesQuery.error.slice(0, 57) + '...' : workspacesQuery.error, W), DIM));
     } else if (workspaces.length === 0) {
       rows.push(row(center('No workspaces found', W), GRAY));
       rows.push(blank(W));
@@ -395,7 +403,8 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
       for (let i = 0; i < workspaces.length; i++) {
         const ws = workspaces[i];
         const isSelected = i === selectorIndex;
-        const pointer = isSelected ? '>' : ' ';
+        const isPressed = isSelected && pressed;
+        const pointer = isPressed ? '▸' : isSelected ? '>' : ' ';
         const role = (ws.role || 'member').padEnd(8);
         const projCount = ws.projectCount != null ? `${ws.projectCount} proj` : '';
         const memCount = ws.memberCount != null ? `${ws.memberCount} mem` : '';
@@ -405,7 +414,15 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
         const displayName = ws.name.length > nameMax ? ws.name.slice(0, nameMax - 1) + '…' : ws.name.padEnd(nameMax);
         const inner = ` ${pointer} ${displayName} ${role}${meta} `;
 
-        if (isSelected) {
+        if (isPressed) {
+          // Brief inverted flash: dark bg with bright text
+          rows.push({
+            segments: padSegs([
+              { text: rep(' ', wll) + pad(inner, wlw), color: WHITE },
+            ], W),
+            bgColor: DARK,
+          });
+        } else if (isSelected) {
           rows.push({
             segments: padSegs([
               { text: rep(' ', wll) + pad(inner, wlw), color: BG },
@@ -440,15 +457,23 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
     fillTo(rows, wsTarget, W);
 
     rows.push(row(rep('─', W), DARK));
-    rows.push(segRow(padSegs([
-      { text: '  ', color: GRAY },
-      { text: '↑↓', color: LIGHT },
-      { text: ' Navigate   ', color: DIM },
-      { text: 'Enter', color: LIGHT },
-      { text: ' Select   ', color: DIM },
-      { text: 'Q', color: LIGHT },
-      { text: ' Quit', color: DIM },
-    ], W)));
+    if (pressed && pressedAction) {
+      rows.push(segRow(padSegs([
+        { text: '  ', color: GRAY },
+        { text: '→ ', color: WHITE },
+        { text: pressedAction, color: WHITE },
+      ], W)));
+    } else {
+      rows.push(segRow(padSegs([
+        { text: '  ', color: GRAY },
+        { text: '↑↓', color: LIGHT },
+        { text: ' Navigate   ', color: DIM },
+        { text: 'Enter', color: LIGHT },
+        { text: ' Select   ', color: DIM },
+        { text: 'Q', color: LIGHT },
+        { text: ' Quit', color: DIM },
+      ], W)));
+    }
 
     return { rows, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
   }
@@ -494,7 +519,8 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
       for (let i = 0; i < projects.length; i++) {
         const p = projects[i];
         const isSelected = i === selectorIndex;
-        const pointer = isSelected ? '>' : ' ';
+        const isPressed = isSelected && pressed;
+        const pointer = isPressed ? '▸' : isSelected ? '>' : ' ';
         const statusStr = (p.status || '').padEnd(8);
         const keyStr = p.key.padEnd(6);
 
@@ -502,7 +528,14 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
         const displayName = p.name.length > nameMax ? p.name.slice(0, nameMax - 1) + '…' : p.name.padEnd(nameMax);
         const inner = ` ${pointer} ${keyStr}${displayName} ${statusStr}`;
 
-        if (isSelected) {
+        if (isPressed) {
+          rows.push({
+            segments: padSegs([
+              { text: rep(' ', pll) + pad(inner, plw), color: WHITE },
+            ], W),
+            bgColor: DARK,
+          });
+        } else if (isSelected) {
           rows.push({
             segments: padSegs([
               { text: rep(' ', pll) + pad(inner, plw), color: BG },
@@ -537,17 +570,25 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
     fillTo(rows, psTarget, W);
 
     rows.push(row(rep('─', W), DARK));
-    rows.push(segRow(padSegs([
-      { text: '  ', color: GRAY },
-      { text: '↑↓', color: LIGHT },
-      { text: ' Navigate   ', color: DIM },
-      { text: 'Enter', color: LIGHT },
-      { text: ' Select   ', color: DIM },
-      { text: 'B', color: LIGHT },
-      { text: ' Back   ', color: DIM },
-      { text: 'Q', color: LIGHT },
-      { text: ' Quit', color: DIM },
-    ], W)));
+    if (pressed && pressedAction) {
+      rows.push(segRow(padSegs([
+        { text: '  ', color: GRAY },
+        { text: '→ ', color: WHITE },
+        { text: pressedAction, color: WHITE },
+      ], W)));
+    } else {
+      rows.push(segRow(padSegs([
+        { text: '  ', color: GRAY },
+        { text: '↑↓', color: LIGHT },
+        { text: ' Navigate   ', color: DIM },
+        { text: 'Enter', color: LIGHT },
+        { text: ' Select   ', color: DIM },
+        { text: 'B', color: LIGHT },
+        { text: ' Back   ', color: DIM },
+        { text: 'Q', color: LIGHT },
+        { text: ' Quit', color: DIM },
+      ], W)));
+    }
 
     return { rows, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
   }
@@ -616,6 +657,18 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
         ], W)));
       }
       rows.push(blank(W));
+
+      // Status icon legend
+      rows.push(segRow(padSegs([
+        { text: '    ', color: WHITE },
+        { text: '◌', color: GRAY }, { text: ' Backlog  ', color: DIM },
+        { text: '○', color: GRAY }, { text: ' Todo  ', color: DIM },
+        { text: '●', color: WHITE }, { text: ' In Progress  ', color: DIM },
+        { text: '◉', color: GRAY }, { text: ' In Review  ', color: DIM },
+        { text: '✓', color: GRAY }, { text: ' Done  ', color: DIM },
+        { text: '✕', color: GRAY }, { text: ' Cancelled', color: DIM },
+      ], W)));
+      rows.push(blank(W));
     }
   } else {
     // Authenticated with project but no tasks yet
@@ -646,9 +699,17 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
   for (let i = 0; i < menuItems.length; i++) {
     const item = menuItems[i];
     const isSelected = i === selectedIndex;
+    const isPressed = isSelected && pressed;
     const line = ` ${item.key}  ${item.label}` + rep(' ', mw - 3 - item.label.length - item.desc.length) + item.desc + ' ';
 
-    if (isSelected) {
+    if (isPressed) {
+      rows.push({
+        segments: padSegs([
+          { text: rep(' ', ml) + line, color: WHITE },
+        ], W),
+        bgColor: DARK,
+      });
+    } else if (isSelected) {
       rows.push({
         segments: padSegs([
           { text: rep(' ', ml) + line, color: BG },
@@ -681,19 +742,27 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
   fillTo(rows, ndTarget, W);
 
   rows.push(row(rep('─', W), DARK));
-  rows.push(segRow(padSegs([
-    { text: '  ', color: GRAY },
-    { text: '↑↓', color: LIGHT },
-    { text: ' Navigate   ', color: DIM },
-    { text: 'Enter', color: LIGHT },
-    { text: ' Select   ', color: DIM },
-    { text: 'W', color: LIGHT },
-    { text: ' Workspace   ', color: DIM },
-    { text: 'P', color: LIGHT },
-    { text: ' Project   ', color: DIM },
-    { text: 'Q', color: LIGHT },
-    { text: ' Quit', color: DIM },
-  ], W)));
+  if (pressed && pressedAction) {
+    rows.push(segRow(padSegs([
+      { text: '  ', color: GRAY },
+      { text: '→ ', color: WHITE },
+      { text: pressedAction, color: WHITE },
+    ], W)));
+  } else {
+    rows.push(segRow(padSegs([
+      { text: '  ', color: GRAY },
+      { text: '↑↓', color: LIGHT },
+      { text: ' Navigate   ', color: DIM },
+      { text: 'Enter', color: LIGHT },
+      { text: ' Select   ', color: DIM },
+      { text: 'W', color: LIGHT },
+      { text: ' Workspace   ', color: DIM },
+      { text: 'P', color: LIGHT },
+      { text: ' Project   ', color: DIM },
+      { text: 'Q', color: LIGHT },
+      { text: ' Quit', color: DIM },
+    ], W)));
+  }
 
   return { rows, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
 }

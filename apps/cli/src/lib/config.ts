@@ -13,6 +13,8 @@ export interface AuthConfig {
   userId?: string;
   email?: string;
   expiresAt?: number;
+  /** Clerk session ID for server-side token refresh (avoids browser re-auth) */
+  sessionId?: string;
 }
 
 export interface ProjectContext {
@@ -54,6 +56,7 @@ const config = new Conf<CLIConfig>({
         userId: { type: 'string' },
         email: { type: 'string' },
         expiresAt: { type: 'number' },
+        sessionId: { type: 'string' },
       },
     },
     context: {

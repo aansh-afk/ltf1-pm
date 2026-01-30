@@ -4,7 +4,7 @@
  * All page rendering delegated to pages/ modules with real data hooks
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Box, Text, useInput, useApp, useStdout } from 'ink';
 
 import type { Page, Row } from './types.js';
@@ -18,7 +18,7 @@ import type { LoginState } from './pages/Dashboard.js';
 import { useTasksPage } from './pages/Tasks.js';
 import { useSprintPage } from './pages/Sprint.js';
 import { useGitPage } from './pages/Git.js';
-import { login } from '../lib/auth.js';
+import { login, refreshToken } from '../lib/auth.js';
 import { setContext, clearContext } from '../lib/config.js';
 
 interface AppProps {
@@ -38,6 +38,27 @@ export function App({ initialView = 'dashboard' }: AppProps) {
   // Login flow state
   const [loginState, setLoginState] = useState<LoginState>('idle');
   const [loginError, setLoginError] = useState('');
+
+  // Press feedback state: brief 150ms visual flash on user actions
+  const [pressed, setPressed] = useState(false);
+  const [pressedAction, setPressedAction] = useState('');
+  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerPress = useCallback((action: string) => {
+    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+    setPressed(true);
+    setPressedAction(action);
+    pressTimerRef.current = setTimeout(() => {
+      setPressed(false);
+      setPressedAction('');
+      pressTimerRef.current = null;
+    }, 150);
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => { if (pressTimerRef.current) clearTimeout(pressTimerRef.current); };
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 100);
@@ -77,13 +98,39 @@ export function App({ initialView = 'dashboard' }: AppProps) {
       });
   }, [loginState, auth]);
 
+  // Auto-refresh token before it expires
+  // Try silent server-side refresh first (using Clerk session ID),
+  // fall back to browser re-auth only if silent refresh fails.
+  useEffect(() => {
+    if (!auth.needsRefresh || loginState === 'authenticating') return;
+
+    if (auth.sessionId) {
+      // Silent refresh via Convex HTTP endpoint
+      setLoginState('authenticating');
+      refreshToken()
+        .then((ok) => {
+          if (ok) {
+            setLoginState('idle');
+            auth.refresh();
+          } else {
+            // Session expired (>7 days) — need browser login
+            startLogin();
+          }
+        })
+        .catch(() => startLogin());
+    } else {
+      // No session ID stored — browser login required
+      startLogin();
+    }
+  }, [auth.needsRefresh, auth.sessionId, loginState, startLogin, auth]);
+
   const tooSmall = width < MIN_WIDTH || height < MIN_HEIGHT;
   const W = Math.max(width, MIN_WIDTH);
   const H = Math.max(height, MIN_HEIGHT);
   const timeStr = time.toLocaleTimeString('en-GB', { hour12: false });
 
   // Call all page hooks unconditionally (React rules of hooks)
-  const dashboardResult = useDashboardPage({ width: W, height: H, timeStr, selectedIndex, selectorIndex, loginState, loginError });
+  const dashboardResult = useDashboardPage({ width: W, height: H, timeStr, selectedIndex, selectorIndex, loginState, loginError, pressed, pressedAction });
   const tasksRows = useTasksPage({ width: W, height: H, timeStr, isActive: view === 'tasks' });
   const sprintRows = useSprintPage({ width: W, height: H, timeStr });
   const gitRows = useGitPage({ width: W, height: H, timeStr, isActive: view === 'git' });
@@ -151,7 +198,7 @@ export function App({ initialView = 'dashboard' }: AppProps) {
       if (dashboardMode === 'workspace_selector') {
         if (key.upArrow) setSelectorIndex(i => Math.max(0, i - 1));
         if (key.downArrow) setSelectorIndex(i => Math.min(Math.max(0, selectorItemCount - 1), i + 1));
-        if (key.return && selectorItemCount > 0) handleWorkspaceSelect();
+        if (key.return && selectorItemCount > 0) { triggerPress('Select'); handleWorkspaceSelect(); }
         return;
       }
 
@@ -159,8 +206,8 @@ export function App({ initialView = 'dashboard' }: AppProps) {
       if (dashboardMode === 'project_selector') {
         if (key.upArrow) setSelectorIndex(i => Math.max(0, i - 1));
         if (key.downArrow) setSelectorIndex(i => Math.min(Math.max(0, selectorItemCount - 1), i + 1));
-        if (key.return && selectorItemCount > 0) handleProjectSelect();
-        if (input === 'b') handleBackToWorkspaceSelector();
+        if (key.return && selectorItemCount > 0) { triggerPress('Select'); handleProjectSelect(); }
+        if (input === 'b') { triggerPress('Back'); handleBackToWorkspaceSelector(); }
         return;
       }
 
@@ -169,14 +216,16 @@ export function App({ initialView = 'dashboard' }: AppProps) {
       if (key.downArrow) setSelectedIndex(i => Math.min(3, i + 1));
       if (key.return) {
         const views: Page[] = ['tasks', 'sprint', 'git', 'dashboard'];
+        const labels = ['Tasks', 'Sprint', 'Git', 'Quit'];
+        triggerPress(labels[selectedIndex]);
         if (selectedIndex < 3) setView(views[selectedIndex]);
         else exit();
       }
-      if (input === 't' || input === '1') setView('tasks');
-      if (input === 's' || input === '2') setView('sprint');
-      if (input === 'g' || input === '3') setView('git');
-      if (input === 'w') handleBackToWorkspaceSelector();
-      if (input === 'p') handleSwitchToProjectSelector();
+      if (input === 't' || input === '1') { triggerPress('Tasks'); setView('tasks'); }
+      if (input === 's' || input === '2') { triggerPress('Sprint'); setView('sprint'); }
+      if (input === 'g' || input === '3') { triggerPress('Git'); setView('git'); }
+      if (input === 'w') { triggerPress('Workspace'); handleBackToWorkspaceSelector(); }
+      if (input === 'p') { triggerPress('Project'); handleSwitchToProjectSelector(); }
     } else {
       if (key.escape || input === 'b') setView('dashboard');
       if (input === 't') setView('tasks');
