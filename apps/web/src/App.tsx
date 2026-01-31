@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { SignIn, SignUp, SignedIn, SignedOut, useAuth } from '@clerk/clerk-react'
 import { Toaster } from 'react-hot-toast'
 import React, { useState, useEffect, useMemo } from 'react'
@@ -46,12 +46,22 @@ import CustomFieldsPage from './pages/CustomFieldsPage'
 import SlackPage from './pages/SlackPage'
 import TeamsPage from './pages/TeamsPage'
 import ComingSoonPage from './pages/ComingSoonPage'
+import CLIAuthPage from './pages/CLIAuthPage'
 import { useEnsureUser } from './hooks/useEnsureUser'
 import { DataMigrationBanner } from './components/admin/DataMigrationBanner'
 import CommandPalette from './components/shortcuts/CommandPalette'
 import ShortcutHelp from './components/shortcuts/ShortcutHelp'
 import OnboardingFlow from './components/onboarding/OnboardingFlow'
 import BrutalistLoader from './components/common/BrutalistLoader'
+
+// Scroll to top on route changes (prevents stale scroll position across pages)
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
+}
 
 // Create a wrapper component that handles authentication state
 function AuthenticatedAppContent() {
@@ -194,6 +204,9 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
         {/* GitHub OAuth Callback */}
         <Route path="/api/auth/github/callback" element={<GitHubCallbackPage />} />
 
+        {/* CLI Authentication */}
+        <Route path="/cli-auth" element={<CLIAuthPage />} />
+
         {/* Protected routes - show without authentication requirement */}
         <Route path="/" element={<DashboardLayout />}>
           <Route path="dashboard" element={<Dashboard />} />
@@ -259,6 +272,7 @@ function App() {
   return (
     <OptionalConvexProvider>
       <Router>
+        <ScrollToTop />
         <ThemeProvider>
           <ShortcutProvider>
             <AppContent />

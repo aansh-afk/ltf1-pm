@@ -22,14 +22,14 @@ export default {
         // Status colors following Brutalist protocol
         'brutal-error': '#FF0000',
         'brutal-success': '#00FF00',
-        'brutal-info': '#00FFFF',
+        'brutal-info': '#FF2D78',
         'brutal-warning': '#FF00FF',
         'warning-brutalist': '#FF00FF',
         'success-brutalist': '#00FF00',
         'terminal-green': '#00FF00',
       },
       backgroundImage: {
-        'glitch-flare': 'linear-gradient(90deg, #00FFFF, #FF00FF, #FFFF00)',
+        'glitch-flare': 'linear-gradient(90deg, #FF2D78, #FF00FF, #FFFF00)',
       },
       fontFamily: {
         'mono': ['IBM Plex Mono', 'monospace'],
@@ -47,6 +47,9 @@ export default {
         '64px': '64px',
         '72px': '72px',
         '80px': '80px',
+        '96px': '96px',
+        '120px': '120px',
+        '160px': '160px',
         '240px': '240px',
         '256px': '256px',
       },
@@ -63,6 +66,13 @@ export default {
         'brutal-lg': ['1.25rem', { lineHeight: '1.4' }],
         'brutal-xl': ['1.5rem', { lineHeight: '1.4' }],
         'brutal-2xl': ['2rem', { lineHeight: '1.2' }],
+        // Marketing hero type scale
+        'hero-sm': ['2rem', { lineHeight: '1.1', letterSpacing: '-0.02em' }],
+        'hero-md': ['3rem', { lineHeight: '1.05', letterSpacing: '-0.02em' }],
+        'hero-lg': ['4rem', { lineHeight: '1.0', letterSpacing: '-0.03em' }],
+        'hero-xl': ['5rem', { lineHeight: '1.0', letterSpacing: '-0.03em' }],
+        'hero-2xl': ['6.5rem', { lineHeight: '0.95', letterSpacing: '-0.04em' }],
+        'section-title': ['2.5rem', { lineHeight: '1.1', letterSpacing: '0.02em' }],
       },
       transitionTimingFunction: {
         'brutal': 'linear',
@@ -80,6 +90,7 @@ export default {
         'marquee-fast': 'marquee 15s linear infinite',
         'scanline': 'scanline 8s linear infinite',
         'crt-flicker': 'crt-flicker 0.15s infinite',
+        'cursor-blink': 'cursor-blink 1.06s step-end infinite',
       },
       keyframes: {
         brutalFade: {
@@ -87,11 +98,11 @@ export default {
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         glitch: {
-          '0%': { textShadow: '2px 2px 0 #00FFFF, -2px -2px 0 #FF00FF' },
-          '25%': { textShadow: '-2px 2px 0 #00FFFF, 2px -2px 0 #FF00FF' },
-          '50%': { textShadow: '2px -2px 0 #00FFFF, -2px 2px 0 #FF00FF' },
-          '75%': { textShadow: '-2px -2px 0 #00FFFF, 2px 2px 0 #FF00FF' },
-          '100%': { textShadow: '2px 2px 0 #00FFFF, -2px -2px 0 #FF00FF' },
+          '0%': { textShadow: '2px 2px 0 #FF2D78, -2px -2px 0 #FF00FF' },
+          '25%': { textShadow: '-2px 2px 0 #FF2D78, 2px -2px 0 #FF00FF' },
+          '50%': { textShadow: '2px -2px 0 #FF2D78, -2px 2px 0 #FF00FF' },
+          '75%': { textShadow: '-2px -2px 0 #FF2D78, 2px 2px 0 #FF00FF' },
+          '100%': { textShadow: '2px 2px 0 #FF2D78, -2px -2px 0 #FF00FF' },
         },
         brutalPulse: {
           '0%, 50%': { opacity: '1' },
@@ -117,6 +128,10 @@ export default {
           '0%': { opacity: '0.9' },
           '50%': { opacity: '1.0' },
           '100%': { opacity: '0.9' },
+        },
+        'cursor-blink': {
+          '0%, 49%': { opacity: '1' },
+          '50%, 100%': { opacity: '0' },
         },
       },
       borderRadius: {

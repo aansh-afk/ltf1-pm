@@ -11,6 +11,47 @@ http.route({
   handler: clerkWebhook,
 });
 
+// CLI token refresh endpoint — mints a fresh Convex JWT from a Clerk session
+http.route({
+  path: "/api/cli-refresh",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const body = await request.json();
+      const sessionId = body?.sessionId;
+
+      if (!sessionId || typeof sessionId !== "string") {
+        return new Response(
+          JSON.stringify({ error: "Missing sessionId" }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      const result = await ctx.runAction(internal.cliRefresh.refreshToken, {
+        sessionId,
+      });
+
+      if ("error" in result) {
+        return new Response(
+          JSON.stringify({ error: result.error }),
+          { status: 401, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ token: result.token }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    } catch (error) {
+      console.error("CLI refresh error:", error);
+      return new Response(
+        JSON.stringify({ error: "Internal server error" }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      );
+    }
+  }),
+});
+
 // GitHub webhook handler
 http.route({
   path: "/api/github/webhook",
