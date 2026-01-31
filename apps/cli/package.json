@@ -1,0 +1,74 @@
+{
+  "name": "@vvg-ltf1/cli",
+  "version": "0.1.0-beta.2",
+  "description": "LTF1 CLI - Terminal interface for project management by Vivid Verse Global",
+  "type": "module",
+  "bin": {
+    "ltf": "./dist/bin/ltf.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "TSX_DEV=1 tsx watch src/bin/ltf.ts",
+    "build": "tsup src/bin/ltf.ts --format esm --outDir dist/bin --clean --loader '.tsx=tsx' && tsup src/index.ts --format esm --outDir dist --dts",
+    "start": "node dist/bin/ltf.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src --ext .ts",
+    "link": "pnpm build && npm link",
+    "prepublishOnly": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vividverseglobal/iceberg",
+    "directory": "apps/cli"
+  },
+  "dependencies": {
+    "boxen": "^8.0.1",
+    "chalk": "^5.3.0",
+    "chokidar": "^4.0.1",
+    "cli-table3": "^0.6.5",
+    "commander": "^12.1.0",
+    "conf": "^13.0.1",
+    "convex": "^1.13.0",
+    "date-fns": "^4.1.0",
+    "express": "^4.21.0",
+    "figures": "^6.1.0",
+    "ink": "^5.0.1",
+    "inquirer": "^10.2.2",
+    "open": "^10.1.0",
+    "ora": "^8.1.1",
+    "react": "^18.3.1",
+    "simple-git": "^3.27.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^20.19.9",
+    "@types/react": "^18.3.3",
+    "@vitest/coverage-v8": "^2.1.9",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.3.0",
+    "vitest": "^2.1.9"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "cli",
+    "project-management",
+    "task-management",
+    "git",
+    "ltf",
+    "vivid-verse-global"
+  ],
+  "author": "Vivid Verse Global",
+  "license": "MIT"
+}
