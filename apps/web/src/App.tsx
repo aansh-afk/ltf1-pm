@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { SignIn, SignUp, SignedIn, SignedOut, useAuth } from '@clerk/clerk-react'
 import { Toaster } from 'react-hot-toast'
 import React, { useState, useEffect, useMemo } from 'react'
@@ -53,6 +53,15 @@ import CommandPalette from './components/shortcuts/CommandPalette'
 import ShortcutHelp from './components/shortcuts/ShortcutHelp'
 import OnboardingFlow from './components/onboarding/OnboardingFlow'
 import BrutalistLoader from './components/common/BrutalistLoader'
+
+// Scroll to top on route changes (prevents stale scroll position across pages)
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
+}
 
 // Create a wrapper component that handles authentication state
 function AuthenticatedAppContent() {
@@ -263,6 +272,7 @@ function App() {
   return (
     <OptionalConvexProvider>
       <Router>
+        <ScrollToTop />
         <ThemeProvider>
           <ShortcutProvider>
             <AppContent />

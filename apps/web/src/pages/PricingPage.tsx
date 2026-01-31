@@ -1,20 +1,20 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { 
-  HiCheck, 
-  HiX, 
-  HiCode, 
+import {
+  HiCheck,
+  HiX,
+  HiCode,
   HiLightningBolt,
   HiCube,
   HiChip,
-  HiGlobe
 } from 'react-icons/hi'
 import PublicNavigation from '../components/common/PublicNavigation'
+import Footer from '../components/common/Footer'
 
 export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
-  const yearlyDiscount = 0.2 // 20% discount for yearly
+  const yearlyDiscount = 0.2
 
   const tiers = [
     {
@@ -24,7 +24,6 @@ export default function PricingPage() {
       minUsers: 1,
       maxUsers: 5,
       icon: HiCode,
-      color: '#00FFFF',
       popular: false,
       enterprise: false,
       features: [
@@ -49,7 +48,6 @@ export default function PricingPage() {
       minUsers: 3,
       maxUsers: 50,
       icon: HiLightningBolt,
-      color: '#FFFF00',
       popular: true,
       enterprise: false,
       features: [
@@ -74,7 +72,6 @@ export default function PricingPage() {
       minUsers: 10,
       maxUsers: 500,
       icon: HiCube,
-      color: '#FF00FF',
       popular: false,
       enterprise: false,
       features: [
@@ -99,7 +96,6 @@ export default function PricingPage() {
       minUsers: 50,
       maxUsers: null,
       icon: HiChip,
-      color: 'linear-gradient(45deg, #00FFFF 0%, #FF00FF 50%, #FFFF00 100%)',
       popular: false,
       enterprise: true,
       features: [
@@ -126,84 +122,77 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A]">
-      {/* NAVIGATION */}
-      <PublicNavigation currentPage="pricing" />
+    <div className="min-h-screen bg-carbon-plate">
+      <PublicNavigation />
 
       {/* HERO SECTION */}
       <section className="py-48px md:py-80px px-16px md:px-24px">
         <div className="max-w-7xl mx-auto text-center">
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-bold mb-16px md:mb-24px"
           >
-            <span className="text-[#FFFFFF]">PRICING THAT</span>{' '}
-            <span className="glitch-text">MAKES SENSE</span>
+            <span className="text-cathode-white">PRICING THAT</span>{' '}
+            <span className="text-brutal-info">MAKES SENSE</span>
           </motion.h1>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-lg sm:text-xl md:text-2xl text-[#FFFFFF]/80 uppercase tracking-wider mb-32px md:mb-48px px-16px sm:px-0"
+            className="text-lg sm:text-xl md:text-2xl text-cathode-white/80 uppercase tracking-wider mb-32px md:mb-48px px-16px sm:px-0"
           >
-            NO HIDDEN FEES. NO SEAT MINIMUMS.<br className="sm:hidden" /> JUST TOOLS THAT WORK.
+            NO HIDDEN FEES. NO SEAT MINIMUMS. JUST TOOLS THAT WORK.
           </motion.p>
 
           {/* BILLING TOGGLE */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="flex flex-col items-center gap-16px mb-64px"
           >
-            {/* Toggle Switch Container */}
             <div className="flex items-center gap-16px md:gap-24px">
-              {/* Monthly Label */}
-              <span 
-                className={`text-sm md:text-lg font-bold transition-colors cursor-pointer ${billingCycle === 'monthly' ? 'text-[#00FFFF]' : 'text-[#FFFFFF]/40'}`}
+              <span
+                className={`text-sm md:text-lg font-bold cursor-pointer ${billingCycle === 'monthly' ? 'text-brutal-info' : 'text-cathode-white/40'}`}
                 onClick={() => setBillingCycle('monthly')}
               >
                 MONTHLY
               </span>
-              
-              {/* Toggle Switch */}
+
               <button
                 onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-                className="relative w-[80px] h-[40px] bg-[#1A1A1A] border-2 border-[#333333] cursor-pointer hover:border-[#555555] transition-colors"
+                className="relative w-[80px] h-[40px] bg-[var(--theme-background-tertiary)] border-2 border-basalt-border cursor-pointer hover:border-cathode-white/30"
                 aria-label="Toggle billing cycle"
                 role="switch"
                 aria-checked={billingCycle === 'yearly'}
               >
-                {/* Sliding Thumb */}
                 <motion.div
-                  className="absolute w-[36px] h-[36px] bg-[#00FFFF] border-2 border-[#000000]"
+                  className="absolute w-[36px] h-[36px] border-2 border-event-horizon"
                   initial={false}
                   animate={{
                     x: billingCycle === 'monthly' ? 0 : 40,
-                    backgroundColor: billingCycle === 'monthly' ? '#00FFFF' : '#00FF00'
+                    backgroundColor: billingCycle === 'monthly' ? '#FF2D78' : '#00FF00'
                   }}
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   style={{ top: '0px', left: '0px' }}
                 />
               </button>
-              
-              {/* Yearly Label */}
-              <span 
-                className={`text-sm md:text-lg font-bold transition-colors cursor-pointer ${billingCycle === 'yearly' ? 'text-[#00FF00]' : 'text-[#FFFFFF]/40'}`}
+
+              <span
+                className={`text-sm md:text-lg font-bold cursor-pointer ${billingCycle === 'yearly' ? 'text-brutal-success' : 'text-cathode-white/40'}`}
                 onClick={() => setBillingCycle('yearly')}
               >
                 YEARLY
               </span>
             </div>
-            
-            {/* Save Badge */}
+
             {billingCycle === 'yearly' && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-[#00FF00] text-[#000000] px-16px py-8px font-bold text-sm border-2 border-[#000000] shadow-[3px_3px_0px_#000000]"
+                className="bg-brutal-success text-event-horizon px-16px py-8px font-bold text-sm border-2 border-event-horizon shadow-brutal-sm"
               >
                 SAVE 20% WITH ANNUAL BILLING
               </motion.div>
@@ -220,8 +209,7 @@ export default function PricingPage() {
                  style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
             {tiers.map((tier, index) => {
               const Icon = tier.icon
-              const isGradient = tier.color.includes('gradient')
-              
+
               return (
                 <motion.div
                   key={tier.name}
@@ -231,59 +219,46 @@ export default function PricingPage() {
                   className={`
                     snap-start flex-shrink-0 lg:flex-shrink-auto w-[85vw] lg:w-auto brutal-card p-32px relative
                     flex flex-col h-full
-                    ${tier.popular ? 'border-4 border-[#00FF00]' : 'border-2 border-[#333333]'}
-                    hover:border-[#FFFFFF] transition-none
+                    ${tier.popular ? 'border-4 border-brutal-info' : 'border-2 border-basalt-border'}
+                    hover:border-cathode-white
                   `}
                 >
-                  {/* POPULAR BADGE */}
                   {tier.popular && (
                     <div className="absolute -top-16px left-1/2 -translate-x-1/2">
-                      <div className="bg-[#00FF00] text-[#000000] px-16px py-4px text-sm font-bold uppercase">
+                      <div className="bg-brutal-info text-event-horizon px-16px py-4px text-sm font-bold uppercase">
                         MOST POPULAR
                       </div>
                     </div>
                   )}
 
-                  {/* TIER ICON */}
                   <div className="mb-24px">
-                    <Icon
-                      className="w-48px h-48px mx-auto"
-                      style={{
-                        color: isGradient ? undefined : tier.color,
-                        background: isGradient ? tier.color : undefined,
-                        WebkitBackgroundClip: isGradient ? 'text' : undefined,
-                        WebkitTextFillColor: isGradient ? 'transparent' : undefined,
-                      }}
-                    />
+                    <Icon className="w-48px h-48px mx-auto text-brutal-info" />
                   </div>
 
-                  {/* TIER NAME */}
-                  <h3 className="text-2xl font-bold mb-8px text-[#FFFFFF]">
+                  <h3 className="text-2xl font-bold mb-8px text-cathode-white">
                     {tier.name}
                   </h3>
 
-                  {/* TAGLINE */}
-                  <p className="text-sm text-[#FFFFFF]/60 mb-24px">
+                  <p className="text-sm text-cathode-white/60 mb-24px">
                     {tier.tagline}
                   </p>
 
-                  {/* PRICE */}
                   <div className="mb-24px">
                     {tier.price === 0 ? (
-                      <div className="text-5xl font-bold text-[#00FFFF]">FREE</div>
+                      <div className="text-5xl font-bold text-brutal-info">FREE</div>
                     ) : (
                       <>
-                        <div className="text-5xl font-bold text-[#FFFFFF]">
+                        <div className="text-5xl font-bold text-cathode-white">
                           ${billingCycle === 'yearly' ? Math.floor(tier.price * (1 - yearlyDiscount)) : tier.price}
                         </div>
-                        <div className="text-sm text-[#FFFFFF]/60 uppercase">
+                        <div className="text-sm text-cathode-white/60 uppercase">
                           per user/month
                         </div>
-                        <div className="text-sm text-[#FFFF00] mt-8px">
+                        <div className="text-sm text-brutal-info mt-8px">
                           {tier.minUsers}-{tier.maxUsers || '∞'} users
                         </div>
                         {tier.minUsers > 1 && (
-                          <div className="text-sm text-[#FF00FF] mt-4px">
+                          <div className="text-sm text-cathode-white/40 mt-4px">
                             ${calculatePrice(tier.price, tier.minUsers)}/month minimum
                           </div>
                         )}
@@ -291,32 +266,29 @@ export default function PricingPage() {
                     )}
                   </div>
 
-                  {/* FEATURES */}
                   <div className="space-y-12px mb-24px">
                     {tier.features.slice(0, 12).map((feature, idx) => (
                       <div key={idx} className="flex items-start gap-8px">
                         {feature.included ? (
-                          <HiCheck className="w-20px h-20px text-[#00FF00] flex-shrink-0 mt-2px" />
+                          <HiCheck className="w-20px h-20px text-brutal-success flex-shrink-0 mt-2px" />
                         ) : (
-                          <HiX className="w-20px h-20px text-[#FF0000] flex-shrink-0 mt-2px" />
+                          <HiX className="w-20px h-20px text-brutal-error flex-shrink-0 mt-2px" />
                         )}
-                        <span className={`text-sm ${feature.included ? 'text-[#FFFFFF]' : 'text-[#FFFFFF]/40 line-through'}`}>
+                        <span className={`text-sm ${feature.included ? 'text-cathode-white' : 'text-cathode-white/40 line-through'}`}>
                           {feature.name}
                         </span>
                       </div>
                     ))}
                   </div>
 
-                  {/* SPACER - Pushes button to bottom */}
                   <div className="flex-grow"></div>
 
-                  {/* CTA BUTTON - Now at bottom */}
                   <Link
                     to={tier.enterprise ? '/contact' : '/sign-up'}
                     className={`
                       brutal-btn w-full text-center block mt-auto
-                      ${tier.popular ? 'bg-[#00FF00] text-[#000000]' : ''}
-                      ${tier.enterprise ? 'bg-gradient-to-r from-[#00FFFF] via-[#FF00FF] to-[#FFFF00] text-[#000000]' : ''}
+                      ${tier.popular ? 'bg-brutal-info text-event-horizon border-brutal-info' : ''}
+                      ${tier.enterprise ? 'bg-brutal-info text-event-horizon border-brutal-info' : ''}
                     `}
                   >
                     {tier.enterprise ? 'CONTACT SALES' : tier.price === 0 ? 'START FREE' : 'START TRIAL'}
@@ -325,65 +297,61 @@ export default function PricingPage() {
               )
             })}
             </div>
-            {/* Scroll Indicator for Pricing Tiers */}
-            <div className="absolute right-0 top-0 bottom-0 w-24px bg-gradient-to-l from-[#0A0A0A] to-transparent lg:hidden flex items-center justify-end pr-8px pointer-events-none">
-              <div className="text-[#00FFFF] text-xs animate-pulse">→</div>
+            <div className="absolute right-0 top-0 bottom-0 w-24px bg-gradient-to-l from-carbon-plate to-transparent lg:hidden flex items-center justify-end pr-8px pointer-events-none">
+              <div className="text-brutal-info text-xs animate-pulse">&rarr;</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* WHAT IS AN AI OPERATION? */}
-      <section className="py-80px border-t-2 border-[#333333] bg-[#000000]">
+      {/* AI OPERATIONS */}
+      <section className="py-80px border-t-2 border-basalt-border bg-event-horizon">
         <div className="max-w-full md:max-w-4xl mx-auto px-16px md:px-24px">
-          <h2 className="text-5xl font-bold text-center mb-48px">
-            WHAT'S AN <span className="glitch-text">AI OPERATION?</span>
+          <h2 className="text-5xl font-bold text-center mb-48px text-cathode-white">
+            WHAT&apos;S AN <span className="text-brutal-info">AI OPERATION?</span>
           </h2>
 
           <div className="flex md:grid md:grid-cols-2 gap-16px md:gap-24px mb-32px md:mb-48px overflow-x-auto md:overflow-x-visible pb-16px md:pb-0 snap-x snap-mandatory md:snap-none"
                style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
             <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[85vw] md:w-auto brutal-card p-32px">
-              <h3 className="text-xl font-bold mb-16px text-[#00FFFF]">
+              <h3 className="text-xl font-bold mb-16px text-brutal-info">
                 COUNTS AS 1 OPERATION:
               </h3>
-              <ul className="space-y-8px text-[#FFFFFF]/80">
-                <li>• Generating task from commit</li>
-                <li>• Estimating story points</li>
-                <li>• Creating PR description</li>
-                <li>• Formatting commit message</li>
-                <li>• Calculating sprint velocity</li>
-                <li>• Generating subtasks</li>
+              <ul className="space-y-8px text-cathode-white/80">
+                <li>&bull; Generating task from commit</li>
+                <li>&bull; Estimating story points</li>
+                <li>&bull; Creating PR description</li>
+                <li>&bull; Formatting commit message</li>
+                <li>&bull; Calculating sprint velocity</li>
+                <li>&bull; Generating subtasks</li>
               </ul>
             </div>
 
             <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[85vw] md:w-auto brutal-card p-32px">
-              <h3 className="text-xl font-bold mb-16px text-[#FF00FF]">
-                DOESN'T COUNT:
+              <h3 className="text-xl font-bold mb-16px text-cathode-white/60">
+                DOESN&apos;T COUNT:
               </h3>
-              <ul className="space-y-8px text-[#FFFFFF]/80">
-                <li>• Viewing existing data</li>
-                <li>• Manual task creation</li>
-                <li>• Git webhook processing</li>
-                <li>• Slack notifications</li>
-                <li>• Basic calculations</li>
-                <li>• CSV exports</li>
+              <ul className="space-y-8px text-cathode-white/80">
+                <li>&bull; Viewing existing data</li>
+                <li>&bull; Manual task creation</li>
+                <li>&bull; Git webhook processing</li>
+                <li>&bull; Slack notifications</li>
+                <li>&bull; Basic calculations</li>
+                <li>&bull; CSV exports</li>
               </ul>
             </div>
           </div>
 
           <div className="brutal-card p-32px text-center">
-            <h3 className="text-2xl font-bold mb-16px text-[#FFFF00]">
+            <h3 className="text-2xl font-bold mb-16px text-cathode-white">
               TYPICAL USAGE
             </h3>
-            <p className="text-[#FFFFFF]/80 mb-24px">
+            <p className="text-cathode-white/80 mb-24px">
               Average developer: 10 commits/day + 5 PR descriptions + 10 story points = 25 AI credits/day<br/>
               Monthly: ~500 AI credits per developer
             </p>
-            <p className="text-sm text-[#00FF00]">
+            <p className="text-sm text-brutal-success">
               STARTUP tier (1,000 credits) = 2x headroom for power users
-            </p>
-            <p className="text-xs text-[#00FFFF] mt-16px">
-              Powered by GPT-OSS-120B via OpenRouter - 67% cheaper than alternatives
             </p>
           </div>
         </div>
@@ -392,109 +360,111 @@ export default function PricingPage() {
       {/* ROI CALCULATOR */}
       <section className="py-80px">
         <div className="max-w-full md:max-w-4xl mx-auto px-16px md:px-24px text-center">
-          <h2 className="text-5xl font-bold mb-48px">
-            THE <span className="glitch-text">MATH</span>
+          <h2 className="text-5xl font-bold mb-48px text-cathode-white">
+            THE <span className="text-brutal-info">MATH</span>
           </h2>
 
           <div className="brutal-card p-48px">
             <div className="grid md:grid-cols-2 gap-24px md:gap-48px text-left">
               <div>
-                <h3 className="text-2xl font-bold mb-24px text-[#FF0000]">WITHOUT LTF1</h3>
-                <div className="space-y-16px text-[#FFFFFF]/80">
-                  <div>Check Git → 1 min</div>
-                  <div>Copy commit → 30 sec</div>
-                  <div>Open Jira → 30 sec</div>
-                  <div>Create task → 2 min</div>
-                  <div>Estimate points → 5 min</div>
-                  <div>Update sprint → 1 min</div>
-                  <div className="pt-16px border-t-2 border-[#333333]">
-                    <span className="text-[#FF0000] font-bold">TOTAL: 10 min × 10/day = 100 min/day</span>
+                <h3 className="text-2xl font-bold mb-24px text-brutal-error">WITHOUT LTF1</h3>
+                <div className="space-y-16px text-cathode-white/80">
+                  <div>Check Git &rarr; 1 min</div>
+                  <div>Copy commit &rarr; 30 sec</div>
+                  <div>Open Jira &rarr; 30 sec</div>
+                  <div>Create task &rarr; 2 min</div>
+                  <div>Estimate points &rarr; 5 min</div>
+                  <div>Update sprint &rarr; 1 min</div>
+                  <div className="pt-16px border-t-2 border-basalt-border">
+                    <span className="text-brutal-error font-bold">TOTAL: 10 min &times; 10/day = 100 min/day</span>
                   </div>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-2xl font-bold mb-24px text-[#00FF00]">WITH LTF1</h3>
-                <div className="space-y-16px text-[#FFFFFF]/80">
-                  <div>Push code → 0 min</div>
-                  <div>Auto-created → 0 min</div>
-                  <div>Already there → 0 min</div>
-                  <div>Auto-generated → 0 min</div>
-                  <div>AI estimated → 0 min</div>
-                  <div>Auto-updated → 0 min</div>
-                  <div className="pt-16px border-t-2 border-[#333333]">
-                    <span className="text-[#00FF00] font-bold">TOTAL: 0 minutes</span>
+                <h3 className="text-2xl font-bold mb-24px text-brutal-success">WITH LTF1</h3>
+                <div className="space-y-16px text-cathode-white/80">
+                  <div>Push code &rarr; 0 min</div>
+                  <div>Auto-created &rarr; 0 min</div>
+                  <div>Already there &rarr; 0 min</div>
+                  <div>Auto-generated &rarr; 0 min</div>
+                  <div>AI estimated &rarr; 0 min</div>
+                  <div>Auto-updated &rarr; 0 min</div>
+                  <div className="pt-16px border-t-2 border-basalt-border">
+                    <span className="text-brutal-success font-bold">TOTAL: 0 minutes</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-48px pt-32px border-t-2 border-[#333333]">
-              <div className="text-3xl font-bold mb-16px">
-                100 min/day × 20 days = <span className="text-[#FFFF00]">33 HOURS/MONTH SAVED</span>
+            <div className="mt-48px pt-32px border-t-2 border-basalt-border">
+              <div className="text-3xl font-bold mb-16px text-cathode-white">
+                100 min/day &times; 20 days = <span className="text-primary-brutalist">33 HOURS/MONTH SAVED</span>
               </div>
-              <div className="text-xl text-[#FFFFFF]/80">
-                33 hours × $100/hour = $3,300 value<br/>
+              <div className="text-xl text-cathode-white/80">
+                33 hours &times; $100/hour = $3,300 value<br/>
                 Cost: $19/month<br/>
-                <span className="text-3xl font-bold text-[#00FF00]">ROI: 17,268%</span>
+                <span className="text-3xl font-bold text-brutal-success">ROI: 17,268%</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ SECTION */}
-      <section className="py-80px border-t-2 border-[#333333] bg-[#000000]">
+      {/* FAQ */}
+      <section className="py-80px border-t-2 border-basalt-border bg-event-horizon">
         <div className="max-w-full md:max-w-4xl mx-auto px-16px md:px-24px">
-          <h2 className="text-5xl font-bold text-center mb-48px">
-            ACTUALLY USEFUL <span className="glitch-text">FAQ</span>
+          <h2 className="text-5xl font-bold text-center mb-48px text-cathode-white">
+            ACTUALLY USEFUL <span className="text-brutal-info">FAQ</span>
           </h2>
 
           <div className="space-y-24px">
             <div className="brutal-card p-32px">
-              <h3 className="text-xl font-bold mb-16px text-[#00FFFF]">
+              <h3 className="text-xl font-bold mb-16px text-brutal-info">
                 DOES IT ACTUALLY WORK WITH MY GIT WORKFLOW?
               </h3>
-              <p className="text-[#FFFFFF]/80">
-                Yes. We support GitHub, GitLab, and Bitbucket. Works with any branching strategy. 
+              <p className="text-cathode-white/80">
+                Yes. We support GitHub, GitLab, and Bitbucket. Works with any branching strategy.
                 Push to main, feature branches, or PRs - we track it all. No special setup required.
               </p>
             </div>
 
             <div className="brutal-card p-32px">
-              <h3 className="text-xl font-bold mb-16px text-[#FF00FF]">
+              <h3 className="text-xl font-bold mb-16px text-cathode-white/60">
                 WHAT IF I RUN OUT OF AI OPERATIONS?
               </h3>
-              <p className="text-[#FFFFFF]/80">
-                Everything else keeps working - Git integration, task management, sprints. 
-                You just lose AI features (auto-generation, estimates) until next month. 
+              <p className="text-cathode-white/80">
+                Everything else keeps working - Git integration, task management, sprints.
+                You just lose AI features (auto-generation, estimates) until next month.
                 Or upgrade/add more operations anytime.
               </p>
             </div>
 
             <div className="brutal-card p-32px">
-              <h3 className="text-xl font-bold mb-16px text-[#FFFF00]">
+              <h3 className="text-xl font-bold mb-16px text-cathode-white/60">
                 CAN I USE MY OWN GEMINI API KEY?
               </h3>
-              <p className="text-[#FFFFFF]/80">
-                Yes, on SCALE tier and above. Bring Your Own Key (BYOK) means unlimited AI operations 
+              <p className="text-cathode-white/80">
+                Yes, on SCALE tier and above. Bring Your Own Key (BYOK) means unlimited AI operations
                 using your own Google Cloud account. We just orchestrate the calls.
               </p>
             </div>
 
             <div className="brutal-card p-32px">
-              <h3 className="text-xl font-bold mb-16px text-[#00FF00]">
+              <h3 className="text-xl font-bold mb-16px text-cathode-white/60">
                 HOW IS THIS DIFFERENT FROM JIRA/LINEAR/MONDAY?
               </h3>
-              <p className="text-[#FFFFFF]/80">
-                Those tools don't understand code. We watch your Git repo and automatically 
-                create/update tasks from your actual work. No double-entry. No "updating the board."
+              <p className="text-cathode-white/80">
+                Those tools don&apos;t understand code. We watch your Git repo and automatically
+                create/update tasks from your actual work. No double-entry. No &ldquo;updating the board.&rdquo;
                 Your code IS the source of truth.
               </p>
             </div>
           </div>
         </div>
       </section>
+
+      <Footer />
     </div>
   )
 }
