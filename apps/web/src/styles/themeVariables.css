@@ -22,7 +22,7 @@
   
   --theme-border: #333333;
   --theme-border-hover: #555555;
-  --theme-border-focus: #00FFFF;
+  --theme-border-focus: #FF2D78;
   
   --theme-primary: #FFFF00;
   --theme-primary-hover: #FFFF33;
@@ -36,8 +36,8 @@
   --theme-error-hover: #FF3333;
   --theme-warning: #FF00FF;
   --theme-warning-hover: #FF33FF;
-  --theme-info: #00FFFF;
-  --theme-info-hover: #33FFFF;
+  --theme-info: #FF2D78;
+  --theme-info-hover: #FF5A9D;
   
   --theme-hover: #1A1A1A;
   --theme-active: #0A0A0A;
@@ -48,9 +48,9 @@
   --theme-shadow: #000000;
   --theme-shadow-hover: #000000;
   
-  --theme-glow: #00FFFF;
+  --theme-glow: #FF2D78;
   --theme-glow-secondary: #FF00FF;
-  --theme-gradient: linear-gradient(90deg, #00FFFF, #FF00FF, #FFFF00);
+  --theme-gradient: linear-gradient(90deg, #FF2D78, #FF00FF, #FFFF00);
   
   /* Typography */
   --theme-font-family: 'IBM Plex Mono', monospace;

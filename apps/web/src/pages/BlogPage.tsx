@@ -1,20 +1,16 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { 
-  HiCode, 
-  HiLightningBolt,
-  HiChip,
-  HiCube,
-  HiBeaker,
-  HiClock,
-  HiUser,
-  HiTag,
+import {
   HiSearch,
   HiRss,
   HiMail
 } from 'react-icons/hi'
+import { useMutation } from 'convex/react'
+import { api } from '../../../../convex/_generated/api'
+import { toast } from 'react-hot-toast'
 import PublicNavigation from '../components/common/PublicNavigation'
+import Footer from '../components/common/Footer'
 
 interface BlogPost {
   id: string
@@ -27,7 +23,6 @@ interface BlogPost {
   readTime: string
   tags: string[]
   featured: boolean
-  image?: string
 }
 
 const blogPosts: BlogPost[] = [
@@ -130,13 +125,13 @@ const blogPosts: BlogPost[] = [
 ]
 
 const categories = [
-  { name: 'ALL', count: blogPosts.length, color: '#FFFFFF' },
-  { name: 'ENGINEERING', count: 2, color: '#00FFFF' },
-  { name: 'AI & ML', count: 2, color: '#FF00FF' },
-  { name: 'DEVOPS', count: 1, color: '#FFFF00' },
-  { name: 'DESIGN', count: 1, color: '#00FF00' },
-  { name: 'PRODUCTIVITY', count: 1, color: '#FF0000' },
-  { name: 'OPEN SOURCE', count: 1, color: '#00FFFF' }
+  { name: 'ALL', count: blogPosts.length },
+  { name: 'ENGINEERING', count: 2 },
+  { name: 'AI & ML', count: 2 },
+  { name: 'DEVOPS', count: 1 },
+  { name: 'DESIGN', count: 1 },
+  { name: 'PRODUCTIVITY', count: 1 },
+  { name: 'OPEN SOURCE', count: 1 }
 ]
 
 export default function BlogPage() {
@@ -144,6 +139,7 @@ export default function BlogPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
+  const subscribe = useMutation(api.waitlist.subscribeToNewsletter)
 
   const filteredPosts = blogPosts.filter(post => {
     const matchesCategory = selectedCategory === 'ALL' || post.category === selectedCategory
@@ -153,62 +149,68 @@ export default function BlogPage() {
     return matchesCategory && matchesSearch
   })
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubscribed(true)
-    setTimeout(() => setSubscribed(false), 5000)
-    setEmail('')
+    if (!email) return
+    try {
+      await subscribe({ email, source: 'blog' })
+      setSubscribed(true)
+      toast.success('SUBSCRIBED!')
+      setEmail('')
+      setTimeout(() => setSubscribed(false), 5000)
+    } catch {
+      toast.error('SOMETHING WENT WRONG. TRY AGAIN.')
+    }
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A]">
-      {/* NAVIGATION */}
-      <PublicNavigation currentPage="blog" />
+    <div className="min-h-screen bg-carbon-plate">
+      <PublicNavigation />
 
       {/* HERO SECTION */}
-      <section className="py-80px px-24px border-b-2 border-[#333333]">
+      <section className="py-80px px-24px border-b-2 border-basalt-border">
         <div className="max-w-7xl mx-auto">
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-6xl md:text-8xl font-bold mb-24px text-center"
           >
-            <span className="text-[#FFFFFF]">ENGINEERING</span>{' '}
-            <span className="glitch-text">INSIGHTS</span>
+            <span className="text-cathode-white">ENGINEERING</span>{' '}
+            <span className="text-brutal-info">INSIGHTS</span>
           </motion.h1>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-xl md:text-2xl text-[#FFFFFF]/80 uppercase tracking-wider text-center mb-48px"
+            className="text-xl md:text-2xl text-cathode-white/80 uppercase tracking-wider text-center mb-48px"
           >
             DEEP DIVES. TECHNICAL BREAKDOWNS. NO FLUFF.
           </motion.p>
 
           {/* SEARCH BAR */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="max-w-2xl mx-auto"
           >
             <div className="relative">
-              <input 
+              <input
                 type="text"
                 placeholder="SEARCH POSTS, TAGS, AUTHORS..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-24px md:px-48px py-12px md:py-16px bg-[#000000] border-2 border-[#333333] text-[#FFFFFF] focus:border-[#00FFFF] outline-none uppercase text-sm md:text-base"
+                className="w-full px-24px md:px-48px py-12px md:py-16px bg-event-horizon border-2 border-basalt-border text-cathode-white focus:border-brutal-info outline-none uppercase text-sm md:text-base"
               />
-              <HiSearch className="absolute left-12px md:left-16px top-1/2 -translate-y-1/2 text-[#FFFFFF]/50 text-lg md:text-xl" />
+              <HiSearch className="absolute left-12px md:left-16px top-1/2 -translate-y-1/2 text-cathode-white/50 text-lg md:text-xl" />
             </div>
           </motion.div>
         </div>
       </section>
 
       {/* CATEGORIES */}
-      <section className="py-24px md:py-32px px-16px md:px-24px border-b-2 border-[#333333] bg-[#000000]">
+      <section className="py-24px md:py-32px px-16px md:px-24px border-b-2 border-basalt-border bg-event-horizon">
         <div className="max-w-full md:max-w-7xl mx-auto">
           <div className="flex flex-wrap gap-8px md:gap-16px justify-center">
             {categories.map((category, index) => (
@@ -220,12 +222,8 @@ export default function BlogPage() {
                 onClick={() => setSelectedCategory(category.name)}
                 className={`
                   brutal-btn px-24px py-12px
-                  ${selectedCategory === category.name ? 'border-2' : ''}
+                  ${selectedCategory === category.name ? 'border-brutal-info text-brutal-info' : ''}
                 `}
-                style={{
-                  borderColor: selectedCategory === category.name ? category.color : undefined,
-                  color: selectedCategory === category.name ? category.color : undefined
-                }}
               >
                 {category.name} ({category.count})
               </motion.button>
@@ -238,8 +236,8 @@ export default function BlogPage() {
       {selectedCategory === 'ALL' && (
         <section className="py-32px md:py-48px px-16px md:px-24px">
           <div className="max-w-full md:max-w-7xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold mb-24px md:mb-32px text-[#FFFFFF]">
-              FEATURED <span className="text-[#00FFFF]">POSTS</span>
+            <h2 className="text-2xl md:text-3xl font-bold mb-24px md:mb-32px text-cathode-white">
+              FEATURED <span className="text-brutal-info">POSTS</span>
             </h2>
 
             <div className="relative">
@@ -251,41 +249,40 @@ export default function BlogPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="snap-start flex-shrink-0 lg:flex-shrink-auto w-[85vw] lg:w-auto brutal-card p-24px hover:border-[#00FFFF] transition-none group"
+                  className="snap-start flex-shrink-0 lg:flex-shrink-auto w-[85vw] lg:w-auto brutal-card p-24px hover:border-brutal-info group"
                 >
                   <div className="flex items-center gap-8px mb-16px">
-                    <span className="text-xs font-bold text-[#00FFFF]">{post.category}</span>
-                    <span className="text-xs text-[#FFFFFF]/50">•</span>
-                    <span className="text-xs text-[#FFFFFF]/50">{post.readTime}</span>
+                    <span className="text-xs font-bold text-brutal-info">{post.category}</span>
+                    <span className="text-xs text-cathode-white/50">&bull;</span>
+                    <span className="text-xs text-cathode-white/50">{post.readTime}</span>
                   </div>
-                  
-                  <h3 className="text-xl font-bold mb-12px text-[#FFFFFF] group-hover:text-[#00FFFF] transition-none">
+
+                  <h3 className="text-xl font-bold mb-12px text-cathode-white group-hover:text-brutal-info">
                     {post.title}
                   </h3>
-                  
-                  <p className="text-sm text-[#FFFFFF]/70 mb-16px">
+
+                  <p className="text-sm text-cathode-white/70 mb-16px">
                     {post.excerpt}
                   </p>
-                  
+
                   <div className="flex items-center justify-between">
-                    <div className="text-xs text-[#FFFFFF]/50">
-                      <span className="font-bold text-[#FFFFFF]">{post.author}</span>
+                    <div className="text-xs text-cathode-white/50">
+                      <span className="font-bold text-cathode-white">{post.author}</span>
                       <br />
                       {post.date}
                     </div>
-                    <Link 
+                    <Link
                       to={`/blog/${post.id}`}
-                      className="text-[#00FFFF] hover:text-[#FFFFFF] font-bold text-sm"
+                      className="text-brutal-info hover:text-cathode-white font-bold text-sm"
                     >
-                      READ →
+                      READ &rarr;
                     </Link>
                   </div>
                 </motion.article>
               ))}
               </div>
-              {/* Scroll Indicator for Featured Posts */}
-              <div className="absolute right-0 top-0 bottom-0 w-24px bg-gradient-to-l from-[#0A0A0A] to-transparent lg:hidden flex items-center justify-end pr-8px pointer-events-none">
-                <div className="text-[#00FFFF] text-xs animate-pulse">→</div>
+              <div className="absolute right-0 top-0 bottom-0 w-24px bg-gradient-to-l from-carbon-plate to-transparent lg:hidden flex items-center justify-end pr-8px pointer-events-none">
+                <div className="text-brutal-info text-xs animate-pulse">&rarr;</div>
               </div>
             </div>
           </div>
@@ -295,10 +292,10 @@ export default function BlogPage() {
       {/* ALL POSTS */}
       <section className="py-48px px-16px md:px-24px">
         <div className="max-w-full md:max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold mb-32px text-[#FFFFFF]">
-            {selectedCategory === 'ALL' ? 'ALL' : selectedCategory} <span className="text-[#FF00FF]">POSTS</span>
+          <h2 className="text-3xl font-bold mb-32px text-cathode-white">
+            {selectedCategory === 'ALL' ? 'ALL' : selectedCategory} <span className="text-brutal-info">POSTS</span>
           </h2>
-          
+
           <div className="grid gap-24px">
             {filteredPosts.map((post, index) => (
               <motion.article
@@ -306,48 +303,48 @@ export default function BlogPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="brutal-card p-32px hover:border-[#FF00FF] transition-none group"
+                className="brutal-card p-32px hover:border-brutal-info group"
               >
                 <div className="grid lg:grid-cols-12 gap-32px">
                   <div className="lg:col-span-9">
                     <div className="flex flex-wrap items-center gap-8px mb-16px">
-                      <span className="text-sm font-bold text-[#FF00FF]">{post.category}</span>
-                      <span className="text-sm text-[#FFFFFF]/50">•</span>
-                      <span className="text-sm text-[#FFFFFF]/50">{post.readTime}</span>
-                      <span className="text-sm text-[#FFFFFF]/50">•</span>
+                      <span className="text-sm font-bold text-brutal-info">{post.category}</span>
+                      <span className="text-sm text-cathode-white/50">&bull;</span>
+                      <span className="text-sm text-cathode-white/50">{post.readTime}</span>
+                      <span className="text-sm text-cathode-white/50">&bull;</span>
                       {post.tags.map(tag => (
-                        <span key={tag} className="text-xs px-8px py-2px bg-[#333333] text-[#FFFFFF]">
+                        <span key={tag} className="text-xs px-8px py-2px bg-basalt-border text-cathode-white">
                           {tag}
                         </span>
                       ))}
                     </div>
-                    
-                    <h3 className="text-2xl font-bold mb-16px text-[#FFFFFF] group-hover:text-[#FF00FF] transition-none">
+
+                    <h3 className="text-2xl font-bold mb-16px text-cathode-white group-hover:text-brutal-info">
                       {post.title}
                     </h3>
-                    
-                    <p className="text-[#FFFFFF]/70 mb-16px">
+
+                    <p className="text-cathode-white/70 mb-16px">
                       {post.excerpt}
                     </p>
-                    
-                    <Link 
+
+                    <Link
                       to={`/blog/${post.id}`}
                       className="inline-block brutal-btn"
                     >
-                      READ FULL POST →
+                      READ FULL POST &rarr;
                     </Link>
                   </div>
-                  
-                  <div className="lg:col-span-3 border-l-2 border-[#333333] pl-32px">
+
+                  <div className="lg:col-span-3 border-l-2 border-basalt-border pl-32px">
                     <div className="space-y-16px">
                       <div>
-                        <div className="text-sm text-[#FFFFFF]/50 mb-4px">AUTHOR</div>
-                        <div className="font-bold text-[#FFFFFF]">{post.author}</div>
-                        <div className="text-sm text-[#FFFF00]">{post.authorRole}</div>
+                        <div className="text-sm text-cathode-white/50 mb-4px">AUTHOR</div>
+                        <div className="font-bold text-cathode-white">{post.author}</div>
+                        <div className="text-sm text-brutal-info">{post.authorRole}</div>
                       </div>
                       <div>
-                        <div className="text-sm text-[#FFFFFF]/50 mb-4px">PUBLISHED</div>
-                        <div className="text-[#FFFFFF]">{post.date}</div>
+                        <div className="text-sm text-cathode-white/50 mb-4px">PUBLISHED</div>
+                        <div className="text-cathode-white">{post.date}</div>
                       </div>
                     </div>
                   </div>
@@ -358,38 +355,38 @@ export default function BlogPage() {
 
           {filteredPosts.length === 0 && (
             <div className="text-center py-80px">
-              <div className="text-6xl mb-24px">404</div>
-              <div className="text-xl text-[#FFFFFF]/60">NO POSTS FOUND</div>
+              <div className="text-6xl mb-24px text-cathode-white">404</div>
+              <div className="text-xl text-cathode-white/60">NO POSTS FOUND</div>
             </div>
           )}
         </div>
       </section>
 
       {/* NEWSLETTER */}
-      <section className="py-48px md:py-80px border-t-2 border-[#333333] bg-[#000000]">
+      <section className="py-48px md:py-80px border-t-2 border-basalt-border bg-event-horizon">
         <div className="max-w-full md:max-w-3xl mx-auto px-16px md:px-24px text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-16px md:mb-24px">
-            NEVER MISS AN <span className="glitch-text">UPDATE</span>
+          <h2 className="text-3xl md:text-4xl font-bold mb-16px md:mb-24px text-cathode-white">
+            NEVER MISS AN <span className="text-brutal-info">UPDATE</span>
           </h2>
-          
-          <p className="text-xl text-[#FFFFFF]/80 mb-32px uppercase">
+
+          <p className="text-xl text-cathode-white/80 mb-32px uppercase">
             Technical insights. Product updates. Zero spam.
           </p>
 
           <form onSubmit={handleSubscribe} className="flex gap-0 max-w-md mx-auto">
-            <input 
+            <input
               type="email"
               placeholder="YOUR@EMAIL.COM"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 px-24px py-16px bg-[#000000] border-2 border-[#333333] border-r-0 text-[#FFFFFF] focus:border-[#00FFFF] outline-none uppercase"
+              className="flex-1 px-24px py-16px bg-event-horizon border-2 border-basalt-border border-r-0 text-cathode-white focus:border-brutal-info outline-none uppercase"
               required
             />
-            <button 
+            <button
               type="submit"
               className={`
                 brutal-btn px-32px py-16px
-                ${subscribed ? 'bg-[#00FF00] text-[#000000]' : 'bg-gradient-to-r from-[#00FFFF] via-[#FF00FF] to-[#FFFF00] text-[#000000]'}
+                ${subscribed ? 'bg-brutal-success text-event-horizon border-brutal-success' : 'bg-brutal-info text-event-horizon border-brutal-info'}
               `}
             >
               {subscribed ? 'SUBSCRIBED!' : 'SUBSCRIBE'}
@@ -397,17 +394,19 @@ export default function BlogPage() {
           </form>
 
           <div className="flex items-center justify-center gap-32px mt-32px">
-            <a href="/rss" className="flex items-center gap-8px text-[#FFFFFF] hover:text-[#00FFFF]">
+            <a href="/rss" className="flex items-center gap-8px text-cathode-white hover:text-brutal-info">
               <HiRss className="text-xl" />
               <span>RSS FEED</span>
             </a>
-            <a href="mailto:blog@ltf1.dev" className="flex items-center gap-8px text-[#FFFFFF] hover:text-[#00FFFF]">
+            <a href="mailto:blog@ltf1.dev" className="flex items-center gap-8px text-cathode-white hover:text-brutal-info">
               <HiMail className="text-xl" />
               <span>SUBMIT POST</span>
             </a>
           </div>
         </div>
       </section>
+
+      <Footer />
     </div>
   )
 }
