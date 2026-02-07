@@ -67,7 +67,9 @@ import type { TaskFilters as TaskFiltersType } from '@/components/features/task/
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 import { formatDistanceToNow } from 'date-fns'
-import { BrutalCard, BrutalButton, BrutalBadge } from '@/components/ui'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalBadge from '@/components/ui/BrutalBadge'
 import { motion } from 'framer-motion'
 
 type TabType = 'overview' | 'tasks' | 'team' | 'github' | 'meetings' | 'docs' | 'logs' | 'settings'

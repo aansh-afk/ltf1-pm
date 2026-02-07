@@ -1,104 +1,163 @@
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, type Variants } from 'framer-motion'
 
 const tiers = [
   {
-    name: 'LOCALHOST',
-    price: 'FREE',
-    users: '1-5 USERS',
-    highlights: ['3 PROJECTS', '100 AI CREDITS/MO', 'BASIC GIT SYNC'],
+    name: 'Open Source',
+    price: '$0',
+    period: 'free forever',
+    features: [
+      'Unlimited projects',
+      'Up to 5 members',
+      'Full Git integration',
+      '100 AI credits/mo',
+      'CLI + TUI access',
+      'Community support',
+    ],
+    cta: { label: 'Get Started', to: '/sign-up', style: 'primary' as const },
   },
   {
-    name: 'STARTUP',
-    price: '$19',
-    priceUnit: '/USER',
-    users: '3-50 USERS',
-    highlights: ['UNLIMITED PROJECTS', '1K AI CREDITS', 'SPRINT PLANNING'],
-    popular: true,
+    name: 'Pro',
+    price: '$12',
+    period: '/user/month',
+    badge: 'Coming Soon',
+    highlight: true,
+    features: [
+      'Everything in OS',
+      'Unlimited members',
+      'Unlimited AI',
+      'Advanced analytics',
+      'SSO / SAML',
+      'Priority support',
+    ],
+    cta: { label: 'Join Waitlist', to: '/coming-soon', style: 'ghost' as const },
   },
   {
-    name: 'SCALE',
-    price: '$49',
-    priceUnit: '/USER',
-    users: '10-500 USERS',
-    highlights: ['10K AI CREDITS', 'API ACCESS', 'SSO/SAML'],
-  },
-  {
-    name: 'ENTERPRISE',
-    price: '$99',
-    priceUnit: '/USER',
-    users: '50+ USERS',
-    highlights: ['UNLIMITED AI', 'ON-PREMISE', '24/7 SUPPORT'],
+    name: 'Enterprise',
+    price: 'Custom',
+    period: 'contact us',
+    features: [
+      'Everything in Pro',
+      'Dedicated support',
+      'Custom SLA',
+      'On-premise deploy',
+      'SCIM provisioning',
+      'Invoice billing',
+    ],
+    cta: { label: 'Contact Sales', to: '/contact', style: 'ghost' as const },
   },
 ]
 
+const cardVariants: Variants = {
+  rest: { borderColor: 'rgba(46, 46, 53, 1)', y: 0 },
+  hover: { borderColor: 'rgba(249, 250, 251, 0.2)', y: -2 },
+}
+
+const highlightCardVariants: Variants = {
+  rest: { borderColor: 'rgba(99, 102, 241, 0.6)', y: 0 },
+  hover: { borderColor: 'rgba(99, 102, 241, 1)', y: -2 },
+}
+
 export default function PricingPreviewSection() {
   return (
-    <section className="marketing-section bg-carbon-plate">
-      <div className="marketing-container">
+    <section className="py-24 md:py-32 bg-[#050505] relative overflow-hidden">
+      <div className="max-w-5xl mx-auto px-6 relative z-10">
         <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-48px md:mb-64px"
+          transition={{ duration: 0.5 }}
+          className="mb-16"
         >
-          <p className="marketing-label">
-            <span className="text-brutal-info/40 mr-4px">&gt;&gt;</span>
-            PRICING
-          </p>
-          <h2 className="text-section-title md:text-hero-sm font-bold uppercase text-cathode-white">
-            SIMPLE. TRANSPARENT.
+          <span className="text-[#6B7280] text-xs font-mono uppercase tracking-wider inline-block mb-4">
+            Pricing
+          </span>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-[#F9FAFB] mb-4">
+            Simple, transparent pricing
           </h2>
+          <p className="text-base text-[#6B7280] max-w-lg">
+            Start free. Scale when you need to.
+          </p>
         </motion.div>
 
-        {/* Mobile: horizontal scroll. Desktop: grid */}
-        <div className="flex lg:grid lg:grid-cols-4 gap-16px overflow-x-auto lg:overflow-x-visible pb-16px lg:pb-0 snap-x snap-mandatory lg:snap-none max-w-4xl mx-auto mb-48px"
-             style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
           {tiers.map((tier, index) => (
             <motion.div
               key={tier.name}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.05 }}
-              className={`snap-start flex-shrink-0 lg:flex-shrink-auto w-[220px] lg:w-auto border-2 bg-event-horizon p-24px text-center relative group hover:border-brutal-info ${
-                tier.popular
-                  ? 'border-brutal-info'
-                  : 'border-basalt-border'
-              }`}
+              transition={{ delay: index * 0.08, duration: 0.5 }}
             >
-              {/* Subtle corner mark */}
-              <span aria-hidden="true" className="absolute top-8px right-12px text-brutal-info/15 font-mono text-[10px] select-none group-hover:text-brutal-info/30">//</span>
+              <motion.div
+                variants={tier.highlight ? highlightCardVariants : cardVariants}
+                initial="rest"
+                whileHover="hover"
+                className={`bg-[#111111] border-2 overflow-hidden flex flex-col h-full ${
+                  tier.highlight ? 'border-[#6366F1]/60' : 'border-[#2E2E35]'
+                }`}
+              >
+                <div className="p-6 md:p-8 flex flex-col flex-1">
+                  {/* Name + Badge */}
+                  <div className="flex items-center justify-between mb-5">
+                    <span className="text-xs font-mono text-[#6B7280] uppercase tracking-wider">
+                      {tier.name}
+                    </span>
+                    {tier.badge && (
+                      <span className="text-[10px] font-mono text-[#6366F1] uppercase tracking-wider border border-[#6366F1]/30 px-2 py-0.5">
+                        {tier.badge}
+                      </span>
+                    )}
+                  </div>
 
-              {tier.popular && (
-                <div className="absolute -top-12px left-1/2 -translate-x-1/2 bg-brutal-info text-event-horizon px-12px py-2px text-xs font-bold uppercase">
-                  POPULAR
+                  {/* Price */}
+                  <div className="mb-6">
+                    <span className="text-4xl font-bold text-[#F9FAFB]">
+                      {tier.price}
+                    </span>
+                    <span className="text-sm text-[#6B7280] ml-1">
+                      {tier.period}
+                    </span>
+                  </div>
+
+                  {/* Features */}
+                  <div className="space-y-2.5 mb-8 flex-1">
+                    {tier.features.map((f) => (
+                      <div key={f} className="flex items-start gap-2.5 text-xs font-mono">
+                        <span className="text-[#F9FAFB] mt-px">+</span>
+                        <span className="text-[#9CA3AF]">{f}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* CTA */}
+                  {tier.cta.style === 'primary' ? (
+                    <Link
+                      to={tier.cta.to}
+                      className="block w-full text-center bg-[#F9FAFB] text-[#050505] font-bold text-sm px-6 py-3"
+                    >
+                      {tier.cta.label}
+                    </Link>
+                  ) : (
+                    <Link
+                      to={tier.cta.to}
+                      className="block w-full text-center text-[#9CA3AF] font-bold text-sm px-6 py-3 border border-[#2E2E35]"
+                    >
+                      {tier.cta.label}
+                    </Link>
+                  )}
                 </div>
-              )}
-              <h3 className="text-sm font-bold text-cathode-white mb-12px">{tier.name}</h3>
-              <div className="text-2xl font-bold text-cathode-white mb-2px">
-                {tier.price === 'FREE' ? (
-                  <span className="text-brutal-info">{tier.price}</span>
-                ) : (
-                  <>{tier.price}<span className="text-sm text-cathode-white/40">{tier.priceUnit}</span></>
-                )}
-              </div>
-              <p className="text-xs text-cathode-white/40 mb-16px">{tier.users}</p>
-              <ul className="space-y-4px text-left">
-                {tier.highlights.map((h) => (
-                  <li key={h} className="text-xs text-cathode-white/60">
-                    &bull; {h}
-                  </li>
-                ))}
-              </ul>
+              </motion.div>
             </motion.div>
           ))}
         </div>
 
-        {/* CTA */}
         <div className="text-center">
-          <Link to="/pricing" className="marketing-cta">
-            VIEW ALL FEATURES &rarr;
+          <Link
+            to="/pricing"
+            className="text-xs font-mono text-[#6B7280] uppercase tracking-wider"
+          >
+            view full comparison →
           </Link>
         </div>
       </div>

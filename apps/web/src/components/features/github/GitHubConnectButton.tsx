@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../../../convex/_generated/api';
 import { FaGithub } from 'react-icons/fa';
-import { BrutalButton } from '@/components/ui';
+import BrutalButton from '@/components/ui/BrutalButton';
 import toast from 'react-hot-toast';
 
 interface GitHubConnectButtonProps {

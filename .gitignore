@@ -76,3 +76,11 @@ logs
 
 # AI System Prompts (Planning/Internal Use)
 ai-system-prompts/
+
+# Temporary asset staging
+temp_asset_download_placement_folder/
+
+# Internal audit/planning docs
+AGENT_TEAM_PROMPT.md
+MVP_AUDIT_REPORT.md
+VERCEL_AUDIT_REPORT.md

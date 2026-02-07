@@ -1,334 +1,199 @@
-import { motion } from 'framer-motion'
-import { useState } from 'react'
-import {
-  HiMail,
-  HiPhone,
-  HiChat,
-  HiLightningBolt,
-  HiClock,
-  HiShieldCheck,
-  HiSupport,
-  HiCash
-} from 'react-icons/hi'
-import { FaGithub, FaTwitter, FaDiscord, FaSlack } from 'react-icons/fa'
+import { motion, type Variants } from 'framer-motion'
 import PublicNavigation from '../components/common/PublicNavigation'
 import Footer from '../components/common/Footer'
 
+/* ─── Card Data ─────────────────────────────────────────────── */
+
+interface ContactCard {
+  icon: string
+  title: string
+  description: string
+  linkLabel: string
+  href: string
+  external?: boolean
+}
+
+const primaryCards: ContactCard[] = [
+  {
+    icon: '◇',
+    title: 'Sales',
+    description: 'Speak to our team about plans, pricing, enterprise contracts, or request a demo.',
+    linkLabel: 'Talk to sales',
+    href: 'mailto:Aansh.Naidu@vividverseglobal.com?subject=Sales%20Inquiry',
+    external: false,
+  },
+  {
+    icon: '○',
+    title: 'Help & support',
+    description: 'Ask product questions, report problems, or leave feedback.',
+    linkLabel: 'Contact support',
+    href: 'mailto:Aansh.Naidu@vividverseglobal.com?subject=Support%20Request',
+    external: false,
+  },
+]
+
+const secondaryCards: ContactCard[] = [
+  {
+    icon: '#',
+    title: 'Join the community',
+    description: 'Connect with other LTF1 users, share workflows, and get help from the community.',
+    linkLabel: 'Join Discord',
+    href: 'https://discord.gg/ltf1',
+    external: true,
+  },
+  {
+    icon: '@',
+    title: 'General communication',
+    description: 'For other queries, please get in touch with us via email.',
+    linkLabel: 'Aansh.Naidu@vividverseglobal.com',
+    href: 'mailto:Aansh.Naidu@vividverseglobal.com',
+    external: false,
+  },
+  {
+    icon: '>',
+    title: 'Documentation',
+    description: 'Get an overview of LTF1\'s features, integrations, and how to use them.',
+    linkLabel: 'View docs',
+    href: '/coming-soon',
+    external: false,
+  },
+  {
+    icon: '{',
+    title: 'Open Source',
+    description: 'Explore the source, contribute, or report issues on GitHub.',
+    linkLabel: 'GitHub',
+    href: 'https://github.com/ltf1',
+    external: true,
+  },
+]
+
+/* ─── Animations ────────────────────────────────────────────── */
+
+const cardVariants: Variants = {
+  rest: { borderColor: 'rgba(46, 46, 53, 1)', y: 0 },
+  hover: { borderColor: 'rgba(249, 250, 251, 0.2)', y: -2 },
+}
+
+const arrowVariants: Variants = {
+  rest: { x: 0, opacity: 0.5 },
+  hover: { x: 4, opacity: 1 },
+}
+
+/* ─── Component ─────────────────────────────────────────────── */
+
 export default function ContactPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    company: '',
-    subject: 'sales',
-    message: '',
-    users: ''
-  })
-
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false)
-      setSubmitStatus('success')
-      setTimeout(() => setSubmitStatus('idle'), 5000)
-    }, 2000)
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
-
   return (
-    <div className="min-h-screen bg-carbon-plate">
+    <div className="min-h-screen bg-[#050505]">
       <PublicNavigation />
 
-      {/* HERO SECTION */}
-      <section className="py-80px px-16px md:px-24px border-b-2 border-basalt-border">
-        <div className="max-w-full md:max-w-7xl mx-auto text-center">
-          <motion.h1
+      {/* Hero */}
+      <section className="pt-32 pb-16 md:pt-40 md:pb-24">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-6xl md:text-8xl font-bold mb-24px"
+            transition={{ duration: 0.5 }}
           >
-            <span className="text-cathode-white">GET IN</span>{' '}
-            <span className="text-brutal-info">TOUCH</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-xl md:text-2xl text-cathode-white/80 uppercase tracking-wider"
-          >
-            REAL DEVELOPERS. REAL SUPPORT. REAL SOLUTIONS.
-          </motion.p>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#F9FAFB] mb-4">
+              How can we help?
+            </h1>
+            <p className="text-lg text-[#6B7280] max-w-lg mx-auto">
+              Get in touch with our sales and support teams for demos,
+              onboarding support, or product questions.
+            </p>
+          </motion.div>
         </div>
       </section>
 
-      <div className="max-w-full md:max-w-7xl mx-auto px-16px md:px-24px py-80px">
-        <div className="grid lg:grid-cols-2 gap-24px md:gap-48px">
-          {/* CONTACT FORM */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <h2 className="text-3xl font-bold mb-32px text-cathode-white">
-              START THE <span className="text-brutal-info">CONVERSATION</span>
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-24px">
-              <div>
-                <label className="block text-sm font-bold text-cathode-white mb-8px uppercase">
-                  I NEED HELP WITH
-                </label>
-                <select
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleChange}
-                  className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border text-cathode-white focus:border-brutal-info outline-none"
-                  required
-                >
-                  <option value="demo">REQUEST A DEMO</option>
-                  <option value="git-integration">GIT INTEGRATION HELP</option>
-                  <option value="pricing">PRICING QUESTIONS</option>
-                  <option value="support">TECHNICAL SUPPORT</option>
-                  <option value="partnership">PARTNERSHIP</option>
-                  <option value="other">OTHER</option>
-                </select>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-16px md:gap-24px">
-                <div>
-                  <label className="block text-xs md:text-sm font-bold text-cathode-white mb-8px uppercase">
-                    NAME
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border text-cathode-white focus:border-brutal-info outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-cathode-white mb-8px uppercase">
-                    EMAIL
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border text-cathode-white focus:border-brutal-info outline-none"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-16px md:gap-24px">
-                <div>
-                  <label className="block text-xs md:text-sm font-bold text-cathode-white mb-8px uppercase">
-                    COMPANY
-                  </label>
-                  <input
-                    type="text"
-                    name="company"
-                    value={formData.company}
-                    onChange={handleChange}
-                    className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border text-cathode-white focus:border-brutal-info outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-cathode-white mb-8px uppercase">
-                    TEAM SIZE
-                  </label>
-                  <select
-                    name="users"
-                    value={formData.users}
-                    onChange={handleChange}
-                    className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border text-cathode-white focus:border-brutal-info outline-none"
-                    required
-                  >
-                    <option value="">SELECT SIZE</option>
-                    <option value="1-10">1-10 DEVELOPERS</option>
-                    <option value="11-50">11-50 DEVELOPERS</option>
-                    <option value="51-200">51-200 DEVELOPERS</option>
-                    <option value="201-500">201-500 DEVELOPERS</option>
-                    <option value="500+">500+ DEVELOPERS</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-cathode-white mb-8px uppercase">
-                  MESSAGE
-                </label>
-                <textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  rows={6}
-                  className="w-full px-16px py-12px bg-event-horizon border-2 border-basalt-border text-cathode-white focus:border-brutal-info outline-none resize-none"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={`
-                  marketing-cta w-full text-xl py-16px
-                  ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
-                  ${submitStatus === 'success' ? 'bg-brutal-success border-brutal-success' : ''}
-                `}
+      {/* Primary Cards — Sales & Support */}
+      <section className="pb-16 md:pb-24">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {primaryCards.map((card, i) => (
+              <motion.div
+                key={card.title}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
               >
-                {isSubmitting ? 'TRANSMITTING...' : submitStatus === 'success' ? 'MESSAGE SENT!' : 'SEND MESSAGE'}
-              </button>
-            </form>
-          </motion.div>
+                <motion.div
+                  variants={cardVariants}
+                  initial="rest"
+                  whileHover="hover"
+                  className="bg-[#111111] border-2 border-[#2E2E35] p-8 md:p-10 flex flex-col h-full"
+                >
+                  {/* Icon + Title */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-[#6B7280] text-lg font-mono">{card.icon}</span>
+                    <h2 className="text-xl font-bold text-[#F9FAFB]">
+                      {card.title}
+                    </h2>
+                  </div>
 
-          {/* CONTACT INFO */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="space-y-32px"
-          >
-            {/* RESPONSE TIMES */}
-            <div className="brutal-card p-32px">
-              <h3 className="text-2xl font-bold mb-24px flex items-center gap-12px">
-                <HiClock className="text-brutal-info" />
-                RESPONSE TIMES
-              </h3>
-              <div className="space-y-16px text-cathode-white/80">
-                <div className="flex justify-between">
-                  <span>ENTERPRISE</span>
-                  <span className="text-brutal-success">2 HOURS</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>SCALE</span>
-                  <span className="text-brutal-success">4 HOURS</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>STARTUP</span>
-                  <span className="text-brutal-info">24 HOURS</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>LOCALHOST</span>
-                  <span className="text-cathode-white/50">COMMUNITY</span>
-                </div>
-              </div>
-            </div>
+                  {/* Description */}
+                  <p className="text-sm text-[#9CA3AF] leading-relaxed mb-6 flex-1">
+                    {card.description}
+                  </p>
 
-            {/* DIRECT CHANNELS */}
-            <div className="brutal-card p-32px">
-              <h3 className="text-2xl font-bold mb-24px flex items-center gap-12px">
-                <HiLightningBolt className="text-brutal-info" />
-                DIRECT CHANNELS
-              </h3>
-              <div className="space-y-16px">
-                <a href="mailto:sales@ltf1.dev" className="flex items-center gap-12px text-cathode-white hover:text-brutal-info">
-                  <HiMail className="text-xl" />
-                  <span>SALES@LTF1.DEV</span>
-                </a>
-                <a href="mailto:support@ltf1.dev" className="flex items-center gap-12px text-cathode-white hover:text-brutal-info">
-                  <HiSupport className="text-xl" />
-                  <span>SUPPORT@LTF1.DEV</span>
-                </a>
-                <a href="mailto:enterprise@ltf1.dev" className="flex items-center gap-12px text-cathode-white hover:text-brutal-info">
-                  <HiCash className="text-xl" />
-                  <span>ENTERPRISE@LTF1.DEV</span>
-                </a>
-                <a href="tel:+1-888-LTF1-DEV" className="flex items-center gap-12px text-cathode-white hover:text-brutal-info">
-                  <HiPhone className="text-xl" />
-                  <span>+1-888-LTF1-DEV</span>
-                </a>
-              </div>
-            </div>
-
-            {/* COMMUNITY */}
-            <div className="brutal-card p-32px">
-              <h3 className="text-2xl font-bold mb-24px flex items-center gap-12px">
-                <HiChat className="text-brutal-info" />
-                COMMUNITY
-              </h3>
-              <div className="flex md:grid md:grid-cols-2 gap-16px overflow-x-auto md:overflow-x-visible pb-12px md:pb-0 snap-x snap-mandatory md:snap-none"
-                   style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
-                <a href="https://github.com/ltf1" className="snap-start flex-shrink-0 md:flex-shrink-auto w-[160px] md:w-auto brutal-btn text-center flex items-center justify-center gap-8px">
-                  <FaGithub /> GITHUB
-                </a>
-                <a href="https://discord.gg/ltf1" className="snap-start flex-shrink-0 md:flex-shrink-auto w-[160px] md:w-auto brutal-btn text-center flex items-center justify-center gap-8px">
-                  <FaDiscord /> DISCORD
-                </a>
-                <a href="https://ltf1.slack.com" className="snap-start flex-shrink-0 md:flex-shrink-auto w-[160px] md:w-auto brutal-btn text-center flex items-center justify-center gap-8px">
-                  <FaSlack /> SLACK
-                </a>
-                <a href="https://twitter.com/ltf1dev" className="snap-start flex-shrink-0 md:flex-shrink-auto w-[160px] md:w-auto brutal-btn text-center flex items-center justify-center gap-8px">
-                  <FaTwitter /> TWITTER
-                </a>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* ENTERPRISE SECTION */}
-      <section className="py-80px border-t-2 border-basalt-border bg-event-horizon">
-        <div className="max-w-full md:max-w-5xl mx-auto px-16px md:px-24px text-center">
-          <h2 className="text-5xl font-bold mb-24px text-cathode-white">
-            <span className="text-brutal-info">ENTERPRISE</span> SOLUTIONS
-          </h2>
-
-          <p className="text-xl text-cathode-white/80 mb-48px uppercase">
-            ON-PREMISE DEPLOYMENT. CUSTOM INTEGRATIONS. DEDICATED SUPPORT.
-          </p>
-
-          <div className="flex md:grid md:grid-cols-4 gap-24px mb-48px overflow-x-auto md:overflow-x-visible pb-16px md:pb-0 snap-x snap-mandatory md:snap-none"
-               style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
-            <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto brutal-card p-24px">
-              <HiShieldCheck className="w-48px h-48px text-brutal-info mx-auto mb-16px" />
-              <h3 className="text-lg font-bold mb-8px text-cathode-white">99.99% SLA</h3>
-              <p className="text-sm text-cathode-white/60">Guaranteed uptime</p>
-            </div>
-
-            <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto brutal-card p-24px">
-              <HiShieldCheck className="w-48px h-48px text-brutal-info mx-auto mb-16px" />
-              <h3 className="text-lg font-bold mb-8px text-cathode-white">ON-PREMISE</h3>
-              <p className="text-sm text-cathode-white/60">Your infrastructure</p>
-            </div>
-
-            <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto brutal-card p-24px">
-              <HiPhone className="w-48px h-48px text-brutal-info mx-auto mb-16px" />
-              <h3 className="text-lg font-bold mb-8px text-cathode-white">24/7 PHONE</h3>
-              <p className="text-sm text-cathode-white/60">Direct support line</p>
-            </div>
-
-            <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[280px] md:w-auto brutal-card p-24px">
-              <HiLightningBolt className="w-48px h-48px text-brutal-info mx-auto mb-16px" />
-              <h3 className="text-lg font-bold mb-8px text-cathode-white">INSTANT</h3>
-              <p className="text-sm text-cathode-white/60">15-min response</p>
-            </div>
+                  {/* CTA */}
+                  <a
+                    href={card.href}
+                    target={card.external ? '_blank' : undefined}
+                    rel={card.external ? 'noopener noreferrer' : undefined}
+                    className="inline-flex items-center gap-2 text-sm font-bold text-[#050505] bg-[#F9FAFB] px-5 py-2.5 w-fit"
+                  >
+                    {card.linkLabel}
+                    <motion.span variants={arrowVariants}>
+                      {card.external ? '↗' : '→'}
+                    </motion.span>
+                  </a>
+                </motion.div>
+              </motion.div>
+            ))}
           </div>
+        </div>
+      </section>
 
-          <a
-            href="mailto:enterprise@ltf1.dev"
-            className="marketing-cta text-xl px-48px py-24px inline-block"
-          >
-            CONTACT ENTERPRISE SALES
-          </a>
+      {/* Secondary Cards — Community, Email, Docs, GitHub */}
+      <section className="pb-24 md:pb-32">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
+            {secondaryCards.map((card, i) => (
+              <motion.div
+                key={card.title}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.06 }}
+              >
+                <h3 className="text-base font-bold text-[#F9FAFB] mb-2">
+                  {card.title}
+                </h3>
+                <p className="text-sm text-[#6B7280] leading-relaxed mb-3">
+                  {card.description}
+                </p>
+                <a
+                  href={card.href}
+                  target={card.external ? '_blank' : undefined}
+                  rel={card.external ? 'noopener noreferrer' : undefined}
+                  className="inline-flex items-center gap-1.5 text-sm font-mono text-[#9CA3AF]"
+                >
+                  {card.linkLabel}
+                  <span className="text-xs">{card.external ? '↗' : '→'}</span>
+                </a>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Status Line */}
+      <section className="pb-16 md:pb-20">
+        <div className="text-center">
+          <span className="inline-flex items-center gap-2 text-xs font-mono text-[#6B7280]">
+            <span className="w-2 h-2 bg-[#10B981]" />
+            All systems operational
+          </span>
         </div>
       </section>
 

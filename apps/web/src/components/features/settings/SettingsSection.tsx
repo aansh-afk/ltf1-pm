@@ -1,5 +1,6 @@
 import { ReactNode } from 'react'
-import { BrutalCard, BrutalButton } from '@/components/ui'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
 import { HiOutlineRefresh } from 'react-icons/hi'
 
 interface SettingsSectionProps {

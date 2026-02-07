@@ -5,7 +5,8 @@ import { HiOutlinePlus, HiOutlineBriefcase, HiOutlineGlobeAlt, HiOutlineUsers } 
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import CreateWorkspaceModal from '@/components/features/workspace/CreateWorkspaceModal'
 import WorkspaceCard from '@/components/features/workspace/WorkspaceCard'
-import { BrutalButton, BrutalCard } from '@/components/ui'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalCard from '@/components/ui/BrutalCard'
 import { motion } from 'framer-motion'
 
 export default function WorkspacesPage() {

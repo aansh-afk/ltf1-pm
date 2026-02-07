@@ -14,7 +14,9 @@ import {
   HiOutlineGlobeAlt
 } from 'react-icons/hi'
 import clsx from 'clsx'
-import { BrutalButton, BrutalCard, BrutalBadge } from '@/components/ui'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalBadge from '@/components/ui/BrutalBadge'
 
 interface EditDeveloperProfileModalProps {
   userId: Id<"users">

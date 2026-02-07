@@ -10,7 +10,9 @@ import {
   FaLink
 } from 'react-icons/fa';
 import { HiOutlineExternalLink, HiOutlineTrash } from 'react-icons/hi';
-import { BrutalButton, BrutalCard, BrutalBadge } from '@/components/ui';
+import BrutalButton from '@/components/ui/BrutalButton';
+import BrutalCard from '@/components/ui/BrutalCard';
+import BrutalBadge from '@/components/ui/BrutalBadge';
 import SettingsSection from './SettingsSection';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';

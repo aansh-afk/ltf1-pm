@@ -3,7 +3,9 @@ import { useShortcuts } from '../../contexts/ShortcutContext'
 import type { Shortcut, KeyCombo, ShortcutCategory } from '../../types/shortcuts'
 import { defaultShortcutGroups } from '../../config/defaultShortcuts'
 import ShortcutRecorder from '../../components/shortcuts/ShortcutRecorder'
-import { BrutalCard, BrutalButton, BrutalBadge } from '@/components/ui'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalBadge from '@/components/ui/BrutalBadge'
 import {
   HiOutlineSearch,
   HiOutlinePencil,

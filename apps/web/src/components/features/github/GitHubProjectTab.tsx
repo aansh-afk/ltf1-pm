@@ -31,7 +31,8 @@ import {
 // WAIT: The previous error log in Step 1000 showed lint errors but NOT import errors for FaCodePullRequest, 
 // implying the import might have been missing but the usage was there.
 // I will just use FaCodeBranch for PRs to be 100% safe against build errors.
-import { BrutalButton, BrutalCard } from '@/components/ui';
+import BrutalButton from '@/components/ui/BrutalButton';
+import BrutalCard from '@/components/ui/BrutalCard';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import ConnectRepositoryModal from './ConnectRepositoryModal';

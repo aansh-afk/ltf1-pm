@@ -5,7 +5,9 @@ import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import WhiteboardCanvas from '@/components/features/whiteboard/WhiteboardCanvasKonva'
 import BrutalistLoader from '@/components/common/BrutalistLoader'
-import { BrutalCard, BrutalButton, BrutalBadge } from '@/components/ui'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalBadge from '@/components/ui/BrutalBadge'
 import {
   HiOutlinePlus,
   HiOutlineBriefcase,

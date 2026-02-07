@@ -55,20 +55,26 @@ export function useAfkDetection({
       }, afkTimeout)
     }
 
-    // Activity events to monitor
-    const events = [
+    // Activity events to monitor - split by passive capability
+    const activeEvents = [
       'mousedown',
-      'mousemove', 
+      'mousemove',
       'keypress',
       'keydown',
-      'scroll',
-      'touchstart',
       'click'
+    ]
+    // These events benefit from passive listeners for better scroll perf
+    const passiveEvents = [
+      'scroll',
+      'touchstart'
     ]
 
     // Add event listeners
-    events.forEach(event => {
+    activeEvents.forEach(event => {
       document.addEventListener(event, handleActivity, true)
+    })
+    passiveEvents.forEach(event => {
+      document.addEventListener(event, handleActivity, { capture: true, passive: true })
     })
 
     // Handle visibility change
@@ -97,8 +103,11 @@ export function useAfkDetection({
 
     // Cleanup
     return () => {
-      events.forEach(event => {
+      activeEvents.forEach(event => {
         document.removeEventListener(event, handleActivity, true)
+      })
+      passiveEvents.forEach(event => {
+        document.removeEventListener(event, handleActivity, { capture: true } as EventListenerOptions)
       })
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       

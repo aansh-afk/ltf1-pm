@@ -36,27 +36,34 @@ export function useScrollReveal({
   })
   
   useEffect(() => {
-    const updateScrollValue = () => {
-      const currentScrollY = window.scrollY
-      const delta = currentScrollY - lastScrollY.current
-      
-      // Smooth the scroll value
-      scrollY.set(scrollY.get() + delta * smoothing)
-      lastScrollY.current = currentScrollY
-      
-      // Check if we should activate the reveal
-      if (triggerRef.current) {
-        const rect = triggerRef.current.getBoundingClientRect()
-        const shouldActivate = rect.top <= window.innerHeight * offset
-        setIsActive(shouldActivate)
-      }
-      
-      rafRef.current = requestAnimationFrame(updateScrollValue)
+    const handleScroll = () => {
+      if (rafRef.current) return
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = undefined
+
+        const currentScrollY = window.scrollY
+        const delta = currentScrollY - lastScrollY.current
+
+        // Smooth the scroll value
+        scrollY.set(scrollY.get() + delta * smoothing)
+        lastScrollY.current = currentScrollY
+
+        // Check if we should activate the reveal
+        if (triggerRef.current) {
+          const rect = triggerRef.current.getBoundingClientRect()
+          const shouldActivate = rect.top <= window.innerHeight * offset
+          setIsActive(shouldActivate)
+        }
+      })
     }
-    
-    rafRef.current = requestAnimationFrame(updateScrollValue)
-    
+
+    // Initial check
+    handleScroll()
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
     return () => {
+      window.removeEventListener('scroll', handleScroll)
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current)
       }
