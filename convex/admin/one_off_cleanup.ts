@@ -3,12 +3,13 @@ import { v } from "convex/values";
 
 /**
  * ONE-OFF CLEANUP FUNCTION
- * 
+ *
  * Run this function from the Convex Dashboard to clear ALL GitHub data.
  * Go to Functions -> admin/one_off_cleanup:clearGitHubData -> Run Mutation
  */
 export const clearGitHubData = internalMutation({
     args: {},
+    returns: v.string(),
     handler: async (ctx) => {
         console.log("Starting FULL GitHub cleanup...");
 

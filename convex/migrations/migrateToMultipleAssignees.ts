@@ -5,6 +5,11 @@ export const migrateTasksToMultipleAssignees = internalMutation({
   args: {
     batchSize: v.optional(v.number()),
   },
+  returns: v.object({
+    migratedCount: v.number(),
+    hasMore: v.boolean(),
+    message: v.string(),
+  }),
   handler: async (ctx, args) => {
     const batchSize = args.batchSize || 100;
     
@@ -69,6 +74,10 @@ export const cleanupDeprecatedAssigneeId = internalMutation({
   args: {
     batchSize: v.optional(v.number()),
   },
+  returns: v.object({
+    cleanedCount: v.number(),
+    message: v.string(),
+  }),
   handler: async (ctx, args) => {
     const batchSize = args.batchSize || 100;
     
