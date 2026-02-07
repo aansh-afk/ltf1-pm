@@ -1,7 +1,7 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { SignIn, SignUp, SignedIn, SignedOut, useAuth } from '@clerk/clerk-react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { useAuth } from '@clerk/clerk-react'
 import { Toaster } from 'react-hot-toast'
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { lazy, Suspense, useState, useEffect, useMemo } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 
@@ -14,54 +14,48 @@ function isProductionEnvironment(): boolean {
   // Allow localhost and 127.0.0.1 to bypass waitlist
   return hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.startsWith('192.168.')
 }
+import ErrorBoundary from './components/common/ErrorBoundary'
 import { OptionalConvexProvider } from './providers/OptionalConvexProvider'
 import { ShortcutProvider } from './contexts/ShortcutContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import DashboardLayout from './components/layout/DashboardLayout'
+
+// Eager imports - public pages that need fast initial load
 import LandingPage from './pages/LandingPage'
 import PricingPage from './pages/PricingPage'
 import ContactPage from './pages/ContactPage'
-import BlogPage from './pages/BlogPage'
-import Dashboard from './pages/Dashboard'
-import WorkspacesPage from './pages/WorkspacesPage'
-import WorkspaceManagementPage from './pages/WorkspaceManagementPage'
-import ProjectManagementPage from './pages/ProjectManagementPage'
-import ProjectsPage from './pages/ProjectsPage'
-import TasksPage from './pages/TasksPage'
-import MeetingsPage from './pages/MeetingsPage'
-import SprintPage from './pages/SprintPage'
-import WorkspaceSettingsPage from './pages/WorkspaceSettingsPage'
-import SettingsPage from './pages/SettingsPage'
-import TeamPage from './pages/TeamPage'
-import JoinProjectPage from './pages/JoinProjectPage'
-import MyProfilePage from './pages/MyProfilePage'
-import GitHubCallbackPage from './pages/GitHubCallbackPage'
-import TestCheckbox from './pages/TestCheckbox'
-import TestAI from './pages/TestAI'
-import NotFoundPage from './pages/NotFoundPage'
-import AutomationPage from './pages/AutomationPage'
-import WhiteboardPage from './pages/WhiteboardPage'
-import VideoPage from './pages/VideoPage'
-import CustomFieldsPage from './pages/CustomFieldsPage'
-import SlackPage from './pages/SlackPage'
-import TeamsPage from './pages/TeamsPage'
 import ComingSoonPage from './pages/ComingSoonPage'
-import CLIAuthPage from './pages/CLIAuthPage'
+import FeatureDetailPage from './pages/FeatureDetailPage'
+import FeaturesPage from './pages/FeaturesPage'
+import SignInPage from './pages/SignInPage'
+import SignUpPage from './pages/SignUpPage'
+
+// Lazy imports - authenticated/secondary pages
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const WorkspacesPage = lazy(() => import('./pages/WorkspacesPage'))
+const WorkspaceManagementPage = lazy(() => import('./pages/WorkspaceManagementPage'))
+const ProjectManagementPage = lazy(() => import('./pages/ProjectManagementPage'))
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage'))
+const TasksPage = lazy(() => import('./pages/TasksPage'))
+const SprintPage = lazy(() => import('./pages/SprintPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const TeamPage = lazy(() => import('./pages/TeamPage'))
+const TeamsPage = lazy(() => import('./pages/TeamsPage'))
+const MyProfilePage = lazy(() => import('./pages/MyProfilePage'))
+const WhiteboardPage = lazy(() => import('./pages/WhiteboardPage'))
+const CustomFieldsPage = lazy(() => import('./pages/CustomFieldsPage'))
+const WorkspaceSettingsPage = lazy(() => import('./pages/WorkspaceSettingsPage'))
+const JoinProjectPage = lazy(() => import('./pages/JoinProjectPage'))
+const GitHubCallbackPage = lazy(() => import('./pages/GitHubCallbackPage'))
+const CLIAuthPage = lazy(() => import('./pages/CLIAuthPage'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 import { useEnsureUser } from './hooks/useEnsureUser'
 import { DataMigrationBanner } from './components/admin/DataMigrationBanner'
 import CommandPalette from './components/shortcuts/CommandPalette'
 import ShortcutHelp from './components/shortcuts/ShortcutHelp'
 import OnboardingFlow from './components/onboarding/OnboardingFlow'
 import BrutalistLoader from './components/common/BrutalistLoader'
-
-// Scroll to top on route changes (prevents stale scroll position across pages)
-function ScrollToTop() {
-  const { pathname } = useLocation()
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [pathname])
-  return null
-}
+import PageTransition from './components/common/PageTransition'
 
 // Create a wrapper component that handles authentication state
 function AuthenticatedAppContent() {
@@ -164,6 +158,7 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
   const { isSignedIn } = useAuth()
 
   return (
+    <Suspense fallback={<BrutalistLoader />}>
     <div className="min-h-screen bg-[var(--theme-background)]">
       {/* Global Shortcut Components - only if authenticated */}
       {isAuthenticated && (
@@ -180,19 +175,10 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
 
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/contact" element={<ContactPage />} />
-        <Route path="/blog" element={<BlogPage />} />
-
-        <Route path="/sign-in/*" element={
-          <div className="flex items-center justify-center min-h-screen">
-            <SignIn routing="path" path="/sign-in" />
-          </div>
-        } />
-
-        <Route path="/sign-up/*" element={
-          <div className="flex items-center justify-center min-h-screen">
-            <SignUp routing="path" path="/sign-up" />
-          </div>
-        } />
+        <Route path="/features" element={<FeaturesPage />} />
+        <Route path="/features/:slug" element={<FeatureDetailPage />} />
+        <Route path="/sign-in/*" element={<SignInPage />} />
+        <Route path="/sign-up/*" element={<SignUpPage />} />
 
         {/* Public Coming Soon Page */}
         <Route path="/coming-soon" element={<ComingSoonPage />} />
@@ -216,20 +202,12 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
           <Route path="workspace/:workspaceId/project/:projectId" element={<ProjectManagementPage />} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="tasks" element={<TasksPage />} />
-          <Route path="tasks" element={<TasksPage />} />
           <Route path="teams" element={<TeamsPage />} />
           <Route path="team" element={<TeamPage />} /> {/* Keeping existing TeamPage for now, might be redundant */}
-          <Route path="meetings" element={<MeetingsPage />} />
           <Route path="sprints" element={<SprintPage />} />
           <Route path="settings" element={<SettingsPage />} />
-          <Route path="automation" element={<AutomationPage />} />
           <Route path="whiteboard" element={<WhiteboardPage />} />
-          <Route path="video" element={<VideoPage />} />
-          <Route path="video/:meetingId" element={<VideoPage />} />
           <Route path="custom-fields" element={<CustomFieldsPage />} />
-          <Route path="slack" element={<SlackPage />} />
-          <Route path="test-checkbox" element={<TestCheckbox />} />
-          <Route path="test-ai" element={<TestAI />} />
         </Route>
 
         {/* 404 Page - Catch all unmatched routes */}
@@ -265,21 +243,24 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
         }}
       />
     </div>
+    </Suspense>
   )
 }
 
 function App() {
   return (
-    <OptionalConvexProvider>
-      <Router>
-        <ScrollToTop />
-        <ThemeProvider>
-          <ShortcutProvider>
-            <AppContent />
-          </ShortcutProvider>
-        </ThemeProvider>
-      </Router>
-    </OptionalConvexProvider>
+    <ErrorBoundary>
+      <OptionalConvexProvider>
+        <Router>
+          <PageTransition />
+          <ThemeProvider>
+            <ShortcutProvider>
+              <AppContent />
+            </ShortcutProvider>
+          </ThemeProvider>
+        </Router>
+      </OptionalConvexProvider>
+    </ErrorBoundary>
   )
 }
 
