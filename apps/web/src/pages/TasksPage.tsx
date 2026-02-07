@@ -14,7 +14,8 @@ import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
 import { useShortcut } from '../contexts/ShortcutContext'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
-import { BrutalCard, BrutalButton } from '@/components/ui'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
 
 const defaultFilters: TaskFiltersType = {
   search: '',

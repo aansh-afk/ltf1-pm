@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { memo } from 'react'
 import { HiOutlinePlus } from 'react-icons/hi'
 import clsx from 'clsx'
-import { BrutalCard, BrutalButton } from '../../ui'
+import BrutalCard from '../../ui/BrutalCard'
+import BrutalButton from '../../ui/BrutalButton'
 import KanbanCard from './KanbanCard'
 import { AnimatePresence, motion } from 'framer-motion'
 
@@ -30,7 +31,7 @@ interface KanbanColumnProps {
     hasOverflow?: boolean
 }
 
-export default function KanbanColumn({
+const KanbanColumn = memo(function KanbanColumn({
     id,
     title,
     tasks,
@@ -194,4 +195,6 @@ export default function KanbanColumn({
             )}
         </BrutalCard>
     )
-}
+})
+
+export default KanbanColumn

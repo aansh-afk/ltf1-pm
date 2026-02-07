@@ -29,7 +29,9 @@ import { GitHubSettingsTab } from '../components/features/settings/GitHubSetting
 import ShortcutSettings from './settings/ShortcutSettings'
 import ThemeSwitcher from '../components/theme/ThemeSwitcher'
 import AISettingsTab from '../components/features/settings/AISettingsTab'
-import { BrutalCard, BrutalButton, BrutalBadge } from '@/components/ui'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalBadge from '@/components/ui/BrutalBadge'
 
 type SettingsTab = 'profile' | 'developer' | 'accessibility' | 'notifications' | 'workspace' | 'github' | 'ai' | 'shortcuts'
 

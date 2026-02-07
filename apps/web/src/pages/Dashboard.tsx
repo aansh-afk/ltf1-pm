@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { motion } from 'framer-motion'
@@ -10,37 +11,31 @@ import {
   HiOutlineCalendar,
   HiOutlineCode,
   HiOutlineLightningBolt,
-  HiOutlineChip,
-  HiOutlineDatabase,
   HiOutlineUser,
-  HiOutlineCheckCircle,
-  HiOutlinePlus,
-  HiOutlinePlay,
-  HiOutlineFlag,
-  HiOutlineUserAdd,
   HiOutlineTerminal
 } from 'react-icons/hi'
-import {
-  HiCodeBracket as HiOutlineGitMerge,
-  HiArrowPath as HiOutlineGitCommit
-} from 'react-icons/hi2'
 import BrutalCard from '../components/ui/BrutalCard'
 import BrutalButton from '../components/ui/BrutalButton'
 
+const STAT_ICONS = [
+  { label: 'WORKSPACES', icon: HiOutlineBriefcase, color: 'var(--theme-info)' },
+  { label: 'PROJECTS', icon: HiOutlineClipboardList, color: 'var(--theme-primary)' },
+  { label: 'TEAM MEMBERS', icon: HiOutlineUsers, color: 'var(--theme-warning)' },
+  { label: 'MEETINGS', icon: HiOutlineCalendar, color: 'var(--theme-success)' },
+] as const
+
 export default function Dashboard() {
-  const workspaces = useQuery(api.workspaces.queries.getUserWorkspaces) || []
-  const recentActivities = useQuery(api.activities.queries.getDashboardActivities, { limit: 10 }) || []
+  const dashboardData = useQuery(api.dashboard.queries.getDashboardData)
+  const workspaces = dashboardData?.workspaces ?? []
+  const recentActivities = dashboardData?.recentActivities ?? []
   const { profileComplete, missingFields } = useProfileCompletion()
 
-  const totalProjects = workspaces.reduce((sum: number, ws: any) => sum + (ws.projectCount || 0), 0)
-  const totalMembers = workspaces.reduce((sum: number, ws: any) => sum + (ws.memberCount || 0), 0)
-
-  const stats = [
-    { label: 'WORKSPACES', value: workspaces.length.toString(), icon: HiOutlineBriefcase, color: 'var(--theme-info)' },
-    { label: 'PROJECTS', value: totalProjects.toString(), icon: HiOutlineClipboardList, color: 'var(--theme-primary)' },
-    { label: 'TEAM MEMBERS', value: totalMembers.toString(), icon: HiOutlineUsers, color: 'var(--theme-warning)' },
-    { label: 'MEETINGS', value: '0', icon: HiOutlineCalendar, color: 'var(--theme-success)' },
-  ]
+  const stats = useMemo(() => {
+    const totalProjects = workspaces.reduce((sum: number, ws: any) => sum + (ws.projectCount || 0), 0)
+    const totalMembers = workspaces.reduce((sum: number, ws: any) => sum + (ws.memberCount || 0), 0)
+    const values = [workspaces.length.toString(), totalProjects.toString(), totalMembers.toString(), '0']
+    return STAT_ICONS.map((s, i) => ({ ...s, value: values[i] }))
+  }, [workspaces])
 
   return (
     <div className="p-6 min-h-screen bg-[var(--theme-background)]">

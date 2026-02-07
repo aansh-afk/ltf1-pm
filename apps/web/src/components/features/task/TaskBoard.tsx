@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, memo, useCallback } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -8,7 +8,8 @@ import CreateTaskModal from './CreateTaskModal'
 import TaskDetailModal from './TaskDetailModal'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
-import { BrutalCard, BrutalButton } from '../../ui'
+import BrutalCard from '../../ui/BrutalCard'
+import BrutalButton from '../../ui/BrutalButton'
 
 interface TaskBoardProps {
   tasks: any[]
@@ -29,7 +30,7 @@ const columns = [
   { id: 'done', title: 'DONE', borderColor: 'border-brutal-success', bgColor: 'bg-brutal-success', textColor: 'text-brutal-success' },
 ]
 
-export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, onTaskDelete, onTaskDuplicate, isCompact = false, onCompactToggle }: TaskBoardProps) {
+const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, onTaskDelete, onTaskDuplicate, isCompact = false, onCompactToggle }: TaskBoardProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createStatus, setCreateStatus] = useState<string>('backlog')
   const [draggedTask, setDraggedTask] = useState<any>(null)
@@ -50,21 +51,21 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
   }, [isCompact])
 
   // Handle compact toggle
-  const handleCompactToggle = () => {
+  const handleCompactToggle = useCallback(() => {
     const newValue = !isCompactView
     setIsCompactView(newValue)
     onCompactToggle?.(newValue)
-  }
+  }, [isCompactView, onCompactToggle])
 
-  const handleDragStart = (e: React.DragEvent, task: any) => {
+  const handleDragStart = useCallback((e: React.DragEvent, task: any) => {
     setDraggedTask(task)
     e.dataTransfer.effectAllowed = 'move'
-  }
+  }, [])
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
-  }
+  }, [])
 
   const handleDragOverTask = (e: React.DragEvent, taskId: string, columnId: string, index: number) => {
     e.preventDefault()
@@ -83,12 +84,12 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
     }
   }
 
-  const handleDragLeaveTask = () => {
+  const handleDragLeaveTask = useCallback(() => {
     // Small delay to prevent flicker when moving between tasks
     setTimeout(() => {
       setDraggedOverTask(null)
     }, 50)
-  }
+  }, [])
 
   const handleDrop = async (e: React.DragEvent, newStatus: string) => {
     e.preventDefault()
@@ -121,22 +122,22 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
     setDraggedOverTask(null)
   }
 
-  const handleDragEnd = () => {
+  const handleDragEnd = useCallback(() => {
     setDraggedTask(null)
     setDropPosition(null)
     setDraggedOverTask(null)
-  }
+  }, [])
 
-  const getTasksByStatus = (status: string) => {
+  const getTasksByStatus = useCallback((status: string) => {
     return tasks
       .filter(task => task.status === status)
       .sort((a, b) => a.position - b.position)
-  }
+  }, [tasks])
 
-  const openCreateModal = (status: string) => {
+  const openCreateModal = useCallback((status: string) => {
     setCreateStatus(status)
     setShowCreateModal(true)
-  }
+  }, [])
 
   // Check for column overflow
   useEffect(() => {
@@ -358,4 +359,6 @@ export default function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, 
       )}
     </>
   )
-}
+})
+
+export default TaskBoard

@@ -2,10 +2,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
 
 const NAV_LINKS = [
-  { to: '/#features', label: 'FEATURES' },
-  { to: '/pricing', label: 'PRICING' },
-  { to: '/blog', label: 'BLOG' },
-  { to: '/contact', label: 'CONTACT' },
+  { to: '/features', label: 'Features' },
+  { to: '/pricing', label: 'Pricing' },
+  { to: '/contact', label: 'Contact' },
 ]
 
 export default function PublicNavigation() {
@@ -16,14 +15,12 @@ export default function PublicNavigation() {
 
   const handleHashClick = useCallback((e: React.MouseEvent, to: string) => {
     if (!to.startsWith('/#')) return
-    const hash = to.slice(1) // e.g. "#features"
+    const hash = to.slice(1)
     if (location.pathname === '/') {
-      // Already on home page — just scroll
       e.preventDefault()
       const el = document.querySelector(hash)
       if (el) el.scrollIntoView({ behavior: 'smooth' })
     } else {
-      // Navigate to home, then scroll after render
       e.preventDefault()
       navigate('/')
       setTimeout(() => {
@@ -34,98 +31,88 @@ export default function PublicNavigation() {
     setMenuOpen(false)
   }, [location.pathname, navigate])
 
-  // Close menu on route change
   useEffect(() => {
     setMenuOpen(false)
   }, [location.pathname])
 
-  // Track scroll for subtle border brightening
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Lock body scroll when menu open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [menuOpen])
 
-  const isActive = (path: string) =>
-    path.startsWith('/#')
-      ? location.pathname === '/' && location.hash === path.slice(1)
-      : location.pathname === path
-
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 bg-event-horizon/95 backdrop-blur-sm transition-colors duration-200 ${
-          scrolled ? 'border-b-2 border-basalt-border' : 'border-b-2 border-transparent'
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? 'bg-[#050505]/80 backdrop-blur-xl border-b border-[#1F1F23]'
+            : 'bg-transparent'
         }`}
       >
-        <div className="marketing-container px-24px">
-          <div className="flex items-center justify-between h-[56px] md:h-[64px]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-between h-16 md:h-[72px]">
             {/* Logo */}
             <Link
               to="/"
-              className="font-mono text-lg md:text-xl font-bold text-cathode-white hover:text-brutal-info transition-colors"
+              className="font-['Inter',sans-serif] text-xl md:text-2xl font-bold text-[#F9FAFB] hover:text-[#6366F1] transition-colors duration-300"
             >
               LTF1
             </Link>
 
             {/* Desktop links */}
-            <div className="hidden md:flex items-center gap-4px">
+            <div className="hidden md:flex items-center gap-1">
               {NAV_LINKS.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
                   onClick={(e) => handleHashClick(e, link.to)}
-                  className={`px-16px py-8px text-xs font-mono uppercase tracking-wider transition-colors ${
-                    isActive(link.to)
-                      ? 'text-brutal-info'
-                      : 'text-cathode-white/50 hover:text-cathode-white'
-                  }`}
+                  className="px-4 py-2 text-sm font-['Inter',sans-serif] font-medium text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200"
                 >
                   {link.label}
                 </Link>
               ))}
 
-              <span className="w-[1px] h-[20px] bg-basalt-border mx-8px" />
+              <span className="w-px h-5 bg-[#2E2E35] mx-3" />
 
               <Link
                 to="/sign-in"
-                className="px-16px py-8px text-xs font-mono uppercase tracking-wider text-cathode-white/50 hover:text-cathode-white transition-colors"
+                className="px-4 py-2 text-sm font-['Inter',sans-serif] font-medium text-[#9CA3AF] hover:text-[#F9FAFB] border-2 border-[#2E2E35] hover:border-[#6366F1] bg-transparent hover:bg-[#111111] rounded-lg transition-all duration-300"
               >
-                SIGN IN
+                Sign In
               </Link>
 
               <Link
                 to="/sign-up"
-                className="ml-8px px-24px py-8px text-xs font-mono uppercase tracking-wider font-bold bg-brutal-info text-event-horizon border-2 border-brutal-info hover:bg-transparent hover:text-brutal-info transition-colors"
+                className="ml-2 px-6 py-2 text-sm font-['Inter',sans-serif] font-semibold bg-[#6366F1] hover:bg-[#4F46E5] text-white rounded-lg border-2 border-[#4F46E5] shadow-[3px_3px_0px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 transition-all duration-300"
               >
-                JOIN WAITLIST
+                Get Started
               </Link>
             </div>
 
             {/* Mobile menu button */}
             <button
               onClick={() => setMenuOpen(v => !v)}
-              className="md:hidden w-[44px] h-[44px] flex flex-col items-center justify-center gap-[5px]"
+              className="md:hidden w-11 h-11 flex flex-col items-center justify-center gap-[5px]"
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             >
               <span
-                className={`block w-[20px] h-[2px] bg-cathode-white transition-all duration-200 origin-center ${
+                className={`block w-5 h-0.5 bg-[#F9FAFB] transition-all duration-200 origin-center ${
                   menuOpen ? 'rotate-45 translate-y-[7px]' : ''
                 }`}
               />
               <span
-                className={`block w-[20px] h-[2px] bg-cathode-white transition-all duration-200 ${
+                className={`block w-5 h-0.5 bg-[#F9FAFB] transition-all duration-200 ${
                   menuOpen ? 'opacity-0' : ''
                 }`}
               />
               <span
-                className={`block w-[20px] h-[2px] bg-cathode-white transition-all duration-200 origin-center ${
+                className={`block w-5 h-0.5 bg-[#F9FAFB] transition-all duration-200 origin-center ${
                   menuOpen ? '-rotate-45 -translate-y-[7px]' : ''
                 }`}
               />
@@ -135,58 +122,43 @@ export default function PublicNavigation() {
       </nav>
 
       {/* Spacer for fixed nav */}
-      <div className="h-[56px] md:h-[64px]" />
+      <div className="h-16 md:h-[72px]" />
 
       {/* Mobile menu overlay */}
       {menuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-event-horizon flex flex-col">
-          {/* Skip past the nav height */}
-          <div className="h-[56px] shrink-0" />
+        <div className="md:hidden fixed inset-0 z-40 bg-[#050505] flex flex-col">
+          <div className="h-16 shrink-0" />
 
-          <div className="flex-1 flex flex-col px-24px py-32px">
-            {/* Nav links */}
-            <div className="flex flex-col gap-4px">
+          <div className="flex-1 flex flex-col px-6 py-8">
+            <div className="flex flex-col gap-1">
               {NAV_LINKS.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
                   onClick={(e) => handleHashClick(e, link.to)}
-                  className={`py-16px px-16px text-sm font-mono uppercase tracking-wider border-b border-basalt-border/30 transition-colors ${
-                    isActive(link.to)
-                      ? 'text-brutal-info'
-                      : 'text-cathode-white/70 active:text-cathode-white'
-                  }`}
+                  className="py-4 px-4 text-base font-['Inter',sans-serif] font-medium text-[#9CA3AF] active:text-[#F9FAFB] border-b border-[#1F1F23]/30 transition-colors"
                 >
-                  {isActive(link.to) && (
-                    <span className="text-brutal-info/50 mr-8px">&gt;</span>
-                  )}
                   {link.label}
                 </Link>
               ))}
             </div>
 
-            {/* Auth actions */}
-            <div className="mt-auto flex flex-col gap-16px">
+            <div className="mt-auto flex flex-col gap-4">
               <Link
                 to="/sign-in"
                 onClick={() => setMenuOpen(false)}
-                className="py-16px text-center text-sm font-mono uppercase tracking-wider text-cathode-white/50 border-2 border-basalt-border"
+                className="py-3 text-center text-sm font-['Inter',sans-serif] font-medium text-[#9CA3AF] border-2 border-[#2E2E35] hover:border-[#6366F1] rounded-lg transition-all duration-300"
               >
-                SIGN IN
+                Sign In
               </Link>
               <Link
                 to="/sign-up"
                 onClick={() => setMenuOpen(false)}
-                className="py-16px text-center text-sm font-mono uppercase tracking-wider font-bold bg-brutal-info text-event-horizon border-2 border-brutal-info"
+                className="py-3 text-center text-sm font-['Inter',sans-serif] font-semibold bg-[#6366F1] hover:bg-[#4F46E5] text-white rounded-lg border-2 border-[#4F46E5] shadow-[3px_3px_0px_rgba(0,0,0,0.4)] transition-all duration-300"
               >
-                JOIN WAITLIST
+                Get Started
               </Link>
             </div>
-
-            {/* Bottom tagline */}
-            <p className="mt-24px text-center text-[10px] font-mono uppercase tracking-wider text-cathode-white/15">
-              YOUR REPO IS THE SOURCE OF TRUTH
-            </p>
           </div>
         </div>
       )}

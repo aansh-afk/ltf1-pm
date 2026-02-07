@@ -14,7 +14,9 @@ import {
 } from 'react-icons/hi'
 import toast from 'react-hot-toast'
 import SettingsSection from './SettingsSection'
-import { BrutalCard, BrutalButton, BrutalBadge } from '@/components/ui'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalBadge from '@/components/ui/BrutalBadge'
 import BrutalModal from '../../ui/BrutalModal'
 
 export default function AISettingsTab() {

@@ -43,15 +43,6 @@ export function useThemePerformance(): UseThemePerformanceReturn {
   const [lastUpdateTime, setLastUpdateTime] = useState(0)
   const { themeName } = useTheme()
 
-  // Update stats when theme changes
-  useEffect(() => {
-    if (isMonitoring) {
-      const now = performance.now()
-      setLastUpdateTime(now)
-      updateStats()
-    }
-  }, [themeName, isMonitoring])
-
   // Update performance statistics
   const updateStats = useCallback(() => {
     const auditResults = themePerformanceOptimizer.auditThemePerformance()
@@ -63,6 +54,15 @@ export function useThemePerformance(): UseThemePerformanceReturn {
       browserCapabilities: capabilities
     })
   }, [lastUpdateTime])
+
+  // Update stats when theme changes
+  useEffect(() => {
+    if (isMonitoring) {
+      const now = performance.now()
+      setLastUpdateTime(now)
+      updateStats()
+    }
+  }, [themeName, isMonitoring, updateStats])
 
   // Start performance monitoring
   const startMonitoring = useCallback(() => {

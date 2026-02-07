@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAction } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { FaGithub, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
-import { BrutalCard } from '@/components/ui';
+import BrutalCard from '@/components/ui/BrutalCard';
 import toast from 'react-hot-toast';
 
 export default function GitHubCallbackPage() {

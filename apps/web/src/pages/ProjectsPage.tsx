@@ -7,7 +7,8 @@ import WorkspaceSelector from '@/components/common/WorkspaceSelector'
 import CreateProjectModal from '@/components/features/project/CreateProjectModal'
 import ProjectCard from '@/components/features/project/ProjectCard'
 import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
-import { BrutalButton, BrutalCard } from '@/components/ui'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalCard from '@/components/ui/BrutalCard'
 import { motion } from 'framer-motion'
 
 export default function ProjectsPage() {

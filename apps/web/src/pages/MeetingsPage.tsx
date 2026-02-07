@@ -26,7 +26,9 @@ import MeetingNotesModal from '../components/features/meetings/MeetingNotesModal
 import BulkScheduleModal from '../components/features/meetings/BulkScheduleModal'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
-import { BrutalCard, BrutalButton, BrutalBadge } from '@/components/ui'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalBadge from '@/components/ui/BrutalBadge'
 
 type ViewMode = 'calendar' | 'list' | 'dashboard'
 type CalendarView = 'month' | 'week' | 'day'

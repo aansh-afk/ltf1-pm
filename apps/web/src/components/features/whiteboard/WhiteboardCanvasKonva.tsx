@@ -17,7 +17,7 @@ import {
     HiOutlineArrowRight,
     HiOutlineX // Using X for Eraser as a placeholder or standard icon
 } from 'react-icons/hi'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 
 // --- Types & Constants ---
 

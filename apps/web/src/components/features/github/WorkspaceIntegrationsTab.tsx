@@ -22,7 +22,8 @@ import {
   HiOutlineTrash,
   HiOutlinePlus
 } from 'react-icons/hi';
-import { BrutalButton, BrutalCard } from '@/components/ui';
+import BrutalButton from '@/components/ui/BrutalButton';
+import BrutalCard from '@/components/ui/BrutalCard';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 
