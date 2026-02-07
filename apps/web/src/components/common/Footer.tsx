@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { FaGithub, FaTwitter, FaDiscord } from 'react-icons/fa'
 import { useRef, useEffect, useState } from 'react'
+import { useAuth } from '@clerk/clerk-react'
 import WaitlistForm from '../landing/WaitlistForm'
 
 // ── Particle field — direct port of apps/cli/src/tui/hooks/useParticles.ts ──
@@ -214,6 +215,8 @@ function ParticleField() {
 }
 
 export default function Footer() {
+  const { isSignedIn } = useAuth()
+
   return (
     <footer className="bg-[#050505] border-t border-[#1F1F23]">
       <div className="max-w-7xl mx-auto px-6">
@@ -234,18 +237,29 @@ export default function Footer() {
 
         {/* Links grid */}
         <div className="py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
-          {/* Product */}
+          {/* Product — only show app links when signed in */}
           <div>
             <h4 className="text-xs font-['IBM_Plex_Mono',monospace] font-semibold text-[#6366F1] uppercase tracking-wider mb-4">
               Product
             </h4>
             <ul className="space-y-2">
-              <li><Link to="/dashboard" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Dashboard</Link></li>
-              <li><Link to="/tasks" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Tasks</Link></li>
-              <li><Link to="/projects" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Projects</Link></li>
-              <li><Link to="/sprints" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Sprints</Link></li>
-              <li><Link to="/team" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Teams</Link></li>
-              <li><Link to="/whiteboard" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Whiteboard</Link></li>
+              {isSignedIn ? (
+                <>
+                  <li><Link to="/dashboard" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Dashboard</Link></li>
+                  <li><Link to="/tasks" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Tasks</Link></li>
+                  <li><Link to="/projects" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Projects</Link></li>
+                  <li><Link to="/sprints" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Sprints</Link></li>
+                  <li><Link to="/team" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Teams</Link></li>
+                  <li><Link to="/whiteboard" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Whiteboard</Link></li>
+                </>
+              ) : (
+                <>
+                  <li><Link to="/features" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Features</Link></li>
+                  <li><Link to="/pricing" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Pricing</Link></li>
+                  <li><Link to="/sign-up" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Get Started</Link></li>
+                  <li><Link to="/sign-in" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Sign In</Link></li>
+                </>
+              )}
             </ul>
           </div>
 
