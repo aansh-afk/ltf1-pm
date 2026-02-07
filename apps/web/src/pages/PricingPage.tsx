@@ -25,6 +25,7 @@ const tiers: Tier[] = [
       'Up to 5 team members',
       'Full Git integration',
       'PR-driven task updates',
+      'Slack & Discord notifications',
       'Sprint management',
       '100 AI credits/month',
       'CLI + TUI access',
@@ -104,6 +105,16 @@ const comparison: ComparisonCategory[] = [
       { feature: 'PR-driven updates', open: true, pro: true, enterprise: true },
       { feature: 'Branch tracking', open: true, pro: true, enterprise: true },
       { feature: 'Custom webhooks', open: false, pro: true, enterprise: true },
+    ],
+  },
+  {
+    name: 'Integrations',
+    rows: [
+      { feature: 'Slack notifications', open: true, pro: true, enterprise: true },
+      { feature: 'Discord notifications', open: true, pro: true, enterprise: true },
+      { feature: 'Email digests', open: true, pro: true, enterprise: true },
+      { feature: 'Custom webhooks', open: false, pro: true, enterprise: true },
+      { feature: 'API access', open: true, pro: true, enterprise: true },
     ],
   },
   {

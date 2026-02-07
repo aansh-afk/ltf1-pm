@@ -124,7 +124,7 @@ const cards: FeatureCard[] = [
     category: 'Collaboration',
     categoryColor: '#EC4899',
     title: 'Team Management',
-    description: 'Workload visibility across your team.',
+    description: 'Workload visibility with Slack & Discord notifications.',
     fullWidth: false,
     ascii: [
       '  +-- {w:team load} ------------+',

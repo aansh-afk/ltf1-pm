@@ -38,7 +38,7 @@ const secondaryCards: ContactCard[] = [
     title: 'Join the community',
     description: 'Connect with other LTF1 users, share workflows, and get help from the community.',
     linkLabel: 'Join Discord',
-    href: 'https://discord.gg/ltf1',
+    href: 'https://discord.gg/jWMS6Pcr',
     external: true,
   },
   {

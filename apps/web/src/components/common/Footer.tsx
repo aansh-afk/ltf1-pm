@@ -310,7 +310,7 @@ export default function Footer() {
             <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-[#6B7280] hover:text-[#6366F1] transition-colors duration-200" aria-label="Twitter">
               <FaTwitter className="w-5 h-5" />
             </a>
-            <a href="https://discord.gg" target="_blank" rel="noopener noreferrer" className="text-[#6B7280] hover:text-[#6366F1] transition-colors duration-200" aria-label="Discord">
+            <a href="https://discord.gg/jWMS6Pcr" target="_blank" rel="noopener noreferrer" className="text-[#6B7280] hover:text-[#6366F1] transition-colors duration-200" aria-label="Discord">
               <FaDiscord className="w-5 h-5" />
             </a>
           </div>
