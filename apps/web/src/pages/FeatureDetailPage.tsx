@@ -353,7 +353,7 @@ const features: FeaturePageData[] = [
           '  {r:blockers detected:}',
           '  |  {c:@bob}  {r:blocked} {p:4.2h} on {w:PR #198}',
           '  |    -> waiting for review from {c:@ada}',
-          '  |    -> {g:auto-notified @ada via Slack}',
+          '  |    -> {g:auto-notified @ada via Slack & Discord}',
           '  |',
           '  |  {c:@max}  {r:blocked} {p:1.1h} on {w:TSK-95}',
           '  |    -> missing API spec from {c:@eve}',
