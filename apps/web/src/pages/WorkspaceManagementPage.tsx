@@ -22,7 +22,9 @@ import LoadingSpinner from '@/components/common/LoadingSpinner'
 import CreateProjectModal from '@/components/features/project/CreateProjectModal'
 import { WorkspaceIntegrationsTab } from '@/components/features/github/WorkspaceIntegrationsTab'
 import clsx from 'clsx'
-import { BrutalCard, BrutalButton, BrutalBadge } from '@/components/ui'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalBadge from '@/components/ui/BrutalBadge'
 import { motion } from 'framer-motion'
 
 interface WorkspaceTab {

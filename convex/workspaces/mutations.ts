@@ -1,4 +1,4 @@
-import { mutation } from "../_generated/server";
+import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../auth/permissions";
 import { internal } from "../_generated/api";
@@ -452,7 +452,7 @@ export const deleteWorkspace = mutation({
   },
 });
 
-export const clearOldActivities = mutation({
+export const clearOldActivities = internalMutation({
   args: {},
   handler: async (ctx) => {
     // Allow anyone to run this migration - it's safe to clear old data

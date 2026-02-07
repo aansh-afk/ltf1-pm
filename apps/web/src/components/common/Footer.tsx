@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { FaGithub, FaTwitter, FaLinkedin, FaDiscord } from 'react-icons/fa'
+import { FaGithub, FaTwitter, FaDiscord } from 'react-icons/fa'
 import { useRef, useEffect, useState } from 'react'
 import WaitlistForm from '../landing/WaitlistForm'
 
@@ -31,8 +31,8 @@ const PARTICLE_CFG = {
   BAND_HEIGHT: 12,
   SPEED_MIN: 0.3,
   SPEED_MAX: 1.2,
-  CHARS: ['.', '\u00B7', '\u2022', '\u25CF'],       // . · • ●
-  COLORS: ['#333333', '#555555', '#888888', '#cccccc'],
+  CHARS: ['.', '\u00B7', '\u2022', '\u25CF'],
+  COLORS: ['#1F1F23', '#6366F1', '#9CA3AF', '#6366F1'],
   EDGE_FADE_PCT: 0.15,
 }
 
@@ -50,7 +50,6 @@ function ParticleField() {
   const rafRef = useRef(0)
   const [dims, setDims] = useState({ w: 0, h: 0 })
 
-  // Measure container to get char-grid dimensions
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -83,7 +82,6 @@ function ParticleField() {
     canvas.style.height = `${H}px`
     ctx.scale(dpr, dpr)
 
-    // Character cell size
     const fontSize = 13
     ctx.font = `${fontSize}px "IBM Plex Mono", monospace`
     const charW = ctx.measureText('M').width
@@ -93,7 +91,6 @@ function ParticleField() {
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    // Init particles
     const particles: Particle[] = []
     for (let i = 0; i < PARTICLE_CFG.COUNT; i++) {
       particles.push({
@@ -105,7 +102,6 @@ function ParticleField() {
       })
     }
 
-    // Flyby state
     const flyby = {
       nextStart: Date.now() + FLYBY.INTERVAL_MIN + Math.random() * (FLYBY.INTERVAL_MAX - FLYBY.INTERVAL_MIN),
       shipX: cols + XWING_WIDTH,
@@ -120,7 +116,6 @@ function ParticleField() {
       const now = Date.now()
 
       if (!reducedMotion) {
-        // Update flyby
         if (!flyby.active && now >= flyby.nextStart) {
           flyby.active = true
           flyby.shipX = cols + 2
@@ -134,9 +129,8 @@ function ParticleField() {
           }
         }
 
-        // Update particles
         for (const p of particles) {
-          p.x -= p.speed * 0.16 // ~60fps scaling
+          p.x -= p.speed * 0.16
           if (p.x < 0) {
             p.x = cols + Math.random() * 4
             p.y = Math.random() * rows
@@ -147,7 +141,6 @@ function ParticleField() {
         }
       }
 
-      // Build grid
       const grid: string[][] = []
       const bright: number[][] = []
       for (let r = 0; r < rows; r++) {
@@ -155,7 +148,6 @@ function ParticleField() {
         bright.push(new Array<number>(cols).fill(0))
       }
 
-      // Place particles
       for (const p of particles) {
         const col = Math.round(p.x)
         const r = Math.round(p.y)
@@ -170,7 +162,6 @@ function ParticleField() {
         bright[r][col] = eb
       }
 
-      // Stamp X-wing
       if (flyby.active) {
         const artLeft = Math.round(flyby.shipX)
         const artTop = Math.max(0, Math.floor((rows - XWING.length) / 2))
@@ -189,7 +180,6 @@ function ParticleField() {
         }
       }
 
-      // Render
       for (let r = 0; r < rows; r++) {
         for (let col = 0; col < cols; col++) {
           if (grid[r][col] === ' ') continue
@@ -225,17 +215,17 @@ function ParticleField() {
 
 export default function Footer() {
   return (
-    <footer className="bg-event-horizon border-t-2 border-basalt-border">
-      <div className="marketing-container px-24px">
+    <footer className="bg-[#050505] border-t border-[#1F1F23]">
+      <div className="max-w-7xl mx-auto px-6">
         {/* Newsletter row */}
-        <div className="py-48px border-b-2 border-basalt-border">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-24px">
+        <div className="py-12 border-b border-[#1F1F23]">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
-              <h3 className="text-lg font-bold text-cathode-white uppercase mb-4px">
-                STAY IN THE LOOP
+              <h3 className="text-lg font-['Inter',sans-serif] font-bold text-[#F9FAFB] tracking-tight mb-1">
+                Stay in the loop
               </h3>
-              <p className="text-sm text-cathode-white/50 uppercase">
-                PRODUCT UPDATES. ENGINEERING INSIGHTS. ZERO SPAM.
+              <p className="text-sm font-['Inter',sans-serif] text-[#6B7280]">
+                Product updates. Engineering insights. Zero spam.
               </p>
             </div>
             <WaitlistForm source="landing" compact />
@@ -243,86 +233,85 @@ export default function Footer() {
         </div>
 
         {/* Links grid */}
-        <div className="py-48px grid grid-cols-2 md:grid-cols-4 gap-32px">
+        <div className="py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Product */}
           <div>
-            <h4 className="text-xs font-bold text-cathode-white uppercase tracking-wider mb-16px">
-              PRODUCT
+            <h4 className="text-xs font-['IBM_Plex_Mono',monospace] font-semibold text-[#6366F1] uppercase tracking-wider mb-4">
+              Product
             </h4>
-            <ul className="space-y-8px">
-              <li><Link to="/pricing" className="text-sm text-cathode-white/50 hover:text-brutal-info uppercase">PRICING</Link></li>
-              <li><Link to="/#features" className="text-sm text-cathode-white/50 hover:text-brutal-info uppercase">FEATURES</Link></li>
-              <li><Link to="/#how-it-works" className="text-sm text-cathode-white/50 hover:text-brutal-info uppercase">HOW IT WORKS</Link></li>
-              <li><span className="text-sm text-cathode-white/30 uppercase">CHANGELOG (SOON)</span></li>
+            <ul className="space-y-2">
+              <li><Link to="/dashboard" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Dashboard</Link></li>
+              <li><Link to="/tasks" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Tasks</Link></li>
+              <li><Link to="/projects" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Projects</Link></li>
+              <li><Link to="/sprints" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Sprints</Link></li>
+              <li><Link to="/team" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Teams</Link></li>
+              <li><Link to="/whiteboard" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Whiteboard</Link></li>
             </ul>
           </div>
 
           {/* Company */}
           <div>
-            <h4 className="text-xs font-bold text-cathode-white uppercase tracking-wider mb-16px">
-              COMPANY
+            <h4 className="text-xs font-['IBM_Plex_Mono',monospace] font-semibold text-[#6366F1] uppercase tracking-wider mb-4">
+              Company
             </h4>
-            <ul className="space-y-8px">
-              <li><Link to="/blog" className="text-sm text-cathode-white/50 hover:text-brutal-info uppercase">BLOG</Link></li>
-              <li><Link to="/contact" className="text-sm text-cathode-white/50 hover:text-brutal-info uppercase">CONTACT</Link></li>
-              <li><span className="text-sm text-cathode-white/30 uppercase">CAREERS (SOON)</span></li>
+            <ul className="space-y-2">
+              <li><Link to="/pricing" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Pricing</Link></li>
+              <li><Link to="/contact" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Contact</Link></li>
+              <li><Link to="/" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">About</Link></li>
             </ul>
           </div>
 
           {/* Developers */}
           <div>
-            <h4 className="text-xs font-bold text-cathode-white uppercase tracking-wider mb-16px">
-              DEVELOPERS
+            <h4 className="text-xs font-['IBM_Plex_Mono',monospace] font-semibold text-[#6366F1] uppercase tracking-wider mb-4">
+              Developers
             </h4>
-            <ul className="space-y-8px">
-              <li><span className="text-sm text-cathode-white/30 uppercase">DOCS (SOON)</span></li>
-              <li><span className="text-sm text-cathode-white/30 uppercase">API (SOON)</span></li>
-              <li><span className="text-sm text-cathode-white/30 uppercase">STATUS (SOON)</span></li>
+            <ul className="space-y-2">
+              <li><a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">GitHub</a></li>
+              <li><Link to="/" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Documentation</Link></li>
+              <li><Link to="/" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">CLI</Link></li>
             </ul>
           </div>
 
           {/* Legal */}
           <div>
-            <h4 className="text-xs font-bold text-cathode-white uppercase tracking-wider mb-16px">
-              LEGAL
+            <h4 className="text-xs font-['IBM_Plex_Mono',monospace] font-semibold text-[#6366F1] uppercase tracking-wider mb-4">
+              Legal
             </h4>
-            <ul className="space-y-8px">
-              <li><span className="text-sm text-cathode-white/30 uppercase">PRIVACY (SOON)</span></li>
-              <li><span className="text-sm text-cathode-white/30 uppercase">TERMS (SOON)</span></li>
-              <li><span className="text-sm text-cathode-white/30 uppercase">SECURITY (SOON)</span></li>
+            <ul className="space-y-2">
+              <li><Link to="/privacy" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Privacy</Link></li>
+              <li><Link to="/terms" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">Terms</Link></li>
+              <li><Link to="/" className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200">AGPL License</Link></li>
             </ul>
           </div>
         </div>
 
         {/* Particle field band */}
-        <div className="py-32px md:py-48px">
+        <div className="py-8 md:py-12">
           <ParticleField />
         </div>
 
         {/* Bottom bar */}
-        <div className="py-24px border-t-2 border-basalt-border flex flex-col sm:flex-row justify-between items-center gap-16px">
-          <div className="flex items-center gap-16px">
-            <Link to="/" className="text-cathode-white/60 hover:text-brutal-info font-mono text-sm font-bold uppercase">
+        <div className="py-6 border-t border-[#1F1F23] flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-4">
+            <Link to="/" className="text-[#9CA3AF] hover:text-[#6366F1] font-['Inter',sans-serif] text-sm font-bold transition-colors duration-200">
               LTF1
             </Link>
-            <span className="text-xs text-cathode-white/30 uppercase">
-              &copy; {new Date().getFullYear()} LTF1. ALL RIGHTS RESERVED.
+            <span className="text-xs font-['Inter',sans-serif] text-[#6B7280]">
+              &copy; 2026 LTF1
             </span>
           </div>
 
           {/* Social icons */}
-          <div className="flex items-center gap-16px">
-            <a href="https://github.com/ltf1" target="_blank" rel="noopener noreferrer" className="text-cathode-white/50 hover:text-brutal-info" aria-label="GitHub">
-              <FaGithub className="w-20px h-20px" />
+          <div className="flex items-center gap-4">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-[#6B7280] hover:text-[#6366F1] transition-colors duration-200" aria-label="GitHub">
+              <FaGithub className="w-5 h-5" />
             </a>
-            <a href="https://twitter.com/ltf1dev" target="_blank" rel="noopener noreferrer" className="text-cathode-white/50 hover:text-brutal-info" aria-label="Twitter">
-              <FaTwitter className="w-20px h-20px" />
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-[#6B7280] hover:text-[#6366F1] transition-colors duration-200" aria-label="Twitter">
+              <FaTwitter className="w-5 h-5" />
             </a>
-            <a href="https://linkedin.com/company/ltf1" target="_blank" rel="noopener noreferrer" className="text-cathode-white/50 hover:text-brutal-info" aria-label="LinkedIn">
-              <FaLinkedin className="w-20px h-20px" />
-            </a>
-            <a href="https://discord.gg/ltf1" target="_blank" rel="noopener noreferrer" className="text-cathode-white/50 hover:text-brutal-info" aria-label="Discord">
-              <FaDiscord className="w-20px h-20px" />
+            <a href="https://discord.gg" target="_blank" rel="noopener noreferrer" className="text-[#6B7280] hover:text-[#6366F1] transition-colors duration-200" aria-label="Discord">
+              <FaDiscord className="w-5 h-5" />
             </a>
           </div>
         </div>

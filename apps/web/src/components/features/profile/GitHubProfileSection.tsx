@@ -11,7 +11,8 @@ import {
   FaExclamationTriangle
 } from 'react-icons/fa';
 import { HiOutlineExternalLink, HiOutlineTrash } from 'react-icons/hi';
-import { BrutalButton, BrutalCard } from '@/components/ui';
+import BrutalButton from '@/components/ui/BrutalButton';
+import BrutalCard from '@/components/ui/BrutalCard';
 import { GitHubConnectButton } from '../github/GitHubConnectButton';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';

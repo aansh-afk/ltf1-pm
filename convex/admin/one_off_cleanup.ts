@@ -1,4 +1,4 @@
-import { mutation } from "../_generated/server";
+import { internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 
 /**
@@ -7,7 +7,7 @@ import { v } from "convex/values";
  * Run this function from the Convex Dashboard to clear ALL GitHub data.
  * Go to Functions -> admin/one_off_cleanup:clearGitHubData -> Run Mutation
  */
-export const clearGitHubData = mutation({
+export const clearGitHubData = internalMutation({
     args: {},
     handler: async (ctx) => {
         console.log("Starting FULL GitHub cleanup...");

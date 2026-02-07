@@ -29,23 +29,23 @@ export const getUserWorkspaces = query({
         const workspace = await ctx.db.get(membership.workspaceId);
         if (!workspace) return null;
 
-        const memberCount = await ctx.db
-          .query("workspaceMembers")
-          .withIndex("by_workspace", (q) => q.eq("workspaceId", workspace._id))
-          .collect()
-          .then((members) => members.length);
-
-        const projectCount = await ctx.db
-          .query("projects")
-          .withIndex("by_workspace", (q) => q.eq("workspaceId", workspace._id))
-          .collect()
-          .then((projects) => projects.filter(p => p.status !== "archived").length);
+        // Fetch member count and project count in parallel
+        const [members, projects] = await Promise.all([
+          ctx.db
+            .query("workspaceMembers")
+            .withIndex("by_workspace", (q) => q.eq("workspaceId", workspace._id))
+            .collect(),
+          ctx.db
+            .query("projects")
+            .withIndex("by_workspace", (q) => q.eq("workspaceId", workspace._id))
+            .collect(),
+        ]);
 
         return {
           ...workspace,
           role: membership.role,
-          memberCount,
-          projectCount,
+          memberCount: members.length,
+          projectCount: projects.filter(p => p.status !== "archived").length,
         };
       })
     );

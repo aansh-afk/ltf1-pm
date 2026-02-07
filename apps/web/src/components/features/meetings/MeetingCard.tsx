@@ -18,7 +18,9 @@ import {
 import { formatDistanceToNow, format } from 'date-fns'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
-import { BrutalCard, BrutalButton, BrutalBadge } from '@/components/ui'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalBadge from '@/components/ui/BrutalBadge'
 
 interface MeetingCardProps {
   meeting: any

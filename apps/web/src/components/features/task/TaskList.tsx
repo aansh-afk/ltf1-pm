@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo, useCallback } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import {
@@ -15,7 +15,7 @@ import {
 import clsx from 'clsx'
 import { format } from 'date-fns'
 import CreateTaskModal from './CreateTaskModal'
-import { BrutalCheckbox } from '../../ui'
+import BrutalCheckbox from '../../ui/BrutalCheckbox'
 
 interface TaskListProps {
   tasks: any[]
@@ -50,16 +50,16 @@ const typeConfig = {
   epic: { label: 'EPIC', color: 'bg-[var(--theme-accent)]' }
 }
 
-export default function TaskList({ tasks, projectId, onTaskUpdate, onTaskEdit, onTaskDelete, onTaskDuplicate }: TaskListProps) {
+const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTaskEdit, onTaskDelete, onTaskDuplicate }: TaskListProps) {
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set())
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set())
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [sortBy, setSortBy] = useState<'status' | 'priority' | 'dueDate' | 'assignee'>('status')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
-  
+
   const updateTask = useMutation(api.tasks.mutations.updateTask)
 
-  const toggleTaskExpansion = (taskId: string) => {
+  const toggleTaskExpansion = useCallback((taskId: string) => {
     setExpandedTasks(prev => {
       const newSet = new Set(prev)
       if (newSet.has(taskId)) {
@@ -69,9 +69,9 @@ export default function TaskList({ tasks, projectId, onTaskUpdate, onTaskEdit, o
       }
       return newSet
     })
-  }
+  }, [])
 
-  const toggleTaskSelection = (taskId: string) => {
+  const toggleTaskSelection = useCallback((taskId: string) => {
     setSelectedTasks(prev => {
       const newSet = new Set(prev)
       if (newSet.has(taskId)) {
@@ -81,24 +81,24 @@ export default function TaskList({ tasks, projectId, onTaskUpdate, onTaskEdit, o
       }
       return newSet
     })
-  }
+  }, [])
 
-  const selectAllTasks = () => {
+  const selectAllTasks = useCallback(() => {
     if (selectedTasks.size === tasks.length) {
       setSelectedTasks(new Set())
     } else {
       setSelectedTasks(new Set(tasks.map(t => t._id)))
     }
-  }
+  }, [selectedTasks.size, tasks])
 
-  const handleSort = (field: typeof sortBy) => {
+  const handleSort = useCallback((field: typeof sortBy) => {
     if (field === sortBy) {
       setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')
     } else {
       setSortBy(field)
       setSortOrder('asc')
     }
-  }
+  }, [sortBy])
 
   // Sort tasks
   const sortedTasks = [...tasks].sort((a, b) => {
@@ -356,4 +356,6 @@ export default function TaskList({ tasks, projectId, onTaskUpdate, onTaskEdit, o
       )}
     </div>
   )
-}
+})
+
+export default TaskList

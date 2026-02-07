@@ -1,466 +1,393 @@
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { useState } from 'react'
-import {
-  HiCheck,
-  HiX,
-  HiCode,
-  HiLightningBolt,
-  HiCube,
-  HiChip,
-} from 'react-icons/hi'
+import { motion, type Variants } from 'framer-motion'
 import PublicNavigation from '../components/common/PublicNavigation'
 import Footer from '../components/common/Footer'
 
+/* ─── Tier Data ─────────────────────────────────────────────── */
+
+interface Tier {
+  name: string
+  price: string
+  period: string
+  highlight?: boolean
+  badge?: string
+  features: string[]
+  cta: { label: string; to: string; style: 'primary' | 'ghost' | 'disabled' }
+}
+
+const tiers: Tier[] = [
+  {
+    name: 'Open Source',
+    price: '$0',
+    period: 'free forever',
+    features: [
+      'Unlimited projects',
+      'Up to 5 team members',
+      'Full Git integration',
+      'PR-driven task updates',
+      'Sprint management',
+      '100 AI credits/month',
+      'CLI + TUI access',
+      'Community support',
+    ],
+    cta: { label: 'Get Started', to: '/sign-up', style: 'primary' },
+  },
+  {
+    name: 'Pro',
+    price: '$12',
+    period: '/user/month',
+    badge: 'Coming Soon',
+    highlight: true,
+    features: [
+      'Everything in Open Source',
+      'Unlimited team members',
+      'Unlimited AI credits',
+      'Advanced analytics',
+      'SSO / SAML',
+      'Priority support (48h)',
+      'Audit logs',
+      'Data retention controls',
+    ],
+    cta: { label: 'Join Waitlist', to: '/coming-soon', style: 'ghost' },
+  },
+  {
+    name: 'Enterprise',
+    price: 'Custom',
+    period: 'contact us',
+    features: [
+      'Everything in Pro',
+      'Unlimited everything',
+      'Dedicated support',
+      'Custom SLA',
+      'On-premise deployment',
+      'Advanced security',
+      'Custom integrations',
+      'Invoice billing',
+    ],
+    cta: { label: 'Contact Sales', to: '/contact', style: 'ghost' },
+  },
+]
+
+/* ─── Feature Comparison Data ───────────────────────────────── */
+
+interface ComparisonRow {
+  feature: string
+  open: string | boolean
+  pro: string | boolean
+  enterprise: string | boolean
+}
+
+interface ComparisonCategory {
+  name: string
+  rows: ComparisonRow[]
+}
+
+const comparison: ComparisonCategory[] = [
+  {
+    name: 'Core Features',
+    rows: [
+      { feature: 'Projects', open: 'Unlimited', pro: 'Unlimited', enterprise: 'Unlimited' },
+      { feature: 'Team members', open: 'Up to 5', pro: 'Unlimited', enterprise: 'Unlimited' },
+      { feature: 'Tasks & issues', open: 'Unlimited', pro: 'Unlimited', enterprise: 'Unlimited' },
+      { feature: 'Sprint management', open: true, pro: true, enterprise: true },
+      { feature: 'Whiteboard', open: true, pro: true, enterprise: true },
+      { feature: 'Custom fields', open: true, pro: true, enterprise: true },
+      { feature: 'Import & export', open: true, pro: true, enterprise: true },
+    ],
+  },
+  {
+    name: 'Git Integration',
+    rows: [
+      { feature: 'GitHub sync', open: true, pro: true, enterprise: true },
+      { feature: 'GitLab sync', open: true, pro: true, enterprise: true },
+      { feature: 'Bitbucket sync', open: true, pro: true, enterprise: true },
+      { feature: 'PR-driven updates', open: true, pro: true, enterprise: true },
+      { feature: 'Branch tracking', open: true, pro: true, enterprise: true },
+      { feature: 'Custom webhooks', open: false, pro: true, enterprise: true },
+    ],
+  },
+  {
+    name: 'AI & Intelligence',
+    rows: [
+      { feature: 'AI credits', open: '100/month', pro: 'Unlimited', enterprise: 'Unlimited' },
+      { feature: 'Code complexity estimates', open: true, pro: true, enterprise: true },
+      { feature: 'Tech debt surfacing', open: false, pro: true, enterprise: true },
+      { feature: 'Sprint suggestions', open: false, pro: true, enterprise: true },
+      { feature: 'BYOK (Bring Your Own Key)', open: false, pro: true, enterprise: true },
+    ],
+  },
+  {
+    name: 'Analytics & Reporting',
+    rows: [
+      { feature: 'Git-based velocity', open: 'Basic', pro: 'Advanced', enterprise: 'Advanced' },
+      { feature: 'Team dashboards', open: true, pro: true, enterprise: true },
+      { feature: 'Cycle time metrics', open: false, pro: true, enterprise: true },
+      { feature: 'Custom reports', open: false, pro: true, enterprise: true },
+      { feature: 'Data warehouse sync', open: false, pro: false, enterprise: true },
+    ],
+  },
+  {
+    name: 'Team Management',
+    rows: [
+      { feature: 'Workload visibility', open: true, pro: true, enterprise: true },
+      { feature: 'Role-based access', open: 'Basic', pro: 'Advanced', enterprise: 'Advanced' },
+      { feature: 'Private teams', open: false, pro: true, enterprise: true },
+      { feature: 'Guest accounts', open: false, pro: true, enterprise: true },
+    ],
+  },
+  {
+    name: 'Security & Compliance',
+    rows: [
+      { feature: 'SOC 2 Type II', open: false, pro: true, enterprise: true },
+      { feature: 'SSO / SAML', open: false, pro: true, enterprise: true },
+      { feature: 'Audit logs', open: false, pro: true, enterprise: true },
+      { feature: 'Data retention controls', open: false, pro: true, enterprise: true },
+      { feature: 'On-premise deployment', open: false, pro: false, enterprise: true },
+      { feature: 'SCIM provisioning', open: false, pro: false, enterprise: true },
+    ],
+  },
+  {
+    name: 'Support',
+    rows: [
+      { feature: 'Community support', open: true, pro: true, enterprise: true },
+      { feature: 'Priority support', open: false, pro: '48h SLA', enterprise: '4h SLA' },
+      { feature: 'Dedicated account manager', open: false, pro: false, enterprise: true },
+      { feature: 'Custom SLA', open: false, pro: false, enterprise: true },
+      { feature: 'Onboarding assistance', open: false, pro: false, enterprise: true },
+    ],
+  },
+]
+
+/* ─── Animations ────────────────────────────────────────────── */
+
+const cardVariants: Variants = {
+  rest: { borderColor: 'rgba(46, 46, 53, 1)', y: 0 },
+  hover: { borderColor: 'rgba(249, 250, 251, 0.2)', y: -2 },
+}
+
+const highlightCardVariants: Variants = {
+  rest: { borderColor: 'rgba(99, 102, 241, 0.6)', y: 0 },
+  hover: { borderColor: 'rgba(99, 102, 241, 1)', y: -2 },
+}
+
+/* ─── Cell Renderer ─────────────────────────────────────────── */
+
+function CellValue({ value }: { value: string | boolean }) {
+  if (value === true) return <span className="text-[#F9FAFB]">+</span>
+  if (value === false) return <span className="text-[#2E2E35]">-</span>
+  return <span className="text-[#9CA3AF]">{value}</span>
+}
+
+/* ─── Component ─────────────────────────────────────────────── */
+
 export default function PricingPage() {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
-  const yearlyDiscount = 0.2
-
-  const tiers = [
-    {
-      name: 'LOCALHOST',
-      tagline: 'For side projects and testing',
-      price: 0,
-      minUsers: 1,
-      maxUsers: 5,
-      icon: HiCode,
-      popular: false,
-      enterprise: false,
-      features: [
-        { name: '3 projects maximum', included: true },
-        { name: 'Up to 5 team members', included: true },
-        { name: 'Basic Git integration', included: true },
-        { name: '100 AI credits/month', included: true },
-        { name: 'Commit → Task generation', included: true },
-        { name: 'Community support', included: true },
-        { name: '7-day activity history', included: true },
-        { name: 'CSV export', included: true },
-        { name: 'Unlimited projects', included: false },
-        { name: 'Story point estimation', included: false },
-        { name: 'PR descriptions', included: false },
-        { name: 'Priority support', included: false },
-      ]
-    },
-    {
-      name: 'STARTUP',
-      tagline: 'For growing teams that ship fast',
-      price: 19,
-      minUsers: 3,
-      maxUsers: 50,
-      icon: HiLightningBolt,
-      popular: true,
-      enterprise: false,
-      features: [
-        { name: 'Unlimited projects', included: true },
-        { name: 'Full Git integration (GitHub/GitLab)', included: true },
-        { name: '1,000 AI credits/user/month', included: true },
-        { name: 'Commit → Task generation', included: true },
-        { name: 'Story point estimation', included: true },
-        { name: 'PR description generation', included: true },
-        { name: 'Velocity tracking', included: true },
-        { name: 'Sprint planning assistant', included: true },
-        { name: 'Slack/Discord webhooks', included: true },
-        { name: 'Email support (48h)', included: true },
-        { name: 'API access', included: false },
-        { name: 'SSO/SAML', included: false },
-      ]
-    },
-    {
-      name: 'SCALE',
-      tagline: 'For teams building the future',
-      price: 49,
-      minUsers: 10,
-      maxUsers: 500,
-      icon: HiCube,
-      popular: false,
-      enterprise: false,
-      features: [
-        { name: '10,000 AI credits/user/month', included: true },
-        { name: 'Everything in STARTUP', included: true },
-        { name: 'API access with high limits', included: true },
-        { name: 'SSO/SAML authentication', included: true },
-        { name: 'BYOK (Bring Your Own Key)', included: true },
-        { name: 'Release notes generation', included: true },
-        { name: 'Advanced analytics', included: true },
-        { name: 'Custom integrations', included: true },
-        { name: 'Priority support (4h)', included: true },
-        { name: 'Audit logs', included: true },
-        { name: 'Role-based access control', included: true },
-        { name: 'Data retention controls', included: true },
-      ]
-    },
-    {
-      name: 'ENTERPRISE',
-      tagline: 'For organizations that need control',
-      price: 99,
-      minUsers: 50,
-      maxUsers: null,
-      icon: HiChip,
-      popular: false,
-      enterprise: true,
-      features: [
-        { name: 'Unlimited AI operations', included: true },
-        { name: 'Everything in SCALE', included: true },
-        { name: 'On-premise deployment option', included: true },
-        { name: 'Custom contracts & SLA', included: true },
-        { name: 'Dedicated support manager', included: true },
-        { name: '24/7 phone & chat support', included: true },
-        { name: 'Custom AI model fine-tuning', included: true },
-        { name: 'Advanced security controls', included: true },
-        { name: 'Compliance reports (SOC2, ISO)', included: true },
-        { name: 'Executive dashboards', included: true },
-        { name: 'Quarterly business reviews', included: true },
-        { name: 'Training & onboarding', included: true },
-      ]
-    }
-  ]
-
-  const calculatePrice = (basePrice: number, minUsers: number) => {
-    if (basePrice === 0) return 0
-    const price = basePrice * (billingCycle === 'yearly' ? (1 - yearlyDiscount) : 1)
-    return price * minUsers
-  }
-
   return (
-    <div className="min-h-screen bg-carbon-plate">
+    <div className="min-h-screen bg-[#050505]">
       <PublicNavigation />
 
-      {/* HERO SECTION */}
-      <section className="py-48px md:py-80px px-16px md:px-24px">
-        <div className="max-w-7xl mx-auto text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-bold mb-16px md:mb-24px"
-          >
-            <span className="text-cathode-white">PRICING THAT</span>{' '}
-            <span className="text-brutal-info">MAKES SENSE</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-lg sm:text-xl md:text-2xl text-cathode-white/80 uppercase tracking-wider mb-32px md:mb-48px px-16px sm:px-0"
-          >
-            NO HIDDEN FEES. NO SEAT MINIMUMS. JUST TOOLS THAT WORK.
-          </motion.p>
-
-          {/* BILLING TOGGLE */}
+      {/* Hero */}
+      <section className="pt-32 pb-20 md:pt-40 md:pb-28">
+        <div className="max-w-6xl mx-auto px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col items-center gap-16px mb-64px"
+            transition={{ duration: 0.5 }}
           >
-            <div className="flex items-center gap-16px md:gap-24px">
-              <span
-                className={`text-sm md:text-lg font-bold cursor-pointer ${billingCycle === 'monthly' ? 'text-brutal-info' : 'text-cathode-white/40'}`}
-                onClick={() => setBillingCycle('monthly')}
-              >
-                MONTHLY
-              </span>
-
-              <button
-                onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-                className="relative w-[80px] h-[40px] bg-[var(--theme-background-tertiary)] border-2 border-basalt-border cursor-pointer hover:border-cathode-white/30"
-                aria-label="Toggle billing cycle"
-                role="switch"
-                aria-checked={billingCycle === 'yearly'}
-              >
-                <motion.div
-                  className="absolute w-[36px] h-[36px] border-2 border-event-horizon"
-                  initial={false}
-                  animate={{
-                    x: billingCycle === 'monthly' ? 0 : 40,
-                    backgroundColor: billingCycle === 'monthly' ? '#FF2D78' : '#00FF00'
-                  }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  style={{ top: '0px', left: '0px' }}
-                />
-              </button>
-
-              <span
-                className={`text-sm md:text-lg font-bold cursor-pointer ${billingCycle === 'yearly' ? 'text-brutal-success' : 'text-cathode-white/40'}`}
-                onClick={() => setBillingCycle('yearly')}
-              >
-                YEARLY
-              </span>
-            </div>
-
-            {billingCycle === 'yearly' && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-brutal-success text-event-horizon px-16px py-8px font-bold text-sm border-2 border-event-horizon shadow-brutal-sm"
-              >
-                SAVE 20% WITH ANNUAL BILLING
-              </motion.div>
-            )}
+            <span className="text-[#6B7280] text-xs font-mono uppercase tracking-wider inline-block mb-4">
+              Pricing
+            </span>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#F9FAFB] mb-4">
+              Simple, transparent pricing
+            </h1>
+            <p className="text-lg text-[#6B7280] max-w-xl mx-auto">
+              Start free with the open source plan. Upgrade for
+              advanced analytics, security, and priority support.
+            </p>
           </motion.div>
         </div>
       </section>
 
-      {/* PRICING TIERS */}
-      <section className="px-16px md:px-24px pb-48px md:pb-80px">
-        <div className="max-w-full md:max-w-6xl mx-auto">
-          <div className="relative">
-            <div className="flex lg:grid lg:grid-cols-4 gap-24px overflow-x-auto lg:overflow-x-visible pb-16px lg:pb-0 snap-x snap-mandatory lg:snap-none"
-                 style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
-            {tiers.map((tier, index) => {
-              const Icon = tier.icon
-
-              return (
+      {/* Tier Cards */}
+      <section className="pb-24 md:pb-32">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {tiers.map((tier, i) => (
+              <motion.div
+                key={tier.name}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+              >
                 <motion.div
-                  key={tier.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  className={`
-                    snap-start flex-shrink-0 lg:flex-shrink-auto w-[85vw] lg:w-auto brutal-card p-32px relative
-                    flex flex-col h-full
-                    ${tier.popular ? 'border-4 border-brutal-info' : 'border-2 border-basalt-border'}
-                    hover:border-cathode-white
-                  `}
+                  variants={tier.highlight ? highlightCardVariants : cardVariants}
+                  initial="rest"
+                  whileHover="hover"
+                  className={`bg-[#111111] border-2 overflow-hidden flex flex-col h-full ${
+                    tier.highlight ? 'border-[#6366F1]/60' : 'border-[#2E2E35]'
+                  }`}
                 >
-                  {tier.popular && (
-                    <div className="absolute -top-16px left-1/2 -translate-x-1/2">
-                      <div className="bg-brutal-info text-event-horizon px-16px py-4px text-sm font-bold uppercase">
-                        MOST POPULAR
-                      </div>
+                  <div className="p-6 md:p-8 flex flex-col flex-1">
+                    {/* Name + Badge */}
+                    <div className="flex items-center justify-between mb-5">
+                      <span className="text-xs font-mono text-[#6B7280] uppercase tracking-wider">
+                        {tier.name}
+                      </span>
+                      {tier.badge && (
+                        <span className="text-[10px] font-mono text-[#6366F1] uppercase tracking-wider border border-[#6366F1]/30 px-2 py-0.5">
+                          {tier.badge}
+                        </span>
+                      )}
                     </div>
-                  )}
 
-                  <div className="mb-24px">
-                    <Icon className="w-48px h-48px mx-auto text-brutal-info" />
-                  </div>
+                    {/* Price */}
+                    <div className="mb-6">
+                      <span className="text-4xl font-bold text-[#F9FAFB]">
+                        {tier.price}
+                      </span>
+                      <span className="text-sm text-[#6B7280] ml-1">
+                        {tier.period}
+                      </span>
+                    </div>
 
-                  <h3 className="text-2xl font-bold mb-8px text-cathode-white">
-                    {tier.name}
-                  </h3>
+                    {/* Features */}
+                    <div className="space-y-2.5 mb-8 flex-1">
+                      {tier.features.map((f) => (
+                        <div key={f} className="flex items-start gap-2.5 text-xs font-mono">
+                          <span className="text-[#F9FAFB] mt-px">+</span>
+                          <span className="text-[#9CA3AF]">{f}</span>
+                        </div>
+                      ))}
+                    </div>
 
-                  <p className="text-sm text-cathode-white/60 mb-24px">
-                    {tier.tagline}
-                  </p>
-
-                  <div className="mb-24px">
-                    {tier.price === 0 ? (
-                      <div className="text-5xl font-bold text-brutal-info">FREE</div>
+                    {/* CTA */}
+                    {tier.cta.style === 'primary' ? (
+                      <Link
+                        to={tier.cta.to}
+                        className="block w-full text-center bg-[#F9FAFB] text-[#050505] font-bold text-sm px-6 py-3"
+                      >
+                        {tier.cta.label}
+                      </Link>
+                    ) : tier.cta.style === 'ghost' ? (
+                      <Link
+                        to={tier.cta.to}
+                        className="block w-full text-center text-[#9CA3AF] font-bold text-sm px-6 py-3 border border-[#2E2E35]"
+                      >
+                        {tier.cta.label}
+                      </Link>
                     ) : (
-                      <>
-                        <div className="text-5xl font-bold text-cathode-white">
-                          ${billingCycle === 'yearly' ? Math.floor(tier.price * (1 - yearlyDiscount)) : tier.price}
-                        </div>
-                        <div className="text-sm text-cathode-white/60 uppercase">
-                          per user/month
-                        </div>
-                        <div className="text-sm text-brutal-info mt-8px">
-                          {tier.minUsers}-{tier.maxUsers || '∞'} users
-                        </div>
-                        {tier.minUsers > 1 && (
-                          <div className="text-sm text-cathode-white/40 mt-4px">
-                            ${calculatePrice(tier.price, tier.minUsers)}/month minimum
-                          </div>
-                        )}
-                      </>
+                      <button
+                        disabled
+                        className="w-full text-center text-[#6B7280] font-bold text-sm px-6 py-3 border border-[#2E2E35] opacity-50 cursor-not-allowed"
+                      >
+                        {tier.cta.label}
+                      </button>
                     )}
                   </div>
-
-                  <div className="space-y-12px mb-24px">
-                    {tier.features.slice(0, 12).map((feature, idx) => (
-                      <div key={idx} className="flex items-start gap-8px">
-                        {feature.included ? (
-                          <HiCheck className="w-20px h-20px text-brutal-success flex-shrink-0 mt-2px" />
-                        ) : (
-                          <HiX className="w-20px h-20px text-brutal-error flex-shrink-0 mt-2px" />
-                        )}
-                        <span className={`text-sm ${feature.included ? 'text-cathode-white' : 'text-cathode-white/40 line-through'}`}>
-                          {feature.name}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex-grow"></div>
-
-                  <Link
-                    to={tier.enterprise ? '/contact' : '/sign-up'}
-                    className={`
-                      brutal-btn w-full text-center block mt-auto
-                      ${tier.popular ? 'bg-brutal-info text-event-horizon border-brutal-info' : ''}
-                      ${tier.enterprise ? 'bg-brutal-info text-event-horizon border-brutal-info' : ''}
-                    `}
-                  >
-                    {tier.enterprise ? 'CONTACT SALES' : tier.price === 0 ? 'START FREE' : 'START TRIAL'}
-                  </Link>
                 </motion.div>
-              )
-            })}
-            </div>
-            <div className="absolute right-0 top-0 bottom-0 w-24px bg-gradient-to-l from-carbon-plate to-transparent lg:hidden flex items-center justify-end pr-8px pointer-events-none">
-              <div className="text-brutal-info text-xs animate-pulse">&rarr;</div>
-            </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* AI OPERATIONS */}
-      <section className="py-80px border-t-2 border-basalt-border bg-event-horizon">
-        <div className="max-w-full md:max-w-4xl mx-auto px-16px md:px-24px">
-          <h2 className="text-5xl font-bold text-center mb-48px text-cathode-white">
-            WHAT&apos;S AN <span className="text-brutal-info">AI OPERATION?</span>
-          </h2>
-
-          <div className="flex md:grid md:grid-cols-2 gap-16px md:gap-24px mb-32px md:mb-48px overflow-x-auto md:overflow-x-visible pb-16px md:pb-0 snap-x snap-mandatory md:snap-none"
-               style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
-            <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[85vw] md:w-auto brutal-card p-32px">
-              <h3 className="text-xl font-bold mb-16px text-brutal-info">
-                COUNTS AS 1 OPERATION:
-              </h3>
-              <ul className="space-y-8px text-cathode-white/80">
-                <li>&bull; Generating task from commit</li>
-                <li>&bull; Estimating story points</li>
-                <li>&bull; Creating PR description</li>
-                <li>&bull; Formatting commit message</li>
-                <li>&bull; Calculating sprint velocity</li>
-                <li>&bull; Generating subtasks</li>
-              </ul>
-            </div>
-
-            <div className="snap-start flex-shrink-0 md:flex-shrink-auto w-[85vw] md:w-auto brutal-card p-32px">
-              <h3 className="text-xl font-bold mb-16px text-cathode-white/60">
-                DOESN&apos;T COUNT:
-              </h3>
-              <ul className="space-y-8px text-cathode-white/80">
-                <li>&bull; Viewing existing data</li>
-                <li>&bull; Manual task creation</li>
-                <li>&bull; Git webhook processing</li>
-                <li>&bull; Slack notifications</li>
-                <li>&bull; Basic calculations</li>
-                <li>&bull; CSV exports</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="brutal-card p-32px text-center">
-            <h3 className="text-2xl font-bold mb-16px text-cathode-white">
-              TYPICAL USAGE
-            </h3>
-            <p className="text-cathode-white/80 mb-24px">
-              Average developer: 10 commits/day + 5 PR descriptions + 10 story points = 25 AI credits/day<br/>
-              Monthly: ~500 AI credits per developer
-            </p>
-            <p className="text-sm text-brutal-success">
-              STARTUP tier (1,000 credits) = 2x headroom for power users
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ROI CALCULATOR */}
-      <section className="py-80px">
-        <div className="max-w-full md:max-w-4xl mx-auto px-16px md:px-24px text-center">
-          <h2 className="text-5xl font-bold mb-48px text-cathode-white">
-            THE <span className="text-brutal-info">MATH</span>
-          </h2>
-
-          <div className="brutal-card p-48px">
-            <div className="grid md:grid-cols-2 gap-24px md:gap-48px text-left">
-              <div>
-                <h3 className="text-2xl font-bold mb-24px text-brutal-error">WITHOUT LTF1</h3>
-                <div className="space-y-16px text-cathode-white/80">
-                  <div>Check Git &rarr; 1 min</div>
-                  <div>Copy commit &rarr; 30 sec</div>
-                  <div>Open Jira &rarr; 30 sec</div>
-                  <div>Create task &rarr; 2 min</div>
-                  <div>Estimate points &rarr; 5 min</div>
-                  <div>Update sprint &rarr; 1 min</div>
-                  <div className="pt-16px border-t-2 border-basalt-border">
-                    <span className="text-brutal-error font-bold">TOTAL: 10 min &times; 10/day = 100 min/day</span>
-                  </div>
+      {/* Feature Comparison Table */}
+      <section className="pb-24 md:pb-32">
+        <div className="max-w-5xl mx-auto px-6">
+          {/* Sticky header row */}
+          <div className="border-b-2 border-[#2E2E35] pb-4 mb-0 sticky top-0 bg-[#050505] z-20 pt-4">
+            <div className="grid grid-cols-4 gap-4">
+              <div />
+              {tiers.map((t) => (
+                <div key={t.name} className="text-xs font-mono text-[#6B7280] uppercase tracking-wider">
+                  {t.name}
                 </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Categories */}
+          {comparison.map((cat, catIdx) => (
+            <motion.div
+              key={cat.name}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ duration: 0.4, delay: catIdx * 0.04 }}
+            >
+              {/* Category header */}
+              <div className="pt-10 pb-4 border-b border-[#2E2E35]">
+                <span className="text-sm font-bold text-[#F9FAFB]">
+                  {cat.name}
+                </span>
               </div>
 
-              <div>
-                <h3 className="text-2xl font-bold mb-24px text-brutal-success">WITH LTF1</h3>
-                <div className="space-y-16px text-cathode-white/80">
-                  <div>Push code &rarr; 0 min</div>
-                  <div>Auto-created &rarr; 0 min</div>
-                  <div>Already there &rarr; 0 min</div>
-                  <div>Auto-generated &rarr; 0 min</div>
-                  <div>AI estimated &rarr; 0 min</div>
-                  <div>Auto-updated &rarr; 0 min</div>
-                  <div className="pt-16px border-t-2 border-basalt-border">
-                    <span className="text-brutal-success font-bold">TOTAL: 0 minutes</span>
-                  </div>
+              {/* Rows */}
+              {cat.rows.map((row) => (
+                <div
+                  key={row.feature}
+                  className="grid grid-cols-4 gap-4 py-3 border-b border-[#2E2E35]/50 text-xs font-mono"
+                >
+                  <div className="text-[#9CA3AF]">{row.feature}</div>
+                  <div><CellValue value={row.open} /></div>
+                  <div><CellValue value={row.pro} /></div>
+                  <div><CellValue value={row.enterprise} /></div>
                 </div>
-              </div>
-            </div>
+              ))}
+            </motion.div>
+          ))}
 
-            <div className="mt-48px pt-32px border-t-2 border-basalt-border">
-              <div className="text-3xl font-bold mb-16px text-cathode-white">
-                100 min/day &times; 20 days = <span className="text-primary-brutalist">33 HOURS/MONTH SAVED</span>
+          {/* Bottom CTA row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-8">
+            {tiers.map((t) => (
+              <div key={t.name}>
+                {t.cta.style === 'primary' ? (
+                  <Link
+                    to={t.cta.to}
+                    className="block w-full text-center bg-[#F9FAFB] text-[#050505] font-bold text-xs px-4 py-2.5"
+                  >
+                    {t.cta.label}
+                  </Link>
+                ) : (
+                  <Link
+                    to={t.cta.to}
+                    className="block w-full text-center text-[#9CA3AF] font-bold text-xs px-4 py-2.5 border border-[#2E2E35]"
+                  >
+                    {t.cta.label}
+                  </Link>
+                )}
               </div>
-              <div className="text-xl text-cathode-white/80">
-                33 hours &times; $100/hour = $3,300 value<br/>
-                Cost: $19/month<br/>
-                <span className="text-3xl font-bold text-brutal-success">ROI: 17,268%</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-80px border-t-2 border-basalt-border bg-event-horizon">
-        <div className="max-w-full md:max-w-4xl mx-auto px-16px md:px-24px">
-          <h2 className="text-5xl font-bold text-center mb-48px text-cathode-white">
-            ACTUALLY USEFUL <span className="text-brutal-info">FAQ</span>
-          </h2>
-
-          <div className="space-y-24px">
-            <div className="brutal-card p-32px">
-              <h3 className="text-xl font-bold mb-16px text-brutal-info">
-                DOES IT ACTUALLY WORK WITH MY GIT WORKFLOW?
-              </h3>
-              <p className="text-cathode-white/80">
-                Yes. We support GitHub, GitLab, and Bitbucket. Works with any branching strategy.
-                Push to main, feature branches, or PRs - we track it all. No special setup required.
-              </p>
+      {/* Bottom CTA Banner */}
+      <section className="py-20 md:py-28 border-t border-[#2E2E35]">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#F9FAFB] mb-8">
+              Ship faster. Track smarter.
+            </h2>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                to="/contact"
+                className="text-[#9CA3AF] font-bold text-sm px-6 py-3 border border-[#2E2E35]"
+              >
+                Contact Sales
+              </Link>
+              <Link
+                to="/sign-up"
+                className="bg-[#F9FAFB] text-[#050505] font-bold text-sm px-6 py-3"
+              >
+                Get Started
+              </Link>
             </div>
-
-            <div className="brutal-card p-32px">
-              <h3 className="text-xl font-bold mb-16px text-cathode-white/60">
-                WHAT IF I RUN OUT OF AI OPERATIONS?
-              </h3>
-              <p className="text-cathode-white/80">
-                Everything else keeps working - Git integration, task management, sprints.
-                You just lose AI features (auto-generation, estimates) until next month.
-                Or upgrade/add more operations anytime.
-              </p>
-            </div>
-
-            <div className="brutal-card p-32px">
-              <h3 className="text-xl font-bold mb-16px text-cathode-white/60">
-                CAN I USE MY OWN GEMINI API KEY?
-              </h3>
-              <p className="text-cathode-white/80">
-                Yes, on SCALE tier and above. Bring Your Own Key (BYOK) means unlimited AI operations
-                using your own Google Cloud account. We just orchestrate the calls.
-              </p>
-            </div>
-
-            <div className="brutal-card p-32px">
-              <h3 className="text-xl font-bold mb-16px text-cathode-white/60">
-                HOW IS THIS DIFFERENT FROM JIRA/LINEAR/MONDAY?
-              </h3>
-              <p className="text-cathode-white/80">
-                Those tools don&apos;t understand code. We watch your Git repo and automatically
-                create/update tasks from your actual work. No double-entry. No &ldquo;updating the board.&rdquo;
-                Your code IS the source of truth.
-              </p>
-            </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 

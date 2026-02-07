@@ -1,23 +1,23 @@
 import { useRef, useState, useEffect } from 'react'
 
-// ── Left panel: what the developer actually does ──────────────────
+// Left panel: what the developer actually does
 const DEV_COMMANDS = [
   { text: '$ git add .', speed: 45, pauseAfter: 350 },
   { text: '$ git commit -m "fix auth bug"', speed: 28, pauseAfter: 450 },
   { text: '$ git push origin main', speed: 32, pauseAfter: 700 },
 ]
 
-// ── Right panel: everything LTF1 does automatically ───────────────
+// Right panel: everything LTF1 does automatically
 const ENGINE_LINES: { tag: string; text: string }[] = [
   { tag: 'DETECT', text: 'push to main (3 commits)' },
   { tag: 'PARSE', text: 'commit: "fix auth bug"' },
   { tag: 'CREATE', text: 'task LTF1-142 generated' },
-  { tag: 'SCAN', text: 'diff: +47 −12 across 3 files' },
+  { tag: 'SCAN', text: 'diff: +47 -12 across 3 files' },
   { tag: 'ESTIMATE', text: '2 story pts (auto-calculated)' },
   { tag: 'LINK', text: 'PR #87 → task LTF1-142' },
   { tag: 'STATUS', text: 'TODO → IN PROGRESS' },
   { tag: 'BOARD', text: 'sprint-23 kanban synced' },
-  { tag: 'MERGE', text: 'PR #87 → main ✓' },
+  { tag: 'MERGE', text: 'PR #87 → main' },
   { tag: 'CLOSE', text: 'LTF1-142 → DONE' },
   { tag: 'VELOCITY', text: '+2 pts (sprint total: 34.7)' },
   { tag: 'NOTIFY', text: '#team: task LTF1-142 shipped' },
@@ -38,7 +38,7 @@ export default function HeroTerminal() {
   const [engineActive, setEngineActive] = useState(false)
   const [engineDone, setEngineDone] = useState(false)
 
-  // ── Trigger: IntersectionObserver (no framer-motion dep) ──
+  // Trigger via IntersectionObserver
   useEffect(() => {
     const el = containerRef.current
     if (!el || started) return
@@ -57,18 +57,18 @@ export default function HeroTerminal() {
     return () => observer.disconnect()
   }, [started])
 
-  // ── Auto-scroll engine panel ──
+  // Auto-scroll engine panel
   useEffect(() => {
     if (rightPanelRef.current) {
       rightPanelRef.current.scrollTop = rightPanelRef.current.scrollHeight
     }
   }, [engineLines])
 
-  // ── Animation: pre-computed setTimeout array ──
+  // Animation: pre-computed setTimeout array
   useEffect(() => {
     if (!started) return
 
-    // Reset for clean start (handles strict-mode remounts)
+    // Reset for clean start
     setCompletedLeft([])
     setTypingText('')
     setShowCursor(false)
@@ -79,7 +79,7 @@ export default function HeroTerminal() {
 
     // Reduced motion: show final state immediately
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setCompletedLeft(DEV_COMMANDS.map(c => c.text))
+      setCompletedLeft(DEV_COMMANDS.map((c) => c.text))
       setEngineLines(ENGINE_LINES)
       setDevDone(true)
       setEngineActive(true)
@@ -87,11 +87,9 @@ export default function HeroTerminal() {
       return
     }
 
-    // Pre-compute every setTimeout up front
     const timers: ReturnType<typeof setTimeout>[] = []
-    let t = 300 // small initial delay to let paint settle
+    let t = 300
 
-    // Show blinking cursor
     timers.push(setTimeout(() => setShowCursor(true), t))
 
     // Phase 1: developer types git commands
@@ -104,7 +102,7 @@ export default function HeroTerminal() {
       const lineEnd = t
       timers.push(
         setTimeout(() => {
-          setCompletedLeft(prev => [...prev, cmd.text])
+          setCompletedLeft((prev) => [...prev, cmd.text])
           setTypingText('')
         }, lineEnd)
       )
@@ -128,7 +126,7 @@ export default function HeroTerminal() {
       const d = t
       timers.push(
         setTimeout(
-          () => setEngineLines(prev => [...prev, ENGINE_LINES[i]]),
+          () => setEngineLines((prev) => [...prev, ENGINE_LINES[i]]),
           d
         )
       )
@@ -141,102 +139,93 @@ export default function HeroTerminal() {
   }, [started])
 
   return (
-    <div ref={containerRef} className="max-w-5xl mx-auto mb-32px text-left">
-      <div className="border-2 border-basalt-border bg-carbon-plate">
-        {/* ── HEADER BAR ── */}
-        <div className="flex border-b-2 border-basalt-border text-[10px] font-mono uppercase tracking-wider">
-          <div className="w-full md:w-[38%] px-12px py-8px border-b md:border-b-0 md:border-r-2 border-basalt-border flex items-center gap-8px">
-            <span className="text-cathode-white/20">//</span>
-            <span className="text-cathode-white/40">YOUR TERMINAL</span>
-          </div>
-          <div className="hidden md:flex w-[62%] px-12px py-8px items-center gap-8px">
-            <span className="text-brutal-info/30">&gt;&gt;</span>
-            <span
-              className={`transition-colors duration-300 ${
-                engineActive ? 'text-brutal-info' : 'text-cathode-white/20'
-              }`}
-            >
-              LTF1 ENGINE
+    <div ref={containerRef} className="max-w-5xl mx-auto mb-8 text-left">
+      <div className="flex flex-col md:flex-row gap-4">
+        {/* LEFT CARD: Developer */}
+        <div className="flex-1 bg-[#111111] border-2 border-[#2E2E35] rounded-xl overflow-hidden shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">
+          {/* Header */}
+          <div className="bg-[#0A0A0A] px-4 py-2 border-b border-[#2E2E35] flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+            <span className="font-['IBM_Plex_Mono',monospace] text-[11px] uppercase tracking-wider text-[#9CA3AF]">
+              Developer
             </span>
-            {engineActive && !engineDone && (
-              <span className="w-[5px] h-[5px] bg-brutal-info animate-pulse ml-auto" />
-            )}
-            {engineDone && (
-              <span className="text-terminal-green/50 ml-auto">✓ DONE</span>
-            )}
           </div>
-        </div>
 
-        {/* ── CONTENT ── */}
-        <div className="flex flex-col md:flex-row">
-          {/* LEFT PANEL */}
-          <div className="md:w-[38%] border-b-2 md:border-b-0 md:border-r-2 border-basalt-border p-16px font-mono text-[11px] md:text-xs flex flex-col min-h-[130px] md:min-h-[280px]">
+          {/* Content */}
+          <div className="p-4 font-['IBM_Plex_Mono',monospace] text-sm min-h-[160px] md:min-h-[260px] flex flex-col">
             <div className="flex-1">
               {completedLeft.map((line, i) => (
-                <div key={i} className="text-cathode-white/90 leading-[2]">
+                <div key={i} className="text-[#F9FAFB] leading-7">
                   {line}
                 </div>
               ))}
               {showCursor && (
-                <div className="text-cathode-white/90 leading-[2]">
+                <div className="text-[#F9FAFB] leading-7">
                   {typingText}
-                  <span className="inline-block w-[7px] h-[14px] bg-cathode-white/80 ml-px align-middle animate-cursor-blink" />
+                  <span className="inline-block w-[7px] h-[14px] bg-[#F9FAFB]/80 ml-px align-middle animate-pulse" />
                 </div>
               )}
             </div>
             {devDone && (
-              <div className="text-cathode-white/20 text-[10px] pt-8px border-t border-basalt-border/30 mt-auto font-mono">
+              <div className="text-[#6B7280] text-xs pt-2 border-t border-[#2E2E35]/50 mt-auto font-['IBM_Plex_Mono',monospace]">
                 {'>'} done. 3 commands.
               </div>
             )}
           </div>
+        </div>
 
-          {/* MOBILE ENGINE HEADER */}
-          <div className="md:hidden flex px-12px py-8px border-b border-basalt-border items-center gap-8px text-[10px] font-mono uppercase tracking-wider">
-            <span className="text-brutal-info/30">&gt;&gt;</span>
+        {/* RIGHT CARD: LTF1 Engine */}
+        <div className="flex-1 bg-[#111111] border-2 border-[#2E2E35] rounded-xl overflow-hidden shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">
+          {/* Header */}
+          <div className="bg-[#0A0A0A] px-4 py-2 border-b border-[#2E2E35] flex items-center gap-2">
             <span
-              className={`transition-colors duration-300 ${
-                engineActive ? 'text-brutal-info' : 'text-cathode-white/20'
+              className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                engineActive ? 'bg-[#6366F1]' : 'bg-[#6B7280]/40'
+              }`}
+            />
+            <span
+              className={`font-['IBM_Plex_Mono',monospace] text-[11px] uppercase tracking-wider transition-colors duration-300 ${
+                engineActive ? 'text-[#6366F1]' : 'text-[#9CA3AF]'
               }`}
             >
-              LTF1 ENGINE
+              LTF1 Engine
             </span>
             {engineActive && !engineDone && (
-              <span className="w-[5px] h-[5px] bg-brutal-info animate-pulse ml-auto" />
+              <span className="w-1.5 h-1.5 bg-[#6366F1] rounded-full animate-pulse ml-auto" />
             )}
             {engineDone && (
-              <span className="text-terminal-green/50 ml-auto">✓ DONE</span>
+              <span className="text-[#10B981] text-xs ml-auto font-['IBM_Plex_Mono',monospace]">
+                Done
+              </span>
             )}
           </div>
 
-          {/* RIGHT PANEL */}
+          {/* Content */}
           <div
             ref={rightPanelRef}
-            className="md:w-[62%] p-16px font-mono text-[10px] md:text-[11px] overflow-y-auto flex flex-col min-h-[220px] md:min-h-[280px]"
+            className="p-4 font-['IBM_Plex_Mono',monospace] text-sm overflow-y-auto min-h-[160px] md:min-h-[260px] flex flex-col"
           >
             {!engineActive ? (
               <div className="flex-1 flex items-center justify-center">
-                <span className="text-cathode-white/[0.06] text-[10px] uppercase tracking-[0.25em] font-mono select-none">
-                  WAITING FOR PUSH...
+                <span className="text-[#6B7280]/30 text-xs uppercase tracking-widest select-none">
+                  Waiting for push...
                 </span>
               </div>
             ) : (
               <>
                 <div className="flex-1">
                   {engineLines.map((line, i) => (
-                    <div key={i} className="leading-[1.7] flex">
-                      <span className="text-brutal-info/70 shrink-0 w-[76px] md:w-[84px]">
+                    <div key={i} className="leading-6 flex">
+                      <span className="text-[#6366F1] shrink-0 w-[80px]">
                         [{line.tag}]
                       </span>
-                      <span className="text-cathode-white/45">
-                        {line.text}
-                      </span>
+                      <span className="text-[#9CA3AF]">{line.text}</span>
                     </div>
                   ))}
                 </div>
                 {engineDone && (
-                  <div className="text-cathode-white/20 text-[10px] pt-8px border-t border-basalt-border/30 mt-auto font-mono">
-                    {'>'} ✓ {ENGINE_LINES.length} operations &middot; 0 manual
+                  <div className="text-[#6B7280] text-xs pt-2 border-t border-[#2E2E35]/50 mt-auto font-['IBM_Plex_Mono',monospace]">
+                    {'>'} {ENGINE_LINES.length} operations &middot; 0 manual
                     effort
                   </div>
                 )}

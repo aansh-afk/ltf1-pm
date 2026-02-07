@@ -2,7 +2,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
 import { Id } from '../../../../../../convex/_generated/dataModel';
 import { GitCommit, GitPullRequest, Github } from "lucide-react";
-import { BrutalCard } from "@/components/ui";
+import BrutalCard from "@/components/ui/BrutalCard";
 import { formatDistanceToNow } from "date-fns";
 
 interface TaskGitHubActivityProps {
