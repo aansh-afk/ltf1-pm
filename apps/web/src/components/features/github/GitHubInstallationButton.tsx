@@ -1,4 +1,4 @@
-import { BrutalButton } from "@/components/ui";
+import BrutalButton from "@/components/ui/BrutalButton";
 import { Github } from "lucide-react";
 
 interface GitHubInstallationButtonProps {

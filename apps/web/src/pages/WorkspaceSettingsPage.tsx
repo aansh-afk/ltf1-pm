@@ -16,7 +16,9 @@ import LoadingSpinner from '@/components/common/LoadingSpinner'
 import SettingsSection from '@/components/features/settings/SettingsSection'
 import MemberManagement from '@/components/features/workspace/MemberManagement'
 import { useSettingsState } from '../hooks/useSettingsState'
-import { BrutalButton, BrutalCard, BrutalBadge } from '@/components/ui'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalBadge from '@/components/ui/BrutalBadge'
 
 const tabs = [
   { id: 'general', label: 'GENERAL', icon: HiOutlineOfficeBuilding },

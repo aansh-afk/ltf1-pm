@@ -159,26 +159,25 @@ export function useResourceMonitor() {
     }
   }, [])
 
-  // Update stats with multiple intervals for different frequencies
+  // Update stats with reduced frequencies to minimize re-renders
   useEffect(() => {
-    let animationFrame: number
     let cpuInterval: NodeJS.Timeout
     let memoryInterval: NodeJS.Timeout
     let systemInterval: NodeJS.Timeout
-    
-    // High-frequency CPU updates (every 200ms)
+
+    // CPU updates (every 1s - sufficient for status display)
     const updateCPU = () => {
       const cpu = measureCPU()
       setStats(prev => ({ ...prev, cpu }))
     }
-    
-    // Medium-frequency memory updates (every 800ms)
+
+    // Memory updates (every 2s)
     const updateMemory = () => {
       const memory = getMemoryStats()
       setStats(prev => ({ ...prev, memory }))
     }
-    
-    // Low-frequency system updates (every 2 seconds)
+
+    // System updates (every 3s)
     const updateSystem = () => {
       setStats(prev => {
         const system = getSystemStatus(prev.cpu.usage, prev.memory.percentage || 0)
@@ -187,23 +186,16 @@ export function useResourceMonitor() {
           active: workspaceTasks.inProgressTasks || 0,
           completed: workspaceTasks.completedTasks || 0
         } : prev.tasks
-        
+
         return { ...prev, system, tasks }
       })
     }
-    
-    // Continuous animation loop for smooth updates
-    const animate = () => {
-      // This ensures the display updates smoothly even if values change gradually
-      animationFrame = requestAnimationFrame(animate)
-    }
-    
+
     // Start all update cycles
-    cpuInterval = setInterval(updateCPU, 200) // 5 times per second
-    memoryInterval = setInterval(updateMemory, 800) // ~1.25 times per second  
-    systemInterval = setInterval(updateSystem, 2000) // Every 2 seconds
-    animationFrame = requestAnimationFrame(animate)
-    
+    cpuInterval = setInterval(updateCPU, 1000)
+    memoryInterval = setInterval(updateMemory, 2000)
+    systemInterval = setInterval(updateSystem, 3000)
+
     // Initial updates
     updateCPU()
     updateMemory()
@@ -213,7 +205,6 @@ export function useResourceMonitor() {
       clearInterval(cpuInterval)
       clearInterval(memoryInterval)
       clearInterval(systemInterval)
-      cancelAnimationFrame(animationFrame)
     }
   }, [getMemoryStats, measureCPU, getSystemStatus, workspaceTasks])
 

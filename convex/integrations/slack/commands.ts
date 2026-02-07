@@ -580,7 +580,7 @@ async function handleSearchCommand(ctx: any, args: any, commandArgs: string) {
 
   const resultList = results
     .slice(0, 5)
-    .map((r: any) => `• *[${r.type}]* ${r.title} - _${r.score.toFixed(0)}% match_`)
+    .map((r: any) => `• *[${r.type}]* ${r.title}`)
     .join("\n")
 
   return {

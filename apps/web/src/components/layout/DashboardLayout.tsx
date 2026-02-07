@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Outlet, Link, useLocation, useParams } from 'react-router-dom'
 import { UserButton } from '@clerk/clerk-react'
 import { motion } from 'framer-motion'
@@ -7,22 +7,15 @@ import {
   HiOutlineBriefcase,
   HiOutlineFolder,
   HiOutlineClipboardList,
-  HiOutlineCalendar,
   HiOutlineCog,
   HiOutlineMenuAlt2,
   HiOutlineX,
   HiOutlineTerminal,
-  HiOutlinePlay,
-  HiOutlineChevronRight,
-  HiOutlineChevronLeft,
   HiOutlineUserGroup,
   HiOutlineUser,
   HiOutlineSearch,
-  HiOutlineLightningBolt,
   HiOutlinePencilAlt,
-  HiOutlineVideoCamera,
-  HiOutlineViewGrid,
-  HiOutlineChatAlt2
+  HiOutlineRefresh
 } from 'react-icons/hi'
 import clsx from 'clsx'
 import { useResourceMonitor } from '../../hooks/useResourceMonitor'
@@ -35,6 +28,18 @@ import WorkspaceMobileBlocker from '../common/WorkspaceMobileBlocker'
 import ProductionAccessGate from '../common/ProductionAccessGate'
 // ThemeSwitcher moved to Settings page
 
+
+const NAV_ITEMS = [
+  { path: '/dashboard', label: 'DASHBOARD', icon: HiOutlineHome },
+  { path: '/profile', label: 'MY PROFILE', icon: HiOutlineUser },
+  { path: '/workspaces', label: 'WORKSPACES', icon: HiOutlineBriefcase },
+  { path: '/projects', label: 'PROJECTS', icon: HiOutlineFolder },
+  { path: '/tasks', label: 'TASKS', icon: HiOutlineClipboardList },
+  { path: '/team', label: 'TEAM', icon: HiOutlineUserGroup },
+  { path: '/sprints', label: 'SPRINTS', icon: HiOutlineRefresh },
+  { path: '/whiteboard', label: 'WHITEBOARD', icon: HiOutlinePencilAlt },
+  { path: '/settings', label: 'SETTINGS', icon: HiOutlineCog },
+] as const
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile sidebar
@@ -107,40 +112,25 @@ export default function DashboardLayout() {
   }, [])
 
   // Handle hover with delay
-  const handleMouseEnter = () => {
+  const handleMouseEnter = useCallback(() => {
     if (isCollapsed) {
       hoverTimeoutRef.current = setTimeout(() => {
         setIsHovered(true)
       }, 200) // 200ms delay before expanding
     }
-  }
+  }, [isCollapsed])
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current)
     }
     setIsHovered(false) // No delay on hover out
-  }
+  }, [])
 
   // Determine if sidebar should be expanded (either not collapsed, or collapsed but hovered)
   const isExpanded = !isCollapsed || isHovered
 
-  // Simplified navigation without workspace dependencies
-  const navItems = [
-    { path: '/dashboard', label: 'DASHBOARD', icon: HiOutlineHome },
-    { path: '/profile', label: 'MY PROFILE', icon: HiOutlineUser },
-    { path: '/workspaces', label: 'WORKSPACES', icon: HiOutlineBriefcase },
-    { path: '/projects', label: 'PROJECTS', icon: HiOutlineFolder },
-    { path: '/tasks', label: 'TASKS', icon: HiOutlineClipboardList },
-    { path: '/team', label: 'TEAM', icon: HiOutlineUserGroup },
-    { path: '/meetings', label: 'MEETINGS', icon: HiOutlineCalendar },
-    // { path: '/automation', label: 'AUTOMATION', icon: HiOutlineLightningBolt }, // Out of scope - not replicating n8n
-    { path: '/whiteboard', label: 'WHITEBOARD', icon: HiOutlinePencilAlt },
-    // { path: '/video', label: 'VIDEO ROOMS', icon: HiOutlineVideoCamera }, // Out of scope - not replicating Zoom
-    // { path: '/custom-fields', label: 'CUSTOM FIELDS', icon: HiOutlineViewGrid }, // Out of scope
-    { path: '/slack', label: 'SLACK', icon: HiOutlineChatAlt2 },
-    { path: '/settings', label: 'SETTINGS', icon: HiOutlineCog },
-  ]
+  const navItems = NAV_ITEMS
 
   return (
     <div className="flex h-screen bg-[var(--theme-background)]">

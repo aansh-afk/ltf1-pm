@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo, useCallback, useTransition } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import {
@@ -79,9 +79,10 @@ const defaultFilters: TaskFilters = {
   isOverdue: null
 }
 
-export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange, workspaceId }: TaskFiltersProps) {
+const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClose, filters, onFiltersChange, workspaceId }: TaskFiltersProps) {
   const [localFilters, setLocalFilters] = useState<TaskFilters>(filters)
   const [activeSection, setActiveSection] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   // Get workspace members for assignee filter
   const workspaceMembers = useQuery(
@@ -99,42 +100,49 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
     setLocalFilters(filters)
   }, [filters])
 
-  const handleApplyFilters = () => {
+  const handleApplyFilters = useCallback(() => {
     onFiltersChange(localFilters)
     onClose()
-  }
+  }, [localFilters, onFiltersChange, onClose])
 
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setLocalFilters(defaultFilters)
     onFiltersChange(defaultFilters)
-  }
+  }, [onFiltersChange])
 
-  const toggleArrayFilter = (key: keyof TaskFilters, value: string) => {
-    const currentArray = localFilters[key] as string[]
-    const newArray = currentArray.includes(value)
-      ? currentArray.filter(item => item !== value)
-      : [...currentArray, value]
-    
-    setLocalFilters(prev => ({ ...prev, [key]: newArray }))
-  }
+  const toggleArrayFilter = useCallback((key: keyof TaskFilters, value: string) => {
+    startTransition(() => {
+      setLocalFilters(prev => {
+        const currentArray = prev[key] as string[]
+        const newArray = currentArray.includes(value)
+          ? currentArray.filter(item => item !== value)
+          : [...currentArray, value]
+        return { ...prev, [key]: newArray }
+      })
+    })
+  }, [])
 
-  const handleBooleanFilter = (key: 'hasTimeTracked' | 'isOverdue', value: boolean | null) => {
-    setLocalFilters(prev => ({ ...prev, [key]: value }))
-  }
+  const handleBooleanFilter = useCallback((key: 'hasTimeTracked' | 'isOverdue', value: boolean | null) => {
+    startTransition(() => {
+      setLocalFilters(prev => ({ ...prev, [key]: value }))
+    })
+  }, [])
 
-  const handleDateRangeChange = (
+  const handleDateRangeChange = useCallback((
     rangeKey: 'dueDateRange' | 'createdDateRange',
     dateKey: 'start' | 'end',
     value: string
   ) => {
-    setLocalFilters(prev => ({
-      ...prev,
-      [rangeKey]: {
-        ...prev[rangeKey],
-        [dateKey]: value || null
-      }
-    }))
-  }
+    startTransition(() => {
+      setLocalFilters(prev => ({
+        ...prev,
+        [rangeKey]: {
+          ...prev[rangeKey],
+          [dateKey]: value || null
+        }
+      }))
+    })
+  }, [])
 
   const getActiveFilterCount = () => {
     let count = 0
@@ -474,4 +482,6 @@ export default function TaskFilters({ isOpen, onClose, filters, onFiltersChange,
       </div>
     </>
   )
-}
+})
+
+export default TaskFiltersComponent

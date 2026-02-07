@@ -10,7 +10,8 @@ import {
 } from 'react-icons/hi'
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
-import { BrutalCard, BrutalBadge } from '../../ui'
+import BrutalCard from '../../ui/BrutalCard'
+import BrutalBadge from '../../ui/BrutalBadge'
 import UserDisplay from '../user/UserDisplay'
 import toast from 'react-hot-toast'
 

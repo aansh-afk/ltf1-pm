@@ -24,5 +24,18 @@ export default defineConfig(({ mode }) => {
     open: true,
   },
   envDir: '../../',
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'clerk': ['@clerk/clerk-react'],
+          'convex': ['convex', 'convex/react'],
+          'animation': ['framer-motion'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 500,
+  },
   }
 })

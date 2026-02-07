@@ -37,6 +37,7 @@ import type * as cliRefresh from "../cliRefresh.js";
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as crons from "../crons.js";
 import type * as customFields from "../customFields.js";
+import type * as dashboard_queries from "../dashboard/queries.js";
 import type * as developers_mutations from "../developers/mutations.js";
 import type * as developers_queries from "../developers/queries.js";
 import type * as filterPresets_mutations from "../filterPresets/mutations.js";
@@ -131,6 +132,7 @@ declare const fullApi: ApiFromModules<{
   "comments/mutations": typeof comments_mutations;
   crons: typeof crons;
   customFields: typeof customFields;
+  "dashboard/queries": typeof dashboard_queries;
   "developers/mutations": typeof developers_mutations;
   "developers/queries": typeof developers_queries;
   "filterPresets/mutations": typeof filterPresets_mutations;

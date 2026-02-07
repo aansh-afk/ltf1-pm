@@ -1,83 +1,82 @@
 import { useState, useEffect, useCallback } from 'react'
 
+interface StorageValue<T> {
+  version: number
+  data: T
+}
+
 type SetValue<T> = T | ((val: T) => T)
 
+const CURRENT_VERSION = 1
+
 /**
- * Custom hook for managing state in localStorage with React state synchronization
+ * Custom hook for managing state in localStorage with React state synchronization.
+ * Supports versioning to handle schema changes gracefully.
  * @param key - The localStorage key
  * @param initialValue - The initial value if nothing is in localStorage
+ * @param version - Schema version number (bumping this clears stale data)
  * @returns [storedValue, setValue] - Similar to useState
  */
 export function useLocalStorage<T>(
   key: string,
-  initialValue: T
+  initialValue: T,
+  version: number = CURRENT_VERSION
 ): [T, (value: SetValue<T>) => void] {
-  // Get from local storage then parse stored json or return initialValue
   const readValue = useCallback((): T => {
-    // Prevent build error "window is undefined" but keep working in SSR
     if (typeof window === 'undefined') {
       return initialValue
     }
 
     try {
       const item = window.localStorage.getItem(key)
-      return item ? (parseJSON(item) as T) : initialValue
+      if (!item) return initialValue
+
+      const parsed = JSON.parse(item)
+
+      // Handle versioned values
+      if (typeof parsed === 'object' && parsed !== null && 'version' in parsed && 'data' in parsed) {
+        if (parsed.version !== version) {
+          window.localStorage.removeItem(key)
+          return initialValue
+        }
+        return parsed.data as T
+      }
+
+      // Legacy value without version wrapper - migrate it
+      return parsed as T
     } catch (error) {
       console.warn(`Error reading localStorage key "${key}":`, error)
       return initialValue
     }
-  }, [initialValue, key])
+  }, [initialValue, key, version])
 
-  // State to store our value
-  // Pass initial state function to useState so logic is only executed once
   const [storedValue, setStoredValue] = useState<T>(readValue)
 
-  // Return a wrapped version of useState's setter function that ...
-  // ... persists the new value to localStorage.
   const setValue = useCallback(
     (value: SetValue<T>) => {
-      // Prevent build error "window is undefined" but keeps working in SSR
-      if (typeof window === 'undefined') {
-        console.warn(
-          `Tried setting localStorage key "${key}" even though environment is not a client`
-        )
-      }
+      if (typeof window === 'undefined') return
 
       try {
-        // Allow value to be a function so we have the same API as useState
         const newValue = value instanceof Function ? value(storedValue) : value
-
-        // Save to local storage
-        window.localStorage.setItem(key, JSON.stringify(newValue))
-
-        // Save state
+        const wrappedValue: StorageValue<T> = { version, data: newValue }
+        window.localStorage.setItem(key, JSON.stringify(wrappedValue))
         setStoredValue(newValue)
-
-        // We dispatch a custom event so every useLocalStorage hook are notified
         window.dispatchEvent(new Event('local-storage'))
       } catch (error) {
         console.warn(`Error setting localStorage key "${key}":`, error)
       }
     },
-    [key, storedValue]
+    [key, storedValue, version]
   )
 
-  // Listen for changes to localStorage
   useEffect(() => {
     setStoredValue(readValue())
   }, [readValue])
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      setStoredValue(readValue())
-    }
-
-    // this only works for other documents, not the current one
+    const handleStorageChange = () => setStoredValue(readValue())
     window.addEventListener('storage', handleStorageChange)
-
-    // this is a custom event, triggered in setValue
     window.addEventListener('local-storage', handleStorageChange)
-
     return () => {
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('local-storage', handleStorageChange)
@@ -85,14 +84,4 @@ export function useLocalStorage<T>(
   }, [readValue])
 
   return [storedValue, setValue]
-}
-
-// A wrapper for "JSON.parse()" to support "undefined" value
-function parseJSON<T>(value: string | null): T | undefined {
-  try {
-    return value === 'undefined' ? undefined : JSON.parse(value ?? '')
-  } catch {
-    console.log('parsing error on', { value })
-    return undefined
-  }
 }

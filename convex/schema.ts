@@ -43,7 +43,8 @@ export default defineSchema({
   })
     .index("by_clerk_id", ["clerkId"])
     .index("by_email", ["email"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .searchIndex("search_email", { searchField: "email" }),
 
   workspaces: defineTable({
     name: v.string(),
@@ -177,7 +178,8 @@ export default defineSchema({
     .index("by_key", ["key"])
     .index("by_lead", ["leadId"])
     .index("by_status", ["status"])
-    .index("by_invite_code", ["inviteCode"]),
+    .index("by_invite_code", ["inviteCode"])
+    .searchIndex("search_name", { searchField: "name", filterFields: ["workspaceId", "status"] }),
 
   tasks: defineTable({
     projectId: v.id("projects"),
@@ -238,7 +240,8 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_sprint", ["sprintId"])
     .index("by_parent", ["parentTaskId"])
-    .index("by_project_number", ["projectId", "number"]),
+    .index("by_project_number", ["projectId", "number"])
+    .searchIndex("search_title", { searchField: "title", filterFields: ["projectId", "status"] }),
 
   sprints: defineTable({
     projectId: v.id("projects"),
@@ -251,7 +254,8 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_project", ["projectId"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .searchIndex("search_name", { searchField: "name", filterFields: ["projectId", "status"] }),
 
   comments: defineTable({
     taskId: v.id("tasks"),

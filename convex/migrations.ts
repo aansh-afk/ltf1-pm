@@ -1,6 +1,6 @@
-import { mutation } from "./_generated/server";
+import { internalMutation } from "./_generated/server";
 
-export const migrateExistingUsersToActive = mutation({
+export const migrateExistingUsersToActive = internalMutation({
     args: {},
     handler: async (ctx) => {
         const users = await ctx.db.query("users").collect();

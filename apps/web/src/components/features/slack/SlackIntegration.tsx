@@ -26,7 +26,9 @@ import {
   HiOutlineInformationCircle,
   HiOutlineTerminal
 } from 'react-icons/hi'
-import { BrutalCard, BrutalButton, BrutalBadge } from '@/components/ui'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalBadge from '@/components/ui/BrutalBadge'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 

@@ -10,7 +10,7 @@ import { useTheme } from '../../contexts/ThemeContext'
 import { globalThemes } from '../../themes/globalThemes'
 import type { ThemeName } from '../../themes/themeTypes'
 import clsx from 'clsx'
-import { BrutalButton } from '@/components/ui'
+import BrutalButton from '@/components/ui/BrutalButton'
 
 interface ThemeSwitcherProps {
   className?: string

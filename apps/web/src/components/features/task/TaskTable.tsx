@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, memo, useCallback } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import {
@@ -14,7 +14,7 @@ import {
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 import CreateTaskModal from './CreateTaskModal'
-import { BrutalCheckbox } from '../../ui'
+import BrutalCheckbox from '../../ui/BrutalCheckbox'
 
 interface TaskTableProps {
   tasks: any[]
@@ -75,7 +75,7 @@ const columns: Column[] = [
   { key: 'actions', label: '', width: 'w-40px' }
 ]
 
-export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableProps) {
+const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableProps) {
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set())
   const [sortBy, setSortBy] = useState<string>('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
@@ -86,14 +86,14 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
   const updateTask = useMutation(api.tasks.mutations.updateTask)
   const deleteTask = useMutation(api.tasks.mutations.deleteTask)
 
-  const handleSort = (column: string) => {
+  const handleSort = useCallback((column: string) => {
     if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')
     } else {
       setSortBy(column)
       setSortOrder('asc')
     }
-  }
+  }, [sortBy])
 
   const sortedTasks = useMemo(() => {
     return [...tasks].sort((a, b) => {
@@ -131,25 +131,27 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
     })
   }, [tasks, sortBy, sortOrder])
 
-  const handleSelectAll = () => {
+  const handleSelectAll = useCallback(() => {
     if (selectedTasks.size === tasks.length) {
       setSelectedTasks(new Set())
     } else {
       setSelectedTasks(new Set(tasks.map(t => t._id)))
     }
-  }
+  }, [selectedTasks.size, tasks])
 
-  const handleSelectTask = (taskId: string) => {
-    const newSelected = new Set(selectedTasks)
-    if (newSelected.has(taskId)) {
-      newSelected.delete(taskId)
-    } else {
-      newSelected.add(taskId)
-    }
-    setSelectedTasks(newSelected)
-  }
+  const handleSelectTask = useCallback((taskId: string) => {
+    setSelectedTasks(prev => {
+      const newSelected = new Set(prev)
+      if (newSelected.has(taskId)) {
+        newSelected.delete(taskId)
+      } else {
+        newSelected.add(taskId)
+      }
+      return newSelected
+    })
+  }, [])
 
-  const handleStatusChange = async (taskId: any, newStatus: any) => {
+  const handleStatusChange = useCallback(async (taskId: any, newStatus: any) => {
     try {
       await updateTask({ taskId, status: newStatus })
       toast.success('Status updated')
@@ -157,9 +159,9 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
     } catch (error: any) {
       toast.error(error.message || 'Failed to update status')
     }
-  }
+  }, [updateTask, onTaskUpdate])
 
-  const handleDeleteTask = async (taskId: any) => {
+  const handleDeleteTask = useCallback(async (taskId: any) => {
     try {
       await deleteTask({ taskId })
       toast.success('Task deleted')
@@ -168,7 +170,7 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete task')
     }
-  }
+  }, [deleteTask, onTaskUpdate])
 
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return '-'
@@ -442,4 +444,6 @@ export default function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableP
       />
     </div>
   )
-}
+})
+
+export default TaskTable

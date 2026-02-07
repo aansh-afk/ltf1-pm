@@ -1,7 +1,7 @@
-import { mutation } from "../_generated/server";
+import { internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 
-export const migrateTasksToMultipleAssignees = mutation({
+export const migrateTasksToMultipleAssignees = internalMutation({
   args: {
     batchSize: v.optional(v.number()),
   },
@@ -65,7 +65,7 @@ export const migrateTasksToMultipleAssignees = mutation({
   },
 });
 
-export const cleanupDeprecatedAssigneeId = mutation({
+export const cleanupDeprecatedAssigneeId = internalMutation({
   args: {
     batchSize: v.optional(v.number()),
   },

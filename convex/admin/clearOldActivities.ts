@@ -1,6 +1,6 @@
-import { mutation } from "../_generated/server";
+import { internalMutation } from "../_generated/server";
 
-export const clearOldActivities = mutation({
+export const clearOldActivities = internalMutation({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();

@@ -5,7 +5,8 @@ import { useEnsureUser } from '../hooks/useEnsureUser'
 import { HiOutlinePlus, HiOutlineUsers, HiOutlineCog, HiOutlineUserAdd } from 'react-icons/hi'
 import { toast } from 'react-hot-toast'
 import BrutalistLoader from '../components/common/BrutalistLoader'
-import { BrutalCard, BrutalButton } from '@/components/ui'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalModal from '@/components/ui/BrutalModal'
 
 export default function TeamsPage() {
