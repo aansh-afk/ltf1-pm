@@ -1,12 +1,15 @@
 import { internalMutation } from "../_generated/server";
+import { v } from "convex/values";
 
 export const clearOldActivities = internalMutation({
   args: {},
+  returns: v.object({
+    success: v.boolean(),
+    deletedCount: v.number(),
+    message: v.string(),
+  }),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
+    // No auth check — internal mutations are system-only and cannot be called externally
 
     // Get all activities with the old schema
     const oldActivities = await ctx.db
