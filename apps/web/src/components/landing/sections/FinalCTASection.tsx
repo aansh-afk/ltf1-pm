@@ -1,12 +1,7 @@
 import { motion } from 'framer-motion'
-import { useQuery } from 'convex/react'
-import { api } from '../../../../../../convex/_generated/api'
-import WaitlistForm from '../WaitlistForm'
+import { Link } from 'react-router-dom'
 
 export default function FinalCTASection() {
-  const stats = useQuery(api.waitlist.getWaitlistStats)
-  const count = stats?.totalCount ?? 0
-
   return (
     <section className="py-24 md:py-32 bg-[#0A0A0A] relative overflow-hidden">
       {/* Dot grid background */}
@@ -38,13 +33,25 @@ export default function FinalCTASection() {
                 </h2>
 
                 <p className="text-base text-[#9CA3AF] leading-relaxed font-['Inter',sans-serif] mb-8">
-                  {count > 0
-                    ? `Join ${count.toLocaleString()} developers who are already building with LTF1. Your repo becomes your project manager.`
-                    : 'Your repo becomes your project manager. Stop updating tickets and start shipping.'}
+                  Your repo becomes your project manager. Stop updating tickets and start shipping.
                 </p>
 
-                <div className="max-w-sm">
-                  <WaitlistForm source="landing-cta" />
+                <div className="flex items-center gap-4">
+                  <Link
+                    to="/sign-up"
+                    className="inline-flex items-center gap-2 px-7 py-3.5 bg-[#6366F1] hover:bg-[#4F46E5] text-white font-['Inter',sans-serif] font-semibold text-sm rounded-lg border-2 border-[#4F46E5] shadow-[3px_3px_0px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 transition-all duration-300"
+                  >
+                    Get Started Free
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                  <Link
+                    to="/features"
+                    className="inline-flex items-center px-7 py-3.5 text-[#9CA3AF] font-['Inter',sans-serif] font-semibold text-sm rounded-lg border border-[#2E2E35] bg-transparent hover:border-[#F9FAFB]/20 hover:text-[#F9FAFB] hover:-translate-y-0.5 transition-all duration-300"
+                  >
+                    See Features
+                  </Link>
                 </div>
 
                 <div className="flex items-center gap-4 mt-6">

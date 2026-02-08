@@ -1,19 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@clerk/clerk-react'
 import { Toaster } from 'react-hot-toast'
-import React, { lazy, Suspense, useState, useEffect, useMemo } from 'react'
+import React, { lazy, Suspense, useState, useEffect } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 
-// Helper to detect if we're in a production environment
-// Returns true for production deployments (including .vercel.app domains)
-// Returns false for localhost development
-function isProductionEnvironment(): boolean {
-  if (typeof window === 'undefined') return false
-  const hostname = window.location.hostname
-  // Allow localhost and 127.0.0.1 to bypass waitlist
-  return hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.startsWith('192.168.')
-}
 import ErrorBoundary from './components/common/ErrorBoundary'
 import { OptionalConvexProvider } from './providers/OptionalConvexProvider'
 import { PostHogProvider } from './providers/PostHogProvider'
@@ -26,7 +17,6 @@ import RequireAuth from './components/common/RequireAuth'
 import LandingPage from './pages/LandingPage'
 import PricingPage from './pages/PricingPage'
 import ContactPage from './pages/ContactPage'
-import ComingSoonPage from './pages/ComingSoonPage'
 import FeatureDetailPage from './pages/FeatureDetailPage'
 import FeaturesPage from './pages/FeaturesPage'
 import SignInPage from './pages/SignInPage'
@@ -119,22 +109,8 @@ function AuthenticatedAppContent() {
     }
   }, [user, npsCompleted])
 
-  // Memoize environment check to avoid re-calculating on every render
-  const isProduction = useMemo(() => isProductionEnvironment(), [])
-
   if (isLoading) {
     return <BrutalistLoader />
-  }
-
-  // Check for waitlist status - only redirect on production environments
-  // On localhost, users can access the app regardless of waitlist status
-  if (isProduction && user?.status === 'waitlisted') {
-    return (
-      <Routes>
-        <Route path="/coming-soon" element={<ComingSoonPage />} />
-        <Route path="*" element={<Navigate to="/coming-soon" replace />} />
-      </Routes>
-    )
   }
 
   return (
@@ -160,7 +136,6 @@ function UnauthenticatedAppContent() {
 // Main app content that decides whether to use authenticated or unauthenticated version
 function AppContent() {
   const { isSignedIn } = useAuth()
-  const [showOnboarding, setShowOnboarding] = useState(false)
 
   // Use the appropriate content based on authentication state
   if (isSignedIn) {
@@ -196,9 +171,6 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
         <Route path="/features/:slug" element={<FeatureDetailPage />} />
         <Route path="/sign-in/*" element={<SignInPage />} />
         <Route path="/sign-up/*" element={<SignUpPage />} />
-
-        {/* Public Coming Soon Page */}
-        <Route path="/coming-soon" element={<ComingSoonPage />} />
 
         {/* Join Project Routes - accessible by anyone */}
         <Route path="/join-project" element={<JoinProjectPage />} />

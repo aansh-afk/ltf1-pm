@@ -243,3 +243,46 @@ export const getWorkspaceStats = query({
     };
   },
 });
+
+export const getPendingInvitations = query({
+  args: {
+    workspaceId: v.id("workspaces"),
+  },
+  returns: v.array(v.object({
+    _id: v.id("workspaceInvitations"),
+    email: v.string(),
+    role: v.union(v.literal("admin"), v.literal("member"), v.literal("viewer")),
+    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined"), v.literal("expired")),
+    createdAt: v.number(),
+    invitedByName: v.string(),
+  })),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const invitations = await ctx.db
+      .query("workspaceInvitations")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+      .collect();
+
+    const pending = invitations.filter((inv) => inv.status === "pending");
+
+    const results = await Promise.all(
+      pending.map(async (inv) => {
+        const inviter = await ctx.db.get(inv.invitedBy);
+        return {
+          _id: inv._id,
+          email: inv.email,
+          role: inv.role,
+          status: inv.status,
+          createdAt: inv.createdAt,
+          invitedByName: inviter?.name || inviter?.email || "Unknown",
+        };
+      })
+    );
+
+    return results;
+  },
+});
