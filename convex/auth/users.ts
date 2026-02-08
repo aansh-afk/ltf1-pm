@@ -142,13 +142,33 @@ export const ensureUserExists = internalMutation({
           },
         },
         lastSeenAt: now,
-        status: "waitlisted",
-        waitlistPosition: now, // Use timestamp as simple position for now
+        status: "active",
         createdAt: now,
         updatedAt: now,
       });
 
       user = await ctx.db.get(userId);
+
+      // Auto-accept any pending workspace invitations for this email
+      if (user) {
+        const pendingInvites = await ctx.db
+          .query("workspaceInvitations")
+          .withIndex("by_email", (q) => q.eq("email", args.email))
+          .collect();
+
+        for (const invite of pendingInvites) {
+          if (invite.status === "pending" && invite.expiresAt > now) {
+            await ctx.db.insert("workspaceMembers", {
+              workspaceId: invite.workspaceId,
+              userId: user._id,
+              role: invite.role,
+              permissions: [],
+              joinedAt: now,
+            });
+            await ctx.db.patch(invite._id, { status: "accepted" });
+          }
+        }
+      }
     }
 
     if (!user) {

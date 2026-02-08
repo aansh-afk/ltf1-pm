@@ -220,6 +220,10 @@ export const inviteToWorkspace = mutation({
     email: v.string(),
     role: v.union(v.literal("admin"), v.literal("member"), v.literal("viewer")),
   },
+  returns: v.object({
+    status: v.union(v.literal("added"), v.literal("invited")),
+    email: v.string(),
+  }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -242,57 +246,93 @@ export const inviteToWorkspace = mutation({
       .withIndex("by_email", (q) => q.eq("email", args.email))
       .first();
 
-    if (!invitedUser) {
-      throw new Error("User not found. They must sign up first.");
-    }
-
-    const existingMember = await ctx.db
-      .query("workspaceMembers")
-      .withIndex("by_workspace_user", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", invitedUser._id)
-      )
-      .first();
-
-    if (existingMember) {
-      throw new Error("User is already a member of this workspace");
-    }
-
     const now = Date.now();
 
-    await ctx.db.insert("workspaceMembers", {
-      workspaceId: args.workspaceId,
-      userId: invitedUser._id,
-      role: args.role,
-      permissions: [],
-      joinedAt: now,
-    });
+    if (invitedUser) {
+      // User exists - add them directly
+      const existingMember = await ctx.db
+        .query("workspaceMembers")
+        .withIndex("by_workspace_user", (q) =>
+          q.eq("workspaceId", args.workspaceId).eq("userId", invitedUser._id)
+        )
+        .first();
 
-    // Log member invitation activity (using member_joined as closest match)
-    await ctx.runMutation(internal.activities.mutations.logActivity, {
-      type: "member_joined",
-      workspaceId: args.workspaceId,
-      actorId: user._id,
-      actorName: user.name || user.email,
-      targetType: "user",
-      targetId: invitedUser._id,
-      targetName: args.email,
-      description: `invited ${args.email} to workspace`,
-      metadata: {
-        extra: { email: args.email, role: args.role, action: "invited" }
+      if (existingMember) {
+        throw new Error("User is already a member of this workspace");
       }
-    });
 
-    await ctx.db.insert("notifications", {
-      userId: invitedUser._id,
-      type: "workspace.invitation",
-      title: "Workspace Invitation",
-      message: `You've been invited to join a workspace`,
-      data: { workspaceId: args.workspaceId, role: args.role },
-      read: false,
-      createdAt: now,
-    });
+      await ctx.db.insert("workspaceMembers", {
+        workspaceId: args.workspaceId,
+        userId: invitedUser._id,
+        role: args.role,
+        permissions: [],
+        joinedAt: now,
+      });
 
-    return invitedUser._id;
+      await ctx.runMutation(internal.activities.mutations.logActivity, {
+        type: "member_joined",
+        workspaceId: args.workspaceId,
+        actorId: user._id,
+        actorName: user.name || user.email,
+        targetType: "user",
+        targetId: invitedUser._id,
+        targetName: args.email,
+        description: `invited ${args.email} to workspace`,
+        metadata: {
+          extra: { email: args.email, role: args.role, action: "invited" }
+        }
+      });
+
+      await ctx.db.insert("notifications", {
+        userId: invitedUser._id,
+        type: "workspace.invitation",
+        title: "Workspace Invitation",
+        message: `You've been invited to join a workspace`,
+        data: { workspaceId: args.workspaceId, role: args.role },
+        read: false,
+        createdAt: now,
+      });
+
+      return { status: "added" as const, email: args.email };
+    } else {
+      // User doesn't exist yet - create a pending invitation
+      const existingInvite = await ctx.db
+        .query("workspaceInvitations")
+        .withIndex("by_workspace_and_email", (q) =>
+          q.eq("workspaceId", args.workspaceId).eq("email", args.email)
+        )
+        .first();
+
+      if (existingInvite && existingInvite.status === "pending") {
+        throw new Error("An invitation has already been sent to this email");
+      }
+
+      await ctx.db.insert("workspaceInvitations", {
+        workspaceId: args.workspaceId,
+        email: args.email,
+        role: args.role,
+        invitedBy: user._id,
+        status: "pending",
+        createdAt: now,
+        expiresAt: now + 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+
+      await ctx.runMutation(internal.activities.mutations.logActivity, {
+        type: "member_joined",
+        workspaceId: args.workspaceId,
+        actorId: user._id,
+        actorName: user.name || user.email,
+        targetType: "user",
+        targetId: args.workspaceId,
+        targetName: args.email,
+        description: `invited ${args.email} to workspace (pending sign-up)`,
+        metadata: {
+          extra: { email: args.email, role: args.role, action: "invited_pending" }
+        }
+      });
+
+      return { status: "invited" as const, email: args.email };
+    }
   },
 });
 
