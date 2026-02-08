@@ -63,7 +63,7 @@ export function GitHubProfileSection({ userId, isProfileComplete, onConnect }: G
   // Not connected state
   if (!githubStats) {
     return (
-      <BrutalCard className="p-24px relative">
+      <BrutalCard className="p-[16px] relative">
         {!isProfileComplete && (
           <div className="absolute top-8px right-8px">
             <div className="flex items-center gap-4px text-brutal-warning">
@@ -73,18 +73,18 @@ export function GitHubProfileSection({ userId, isProfileComplete, onConnect }: G
           </div>
         )}
         
-        <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+        <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-[4px]">
           <FaGithub className="w-20px h-20px" />
           GITHUB INTEGRATION
         </h3>
         
         <div className="text-center py-32px">
-          <FaGithub className="w-48px h-48px text-[var(--theme-foreground)]/20 mx-auto mb-16px" />
-          <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mb-24px">
+          <FaGithub className="w-6 h-6 text-[var(--theme-foreground)]/20 mx-auto mb-[8px]" />
+          <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mb-[12px]">
             Connect your GitHub account to showcase your contributions and coding activity
           </p>
           
-          <div className="space-y-12px">
+          <div className="space-y-[6px]">
             <GitHubConnectButton 
               onConnect={onConnect}
               className="w-full max-w-xs mx-auto"
@@ -106,14 +106,14 @@ export function GitHubProfileSection({ userId, isProfileComplete, onConnect }: G
   const isStale = githubStats.isStale;
   
   return (
-    <BrutalCard className="p-24px">
-      <div className="flex items-center justify-between mb-16px">
-        <h3 className="text-brutal-md font-bold flex items-center gap-8px">
+    <BrutalCard className="p-[16px]">
+      <div className="flex items-center justify-between mb-[8px]">
+        <h3 className="text-brutal-md font-bold flex items-center gap-[4px]">
           <FaGithub className="w-20px h-20px" />
           GITHUB STATISTICS
         </h3>
         
-        <div className="flex items-center gap-16px">
+        <div className="flex items-center gap-[8px]">
           {githubStats.username && (
             <a
               href={`https://github.com/${githubStats.username}`}
@@ -135,7 +135,7 @@ export function GitHubProfileSection({ userId, isProfileComplete, onConnect }: G
       </div>
       
       {isStale && (
-        <div className="mb-16px p-12px bg-brutal-warning/10 border border-brutal-warning flex items-center gap-8px">
+        <div className="mb-[8px] p-[8px] bg-brutal-warning/10 border border-brutal-warning flex items-center gap-[4px]">
           <FaExclamationTriangle className="w-16px h-16px text-brutal-warning" />
           <span className="text-brutal-xs">
             GitHub data is outdated. Stats will refresh automatically soon.
@@ -144,23 +144,23 @@ export function GitHubProfileSection({ userId, isProfileComplete, onConnect }: G
       )}
       
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-16px mb-24px">
-        <div className="text-center p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
-          <div className="text-brutal-2xl font-bold text-brutal-success">{githubStats.totalPRs || 0}</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-[8px] mb-[12px]">
+        <div className="text-center p-[10px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+          <div className="text-[20px] font-bold font-bold text-brutal-success">{githubStats.totalPRs || 0}</div>
           <div className="text-brutal-xs uppercase">Pull Requests</div>
         </div>
-        <div className="text-center p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
-          <div className="text-brutal-2xl font-bold text-brutal-info">{githubStats.totalReviews || 0}</div>
+        <div className="text-center p-[10px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+          <div className="text-[20px] font-bold font-bold text-brutal-info">{githubStats.totalReviews || 0}</div>
           <div className="text-brutal-xs uppercase">Code Reviews</div>
         </div>
-        <div className="text-center p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
-          <div className="text-brutal-2xl font-bold text-brutal-warning">
+        <div className="text-center p-[10px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+          <div className="text-[20px] font-bold font-bold text-brutal-warning">
             {githubStats.avgReviewTime ? `${Math.round(githubStats.avgReviewTime)}h` : '--'}
           </div>
           <div className="text-brutal-xs uppercase">Avg Review Time</div>
         </div>
-        <div className="text-center p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
-          <div className="text-brutal-2xl font-bold text-primary-brutalist">
+        <div className="text-center p-[10px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+          <div className="text-[20px] font-bold font-bold text-primary-brutalist">
             {githubStats.languages?.length || 0}
           </div>
           <div className="text-brutal-xs uppercase">Languages</div>
@@ -170,15 +170,15 @@ export function GitHubProfileSection({ userId, isProfileComplete, onConnect }: G
       {/* Languages */}
       {githubStats.languages && githubStats.languages.length > 0 && (
         <div>
-          <h4 className="font-mono text-brutal-xs font-bold mb-12px flex items-center gap-4px">
+          <h4 className="font-mono text-brutal-xs font-bold mb-[6px] flex items-center gap-4px">
             <FaCode className="w-12px h-12px" />
             TOP LANGUAGES
           </h4>
-          <div className="space-y-8px">
+          <div className="space-y-[4px]">
             {githubStats.languages.slice(0, 5).map((lang) => (
-              <div key={lang.name} className="flex items-center gap-12px">
+              <div key={lang.name} className="flex items-center gap-[6px]">
                 <div className="flex-1">
-                  <div className="flex items-center justify-between mb-4px">
+                  <div className="flex items-center justify-between mb-[2px]">
                     <span className="font-mono text-brutal-xs">{lang.name}</span>
                     <span className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60">{lang.percentage}%</span>
                   </div>
@@ -197,11 +197,11 @@ export function GitHubProfileSection({ userId, isProfileComplete, onConnect }: G
       
       {/* Advanced Features */}
       {installations && installations.length === 0 && (
-        <div className="mt-24px pt-24px border-t border-[var(--theme-border)]">
-          <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mb-12px">
+        <div className="mt-[12px] pt-[12px] border-t border-[var(--theme-border)]">
+          <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mb-[6px]">
             Install the GitHub App for advanced features:
           </p>
-          <ul className="text-brutal-xs text-[var(--theme-foreground)]/40 space-y-4px mb-12px">
+          <ul className="text-brutal-xs text-[var(--theme-foreground)]/40 space-y-4px mb-[6px]">
             <li>• Automatic commit and PR tracking</li>
             <li>• Real-time repository syncing</li>
             <li>• Task-code linking</li>

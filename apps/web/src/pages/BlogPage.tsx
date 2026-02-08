@@ -168,12 +168,12 @@ export default function BlogPage() {
       <PublicNavigation />
 
       {/* HERO SECTION */}
-      <section className="py-80px px-24px border-b-2 border-basalt-border">
+      <section className="py-80px px-[12px] border-b-2 border-basalt-border">
         <div className="max-w-7xl mx-auto">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-6xl md:text-8xl font-bold mb-24px text-center"
+            className="text-6xl md:text-8xl font-bold mb-[12px] text-center"
           >
             <span className="text-cathode-white">ENGINEERING</span>{' '}
             <span className="text-brutal-info">INSIGHTS</span>
@@ -183,7 +183,7 @@ export default function BlogPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-xl md:text-2xl text-cathode-white/80 uppercase tracking-wider text-center mb-48px"
+            className="text-xl md:text-2xl text-cathode-white/80 uppercase tracking-wider text-center mb-[24px]"
           >
             DEEP DIVES. TECHNICAL BREAKDOWNS. NO FLUFF.
           </motion.p>
@@ -201,7 +201,7 @@ export default function BlogPage() {
                 placeholder="SEARCH POSTS, TAGS, AUTHORS..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-24px md:px-48px py-12px md:py-16px bg-event-horizon border-2 border-basalt-border text-cathode-white focus:border-brutal-info outline-none uppercase text-sm md:text-base"
+                className="w-full px-[12px] md:px-[24px] py-12px md:py-[8px] bg-event-horizon border-2 border-basalt-border text-cathode-white focus:border-brutal-info outline-none uppercase text-sm md:text-base"
               />
               <HiSearch className="absolute left-12px md:left-16px top-1/2 -translate-y-1/2 text-cathode-white/50 text-lg md:text-xl" />
             </div>
@@ -210,9 +210,9 @@ export default function BlogPage() {
       </section>
 
       {/* CATEGORIES */}
-      <section className="py-24px md:py-32px px-16px md:px-24px border-b-2 border-basalt-border bg-event-horizon">
+      <section className="py-[12px] md:py-32px px-[10px] md:px-[12px] border-b-2 border-basalt-border bg-event-horizon">
         <div className="max-w-full md:max-w-7xl mx-auto">
-          <div className="flex flex-wrap gap-8px md:gap-16px justify-center">
+          <div className="flex flex-wrap gap-8px md:gap-[10px] justify-center">
             {categories.map((category, index) => (
               <motion.button
                 key={category.name}
@@ -221,7 +221,7 @@ export default function BlogPage() {
                 transition={{ delay: index * 0.05 }}
                 onClick={() => setSelectedCategory(category.name)}
                 className={`
-                  brutal-btn px-24px py-12px
+                  brutal-btn px-[12px] py-12px
                   ${selectedCategory === category.name ? 'border-brutal-info text-brutal-info' : ''}
                 `}
               >
@@ -234,14 +234,14 @@ export default function BlogPage() {
 
       {/* FEATURED POSTS */}
       {selectedCategory === 'ALL' && (
-        <section className="py-32px md:py-48px px-16px md:px-24px">
+        <section className="py-32px md:py-48px px-[10px] md:px-[12px]">
           <div className="max-w-full md:max-w-7xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold mb-24px md:mb-32px text-cathode-white">
+            <h2 className="text-2xl md:text-3xl font-bold mb-[12px] md:mb-[16px] text-cathode-white">
               FEATURED <span className="text-brutal-info">POSTS</span>
             </h2>
 
             <div className="relative">
-              <div className="flex lg:grid lg:grid-cols-3 gap-24px overflow-x-auto lg:overflow-x-visible pb-16px lg:pb-0 snap-x snap-mandatory lg:snap-none"
+              <div className="flex lg:grid lg:grid-cols-3 gap-[16px] overflow-x-auto lg:overflow-x-visible pb-16px lg:pb-0 snap-x snap-mandatory lg:snap-none"
                    style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
               {blogPosts.filter(post => post.featured).map((post, index) => (
                 <motion.article
@@ -249,9 +249,9 @@ export default function BlogPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="snap-start flex-shrink-0 lg:flex-shrink-auto w-[85vw] lg:w-auto brutal-card p-24px hover:border-brutal-info group"
+                  className="snap-start flex-shrink-0 lg:flex-shrink-auto w-[85vw] lg:w-auto brutal-card p-[16px] hover:border-brutal-info group"
                 >
-                  <div className="flex items-center gap-8px mb-16px">
+                  <div className="flex items-center gap-8px mb-[8px]">
                     <span className="text-xs font-bold text-brutal-info">{post.category}</span>
                     <span className="text-xs text-cathode-white/50">&bull;</span>
                     <span className="text-xs text-cathode-white/50">{post.readTime}</span>
@@ -261,7 +261,7 @@ export default function BlogPage() {
                     {post.title}
                   </h3>
 
-                  <p className="text-sm text-cathode-white/70 mb-16px">
+                  <p className="text-sm text-cathode-white/70 mb-[8px]">
                     {post.excerpt}
                   </p>
 
@@ -290,24 +290,24 @@ export default function BlogPage() {
       )}
 
       {/* ALL POSTS */}
-      <section className="py-48px px-16px md:px-24px">
+      <section className="py-48px px-[10px] md:px-[12px]">
         <div className="max-w-full md:max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold mb-32px text-cathode-white">
+          <h2 className="text-3xl font-bold mb-[16px] text-cathode-white">
             {selectedCategory === 'ALL' ? 'ALL' : selectedCategory} <span className="text-brutal-info">POSTS</span>
           </h2>
 
-          <div className="grid gap-24px">
+          <div className="grid gap-[16px]">
             {filteredPosts.map((post, index) => (
               <motion.article
                 key={post.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="brutal-card p-32px hover:border-brutal-info group"
+                className="brutal-card p-[20px] hover:border-brutal-info group"
               >
-                <div className="grid lg:grid-cols-12 gap-32px">
+                <div className="grid lg:grid-cols-12 gap-[20px]">
                   <div className="lg:col-span-9">
-                    <div className="flex flex-wrap items-center gap-8px mb-16px">
+                    <div className="flex flex-wrap items-center gap-8px mb-[8px]">
                       <span className="text-sm font-bold text-brutal-info">{post.category}</span>
                       <span className="text-sm text-cathode-white/50">&bull;</span>
                       <span className="text-sm text-cathode-white/50">{post.readTime}</span>
@@ -319,11 +319,11 @@ export default function BlogPage() {
                       ))}
                     </div>
 
-                    <h3 className="text-2xl font-bold mb-16px text-cathode-white group-hover:text-brutal-info">
+                    <h3 className="text-2xl font-bold mb-[8px] text-cathode-white group-hover:text-brutal-info">
                       {post.title}
                     </h3>
 
-                    <p className="text-cathode-white/70 mb-16px">
+                    <p className="text-cathode-white/70 mb-[8px]">
                       {post.excerpt}
                     </p>
 
@@ -336,7 +336,7 @@ export default function BlogPage() {
                   </div>
 
                   <div className="lg:col-span-3 border-l-2 border-basalt-border pl-32px">
-                    <div className="space-y-16px">
+                    <div className="space-y-[8px]">
                       <div>
                         <div className="text-sm text-cathode-white/50 mb-4px">AUTHOR</div>
                         <div className="font-bold text-cathode-white">{post.author}</div>
@@ -355,7 +355,7 @@ export default function BlogPage() {
 
           {filteredPosts.length === 0 && (
             <div className="text-center py-80px">
-              <div className="text-6xl mb-24px text-cathode-white">404</div>
+              <div className="text-6xl mb-[12px] text-cathode-white">404</div>
               <div className="text-xl text-cathode-white/60">NO POSTS FOUND</div>
             </div>
           )}
@@ -364,12 +364,12 @@ export default function BlogPage() {
 
       {/* NEWSLETTER */}
       <section className="py-48px md:py-80px border-t-2 border-basalt-border bg-event-horizon">
-        <div className="max-w-full md:max-w-3xl mx-auto px-16px md:px-24px text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-16px md:mb-24px text-cathode-white">
+        <div className="max-w-full md:max-w-3xl mx-auto px-[10px] md:px-[12px] text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-[8px] md:mb-[12px] text-cathode-white">
             NEVER MISS AN <span className="text-brutal-info">UPDATE</span>
           </h2>
 
-          <p className="text-xl text-cathode-white/80 mb-32px uppercase">
+          <p className="text-xl text-cathode-white/80 mb-[16px] uppercase">
             Technical insights. Product updates. Zero spam.
           </p>
 
@@ -379,13 +379,13 @@ export default function BlogPage() {
               placeholder="YOUR@EMAIL.COM"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 px-24px py-16px bg-event-horizon border-2 border-basalt-border border-r-0 text-cathode-white focus:border-brutal-info outline-none uppercase"
+              className="flex-1 px-[12px] py-[8px] bg-event-horizon border-2 border-basalt-border border-r-0 text-cathode-white focus:border-brutal-info outline-none uppercase"
               required
             />
             <button
               type="submit"
               className={`
-                brutal-btn px-32px py-16px
+                brutal-btn px-[16px] py-[8px]
                 ${subscribed ? 'bg-brutal-success text-event-horizon border-brutal-success' : 'bg-brutal-info text-event-horizon border-brutal-info'}
               `}
             >
@@ -393,7 +393,7 @@ export default function BlogPage() {
             </button>
           </form>
 
-          <div className="flex items-center justify-center gap-32px mt-32px">
+          <div className="flex items-center justify-center gap-[20px] mt-[16px]">
             <a href="/rss" className="flex items-center gap-8px text-cathode-white hover:text-brutal-info">
               <HiRss className="text-xl" />
               <span>RSS FEED</span>

@@ -47,7 +47,7 @@ export function GitHubMonitor({ isExpanded, compact = false }: GitHubMonitorProp
   if (!isExpanded) {
     // Icon-only mode
     return (
-      <div className="flex justify-center py-16px border-t-2 border-[var(--theme-border)]">
+      <div className="flex justify-center py-[8px] border-t-2 border-[var(--theme-border)]">
         <FaGithub className={clsx(
           "w-20px h-20px transition-colors duration-300",
           hasGitHub ? "text-primary-brutalist" : "text-[var(--theme-foreground)]/20"
@@ -58,7 +58,7 @@ export function GitHubMonitor({ isExpanded, compact = false }: GitHubMonitorProp
   
   // Full expanded mode
   return (
-    <div className="px-24px py-16px border-t-2 border-[var(--theme-border)]">
+    <div className="px-[12px] py-[8px] border-t-2 border-[var(--theme-border)]">
       <h3 className="text-brutal-xs font-bold mb-12px flex items-center gap-8px">
         <FaGithub className="w-16px h-16px" />
         GITHUB STATUS

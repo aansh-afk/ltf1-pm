@@ -79,10 +79,10 @@ export default function CreateSprintModal({
       onClose={onClose}
       title="CREATE NEW SPRINT"
     >
-      <form onSubmit={handleSubmit} className="space-y-24px">
+      <form onSubmit={handleSubmit} className="space-y-[12px]">
         {/* Sprint Name */}
         <div>
-          <label className="block text-brutal-sm uppercase mb-8px">
+          <label className="block text-brutal-sm uppercase mb-[4px]">
             SPRINT NAME
           </label>
           <input
@@ -90,7 +90,7 @@ export default function CreateSprintModal({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="SPRINT 1"
-            className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+            className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-sm uppercase placeholder:text-neutral-600
                      focus:border-primary-brutalist focus:outline-none transition-colors"
             required
@@ -99,7 +99,7 @@ export default function CreateSprintModal({
 
         {/* Sprint Goal */}
         <div>
-          <label className="block text-brutal-sm uppercase mb-8px">
+          <label className="block text-brutal-sm uppercase mb-[4px]">
             SPRINT GOAL
           </label>
           <textarea
@@ -107,37 +107,37 @@ export default function CreateSprintModal({
             onChange={(e) => setGoal(e.target.value)}
             placeholder="DELIVER USER AUTHENTICATION AND DASHBOARD..."
             rows={3}
-            className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+            className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-sm uppercase placeholder:text-neutral-600
                      focus:border-primary-brutalist focus:outline-none transition-colors resize-none"
           />
         </div>
 
         {/* Date Range */}
-        <div className="grid grid-cols-2 gap-16px">
+        <div className="grid grid-cols-2 gap-[8px]">
           <div>
-            <label className="block text-brutal-sm uppercase mb-8px">
+            <label className="block text-brutal-sm uppercase mb-[4px]">
               START DATE
             </label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm
                        focus:border-primary-brutalist focus:outline-none transition-colors"
               required
             />
           </div>
           <div>
-            <label className="block text-brutal-sm uppercase mb-8px">
+            <label className="block text-brutal-sm uppercase mb-[4px]">
               END DATE
             </label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm
                        focus:border-primary-brutalist focus:outline-none transition-colors"
               required
@@ -146,7 +146,7 @@ export default function CreateSprintModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-16px justify-end pt-24px border-t-2 border-[var(--theme-border)]">
+        <div className="flex gap-[8px] justify-end pt-[12px] border-t-2 border-[var(--theme-border)]">
           <button
             type="button"
             onClick={onClose}

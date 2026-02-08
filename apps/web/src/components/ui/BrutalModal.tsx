@@ -106,7 +106,7 @@ export default function BrutalModal({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '24px',
+              padding: '16px',
               pointerEvents: 'none'
             }}
           >
@@ -124,19 +124,19 @@ export default function BrutalModal({
               )}
               style={{ 
                 pointerEvents: 'auto',
-                maxHeight: 'calc(100vh - 48px)',
+                maxHeight: 'calc(100vh - 32px)',
                 overflow: 'auto'
               }}
               role="dialog"
               aria-modal="true"
               aria-labelledby={title ? "modal-title" : undefined}
             >
-              <div className="bg-[var(--theme-background-secondary)] border-4 border-[var(--theme-border)] shadow-[var(--theme-box-shadow-hover)]">
+              <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] shadow-[var(--theme-box-shadow-hover)]">
               {/* HEADER */}
               {(title || showCloseButton) && (
-                <div className="px-24px py-16px border-b-2 border-[var(--theme-border)] flex items-center justify-between">
+                <div className="px-[16px] py-[10px] border-b border-[var(--theme-border)] flex items-center justify-between">
                   {title && (
-                    <h2 id="modal-title" className="text-brutal-xl">{title.toUpperCase()}</h2>
+                    <h2 id="modal-title" className="text-[14px] font-bold uppercase">{title.toUpperCase()}</h2>
                   )}
                   {showCloseButton && (
                     <button
@@ -144,18 +144,18 @@ export default function BrutalModal({
                         e.stopPropagation()
                         onClose()
                       }}
-                      className="ml-auto p-8px hover:bg-[var(--theme-hover)] transition-colors"
+                      className="ml-auto p-[4px] hover:bg-[var(--theme-hover)] transition-colors"
                       type="button"
                       aria-label="Close modal"
                     >
-                      <HiOutlineX className="w-24px h-24px" />
+                      <HiOutlineX className="w-4 h-4" />
                     </button>
                   )}
                 </div>
               )}
 
               {/* CONTENT */}
-              <div className="p-24px">
+              <div className="p-[16px]">
                 {children}
               </div>
             </div>

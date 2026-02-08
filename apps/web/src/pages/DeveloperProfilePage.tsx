@@ -61,7 +61,7 @@ export default function DeveloperProfilePage() {
 
   if (!userId) {
     return (
-      <div className="p-24px">
+      <div className="p-[16px]">
         <div className="text-brutal-error">Invalid user ID</div>
       </div>
     )
@@ -69,8 +69,8 @@ export default function DeveloperProfilePage() {
 
   if (!profile) {
     return (
-      <div className="p-24px">
-        <div className="brutal-card p-48px text-center">
+      <div className="p-[16px]">
+        <div className="brutal-card p-[24px] text-center">
           <div className="animate-pulse">Loading developer profile...</div>
         </div>
       </div>
@@ -113,12 +113,12 @@ export default function DeveloperProfilePage() {
   ] as const
 
   return (
-    <div className="space-y-24px">
+    <div className="space-y-[12px]">
       {/* Profile Header */}
       <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
-        <div className="p-24px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+        <div className="p-[16px] border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
           <div className="flex items-start justify-between">
-            <div className="flex items-start gap-24px">
+            <div className="flex items-start gap-[16px]">
               {/* Avatar */}
               <div className="w-80px h-80px bg-basalt-border border-2 border-[var(--theme-border)] flex items-center justify-center">
                 {profile.avatarUrl ? (
@@ -134,10 +134,10 @@ export default function DeveloperProfilePage() {
 
               {/* Basic Info */}
               <div>
-                <h1 className="text-brutal-xl font-bold mb-8px">
+                <h1 className="text-[16px] font-bold font-bold mb-8px">
                   {profile.name || 'UNNAMED DEVELOPER'}
                 </h1>
-                <div className="flex items-center gap-16px mb-12px">
+                <div className="flex items-center gap-[10px] mb-12px">
                   <span className="font-mono text-brutal-sm text-primary-brutalist/80">
                     {profile.role || 'DEVELOPER'}
                   </span>
@@ -160,7 +160,7 @@ export default function DeveloperProfilePage() {
                 </div>
 
                 {/* Status */}
-                <div className="flex items-center gap-16px">
+                <div className="flex items-center gap-[10px]">
                   <DeveloperStatusIndicator 
                     userId={userId as Id<"users">}
                     size="lg"
@@ -189,10 +189,10 @@ export default function DeveloperProfilePage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-12px">
+            <div className="flex items-center gap-[6px]">
               <button
                 onClick={copyCoAuthorString}
-                className="brutal-btn-secondary flex items-center gap-8px px-16px py-8px"
+                className="brutal-btn-secondary flex items-center gap-8px px-[10px] py-8px"
                 title="Copy git co-author string"
               >
                 <HiOutlineClipboardCopy className="w-16px h-16px" />
@@ -202,7 +202,7 @@ export default function DeveloperProfilePage() {
               {isOwnProfile && (
                 <button
                   onClick={() => setShowEditModal(true)}
-                  className="brutal-btn flex items-center gap-8px px-16px py-8px"
+                  className="brutal-btn flex items-center gap-8px px-[10px] py-8px"
                 >
                   <HiOutlinePencil className="w-16px h-16px" />
                   <span className="font-mono text-brutal-xs">EDIT PROFILE</span>
@@ -221,7 +221,7 @@ export default function DeveloperProfilePage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={clsx(
-                  "flex items-center gap-8px px-24px py-16px font-mono text-brutal-sm font-bold transition-all border-r-2 border-[var(--theme-border)] last:border-r-0",
+                  "flex items-center gap-8px px-[12px] py-[8px] font-mono text-brutal-sm font-bold transition-all border-r-2 border-[var(--theme-border)] last:border-r-0",
                   activeTab === tab.id
                     ? "bg-primary-brutalist text-event-horizon"
                     : "bg-[var(--theme-background)] text-primary-brutalist/80 hover:bg-[var(--theme-background-secondary)] hover:text-primary-brutalist"
@@ -236,37 +236,37 @@ export default function DeveloperProfilePage() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
         {activeTab === 'overview' && (
-          <div className="space-y-24px">
+          <div className="space-y-[12px]">
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-16px">
-              <div className="brutal-card p-16px text-center">
-                <div className="text-brutal-lg font-bold text-brutal-success">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-[10px]">
+              <div className="brutal-card p-[10px] text-center">
+                <div className="text-[14px] font-semibold font-bold text-brutal-success">
                   {activityStats?.totalActivities || 0}
                 </div>
                 <div className="font-mono text-brutal-xs text-primary-brutalist/60">
                   ACTIVITIES (30D)
                 </div>
               </div>
-              <div className="brutal-card p-16px text-center">
-                <div className="text-brutal-lg font-bold text-brutal-info">
+              <div className="brutal-card p-[10px] text-center">
+                <div className="text-[14px] font-semibold font-bold text-brutal-info">
                   {profile.techStack?.length || 0}
                 </div>
                 <div className="font-mono text-brutal-xs text-primary-brutalist/60">
                   TECHNOLOGIES
                 </div>
               </div>
-              <div className="brutal-card p-16px text-center">
-                <div className="text-brutal-lg font-bold text-brutal-warning">
+              <div className="brutal-card p-[10px] text-center">
+                <div className="text-[14px] font-semibold font-bold text-brutal-warning">
                   {profile.githubStats?.contributions || 0}
                 </div>
                 <div className="font-mono text-brutal-xs text-primary-brutalist/60">
                   CONTRIBUTIONS
                 </div>
               </div>
-              <div className="brutal-card p-16px text-center">
-                <div className="text-brutal-lg font-bold text-primary-brutalist">
+              <div className="brutal-card p-[10px] text-center">
+                <div className="text-[14px] font-semibold font-bold text-primary-brutalist">
                   {profile.yearsExperience || 0}Y
                 </div>
                 <div className="font-mono text-brutal-xs text-primary-brutalist/60">
@@ -277,26 +277,26 @@ export default function DeveloperProfilePage() {
 
             {/* Contact Info */}
             {(profile.email || profile.phone || profile.githubUsername) && (
-              <div className="brutal-card p-24px">
-                <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+              <div className="brutal-card p-[16px]">
+                <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
                   <HiOutlineMail className="w-20px h-20px" />
                   CONTACT INFORMATION
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-16px">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-[10px]">
                   {profile.email && (
-                    <div className="flex items-center gap-12px">
+                    <div className="flex items-center gap-[6px]">
                       <HiOutlineMail className="w-16px h-16px text-primary-brutalist/60" />
                       <span className="font-mono text-brutal-sm">{profile.email}</span>
                     </div>
                   )}
                   {profile.phone && (
-                    <div className="flex items-center gap-12px">
+                    <div className="flex items-center gap-[6px]">
                       <HiOutlinePhone className="w-16px h-16px text-primary-brutalist/60" />
                       <span className="font-mono text-brutal-sm">{profile.phone}</span>
                     </div>
                   )}
                   {profile.githubUsername && (
-                    <div className="flex items-center gap-12px">
+                    <div className="flex items-center gap-[6px]">
                       <HiOutlineCode className="w-16px h-16px text-primary-brutalist/60" />
                       <a 
                         href={`https://github.com/${profile.githubUsername}`}
@@ -314,8 +314,8 @@ export default function DeveloperProfilePage() {
 
             {/* Recent Activity */}
             {profile.lastActivity && (
-              <div className="brutal-card p-24px">
-                <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+              <div className="brutal-card p-[16px]">
+                <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
                   <HiOutlineClock className="w-20px h-20px" />
                   RECENT ACTIVITY
                 </h3>
@@ -328,15 +328,15 @@ export default function DeveloperProfilePage() {
         )}
 
         {activeTab === 'expertise' && (
-          <div className="space-y-24px">
+          <div className="space-y-[12px]">
             {/* Tech Stack */}
             {profile.techStack && profile.techStack.length > 0 && (
-              <div className="brutal-card p-24px">
-                <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+              <div className="brutal-card p-[16px]">
+                <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
                   <HiOutlineCode className="w-20px h-20px" />
                   TECHNOLOGY STACK
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12px">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[6px]">
                   {profile.techStack.map((tech, index) => {
                     const expertise = getExpertiseLevel(tech.level)
                     return (
@@ -367,10 +367,10 @@ export default function DeveloperProfilePage() {
 
             {/* Skills & Interests */}
             {(profile.skills || profile.interests) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-24px">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-[16px]">
                 {profile.skills && profile.skills.length > 0 && (
-                  <div className="brutal-card p-24px">
-                    <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+                  <div className="brutal-card p-[16px]">
+                    <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
                       <HiOutlineBadgeCheck className="w-20px h-20px" />
                       SKILLS
                     </h3>
@@ -388,8 +388,8 @@ export default function DeveloperProfilePage() {
                 )}
 
                 {profile.interests && profile.interests.length > 0 && (
-                  <div className="brutal-card p-24px">
-                    <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+                  <div className="brutal-card p-[16px]">
+                    <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
                       <HiOutlineHeart className="w-20px h-20px" />
                       INTERESTS
                     </h3>
@@ -410,12 +410,12 @@ export default function DeveloperProfilePage() {
 
             {/* Experience */}
             {profile.yearsExperience && (
-              <div className="brutal-card p-24px">
-                <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+              <div className="brutal-card p-[16px]">
+                <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
                   <HiOutlineBookOpen className="w-20px h-20px" />
                   EXPERIENCE
                 </h3>
-                <div className="text-brutal-lg font-bold text-primary-brutalist">
+                <div className="text-[14px] font-semibold font-bold text-primary-brutalist">
                   {profile.yearsExperience} Years of Professional Development
                 </div>
                 {profile.careerLevel && (
@@ -429,7 +429,7 @@ export default function DeveloperProfilePage() {
         )}
 
         {activeTab === 'github' && (
-          <div className="space-y-24px">
+          <div className="space-y-[12px]">
             {/* GitHub Header */}
             <div className="flex items-center justify-between">
               <h3 className="text-brutal-md font-bold flex items-center gap-8px">
@@ -439,7 +439,7 @@ export default function DeveloperProfilePage() {
               {isOwnProfile && profile.githubUsername && (
                 <button
                   onClick={handleSyncGithub}
-                  className="brutal-btn-secondary flex items-center gap-8px px-16px py-8px"
+                  className="brutal-btn-secondary flex items-center gap-8px px-[10px] py-8px"
                 >
                   <HiOutlineRefresh className="w-16px h-16px" />
                   <span className="font-mono text-brutal-xs">SYNC</span>
@@ -450,33 +450,33 @@ export default function DeveloperProfilePage() {
             {profile.githubUsername ? (
               <>
                 {/* GitHub Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-16px">
-                  <div className="brutal-card p-16px text-center">
-                    <div className="text-brutal-lg font-bold text-brutal-success">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-[10px]">
+                  <div className="brutal-card p-[10px] text-center">
+                    <div className="text-[14px] font-semibold font-bold text-brutal-success">
                       {profile.githubStats?.contributions || 0}
                     </div>
                     <div className="font-mono text-brutal-xs text-primary-brutalist/60">
                       CONTRIBUTIONS
                     </div>
                   </div>
-                  <div className="brutal-card p-16px text-center">
-                    <div className="text-brutal-lg font-bold text-brutal-info">
+                  <div className="brutal-card p-[10px] text-center">
+                    <div className="text-[14px] font-semibold font-bold text-brutal-info">
                       {profile.githubStats?.publicRepos || 0}
                     </div>
                     <div className="font-mono text-brutal-xs text-primary-brutalist/60">
                       REPOSITORIES
                     </div>
                   </div>
-                  <div className="brutal-card p-16px text-center">
-                    <div className="text-brutal-lg font-bold text-brutal-warning">
+                  <div className="brutal-card p-[10px] text-center">
+                    <div className="text-[14px] font-semibold font-bold text-brutal-warning">
                       {profile.githubStats?.followers || 0}
                     </div>
                     <div className="font-mono text-brutal-xs text-primary-brutalist/60">
                       FOLLOWERS
                     </div>
                   </div>
-                  <div className="brutal-card p-16px text-center">
-                    <div className="text-brutal-lg font-bold text-primary-brutalist">
+                  <div className="brutal-card p-[10px] text-center">
+                    <div className="text-[14px] font-semibold font-bold text-primary-brutalist">
                       {profile.githubStats?.following || 0}
                     </div>
                     <div className="font-mono text-brutal-xs text-primary-brutalist/60">
@@ -487,7 +487,7 @@ export default function DeveloperProfilePage() {
 
                 {/* Recent Activity */}
                 {profile.githubStats?.lastUpdated && (
-                  <div className="brutal-card p-24px">
+                  <div className="brutal-card p-[16px]">
                     <h4 className="text-brutal-sm font-bold mb-12px">DATA FRESHNESS</h4>
                     <div className="font-mono text-brutal-sm text-primary-brutalist/80">
                       Last synced: {formatDistanceToNow(new Date(profile.githubStats.lastUpdated), { addSuffix: true })}
@@ -496,10 +496,10 @@ export default function DeveloperProfilePage() {
                 )}
               </>
             ) : (
-              <div className="brutal-card p-48px text-center">
-                <HiOutlineCode className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
+              <div className="brutal-card p-[24px] text-center">
+                <HiOutlineCode className="w-6 h-6 text-primary-brutalist/30 mx-auto mb-[8px]" />
                 <h4 className="text-brutal-md font-bold mb-8px">NO GITHUB CONNECTED</h4>
-                <p className="text-brutal-sm text-primary-brutalist/60 mb-16px">
+                <p className="text-brutal-sm text-primary-brutalist/60 mb-[8px]">
                   Connect your GitHub account to display statistics and contributions.
                 </p>
                 {isOwnProfile && (
@@ -516,14 +516,14 @@ export default function DeveloperProfilePage() {
         )}
 
         {activeTab === 'preferences' && (
-          <div className="space-y-24px">
+          <div className="space-y-[12px]">
             {/* Work Preferences */}
-            <div className="brutal-card p-24px">
-              <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+            <div className="brutal-card p-[16px]">
+              <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
                 <HiOutlineClock className="w-20px h-20px" />
                 WORK PREFERENCES
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-24px">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-[16px]">
                 <div>
                   <h4 className="font-mono text-brutal-sm font-bold mb-12px">AVAILABILITY</h4>
                   <div className="space-y-8px text-brutal-sm">
@@ -556,12 +556,12 @@ export default function DeveloperProfilePage() {
             </div>
 
             {/* Personal Preferences */}
-            <div className="brutal-card p-24px">
-              <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+            <div className="brutal-card p-[16px]">
+              <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
                 <HiOutlineHeart className="w-20px h-20px" />
                 PERSONAL PREFERENCES
               </h3>
-              <div className="space-y-16px">
+              <div className="space-y-[8px]">
                 <div>
                   <h4 className="font-mono text-brutal-sm font-bold mb-8px">WORK STYLE</h4>
                   <p className="text-brutal-sm text-primary-brutalist/80">
@@ -588,25 +588,25 @@ export default function DeveloperProfilePage() {
 
             {/* Privacy Settings */}
             {isOwnProfile && (
-              <div className="brutal-card p-24px">
-                <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+              <div className="brutal-card p-[16px]">
+                <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
                   <HiOutlineCog className="w-20px h-20px" />
                   PRIVACY SETTINGS
                 </h3>
                 <div className="space-y-12px">
-                  <label className="flex items-center gap-12px">
+                  <label className="flex items-center gap-[6px]">
                     <input type="checkbox" className="brutal-checkbox" />
                     <span className="font-mono text-brutal-sm">Show email to team members</span>
                   </label>
-                  <label className="flex items-center gap-12px">
+                  <label className="flex items-center gap-[6px]">
                     <input type="checkbox" className="brutal-checkbox" />
                     <span className="font-mono text-brutal-sm">Show phone number to team members</span>
                   </label>
-                  <label className="flex items-center gap-12px">
+                  <label className="flex items-center gap-[6px]">
                     <input type="checkbox" className="brutal-checkbox" />
                     <span className="font-mono text-brutal-sm">Show GitHub profile publicly</span>
                   </label>
-                  <label className="flex items-center gap-12px">
+                  <label className="flex items-center gap-[6px]">
                     <input type="checkbox" className="brutal-checkbox" />
                     <span className="font-mono text-brutal-sm">Show activity status to team</span>
                   </label>

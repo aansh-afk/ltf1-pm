@@ -137,12 +137,12 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
   }
 
   return (
-    <div className="space-y-24px">
+    <div className="space-y-[12px]">
       {/* Sprint Actions */}
-      <div className="flex justify-end gap-16px">
+      <div className="flex justify-end gap-[8px]">
         <button
           onClick={handleCompleteSprint}
-          className="brutal-btn flex items-center gap-8px"
+          className="brutal-btn flex items-center gap-[4px]"
         >
           <HiOutlineCheck className="w-16px h-16px" />
           COMPLETE SPRINT
@@ -151,12 +151,12 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
 
       {/* Board */}
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-4 gap-24px">
+        <div className="grid grid-cols-4 gap-[12px]">
           {columns.map((column) => (
             <div key={column.id} className="flex flex-col">
               {/* Column Header */}
               <div className={clsx(
-                "p-16px border-2 border-[var(--theme-border)] mb-16px",
+                "p-[10px] border-2 border-[var(--theme-border)] mb-[8px]",
                 column.color
               )}>
                 <h3 className="font-mono text-brutal-sm uppercase text-event-horizon">
@@ -174,7 +174,7 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                     className={clsx(
-                      "flex-1 space-y-16px p-16px border-2 border-dashed transition-colors min-h-400px",
+                      "flex-1 space-y-[8px] p-[10px] border-2 border-dashed transition-colors min-h-400px",
                       snapshot.isDraggingOver
                         ? "border-primary-brutalist bg-primary-brutalist/10"
                         : "border-[var(--theme-border)]"
@@ -188,14 +188,14 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                             className={clsx(
-                              "bg-[var(--theme-background)] border-2 p-16px transition-all",
+                              "bg-[var(--theme-background)] border-2 p-[10px] transition-all",
                               priorityColors[task.priority],
                               snapshot.isDragging && "shadow-brutal-lg rotate-2"
                             )}
                           >
                             {/* Task Header */}
-                            <div className="flex items-start justify-between mb-8px">
-                              <div className="flex items-center gap-8px">
+                            <div className="flex items-start justify-between mb-[4px]">
+                              <div className="flex items-center gap-[4px]">
                                 <span className="font-mono text-brutal-xs text-neutral-500">
                                   {task.key}
                                 </span>
@@ -226,12 +226,12 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
                             </div>
 
                             {/* Task Title */}
-                            <h4 className="font-mono text-brutal-sm mb-8px">
+                            <h4 className="font-mono text-brutal-sm mb-[4px]">
                               {task.title}
                             </h4>
 
                             {/* Task Meta */}
-                            <div className="flex items-center gap-12px text-brutal-xs">
+                            <div className="flex items-center gap-[6px] text-brutal-xs">
                               {task.assigneeName && (
                                 <div className="flex items-center gap-4px text-neutral-500">
                                   <HiOutlineUser className="w-12px h-12px" />

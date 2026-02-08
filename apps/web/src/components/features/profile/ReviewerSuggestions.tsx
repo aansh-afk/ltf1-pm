@@ -91,9 +91,9 @@ export function ReviewerSuggestions({
     return (
       <div className={clsx(
         "brutal-card",
-        mode === 'compact' ? "p-12px" : "p-24px"
+        mode === 'compact' ? "p-[8px]" : "p-[16px]"
       )}>
-        <div className="flex items-center gap-12px text-primary-brutalist/60">
+        <div className="flex items-center gap-[6px] text-primary-brutalist/60">
           <HiOutlineQuestionMarkCircle className="w-20px h-20px" />
           <span className="font-mono text-brutal-sm">
             Add technologies to get reviewer suggestions
@@ -107,9 +107,9 @@ export function ReviewerSuggestions({
     return (
       <div className={clsx(
         "brutal-card",
-        mode === 'compact' ? "p-12px" : "p-24px"
+        mode === 'compact' ? "p-[8px]" : "p-[16px]"
       )}>
-        <div className="flex items-center gap-12px text-brutal-warning">
+        <div className="flex items-center gap-[6px] text-brutal-warning">
           <HiOutlineExclamationCircle className="w-20px h-20px" />
           <span className="font-mono text-brutal-sm">
             No available reviewers with matching expertise
@@ -121,8 +121,8 @@ export function ReviewerSuggestions({
 
   if (mode === 'compact') {
     return (
-      <div className="brutal-card p-12px">
-        <div className="flex items-center justify-between mb-8px">
+      <div className="brutal-card p-[8px]">
+        <div className="flex items-center justify-between mb-[4px]">
           <h4 className="font-mono text-brutal-xs font-bold flex items-center gap-6px">
             <HiOutlineLightBulb className="w-14px h-14px" />
             SUGGESTED REVIEWERS
@@ -142,7 +142,7 @@ export function ReviewerSuggestions({
             <div
               key={reviewer.user._id}
               className={clsx(
-                "flex items-center gap-8px p-6px border cursor-pointer transition-all",
+                "flex items-center gap-[4px] p-6px border cursor-pointer transition-all",
                 selectedReviewers.includes(reviewer.user._id)
                   ? "bg-primary-brutalist/20 border-primary-brutalist"
                   : "bg-[var(--theme-background-secondary)] border-[var(--theme-border)] hover:border-primary-brutalist/50"
@@ -177,17 +177,17 @@ export function ReviewerSuggestions({
   }
 
   return (
-    <div className="brutal-card p-24px">
-      <div className="flex items-center justify-between mb-16px">
-        <h3 className="text-brutal-md font-bold flex items-center gap-8px">
+    <div className="brutal-card p-[16px]">
+      <div className="flex items-center justify-between mb-[8px]">
+        <h3 className="text-brutal-md font-bold flex items-center gap-[4px]">
           <HiOutlineLightBulb className="w-20px h-20px text-brutal-warning" />
           SUGGESTED REVIEWERS
         </h3>
-        <div className="flex items-center gap-8px">
+        <div className="flex items-center gap-[4px]">
           {selectedReviewers.length > 0 && (
             <button
               onClick={copyReviewerNames}
-              className="brutal-btn-secondary flex items-center gap-6px px-12px py-6px"
+              className="brutal-btn-secondary flex items-center gap-6px px-[8px] py-6px"
               title="Copy selected reviewer names"
             >
               <HiOutlineClipboardCopy className="w-16px h-16px" />
@@ -200,13 +200,13 @@ export function ReviewerSuggestions({
         </div>
       </div>
 
-      <div className="mb-12px">
-        <div className="flex items-center gap-8px flex-wrap">
+      <div className="mb-[6px]">
+        <div className="flex items-center gap-[4px] flex-wrap">
           <span className="font-mono text-brutal-xs text-primary-brutalist/60">LOOKING FOR:</span>
           {technologies.map((tech, idx) => (
             <span
               key={idx}
-              className="px-8px py-4px font-mono text-brutal-xs bg-primary-brutalist/20 border border-primary-brutalist text-primary-brutalist font-bold"
+              className="px-[4px] py-4px font-mono text-brutal-xs bg-primary-brutalist/20 border border-primary-brutalist text-primary-brutalist font-bold"
             >
               {tech}
             </span>
@@ -214,19 +214,19 @@ export function ReviewerSuggestions({
         </div>
       </div>
 
-      <div className="space-y-12px">
+      <div className="space-y-[6px]">
         {availableReviewers.map((reviewer) => (
           <div
             key={reviewer.user._id}
             className={clsx(
-              "brutal-card p-16px cursor-pointer transition-all",
+              "brutal-card p-[10px] cursor-pointer transition-all",
               selectedReviewers.includes(reviewer.user._id)
                 ? "border-2 border-primary-brutalist bg-primary-brutalist/10"
                 : "border-2 border-[var(--theme-border)] hover:border-primary-brutalist/50"
             )}
           >
             <div className="flex items-start justify-between">
-              <div className="flex items-start gap-12px flex-1">
+              <div className="flex items-start gap-[6px] flex-1">
                 <input
                   type="checkbox"
                   checked={selectedReviewers.includes(reviewer.user._id)}
@@ -235,7 +235,7 @@ export function ReviewerSuggestions({
                 />
                 
                 <div className="flex-1">
-                  <div className="flex items-center gap-12px mb-8px">
+                  <div className="flex items-center gap-[6px] mb-[4px]">
                     <h4 className="font-mono text-brutal-sm font-bold">
                       {reviewer.user.name || 'UNNAMED DEVELOPER'}
                     </h4>
@@ -247,13 +247,13 @@ export function ReviewerSuggestions({
                   </div>
 
                   {reviewer.profile?.role && (
-                    <p className="font-mono text-brutal-xs text-primary-brutalist/80 mb-8px">
+                    <p className="font-mono text-brutal-xs text-primary-brutalist/80 mb-[4px]">
                       {reviewer.profile.role}
                     </p>
                   )}
 
                   {/* Score and Match Quality */}
-                  <div className="flex items-center gap-12px mb-8px">
+                  <div className="flex items-center gap-[6px] mb-[4px]">
                     <div className="flex items-center gap-6px">
                       <span className="font-mono text-brutal-xs text-primary-brutalist/60">MATCH SCORE:</span>
                       <span className={clsx(
@@ -264,7 +264,7 @@ export function ReviewerSuggestions({
                       </span>
                     </div>
                     <span className={clsx(
-                      "px-8px py-2px font-mono text-brutal-xs font-bold",
+                      "px-[4px] py-2px font-mono text-brutal-xs font-bold",
                       reviewer.score >= 7 ? "bg-brutal-success/20 text-brutal-success" :
                       reviewer.score >= 4 ? "bg-brutal-info/20 text-brutal-info" :
                       reviewer.score >= 2 ? "bg-brutal-warning/20 text-brutal-warning" :
@@ -301,7 +301,7 @@ export function ReviewerSuggestions({
                 </div>
               </div>
 
-              <div className="flex flex-col items-end gap-8px ml-12px">
+              <div className="flex flex-col items-end gap-[4px] ml-[6px]">
                 {reviewer.user.email && (
                   <a
                     href={`mailto:${reviewer.user.email}?subject=Code Review Request`}
@@ -319,7 +319,7 @@ export function ReviewerSuggestions({
       </div>
 
       {availableReviewers.length < maxSuggestions && (
-        <div className="mt-12px p-12px bg-brutal-warning/10 border border-brutal-warning">
+        <div className="mt-[6px] p-[8px] bg-brutal-warning/10 border border-brutal-warning">
           <p className="font-mono text-brutal-xs text-brutal-warning">
             Limited reviewers available. Consider scheduling review for when more team members are available.
           </p>

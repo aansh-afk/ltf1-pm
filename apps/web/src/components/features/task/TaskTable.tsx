@@ -179,14 +179,14 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
   }
 
   return (
-    <div className="space-y-24px">
+    <div className="space-y-[12px]">
       {/* Bulk Actions Bar */}
       {selectedTasks.size > 0 && (
-        <div className="bg-primary-brutalist border-2 border-[var(--theme-border)] p-16px flex items-center justify-between">
+        <div className="bg-primary-brutalist border-2 border-[var(--theme-border)] p-[10px] flex items-center justify-between">
           <span className="font-mono text-brutal-sm text-event-horizon">
             {selectedTasks.size} TASKS SELECTED
           </span>
-          <div className="flex gap-16px">
+          <div className="flex gap-[8px]">
             <button className="brutal-btn-sm bg-[var(--theme-background-secondary)] text-primary-brutalist">
               ASSIGN
             </button>
@@ -211,7 +211,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                   <th
                     key={column.key}
                     className={clsx(
-                      "p-16px text-left font-mono text-brutal-sm uppercase",
+                      "p-[10px] text-left font-mono text-brutal-sm uppercase",
                       column.width,
                       column.sortable && "cursor-pointer hover:bg-[var(--theme-background-secondary)]/10"
                     )}
@@ -225,7 +225,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                         className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                       />
                     ) : (
-                      <div className="flex items-center gap-8px">
+                      <div className="flex items-center gap-[4px]">
                         {column.label}
                         {column.sortable && sortBy === column.key && (
                           sortOrder === 'asc' 
@@ -251,7 +251,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                     )}
                   >
                     {/* Select */}
-                    <td className="p-16px">
+                    <td className="p-[10px]">
                       <BrutalCheckbox
                         checked={selectedTasks.has(task._id)}
                         onChange={() => handleSelectTask(task._id)}
@@ -261,12 +261,12 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                     </td>
 
                     {/* ID */}
-                    <td className="p-16px">
+                    <td className="p-[10px]">
                       <span className="font-mono text-brutal-sm">{task.key}</span>
                     </td>
 
                     {/* Title */}
-                    <td className="p-16px">
+                    <td className="p-[10px]">
                       <button
                         onClick={() => setExpandedRow(expandedRow === task._id ? null : task._id)}
                         className="text-left hover:text-primary-brutalist transition-colors"
@@ -276,19 +276,19 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                     </td>
 
                     {/* Type */}
-                    <td className="p-16px">
+                    <td className="p-[10px]">
                       <span className="font-mono text-brutal-sm">
                         {typeIcons[task.type]} {task.type.toUpperCase()}
                       </span>
                     </td>
 
                     {/* Status */}
-                    <td className="p-16px">
+                    <td className="p-[10px]">
                       <select
                         value={task.status}
                         onChange={(e) => handleStatusChange(task._id, e.target.value)}
                         className={clsx(
-                          "px-8px py-4px bg-transparent border-2 border-current",
+                          "px-[4px] py-4px bg-transparent border-2 border-current",
                           "font-mono text-brutal-xs uppercase",
                           "focus:outline-none cursor-pointer",
                           statusColors[task.status]
@@ -303,28 +303,28 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                     </td>
 
                     {/* Priority */}
-                    <td className="p-16px">
+                    <td className="p-[10px]">
                       <span className="font-mono text-brutal-sm">
                         {priorityIcons[task.priority]} {task.priority.toUpperCase()}
                       </span>
                     </td>
 
                     {/* Assignee */}
-                    <td className="p-16px">
+                    <td className="p-[10px]">
                       <span className="font-mono text-brutal-sm text-neutral-500">
                         {task.assigneeName || 'UNASSIGNED'}
                       </span>
                     </td>
 
                     {/* Estimate */}
-                    <td className="p-16px">
+                    <td className="p-[10px]">
                       <span className="font-mono text-brutal-sm">
                         {task.estimate?.hours || '-'}h
                       </span>
                     </td>
 
                     {/* Due Date */}
-                    <td className="p-16px">
+                    <td className="p-[10px]">
                       <span className={clsx(
                         "font-mono text-brutal-sm",
                         task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'done' 
@@ -336,7 +336,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                     </td>
 
                     {/* Actions */}
-                    <td className="p-16px relative">
+                    <td className="p-[10px] relative">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
@@ -353,7 +353,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                             onClick={() => {
                               setShowContextMenu(null)
                             }}
-                            className="w-full px-16px py-8px text-left font-mono text-brutal-sm hover:bg-[var(--theme-background-secondary)]/20 flex items-center gap-8px"
+                            className="w-full px-[10px] py-[4px] text-left font-mono text-brutal-sm hover:bg-[var(--theme-background-secondary)]/20 flex items-center gap-[4px]"
                           >
                             <HiOutlinePencil className="w-16px h-16px" />
                             EDIT
@@ -362,7 +362,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                             onClick={() => {
                               setShowContextMenu(null)
                             }}
-                            className="w-full px-16px py-8px text-left font-mono text-brutal-sm hover:bg-[var(--theme-background-secondary)]/20 flex items-center gap-8px"
+                            className="w-full px-[10px] py-[4px] text-left font-mono text-brutal-sm hover:bg-[var(--theme-background-secondary)]/20 flex items-center gap-[4px]"
                           >
                             <HiOutlineDuplicate className="w-16px h-16px" />
                             DUPLICATE
@@ -371,14 +371,14 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                             onClick={() => {
                               setShowContextMenu(null)
                             }}
-                            className="w-full px-16px py-8px text-left font-mono text-brutal-sm hover:bg-[var(--theme-background-secondary)]/20 flex items-center gap-8px"
+                            className="w-full px-[10px] py-[4px] text-left font-mono text-brutal-sm hover:bg-[var(--theme-background-secondary)]/20 flex items-center gap-[4px]"
                           >
                             <HiOutlineClock className="w-16px h-16px" />
                             LOG TIME
                           </button>
                           <button
                             onClick={() => handleDeleteTask(task._id)}
-                            className="w-full px-16px py-8px text-left font-mono text-brutal-sm hover:bg-[var(--theme-error)] hover:text-[var(--theme-foreground)] flex items-center gap-8px"
+                            className="w-full px-[10px] py-[4px] text-left font-mono text-brutal-sm hover:bg-[var(--theme-error)] hover:text-[var(--theme-foreground)] flex items-center gap-[4px]"
                           >
                             <HiOutlineTrash className="w-16px h-16px" />
                             DELETE
@@ -391,11 +391,11 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                   {/* Expanded Row */}
                   {expandedRow === task._id && (
                     <tr>
-                      <td colSpan={columns.length} className="p-24px bg-[var(--theme-background-secondary)]/5 border-b border-[var(--theme-border)]">
-                        <div className="space-y-16px">
+                      <td colSpan={columns.length} className="p-[16px] bg-[var(--theme-background-secondary)]/5 border-b border-[var(--theme-border)]">
+                        <div className="space-y-[8px]">
                           {task.description && (
                             <div>
-                              <h4 className="font-mono text-brutal-sm uppercase mb-8px">DESCRIPTION</h4>
+                              <h4 className="font-mono text-brutal-sm uppercase mb-[4px]">DESCRIPTION</h4>
                               <p className="text-brutal-sm whitespace-pre-wrap">{task.description}</p>
                             </div>
                           )}
@@ -403,19 +403,19 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                           <div className="flex gap-32px">
                             {task.startDate && (
                               <div>
-                                <h4 className="font-mono text-brutal-sm uppercase mb-4px">START DATE</h4>
+                                <h4 className="font-mono text-brutal-sm uppercase mb-[2px]">START DATE</h4>
                                 <p className="text-brutal-sm">{new Date(task.startDate).toLocaleDateString()}</p>
                               </div>
                             )}
                             
                             {task.labels && task.labels.length > 0 && (
                               <div>
-                                <h4 className="font-mono text-brutal-sm uppercase mb-4px">LABELS</h4>
-                                <div className="flex gap-8px">
+                                <h4 className="font-mono text-brutal-sm uppercase mb-[2px]">LABELS</h4>
+                                <div className="flex gap-[4px]">
                                   {task.labels.map((label: string) => (
                                     <span 
                                       key={label}
-                                      className="px-8px py-4px bg-primary-brutalist text-event-horizon font-mono text-brutal-xs uppercase"
+                                      className="px-[4px] py-4px bg-primary-brutalist text-event-horizon font-mono text-brutal-xs uppercase"
                                     >
                                       {label}
                                     </span>

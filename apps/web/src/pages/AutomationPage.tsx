@@ -17,8 +17,8 @@ export default function AutomationPage() {
   }
 
   return (
-    <div className="p-24px">
-      <div className="mb-24px">
+    <div className="p-[16px]">
+      <div className="mb-[12px]">
         <h1 className="text-brutal-3xl font-bold mb-8px">WORKFLOW AUTOMATION</h1>
         <p className="text-[var(--theme-muted)]">
           Automate your workflows with triggers, conditions, and actions

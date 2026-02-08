@@ -158,11 +158,11 @@ export default function TeamWorkloadHeatmap({
   
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-16px">
+      <div className="flex items-center justify-between mb-[8px]">
         <h3 className="text-brutal-md font-bold uppercase">Team Workload Heatmap</h3>
-        <div className="flex items-center gap-16px">
+        <div className="flex items-center gap-[8px]">
           {/* Legend */}
-          <div className="flex items-center gap-8px text-brutal-xs">
+          <div className="flex items-center gap-[4px] text-brutal-xs">
             <span className="text-[var(--theme-foreground-secondary)]">Intensity:</span>
             <div className="flex items-center gap-4px">
               <div 
@@ -198,7 +198,7 @@ export default function TeamWorkloadHeatmap({
       <div className="overflow-x-auto">
         <div className="min-w-[800px]">
           {/* Date headers */}
-          <div className="flex mb-8px">
+          <div className="flex mb-[4px]">
             <div className="w-120px" /> {/* Space for names */}
             {dates.map((date, index) => (
               <div 
@@ -217,18 +217,18 @@ export default function TeamWorkloadHeatmap({
           
           {/* Team member rows */}
           {heatmapData.map((memberData, memberIndex) => (
-            <div key={memberData.member._id} className="flex mb-4px">
+            <div key={memberData.member._id} className="flex mb-[2px]">
               {/* Member name */}
-              <div className="w-120px pr-8px flex items-center">
-                <div className="flex items-center gap-8px">
+              <div className="w-120px pr-[4px] flex items-center">
+                <div className="flex items-center gap-[4px]">
                   {memberData.member.avatar ? (
                     <img 
                       src={memberData.member.avatar} 
                       alt={memberData.member.name}
-                      className="w-24px h-24px rounded-full"
+                      className="w-4 h-4 rounded-full"
                     />
                   ) : (
-                    <div className="w-24px h-24px bg-[var(--theme-primary)] flex items-center justify-center text-brutal-xs font-bold">
+                    <div className="w-4 h-4 bg-[var(--theme-primary)] flex items-center justify-center text-brutal-xs font-bold">
                       {memberData.member.name.charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -273,19 +273,19 @@ Load: ${day.totalLoad.toFixed(1)} hours`}
       </div>
       
       {/* Summary stats */}
-      <div className="mt-16px p-12px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-16px text-brutal-xs">
+      <div className="mt-[8px] p-[8px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-[8px] text-brutal-xs">
           <div>
             <span className="text-[var(--theme-foreground-secondary)]">Team Size:</span>
-            <span className="ml-8px font-bold">{team.length} members</span>
+            <span className="ml-[4px] font-bold">{team.length} members</span>
           </div>
           <div>
             <span className="text-[var(--theme-foreground-secondary)]">Total Tasks:</span>
-            <span className="ml-8px font-bold">{tasks.length} active</span>
+            <span className="ml-[4px] font-bold">{tasks.length} active</span>
           </div>
           <div>
             <span className="text-[var(--theme-foreground-secondary)]">Overloaded Days:</span>
-            <span className="ml-8px font-bold text-[var(--theme-warning)]">
+            <span className="ml-[4px] font-bold text-[var(--theme-warning)]">
               {heatmapData.reduce((sum, member) => 
                 sum + member.dailyWorkload.filter(d => d.intensity === 'high' || d.intensity === 'critical').length, 0
               )}
@@ -293,7 +293,7 @@ Load: ${day.totalLoad.toFixed(1)} hours`}
           </div>
           <div>
             <span className="text-[var(--theme-foreground-secondary)]">Avg Daily Load:</span>
-            <span className="ml-8px font-bold">
+            <span className="ml-[4px] font-bold">
               {(heatmapData.reduce((sum, member) => 
                 sum + member.dailyWorkload.reduce((dSum, d) => dSum + d.totalLoad, 0), 0
               ) / (team.length * dateRange)).toFixed(1)} hrs

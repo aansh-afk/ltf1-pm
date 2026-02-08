@@ -45,19 +45,19 @@ export default function WorkspaceMobileBlocker({ children }: { children: React.R
       <>
         {showWarning && (
           <div className="fixed top-0 left-0 right-0 z-50 bg-brutal-warning text-event-horizon border-b-4 border-event-horizon">
-            <div className="container mx-auto px-16px py-12px">
-              <div className="flex items-center justify-between gap-16px">
+            <div className="container mx-auto px-[10px] py-[6px]">
+              <div className="flex items-center justify-between gap-[8px]">
                 <div className="flex-1">
                   <p className="text-xs md:text-sm font-bold uppercase">
                     ⚠️ MOBILE UX WARNING → IOS/ANDROID APPS COMING SOON
                   </p>
-                  <p className="text-xs text-event-horizon/80 mt-4px normal-case">
+                  <p className="text-xs text-event-horizon/80 mt-[2px] normal-case">
                     You chose this. Desktop recommended for best experience.
                   </p>
                 </div>
                 <button
                   onClick={() => setShowWarning(false)}
-                  className="text-event-horizon hover:text-event-horizon/60 font-bold text-sm px-8px"
+                  className="text-event-horizon hover:text-event-horizon/60 font-bold text-sm px-[5px]"
                   aria-label="Dismiss warning"
                 >
                   ✕
@@ -76,12 +76,12 @@ export default function WorkspaceMobileBlocker({ children }: { children: React.R
   // Show "come back on desktop" message if user chose that
   if (choice === 'desktop') {
     return (
-      <div className="fixed inset-0 z-50 bg-event-horizon flex items-center justify-center p-24px">
-        <div className="max-w-2xl w-full border-4 border-basalt-border bg-event-horizon p-32px md:p-48px">
+      <div className="fixed inset-0 z-50 bg-event-horizon flex items-center justify-center p-[16px]">
+        <div className="max-w-2xl w-full border-4 border-basalt-border bg-event-horizon p-[20px] md:p-[24px]">
           {/* Header */}
-          <div className="text-center mb-32px">
-            <div className="text-6xl mb-24px">💻</div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-16px">
+          <div className="text-center mb-[16px]">
+            <div className="text-6xl mb-[12px]">💻</div>
+            <h1 className="text-3xl md:text-4xl font-bold mb-[8px]">
               <span className="bg-glitch-flare bg-clip-text text-transparent">
                 SEE YOU ON DESKTOP
               </span>
@@ -92,7 +92,7 @@ export default function WorkspaceMobileBlocker({ children }: { children: React.R
           </div>
 
           {/* Body */}
-          <div className="space-y-16px mb-32px text-cathode-white/80">
+          <div className="space-y-[8px] mb-[16px] text-cathode-white/80">
             <p className="text-base">
               LTF1 is built for serious project management. That means proper screen real estate,
               keyboard shortcuts, and workflows that don't make you want to throw your phone.
@@ -104,10 +104,10 @@ export default function WorkspaceMobileBlocker({ children }: { children: React.R
           </div>
 
           {/* CTA */}
-          <div className="space-y-12px">
+          <div className="space-y-[6px]">
             <button
               onClick={handleDismissDesktop}
-              className="w-full brutal-btn bg-brutal-info text-event-horizon px-32px py-16px text-lg font-bold uppercase"
+              className="w-full brutal-btn bg-brutal-info text-event-horizon px-[16px] py-[8px] text-lg font-bold uppercase"
             >
               WAIT, I NEED URGENT ACCESS →
             </button>
@@ -122,12 +122,12 @@ export default function WorkspaceMobileBlocker({ children }: { children: React.R
 
   // Show initial choice screen
   return (
-    <div className="fixed inset-0 z-50 bg-event-horizon flex items-center justify-center p-24px overflow-y-auto">
-      <div className="max-w-3xl w-full border-4 border-basalt-border bg-event-horizon p-32px md:p-48px my-auto">
+    <div className="fixed inset-0 z-50 bg-event-horizon flex items-center justify-center p-[16px] overflow-y-auto">
+      <div className="max-w-3xl w-full border-4 border-basalt-border bg-event-horizon p-[20px] md:p-[24px] my-auto">
         {/* Header */}
-        <div className="text-center mb-32px">
-          <div className="text-6xl mb-24px">📱❌</div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-16px">
+        <div className="text-center mb-[16px]">
+          <div className="text-6xl mb-[12px]">📱❌</div>
+          <h1 className="text-3xl md:text-4xl font-bold mb-[8px]">
             <span className="bg-glitch-flare bg-clip-text text-transparent">
               HOLD UP
             </span>
@@ -138,12 +138,12 @@ export default function WorkspaceMobileBlocker({ children }: { children: React.R
         </div>
 
         {/* Body */}
-        <div className="space-y-24px mb-40px">
-          <div className="border-2 border-brutal-warning bg-brutal-warning/10 p-24px">
-            <h2 className="text-xl font-bold text-brutal-warning mb-12px uppercase">
+        <div className="space-y-[12px] mb-[20px]">
+          <div className="border-2 border-brutal-warning bg-brutal-warning/10 p-[16px]">
+            <h2 className="text-xl font-bold text-brutal-warning mb-[6px] uppercase">
               LET'S BE REAL
             </h2>
-            <p className="text-base text-cathode-white/80 mb-16px">
+            <p className="text-base text-cathode-white/80 mb-[8px]">
               You're smart. We're not gonna stop you. But the LTF1 workspace wasn't built for
               mobile screens. Think dashboards, kanban boards, sprint planning, real-time collaboration.
             </p>
@@ -152,8 +152,8 @@ export default function WorkspaceMobileBlocker({ children }: { children: React.R
             </p>
           </div>
 
-          <div className="border-2 border-brutal-info bg-brutal-info/10 p-24px">
-            <h2 className="text-xl font-bold text-brutal-info mb-12px uppercase">
+          <div className="border-2 border-brutal-info bg-brutal-info/10 p-[16px]">
+            <h2 className="text-xl font-bold text-brutal-info mb-[6px] uppercase">
               NATIVE APPS COMING SOON
             </h2>
             <p className="text-base text-cathode-white/80">
@@ -164,30 +164,30 @@ export default function WorkspaceMobileBlocker({ children }: { children: React.R
         </div>
 
         {/* Choice Buttons */}
-        <div className="space-y-16px">
+        <div className="space-y-[8px]">
           <button
             onClick={handleUrgentAccess}
-            className="w-full brutal-btn bg-brutal-warning text-event-horizon px-32px py-20px text-lg font-bold uppercase border-4 border-brutal-warning hover:bg-brutal-warning/80 transition-colors"
+            className="w-full brutal-btn bg-brutal-warning text-event-horizon px-[16px] py-[10px] text-lg font-bold uppercase border-4 border-brutal-warning hover:bg-brutal-warning/80 transition-colors"
           >
             I NEED URGENT ACCESS →
-            <span className="block text-xs mt-8px normal-case font-normal">
+            <span className="block text-xs mt-[4px] normal-case font-normal">
               (I know it'll be terrible, let me through)
             </span>
           </button>
 
           <button
             onClick={handleDesktopChoice}
-            className="w-full brutal-btn bg-brutal-success text-event-horizon px-32px py-20px text-lg font-bold uppercase border-4 border-brutal-success hover:bg-brutal-success/80 transition-colors"
+            className="w-full brutal-btn bg-brutal-success text-event-horizon px-[16px] py-[10px] text-lg font-bold uppercase border-4 border-brutal-success hover:bg-brutal-success/80 transition-colors"
           >
             I'LL USE DESKTOP →
-            <span className="block text-xs mt-8px normal-case font-normal">
+            <span className="block text-xs mt-[4px] normal-case font-normal">
               (Smart move. Come back when you're on a real computer)
             </span>
           </button>
         </div>
 
         {/* Footer Note */}
-        <div className="mt-32px pt-24px border-t-2 border-basalt-border">
+        <div className="mt-[16px] pt-[12px] border-t-2 border-basalt-border">
           <p className="text-xs text-cathode-white/60 text-center uppercase">
             YOUR CHOICE, YOUR CONSEQUENCES → SESSION STORED
           </p>

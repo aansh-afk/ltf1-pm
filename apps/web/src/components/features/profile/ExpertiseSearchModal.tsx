@@ -96,21 +96,21 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background-secondary)]/80">
       <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-24px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
-          <div className="flex items-center gap-12px">
-            <HiOutlineSearch className="w-24px h-24px text-primary-brutalist" />
-            <h2 className="text-brutal-lg font-bold">FIND WHO KNOWS</h2>
+        <div className="flex items-center justify-between p-[16px] border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+          <div className="flex items-center gap-[6px]">
+            <HiOutlineSearch className="w-4 h-4 text-primary-brutalist" />
+            <h2 className="text-[14px] font-semibold font-bold">FIND WHO KNOWS</h2>
           </div>
           <button
             onClick={onClose}
-            className="brutal-btn-secondary p-8px"
+            className="brutal-btn-secondary p-[4px]"
           >
             <HiOutlineX className="w-20px h-20px" />
           </button>
         </div>
 
         {/* Search Input */}
-        <div className="p-24px border-b-2 border-[var(--theme-border)]">
+        <div className="p-[16px] border-b-2 border-[var(--theme-border)]">
           <div className="relative">
             <HiOutlineSearch className="absolute left-16px top-50% transform -translate-y-50% w-20px h-20px text-primary-brutalist/60" />
             <input
@@ -119,7 +119,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="brutal-input w-full pl-48px pr-16px py-12px text-brutal-md"
+              className="brutal-input w-full pl-[24px] pr-[8px] py-[8px] text-brutal-md"
               placeholder="Search for technologies, skills, or expertise (e.g., React, Python, DevOps)..."
             />
             {searchQuery && (
@@ -131,7 +131,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
               </button>
             )}
           </div>
-          <div className="mt-12px font-mono text-brutal-xs text-primary-brutalist/60">
+          <div className="mt-[6px] font-mono text-brutal-xs text-primary-brutalist/60">
             Search by technology, programming language, framework, or skill
           </div>
         </div>
@@ -139,20 +139,20 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
         {/* Search Results */}
         <div className="flex-1 overflow-y-auto max-h-[60vh]">
           {!searchQuery.trim() && (
-            <div className="p-48px text-center">
-              <HiOutlineSearch className="w-64px h-64px text-primary-brutalist/30 mx-auto mb-24px" />
-              <h3 className="text-brutal-md font-bold mb-12px">SEARCH TEAM EXPERTISE</h3>
+            <div className="p-[24px] text-center">
+              <HiOutlineSearch className="w-8 h-8 text-primary-brutalist/30 mx-auto mb-[12px]" />
+              <h3 className="text-brutal-md font-bold mb-[6px]">SEARCH TEAM EXPERTISE</h3>
               <p className="text-brutal-sm text-primary-brutalist/60 max-w-400px mx-auto">
                 Type a technology, skill, or area of expertise to find team members who have experience with it.
               </p>
-              <div className="mt-24px">
-                <div className="text-brutal-xs font-mono text-primary-brutalist/40 mb-8px">EXAMPLE SEARCHES:</div>
-                <div className="flex flex-wrap gap-8px justify-center">
+              <div className="mt-[12px]">
+                <div className="text-brutal-xs font-mono text-primary-brutalist/40 mb-[4px]">EXAMPLE SEARCHES:</div>
+                <div className="flex flex-wrap gap-[4px] justify-center">
                   {['React', 'Python', 'DevOps', 'Machine Learning', 'Database Design'].map((example) => (
                     <button
                       key={example}
                       onClick={() => setSearchQuery(example)}
-                      className="px-12px py-6px font-mono text-brutal-xs bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-primary-brutalist/80 hover:bg-primary-brutalist/10 hover:text-primary-brutalist transition-all"
+                      className="px-[8px] py-6px font-mono text-brutal-xs bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-primary-brutalist/80 hover:bg-primary-brutalist/10 hover:text-primary-brutalist transition-all"
                     >
                       {example}
                     </button>
@@ -163,7 +163,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
           )}
 
           {searchQuery.trim().length > 0 && searchQuery.trim().length < 2 && (
-            <div className="p-48px text-center">
+            <div className="p-[24px] text-center">
               <div className="text-brutal-sm text-primary-brutalist/60">
                 Type at least 2 characters to search...
               </div>
@@ -171,7 +171,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
           )}
 
           {isSearching && searchQuery.trim().length >= 2 && (
-            <div className="p-48px text-center">
+            <div className="p-[24px] text-center">
               <div className="animate-pulse text-brutal-sm text-primary-brutalist/60">
                 Searching team expertise...
               </div>
@@ -181,16 +181,16 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
           {!isSearching && searchResults && searchQuery.trim().length >= 2 && (
             <>
               {searchResults.length === 0 ? (
-                <div className="p-48px text-center">
-                  <HiOutlineUser className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
-                  <h3 className="text-brutal-md font-bold mb-8px">NO MATCHES FOUND</h3>
+                <div className="p-[24px] text-center">
+                  <HiOutlineUser className="w-6 h-6 text-primary-brutalist/30 mx-auto mb-[8px]" />
+                  <h3 className="text-brutal-md font-bold mb-[4px]">NO MATCHES FOUND</h3>
                   <p className="text-brutal-sm text-primary-brutalist/60">
                     No team members found with expertise in "{searchQuery}". Try a different search term.
                   </p>
                 </div>
               ) : (
-                <div className="p-24px">
-                  <div className="flex items-center justify-between mb-16px">
+                <div className="p-[16px]">
+                  <div className="flex items-center justify-between mb-[8px]">
                     <div className="font-mono text-brutal-sm text-primary-brutalist/80">
                       FOUND {searchResults.length} EXPERT{searchResults.length !== 1 ? 'S' : ''}
                     </div>
@@ -199,16 +199,16 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
                     </div>
                   </div>
 
-                  <div className="space-y-16px">
+                  <div className="space-y-[8px]">
                     {searchResults.map((result) => (
                       <div
                         key={result._id}
                         className="brutal-card p-20px hover:shadow-brutal-sm transition-all"
                       >
                         <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-16px flex-1">
+                          <div className="flex items-start gap-[8px] flex-1">
                             {/* Avatar */}
-                            <div className="w-48px h-48px bg-basalt-border border-2 border-[var(--theme-border)] flex items-center justify-center flex-shrink-0">
+                            <div className="w-6 h-6 bg-basalt-border border-2 border-[var(--theme-border)] flex items-center justify-center flex-shrink-0">
                               {result.avatarUrl ? (
                                 <img 
                                   src={result.avatarUrl} 
@@ -216,13 +216,13 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <HiOutlineUser className="w-24px h-24px text-primary-brutalist" />
+                                <HiOutlineUser className="w-4 h-4 text-primary-brutalist" />
                               )}
                             </div>
 
                             {/* Developer Info */}
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-12px mb-8px">
+                              <div className="flex items-center gap-[6px] mb-[4px]">
                                 <h4 className="text-brutal-md font-bold truncate">
                                   {highlightMatch(result.name || 'UNNAMED DEVELOPER', searchQuery)}
                                 </h4>
@@ -233,7 +233,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
                                 />
                               </div>
 
-                              <div className="flex items-center gap-16px mb-12px text-brutal-sm text-primary-brutalist/80">
+                              <div className="flex items-center gap-[8px] mb-[6px] text-brutal-sm text-primary-brutalist/80">
                                 <span>{result.profile?.role || 'DEVELOPER'}</span>
                                 {result.profile?.location && (
                                   <div className="flex items-center gap-4px">
@@ -251,7 +251,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
 
                               {/* Matching Technologies */}
                               {result.profile?.techStack && result.profile.techStack.length > 0 && (
-                                <div className="mb-12px">
+                                <div className="mb-[6px]">
                                   <div className="font-mono text-brutal-xs font-bold mb-6px text-primary-brutalist/60">
                                     EXPERTISE MATCHES:
                                   </div>
@@ -268,7 +268,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
                                           <span
                                             key={index}
                                             className={clsx(
-                                              "inline-flex items-center gap-4px px-8px py-4px font-mono text-brutal-xs border-2 font-bold",
+                                              "inline-flex items-center gap-4px px-[4px] py-4px font-mono text-brutal-xs border-2 font-bold",
                                               expertise.color,
                                               expertise.color === 'text-brutal-success' ? 'bg-brutal-success/20 border-brutal-success' :
                                               expertise.color === 'text-brutal-info' ? 'bg-brutal-info/20 border-brutal-info' :
@@ -287,7 +287,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
 
                               {/* Skills */}
                               {result.profile?.skills && result.profile.skills.length > 0 && (
-                                <div className="mb-12px">
+                                <div className="mb-[6px]">
                                   <div className="font-mono text-brutal-xs font-bold mb-6px text-primary-brutalist/60">
                                     SKILLS:
                                   </div>
@@ -301,7 +301,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
                                       .map((skill, index) => (
                                         <span
                                           key={index}
-                                          className="px-8px py-4px font-mono text-brutal-xs bg-primary-brutalist/10 border border-primary-brutalist/30 text-primary-brutalist"
+                                          className="px-[4px] py-4px font-mono text-brutal-xs bg-primary-brutalist/10 border border-primary-brutalist/30 text-primary-brutalist"
                                         >
                                           {highlightMatch(skill, searchQuery)}
                                         </span>
@@ -320,10 +320,10 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
                           </div>
 
                           {/* Action Buttons */}
-                          <div className="flex items-center gap-8px ml-16px">
+                          <div className="flex items-center gap-[4px] ml-[8px]">
                             <button
                               onClick={() => copyContactInfo(result)}
-                              className="brutal-btn-secondary p-8px"
+                              className="brutal-btn-secondary p-[4px]"
                               title="Copy contact info"
                             >
                               <HiOutlineClipboardCopy className="w-16px h-16px" />
@@ -331,7 +331,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
                             {result.email && (
                               <a
                                 href={`mailto:${result.email}?subject=Collaboration Opportunity`}
-                                className="brutal-btn p-8px"
+                                className="brutal-btn p-[4px]"
                                 title="Send email"
                               >
                                 <HiOutlineChat className="w-16px h-16px" />
@@ -349,13 +349,13 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-16px border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+        <div className="flex items-center justify-between p-[10px] border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
           <div className="font-mono text-brutal-xs text-primary-brutalist/60">
             Use ESC to close • Results show team members with matching expertise
           </div>
           <button
             onClick={onClose}
-            className="brutal-btn-secondary px-16px py-8px"
+            className="brutal-btn-secondary px-[10px] py-[4px]"
           >
             CLOSE
           </button>

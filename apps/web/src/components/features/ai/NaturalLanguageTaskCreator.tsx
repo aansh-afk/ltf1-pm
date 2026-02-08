@@ -128,8 +128,8 @@ export default function NaturalLanguageTaskCreator({
   
   return (
     <div className="w-full">
-      <div className="mb-24px">
-        <h3 className="text-brutal-lg font-bold uppercase mb-8px flex items-center gap-8px">
+      <div className="mb-[12px]">
+        <h3 className="text-[14px] font-semibold font-bold uppercase mb-8px flex items-center gap-8px">
           <HiOutlineSparkles className="text-[var(--theme-primary)]" />
           Natural Language Task Creator
         </h3>
@@ -139,7 +139,7 @@ export default function NaturalLanguageTaskCreator({
       </div>
       
       {/* Input Section */}
-      <div className="space-y-16px">
+      <div className="space-y-[8px]">
         <div>
           <label className="block text-brutal-xs font-bold uppercase mb-8px">
             Describe Your Feature or Epic
@@ -208,7 +208,7 @@ export default function NaturalLanguageTaskCreator({
         <button
           onClick={handleGenerate}
           disabled={isGenerating || !input.trim()}
-          className="px-16px py-12px bg-[var(--theme-primary)] text-[var(--theme-background)]
+          className="px-[10px] py-12px bg-[var(--theme-primary)] text-[var(--theme-background)]
                    font-bold text-brutal-sm uppercase
                    hover:bg-[var(--theme-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed
                    flex items-center gap-8px"
@@ -229,8 +229,8 @@ export default function NaturalLanguageTaskCreator({
       
       {/* Generated Tasks */}
       {generatedTasks.length > 0 && (
-        <div className="mt-32px">
-          <div className="flex items-center justify-between mb-16px">
+        <div className="mt-[16px]">
+          <div className="flex items-center justify-between mb-[8px]">
             <h4 className="text-brutal-md font-bold uppercase">
               Generated Tasks ({generatedTasks.length})
             </h4>
@@ -256,11 +256,11 @@ export default function NaturalLanguageTaskCreator({
             </div>
           </div>
           
-          <div className="space-y-12px">
+          <div className="space-y-[6px]">
             {generatedTasks.map((task, index) => (
               <div
                 key={index}
-                className="p-16px bg-[var(--theme-background)] border-2 border-[var(--theme-border)]"
+                className="p-[10px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]"
               >
                 <div className="flex items-start justify-between mb-12px">
                   <div className="flex-1">

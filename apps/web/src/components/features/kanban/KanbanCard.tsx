@@ -122,7 +122,7 @@ export default function KanbanCard({
             />
 
             <div className={clsx(
-                isCompact ? "space-y-4px" : "space-y-12px"
+                isCompact ? "space-y-4px" : "space-y-[6px]"
             )}>
                 {/* Header with type, number, and menu */}
                 <div className="flex items-center justify-between mb-4px">
@@ -176,7 +176,7 @@ export default function KanbanCard({
                                         setShowMenu(false)
                                         onEdit?.(task)
                                     }}
-                                    className="w-full px-16px py-8px text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-8px"
+                                    className="w-full px-[10px] py-8px text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-8px"
                                 >
                                     <HiOutlinePencil className="w-16px h-16px" />
                                     EDIT
@@ -186,7 +186,7 @@ export default function KanbanCard({
                                         setShowMenu(false)
                                         onDuplicate?.(task)
                                     }}
-                                    className="w-full px-16px py-8px text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-8px"
+                                    className="w-full px-[10px] py-8px text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-8px"
                                 >
                                     <HiOutlineDuplicate className="w-16px h-16px" />
                                     DUPLICATE
@@ -197,7 +197,7 @@ export default function KanbanCard({
                                         toast.success('Link copied!')
                                         setShowMenu(false)
                                     }}
-                                    className="w-full px-16px py-8px text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-8px"
+                                    className="w-full px-[10px] py-8px text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-8px"
                                 >
                                     <HiOutlineLink className="w-16px h-16px" />
                                     COPY LINK
@@ -205,7 +205,7 @@ export default function KanbanCard({
                                 <div className="border-t-2 border-[var(--theme-border)]" />
                                 <button
                                     onClick={handleDelete}
-                                    className="w-full px-16px py-8px text-xs font-mono uppercase text-left hover:bg-brutal-error hover:text-white transition-colors flex items-center gap-8px text-brutal-error"
+                                    className="w-full px-[10px] py-8px text-xs font-mono uppercase text-left hover:bg-brutal-error hover:text-white transition-colors flex items-center gap-8px text-brutal-error"
                                 >
                                     <HiOutlineTrash className="w-16px h-16px" />
                                     DELETE
@@ -242,7 +242,7 @@ export default function KanbanCard({
                 {/* Footer */}
                 {!isCompact && (
                     <div className="flex items-center justify-between pt-8px border-t border-[var(--theme-border)]/50">
-                        <div className="flex items-center gap-12px">
+                        <div className="flex items-center gap-[6px]">
                             <UserDisplay
                                 userId={task.assigneeId || (task.assigneeIds && task.assigneeIds[0])}
                                 size="sm"

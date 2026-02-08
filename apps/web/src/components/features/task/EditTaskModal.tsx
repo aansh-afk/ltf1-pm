@@ -125,9 +125,9 @@ export default function EditTaskModal({
       title={`EDIT TASK: ${task?.project?.key || 'PROJ'}-${task?.number || '0'}`}
       size="lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-24px">
+      <form onSubmit={handleSubmit} className="space-y-[12px]">
         {/* Title */}
-        <div className="space-y-8px">
+        <div className="space-y-[4px]">
           <label htmlFor="title" className="text-xs font-mono uppercase tracking-wider">
             TITLE*
           </label>
@@ -143,7 +143,7 @@ export default function EditTaskModal({
         </div>
 
         {/* Description */}
-        <div className="space-y-8px">
+        <div className="space-y-[4px]">
           <label htmlFor="description" className="text-xs font-mono uppercase tracking-wider">
             DESCRIPTION
           </label>
@@ -158,8 +158,8 @@ export default function EditTaskModal({
         </div>
 
         {/* Type and Priority */}
-        <div className="grid grid-cols-2 gap-16px">
-          <div className="space-y-8px">
+        <div className="grid grid-cols-2 gap-[8px]">
+          <div className="space-y-[4px]">
             <label htmlFor="type" className="text-xs font-mono uppercase tracking-wider">
               TYPE
             </label>
@@ -175,7 +175,7 @@ export default function EditTaskModal({
             </select>
           </div>
 
-          <div className="space-y-8px">
+          <div className="space-y-[4px]">
             <label htmlFor="priority" className="text-xs font-mono uppercase tracking-wider">
               PRIORITY
             </label>
@@ -195,7 +195,7 @@ export default function EditTaskModal({
         </div>
 
         {/* Status */}
-        <div className="space-y-8px">
+        <div className="space-y-[4px]">
           <label htmlFor="status" className="text-xs font-mono uppercase tracking-wider">
             STATUS
           </label>
@@ -212,7 +212,7 @@ export default function EditTaskModal({
         </div>
 
         {/* Assignees */}
-        <div className="space-y-8px">
+        <div className="space-y-[4px]">
           <div className="flex items-center justify-between">
             <label className="text-xs font-mono uppercase tracking-wider">
               ASSIGNEES
@@ -220,7 +220,7 @@ export default function EditTaskModal({
             <button
               type="button"
               onClick={() => setUseSmartAssignment(!useSmartAssignment)}
-              className="flex items-center gap-8px font-mono text-brutal-xs text-primary-brutalist hover:text-brutal-info transition-colors"
+              className="flex items-center gap-[4px] font-mono text-brutal-xs text-primary-brutalist hover:text-brutal-info transition-colors"
             >
               {useSmartAssignment ? (
                 <>
@@ -262,7 +262,7 @@ export default function EditTaskModal({
         </div>
 
         {/* Labels */}
-        <div className="space-y-8px">
+        <div className="space-y-[4px]">
           <label htmlFor="labels" className="text-xs font-mono uppercase tracking-wider">
             LABELS (COMMA SEPARATED)
           </label>
@@ -277,8 +277,8 @@ export default function EditTaskModal({
         </div>
 
         {/* Dates and Estimate */}
-        <div className="grid grid-cols-3 gap-16px">
-          <div className="space-y-8px">
+        <div className="grid grid-cols-3 gap-[8px]">
+          <div className="space-y-[4px]">
             <label htmlFor="startDate" className="text-xs font-mono uppercase tracking-wider">
               START DATE
             </label>
@@ -291,7 +291,7 @@ export default function EditTaskModal({
             />
           </div>
 
-          <div className="space-y-8px">
+          <div className="space-y-[4px]">
             <label htmlFor="dueDate" className="text-xs font-mono uppercase tracking-wider">
               DUE DATE
             </label>
@@ -304,7 +304,7 @@ export default function EditTaskModal({
             />
           </div>
 
-          <div className="space-y-8px">
+          <div className="space-y-[4px]">
             <label htmlFor="estimate" className="text-xs font-mono uppercase tracking-wider">
               ESTIMATE (HOURS)
             </label>
@@ -322,17 +322,17 @@ export default function EditTaskModal({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-between border-t-2 border-[var(--theme-border)] pt-24px">
+        <div className="flex items-center justify-between border-t-2 border-[var(--theme-border)] pt-[12px]">
           <button
             type="button"
             onClick={onDelete}
-            className="brutal-btn brutal-btn-error flex items-center gap-8px"
+            className="brutal-btn brutal-btn-error flex items-center gap-[4px]"
           >
             <HiOutlineTrash className="w-16px h-16px" />
             DELETE TASK
           </button>
 
-          <div className="flex items-center gap-16px">
+          <div className="flex items-center gap-[8px]">
             <button
               type="button"
               onClick={onClose}

@@ -174,7 +174,7 @@ const KanbanColumn = memo(function KanbanColumn({
                 </AnimatePresence>
 
                 {/* Add Task Button */}
-                <div className={clsx(isCompact ? "p-8px" : "p-16px")}>
+                <div className={clsx(isCompact ? "p-8px" : "p-[10px]")}>
                     <BrutalButton
                         onClick={() => onAddTask?.(id)}
                         variant="secondary"

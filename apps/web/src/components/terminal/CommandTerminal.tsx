@@ -363,15 +363,15 @@ export default function CommandTerminal({ isOpen, onClose }: CommandTerminalProp
         }}
       >
         {/* Terminal Header */}
-        <div 
-          className="px-16px py-8px flex items-center justify-between"
+        <div
+          className="px-[10px] py-[6px] flex items-center justify-between"
           style={{ backgroundColor: 'var(--theme-background-secondary)' }}
         >
-          <div className="flex items-center gap-12px">
-            <div className="flex gap-8px">
-              <div className="w-12px h-12px" style={{ backgroundColor: 'var(--theme-error)' }} />
-              <div className="w-12px h-12px" style={{ backgroundColor: 'var(--theme-warning)' }} />
-              <div className="w-12px h-12px" style={{ backgroundColor: 'var(--theme-success)' }} />
+          <div className="flex items-center gap-[6px]">
+            <div className="flex gap-[4px]">
+              <div className="w-[10px] h-[10px]" style={{ backgroundColor: 'var(--theme-error)' }} />
+              <div className="w-[10px] h-[10px]" style={{ backgroundColor: 'var(--theme-warning)' }} />
+              <div className="w-[10px] h-[10px]" style={{ backgroundColor: 'var(--theme-success)' }} />
             </div>
             <span 
               className="font-mono text-brutal-sm uppercase"
@@ -385,14 +385,14 @@ export default function CommandTerminal({ isOpen, onClose }: CommandTerminalProp
             className="p-4px hover:opacity-80 transition-opacity"
             title="Close Terminal (ESC)"
           >
-            <HiOutlineX className="w-16px h-16px" style={{ color: 'var(--theme-foreground)' }} />
+            <HiOutlineX className="w-4 h-4" style={{ color: 'var(--theme-foreground)' }} />
           </button>
         </div>
 
         {/* Terminal Output */}
         <div 
           ref={outputRef}
-          className="flex-1 overflow-y-auto p-16px font-mono text-sm"
+          className="flex-1 overflow-y-auto p-[10px] font-mono text-sm"
           style={{ 
             backgroundColor: 'var(--theme-background)',
             color: 'var(--theme-foreground)',
@@ -425,7 +425,7 @@ export default function CommandTerminal({ isOpen, onClose }: CommandTerminalProp
           })}
           
           {/* Current Input Line */}
-          <div className="flex items-center mt-8px">
+          <div className="flex items-center mt-[4px]">
             <span style={{ color: 'var(--theme-info)' }} className="mr-4px">
               {currentPath}
             </span>
@@ -479,20 +479,20 @@ export default function CommandTerminal({ isOpen, onClose }: CommandTerminalProp
 
         {/* Terminal Footer */}
         <div 
-          className="px-16px py-8px"
+          className="px-[10px] py-[6px]"
           style={{ 
             backgroundColor: 'var(--theme-background-secondary)',
             borderTop: '2px solid var(--theme-border)'
           }}
         >
           <div className="flex items-center justify-between text-brutal-xs font-mono" style={{ color: 'var(--theme-foreground-tertiary)' }}>
-            <div className="flex items-center gap-16px">
+            <div className="flex items-center gap-[8px]">
               <span>TYPE 'help' FOR COMMANDS</span>
               <span>↑↓ FOR HISTORY</span>
               <span>TAB FOR COMPLETION</span>
               <span>ESC TO EXIT</span>
             </div>
-            <div className="flex items-center gap-16px">
+            <div className="flex items-center gap-[8px]">
               <span style={{ color: 'var(--theme-info)' }}>
                 THEME: {themeName.toUpperCase()}
               </span>

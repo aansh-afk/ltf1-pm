@@ -167,7 +167,7 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-16px">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-[8px]">
         {columns.map((column) => {
           const columnTasks = getTasksByStatus(column.id)
           const taskCount = columnTasks.length
@@ -194,7 +194,7 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
             >
               {/* Column Header */}
               <div className={clsx(
-                "p-12px border-b-2",
+                "p-[8px] border-b-2",
                 "flex items-center justify-between",
                 "bg-[var(--theme-background-secondary)]",
                 column.borderColor
@@ -203,9 +203,9 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
                   "font-mono text-brutal-sm font-bold uppercase",
                   column.textColor
                 )}>{column.title}</h3>
-                <div className="flex items-center gap-8px">
+                <div className="flex items-center gap-[4px]">
                   <span className={clsx(
-                    "px-8px py-2px text-brutal-xs font-mono font-bold",
+                    "px-[4px] py-2px text-brutal-xs font-mono font-bold",
                     "border-2",
                     taskCount === 0
                       ? "border-[var(--theme-border)] text-[var(--theme-foreground)]/40"
@@ -226,7 +226,7 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
                 ref={(el) => columnRefs.current[column.id] = el}
                 className={clsx(
                   "flex-1 overflow-y-auto custom-scrollbar",
-                  "p-12px space-y-8px",
+                  "p-[8px] space-y-[4px]",
                   "relative"
                 )}
                 style={{
@@ -249,7 +249,7 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
                         {/* Drop Position Indicator */}
                         {showDropIndicatorBefore && draggedTask && (
                           <div
-                            className="relative mb-8px transition-all duration-150"
+                            className="relative mb-[4px] transition-all duration-150"
                             style={{ height: isCompactView ? 64 : 136 }}
                           >
                             <div className="absolute inset-0 border-2 border-dashed border-primary-brutalist bg-primary-brutalist/10 flex items-center justify-center animate-pulse">
@@ -315,11 +315,11 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
                 </AnimatePresence>
 
                 {/* Add Task Button */}
-                <div className={clsx(isCompactView ? "p-8px" : "p-16px")}>
+                <div className={clsx(isCompactView ? "p-[4px]" : "p-[10px]")}>
                   <BrutalButton
                     onClick={() => openCreateModal(column.id)}
                     variant="outline"
-                    className="w-full border-dashed flex items-center justify-center gap-8px"
+                    className="w-full border-dashed flex items-center justify-center gap-[4px]"
                     size={isCompactView ? "sm" : "md"}
                   >
                     <HiOutlinePlus className="w-16px h-16px" />

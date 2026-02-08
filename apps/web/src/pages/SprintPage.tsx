@@ -50,11 +50,11 @@ export default function SprintPage() {
   // Show workspace selector for pages without URL workspace context
   if (!currentWorkspaceId && workspaces && workspaces.length > 0) {
     return (
-      <div className="p-24px">
+      <div className="p-[16px]">
         <div className="max-w-md mx-auto">
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-32px">
-            <h1 className="text-brutal-lg font-bold mb-16px">SELECT WORKSPACE</h1>
-            <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mb-24px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[20px]">
+            <h1 className="text-[14px] font-semibold font-bold mb-[8px]">SELECT WORKSPACE</h1>
+            <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mb-[12px]">
               Choose a workspace to view and manage sprints.
             </p>
             <WorkspaceSelector size="lg" showLabel={false} />
@@ -67,7 +67,7 @@ export default function SprintPage() {
   // Show empty state if no workspaces exist
   if (!currentWorkspaceId && (!workspaces || workspaces.length === 0)) {
     return (
-      <div className="p-24px">
+      <div className="p-[16px]">
         <EmptyState
           title="NO WORKSPACES FOUND"
           description="Create a workspace first to organize your sprints."
@@ -82,7 +82,7 @@ export default function SprintPage() {
 
   if (projects.length === 0) {
     return (
-      <div className="p-24px">
+      <div className="p-[16px]">
         <EmptyState
           title="No projects yet"
           description="Create a project first to start sprint planning"
@@ -99,13 +99,13 @@ export default function SprintPage() {
   const currentWorkspace = workspaces?.find(w => w._id === currentWorkspaceId)
 
   return (
-    <div className="p-24px">
+    <div className="p-[16px]">
       {/* Header */}
-      <div className="mb-32px">
-        <div className="flex items-center justify-between mb-16px">
+      <div className="mb-[16px]">
+        <div className="flex items-center justify-between mb-[8px]">
           <div>
-            <div className="flex items-center gap-16px mb-8px">
-              <h1 className="text-brutal-2xl font-bold uppercase">SPRINTS</h1>
+            <div className="flex items-center gap-[8px] mb-8px">
+              <h1 className="text-[20px] font-bold font-bold uppercase">SPRINTS</h1>
               {!hasWorkspaceContext && (
                 <div className="text-brutal-xs text-[var(--theme-foreground)]/60">
                   IN: {currentWorkspace?.name}
@@ -113,14 +113,14 @@ export default function SprintPage() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-16px">
+          <div className="flex items-center gap-[8px]">
             {/* Show workspace selector for global routes */}
             {!hasWorkspaceContext && (
               <WorkspaceSelector size="sm" showLabel={false} />
             )}
             
             <select
-              className="px-16px py-8px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+              className="px-[10px] py-8px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm uppercase
                        focus:border-primary-brutalist focus:outline-none transition-colors"
               value={selectedProjectId}
@@ -144,12 +144,12 @@ export default function SprintPage() {
 
         {/* Current Sprint Info */}
         {currentSprint && (
-          <div className="bg-primary-brutalist border-2 border-[var(--theme-border)] p-24px">
+          <div className="bg-primary-brutalist border-2 border-[var(--theme-border)] p-[16px]">
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-8px mb-8px">
                   <HiOutlinePlay className="w-20px h-20px text-event-horizon" />
-                  <h2 className="text-brutal-lg font-bold text-event-horizon">
+                  <h2 className="text-[14px] font-semibold font-bold text-event-horizon">
                     {currentSprint.name}
                   </h2>
                   <span className="px-8px py-4px bg-[var(--theme-background-secondary)] text-primary-brutalist font-mono text-brutal-xs uppercase">
@@ -157,9 +157,9 @@ export default function SprintPage() {
                   </span>
                 </div>
                 {currentSprint.goal && (
-                  <p className="text-brutal-sm text-event-horizon/80 mb-16px">{currentSprint.goal}</p>
+                  <p className="text-brutal-sm text-event-horizon/80 mb-[8px]">{currentSprint.goal}</p>
                 )}
-                <div className="flex gap-32px">
+                <div className="flex gap-[20px]">
                   <div className="flex items-center gap-8px">
                     <HiOutlineCalendar className="w-16px h-16px text-event-horizon" />
                     <span className="font-mono text-brutal-sm text-event-horizon">
@@ -211,11 +211,11 @@ export default function SprintPage() {
       </div>
 
       {/* View Toggle */}
-      <div className="flex items-center gap-16px mb-24px">
+      <div className="flex items-center gap-[8px] mb-[12px]">
         <div className="flex border-2 border-[var(--theme-border)]">
           <button
             className={clsx(
-              "px-16px py-8px flex items-center gap-8px",
+              "px-[10px] py-8px flex items-center gap-8px",
               "font-mono text-brutal-sm uppercase transition-colors",
               "border-r-2 border-[var(--theme-border)]",
               viewMode === 'board' 
@@ -229,7 +229,7 @@ export default function SprintPage() {
           </button>
           <button
             className={clsx(
-              "px-16px py-8px flex items-center gap-8px",
+              "px-[10px] py-8px flex items-center gap-8px",
               "font-mono text-brutal-sm uppercase transition-colors",
               viewMode === 'planning' 
                 ? "bg-primary-brutalist text-event-horizon" 

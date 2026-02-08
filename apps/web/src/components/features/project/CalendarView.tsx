@@ -257,7 +257,7 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
       {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
         <div 
           key={day} 
-          className="p-8px text-center font-bold text-xs border-b-2 border-r border-[var(--theme-border)] bg-[var(--theme-background-secondary)]"
+          className="p-[4px] text-center font-bold text-xs border-b-2 border-r border-[var(--theme-border)] bg-[var(--theme-background-secondary)]"
         >
           {day}
         </div>
@@ -275,7 +275,7 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
             key={index}
             onClick={() => handleDayClick(day)}
             className={clsx(
-              'min-h-[100px] p-8px border-b border-r border-[var(--theme-border)] cursor-pointer transition-all',
+              'min-h-[100px] p-[4px] border-b border-r border-[var(--theme-border)] cursor-pointer transition-all',
               !isCurrentMonth && 'bg-[var(--theme-background)]/50 opacity-50',
               isSelected && 'bg-[var(--theme-hover)]',
               isTodayDate && 'bg-[var(--theme-primary)]/10',
@@ -283,7 +283,7 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
             )}
           >
             <div className={clsx(
-              'text-xs font-bold mb-4px',
+              'text-xs font-bold mb-[2px]',
               isTodayDate && 'text-[var(--theme-primary)]',
               !isCurrentMonth && 'text-[var(--theme-foreground)]/40'
             )}>
@@ -331,9 +331,9 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
       .slice(0, 20)
     
     return (
-      <div className="space-y-16px">
+      <div className="space-y-[8px]">
         {upcomingEvents.length === 0 ? (
-          <div className="text-center py-48px text-[var(--theme-foreground)]/60">
+          <div className="text-center py-[24px] text-[var(--theme-foreground)]/60">
             NO UPCOMING EVENTS
           </div>
         ) : (
@@ -345,20 +345,20 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
                 key={event.id}
                 onClick={() => handleEventClick(event)}
                 className={clsx(
-                  'p-16px border-2 border-[var(--theme-border)] cursor-pointer',
+                  'p-[10px] border-2 border-[var(--theme-border)] cursor-pointer',
                   'hover:shadow-brutal hover:translate-x-[-2px] hover:translate-y-[-2px]',
                   'transition-all'
                 )}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-8px mb-8px">
-                      <span className={clsx('px-8px py-4px text-xs font-bold', event.color, 'text-[var(--theme-background)]')}>
+                    <div className="flex items-center gap-[4px] mb-[4px]">
+                      <span className={clsx('px-[4px] py-4px text-xs font-bold', event.color, 'text-[var(--theme-background)]')}>
                         {event.type.toUpperCase()}
                       </span>
                       {event.priority && (
                         <span className={clsx(
-                          'px-8px py-4px text-xs font-bold',
+                          'px-[4px] py-4px text-xs font-bold',
                           priorityColors[event.priority as keyof typeof priorityColors],
                           'text-[var(--theme-background)]'
                         )}>
@@ -366,15 +366,15 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
                         </span>
                       )}
                       {event.status && (
-                        <span className="px-8px py-4px text-xs bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+                        <span className="px-[4px] py-4px text-xs bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
                           {event.status.toUpperCase()}
                         </span>
                       )}
                     </div>
                     
-                    <h3 className="font-bold text-brutal-sm mb-4px">{event.title}</h3>
+                    <h3 className="font-bold text-brutal-sm mb-[2px]">{event.title}</h3>
                     
-                    <div className="flex items-center gap-16px text-xs text-[var(--theme-foreground)]/60">
+                    <div className="flex items-center gap-[8px] text-xs text-[var(--theme-foreground)]/60">
                       <span>{format(event.date, 'MMM d, yyyy')}</span>
                       {event.endDate && (
                         <span>→ {format(event.endDate, 'MMM d, yyyy')}</span>
@@ -404,29 +404,29 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
   return (
     <div className="h-full flex flex-col bg-[var(--theme-background)]">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between p-16px border-b-2 border-[var(--theme-border)]">
-        <div className="flex items-center gap-16px">
-          <h2 className="text-brutal-lg font-bold">
+      <div className="flex items-center justify-between p-[10px] border-b-2 border-[var(--theme-border)]">
+        <div className="flex items-center gap-[8px]">
+          <h2 className="text-[14px] font-semibold font-bold">
             {format(currentDate, 'MMMM yyyy').toUpperCase()}
           </h2>
           
           {/* Navigation */}
-          <div className="flex items-center gap-8px">
+          <div className="flex items-center gap-[4px]">
             <button
               onClick={() => navigateMonth('prev')}
-              className="p-8px hover:bg-[var(--theme-hover)] transition-colors"
+              className="p-[4px] hover:bg-[var(--theme-hover)] transition-colors"
             >
               <HiOutlineChevronLeft className="w-16px h-16px" />
             </button>
             <button
               onClick={goToToday}
-              className="px-12px py-6px text-xs font-bold border-2 border-[var(--theme-border)] hover:bg-[var(--theme-hover)]"
+              className="px-[8px] py-6px text-xs font-bold border-2 border-[var(--theme-border)] hover:bg-[var(--theme-hover)]"
             >
               TODAY
             </button>
             <button
               onClick={() => navigateMonth('next')}
-              className="p-8px hover:bg-[var(--theme-hover)] transition-colors"
+              className="p-[4px] hover:bg-[var(--theme-hover)] transition-colors"
             >
               <HiOutlineChevronRight className="w-16px h-16px" />
             </button>
@@ -437,7 +437,7 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
             <button
               onClick={() => setViewType('month')}
               className={clsx(
-                'px-12px py-6px text-xs font-bold',
+                'px-[8px] py-6px text-xs font-bold',
                 viewType === 'month' 
                   ? 'bg-[var(--theme-primary)] text-[var(--theme-background)]'
                   : 'hover:bg-[var(--theme-hover)]'
@@ -448,7 +448,7 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
             <button
               onClick={() => setViewType('week')}
               className={clsx(
-                'px-12px py-6px text-xs font-bold border-x border-[var(--theme-border)]',
+                'px-[8px] py-6px text-xs font-bold border-x border-[var(--theme-border)]',
                 viewType === 'week' 
                   ? 'bg-[var(--theme-primary)] text-[var(--theme-background)]'
                   : 'hover:bg-[var(--theme-hover)]'
@@ -460,7 +460,7 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
             <button
               onClick={() => setViewType('day')}
               className={clsx(
-                'px-12px py-6px text-xs font-bold border-r border-[var(--theme-border)]',
+                'px-[8px] py-6px text-xs font-bold border-r border-[var(--theme-border)]',
                 viewType === 'day' 
                   ? 'bg-[var(--theme-primary)] text-[var(--theme-background)]'
                   : 'hover:bg-[var(--theme-hover)]'
@@ -472,7 +472,7 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
             <button
               onClick={() => setViewType('agenda')}
               className={clsx(
-                'px-12px py-6px text-xs font-bold',
+                'px-[8px] py-6px text-xs font-bold',
                 viewType === 'agenda' 
                   ? 'bg-[var(--theme-primary)] text-[var(--theme-background)]'
                   : 'hover:bg-[var(--theme-hover)]'
@@ -484,12 +484,12 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
         </div>
         
         {/* Actions */}
-        <div className="flex items-center gap-8px">
+        <div className="flex items-center gap-[4px]">
           {/* Filter */}
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value as any)}
-            className="px-12px py-6px text-xs font-bold bg-transparent border-2 border-[var(--theme-border)] outline-none"
+            className="px-[8px] py-6px text-xs font-bold bg-transparent border-2 border-[var(--theme-border)] outline-none"
           >
             <option value="all">ALL EVENTS</option>
             <option value="tasks">TASKS ONLY</option>
@@ -499,7 +499,7 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
           
           <button
             onClick={() => setShowCreateTaskModal(true)}
-            className="flex items-center gap-8px px-16px py-8px bg-[var(--theme-primary)] text-[var(--theme-background)] font-bold hover:opacity-90"
+            className="flex items-center gap-[4px] px-[10px] py-[4px] bg-[var(--theme-primary)] text-[var(--theme-background)] font-bold hover:opacity-90"
           >
             <HiOutlinePlus className="w-16px h-16px" />
             <span className="text-xs">NEW TASK</span>
@@ -507,7 +507,7 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
           
           <button
             onClick={() => setShowScheduleMeetingModal(true)}
-            className="flex items-center gap-8px px-16px py-8px bg-transparent border-2 border-[var(--theme-border)] font-bold hover:bg-[var(--theme-hover)]"
+            className="flex items-center gap-[4px] px-[10px] py-[4px] bg-transparent border-2 border-[var(--theme-border)] font-bold hover:bg-[var(--theme-hover)]"
           >
             <HiOutlineVideoCamera className="w-16px h-16px" />
             <span className="text-xs">SCHEDULE MEETING</span>
@@ -516,16 +516,16 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
       </div>
       
       {/* Calendar Content */}
-      <div className="flex-1 overflow-auto p-16px">
+      <div className="flex-1 overflow-auto p-[10px]">
         {viewType === 'month' && renderMonthView()}
         {viewType === 'agenda' && renderAgendaView()}
         {viewType === 'week' && (
-          <div className="text-center py-48px text-[var(--theme-foreground)]/60">
+          <div className="text-center py-[24px] text-[var(--theme-foreground)]/60">
             WEEK VIEW COMING SOON
           </div>
         )}
         {viewType === 'day' && (
-          <div className="text-center py-48px text-[var(--theme-foreground)]/60">
+          <div className="text-center py-[24px] text-[var(--theme-foreground)]/60">
             DAY VIEW COMING SOON
           </div>
         )}

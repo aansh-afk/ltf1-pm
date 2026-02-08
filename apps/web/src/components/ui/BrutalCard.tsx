@@ -28,9 +28,9 @@ const BrutalCard = forwardRef<HTMLDivElement, BrutalCardProps>(
 
     const paddings = {
       none: '',
-      sm: 'p-16px',
-      md: 'p-24px',
-      lg: 'p-32px',
+      sm: 'p-[10px]',
+      md: 'p-[16px]',
+      lg: 'p-[20px]',
     }
 
     return (

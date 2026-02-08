@@ -87,9 +87,9 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: Cre
       title="CREATE NEW WORKSPACE"
       size="md"
     >
-      <form onSubmit={handleSubmit} className="space-y-24px">
+      <form onSubmit={handleSubmit} className="space-y-[12px]">
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider mb-8px text-[var(--theme-foreground)]">
+          <label className="block text-xs font-bold uppercase tracking-wider mb-[4px] text-[var(--theme-foreground)]">
             WORKSPACE NAME *
           </label>
           <BrutalInput
@@ -104,13 +104,13 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: Cre
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider mb-8px text-[var(--theme-foreground)]">
+          <label className="block text-xs font-bold uppercase tracking-wider mb-[4px] text-[var(--theme-foreground)]">
             DESCRIPTION (OPTIONAL)
           </label>
           <textarea
             placeholder="DESCRIBE THIS WORKSPACE..."
             className="w-full bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)] 
-                     focus:border-brutal-info focus:shadow-brutal px-16px py-8px
+                     focus:border-brutal-info focus:shadow-brutal px-[10px] py-[4px]
                      disabled:opacity-50 disabled:cursor-not-allowed
                      placeholder:text-[var(--theme-foreground)]/50 font-mono text-sm uppercase"
             style={{ borderRadius: '0 !important' }}
@@ -121,7 +121,7 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: Cre
           />
         </div>
 
-        <div className="border-t-2 border-[var(--theme-border)] pt-24px flex justify-end gap-16px">
+        <div className="border-t-2 border-[var(--theme-border)] pt-[12px] flex justify-end gap-[8px]">
           <BrutalButton
             type="button"
             variant="secondary"
