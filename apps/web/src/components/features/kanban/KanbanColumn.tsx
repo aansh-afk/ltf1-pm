@@ -1,8 +1,6 @@
 import React, { memo } from 'react'
 import { HiOutlinePlus } from 'react-icons/hi'
 import clsx from 'clsx'
-import BrutalCard from '../../ui/BrutalCard'
-import BrutalButton from '../../ui/BrutalButton'
 import KanbanCard from './KanbanCard'
 import { AnimatePresence, motion } from 'framer-motion'
 
@@ -58,12 +56,10 @@ const KanbanColumn = memo(function KanbanColumn({
     const taskCount = tasks.length
 
     return (
-        <BrutalCard
-            variant="default"
-            padding="none"
+        <div
             className={clsx(
-                "flex flex-col relative h-full transition-colors duration-200",
-                hoveredColumn === id && draggedTask && "border-primary-brutalist bg-primary-brutalist/5",
+                "flex flex-col relative h-full transition-colors duration-200 bg-[#111111] border-2 border-[#2E2E35]",
+                hoveredColumn === id && draggedTask && "border-[#6366F1] bg-[#6366F1]/5",
                 draggedTask && !hoveredColumn && "border-opacity-50"
             )}
             onDragOver={onDragOver}
@@ -72,24 +68,23 @@ const KanbanColumn = memo(function KanbanColumn({
         >
             {/* Column Header */}
             <div className={clsx(
-                "p-[10px] border-b-2",
+                "px-3 py-2.5 border-b-2 border-[#2E2E35]",
                 "flex items-center justify-between",
-                "bg-[var(--theme-background-secondary)]",
-                borderColor
+                "bg-[#0A0A0A]"
             )}>
                 <h3 className={clsx(
-                    "font-mono text-brutal-sm font-bold uppercase",
+                    "font-mono text-xs font-bold uppercase tracking-wider",
                     textColor
                 )}>{title}</h3>
-                <div className="flex items-center gap-[8px]">
+                <div className="flex items-center gap-2">
                     <span className={clsx(
-                        "px-8px py-2px text-brutal-xs font-mono font-bold",
+                        "px-2 py-0.5 text-[10px] font-mono font-bold",
                         "border-2",
                         taskCount === 0
-                            ? "border-[var(--theme-border)] text-[var(--theme-foreground)]/40"
+                            ? "border-[#2E2E35] text-[#6B7280]"
                             : taskCount > 10
-                                ? "border-brutal-warning text-brutal-warning bg-brutal-warning/10"
-                                : "border-primary-brutalist text-primary-brutalist bg-primary-brutalist/10"
+                                ? "border-[#F59E0B] text-[#F59E0B] bg-[#F59E0B]/10"
+                                : "border-[#6366F1] text-[#6366F1] bg-[#6366F1]/10"
                     )}>
                         {taskCount}
                     </span>
@@ -97,14 +92,14 @@ const KanbanColumn = memo(function KanbanColumn({
             </div>
 
             {/* Color indicator bar */}
-            <div className={clsx("h-4px", bgColor)} />
+            <div className={clsx("h-[3px]", bgColor)} />
 
             {/* Task List Container */}
             <div
                 ref={columnRef}
                 className={clsx(
                     "flex-1 overflow-y-auto custom-scrollbar",
-                    "p-[10px] space-y-[8px]",
+                    "p-1.5 space-y-1.5",
                     "relative"
                 )}
                 style={{
@@ -120,11 +115,11 @@ const KanbanColumn = memo(function KanbanColumn({
                                 {/* Drop Position Indicator */}
                                 {showDropIndicatorBefore && draggedTask && (
                                     <div
-                                        className="relative mb-[8px] transition-all duration-150"
-                                        style={{ height: isCompact ? 64 : 136 }}
+                                        className="relative mb-1.5 transition-all duration-150"
+                                        style={{ height: isCompact ? 48 : 72 }}
                                     >
-                                        <div className="absolute inset-0 border-2 border-dashed border-primary-brutalist bg-primary-brutalist/10 flex items-center justify-center animate-pulse">
-                                            <span className="text-brutal-xs font-mono uppercase text-primary-brutalist">
+                                        <div className="absolute inset-0 border-2 border-dashed border-[#6366F1] bg-[#6366F1]/10 flex items-center justify-center animate-pulse">
+                                            <span className="text-[10px] font-mono uppercase text-[#6366F1]">
                                                 DROP HERE
                                             </span>
                                         </div>
@@ -162,10 +157,10 @@ const KanbanColumn = memo(function KanbanColumn({
                     {dropPosition?.column === id && dropPosition?.index === tasks.length && draggedTask && (
                         <div
                             className="relative transition-all duration-150"
-                            style={{ height: isCompact ? 64 : 136 }}
+                            style={{ height: isCompact ? 48 : 72 }}
                         >
-                            <div className="absolute inset-0 border-2 border-dashed border-primary-brutalist bg-primary-brutalist/10 flex items-center justify-center animate-pulse">
-                                <span className="text-brutal-xs font-mono uppercase text-primary-brutalist">
+                            <div className="absolute inset-0 border-2 border-dashed border-[#6366F1] bg-[#6366F1]/10 flex items-center justify-center animate-pulse">
+                                <span className="text-[10px] font-mono uppercase text-[#6366F1]">
                                     DROP HERE
                                 </span>
                             </div>
@@ -174,26 +169,24 @@ const KanbanColumn = memo(function KanbanColumn({
                 </AnimatePresence>
 
                 {/* Add Task Button */}
-                <div className={clsx(isCompact ? "p-8px" : "p-[10px]")}>
-                    <BrutalButton
+                <div className={clsx(isCompact ? "p-1" : "p-1.5")}>
+                    <button
                         onClick={() => onAddTask?.(id)}
-                        variant="secondary"
-                        className="w-full border-dashed flex items-center justify-center gap-[8px] opacity-50 hover:opacity-100"
-                        size={isCompact ? "sm" : "md"}
+                        className="w-full border border-dashed border-[#2E2E35] bg-transparent text-[#6B7280] hover:text-[#F9FAFB] hover:border-[#6366F1] flex items-center justify-center gap-1.5 py-1.5 font-mono text-[10px] uppercase transition-colors"
                     >
-                        <HiOutlinePlus className="w-4 h-4" />
-                        {!isCompact && <span>ADD TASK</span>}
-                    </BrutalButton>
+                        <HiOutlinePlus className="w-3 h-3" />
+                        {!isCompact && <span>ADD</span>}
+                    </button>
                 </div>
             </div>
 
             {/* Scroll Indicator */}
             {hasOverflow && (
-                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-carbon-plate to-transparent pointer-events-none flex items-end justify-center pb-4px">
-                    <div className="w-4 h-2px bg-primary-brutalist/40 animate-pulse" />
+                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#111111] to-transparent pointer-events-none flex items-end justify-center pb-1">
+                    <div className="w-4 h-[2px] bg-[#6366F1]/40 animate-pulse" />
                 </div>
             )}
-        </BrutalCard>
+        </div>
     )
 })
 

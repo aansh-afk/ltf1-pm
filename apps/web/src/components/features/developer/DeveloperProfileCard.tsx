@@ -20,12 +20,12 @@ export default function DeveloperProfileCard({
   if (!developerData) {
     return (
       <div className={clsx(
-        'bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]',
+        'bg-[#111111] border-2 border-[#2E2E35] p-4',
         'animate-pulse',
         className
       )}>
-        <div className="h-4 bg-basalt-border mb-[8px]" />
-        <div className="h-4 bg-basalt-border w-3/4" />
+        <div className="h-4 bg-[#2E2E35] mb-2" />
+        <div className="h-4 bg-[#2E2E35] w-3/4" />
       </div>
     )
   }
@@ -36,122 +36,122 @@ export default function DeveloperProfileCard({
   // If user has no profile, show prompt to create one
   if (!hasProfile) {
     return (
-      <div 
+      <div
         className={clsx(
-          'bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]',
-          'hover:border-primary-brutalist transition-colors cursor-pointer',
+          'bg-[#111111] border-2 border-[#2E2E35] p-4',
+          'hover:border-[#6366F1] cursor-pointer',
           className
         )}
         onClick={onClick}
       >
-        <div className="flex items-center justify-between mb-[8px]">
-          <h3 className="text-[14px] font-semibold font-bold uppercase">{developerData.name}</h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-bold uppercase text-[#F9FAFB]">{developerData.name}</h3>
           <DeveloperStatusIndicator status={profile.status || 'AVAILABLE'} showLabel />
         </div>
-        
-        <div className="text-[var(--theme-foreground)]/60 text-brutal-sm mb-[8px]">
+
+        <div className="text-xs text-[#6B7280] mb-2">
           No developer profile set up yet
         </div>
-        
-        <div className="text-brutal-xs uppercase text-primary-brutalist">
-          Click to set up profile →
+
+        <div className="text-xs uppercase text-[#6366F1] font-mono tracking-wider">
+          Click to set up profile &rarr;
         </div>
       </div>
     )
   }
 
   return (
-    <div 
+    <div
       className={clsx(
-        'bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]',
-        'hover:border-primary-brutalist transition-colors',
+        'bg-[#111111] border-2 border-[#2E2E35] p-4',
+        'hover:border-[#6366F1]',
         onClick && 'cursor-pointer',
         className
       )}
       onClick={onClick}
     >
       {/* Header with name and status */}
-      <div className="flex items-center justify-between mb-[8px]">
-        <h3 className="text-[14px] font-semibold font-bold uppercase">{developerData.name}</h3>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-bold uppercase text-[#F9FAFB]">{developerData.name}</h3>
         <DeveloperStatusIndicator status={profile.status || 'AVAILABLE'} showLabel />
       </div>
-      
+
       {/* Status message if any */}
       {profile.statusMessage && (
-        <div className="text-brutal-sm text-[var(--theme-foreground)]/80 mb-[8px] font-mono">
-          "{profile.statusMessage}"
+        <div className="text-xs text-[#9CA3AF] mb-2 font-mono">
+          &ldquo;{profile.statusMessage}&rdquo;
         </div>
       )}
-      
+
       {/* Current focus */}
       {profile.currentFocus && (
-        <div className="mb-[8px]">
-          <div className="text-brutal-xs text-primary-brutalist/60 uppercase mb-4px">
+        <div className="mb-2">
+          <div className="text-[10px] font-mono uppercase tracking-wider text-[#6366F1]/60 mb-1">
             CURRENT FOCUS
           </div>
-          <div className="text-brutal-sm">{profile.currentFocus}</div>
+          <div className="text-xs text-[#F9FAFB]">{profile.currentFocus}</div>
         </div>
       )}
-      
+
       {/* Tech stack */}
       {topSkills.length > 0 && (
-        <div className="mb-[8px]">
-          <div className="text-brutal-xs text-primary-brutalist/60 uppercase mb-8px">
+        <div className="mb-2">
+          <div className="text-[10px] font-mono uppercase tracking-wider text-[#6366F1]/60 mb-1.5">
             EXPERTISE
           </div>
-          <div className="space-y-4px">
+          <div className="space-y-1">
             {topSkills.map((tech) => (
               <div key={tech.name} className="flex items-center justify-between">
-                <span className="text-brutal-sm font-mono">{tech.name}</span>
-                <div className="flex items-center gap-[8px]">
-                  <div className="h-8px bg-basalt-border" style={{ width: '80px' }}>
-                    <div 
+                <span className="text-xs font-mono text-[#F9FAFB]">{tech.name}</span>
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 bg-[#2E2E35]" style={{ width: '60px' }}>
+                    <div
                       className={clsx(
                         'h-full',
-                        tech.level === 'expert' ? 'bg-brutal-success' :
-                        tech.level === 'proficient' ? 'bg-brutal-info' :
-                        'bg-brutal-warning'
+                        tech.level === 'expert' ? 'bg-[#22C55E]' :
+                        tech.level === 'proficient' ? 'bg-[#6366F1]' :
+                        'bg-[#F59E0B]'
                       )}
-                      style={{ 
+                      style={{
                         width: tech.level === 'expert' ? '100%' :
                                tech.level === 'proficient' ? '66%' :
                                '33%'
                       }}
                     />
                   </div>
-                  <span className="text-brutal-xs uppercase text-[var(--theme-foreground)]/60">
+                  <span className="text-[10px] uppercase text-[#6B7280] font-mono tracking-wider w-[70px] text-right">
                     {tech.level}
                   </span>
                 </div>
               </div>
             ))}
             {profile.techStack && profile.techStack.length > 3 && (
-              <div className="text-brutal-xs text-primary-brutalist/60 mt-4px">
+              <div className="text-[10px] text-[#6366F1]/60 font-mono mt-1">
                 +{profile.techStack.length - 3} MORE
               </div>
             )}
           </div>
         </div>
       )}
-      
+
       {/* Work hours */}
       {profile.workHours && (
-        <div className="flex items-center gap-[8px] text-brutal-xs text-[var(--theme-foreground)]/60">
-          <HiOutlineClock className="w-4 h-4" />
+        <div className="flex items-center gap-2 text-[10px] text-[#6B7280] font-mono">
+          <HiOutlineClock className="w-3.5 h-3.5" />
           <span>{profile.workHours.start} - {profile.workHours.end}</span>
           <span>({profile.timezone || 'UTC'})</span>
         </div>
       )}
-      
+
       {/* Profile completeness */}
-      <div className="mt-[8px]">
-        <div className="flex justify-between text-brutal-xs mb-4px">
-          <span className="text-primary-brutalist/60">PROFILE COMPLETENESS</span>
-          <span className="font-mono">{profile.profileCompleteness}%</span>
+      <div className="mt-2 pt-2 border-t border-[#1F1F23]">
+        <div className="flex justify-between text-[10px] mb-1 font-mono">
+          <span className="text-[#6366F1]/60 uppercase tracking-wider">PROFILE COMPLETENESS</span>
+          <span className="text-[#9CA3AF]">{profile.profileCompleteness}%</span>
         </div>
-        <div className="h-4px bg-basalt-border">
-          <div 
-            className="h-full bg-primary-brutalist transition-all duration-300"
+        <div className="h-1 bg-[#2E2E35]">
+          <div
+            className="h-full bg-[#6366F1]"
             style={{ width: `${profile.profileCompleteness}%` }}
           />
         </div>

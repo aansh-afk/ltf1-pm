@@ -6,9 +6,7 @@ import {
   HiOutlinePlay,
   HiOutlineClock,
   HiOutlineExclamation,
-  HiOutlineUser,
   HiOutlineCalendar,
-  HiOutlineHashtag,
   HiOutlineChevronDown,
   HiOutlineChevronUp
 } from 'react-icons/hi'
@@ -27,27 +25,27 @@ interface TaskListProps {
 }
 
 const statusConfig = {
-  backlog: { label: 'BACKLOG', color: 'bg-neutral-600', icon: HiOutlineClock },
-  todo: { label: 'TO DO', color: 'bg-primary-brutalist text-event-horizon', icon: HiOutlinePlay },
-  in_progress: { label: 'IN PROGRESS', color: 'bg-[var(--theme-info)] text-event-horizon', icon: HiOutlinePlay },
-  in_review: { label: 'IN REVIEW', color: 'bg-[var(--theme-accent)] text-event-horizon', icon: HiOutlineClock },
-  done: { label: 'DONE', color: 'bg-[var(--theme-success)] text-event-horizon', icon: HiOutlineCheckCircle },
-  cancelled: { label: 'CANCELLED', color: 'bg-[var(--theme-error)] text-[var(--theme-foreground)]', icon: HiOutlineExclamation }
+  backlog: { label: 'BACKLOG', color: 'bg-[#6B7280]', icon: HiOutlineClock },
+  todo: { label: 'TO DO', color: 'bg-[#6366F1]', icon: HiOutlinePlay },
+  in_progress: { label: 'IN PROGRESS', color: 'bg-[#06B6D4]', icon: HiOutlinePlay },
+  in_review: { label: 'IN REVIEW', color: 'bg-[#F59E0B]', icon: HiOutlineClock },
+  done: { label: 'DONE', color: 'bg-[#22C55E]', icon: HiOutlineCheckCircle },
+  cancelled: { label: 'CANCELLED', color: 'bg-[#EF4444]', icon: HiOutlineExclamation }
 }
 
 const priorityConfig = {
-  urgent: { label: 'URGENT', color: 'text-[var(--theme-error)]' },
-  high: { label: 'HIGH', color: 'text-[var(--theme-accent)]' },
-  medium: { label: 'MEDIUM', color: 'text-primary-brutalist' },
-  low: { label: 'LOW', color: 'text-neutral-400' }
+  urgent: { label: 'URGENT', color: 'text-[#EF4444]' },
+  high: { label: 'HIGH', color: 'text-[#F59E0B]' },
+  medium: { label: 'MEDIUM', color: 'text-[#6366F1]' },
+  low: { label: 'LOW', color: 'text-[#6B7280]' }
 }
 
 const typeConfig = {
-  feature: { label: 'FEATURE', color: 'bg-[var(--theme-success)]' },
-  bug: { label: 'BUG', color: 'bg-[var(--theme-error)]' },
-  improvement: { label: 'IMPROVEMENT', color: 'bg-[var(--theme-info)]' },
-  task: { label: 'TASK', color: 'bg-primary-brutalist' },
-  epic: { label: 'EPIC', color: 'bg-[var(--theme-accent)]' }
+  feature: { label: 'FEATURE', color: 'bg-[#22C55E]' },
+  bug: { label: 'BUG', color: 'bg-[#EF4444]' },
+  improvement: { label: 'IMPROVEMENT', color: 'bg-[#06B6D4]' },
+  task: { label: 'TASK', color: 'bg-[#6366F1]' },
+  epic: { label: 'EPIC', color: 'bg-[#F59E0B]' }
 }
 
 const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTaskEdit, onTaskDelete, onTaskDuplicate }: TaskListProps) {
@@ -103,7 +101,7 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
   // Sort tasks
   const sortedTasks = [...tasks].sort((a, b) => {
     let compareValue = 0
-    
+
     switch (sortBy) {
       case 'status':
         const statusOrder = ['backlog', 'todo', 'in_progress', 'in_review', 'done', 'cancelled']
@@ -126,59 +124,58 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
         compareValue = aName.localeCompare(bName)
         break
     }
-    
+
     return sortOrder === 'asc' ? compareValue : -compareValue
   })
 
   return (
-    <div className="space-y-[12px]">
+    <div className="space-y-3">
       {/* Actions Bar */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-[8px]">
+        <div className="flex items-center gap-2">
           <BrutalCheckbox
             checked={selectedTasks.size === tasks.length && tasks.length > 0}
             onChange={selectAllTasks}
             size="sm"
-            className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
           />
-          <span className="text-brutal-sm">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[#9CA3AF]">
             {selectedTasks.size > 0 && `${selectedTasks.size} SELECTED`}
           </span>
         </div>
-        
+
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="brutal-btn"
+          className="px-3 py-1.5 bg-[#6366F1] text-[#F9FAFB] font-mono text-xs uppercase tracking-wider hover:bg-[#4F46E5] transition-colors border-2 border-[#6366F1]"
         >
           + NEW TASK
         </button>
       </div>
 
       {/* Table Header */}
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
-        <div className="grid grid-cols-12 gap-[8px] p-[10px] font-mono text-brutal-sm uppercase border-b-2 border-[var(--theme-border)]">
+      <div className="bg-[#0A0A0A] border-2 border-[#2E2E35]">
+        <div className="grid grid-cols-12 gap-2 px-3 py-2.5 font-mono text-[10px] uppercase tracking-wider text-[#6B7280] border-b-2 border-[#2E2E35]">
           <div className="col-span-1"></div>
           <div className="col-span-4">TASK</div>
-          <div 
-            className="col-span-2 cursor-pointer hover:text-primary-brutalist"
+          <div
+            className="col-span-2 cursor-pointer hover:text-[#6366F1] transition-colors"
             onClick={() => handleSort('status')}
           >
             STATUS {sortBy === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
           </div>
-          <div 
-            className="col-span-1 cursor-pointer hover:text-primary-brutalist"
+          <div
+            className="col-span-1 cursor-pointer hover:text-[#6366F1] transition-colors"
             onClick={() => handleSort('priority')}
           >
             PRIORITY {sortBy === 'priority' && (sortOrder === 'asc' ? '↑' : '↓')}
           </div>
-          <div 
-            className="col-span-2 cursor-pointer hover:text-primary-brutalist"
+          <div
+            className="col-span-2 cursor-pointer hover:text-[#6366F1] transition-colors"
             onClick={() => handleSort('assignee')}
           >
             ASSIGNEE {sortBy === 'assignee' && (sortOrder === 'asc' ? '↑' : '↓')}
           </div>
-          <div 
-            className="col-span-2 cursor-pointer hover:text-primary-brutalist"
+          <div
+            className="col-span-2 cursor-pointer hover:text-[#6366F1] transition-colors"
             onClick={() => handleSort('dueDate')}
           >
             DUE DATE {sortBy === 'dueDate' && (sortOrder === 'asc' ? '↑' : '↓')}
@@ -187,142 +184,144 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
 
         {/* Task Rows */}
         {sortedTasks.map((task) => {
-          const StatusIcon = statusConfig[task.status as keyof typeof statusConfig].icon
+          const StatusIcon = statusConfig[task.status as keyof typeof statusConfig]?.icon || HiOutlineClock
           const isExpanded = expandedTasks.has(task._id)
           const isSelected = selectedTasks.has(task._id)
-          
+
           return (
-            <div key={task._id} className="border-b-2 border-[var(--theme-border)] last:border-b-0">
+            <div key={task._id} className="border-b border-[#1F1F23] last:border-b-0">
               {/* Main Row */}
               <div className={clsx(
-                "grid grid-cols-12 gap-[8px] p-[10px] items-center hover:bg-[var(--theme-background-secondary)]/20 transition-colors",
-                isSelected && "bg-primary-brutalist/10"
+                "grid grid-cols-12 gap-2 px-3 py-2.5 items-center hover:bg-[#111111] transition-colors",
+                isSelected && "bg-[#6366F1]/10"
               )}>
-                <div className="col-span-1 flex items-center gap-[4px]">
+                <div className="col-span-1 flex items-center gap-1.5">
                   <BrutalCheckbox
                     checked={isSelected}
                     onChange={() => toggleTaskSelection(task._id)}
                     size="sm"
-                    className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                   />
                   <button
                     onClick={() => toggleTaskExpansion(task._id)}
-                    className="brutal-hover"
+                    className="p-0.5 hover:bg-[#111111] transition-colors"
                   >
                     {isExpanded ? (
-                      <HiOutlineChevronUp className="w-16px h-16px" />
+                      <HiOutlineChevronUp className="w-3.5 h-3.5 text-[#6B7280]" />
                     ) : (
-                      <HiOutlineChevronDown className="w-16px h-16px" />
+                      <HiOutlineChevronDown className="w-3.5 h-3.5 text-[#6B7280]" />
                     )}
                   </button>
                 </div>
-                
+
                 <div className="col-span-4">
-                  <div className="flex items-center gap-[4px]">
+                  <div className="flex items-center gap-1.5">
                     <span className={clsx(
-                      "px-[4px] py-2px text-brutal-xs font-bold",
-                      typeConfig[task.type as keyof typeof typeConfig].color,
-                      "text-event-horizon"
+                      "px-1 py-0.5 text-[10px] font-mono font-bold",
+                      typeConfig[task.type as keyof typeof typeConfig]?.color || 'bg-[#6366F1]',
+                      "text-[#050505]"
                     )}>
                       {task.key}
                     </span>
-                    <span className="font-mono text-brutal-sm">{task.title}</span>
+                    <span className="font-mono text-xs text-[#F9FAFB]">{task.title}</span>
                   </div>
                 </div>
-                
+
                 <div className="col-span-2">
                   <div className={clsx(
-                    "inline-flex items-center gap-4px px-[4px] py-4px",
-                    statusConfig[task.status as keyof typeof statusConfig].color,
-                    "font-mono text-brutal-xs uppercase"
+                    "inline-flex items-center gap-1 px-1.5 py-0.5",
+                    statusConfig[task.status as keyof typeof statusConfig]?.color || 'bg-[#6B7280]',
+                    "text-[#050505] font-mono text-[10px] uppercase"
                   )}>
-                    <StatusIcon className="w-12px h-12px" />
-                    {statusConfig[task.status as keyof typeof statusConfig].label}
+                    <StatusIcon className="w-3 h-3" />
+                    {statusConfig[task.status as keyof typeof statusConfig]?.label || task.status}
                   </div>
                 </div>
-                
+
                 <div className="col-span-1">
                   <span className={clsx(
-                    "font-mono text-brutal-xs uppercase",
-                    priorityConfig[task.priority as keyof typeof priorityConfig].color
+                    "font-mono text-[10px] uppercase",
+                    priorityConfig[task.priority as keyof typeof priorityConfig]?.color || 'text-[#6B7280]'
                   )}>
-                    {priorityConfig[task.priority as keyof typeof priorityConfig].label}
+                    {priorityConfig[task.priority as keyof typeof priorityConfig]?.label || task.priority}
                   </span>
                 </div>
-                
+
                 <div className="col-span-2">
                   {task.assignees && task.assignees.length > 0 ? (
-                    <div className="flex items-center gap-4px flex-wrap">
+                    <div className="flex items-center gap-1 flex-wrap">
                       {task.assignees.slice(0, 2).map((assignee: any, index: number) => (
-                        <div key={assignee._id} className="flex items-center gap-4px">
-                          <div className="w-20px h-20px bg-primary-brutalist border border-[var(--theme-border)] flex items-center justify-center">
-                            <span className="text-event-horizon text-[10px] font-bold">
+                        <div key={assignee._id} className="flex items-center gap-1">
+                          <div className="w-5 h-5 bg-[#6366F1] border border-[#2E2E35] flex items-center justify-center">
+                            <span className="text-[#050505] text-[10px] font-bold">
                               {assignee.name.charAt(0)}
                             </span>
                           </div>
                           {index === 0 && task.assignees.length === 1 && (
-                            <span className="text-brutal-xs">{assignee.name}</span>
+                            <span className="text-[10px] font-mono text-[#9CA3AF]">{assignee.name}</span>
                           )}
                         </div>
                       ))}
                       {task.assignees.length > 2 && (
-                        <span className="text-brutal-xs text-neutral-400">
+                        <span className="text-[10px] font-mono text-[#6B7280]">
                           +{task.assignees.length - 2}
                         </span>
                       )}
                     </div>
                   ) : (
-                    <span className="text-brutal-xs text-neutral-500">UNASSIGNED</span>
+                    <span className="text-[10px] font-mono text-[#6B7280]">UNASSIGNED</span>
                   )}
                 </div>
-                
+
                 <div className="col-span-2">
                   {task.dueDate ? (
-                    <div className="flex items-center gap-4px text-brutal-xs">
-                      <HiOutlineCalendar className="w-12px h-12px" />
+                    <div className={clsx(
+                      "flex items-center gap-1 text-[10px] font-mono",
+                      new Date(task.dueDate) < new Date() ? 'text-[#EF4444]' : 'text-[#9CA3AF]'
+                    )}>
+                      <HiOutlineCalendar className="w-3 h-3" />
                       {format(new Date(task.dueDate), 'MMM dd, yyyy')}
                     </div>
                   ) : (
-                    <span className="text-brutal-xs text-neutral-500">NO DUE DATE</span>
+                    <span className="text-[10px] font-mono text-[#6B7280]">NO DUE DATE</span>
                   )}
                 </div>
               </div>
-              
+
               {/* Expanded Details */}
               {isExpanded && (
-                <div className="px-64px py-[8px] bg-[var(--theme-background-secondary)]/10 border-t-2 border-[var(--theme-border)]">
-                  <div className="grid grid-cols-2 gap-[12px]">
+                <div className="px-12 py-2.5 bg-[#111111] border-t border-[#1F1F23]">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <h4 className="text-brutal-sm font-bold mb-[4px] uppercase">Description</h4>
-                      <p className="text-brutal-sm text-[var(--theme-foreground)]/80">
+                      <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#6B7280] mb-1">Description</h4>
+                      <p className="text-xs font-mono text-[#9CA3AF]">
                         {task.description || 'No description provided.'}
                       </p>
                     </div>
-                    
-                    <div className="space-y-[8px]">
+
+                    <div className="space-y-2">
                       <div>
-                        <h4 className="text-brutal-sm font-bold mb-[4px] uppercase">Details</h4>
-                        <div className="space-y-[4px] text-brutal-xs">
-                          <div className="flex items-center gap-[4px]">
-                            <span className="text-neutral-500">TYPE:</span>
-                            <span className="uppercase">{task.type}</span>
+                        <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#6B7280] mb-1">Details</h4>
+                        <div className="space-y-1 text-[10px] font-mono">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[#6B7280]">TYPE:</span>
+                            <span className="text-[#9CA3AF] uppercase">{task.type}</span>
                           </div>
-                          <div className="flex items-center gap-[4px]">
-                            <span className="text-neutral-500">REPORTER:</span>
-                            <span>{task.reporter?.name || 'Unknown'}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[#6B7280]">REPORTER:</span>
+                            <span className="text-[#9CA3AF]">{task.reporter?.name || 'Unknown'}</span>
                           </div>
                           {task.estimate && (
-                            <div className="flex items-center gap-[4px]">
-                              <span className="text-neutral-500">ESTIMATE:</span>
-                              <span>{task.estimate.points || task.estimate.hours}h</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[#6B7280]">ESTIMATE:</span>
+                              <span className="text-[#9CA3AF]">{task.estimate.points || task.estimate.hours}h</span>
                             </div>
                           )}
                           {task.labels && task.labels.length > 0 && (
-                            <div className="flex items-center gap-[4px]">
-                              <span className="text-neutral-500">LABELS:</span>
-                              <div className="flex gap-4px">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[#6B7280]">LABELS:</span>
+                              <div className="flex gap-1">
                                 {task.labels.map((label: string) => (
-                                  <span key={label} className="px-[4px] py-2px bg-primary-brutalist text-event-horizon text-brutal-xs">
+                                  <span key={label} className="px-1 py-0.5 bg-[#6366F1]/20 text-[#6366F1] text-[10px] font-mono">
                                     {label}
                                   </span>
                                 ))}
@@ -331,10 +330,20 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
                           )}
                         </div>
                       </div>
-                      
-                      <div className="flex gap-[4px]">
-                        <button className="brutal-btn-sm">EDIT</button>
-                        <button className="brutal-btn-sm bg-[var(--theme-error)] border-[var(--theme-error)] hover:bg-[#CC0000]">DELETE</button>
+
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => onTaskEdit?.(task)}
+                          className="px-2 py-1 text-[10px] font-mono uppercase border-2 border-[#2E2E35] text-[#9CA3AF] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors"
+                        >
+                          EDIT
+                        </button>
+                        <button
+                          onClick={() => onTaskDelete?.(task)}
+                          className="px-2 py-1 text-[10px] font-mono uppercase border-2 border-[#EF4444]/30 text-[#EF4444] hover:bg-[#EF4444] hover:text-[#F9FAFB] transition-colors"
+                        >
+                          DELETE
+                        </button>
                       </div>
                     </div>
                   </div>

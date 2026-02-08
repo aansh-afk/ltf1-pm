@@ -1482,4 +1482,190 @@ export default defineSchema({
     .index("by_timestamp", ["timestamp"])
     .index("by_level", ["level"])
     .index("by_installation", ["installationId"]),
+
+  // ─── Communications Hub ───────────────────────────────────────────
+
+  // Unified normalized messages from all integration sources
+  commsMessages: defineTable({
+    workspaceId: v.id("workspaces"),
+    source: v.union(
+      v.literal("slack"),
+      v.literal("github"),
+      v.literal("discord"),
+      v.literal("jira"),
+      v.literal("internal")
+    ),
+    sourceChannelId: v.id("commsChannels"),
+    sourceMessageId: v.optional(v.string()), // External message ID for dedup
+    senderName: v.string(),
+    senderAvatarUrl: v.optional(v.string()),
+    senderUserId: v.optional(v.id("users")), // Mapped LTF1 user if known
+    content: v.string(),
+    contentType: v.union(
+      v.literal("text"),
+      v.literal("markdown"),
+      v.literal("code"),
+      v.literal("system")
+    ),
+    metadata: v.optional(v.any()), // Source-specific data (PR url, issue link, etc.)
+    externalCreatedAt: v.optional(v.number()), // Original timestamp from source
+    createdAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_workspace_source", ["workspaceId", "source"])
+    .index("by_channel", ["sourceChannelId", "createdAt"])
+    .index("by_workspace_created", ["workspaceId", "createdAt"]),
+
+  // Registry of all connected channels across integrations
+  commsChannels: defineTable({
+    workspaceId: v.id("workspaces"),
+    source: v.union(
+      v.literal("slack"),
+      v.literal("github"),
+      v.literal("discord"),
+      v.literal("jira"),
+      v.literal("internal")
+    ),
+    externalId: v.string(), // Channel/repo/issue ID from the source
+    name: v.string(),
+    channelType: v.union(
+      v.literal("channel"),
+      v.literal("repository"),
+      v.literal("issue"),
+      v.literal("pr"),
+      v.literal("direct"),
+      v.literal("thread")
+    ),
+    parentId: v.optional(v.string()), // Parent channel/repo ID
+    parentName: v.optional(v.string()),
+    active: v.boolean(),
+    muted: v.boolean(),
+    unreadCount: v.number(),
+    lastMessageAt: v.optional(v.number()),
+    replyEnabled: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_workspace_source", ["workspaceId", "source"])
+    .index("by_workspace_external", ["workspaceId", "source", "externalId"])
+    .index("by_last_message", ["workspaceId", "lastMessageAt"]),
+
+  // Outbound reply tracking
+  commsReplies: defineTable({
+    workspaceId: v.id("workspaces"),
+    userId: v.id("users"),
+    channelId: v.id("commsChannels"),
+    content: v.string(),
+    source: v.union(
+      v.literal("slack"),
+      v.literal("github"),
+      v.literal("discord"),
+      v.literal("jira"),
+      v.literal("internal")
+    ),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("sent"),
+      v.literal("failed")
+    ),
+    externalMessageId: v.optional(v.string()),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_channel", ["channelId"])
+    .index("by_status", ["status"]),
+
+  // ─── Discord Integration (Stub) ──────────────────────────────────
+
+  discordIntegrations: defineTable({
+    workspaceId: v.id("workspaces"),
+    botToken: v.optional(v.string()),
+    guildId: v.string(),
+    guildName: v.string(),
+    active: v.boolean(),
+    connectedBy: v.id("users"),
+    connectedAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_guild", ["guildId"]),
+
+  discordChannelMappings: defineTable({
+    workspaceId: v.id("workspaces"),
+    integrationId: v.id("discordIntegrations"),
+    discordChannelId: v.string(),
+    discordChannelName: v.string(),
+    projectId: v.optional(v.id("projects")),
+    channelType: v.union(v.literal("text"), v.literal("voice"), v.literal("forum")),
+    syncEvents: v.array(v.string()),
+    active: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_integration", ["integrationId"])
+    .index("by_discord_channel", ["discordChannelId"]),
+
+  // ─── Jira Integration (Stub) ─────────────────────────────────────
+
+  jiraIntegrations: defineTable({
+    workspaceId: v.id("workspaces"),
+    accessToken: v.string(),
+    refreshToken: v.optional(v.string()),
+    cloudId: v.string(),
+    siteName: v.string(),
+    siteUrl: v.string(),
+    active: v.boolean(),
+    connectedBy: v.id("users"),
+    connectedAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_cloud", ["cloudId"]),
+
+  jiraProjectMappings: defineTable({
+    workspaceId: v.id("workspaces"),
+    integrationId: v.id("jiraIntegrations"),
+    jiraProjectId: v.string(),
+    jiraProjectKey: v.string(),
+    jiraProjectName: v.string(),
+    projectId: v.optional(v.id("projects")),
+    syncDirection: v.union(
+      v.literal("to_ltf1"),
+      v.literal("to_jira"),
+      v.literal("bidirectional")
+    ),
+    syncTypes: v.array(v.string()), // e.g., ["issue", "comment", "status"]
+    active: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_integration", ["integrationId"])
+    .index("by_jira_project", ["jiraProjectId"]),
+
+  // ─── Feedback & NPS ────────────────────────────────────────────
+
+  feedback: defineTable({
+    userId: v.optional(v.id("users")),
+    email: v.optional(v.string()),
+    message: v.string(),
+    page: v.string(),
+    userAgent: v.optional(v.string()),
+    status: v.union(v.literal("new"), v.literal("reviewed"), v.literal("resolved")),
+    createdAt: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_created", ["createdAt"]),
+
+  npsSurveys: defineTable({
+    userId: v.id("users"),
+    score: v.number(),
+    reason: v.optional(v.string()),
+    dismissedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_score", ["score"])
+    .index("by_created", ["createdAt"]),
 });

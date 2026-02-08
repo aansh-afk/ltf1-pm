@@ -27,25 +27,25 @@ interface SprintBoardProps {
 }
 
 const columns = [
-  { id: 'todo', title: 'TODO', color: 'bg-neutral-600' },
-  { id: 'in_progress', title: 'IN PROGRESS', color: 'bg-[var(--theme-info)]' },
-  { id: 'in_review', title: 'IN REVIEW', color: 'bg-[var(--theme-accent)]' },
-  { id: 'done', title: 'DONE', color: 'bg-[var(--theme-success)]' }
+  { id: 'todo', title: 'TODO', dotColor: 'bg-[#6B7280]' },
+  { id: 'in_progress', title: 'IN PROGRESS', dotColor: 'bg-[#3B82F6]' },
+  { id: 'in_review', title: 'IN REVIEW', dotColor: 'bg-[#8B5CF6]' },
+  { id: 'done', title: 'DONE', dotColor: 'bg-[#22C55E]' }
 ]
 
-const priorityColors = {
-  urgent: 'border-[var(--theme-error)]',
-  high: 'border-[#FF8800]',
-  medium: 'border-primary-brutalist',
-  low: 'border-neutral-600'
+const priorityColors: Record<string, string> = {
+  urgent: 'border-l-[#EF4444]',
+  high: 'border-l-[#F59E0B]',
+  medium: 'border-l-[#2E2E35]',
+  low: 'border-l-[#2E2E35]'
 }
 
-const typeIcons = {
-  task: '📋',
-  feature: '✨',
-  bug: '🐛',
-  improvement: '💡',
-  epic: '🎯'
+const typeIcons: Record<string, string> = {
+  task: '\uD83D\uDCCB',
+  feature: '\u2728',
+  bug: '\uD83D\uDC1B',
+  improvement: '\uD83D\uDCA1',
+  epic: '\uD83C\uDFAF'
 }
 
 export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTaskDelete, onTaskDuplicate }: SprintBoardProps) {
@@ -102,7 +102,7 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
       const newStatus = destination.droppableId === 'todo' ? 'backlog' : destination.droppableId
       await moveTask({
         taskId: draggableId as any,
-        status: newStatus as any, // Cast to any or appropriate union type if strict
+        status: newStatus as any,
         position: destination.index
       })
     } catch (error: any) {
@@ -137,33 +137,33 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
   }
 
   return (
-    <div className="space-y-[12px]">
+    <div className="space-y-3">
       {/* Sprint Actions */}
-      <div className="flex justify-end gap-[8px]">
+      <div className="flex justify-end">
         <button
           onClick={handleCompleteSprint}
-          className="brutal-btn flex items-center gap-[4px]"
+          className="px-3 py-1.5 bg-[#111111] border-2 border-[#2E2E35] text-xs font-mono text-[#9CA3AF] uppercase tracking-wider flex items-center gap-1.5 hover:border-[#22C55E] hover:text-[#22C55E]"
         >
-          <HiOutlineCheck className="w-16px h-16px" />
-          COMPLETE SPRINT
+          <HiOutlineCheck className="w-3.5 h-3.5" />
+          Complete Sprint
         </button>
       </div>
 
       {/* Board */}
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-4 gap-[12px]">
+        <div className="grid grid-cols-4 gap-3">
           {columns.map((column) => (
             <div key={column.id} className="flex flex-col">
               {/* Column Header */}
-              <div className={clsx(
-                "p-[10px] border-2 border-[var(--theme-border)] mb-[8px]",
-                column.color
-              )}>
-                <h3 className="font-mono text-brutal-sm uppercase text-event-horizon">
-                  {column.title}
-                </h3>
-                <p className="font-mono text-brutal-xs text-event-horizon/80">
-                  {tasksByStatus[column.id].length} TASKS
+              <div className="bg-[#111111] border-2 border-[#2E2E35] p-3 mb-2">
+                <div className="flex items-center gap-2">
+                  <div className={clsx("w-2 h-2 shrink-0", column.dotColor)} />
+                  <h3 className="font-mono text-xs uppercase tracking-wider text-[#F9FAFB]">
+                    {column.title}
+                  </h3>
+                </div>
+                <p className="font-mono text-[10px] text-[#6B7280] mt-1 ml-4">
+                  {tasksByStatus[column.id].length} tasks
                 </p>
               </div>
 
@@ -174,10 +174,10 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                     className={clsx(
-                      "flex-1 space-y-[8px] p-[10px] border-2 border-dashed transition-colors min-h-400px",
+                      "flex-1 space-y-2 p-2 border-2 border-dashed min-h-[300px]",
                       snapshot.isDraggingOver
-                        ? "border-primary-brutalist bg-primary-brutalist/10"
-                        : "border-[var(--theme-border)]"
+                        ? "border-[#6366F1] bg-[#6366F1]/5"
+                        : "border-[#2E2E35]/50"
                     )}
                   >
                     {tasksByStatus[column.id].map((task, index) => (
@@ -188,68 +188,68 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                             className={clsx(
-                              "bg-[var(--theme-background)] border-2 p-[10px] transition-all",
-                              priorityColors[task.priority],
-                              snapshot.isDragging && "shadow-brutal-lg rotate-2"
+                              "bg-[#0A0A0A] border-2 border-[#2E2E35] border-l-[3px] p-3",
+                              priorityColors[task.priority] || 'border-l-[#2E2E35]',
+                              snapshot.isDragging && "shadow-[4px_4px_0px_#000000]"
                             )}
                           >
                             {/* Task Header */}
-                            <div className="flex items-start justify-between mb-[4px]">
-                              <div className="flex items-center gap-[4px]">
-                                <span className="font-mono text-brutal-xs text-neutral-500">
+                            <div className="flex items-start justify-between mb-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-mono text-[10px] text-[#6B7280]">
                                   {task.key}
                                 </span>
-                                <span>{typeIcons[task.type]}</span>
+                                <span className="text-xs">{typeIcons[task.type]}</span>
                               </div>
-                              <div className="flex items-center gap-4px">
+                              <div className="flex items-center gap-0.5">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     onTaskEdit?.(task)
                                   }}
-                                  className="p-4px hover:bg-[var(--theme-background-secondary)]/20 transition-colors"
+                                  className="p-1 hover:bg-[#111111] text-[#6B7280] hover:text-[#F9FAFB]"
                                   title="Edit"
                                 >
-                                  <HiOutlinePencil className="w-12px h-12px" />
+                                  <HiOutlinePencil className="w-3 h-3" />
                                 </button>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     handleRemoveFromSprint(task._id)
                                   }}
-                                  className="p-4px hover:bg-[var(--theme-background-secondary)]/20 transition-colors"
+                                  className="p-1 hover:bg-[#111111] text-[#6B7280] hover:text-[#EF4444]"
                                   title="Remove from sprint"
                                 >
-                                  <HiOutlineX className="w-12px h-12px" />
+                                  <HiOutlineX className="w-3 h-3" />
                                 </button>
                               </div>
                             </div>
 
                             {/* Task Title */}
-                            <h4 className="font-mono text-brutal-sm mb-[4px]">
+                            <h4 className="text-xs font-semibold text-[#F9FAFB] mb-1.5">
                               {task.title}
                             </h4>
 
                             {/* Task Meta */}
-                            <div className="flex items-center gap-[6px] text-brutal-xs">
+                            <div className="flex items-center gap-2 flex-wrap">
                               {task.assigneeName && (
-                                <div className="flex items-center gap-4px text-neutral-500">
-                                  <HiOutlineUser className="w-12px h-12px" />
+                                <div className="flex items-center gap-1 text-[10px] text-[#6B7280] font-mono">
+                                  <HiOutlineUser className="w-3 h-3" />
                                   {task.assigneeName}
                                 </div>
                               )}
                               {task.estimate?.points && (
-                                <div className="flex items-center gap-4px text-neutral-500">
-                                  <HiOutlineFlag className="w-12px h-12px" />
-                                  {task.estimate.points} PTS
+                                <div className="flex items-center gap-1 text-[10px] text-[#6B7280] font-mono">
+                                  <HiOutlineFlag className="w-3 h-3" />
+                                  {task.estimate.points} pts
                                 </div>
                               )}
                               {task.dueDate && (
                                 <div className={clsx(
-                                  "flex items-center gap-4px",
-                                  new Date(task.dueDate) < new Date() ? "text-[var(--theme-error)]" : "text-neutral-500"
+                                  "flex items-center gap-1 text-[10px] font-mono",
+                                  new Date(task.dueDate) < new Date() ? "text-[#EF4444]" : "text-[#6B7280]"
                                 )}>
-                                  <HiOutlineClock className="w-12px h-12px" />
+                                  <HiOutlineClock className="w-3 h-3" />
                                   {new Date(task.dueDate).toLocaleDateString('en-US', {
                                     month: 'short',
                                     day: 'numeric'

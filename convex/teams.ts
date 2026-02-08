@@ -91,6 +91,61 @@ export const getTeamMembers = query({
     },
 });
 
+export const getAvailableMembers = query({
+    args: {
+        teamId: v.id("teams"),
+    },
+    returns: v.array(
+        v.object({
+            _id: v.id("users"),
+            name: v.string(),
+            email: v.string(),
+            avatarUrl: v.optional(v.string()),
+        })
+    ),
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) {
+            return [];
+        }
+
+        const team = await ctx.db.get(args.teamId);
+        if (!team) {
+            return [];
+        }
+
+        // Get all workspace members
+        const workspaceMembers = await ctx.db
+            .query("workspaceMembers")
+            .withIndex("by_workspace", (q) => q.eq("workspaceId", team.workspaceId))
+            .collect();
+
+        // Get existing team members
+        const teamMembers = await ctx.db
+            .query("teamMembers")
+            .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+            .collect();
+
+        const teamMemberUserIds = new Set(teamMembers.map((m) => m.userId.toString()));
+
+        // Filter to workspace members not already in the team
+        const available = [];
+        for (const wm of workspaceMembers) {
+            if (teamMemberUserIds.has(wm.userId.toString())) continue;
+            const user = await ctx.db.get(wm.userId);
+            if (!user) continue;
+            available.push({
+                _id: user._id,
+                name: user.name || user.email || "Unknown",
+                email: user.email || "",
+                avatarUrl: user.avatarUrl,
+            });
+        }
+
+        return available;
+    },
+});
+
 export const addTeamMember = mutation({
     args: {
         teamId: v.id("teams"),

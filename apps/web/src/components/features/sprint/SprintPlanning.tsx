@@ -21,19 +21,19 @@ interface SprintPlanningProps {
   currentSprint: any
 }
 
-const typeIcons = {
-  task: '📋',
-  feature: '✨',
-  bug: '🐛',
-  improvement: '💡',
-  epic: '🎯'
+const typeIcons: Record<string, string> = {
+  task: '\uD83D\uDCCB',
+  feature: '\u2728',
+  bug: '\uD83D\uDC1B',
+  improvement: '\uD83D\uDCA1',
+  epic: '\uD83C\uDFAF'
 }
 
-const priorityIcons = {
-  urgent: '🔴',
-  high: '🟠',
-  medium: '🟡',
-  low: '🟢'
+const priorityIcons: Record<string, string> = {
+  urgent: '\uD83D\uDD34',
+  high: '\uD83D\uDFE0',
+  medium: '\uD83D\uDFE1',
+  low: '\uD83D\uDFE2'
 }
 
 export default function SprintPlanning({ projectId, sprints, currentSprint }: SprintPlanningProps) {
@@ -87,7 +87,7 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
 
   const handleSelectAll = () => {
     if (!backlogTasks) return
-    
+
     if (selectedTasks.size === backlogTasks.length) {
       setSelectedTasks(new Set())
     } else {
@@ -104,44 +104,44 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
   }
 
   return (
-    <div className="grid grid-cols-2 gap-[12px]">
+    <div className="grid grid-cols-2 gap-3">
       {/* Backlog Column */}
-      <div className="space-y-[8px]">
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h2 className="font-mono text-[14px] font-semibold uppercase">BACKLOG</h2>
-          <div className="flex items-center gap-[8px]">
+          <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-[#F9FAFB]">BACKLOG</h2>
+          <div className="flex items-center gap-2">
             {backlogTasks && backlogTasks.length > 0 && (
               <button
                 onClick={handleSelectAll}
-                className="brutal-btn-sm"
+                className="px-2 py-1 bg-[#111111] border-2 border-[#2E2E35] font-mono text-[10px] uppercase tracking-wider text-[#9CA3AF] hover:border-[#6366F1] hover:text-[#F9FAFB]"
               >
                 {selectedTasks.size === backlogTasks.length ? 'DESELECT ALL' : 'SELECT ALL'}
               </button>
             )}
             <button
               onClick={() => setShowCreateTaskModal(true)}
-              className="brutal-btn-sm flex items-center gap-[4px]"
+              className="px-2 py-1 bg-[#111111] border-2 border-[#2E2E35] font-mono text-[10px] uppercase tracking-wider text-[#9CA3AF] hover:border-[#6366F1] hover:text-[#F9FAFB] flex items-center gap-1"
             >
-              <HiOutlinePlus className="w-12px h-12px" />
+              <HiOutlinePlus className="w-3 h-3" />
               NEW TASK
             </button>
           </div>
         </div>
 
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[10px] space-y-[8px] max-h-600px overflow-y-auto">
+        <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-2.5 space-y-2 max-h-[600px] overflow-y-auto">
           {!backlogTasks ? (
-            <p className="text-brutal-sm text-neutral-500">Loading tasks...</p>
+            <p className="text-xs text-[#6B7280] font-mono uppercase">Loading tasks...</p>
           ) : backlogTasks.length === 0 ? (
-            <p className="text-brutal-sm text-neutral-500">No tasks in backlog</p>
+            <p className="text-xs text-[#6B7280] font-mono uppercase">No tasks in backlog</p>
           ) : (
             backlogTasks.map((task) => (
               <div
                 key={task._id}
                 className={clsx(
-                  "p-[10px] border-2 cursor-pointer transition-all",
+                  "p-2.5 border-2 cursor-pointer",
                   selectedTasks.has(task._id)
-                    ? "border-primary-brutalist bg-primary-brutalist/10"
-                    : "border-[var(--theme-border)] hover:border-primary-brutalist/50"
+                    ? "border-[#6366F1] bg-[#6366F1]/10"
+                    : "border-[#2E2E35] hover:border-[#6366F1]/50"
                 )}
                 onClick={() => {
                   const newSelected = new Set(selectedTasks)
@@ -153,23 +153,23 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
                   setSelectedTasks(newSelected)
                 }}
               >
-                <div className="flex items-center justify-between mb-[4px]">
-                  <div className="flex items-center gap-[4px]">
-                    <span className="font-mono text-brutal-xs text-neutral-500">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1">
+                    <span className="font-mono text-[10px] text-[#6B7280] uppercase">
                       {task.key}
                     </span>
-                    <span>{typeIcons[task.type]}</span>
-                    <span>{priorityIcons[task.priority]}</span>
+                    <span className="text-xs">{typeIcons[task.type]}</span>
+                    <span className="text-xs">{priorityIcons[task.priority]}</span>
                   </div>
                   {task.estimate?.points && (
-                    <span className="font-mono text-brutal-xs">
+                    <span className="font-mono text-[10px] text-[#9CA3AF]">
                       {task.estimate.points} PTS
                     </span>
                   )}
                 </div>
-                <h4 className="font-mono text-brutal-sm">{task.title}</h4>
+                <h4 className="font-mono text-xs text-[#F9FAFB]">{task.title}</h4>
                 {task.assigneeName && (
-                  <p className="text-brutal-xs text-neutral-500 mt-4px">
+                  <p className="text-[10px] text-[#6B7280] font-mono mt-1">
                     {task.assigneeName}
                   </p>
                 )}
@@ -179,120 +179,120 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
         </div>
 
         {selectedTasks.size > 0 && (
-          <div className="bg-primary-brutalist border-2 border-[var(--theme-border)] p-[10px]">
-            <p className="font-mono text-brutal-sm text-event-horizon mb-[4px]">
+          <div className="bg-[#6366F1] border-2 border-[#4F46E5] p-2.5">
+            <p className="font-mono text-xs text-white mb-1 font-bold">
               {selectedTasks.size} TASKS SELECTED
             </p>
-            <p className="font-mono text-brutal-xs text-event-horizon">
-              SELECT A SPRINT TO ADD THESE TASKS →
+            <p className="font-mono text-[10px] text-white/80 uppercase">
+              SELECT A SPRINT TO ADD THESE TASKS &rarr;
             </p>
           </div>
         )}
       </div>
 
       {/* Sprints Column */}
-      <div className="space-y-[8px]">
-        <h2 className="font-mono text-[14px] font-semibold uppercase">SPRINTS</h2>
+      <div className="space-y-2">
+        <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-[#F9FAFB]">SPRINTS</h2>
 
-        <div className="space-y-[8px]">
+        <div className="space-y-2">
           {sprints.map((sprint) => {
             const isActive = sprint.status === 'active'
             const isCompleted = sprint.status === 'completed'
-            
+
             return (
               <div
                 key={sprint._id}
                 className={clsx(
-                  "border-2 p-[16px]",
-                  isActive ? "border-primary-brutalist bg-primary-brutalist/10" :
-                  isCompleted ? "border-[var(--theme-success)] bg-[var(--theme-success)]/10" :
-                  "border-[var(--theme-border)] bg-[var(--theme-background)]"
+                  "border-2 p-4",
+                  isActive ? "border-[#6366F1]/60 bg-[#6366F1]/5" :
+                  isCompleted ? "border-[#22C55E]/40 bg-[#22C55E]/5" :
+                  "border-[#2E2E35] bg-[#0A0A0A]"
                 )}
               >
-                <div className="flex items-start justify-between mb-[8px]">
+                <div className="flex items-start justify-between mb-2">
                   <div>
-                    <div className="flex items-center gap-[4px] mb-[2px]">
-                      <h3 className="font-mono text-brutal-md uppercase">{sprint.name}</h3>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <h3 className="font-mono text-sm font-bold uppercase text-[#F9FAFB]">{sprint.name}</h3>
                       {isActive && (
-                        <span className="px-[4px] py-4px bg-primary-brutalist text-event-horizon font-mono text-brutal-xs uppercase">
+                        <span className="px-1.5 py-0.5 bg-[#6366F1]/20 text-[#6366F1] font-mono text-[10px] uppercase tracking-wider font-bold border border-[#6366F1]/40">
                           ACTIVE
                         </span>
                       )}
                       {isCompleted && (
-                        <span className="px-[4px] py-4px bg-[var(--theme-success)] text-event-horizon font-mono text-brutal-xs uppercase">
+                        <span className="px-1.5 py-0.5 bg-[#22C55E]/20 text-[#22C55E] font-mono text-[10px] uppercase tracking-wider font-bold border border-[#22C55E]/40">
                           COMPLETED
                         </span>
                       )}
                     </div>
                     {sprint.goal && (
-                      <p className="text-brutal-sm text-neutral-500">{sprint.goal}</p>
+                      <p className="text-xs text-[#6B7280] font-mono">{sprint.goal}</p>
                     )}
                   </div>
-                  
+
                   {!isActive && !isCompleted && (
-                    <div className="flex gap-[4px]">
+                    <div className="flex gap-1">
                       <button
                         onClick={() => handleStartSprint(sprint._id)}
-                        className="p-[4px] border-2 border-primary-brutalist text-primary-brutalist hover:bg-primary-brutalist hover:text-event-horizon transition-colors"
+                        className="p-1 border-2 border-[#6366F1] text-[#6366F1] hover:bg-[#6366F1] hover:text-white"
                       >
-                        <HiOutlinePlay className="w-16px h-16px" />
+                        <HiOutlinePlay className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteSprint(sprint._id)}
-                        className="p-[4px] border-2 border-[var(--theme-error)] text-[var(--theme-error)] hover:bg-[var(--theme-error)] hover:text-[var(--theme-foreground)] transition-colors"
+                        className="p-1 border-2 border-[#EF4444] text-[#EF4444] hover:bg-[#EF4444] hover:text-white"
                       >
-                        <HiOutlineTrash className="w-16px h-16px" />
+                        <HiOutlineTrash className="w-4 h-4" />
                       </button>
                     </div>
                   )}
                 </div>
 
-                <div className="flex gap-[12px] mb-[8px]">
-                  <div className="flex items-center gap-[4px]">
-                    <HiOutlineCalendar className="w-16px h-16px text-neutral-500" />
-                    <span className="font-mono text-brutal-xs">
+                <div className="flex gap-3 mb-2 text-[10px] font-mono text-[#6B7280]">
+                  <div className="flex items-center gap-1">
+                    <HiOutlineCalendar className="w-3.5 h-3.5" />
+                    <span>
                       {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-[4px]">
-                    <HiOutlineChartBar className="w-16px h-16px text-neutral-500" />
-                    <span className="font-mono text-brutal-xs">
+                  <div className="flex items-center gap-1">
+                    <HiOutlineChartBar className="w-3.5 h-3.5" />
+                    <span>
                       {sprint.taskStats.total} TASKS
                     </span>
                   </div>
                 </div>
 
                 {/* Progress Bar */}
-                <div className="mb-[8px]">
-                  <div className="flex justify-between mb-[2px]">
-                    <span className="font-mono text-brutal-xs">PROGRESS</span>
-                    <span className="font-mono text-brutal-xs">{sprint.progress}%</span>
+                <div className="mb-2">
+                  <div className="flex justify-between mb-0.5">
+                    <span className="font-mono text-[10px] text-[#6B7280] uppercase tracking-wider">PROGRESS</span>
+                    <span className="font-mono text-[10px] text-[#9CA3AF]">{sprint.progress}%</span>
                   </div>
-                  <div className="h-16px bg-[var(--theme-background-secondary)]/20 border-2 border-[var(--theme-border)]">
-                    <div 
-                      className="h-full bg-primary-brutalist transition-all duration-300"
+                  <div className="h-1.5 bg-[#2E2E35] border border-[#2E2E35]">
+                    <div
+                      className="h-full bg-[#6366F1]"
                       style={{ width: `${sprint.progress}%` }}
                     />
                   </div>
                 </div>
 
                 {/* Task Stats */}
-                <div className="grid grid-cols-4 gap-[4px] mb-[8px]">
-                  <div className="text-center p-[4px] bg-[var(--theme-background-secondary)]/10">
-                    <p className="font-mono text-brutal-xs text-neutral-500">TODO</p>
-                    <p className="font-mono text-brutal-sm">{sprint.taskStats.todo}</p>
+                <div className="grid grid-cols-4 gap-1 mb-2">
+                  <div className="text-center p-1.5 bg-[#111111]">
+                    <p className="font-mono text-[10px] text-[#6B7280] uppercase">TODO</p>
+                    <p className="font-mono text-xs font-bold text-[#F9FAFB]">{sprint.taskStats.todo}</p>
                   </div>
-                  <div className="text-center p-[4px] bg-[var(--theme-info)]/10">
-                    <p className="font-mono text-brutal-xs text-neutral-500">IN PROGRESS</p>
-                    <p className="font-mono text-brutal-sm">{sprint.taskStats.inProgress}</p>
+                  <div className="text-center p-1.5 bg-[#06B6D4]/10">
+                    <p className="font-mono text-[10px] text-[#6B7280] uppercase">WIP</p>
+                    <p className="font-mono text-xs font-bold text-[#F9FAFB]">{sprint.taskStats.inProgress}</p>
                   </div>
-                  <div className="text-center p-[4px] bg-[var(--theme-accent)]/10">
-                    <p className="font-mono text-brutal-xs text-neutral-500">IN REVIEW</p>
-                    <p className="font-mono text-brutal-sm">{sprint.taskStats.inReview}</p>
+                  <div className="text-center p-1.5 bg-[#6366F1]/10">
+                    <p className="font-mono text-[10px] text-[#6B7280] uppercase">REVIEW</p>
+                    <p className="font-mono text-xs font-bold text-[#F9FAFB]">{sprint.taskStats.inReview}</p>
                   </div>
-                  <div className="text-center p-[4px] bg-[var(--theme-success)]/10">
-                    <p className="font-mono text-brutal-xs text-neutral-500">DONE</p>
-                    <p className="font-mono text-brutal-sm">{sprint.taskStats.done}</p>
+                  <div className="text-center p-1.5 bg-[#22C55E]/10">
+                    <p className="font-mono text-[10px] text-[#6B7280] uppercase">DONE</p>
+                    <p className="font-mono text-xs font-bold text-[#F9FAFB]">{sprint.taskStats.done}</p>
                   </div>
                 </div>
 
@@ -300,9 +300,9 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
                 {!isCompleted && selectedTasks.size > 0 && (
                   <button
                     onClick={() => handleAddToSprint(sprint._id)}
-                    className="w-full brutal-btn flex items-center justify-center gap-[4px]"
+                    className="w-full px-3 py-2 bg-[#6366F1] text-white font-mono text-xs uppercase tracking-wider font-bold border-2 border-[#4F46E5] flex items-center justify-center gap-1.5 hover:bg-[#4F46E5]"
                   >
-                    <HiOutlineArrowRight className="w-16px h-16px" />
+                    <HiOutlineArrowRight className="w-4 h-4" />
                     ADD {selectedTasks.size} TASKS TO SPRINT
                   </button>
                 )}

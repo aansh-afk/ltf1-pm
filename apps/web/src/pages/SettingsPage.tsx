@@ -4,6 +4,7 @@ import { api } from '../../../../convex/_generated/api'
 import { useAuth } from '@clerk/clerk-react'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
+import { motion } from 'framer-motion'
 import {
   HiOutlineUser,
   HiOutlineEye,
@@ -223,43 +224,51 @@ export default function SettingsPage() {
 
   if (!currentUser) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[var(--theme-background)]">
-        <div className="text-[14px] font-semibold font-mono animate-pulse">Loading settings...</div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-xs font-semibold font-mono uppercase tracking-wider text-[var(--theme-foreground)]/50 animate-pulse">Loading settings...</div>
       </div>
     )
   }
 
   return (
-    <div className="p-4 min-h-screen bg-[var(--theme-background)] font-mono">
+    <motion.div
+      className="p-4 bg-[var(--theme-background)]"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       {/* Header */}
       <div className="mb-4 flex flex-col md:flex-row md:items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
-            <HiOutlineCog className="w-6 h-6 md:w-7 md:h-7 text-[var(--theme-primary)]" />
+          <span className="text-[10px] font-mono font-semibold uppercase tracking-widest text-[var(--theme-foreground)]/40 inline-block mb-1">
+            Account
+          </span>
+          <h1 className="text-xl font-bold tracking-tight text-[var(--theme-foreground)]">
             Settings
           </h1>
-          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 uppercase tracking-wide">
-            Manage your account settings and preferences • User: {currentUser.name}
+          <p className="text-xs text-[var(--theme-foreground)]/40 mt-1 font-mono">
+            Manage your account settings and preferences
           </p>
         </div>
 
         {/* Global Save Status */}
         {(hasUnsavedProfile || hasUnsavedPreferences) && (
-          <div className="flex items-center gap-4 animate-pulse">
-            <span className="text-brutal-warning font-bold uppercase text-sm flex items-center gap-2">
-              <HiOutlineExclamation className="w-4 h-4" />
-              Unsaved Changes
+          <div className="flex items-center gap-3">
+            <span className="text-brutal-warning font-bold uppercase text-xs font-mono flex items-center gap-2">
+              <HiOutlineExclamation className="w-3.5 h-3.5" />
+              Unsaved
             </span>
             <BrutalButton
               variant="primary"
+              size="sm"
               onClick={() => {
                 if (hasUnsavedProfile) forceSaveProfile()
                 if (hasUnsavedPreferences) forceSavePreferences()
               }}
               className="flex items-center gap-2"
             >
-              <HiOutlineSave className="w-4 h-4" />
-              {isSavingProfile || isSavingPreferences ? 'Saving...' : 'Save Changes'}
+              <HiOutlineSave className="w-3.5 h-3.5" />
+              {isSavingProfile || isSavingPreferences ? 'Saving...' : 'Save'}
             </BrutalButton>
           </div>
         )}
@@ -644,7 +653,7 @@ export default function SettingsPage() {
           onClose={() => setShowEditDeveloperProfile(false)}
         />
       )}
-    </div>
+    </motion.div>
   )
 }
 

@@ -151,30 +151,48 @@ export const getUserInstallations = query({
 
     if (!user) return [];
 
-    // Get all workspaces the user is a member of
+    const seenIds = new Set<number>();
+    const installations = [];
+
+    // 1. Get installations linked to user's workspaces
     const memberships = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
 
-    const installations = [];
     for (const membership of memberships) {
       const workspace = await ctx.db.get(membership.workspaceId);
       if (workspace?.settings?.integrations?.githubInstallationId) {
         const installationId = workspace.settings.integrations.githubInstallationId;
         const installation = await ctx.db
           .query("githubInstallations")
-          .withIndex("by_installation_id", (q) => 
+          .withIndex("by_installation_id", (q) =>
             q.eq("installationId", installationId)
           )
           .first();
 
         if (installation && !installation.suspendedAt) {
+          seenIds.add(installation.installationId);
           installations.push({
             ...installation,
             workspaceId: workspace._id,
             workspaceName: workspace.name,
           });
+        }
+      }
+    }
+
+    // 2. Also include unlinked installations matching user's GitHub account
+    if (user.githubUsername) {
+      const allInstallations = await ctx.db
+        .query("githubInstallations")
+        .collect();
+
+      for (const inst of allInstallations) {
+        if (!inst.suspendedAt && !seenIds.has(inst.installationId)) {
+          if (inst.accountName === user.githubUsername) {
+            installations.push(inst);
+          }
         }
       }
     }
