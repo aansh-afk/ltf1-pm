@@ -50,10 +50,10 @@ export default function WorkspaceCard({ workspace, index }: WorkspaceCardProps) 
         )}
       />
       
-      <div className="p-32px">
-        <div className="flex items-start justify-between gap-16px mb-24px">
+      <div className="p-[20px]">
+        <div className="flex items-start justify-between gap-[8px] mb-[12px]">
           <div className="flex-1">
-            <h3 className="text-xl font-bold uppercase tracking-wider text-[var(--theme-foreground)] mb-16px">
+            <h3 className="text-xl font-bold uppercase tracking-wider text-[var(--theme-foreground)] mb-[8px]">
               {workspace.name}
             </h3>
             {workspace.description && (
@@ -67,18 +67,18 @@ export default function WorkspaceCard({ workspace, index }: WorkspaceCardProps) 
           </BrutalBadge>
         </div>
 
-        <div className="flex items-center gap-24px text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/60 pb-16px border-b-2 border-[var(--theme-border)]">
-          <div className="flex items-center gap-8px">
+        <div className="flex items-center gap-[12px] text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/60 pb-[8px] border-b-2 border-[var(--theme-border)]">
+          <div className="flex items-center gap-[4px]">
             <HiOutlineUsers className="w-16px h-16px" />
             <span>{workspace.memberCount} MEMBERS</span>
           </div>
-          <div className="flex items-center gap-8px">
+          <div className="flex items-center gap-[4px]">
             <HiOutlineFolder className="w-16px h-16px" />
             <span>{workspace.projectCount || 0} PROJECTS</span>
           </div>
         </div>
 
-        <div className="mt-16px text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/50">
+        <div className="mt-[8px] text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/50">
           CREATED {formatDistanceToNow(new Date(workspace.createdAt)).toUpperCase()} AGO
         </div>
 

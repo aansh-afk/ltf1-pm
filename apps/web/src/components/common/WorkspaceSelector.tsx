@@ -53,7 +53,7 @@ export default function WorkspaceSelector({
 
   if (!workspaces || workspaces.length === 0) {
     return (
-      <div className="bg-brutal-warning/10 border-2 border-brutal-warning p-16px">
+      <div className="bg-brutal-warning/10 border-2 border-brutal-warning p-[10px]">
         <p className="text-brutal-xs text-brutal-warning">
           No workspaces found. Create a workspace first.
         </p>
@@ -84,7 +84,7 @@ export default function WorkspaceSelector({
   return (
     <div className={clsx('relative', className)} ref={dropdownRef}>
       {showLabel && (
-        <label className="block text-brutal-xs mb-8px text-cathode-white/60">
+        <label className="block text-brutal-xs mb-[4px] text-cathode-white/60">
           ACTIVE WORKSPACE
         </label>
       )}
@@ -99,19 +99,19 @@ export default function WorkspaceSelector({
             'text-cathode-white font-mono transition-all',
             'hover:border-primary-brutalist focus:border-primary-brutalist focus:outline-none',
             isOpen && 'border-primary-brutalist',
-            size === 'sm' && 'px-12px py-8px text-brutal-xs',
-            size === 'md' && 'px-16px py-12px text-brutal-sm',
-            size === 'lg' && 'px-20px py-16px text-brutal-md'
+            size === 'sm' && 'px-[8px] py-[5px] text-brutal-xs',
+            size === 'md' && 'px-[10px] py-[6px] text-brutal-sm',
+            size === 'lg' && 'px-[12px] py-[8px] text-brutal-md'
           )}
           aria-expanded={isOpen}
           aria-haspopup="listbox"
         >
-          <div className="flex items-center gap-12px">
+          <div className="flex items-center gap-[6px]">
             <HiOutlineOfficeBuilding className={clsx(
               'text-primary-brutalist flex-shrink-0',
-              size === 'sm' && 'w-14px h-14px',
-              size === 'md' && 'w-16px h-16px',
-              size === 'lg' && 'w-20px h-20px'
+              size === 'sm' && 'w-3 h-3',
+              size === 'md' && 'w-3.5 h-3.5',
+              size === 'lg' && 'w-4 h-4'
             )} />
             <span className="truncate">
               {currentWorkspace?.name || 'SELECT WORKSPACE'}
@@ -121,9 +121,9 @@ export default function WorkspaceSelector({
           <HiOutlineChevronDown className={clsx(
             'transition-transform text-cathode-white/60 flex-shrink-0',
             isOpen && 'rotate-180',
-            size === 'sm' && 'w-14px h-14px',
-            size === 'md' && 'w-16px h-16px',
-            size === 'lg' && 'w-20px h-20px'
+            size === 'sm' && 'w-3 h-3',
+            size === 'md' && 'w-3.5 h-3.5',
+            size === 'lg' && 'w-4 h-4'
           )} />
         </button>
 
@@ -144,7 +144,7 @@ export default function WorkspaceSelector({
                   type="button"
                   onClick={() => handleWorkspaceSelect(workspace._id)}
                   className={clsx(
-                    'w-full flex items-center justify-between px-16px py-12px',
+                    'w-full flex items-center justify-between px-[10px] py-[6px]',
                     'text-left transition-colors hover:bg-event-horizon',
                     'border-none cursor-pointer',
                     currentWorkspaceId === workspace._id && 'bg-event-horizon text-primary-brutalist'
@@ -152,8 +152,8 @@ export default function WorkspaceSelector({
                   role="option"
                   aria-selected={currentWorkspaceId === workspace._id}
                 >
-                  <div className="flex items-center gap-12px min-w-0">
-                    <HiOutlineOfficeBuilding className="w-16px h-16px text-primary-brutalist flex-shrink-0" />
+                  <div className="flex items-center gap-[6px] min-w-0">
+                    <HiOutlineOfficeBuilding className="w-3.5 h-3.5 text-primary-brutalist flex-shrink-0" />
                     <div className="min-w-0">
                       <div className="text-brutal-sm font-mono truncate">{workspace.name}</div>
                       {workspace.description && (
@@ -165,14 +165,14 @@ export default function WorkspaceSelector({
                   </div>
                   
                   {currentWorkspaceId === workspace._id && (
-                    <HiOutlineCheck className="w-16px h-16px text-primary-brutalist flex-shrink-0 ml-8px" />
+                    <HiOutlineCheck className="w-3.5 h-3.5 text-primary-brutalist flex-shrink-0 ml-[4px]" />
                   )}
                 </button>
               ))}
             </div>
             
             {/* Footer with workspace count */}
-            <div className="border-t-2 border-basalt-border px-16px py-8px bg-event-horizon">
+            <div className="border-t-2 border-basalt-border px-[10px] py-[5px] bg-event-horizon">
               <p className="text-brutal-xs text-cathode-white/60">
                 {uniqueWorkspaces.length} workspace{uniqueWorkspaces.length !== 1 ? 's' : ''} available
               </p>

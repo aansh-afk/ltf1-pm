@@ -131,10 +131,10 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
   })
 
   return (
-    <div className="space-y-24px">
+    <div className="space-y-[12px]">
       {/* Actions Bar */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-16px">
+        <div className="flex items-center gap-[8px]">
           <BrutalCheckbox
             checked={selectedTasks.size === tasks.length && tasks.length > 0}
             onChange={selectAllTasks}
@@ -156,7 +156,7 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
 
       {/* Table Header */}
       <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
-        <div className="grid grid-cols-12 gap-16px p-16px font-mono text-brutal-sm uppercase border-b-2 border-[var(--theme-border)]">
+        <div className="grid grid-cols-12 gap-[8px] p-[10px] font-mono text-brutal-sm uppercase border-b-2 border-[var(--theme-border)]">
           <div className="col-span-1"></div>
           <div className="col-span-4">TASK</div>
           <div 
@@ -195,10 +195,10 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
             <div key={task._id} className="border-b-2 border-[var(--theme-border)] last:border-b-0">
               {/* Main Row */}
               <div className={clsx(
-                "grid grid-cols-12 gap-16px p-16px items-center hover:bg-[var(--theme-background-secondary)]/20 transition-colors",
+                "grid grid-cols-12 gap-[8px] p-[10px] items-center hover:bg-[var(--theme-background-secondary)]/20 transition-colors",
                 isSelected && "bg-primary-brutalist/10"
               )}>
-                <div className="col-span-1 flex items-center gap-8px">
+                <div className="col-span-1 flex items-center gap-[4px]">
                   <BrutalCheckbox
                     checked={isSelected}
                     onChange={() => toggleTaskSelection(task._id)}
@@ -218,9 +218,9 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
                 </div>
                 
                 <div className="col-span-4">
-                  <div className="flex items-center gap-8px">
+                  <div className="flex items-center gap-[4px]">
                     <span className={clsx(
-                      "px-8px py-2px text-brutal-xs font-bold",
+                      "px-[4px] py-2px text-brutal-xs font-bold",
                       typeConfig[task.type as keyof typeof typeConfig].color,
                       "text-event-horizon"
                     )}>
@@ -232,7 +232,7 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
                 
                 <div className="col-span-2">
                   <div className={clsx(
-                    "inline-flex items-center gap-4px px-8px py-4px",
+                    "inline-flex items-center gap-4px px-[4px] py-4px",
                     statusConfig[task.status as keyof typeof statusConfig].color,
                     "font-mono text-brutal-xs uppercase"
                   )}>
@@ -290,39 +290,39 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
               
               {/* Expanded Details */}
               {isExpanded && (
-                <div className="px-64px py-16px bg-[var(--theme-background-secondary)]/10 border-t-2 border-[var(--theme-border)]">
-                  <div className="grid grid-cols-2 gap-24px">
+                <div className="px-64px py-[8px] bg-[var(--theme-background-secondary)]/10 border-t-2 border-[var(--theme-border)]">
+                  <div className="grid grid-cols-2 gap-[12px]">
                     <div>
-                      <h4 className="text-brutal-sm font-bold mb-8px uppercase">Description</h4>
+                      <h4 className="text-brutal-sm font-bold mb-[4px] uppercase">Description</h4>
                       <p className="text-brutal-sm text-[var(--theme-foreground)]/80">
                         {task.description || 'No description provided.'}
                       </p>
                     </div>
                     
-                    <div className="space-y-16px">
+                    <div className="space-y-[8px]">
                       <div>
-                        <h4 className="text-brutal-sm font-bold mb-8px uppercase">Details</h4>
-                        <div className="space-y-8px text-brutal-xs">
-                          <div className="flex items-center gap-8px">
+                        <h4 className="text-brutal-sm font-bold mb-[4px] uppercase">Details</h4>
+                        <div className="space-y-[4px] text-brutal-xs">
+                          <div className="flex items-center gap-[4px]">
                             <span className="text-neutral-500">TYPE:</span>
                             <span className="uppercase">{task.type}</span>
                           </div>
-                          <div className="flex items-center gap-8px">
+                          <div className="flex items-center gap-[4px]">
                             <span className="text-neutral-500">REPORTER:</span>
                             <span>{task.reporter?.name || 'Unknown'}</span>
                           </div>
                           {task.estimate && (
-                            <div className="flex items-center gap-8px">
+                            <div className="flex items-center gap-[4px]">
                               <span className="text-neutral-500">ESTIMATE:</span>
                               <span>{task.estimate.points || task.estimate.hours}h</span>
                             </div>
                           )}
                           {task.labels && task.labels.length > 0 && (
-                            <div className="flex items-center gap-8px">
+                            <div className="flex items-center gap-[4px]">
                               <span className="text-neutral-500">LABELS:</span>
                               <div className="flex gap-4px">
                                 {task.labels.map((label: string) => (
-                                  <span key={label} className="px-8px py-2px bg-primary-brutalist text-event-horizon text-brutal-xs">
+                                  <span key={label} className="px-[4px] py-2px bg-primary-brutalist text-event-horizon text-brutal-xs">
                                     {label}
                                   </span>
                                 ))}
@@ -332,7 +332,7 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
                         </div>
                       </div>
                       
-                      <div className="flex gap-8px">
+                      <div className="flex gap-[4px]">
                         <button className="brutal-btn-sm">EDIT</button>
                         <button className="brutal-btn-sm bg-[var(--theme-error)] border-[var(--theme-error)] hover:bg-[#CC0000]">DELETE</button>
                       </div>

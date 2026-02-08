@@ -186,7 +186,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
       headers.push(
         <div
           key={columnIndex}
-          className="border-r border-[var(--theme-border)] text-center py-8px text-xs font-bold"
+          className="border-r border-[var(--theme-border)] text-center py-[4px] text-xs font-bold"
           style={{ 
             width: `${width}px`,
             minWidth: `${width}px`
@@ -439,16 +439,16 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
   return (
     <div className="h-full flex flex-col bg-[var(--theme-background)]">
       {/* Toolbar */}
-      <div className="flex items-center justify-between p-16px border-b-2 border-[var(--theme-border)]">
-        <div className="flex items-center gap-16px">
-          <h2 className="text-brutal-lg font-bold">GANTT CHART</h2>
+      <div className="flex items-center justify-between p-[10px] border-b-2 border-[var(--theme-border)]">
+        <div className="flex items-center gap-[8px]">
+          <h2 className="text-[14px] font-semibold font-bold">GANTT CHART</h2>
           
           {/* Zoom controls */}
-          <div className="flex items-center gap-8px">
+          <div className="flex items-center gap-[4px]">
             <button
               onClick={() => setZoomLevel('day')}
               className={clsx(
-                'px-12px py-6px text-xs font-bold border-2',
+                'px-[8px] py-6px text-xs font-bold border-2',
                 zoomLevel === 'day' 
                   ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]'
                   : 'bg-transparent border-[var(--theme-border)]'
@@ -459,7 +459,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
             <button
               onClick={() => setZoomLevel('week')}
               className={clsx(
-                'px-12px py-6px text-xs font-bold border-2',
+                'px-[8px] py-6px text-xs font-bold border-2',
                 zoomLevel === 'week' 
                   ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]'
                   : 'bg-transparent border-[var(--theme-border)]'
@@ -470,7 +470,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
             <button
               onClick={() => setZoomLevel('month')}
               className={clsx(
-                'px-12px py-6px text-xs font-bold border-2',
+                'px-[8px] py-6px text-xs font-bold border-2',
                 zoomLevel === 'month' 
                   ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]'
                   : 'bg-transparent border-[var(--theme-border)]'
@@ -481,11 +481,11 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
           </div>
           
           {/* View options */}
-          <div className="flex items-center gap-8px">
+          <div className="flex items-center gap-[4px]">
             <button
               onClick={() => setShowCriticalPath(!showCriticalPath)}
               className={clsx(
-                'px-12px py-6px text-xs font-bold border-2',
+                'px-[8px] py-6px text-xs font-bold border-2',
                 showCriticalPath 
                   ? 'bg-[var(--theme-error)] text-[var(--theme-background)] border-[var(--theme-error)]'
                   : 'bg-transparent border-[var(--theme-border)]'
@@ -496,7 +496,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
             <button
               onClick={() => setShowMilestones(!showMilestones)}
               className={clsx(
-                'px-12px py-6px text-xs font-bold border-2',
+                'px-[8px] py-6px text-xs font-bold border-2',
                 showMilestones 
                   ? 'bg-[var(--theme-warning)] text-[var(--theme-background)] border-[var(--theme-warning)]'
                   : 'bg-transparent border-[var(--theme-border)]'
@@ -507,7 +507,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
             <button
               onClick={() => setShowDependencies(!showDependencies)}
               className={clsx(
-                'px-12px py-6px text-xs font-bold border-2',
+                'px-[8px] py-6px text-xs font-bold border-2',
                 showDependencies 
                   ? 'bg-[var(--theme-info)] text-[var(--theme-background)] border-[var(--theme-info)]'
                   : 'bg-transparent border-[var(--theme-border)]'
@@ -518,10 +518,10 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
           </div>
         </div>
         
-        <div className="flex items-center gap-8px">
+        <div className="flex items-center gap-[4px]">
           <button
             onClick={exportToImage}
-            className="flex items-center gap-8px px-16px py-8px bg-transparent border-2 border-[var(--theme-border)] hover:bg-[var(--theme-hover)]"
+            className="flex items-center gap-[4px] px-[10px] py-[4px] bg-transparent border-2 border-[var(--theme-border)] hover:bg-[var(--theme-hover)]"
           >
             <HiOutlineDownload className="w-16px h-16px" />
             <span className="text-xs font-bold">EXPORT</span>
@@ -537,7 +537,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
           style={{ width: `${SIDEBAR_WIDTH}px`, minWidth: `${SIDEBAR_WIDTH}px` }}
         >
           {/* Header */}
-          <div className="h-[60px] border-b-2 border-[var(--theme-border)] flex items-center px-16px font-bold text-xs">
+          <div className="h-[60px] border-b-2 border-[var(--theme-border)] flex items-center px-[10px] font-bold text-xs">
             TASK NAME
           </div>
           
@@ -546,7 +546,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
             <div
               key={task.id}
               className={clsx(
-                'h-[40px] border-b border-[var(--theme-border)] flex items-center px-16px text-sm',
+                'h-[40px] border-b border-[var(--theme-border)] flex items-center px-[10px] text-sm',
                 selectedTask === task.id && 'bg-[var(--theme-hover)]'
               )}
               style={{ paddingLeft: `${16 + level * 24}px` }}
@@ -554,7 +554,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
               {task.children && task.children.length > 0 && (
                 <button
                   onClick={() => toggleTaskExpansion(task.id)}
-                  className="mr-8px"
+                  className="mr-[4px]"
                 >
                   {task.expanded ? <HiOutlineChevronDown /> : <HiOutlineChevronRight />}
                 </button>

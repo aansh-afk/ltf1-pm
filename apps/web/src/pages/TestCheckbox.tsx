@@ -8,17 +8,17 @@ export default function TestCheckbox() {
   const [checked4, setChecked4] = useState(true)
 
   return (
-    <div className="min-h-screen bg-[var(--theme-background-secondary)] p-48px">
+    <div className="min-h-screen bg-[var(--theme-background-secondary)] p-[24px]">
       <div className="max-w-600px mx-auto">
-        <h1 className="text-brutal-2xl text-[var(--theme-foreground)] mb-32px uppercase">
+        <h1 className="text-[20px] font-bold text-[var(--theme-foreground)] mb-[16px] uppercase">
           Brutalist Checkbox Test
         </h1>
         
-        <div className="space-y-24px">
-          <div className="brutal-card p-24px">
-            <h2 className="text-brutal-lg text-primary-brutalist mb-16px">DEFAULT VARIANT</h2>
-            
-            <div className="space-y-16px">
+        <div className="space-y-[12px]">
+          <div className="brutal-card p-[16px]">
+            <h2 className="text-[14px] font-semibold text-primary-brutalist mb-[8px]">DEFAULT VARIANT</h2>
+
+            <div className="space-y-[8px]">
               <BrutalCheckbox
                 size="sm"
                 label="Small Checkbox"
@@ -45,10 +45,10 @@ export default function TestCheckbox() {
             </div>
           </div>
 
-          <div className="brutal-card p-24px">
-            <h2 className="text-brutal-lg text-primary-brutalist mb-16px">COLOR VARIANTS</h2>
-            
-            <div className="space-y-16px">
+          <div className="brutal-card p-[16px]">
+            <h2 className="text-[14px] font-semibold text-primary-brutalist mb-[8px]">COLOR VARIANTS</h2>
+
+            <div className="space-y-[8px]">
               <BrutalCheckbox
                 variant="default"
                 label="Default (Yellow)"
@@ -79,10 +79,10 @@ export default function TestCheckbox() {
             </div>
           </div>
 
-          <div className="brutal-card p-24px">
-            <h2 className="text-brutal-lg text-primary-brutalist mb-16px">STATES</h2>
-            
-            <div className="space-y-16px">
+          <div className="brutal-card p-[16px]">
+            <h2 className="text-[14px] font-semibold text-primary-brutalist mb-[8px]">STATES</h2>
+
+            <div className="space-y-[8px]">
               <BrutalCheckbox
                 label="Unchecked State"
                 description="Click to check"

@@ -169,12 +169,12 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
   }
 
   return (
-    <div className="flex flex-col gap-16px">
+    <div className="flex flex-col gap-[8px]">
       {/* Calendar View */}
       <div className="w-full">
         {/* Compact Controls Bar */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-8px mb-8px">
-          <div className="flex flex-wrap items-center justify-between gap-8px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[4px] mb-[4px]">
+          <div className="flex flex-wrap items-center justify-between gap-[4px]">
             {/* Navigation & Date */}
             <div className="flex items-center gap-4px">
               <button
@@ -185,7 +185,7 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
                 <HiOutlineChevronLeft className="w-12px h-12px" />
               </button>
               
-              <span className="font-mono text-brutal-xs uppercase px-8px">
+              <span className="font-mono text-brutal-xs uppercase px-[4px]">
                 {viewMode === 'month' && format(currentDate, 'MMM yyyy')}
                 {viewMode === 'week' && format(startOfWeek(currentDate), 'MMM dd')}
                 {viewMode === 'day' && format(currentDate, 'MMM dd')}
@@ -212,7 +212,7 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
             <div className="flex border-2 border-[var(--theme-border)]">
               <button
                 className={clsx(
-                  "px-8px h-[28px] flex items-center justify-center",
+                  "px-[4px] h-[28px] flex items-center justify-center",
                   "font-mono text-brutal-xs uppercase transition-colors",
                   "border-r border-[var(--theme-border)]",
                   viewMode === 'month' 
@@ -225,7 +225,7 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
               </button>
               <button
                 className={clsx(
-                  "px-8px h-[28px] flex items-center justify-center",
+                  "px-[4px] h-[28px] flex items-center justify-center",
                   "font-mono text-brutal-xs uppercase transition-colors",
                   "border-r border-[var(--theme-border)]",
                   viewMode === 'week' 
@@ -238,7 +238,7 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
               </button>
               <button
                 className={clsx(
-                  "px-8px h-[28px] flex items-center justify-center",
+                  "px-[4px] h-[28px] flex items-center justify-center",
                   "font-mono text-brutal-xs uppercase transition-colors",
                   viewMode === 'day' 
                     ? "bg-primary-brutalist text-event-horizon" 
@@ -355,7 +355,7 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
                           <div
                             key={task._id}
                             className={clsx(
-                              "p-4px mb-4px border border-[var(--theme-border)] cursor-pointer",
+                              "p-4px mb-[2px] border border-[var(--theme-border)] cursor-pointer",
                               statusColors[task.status as keyof typeof statusColors]
                             )}
                             onClick={(e) => {
@@ -384,11 +384,11 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
       </div>
 
       {/* Task Details Sidebar */}
-      <div className="space-y-24px">
+      <div className="space-y-[12px]">
         {/* Selected Date Info */}
         {selectedDate && (
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-            <div className="flex items-center justify-between mb-16px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[10px]">
+            <div className="flex items-center justify-between mb-[8px]">
               <h3 className="font-mono text-brutal-md uppercase">
                 {format(selectedDate, 'MMM dd, yyyy')}
               </h3>
@@ -432,7 +432,7 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
           {/* Selected Task Summary */}
           {selectedTask && (
             <div className="border-t border-[var(--theme-border)] pt-8px">
-              <div className="flex items-center justify-between mb-4px">
+              <div className="flex items-center justify-between mb-[2px]">
                 <h4 className="font-mono text-[11px] uppercase font-bold truncate">
                   {selectedTask.title}
                 </h4>
@@ -469,30 +469,30 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
           )}
 
         {/* Calendar Legend */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-          <h3 className="font-mono text-brutal-md uppercase mb-16px">LEGEND</h3>
-          <div className="space-y-8px text-brutal-xs">
-            <div className="flex items-center gap-8px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[10px]">
+          <h3 className="font-mono text-brutal-md uppercase mb-[8px]">LEGEND</h3>
+          <div className="space-y-[4px] text-brutal-xs">
+            <div className="flex items-center gap-[4px]">
               <div className="w-16px h-16px bg-[var(--theme-info)] border border-[var(--theme-border)]"></div>
               <span>TODAY</span>
             </div>
-            <div className="flex items-center gap-8px">
+            <div className="flex items-center gap-[4px]">
               <span>🔴</span>
               <span>URGENT PRIORITY</span>
             </div>
-            <div className="flex items-center gap-8px">
+            <div className="flex items-center gap-[4px]">
               <span>🟠</span>
               <span>HIGH PRIORITY</span>
             </div>
-            <div className="flex items-center gap-8px">
+            <div className="flex items-center gap-[4px]">
               <span>🟡</span>
               <span>MEDIUM PRIORITY</span>
             </div>
-            <div className="flex items-center gap-8px">
+            <div className="flex items-center gap-[4px]">
               <span>🟢</span>
               <span>LOW PRIORITY</span>
             </div>
-            <div className="flex items-center gap-8px">
+            <div className="flex items-center gap-[4px]">
               <span>▶</span>
               <span>TASK START DATE</span>
             </div>

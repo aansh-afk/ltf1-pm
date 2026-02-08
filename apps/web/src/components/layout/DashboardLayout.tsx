@@ -26,7 +26,6 @@ import CommandTerminal from '../terminal/CommandTerminal'
 import GlobalSearchModal from '../features/search/GlobalSearchModal'
 import WorkspaceMobileBlocker from '../common/WorkspaceMobileBlocker'
 import ProductionAccessGate from '../common/ProductionAccessGate'
-// ThemeSwitcher moved to Settings page
 
 
 const NAV_ITEMS = [
@@ -44,7 +43,6 @@ const NAV_ITEMS = [
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile sidebar
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    // Load collapsed state from localStorage
     const saved = localStorage.getItem('sidebar-collapsed')
     return saved ? JSON.parse(saved) : false
   })
@@ -55,54 +53,43 @@ export default function DashboardLayout() {
   const params = useParams()
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Real-time resource monitoring
   const { stats, formatMemory } = useResourceMonitor()
 
-  // AFK detection for automatic status updates
   useAfkDetection({
-    afkTimeout: 5 * 60 * 1000, // 5 minutes
-    awayTimeout: 15 * 60 * 1000, // 15 minutes
+    afkTimeout: 5 * 60 * 1000,
+    awayTimeout: 15 * 60 * 1000,
     enabled: true
   })
 
-  // Save collapsed state to localStorage
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', JSON.stringify(isCollapsed))
   }, [isCollapsed])
 
-  // Listen for terminal open events
   useEffect(() => {
     const handleOpenTerminal = () => {
       setTerminalOpen(true)
     }
-
     window.addEventListener('open-terminal', handleOpenTerminal)
-
     return () => {
       window.removeEventListener('open-terminal', handleOpenTerminal)
     }
   }, [])
 
-  // Keyboard shortcuts for search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd/Ctrl+K for search
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
         setSearchOpen(true)
       }
-      // Forward slash for quick search (when not in input)
       if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
         e.preventDefault()
         setSearchOpen(true)
       }
     }
-
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  // Cleanup hover timeout on unmount
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
@@ -111,12 +98,11 @@ export default function DashboardLayout() {
     }
   }, [])
 
-  // Handle hover with delay
   const handleMouseEnter = useCallback(() => {
     if (isCollapsed) {
       hoverTimeoutRef.current = setTimeout(() => {
         setIsHovered(true)
-      }, 200) // 200ms delay before expanding
+      }, 200)
     }
   }, [isCollapsed])
 
@@ -124,10 +110,9 @@ export default function DashboardLayout() {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current)
     }
-    setIsHovered(false) // No delay on hover out
+    setIsHovered(false)
   }, [])
 
-  // Determine if sidebar should be expanded (either not collapsed, or collapsed but hovered)
   const isExpanded = !isCollapsed || isHovered
 
   const navItems = NAV_ITEMS
@@ -145,39 +130,37 @@ export default function DashboardLayout() {
         />
       </div>
 
-      {/* BRUTAL SIDEBAR */}
+      {/* SIDEBAR */}
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-[50] bg-[var(--theme-background-secondary)] border-r-2 border-[var(--theme-border)] transform lg:relative lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-[50] bg-[var(--theme-background-secondary)] border-r border-[var(--theme-border)] transform lg:relative lg:translate-x-0 flex flex-col',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
-          isExpanded ? 'w-256px' : 'w-80px',
-          // Different transition durations for hover vs button
-          isHovered ? 'transition-all duration-200 ease-out' : 'transition-all duration-300 ease-in-out'
+          isExpanded ? 'w-[220px]' : 'w-[48px]',
+          isHovered ? 'transition-all duration-150 ease-out' : 'transition-all duration-200 ease-in-out'
         )}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         {/* SIDEBAR HEADER */}
-        <div className="h-64px px-24px border-b-2 border-[var(--theme-border)] flex items-center justify-between">
+        <div className="h-[40px] px-[12px] border-b border-[var(--theme-border)] flex items-center justify-between shrink-0">
           <h1 className={clsx(
-            "text-2xl font-bold",
+            "text-[13px] font-bold tracking-wide",
             !isExpanded && "opacity-0",
-            isHovered ? "transition-opacity duration-200 ease-out" : "transition-opacity duration-300 ease-in-out"
+            isHovered ? "transition-opacity duration-150 ease-out" : "transition-opacity duration-200 ease-in-out"
           )}>
             <span className="text-[var(--theme-foreground)]">LTF1</span>
           </h1>
 
-          {/* Mobile close button */}
           <button
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden brutal-hover"
           >
-            <HiOutlineX className="w-24px h-24px text-[var(--theme-foreground)]" />
+            <HiOutlineX className="w-4 h-4 text-[var(--theme-foreground)]" />
           </button>
         </div>
 
         {/* NAV ITEMS */}
-        <nav className="py-24px">
+        <nav className="py-[6px] flex-1 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = location.pathname === item.path
@@ -187,14 +170,13 @@ export default function DashboardLayout() {
                 key={item.path}
                 to={item.path}
                 className={clsx(
-                  'flex items-center text-brutal-sm font-semibold relative group',
-                  isExpanded ? 'px-24px' : 'px-0 justify-center',
-                  'py-16px',
+                  'flex items-center text-[12px] font-medium relative group',
+                  isExpanded ? 'px-[12px]' : 'px-0 justify-center',
+                  'py-[6px] mx-[4px]',
                   isActive
-                    ? 'bg-[var(--theme-background)] text-[var(--theme-info)] border-l-4 border-[var(--theme-info)] shadow-brutal-sm'
-                    : 'text-[var(--theme-foreground)] hover:bg-[var(--theme-hover)] hover:text-[var(--theme-foreground)]',
-                  isExpanded && !isActive && 'hover:translate-x-4px',
-                  isHovered ? 'transition-all duration-200 ease-out' : 'transition-all duration-300 ease-in-out'
+                    ? 'bg-[var(--theme-background)] text-[var(--theme-info)] border-l-2 border-[var(--theme-info)]'
+                    : 'text-[var(--theme-foreground)]/70 hover:bg-[var(--theme-hover)] hover:text-[var(--theme-foreground)]',
+                  isHovered ? 'transition-all duration-150 ease-out' : 'transition-all duration-200 ease-in-out'
                 )}
                 title={!isExpanded ? item.label : undefined}
               >
@@ -204,14 +186,14 @@ export default function DashboardLayout() {
                 )}>
                   <div className="flex items-center">
                     <Icon className={clsx(
-                      "w-24px h-24px flex-shrink-0",
-                      isExpanded && "mr-16px",
-                      isHovered ? "transition-all duration-200 ease-out" : "transition-all duration-300 ease-in-out"
+                      "w-4 h-4 flex-shrink-0",
+                      isExpanded && "mr-[8px]",
+                      isHovered ? "transition-all duration-150 ease-out" : "transition-all duration-200 ease-in-out"
                     )} />
                     <span className={clsx(
-                      "whitespace-nowrap",
+                      "whitespace-nowrap tracking-wide",
                       !isExpanded && "hidden",
-                      isHovered ? "transition-all duration-200 ease-out" : "transition-all duration-300 ease-in-out"
+                      isHovered ? "transition-all duration-150 ease-out" : "transition-all duration-200 ease-in-out"
                     )}>
                       {item.label}
                     </span>
@@ -220,8 +202,8 @@ export default function DashboardLayout() {
 
                 {/* Tooltip for collapsed state */}
                 {!isExpanded && (
-                  <div className="absolute left-full ml-8px px-8px py-4px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 whitespace-nowrap z-[60]">
-                    <span className="text-brutal-xs">{item.label}</span>
+                  <div className="absolute left-full ml-[6px] px-[6px] py-[3px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-100 whitespace-nowrap z-[60]">
+                    <span className="text-[11px]">{item.label}</span>
                   </div>
                 )}
               </Link>
@@ -229,30 +211,29 @@ export default function DashboardLayout() {
           })}
         </nav>
 
-
         {/* GITHUB MONITOR */}
         <GitHubMonitor isExpanded={isExpanded} />
 
         {/* USER SECTION */}
         <div className={clsx(
-          "absolute bottom-0 left-0 right-0 border-t-2 border-[var(--theme-border)]",
-          isExpanded ? "p-24px" : "p-16px",
-          isHovered ? "transition-all duration-200 ease-out" : "transition-all duration-300 ease-in-out"
+          "border-t border-[var(--theme-border)] shrink-0",
+          isExpanded ? "p-[10px]" : "p-[8px]",
+          isHovered ? "transition-all duration-150 ease-out" : "transition-all duration-200 ease-in-out"
         )}>
           <div className={clsx(
             "flex items-center",
-            isExpanded ? "gap-16px" : "justify-center",
-            isHovered ? "transition-all duration-200 ease-out" : "transition-all duration-300 ease-in-out"
+            isExpanded ? "gap-[8px]" : "justify-center",
+            isHovered ? "transition-all duration-150 ease-out" : "transition-all duration-200 ease-in-out"
           )}>
-            <div className="border-2 border-[var(--theme-border)] p-2">
+            <div className="border border-[var(--theme-border)] p-[1px]">
               <UserButton afterSignOutUrl="/" />
             </div>
             {isExpanded && (
               <div className={clsx(
-                isHovered ? "transition-opacity duration-200 ease-out" : "transition-opacity duration-300 ease-in-out"
+                isHovered ? "transition-opacity duration-150 ease-out" : "transition-opacity duration-200 ease-in-out"
               )}>
-                <p className="text-brutal-xs">USER ACCOUNT</p>
-                <p className="text-brutal-xs text-[var(--theme-info)]">ACTIVE</p>
+                <p className="text-[11px] text-[var(--theme-foreground)]/60">ACCOUNT</p>
+                <p className="text-[11px] text-[var(--theme-info)]">ACTIVE</p>
               </div>
             )}
           </div>
@@ -261,50 +242,51 @@ export default function DashboardLayout() {
 
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* BRUTAL HEADER */}
-        <header className="h-64px bg-[var(--theme-background-secondary)] border-b-2 border-[var(--theme-border)] flex items-center px-24px gap-16px">
-          {/* Desktop hamburger to toggle sidebar */}
+        {/* HEADER */}
+        <header className="h-[40px] bg-[var(--theme-background-secondary)] border-b border-[var(--theme-border)] flex items-center px-[12px] gap-[8px] shrink-0">
+          {/* Desktop hamburger */}
           <button
             onClick={() => isCollapsed ? setIsCollapsed(false) : setIsCollapsed(true)}
-            className="hidden lg:flex items-center justify-center w-32px h-32px brutal-hover"
+            className="hidden lg:flex items-center justify-center w-[28px] h-[28px] brutal-hover"
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <HiOutlineMenuAlt2 className="w-24px h-24px" />
+            <HiOutlineMenuAlt2 className="w-4 h-4" />
           </button>
 
-          {/* Mobile hamburger to open sidebar */}
+          {/* Mobile hamburger */}
           <button
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden brutal-hover"
           >
-            <HiOutlineMenuAlt2 className="w-24px h-24px" />
+            <HiOutlineMenuAlt2 className="w-4 h-4" />
           </button>
 
           <div className="flex-1 flex items-center justify-center">
-            <h2 className="text-brutal-md uppercase">
+            <h2 className="text-[12px] uppercase tracking-wider font-medium text-[var(--theme-foreground)]/70">
               {navItems.find(item => item.path === location.pathname)?.label || 'DASHBOARD'}
             </h2>
           </div>
 
-          <div className="flex items-center gap-16px">
+          <div className="flex items-center gap-[6px]">
             <button
-              className="brutal-btn flex items-center gap-8px"
+              className="flex items-center gap-[4px] px-[8px] py-[4px] text-[11px] border border-[var(--theme-border)] hover:bg-[var(--theme-hover)]"
               onClick={() => setSearchOpen(true)}
               title="Global Search (Ctrl+K or /)"
             >
-              <HiOutlineSearch className="w-20px h-20px" />
-              <span>SEARCH</span>
+              <HiOutlineSearch className="w-[14px] h-[14px]" />
+              <span className="hidden sm:inline">SEARCH</span>
             </button>
             <button
-              className="brutal-btn flex items-center gap-8px"
+              className="flex items-center gap-[4px] px-[8px] py-[4px] text-[11px] border border-[var(--theme-border)] hover:bg-[var(--theme-hover)]"
               onClick={() => setTerminalOpen(true)}
               title="Open Terminal"
             >
-              <HiOutlineTerminal className="w-20px h-20px" />
-              <span>TERMINAL</span>
+              <HiOutlineTerminal className="w-[14px] h-[14px]" />
+              <span className="hidden sm:inline">TERMINAL</span>
             </button>
-            <div className="text-brutal-xs">
-              <span className="text-[var(--theme-info)]">STATUS:</span> OPERATIONAL
+            <div className="text-[11px] hidden md:block">
+              <span className="text-[var(--theme-info)]">STATUS:</span>{' '}
+              <span className="text-[var(--theme-foreground)]/60">OK</span>
             </div>
           </div>
         </header>
@@ -316,10 +298,10 @@ export default function DashboardLayout() {
         <main className="flex-1 overflow-y-auto bg-[var(--theme-background)]">
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
             className="h-full"
           >
             <ProductionAccessGate>
@@ -330,51 +312,49 @@ export default function DashboardLayout() {
           </motion.div>
         </main>
 
-        {/* BRUTAL STATUS BAR */}
-        <footer className="h-32px bg-[var(--theme-background-secondary)] border-t-2 border-[var(--theme-border)] flex items-center px-24px">
-          <div className="flex items-center gap-24px text-brutal-xs font-mono">
-            <span className="transition-all duration-200">
+        {/* STATUS BAR */}
+        <footer className="h-[28px] bg-[var(--theme-background-secondary)] border-t border-[var(--theme-border)] flex items-center px-[12px] shrink-0">
+          <div className="flex items-center gap-[16px] text-[11px] font-mono w-full">
+            <span>
               <span className="text-[var(--theme-primary)]">MEM:</span>{' '}
               <span className={clsx(
-                "transition-colors duration-300",
-                stats.memory.percentage && stats.memory.percentage > 75 ? "text-[var(--theme-error)]" : "text-[var(--theme-foreground)]"
+                stats.memory.percentage && stats.memory.percentage > 75 ? "text-[var(--theme-error)]" : "text-[var(--theme-foreground)]/60"
               )}>
                 {formatMemory(stats.memory.used)}
               </span>
               {stats.memory.percentage && (
                 <span className={clsx(
-                  "ml-4px transition-colors duration-300",
-                  stats.memory.percentage > 75 ? "text-[var(--theme-error)]/80" : "text-[var(--theme-foreground)]/60"
+                  "ml-[2px]",
+                  stats.memory.percentage > 75 ? "text-[var(--theme-error)]/80" : "text-[var(--theme-foreground)]/40"
                 )}>
                   ({stats.memory.percentage}%)
                 </span>
               )}
             </span>
 
-            <span className="transition-all duration-200">
+            <span>
               <span className="text-[var(--theme-info)]">CPU:</span>{' '}
               <span className={clsx(
-                "transition-colors duration-300",
                 stats.cpu.usage > 70 ? "text-[var(--theme-error)]" :
-                  stats.cpu.usage > 40 ? "text-[var(--theme-warning)]" : "text-[var(--theme-foreground)]"
+                  stats.cpu.usage > 40 ? "text-[var(--theme-warning)]" : "text-[var(--theme-foreground)]/60"
               )}>
                 {stats.cpu.usage}%
               </span>
               {stats.cpu.trend !== 'stable' && (
                 <span className={clsx(
-                  "ml-4px transition-all duration-300",
-                  stats.cpu.trend === 'increasing' ? "text-[var(--theme-error)] animate-pulse" : "text-[var(--theme-success)]"
+                  "ml-[2px]",
+                  stats.cpu.trend === 'increasing' ? "text-[var(--theme-error)]" : "text-[var(--theme-success)]"
                 )}>
                   {stats.cpu.trend === 'increasing' ? '↗' : '↘'}
                 </span>
               )}
             </span>
 
-            <span className="transition-all duration-200">
+            <span>
               <span className="text-[var(--theme-warning)]">TASKS:</span>{' '}
-              <span className="text-[var(--theme-foreground)]">{stats.tasks.total}</span>
-              <span className="text-[var(--theme-foreground)]/60 ml-4px">
-                ({stats.tasks.active} active)
+              <span className="text-[var(--theme-foreground)]/60">{stats.tasks.total}</span>
+              <span className="text-[var(--theme-foreground)]/40 ml-[2px]">
+                ({stats.tasks.active})
               </span>
             </span>
 
@@ -384,28 +364,27 @@ export default function DashboardLayout() {
               compact={true}
             />
 
-            <span className="ml-auto transition-all duration-300">
+            <span className="ml-auto">
               <span className={clsx(
-                "transition-colors duration-500",
                 stats.system.status === 'NOMINAL' ? "text-[var(--theme-success)]" :
                   stats.system.status === 'DEGRADED' ? "text-[var(--theme-warning)]" : "text-[var(--theme-error)]"
               )}>
-                SYSTEM:
+                SYS:
               </span>
               <span className={clsx(
-                "ml-4px transition-all duration-500",
+                "ml-[2px]",
                 stats.system.status === 'NOMINAL' ? "text-[var(--theme-success)]" :
-                  stats.system.status === 'DEGRADED' ? "text-[var(--theme-warning)] animate-pulse" : "text-[var(--theme-error)] animate-pulse"
+                  stats.system.status === 'DEGRADED' ? "text-[var(--theme-warning)]" : "text-[var(--theme-error)]"
               )}>
-                {stats.system.status}
+                {stats.system.status === 'NOMINAL' ? 'OK' : stats.system.status}
               </span>
               {stats.system.errors > 0 && (
-                <span className="text-[var(--theme-error)] ml-4px animate-bounce">
-                  ({stats.system.errors} ERR)
+                <span className="text-[var(--theme-error)] ml-[2px]">
+                  ({stats.system.errors})
                 </span>
               )}
-              <span className="text-[var(--theme-foreground)]/40 ml-4px text-brutal-xs">
-                ↻ {Math.floor(stats.system.uptime / 60)}m
+              <span className="text-[var(--theme-foreground)]/30 ml-[4px]">
+                {Math.floor(stats.system.uptime / 60)}m
               </span>
             </span>
           </div>

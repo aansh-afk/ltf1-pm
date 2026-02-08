@@ -32,31 +32,31 @@ export default function ProfileDemoPage() {
 
   if (!currentUser || !currentWorkspace) {
     return (
-      <div className="p-48px text-center">
-        <div className="text-brutal-lg">Loading profile demo...</div>
+      <div className="p-[24px] text-center">
+        <div className="text-[14px] font-semibold">Loading profile demo...</div>
       </div>
     )
   }
 
   return (
-    <div className="p-24px space-y-32px">
+    <div className="p-[16px] space-y-32px">
       {/* Page Header */}
-      <div className="mb-32px">
-        <h1 className="text-brutal-2xl font-bold mb-8px">DEVELOPER PROFILE FEATURES DEMO</h1>
+      <div className="mb-[16px]">
+        <h1 className="text-[20px] font-bold font-bold mb-8px">DEVELOPER PROFILE FEATURES DEMO</h1>
         <p className="text-brutal-sm text-primary-brutalist/80">
           Explore all the new developer profile and team expertise features
         </p>
       </div>
 
       {/* Feature Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-24px">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[16px]">
         {/* Profile Card Demo */}
-        <div className="brutal-card p-24px">
-          <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+        <div className="brutal-card p-[16px]">
+          <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
             <HiOutlineUser className="w-20px h-20px" />
             DEVELOPER PROFILE CARD
           </h3>
-          <p className="text-brutal-sm text-primary-brutalist/80 mb-16px">
+          <p className="text-brutal-sm text-primary-brutalist/80 mb-[8px]">
             Real-time status, expertise display, and quick actions
           </p>
           <DeveloperProfileCard 
@@ -65,19 +65,19 @@ export default function ProfileDemoPage() {
           />
           <button
             onClick={() => setShowEditProfile(true)}
-            className="brutal-btn w-full mt-16px"
+            className="brutal-btn w-full mt-[8px]"
           >
             EDIT YOUR PROFILE
           </button>
         </div>
 
         {/* Expertise Search Demo */}
-        <div className="brutal-card p-24px">
-          <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+        <div className="brutal-card p-[16px]">
+          <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
             <HiOutlineSearch className="w-20px h-20px" />
             FIND TEAM EXPERTS
           </h3>
-          <p className="text-brutal-sm text-primary-brutalist/80 mb-16px">
+          <p className="text-brutal-sm text-primary-brutalist/80 mb-[8px]">
             Search for team members by technology, skill, or expertise
           </p>
           <button
@@ -94,12 +94,12 @@ export default function ProfileDemoPage() {
         </div>
 
         {/* Team Matrix Demo */}
-        <div className="brutal-card p-24px">
-          <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+        <div className="brutal-card p-[16px]">
+          <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
             <HiOutlineChartBar className="w-20px h-20px" />
             EXPERTISE MATRIX
           </h3>
-          <p className="text-brutal-sm text-primary-brutalist/80 mb-16px">
+          <p className="text-brutal-sm text-primary-brutalist/80 mb-[8px]">
             Visualize your team's skills and expertise levels
           </p>
           <button
@@ -117,16 +117,16 @@ export default function ProfileDemoPage() {
       </div>
 
       {/* Reviewer Suggestions Demo */}
-      <div className="brutal-card p-24px">
-        <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+      <div className="brutal-card p-[16px]">
+        <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
           <HiOutlineLightBulb className="w-20px h-20px" />
           SMART REVIEWER SUGGESTIONS
         </h3>
-        <p className="text-brutal-sm text-primary-brutalist/80 mb-16px">
+        <p className="text-brutal-sm text-primary-brutalist/80 mb-[8px]">
           Get AI-powered suggestions for code reviewers based on expertise matching
         </p>
         
-        <div className="mb-16px">
+        <div className="mb-[8px]">
           <label className="block font-mono text-brutal-sm font-bold mb-8px">
             SELECT TECHNOLOGIES FOR REVIEW:
           </label>
@@ -165,12 +165,12 @@ export default function ProfileDemoPage() {
       </div>
 
       {/* Task Assignment Helper Demo */}
-      <div className="brutal-card p-24px">
-        <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+      <div className="brutal-card p-[16px]">
+        <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
           <HiOutlineClipboardList className="w-20px h-20px" />
           SMART TASK ASSIGNMENT
         </h3>
-        <p className="text-brutal-sm text-primary-brutalist/80 mb-16px">
+        <p className="text-brutal-sm text-primary-brutalist/80 mb-[8px]">
           Automatically detect technologies from task details and suggest the best assignees
         </p>
 
@@ -186,12 +186,12 @@ export default function ProfileDemoPage() {
       </div>
 
       {/* Integration Examples */}
-      <div className="brutal-card p-24px bg-[var(--theme-background-secondary)]">
-        <h3 className="text-brutal-md font-bold mb-16px flex items-center gap-8px">
+      <div className="brutal-card p-[16px] bg-[var(--theme-background-secondary)]">
+        <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
           <HiOutlineCode className="w-20px h-20px" />
           INTEGRATION POINTS
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16px">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[10px]">
           <div>
             <h4 className="font-mono text-brutal-sm font-bold mb-8px">WHERE TO FIND THESE FEATURES:</h4>
             <ul className="space-y-4px">

@@ -12,7 +12,7 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center px-6">
         <div className="max-w-md w-full text-center">
-          <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-10">
+          <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-6">
             {/* Terminal prompt */}
             <pre className="font-['IBM_Plex_Mono',monospace] text-[11px] text-[#6B7280] leading-relaxed mb-8 text-left select-none">
 {`  $ ltf1 access --workspace

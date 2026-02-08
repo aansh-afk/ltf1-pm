@@ -151,20 +151,20 @@ export default function MeetingDetailsModal({
       title="MEETING DETAILS"
       size="lg"
     >
-      <div className="space-y-24px">
+      <div className="space-y-[12px]">
         {/* Header */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-          <div className="flex items-start justify-between mb-12px">
-            <div className="flex items-center gap-12px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[10px]">
+          <div className="flex items-start justify-between mb-[6px]">
+            <div className="flex items-center gap-[6px]">
               <div className={clsx(
-                "w-48px h-48px flex items-center justify-center text-event-horizon text-2xl border-4",
+                "w-6 h-6 flex items-center justify-center text-event-horizon text-2xl border-4",
                 typeConfig.color
               )}>
                 {typeConfig.icon}
               </div>
               <div>
                 <h2 className="font-mono text-xl font-bold uppercase">{meeting.title}</h2>
-                <div className="flex items-center gap-8px text-brutal-xs text-[var(--theme-foreground)]/60">
+                <div className="flex items-center gap-[4px] text-brutal-xs text-[var(--theme-foreground)]/60">
                   <span className="uppercase">{typeConfig.label}</span>
                   {isHappening && (
                     <span className="flex items-center gap-4px text-brutal-success">
@@ -177,7 +177,7 @@ export default function MeetingDetailsModal({
               </div>
             </div>
 
-            <div className="flex items-center gap-8px">
+            <div className="flex items-center gap-[4px]">
               {meeting.meetingUrl && (
                 <button
                   onClick={() => window.open(meeting.meetingUrl, '_blank')}
@@ -209,14 +209,14 @@ export default function MeetingDetailsModal({
           </div>
 
           {/* Time & Location */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12px">
-            <div className="flex items-center gap-8px text-brutal-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-[6px]">
+            <div className="flex items-center gap-[4px] text-brutal-sm">
               <HiOutlineCalendar className="w-16px h-16px text-primary-brutalist" />
               <span className="font-mono">
                 {format(new Date(meeting.startTime), 'EEEE, MMMM d, yyyy')}
               </span>
             </div>
-            <div className="flex items-center gap-8px text-brutal-sm">
+            <div className="flex items-center gap-[4px] text-brutal-sm">
               <HiOutlineClock className="w-16px h-16px text-primary-brutalist" />
               <span className="font-mono">
                 {format(new Date(meeting.startTime), 'h:mm a')} - {format(new Date(meeting.endTime), 'h:mm a')}
@@ -228,13 +228,13 @@ export default function MeetingDetailsModal({
               )}
             </div>
             {meeting.location && (
-              <div className="flex items-center gap-8px text-brutal-sm">
+              <div className="flex items-center gap-[4px] text-brutal-sm">
                 <HiOutlineLocationMarker className="w-16px h-16px text-primary-brutalist" />
                 <span className="font-mono">{meeting.location}</span>
               </div>
             )}
             {meeting.meetingUrl && (
-              <div className="flex items-center gap-8px text-brutal-sm">
+              <div className="flex items-center gap-[4px] text-brutal-sm">
                 <HiOutlineVideoCamera className="w-16px h-16px text-primary-brutalist" />
                 <span className="font-mono">VIDEO CALL</span>
               </div>
@@ -244,46 +244,46 @@ export default function MeetingDetailsModal({
 
         {/* Your Response */}
         {currentUserId && !isOrganizer && isUpcoming && (
-          <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-16px">
-            <h3 className="font-mono text-brutal-sm uppercase mb-12px">YOUR RESPONSE</h3>
-            <div className="flex items-center gap-8px">
+          <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-[10px]">
+            <h3 className="font-mono text-brutal-sm uppercase mb-[6px]">YOUR RESPONSE</h3>
+            <div className="flex items-center gap-[4px]">
               <button
                 onClick={() => handleResponse('accepted')}
                 disabled={isResponding}
                 className={clsx(
-                  "flex-1 px-16px py-12px font-mono text-brutal-sm uppercase border-2 transition-colors",
+                  "flex-1 px-[10px] py-[8px] font-mono text-brutal-sm uppercase border-2 transition-colors",
                   userResponse === 'accepted'
                     ? 'bg-brutal-success border-brutal-success text-event-horizon'
                     : 'bg-[var(--theme-background)] border-[var(--theme-border)] hover:border-brutal-success'
                 )}
               >
-                <HiOutlineCheck className="inline w-16px h-16px mr-8px" />
+                <HiOutlineCheck className="inline w-16px h-16px mr-[4px]" />
                 ACCEPT
               </button>
               <button
                 onClick={() => handleResponse('tentative')}
                 disabled={isResponding}
                 className={clsx(
-                  "flex-1 px-16px py-12px font-mono text-brutal-sm uppercase border-2 transition-colors",
+                  "flex-1 px-[10px] py-[8px] font-mono text-brutal-sm uppercase border-2 transition-colors",
                   userResponse === 'tentative'
                     ? 'bg-brutal-warning border-brutal-warning text-event-horizon'
                     : 'bg-[var(--theme-background)] border-[var(--theme-border)] hover:border-brutal-warning'
                 )}
               >
-                <HiOutlineExclamationCircle className="inline w-16px h-16px mr-8px" />
+                <HiOutlineExclamationCircle className="inline w-16px h-16px mr-[4px]" />
                 MAYBE
               </button>
               <button
                 onClick={() => handleResponse('declined')}
                 disabled={isResponding}
                 className={clsx(
-                  "flex-1 px-16px py-12px font-mono text-brutal-sm uppercase border-2 transition-colors",
+                  "flex-1 px-[10px] py-[8px] font-mono text-brutal-sm uppercase border-2 transition-colors",
                   userResponse === 'declined'
                     ? 'bg-brutal-error border-brutal-error text-white'
                     : 'bg-[var(--theme-background)] border-[var(--theme-border)] hover:border-brutal-error'
                 )}
               >
-                <HiOutlineX className="inline w-16px h-16px mr-8px" />
+                <HiOutlineX className="inline w-16px h-16px mr-[4px]" />
                 DECLINE
               </button>
             </div>
@@ -298,35 +298,35 @@ export default function MeetingDetailsModal({
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={clsx(
-                  "flex-1 px-16px py-12px font-mono text-brutal-sm uppercase transition-colors",
+                  "flex-1 px-[10px] py-[8px] font-mono text-brutal-sm uppercase transition-colors",
                   activeTab === tab
                     ? 'bg-primary-brutalist text-event-horizon'
                     : 'bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]/20'
                 )}
               >
-                {tab === 'details' && <HiOutlineDocumentText className="inline w-16px h-16px mr-8px" />}
-                {tab === 'attendees' && <HiOutlineUsers className="inline w-16px h-16px mr-8px" />}
-                {tab === 'agenda' && <HiOutlineClipboardList className="inline w-16px h-16px mr-8px" />}
-                {tab === 'actions' && <HiOutlineCheck className="inline w-16px h-16px mr-8px" />}
+                {tab === 'details' && <HiOutlineDocumentText className="inline w-16px h-16px mr-[4px]" />}
+                {tab === 'attendees' && <HiOutlineUsers className="inline w-16px h-16px mr-[4px]" />}
+                {tab === 'agenda' && <HiOutlineClipboardList className="inline w-16px h-16px mr-[4px]" />}
+                {tab === 'actions' && <HiOutlineCheck className="inline w-16px h-16px mr-[4px]" />}
                 {tab}
               </button>
             ))}
           </div>
 
-          <div className="p-16px bg-[var(--theme-background-secondary)] min-h-200px">
+          <div className="p-[10px] bg-[var(--theme-background-secondary)] min-h-200px">
             {/* Details Tab */}
             {activeTab === 'details' && (
-              <div className="space-y-16px">
+              <div className="space-y-[8px]">
                 {meeting.description && (
                   <div>
-                    <h4 className="font-mono text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-8px">DESCRIPTION</h4>
+                    <h4 className="font-mono text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-[4px]">DESCRIPTION</h4>
                     <p className="font-mono text-brutal-sm">{meeting.description}</p>
                   </div>
                 )}
                 {meeting.recurrence && (
                   <div>
-                    <h4 className="font-mono text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-8px">RECURRENCE</h4>
-                    <div className="flex items-center gap-8px">
+                    <h4 className="font-mono text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-[4px]">RECURRENCE</h4>
+                    <div className="flex items-center gap-[4px]">
                       <HiOutlineRefresh className="w-16px h-16px text-primary-brutalist" />
                       <span className="font-mono text-brutal-sm uppercase">
                         {meeting.recurrence.frequency} (EVERY {meeting.recurrence.interval} {meeting.recurrence.frequency === 'daily' ? 'DAY' : meeting.recurrence.frequency === 'weekly' ? 'WEEK' : 'MONTH'})
@@ -336,7 +336,7 @@ export default function MeetingDetailsModal({
                 )}
                 {meeting.projectId && (
                   <div>
-                    <h4 className="font-mono text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-8px">PROJECT</h4>
+                    <h4 className="font-mono text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-[4px]">PROJECT</h4>
                     <p className="font-mono text-brutal-sm">PROJECT MEETING</p>
                   </div>
                 )}
@@ -345,41 +345,41 @@ export default function MeetingDetailsModal({
 
             {/* Attendees Tab */}
             {activeTab === 'attendees' && (
-              <div className="space-y-12px">
-                <div className="grid grid-cols-2 gap-8px mb-16px">
-                  <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-8px text-center">
+              <div className="space-y-[6px]">
+                <div className="grid grid-cols-2 gap-[4px] mb-[8px]">
+                  <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[4px] text-center">
                     <div className="text-2xl font-mono">{acceptedCount}</div>
                     <div className="text-brutal-xs text-[var(--theme-foreground)]/60 uppercase">ACCEPTED</div>
                   </div>
-                  <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-8px text-center">
+                  <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[4px] text-center">
                     <div className="text-2xl font-mono">{pendingCount}</div>
                     <div className="text-brutal-xs text-[var(--theme-foreground)]/60 uppercase">PENDING</div>
                   </div>
-                  <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-8px text-center">
+                  <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[4px] text-center">
                     <div className="text-2xl font-mono">{tentativeCount}</div>
                     <div className="text-brutal-xs text-[var(--theme-foreground)]/60 uppercase">TENTATIVE</div>
                   </div>
-                  <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-8px text-center">
+                  <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[4px] text-center">
                     <div className="text-2xl font-mono">{declinedCount}</div>
                     <div className="text-brutal-xs text-[var(--theme-foreground)]/60 uppercase">DECLINED</div>
                   </div>
                 </div>
 
-                <div className="space-y-8px">
+                <div className="space-y-[4px]">
                   {meeting.attendees?.map((attendee: any) => (
                     <div
                       key={attendee.userId}
-                      className="flex items-center justify-between p-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)]"
+                      className="flex items-center justify-between p-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]"
                     >
-                      <div className="flex items-center gap-12px">
+                      <div className="flex items-center gap-[6px]">
                         {attendee.user?.avatarUrl ? (
                           <img
                             src={attendee.user.avatarUrl}
                             alt={attendee.user.name}
-                            className="w-32px h-32px border-2 border-[var(--theme-border)]"
+                            className="w-5 h-5 border-2 border-[var(--theme-border)]"
                           />
                         ) : (
-                          <div className="w-32px h-32px border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] flex items-center justify-center font-mono text-brutal-sm">
+                          <div className="w-5 h-5 border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] flex items-center justify-center font-mono text-brutal-sm">
                             {attendee.user?.name?.charAt(0) || '?'}
                           </div>
                         )}
@@ -388,7 +388,7 @@ export default function MeetingDetailsModal({
                           <div className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60">{attendee.user?.email}</div>
                         </div>
                         {attendee.userId === meeting.organizerId && (
-                          <span className="px-8px py-2px bg-primary-brutalist text-event-horizon font-mono text-brutal-xs uppercase">
+                          <span className="px-[4px] py-2px bg-primary-brutalist text-event-horizon font-mono text-brutal-xs uppercase">
                             ORGANIZER
                           </span>
                         )}
@@ -405,14 +405,14 @@ export default function MeetingDetailsModal({
 
             {/* Agenda Tab */}
             {activeTab === 'agenda' && (
-              <div className="space-y-8px">
+              <div className="space-y-[4px]">
                 {meeting.template?.agenda && meeting.template.agenda.length > 0 ? (
                   meeting.template.agenda.map((item: string, index: number) => (
                     <div
                       key={index}
-                      className="p-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)]"
+                      className="p-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]"
                     >
-                      <span className="font-mono text-brutal-xs text-primary-brutalist mr-8px">
+                      <span className="font-mono text-brutal-xs text-primary-brutalist mr-[4px]">
                         {(index + 1).toString().padStart(2, '0')}.
                       </span>
                       <span className="font-mono text-brutal-sm uppercase">{item}</span>
@@ -426,14 +426,14 @@ export default function MeetingDetailsModal({
 
             {/* Actions Tab */}
             {activeTab === 'actions' && (
-              <div className="space-y-12px">
+              <div className="space-y-[6px]">
                 {meeting.actionItems && meeting.actionItems.length > 0 ? (
                   meeting.actionItems.map((item: any) => (
                     <div
                       key={item.id}
-                      className="p-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] flex items-center justify-between"
+                      className="p-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] flex items-center justify-between"
                     >
-                      <div className="flex items-center gap-8px flex-1">
+                      <div className="flex items-center gap-[4px] flex-1">
                         <input
                           type="checkbox"
                           checked={item.completed}
@@ -458,17 +458,17 @@ export default function MeetingDetailsModal({
                     </div>
                   ))
                 ) : (
-                  <p className="text-[var(--theme-foreground)]/60 font-mono text-brutal-sm mb-12px">NO ACTION ITEMS YET</p>
+                  <p className="text-[var(--theme-foreground)]/60 font-mono text-brutal-sm mb-[6px]">NO ACTION ITEMS YET</p>
                 )}
 
                 {isPast && (
-                  <div className="flex gap-8px">
+                  <div className="flex gap-[4px]">
                     <input
                       type="text"
                       value={newActionItem}
                       onChange={(e) => setNewActionItem(e.target.value)}
                       placeholder="ADD NEW ACTION ITEM..."
-                      className="flex-1 px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm placeholder:text-neutral-600 focus:border-primary-brutalist focus:outline-none"
+                      className="flex-1 px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm placeholder:text-neutral-600 focus:border-primary-brutalist focus:outline-none"
                       onKeyPress={(e) => e.key === 'Enter' && handleAddActionItem()}
                     />
                     <button
@@ -486,7 +486,7 @@ export default function MeetingDetailsModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex gap-16px justify-end">
+        <div className="flex gap-[8px] justify-end">
           {onViewNotes && (
             <button
               onClick={onViewNotes}

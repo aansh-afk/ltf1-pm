@@ -224,7 +224,7 @@ export default function SettingsPage() {
   if (!currentUser) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[var(--theme-background)]">
-        <div className="text-brutal-lg font-mono animate-pulse">Loading settings...</div>
+        <div className="text-[14px] font-semibold font-mono animate-pulse">Loading settings...</div>
       </div>
     )
   }

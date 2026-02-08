@@ -5,11 +5,11 @@ export default function BrutalistLoader() {
     <div className="min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
       <div className="relative">
         {/* Animated squares in a grid pattern */}
-        <div className="grid grid-cols-3 gap-8px">
+        <div className="grid grid-cols-3 gap-[4px]">
           {[...Array(9)].map((_, index) => (
             <div
               key={index}
-              className="w-24px h-24px border-2"
+              className="w-5 h-5 border-2"
               style={{
                 backgroundColor: 'var(--theme-background)',
                 borderColor: 'var(--theme-primary)',
@@ -21,8 +21,8 @@ export default function BrutalistLoader() {
         </div>
         
         {/* Optional: Terminal cursor blinking effect */}
-        <div 
-          className="absolute -right-16px top-1/2 -translate-y-1/2 w-8px h-32px"
+        <div
+          className="absolute -right-[10px] top-1/2 -translate-y-1/2 w-[6px] h-5"
           style={{
             backgroundColor: 'var(--theme-primary)',
             animation: 'brutalBlink 1s infinite step-end',
@@ -60,7 +60,7 @@ export default function BrutalistLoader() {
 export function BrutalistStepLoader() {
   return (
     <div className="min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
-      <div className="flex gap-12px">
+      <div className="flex gap-[6px]">
         {[...Array(5)].map((_, index) => (
           <div
             key={index}
@@ -108,7 +108,7 @@ export function BrutalistTerminalLoader() {
       <div className="font-mono text-[var(--theme-primary)] text-brutal-lg uppercase">
         <span className="mr-8px">&gt;</span>
         <span>INITIALIZING</span>
-        <span className="inline-block w-32px text-left">{dots}</span>
+        <span className="inline-block w-5 text-left">{dots}</span>
         <span 
           className="inline-block w-12px h-20px ml-4px"
           style={{

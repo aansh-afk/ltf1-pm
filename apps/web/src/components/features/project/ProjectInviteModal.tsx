@@ -108,10 +108,10 @@ export default function ProjectInviteModal({
       title="PROJECT INVITE"
       size="lg"
     >
-      <div className="space-y-24px">
+      <div className="space-y-[12px]">
         {/* Project Info */}
-        <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-16px">
-          <h3 className="text-brutal-md font-bold mb-8px">INVITING TO: {projectName}</h3>
+        <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-[10px]">
+          <h3 className="text-brutal-md font-bold mb-[4px]">INVITING TO: {projectName}</h3>
           <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
             Share the link or code below to invite people to join this project.
           </p>
@@ -121,8 +121,8 @@ export default function ProjectInviteModal({
           <>
             {/* Show loading if generating invite code */}
             {isEnsuring && (
-              <div className="bg-brutal-warning/10 border-2 border-brutal-warning p-16px mb-24px">
-                <div className="flex items-center gap-12px">
+              <div className="bg-brutal-warning/10 border-2 border-brutal-warning p-[10px] mb-[12px]">
+                <div className="flex items-center gap-[6px]">
                   <div className="animate-spin w-16px h-16px border-2 border-brutal-warning border-t-transparent"></div>
                   <p className="text-brutal-sm text-brutal-warning">
                     Generating new single-use invite code...
@@ -133,13 +133,13 @@ export default function ProjectInviteModal({
 
             {/* Show message if no invite code yet */}
             {!inviteCode && !isEnsuring && (
-              <div className="bg-brutal-warning/10 border-2 border-brutal-warning p-16px mb-24px">
-                <p className="text-brutal-sm text-brutal-warning mb-12px">
+              <div className="bg-brutal-warning/10 border-2 border-brutal-warning p-[10px] mb-[12px]">
+                <p className="text-brutal-sm text-brutal-warning mb-[6px]">
                   ⚠️ This project doesn't have an invite code yet.
                 </p>
                 <button
                   onClick={handleEnsureInviteCode}
-                  className="brutal-btn-secondary text-brutal-xs px-16px py-8px"
+                  className="brutal-btn-secondary text-brutal-xs px-[10px] py-[4px]"
                 >
                   GENERATE INVITE CODE
                 </button>
@@ -148,7 +148,7 @@ export default function ProjectInviteModal({
 
             {/* Single-use warning */}
             {inviteCode && (
-              <div className="bg-brutal-info/10 border-2 border-brutal-info p-16px mb-24px">
+              <div className="bg-brutal-info/10 border-2 border-brutal-info p-[10px] mb-[12px]">
                 <p className="text-brutal-sm text-brutal-info">
                   🔒 <strong>SINGLE-USE INVITE:</strong> This code can only be used once. A new code will be generated after someone joins.
                 </p>
@@ -156,32 +156,32 @@ export default function ProjectInviteModal({
             )}
 
             {/* Invite Link Section */}
-            <div className="space-y-16px">
+            <div className="space-y-[8px]">
               <div className="flex items-center justify-between">
                 <h4 className="text-brutal-sm font-bold">SHAREABLE LINK</h4>
                 <button
                   onClick={handleShareLink}
                   disabled={!inviteUrl || isEnsuring}
-                  className="brutal-btn-secondary flex items-center gap-8px text-brutal-xs px-16px py-8px disabled:opacity-50"
+                  className="brutal-btn-secondary flex items-center gap-[4px] text-brutal-xs px-[10px] py-[4px] disabled:opacity-50"
                 >
                   <HiOutlineShare className="w-14px h-14px" />
                   SHARE
                 </button>
               </div>
 
-              <div className="flex gap-8px">
+              <div className="flex gap-[4px]">
                 <input
                   type="text"
                   value={inviteUrl || (isEnsuring ? 'Generating...' : 'No invite code available')}
                   readOnly
-                  className="flex-1 px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+                  className="flex-1 px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                            font-mono text-brutal-sm text-[var(--theme-foreground)]/80
                            focus:border-primary-brutalist focus:outline-none"
                 />
                 <button
                   onClick={() => handleCopyToClipboard(inviteUrl, 'Invite Link')}
                   disabled={!inviteUrl || isEnsuring}
-                  className={`px-16px py-12px border-2 transition-colors disabled:opacity-50 ${
+                  className={`px-[10px] py-[8px] border-2 transition-colors disabled:opacity-50 ${
                     copiedText === 'Invite Link'
                       ? 'bg-brutal-success border-brutal-success text-event-horizon'
                       : 'bg-[var(--theme-background)] border-[var(--theme-border)] text-[var(--theme-foreground)] hover:border-primary-brutalist'
@@ -193,32 +193,32 @@ export default function ProjectInviteModal({
             </div>
 
             {/* Invite Code Section */}
-            <div className="space-y-16px">
+            <div className="space-y-[8px]">
               <div className="flex items-center justify-between">
                 <h4 className="text-brutal-sm font-bold">INVITE CODE</h4>
                 <button
                   onClick={handleGenerateNewCode}
                   disabled={isEnsuring}
-                  className="brutal-btn-secondary flex items-center gap-8px text-brutal-xs px-16px py-8px disabled:opacity-50"
+                  className="brutal-btn-secondary flex items-center gap-[4px] text-brutal-xs px-[10px] py-[4px] disabled:opacity-50"
                 >
                   <HiOutlineRefresh className="w-14px h-14px" />
                   {inviteCode ? 'REGENERATE' : 'GENERATE'}
                 </button>
               </div>
 
-              <div className="flex gap-8px">
+              <div className="flex gap-[4px]">
                 <input
                   type="text"
                   value={inviteCode || (isEnsuring ? 'Generating...' : 'No invite code available')}
                   readOnly
-                  className="flex-1 px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+                  className="flex-1 px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                            font-mono text-brutal-md text-primary-brutalist font-bold
                            focus:border-primary-brutalist focus:outline-none"
                 />
                 <button
                   onClick={() => handleCopyToClipboard(inviteCode || '', 'Invite Code')}
                   disabled={!inviteCode || isEnsuring}
-                  className={`px-16px py-12px border-2 transition-colors disabled:opacity-50 ${
+                  className={`px-[10px] py-[8px] border-2 transition-colors disabled:opacity-50 ${
                     copiedText === 'Invite Code'
                       ? 'bg-brutal-success border-brutal-success text-event-horizon'
                       : 'bg-[var(--theme-background)] border-[var(--theme-border)] text-[var(--theme-foreground)] hover:border-primary-brutalist'
@@ -235,13 +235,13 @@ export default function ProjectInviteModal({
 
             {/* Team Settings Info */}
             {inviteLinkData.teamSettings && (
-              <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-16px">
-                <div className="flex items-center gap-8px mb-12px">
+              <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-[10px]">
+                <div className="flex items-center gap-[4px] mb-[6px]">
                   <HiOutlineCog className="w-16px h-16px text-primary-brutalist" />
                   <h4 className="text-brutal-sm font-bold">TEAM SETTINGS</h4>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-16px text-brutal-xs">
+                <div className="grid grid-cols-2 gap-[8px] text-brutal-xs">
                   <div>
                     <span className="text-[var(--theme-foreground)]/60">Max Members:</span>{' '}
                     <span className="text-[var(--theme-foreground)]">
@@ -265,11 +265,11 @@ export default function ProjectInviteModal({
             )}
 
             {/* Quick Actions */}
-            <div className="flex gap-16px pt-16px border-t-2 border-[var(--theme-border)]">
+            <div className="flex gap-[8px] pt-[8px] border-t-2 border-[var(--theme-border)]">
               <button
                 onClick={() => window.open(inviteUrl, '_blank')}
                 disabled={!inviteUrl || isEnsuring}
-                className="flex-1 brutal-btn-secondary flex items-center justify-center gap-8px disabled:opacity-50"
+                className="flex-1 brutal-btn-secondary flex items-center justify-center gap-[4px] disabled:opacity-50"
               >
                 <HiOutlineExternalLink className="w-16px h-16px" />
                 TEST LINK
@@ -283,8 +283,8 @@ export default function ProjectInviteModal({
             </div>
           </>
         ) : (
-          <div className="text-center py-48px">
-            <div className="animate-spin w-24px h-24px border-2 border-primary-brutalist border-t-transparent mx-auto mb-16px"></div>
+          <div className="text-center py-[24px]">
+            <div className="animate-spin w-4 h-4 border-2 border-primary-brutalist border-t-transparent mx-auto mb-[8px]"></div>
             <p className="text-brutal-sm text-[var(--theme-foreground)]/60">Loading invite information...</p>
           </div>
         )}

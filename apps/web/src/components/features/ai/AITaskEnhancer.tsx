@@ -329,11 +329,11 @@ ${title}
   
   return (
     <div className="w-full">
-      <div className="mb-16px">
+      <div className="mb-[8px]">
         <button
           onClick={enhanceWithAI}
           disabled={isEnhancing}
-          className="px-16px py-12px bg-[var(--theme-primary)] text-[var(--theme-background)]
+          className="px-[10px] py-12px bg-[var(--theme-primary)] text-[var(--theme-background)]
                    font-bold text-brutal-sm uppercase
                    hover:bg-[var(--theme-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed
                    flex items-center gap-8px w-full justify-center"
@@ -353,7 +353,7 @@ ${title}
       </div>
       
       {enhancements && (
-        <div className="space-y-12px">
+        <div className="space-y-[6px]">
           <h4 className="text-brutal-sm font-bold uppercase mb-8px">AI Suggestions</h4>
           
           {/* Title Enhancement */}
@@ -525,7 +525,7 @@ ${title}
           <button
             onClick={applyEnhancements}
             disabled={selectedEnhancements.size === 0}
-            className="px-16px py-12px bg-[var(--theme-success)] text-[var(--theme-background)]
+            className="px-[10px] py-12px bg-[var(--theme-success)] text-[var(--theme-background)]
                      font-bold text-brutal-sm uppercase w-full
                      hover:bg-[var(--theme-success-hover)] disabled:opacity-50 disabled:cursor-not-allowed
                      flex items-center gap-8px justify-center"

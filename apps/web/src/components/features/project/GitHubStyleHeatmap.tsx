@@ -101,9 +101,9 @@ export default function GitHubStyleHeatmap({
 
   return (
     <div className="w-full overflow-x-auto pb-4px">
-      <div className="flex items-center justify-between mb-16px sticky left-0">
+      <div className="flex items-center justify-between mb-[8px] sticky left-0">
         <h3 className="text-brutal-md font-bold uppercase tracking-tight">Activity</h3>
-        <div className="flex items-center gap-16px">
+        <div className="flex items-center gap-[8px]">
           {/* Legend */}
           <div className="flex items-center gap-4px text-[10px] text-[#8b949e]">
             <span className="mr-4px">Less</span>

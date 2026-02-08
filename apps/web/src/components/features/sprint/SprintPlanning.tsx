@@ -104,12 +104,12 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
   }
 
   return (
-    <div className="grid grid-cols-2 gap-24px">
+    <div className="grid grid-cols-2 gap-[12px]">
       {/* Backlog Column */}
-      <div className="space-y-16px">
+      <div className="space-y-[8px]">
         <div className="flex items-center justify-between">
-          <h2 className="font-mono text-brutal-lg uppercase">BACKLOG</h2>
-          <div className="flex items-center gap-16px">
+          <h2 className="font-mono text-[14px] font-semibold uppercase">BACKLOG</h2>
+          <div className="flex items-center gap-[8px]">
             {backlogTasks && backlogTasks.length > 0 && (
               <button
                 onClick={handleSelectAll}
@@ -120,7 +120,7 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
             )}
             <button
               onClick={() => setShowCreateTaskModal(true)}
-              className="brutal-btn-sm flex items-center gap-8px"
+              className="brutal-btn-sm flex items-center gap-[4px]"
             >
               <HiOutlinePlus className="w-12px h-12px" />
               NEW TASK
@@ -128,7 +128,7 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
           </div>
         </div>
 
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px space-y-16px max-h-600px overflow-y-auto">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[10px] space-y-[8px] max-h-600px overflow-y-auto">
           {!backlogTasks ? (
             <p className="text-brutal-sm text-neutral-500">Loading tasks...</p>
           ) : backlogTasks.length === 0 ? (
@@ -138,7 +138,7 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
               <div
                 key={task._id}
                 className={clsx(
-                  "p-16px border-2 cursor-pointer transition-all",
+                  "p-[10px] border-2 cursor-pointer transition-all",
                   selectedTasks.has(task._id)
                     ? "border-primary-brutalist bg-primary-brutalist/10"
                     : "border-[var(--theme-border)] hover:border-primary-brutalist/50"
@@ -153,8 +153,8 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
                   setSelectedTasks(newSelected)
                 }}
               >
-                <div className="flex items-center justify-between mb-8px">
-                  <div className="flex items-center gap-8px">
+                <div className="flex items-center justify-between mb-[4px]">
+                  <div className="flex items-center gap-[4px]">
                     <span className="font-mono text-brutal-xs text-neutral-500">
                       {task.key}
                     </span>
@@ -179,8 +179,8 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
         </div>
 
         {selectedTasks.size > 0 && (
-          <div className="bg-primary-brutalist border-2 border-[var(--theme-border)] p-16px">
-            <p className="font-mono text-brutal-sm text-event-horizon mb-8px">
+          <div className="bg-primary-brutalist border-2 border-[var(--theme-border)] p-[10px]">
+            <p className="font-mono text-brutal-sm text-event-horizon mb-[4px]">
               {selectedTasks.size} TASKS SELECTED
             </p>
             <p className="font-mono text-brutal-xs text-event-horizon">
@@ -191,10 +191,10 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
       </div>
 
       {/* Sprints Column */}
-      <div className="space-y-16px">
-        <h2 className="font-mono text-brutal-lg uppercase">SPRINTS</h2>
+      <div className="space-y-[8px]">
+        <h2 className="font-mono text-[14px] font-semibold uppercase">SPRINTS</h2>
 
-        <div className="space-y-16px">
+        <div className="space-y-[8px]">
           {sprints.map((sprint) => {
             const isActive = sprint.status === 'active'
             const isCompleted = sprint.status === 'completed'
@@ -203,23 +203,23 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
               <div
                 key={sprint._id}
                 className={clsx(
-                  "border-2 p-24px",
+                  "border-2 p-[16px]",
                   isActive ? "border-primary-brutalist bg-primary-brutalist/10" :
                   isCompleted ? "border-[var(--theme-success)] bg-[var(--theme-success)]/10" :
                   "border-[var(--theme-border)] bg-[var(--theme-background)]"
                 )}
               >
-                <div className="flex items-start justify-between mb-16px">
+                <div className="flex items-start justify-between mb-[8px]">
                   <div>
-                    <div className="flex items-center gap-8px mb-4px">
+                    <div className="flex items-center gap-[4px] mb-[2px]">
                       <h3 className="font-mono text-brutal-md uppercase">{sprint.name}</h3>
                       {isActive && (
-                        <span className="px-8px py-4px bg-primary-brutalist text-event-horizon font-mono text-brutal-xs uppercase">
+                        <span className="px-[4px] py-4px bg-primary-brutalist text-event-horizon font-mono text-brutal-xs uppercase">
                           ACTIVE
                         </span>
                       )}
                       {isCompleted && (
-                        <span className="px-8px py-4px bg-[var(--theme-success)] text-event-horizon font-mono text-brutal-xs uppercase">
+                        <span className="px-[4px] py-4px bg-[var(--theme-success)] text-event-horizon font-mono text-brutal-xs uppercase">
                           COMPLETED
                         </span>
                       )}
@@ -230,16 +230,16 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
                   </div>
                   
                   {!isActive && !isCompleted && (
-                    <div className="flex gap-8px">
+                    <div className="flex gap-[4px]">
                       <button
                         onClick={() => handleStartSprint(sprint._id)}
-                        className="p-8px border-2 border-primary-brutalist text-primary-brutalist hover:bg-primary-brutalist hover:text-event-horizon transition-colors"
+                        className="p-[4px] border-2 border-primary-brutalist text-primary-brutalist hover:bg-primary-brutalist hover:text-event-horizon transition-colors"
                       >
                         <HiOutlinePlay className="w-16px h-16px" />
                       </button>
                       <button
                         onClick={() => handleDeleteSprint(sprint._id)}
-                        className="p-8px border-2 border-[var(--theme-error)] text-[var(--theme-error)] hover:bg-[var(--theme-error)] hover:text-[var(--theme-foreground)] transition-colors"
+                        className="p-[4px] border-2 border-[var(--theme-error)] text-[var(--theme-error)] hover:bg-[var(--theme-error)] hover:text-[var(--theme-foreground)] transition-colors"
                       >
                         <HiOutlineTrash className="w-16px h-16px" />
                       </button>
@@ -247,14 +247,14 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
                   )}
                 </div>
 
-                <div className="flex gap-24px mb-16px">
-                  <div className="flex items-center gap-8px">
+                <div className="flex gap-[12px] mb-[8px]">
+                  <div className="flex items-center gap-[4px]">
                     <HiOutlineCalendar className="w-16px h-16px text-neutral-500" />
                     <span className="font-mono text-brutal-xs">
                       {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-8px">
+                  <div className="flex items-center gap-[4px]">
                     <HiOutlineChartBar className="w-16px h-16px text-neutral-500" />
                     <span className="font-mono text-brutal-xs">
                       {sprint.taskStats.total} TASKS
@@ -263,8 +263,8 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
                 </div>
 
                 {/* Progress Bar */}
-                <div className="mb-16px">
-                  <div className="flex justify-between mb-4px">
+                <div className="mb-[8px]">
+                  <div className="flex justify-between mb-[2px]">
                     <span className="font-mono text-brutal-xs">PROGRESS</span>
                     <span className="font-mono text-brutal-xs">{sprint.progress}%</span>
                   </div>
@@ -277,20 +277,20 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
                 </div>
 
                 {/* Task Stats */}
-                <div className="grid grid-cols-4 gap-8px mb-16px">
-                  <div className="text-center p-8px bg-[var(--theme-background-secondary)]/10">
+                <div className="grid grid-cols-4 gap-[4px] mb-[8px]">
+                  <div className="text-center p-[4px] bg-[var(--theme-background-secondary)]/10">
                     <p className="font-mono text-brutal-xs text-neutral-500">TODO</p>
                     <p className="font-mono text-brutal-sm">{sprint.taskStats.todo}</p>
                   </div>
-                  <div className="text-center p-8px bg-[var(--theme-info)]/10">
+                  <div className="text-center p-[4px] bg-[var(--theme-info)]/10">
                     <p className="font-mono text-brutal-xs text-neutral-500">IN PROGRESS</p>
                     <p className="font-mono text-brutal-sm">{sprint.taskStats.inProgress}</p>
                   </div>
-                  <div className="text-center p-8px bg-[var(--theme-accent)]/10">
+                  <div className="text-center p-[4px] bg-[var(--theme-accent)]/10">
                     <p className="font-mono text-brutal-xs text-neutral-500">IN REVIEW</p>
                     <p className="font-mono text-brutal-sm">{sprint.taskStats.inReview}</p>
                   </div>
-                  <div className="text-center p-8px bg-[var(--theme-success)]/10">
+                  <div className="text-center p-[4px] bg-[var(--theme-success)]/10">
                     <p className="font-mono text-brutal-xs text-neutral-500">DONE</p>
                     <p className="font-mono text-brutal-sm">{sprint.taskStats.done}</p>
                   </div>
@@ -300,7 +300,7 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
                 {!isCompleted && selectedTasks.size > 0 && (
                   <button
                     onClick={() => handleAddToSprint(sprint._id)}
-                    className="w-full brutal-btn flex items-center justify-center gap-8px"
+                    className="w-full brutal-btn flex items-center justify-center gap-[4px]"
                   >
                     <HiOutlineArrowRight className="w-16px h-16px" />
                     ADD {selectedTasks.size} TASKS TO SPRINT

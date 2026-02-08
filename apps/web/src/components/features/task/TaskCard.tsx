@@ -103,11 +103,11 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
       />
 
       <div className={clsx(
-        isCompact ? "p-8px space-y-4px" : "p-16px space-y-12px"
+        isCompact ? "p-[4px] space-y-4px" : "p-[10px] space-y-[6px]"
       )}>
         {/* Header with type, number, and menu */}
-        <div className="flex items-center justify-between mb-4px">
-          <div className="flex items-center gap-8px">
+        <div className="flex items-center justify-between mb-[2px]">
+          <div className="flex items-center gap-[4px]">
             <span className={clsx(
               "text-xs font-bold px-6px py-2px",
               task.type === 'bug' && "text-brutal-error bg-brutal-error/10",
@@ -156,7 +156,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
                     setShowMenu(false)
                     onEdit?.()
                   }}
-                  className="w-full px-16px py-8px text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-8px"
+                  className="w-full px-[10px] py-[4px] text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-[4px]"
                 >
                   <HiOutlinePencil className="w-16px h-16px" />
                   EDIT
@@ -167,7 +167,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
                     setShowMenu(false)
                     onDuplicate?.()
                   }}
-                  className="w-full px-16px py-8px text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-8px"
+                  className="w-full px-[10px] py-[4px] text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-[4px]"
                 >
                   <HiOutlineDuplicate className="w-16px h-16px" />
                   DUPLICATE
@@ -179,7 +179,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
                     toast.success('Link copied!')
                     setShowMenu(false)
                   }}
-                  className="w-full px-16px py-8px text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-8px"
+                  className="w-full px-[10px] py-[4px] text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-[4px]"
                 >
                   <HiOutlineLink className="w-16px h-16px" />
                   COPY LINK
@@ -190,7 +190,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
                     setShowMenu(false)
                     onViewDetails?.()
                   }}
-                  className="w-full px-16px py-8px text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-8px"
+                  className="w-full px-[10px] py-[4px] text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-[4px]"
                 >
                   <HiOutlineInformationCircle className="w-16px h-16px" />
                   MORE INFO
@@ -202,7 +202,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
                     setShowMenu(false)
                     onDelete?.()
                   }}
-                  className="w-full px-16px py-8px text-xs font-mono uppercase text-left hover:bg-brutal-error hover:text-event-horizon transition-colors flex items-center gap-8px"
+                  className="w-full px-[10px] py-[4px] text-xs font-mono uppercase text-left hover:bg-brutal-error hover:text-event-horizon transition-colors flex items-center gap-[4px]"
                 >
                   <HiOutlineTrash className="w-16px h-16px" />
                   DELETE
@@ -221,7 +221,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
             </h4>
 
             {/* Compact tags, user, and status */}
-            <div className="flex items-center justify-between gap-8px">
+            <div className="flex items-center justify-between gap-[4px]">
               <div className="flex items-center gap-6px flex-1 min-w-0">
                 <UserDisplay
                   userId={task.assigneeId}
@@ -255,7 +255,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
         ) : (
           // Normal mode: vertical layout
           <div>
-            <h4 className="font-bold text-sm uppercase tracking-wider text-[var(--theme-foreground)] break-words line-clamp-2 mb-4px">
+            <h4 className="font-bold text-sm uppercase tracking-wider text-[var(--theme-foreground)] break-words line-clamp-2 mb-[2px]">
               {task.title}
             </h4>
             {task.description && (
@@ -267,7 +267,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
         )}
 
         {!isCompact && task.labels && task.labels.length > 0 && (
-          <div className="flex flex-wrap gap-8px">
+          <div className="flex flex-wrap gap-[4px]">
             {task.labels.slice(0, 3).map((label: string) => (
               <BrutalBadge key={label} size="sm">{label}</BrutalBadge>
             ))}
@@ -279,7 +279,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
 
         {!isCompact && (
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-12px">
+            <div className="flex items-center gap-[6px]">
               <UserDisplay
                 userId={task.assigneeId}
                 size="sm"
@@ -295,7 +295,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
               )}
             </div>
 
-            <div className="flex items-center gap-8px">
+            <div className="flex items-center gap-[4px]">
               <div className="text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/60">
                 {statusIndicators[task.status as keyof typeof statusIndicators]?.label}
               </div>
@@ -309,7 +309,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
         )}
 
         {!isCompact && task.dueDate && (
-          <div className="flex items-center gap-8px text-xs font-mono uppercase text-[var(--theme-foreground)]/60 border-t border-[var(--theme-border)] pt-8px">
+          <div className="flex items-center gap-[4px] text-xs font-mono uppercase text-[var(--theme-foreground)]/60 border-t border-[var(--theme-border)] pt-8px">
             <HiOutlineClock className="w-12px h-12px" />
             <span className={clsx(
               new Date(task.dueDate) < new Date() && 'text-brutal-error'

@@ -71,8 +71,8 @@ export function GitHubConnectButton({
 
   const sizeClasses = {
     sm: 'px-12px py-6px text-brutal-xs',
-    md: 'px-16px py-8px text-brutal-sm',
-    lg: 'px-24px py-12px text-brutal-md'
+    md: 'px-[10px] py-8px text-brutal-sm',
+    lg: 'px-[12px] py-12px text-brutal-md'
   };
 
   return (

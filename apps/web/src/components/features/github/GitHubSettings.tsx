@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery, useMutation } from 'convex/react';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../../../../../../convex/_generated/api';
 import { FaGithub, FaCheckCircle, FaTimesCircle, FaExclamationCircle, FaSync } from 'react-icons/fa';
 import { HiOutlineExternalLink, HiOutlineTrash } from 'react-icons/hi';
@@ -16,7 +16,19 @@ interface GitHubSettingsProps {
 export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  
+
+  // Listen for GitHub App installation popup closing
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'github-app-installed') {
+        toast.success('GitHub App installed successfully!');
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   // Get GitHub stats
   const githubStats = useQuery(
     api.integrations.github.queries.getDeveloperGitHubStats,
@@ -50,13 +62,25 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
     }
   };
   
+  const triggerSync = useMutation(api.integrations.github.sync.triggerManualStatsSync);
+
   const handleSyncStats = async () => {
     if (!currentUser) return;
+    setIsSyncing(true);
 
-    // GitHub stats are synced automatically via webhook and cron jobs
-    // Show info message about automatic syncing
-    toast.success('Stats sync happens automatically via webhooks');
-    setIsSyncing(false);
+    try {
+      const result = await triggerSync();
+      if (result.success) {
+        toast.success('Stats sync started — results will appear shortly');
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error('Error triggering sync:', error);
+      toast.error('Failed to start stats sync');
+    } finally {
+      setIsSyncing(false);
+    }
   };
   
   const handleInstallApp = () => {
@@ -73,12 +97,12 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
         title="GitHub Integration"
         description="Connect your GitHub account to enable code tracking, PR management, and developer statistics."
       >
-        <div className="space-y-24px">
+        <div className="space-y-[12px]">
           {/* Connection Status */}
-          <BrutalCard className="p-24px">
-            <div className="flex items-center justify-between mb-16px">
-              <h3 className="text-brutal-md font-bold flex items-center gap-12px">
-                <FaGithub className="w-24px h-24px" />
+          <BrutalCard className="p-[16px]">
+            <div className="flex items-center justify-between mb-[8px]">
+              <h3 className="text-brutal-md font-bold flex items-center gap-[6px]">
+                <FaGithub className="w-4 h-4" />
                 CONNECTION STATUS
               </h3>
               
@@ -96,7 +120,7 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
             </div>
             
             {!isConnected ? (
-              <div className="space-y-16px">
+              <div className="space-y-[8px]">
                 <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
                   Connect your GitHub account to track your contributions and enable advanced features.
                 </p>
@@ -105,8 +129,8 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
                 </BrutalButton>
               </div>
             ) : (
-              <div className="space-y-16px">
-                <div className="grid grid-cols-2 gap-16px">
+              <div className="space-y-[8px]">
+                <div className="grid grid-cols-2 gap-[10px]">
                   <div>
                     <div className="text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-4px">Username</div>
                     <div className="font-mono font-bold">@{githubStats.username}</div>
@@ -122,7 +146,7 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-12px">
+                <div className="flex items-center gap-[6px]">
                   <BrutalButton
                     size="sm"
                     onClick={handleSyncStats}
@@ -147,11 +171,11 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
           </BrutalCard>
           
           {/* GitHub App Installation */}
-          <BrutalCard className="p-24px">
-            <h3 className="text-brutal-md font-bold mb-16px">GITHUB APP INSTALLATION</h3>
+          <BrutalCard className="p-[16px]">
+            <h3 className="text-brutal-md font-bold mb-[8px]">GITHUB APP INSTALLATION</h3>
             
             {installations && installations.length > 0 ? (
-              <div className="space-y-16px">
+              <div className="space-y-[8px]">
                 <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
                   GitHub App is installed and active for the following accounts:
                 </p>
@@ -159,7 +183,7 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
                 {installations.map((installation) => (
                   <div 
                     key={installation._id}
-                    className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]"
+                    className="p-[10px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -180,7 +204,7 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
                 ))}
               </div>
             ) : (
-              <div className="space-y-16px">
+              <div className="space-y-[8px]">
                 <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
                   Install the GitHub App to enable automatic repository syncing and advanced features.
                 </p>
@@ -213,30 +237,30 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
           
           {/* Statistics */}
           {isConnected && githubStats && (
-            <BrutalCard className="p-24px">
-              <h3 className="text-brutal-md font-bold mb-16px">CONTRIBUTION STATISTICS</h3>
+            <BrutalCard className="p-[16px]">
+              <h3 className="text-brutal-md font-bold mb-[8px]">CONTRIBUTION STATISTICS</h3>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-16px">
-                <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-center">
-                  <div className="text-brutal-2xl font-bold text-brutal-success">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-[10px]">
+                <div className="p-[10px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-center">
+                  <div className="text-[20px] font-bold font-bold text-brutal-success">
                     {githubStats.totalPRs || 0}
                   </div>
                   <div className="text-brutal-xs uppercase">Pull Requests</div>
                 </div>
-                <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-center">
-                  <div className="text-brutal-2xl font-bold text-brutal-info">
+                <div className="p-[10px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-center">
+                  <div className="text-[20px] font-bold font-bold text-brutal-info">
                     {githubStats.totalReviews || 0}
                   </div>
                   <div className="text-brutal-xs uppercase">Code Reviews</div>
                 </div>
-                <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-center">
-                  <div className="text-brutal-2xl font-bold text-brutal-warning">
+                <div className="p-[10px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-center">
+                  <div className="text-[20px] font-bold font-bold text-brutal-warning">
                     {githubStats.avgReviewTime ? `${Math.round(githubStats.avgReviewTime)}h` : '--'}
                   </div>
                   <div className="text-brutal-xs uppercase">Avg Review Time</div>
                 </div>
-                <div className="p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-center">
-                  <div className="text-brutal-2xl font-bold text-primary-brutalist">
+                <div className="p-[10px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-center">
+                  <div className="text-[20px] font-bold font-bold text-primary-brutalist">
                     {githubStats.languages?.length || 0}
                   </div>
                   <div className="text-brutal-xs uppercase">Languages</div>
@@ -251,8 +275,8 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
         title="Privacy & Permissions"
         description="Control what GitHub data is synced and how it's used."
       >
-        <div className="space-y-16px">
-          <label className="flex items-center justify-between p-16px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] cursor-pointer">
+        <div className="space-y-[8px]">
+          <label className="flex items-center justify-between p-[10px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] cursor-pointer">
             <div>
               <div className="font-mono text-brutal-sm font-bold">SYNC PUBLIC REPOSITORIES</div>
               <div className="text-brutal-xs text-[var(--theme-foreground)]/60">
@@ -261,11 +285,11 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
             </div>
             <input type="checkbox" className="sr-only" defaultChecked />
             <div className="w-48px h-24px bg-basalt-border relative rounded-none">
-              <div className="absolute top-0 left-0 w-24px h-24px bg-primary-brutalist transition-transform" />
+              <div className="absolute top-0 left-0 w-4 h-4 bg-primary-brutalist transition-transform" />
             </div>
           </label>
           
-          <label className="flex items-center justify-between p-16px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] cursor-pointer">
+          <label className="flex items-center justify-between p-[10px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] cursor-pointer">
             <div>
               <div className="font-mono text-brutal-sm font-bold">DISPLAY STATISTICS PUBLICLY</div>
               <div className="text-brutal-xs text-[var(--theme-foreground)]/60">
@@ -274,11 +298,11 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
             </div>
             <input type="checkbox" className="sr-only" defaultChecked />
             <div className="w-48px h-24px bg-basalt-border relative rounded-none">
-              <div className="absolute top-0 left-0 w-24px h-24px bg-primary-brutalist transition-transform" />
+              <div className="absolute top-0 left-0 w-4 h-4 bg-primary-brutalist transition-transform" />
             </div>
           </label>
           
-          <label className="flex items-center justify-between p-16px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] cursor-pointer">
+          <label className="flex items-center justify-between p-[10px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] cursor-pointer">
             <div>
               <div className="font-mono text-brutal-sm font-bold">ENABLE NOTIFICATIONS</div>
               <div className="text-brutal-xs text-[var(--theme-foreground)]/60">
@@ -287,7 +311,7 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
             </div>
             <input type="checkbox" className="sr-only" />
             <div className="w-48px h-24px bg-basalt-border relative rounded-none">
-              <div className="absolute top-0 left-0 w-24px h-24px bg-basalt-border transition-transform" />
+              <div className="absolute top-0 left-0 w-4 h-4 bg-basalt-border transition-transform" />
             </div>
           </label>
         </div>
