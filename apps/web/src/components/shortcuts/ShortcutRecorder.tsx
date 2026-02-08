@@ -103,24 +103,24 @@ export default function ShortcutRecorder({
     <div 
       ref={containerRef}
       className={clsx(
-        "bg-carbon-plate border-4 border-basalt-border p-24px",
+        "bg-carbon-plate border-4 border-basalt-border p-[16px]",
         isRecording && "border-primary-brutalist",
         className
       )}
       tabIndex={-1}
     >
-      <div className="mb-16px">
-        <h3 className="font-mono text-brutal-sm uppercase mb-8px">
+      <div className="mb-[8px]">
+        <h3 className="font-mono text-brutal-sm uppercase mb-[8px]">
           {isRecording ? 'RECORDING... PRESS KEYS' : 'KEYBOARD SHORTCUT'}
         </h3>
         
         {/* Key Display */}
         <div className={clsx(
-          "bg-event-horizon border-2 border-basalt-border p-16px min-h-60px flex items-center justify-center",
+          "bg-event-horizon border-2 border-basalt-border p-[10px] min-h-60px flex items-center justify-center",
           isRecording && "border-primary-brutalist animate-pulse"
         )}>
           {displayKeys ? (
-            <div className="flex items-center gap-8px">
+            <div className="flex items-center gap-[8px]">
               {displayKeys.modifiers.map(mod => (
                 <span
                   key={mod}
@@ -137,7 +137,7 @@ export default function ShortcutRecorder({
               <span className="text-brutal-sm">+</span>
               <span
                 className={clsx(
-                  "px-16px py-8px bg-carbon-plate border-2 font-mono text-brutal-sm uppercase",
+                  "px-[10px] py-8px bg-carbon-plate border-2 font-mono text-brutal-sm uppercase",
                   pressedKeys.has(displayKeys.key.toLowerCase())
                     ? "border-primary-brutalist bg-primary-brutalist text-event-horizon"
                     : "border-basalt-border"
@@ -165,10 +165,10 @@ export default function ShortcutRecorder({
 
       {/* Conflicts */}
       {conflicts.length > 0 && (
-        <div className="mb-16px">
-          <div className="bg-brutal-error/20 border-2 border-brutal-error p-12px">
-            <div className="flex items-start gap-8px">
-              <HiOutlineExclamationCircle className="w-20px h-20px text-brutal-error flex-shrink-0 mt-2px" />
+        <div className="mb-[8px]">
+          <div className="bg-brutal-error/20 border-2 border-brutal-error p-[10px]">
+            <div className="flex items-start gap-[8px]">
+              <HiOutlineExclamationCircle className="w-5 h-5 text-brutal-error flex-shrink-0 mt-2px" />
               <div className="flex-1">
                 <h4 className="font-mono text-brutal-xs uppercase mb-4px text-brutal-error">
                   CONFLICT DETECTED
@@ -185,7 +185,7 @@ export default function ShortcutRecorder({
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-12px">
+      <div className="flex items-center gap-[10px]">
         {!isRecording ? (
           <>
             <button
@@ -206,7 +206,7 @@ export default function ShortcutRecorder({
               onClick={handleCancel}
               className="brutal-btn-secondary"
             >
-              <HiOutlineX className="w-16px h-16px" />
+              <HiOutlineX className="w-4 h-4" />
             </button>
           </>
         ) : (
@@ -233,7 +233,7 @@ export default function ShortcutRecorder({
 
       {/* Instructions */}
       {isRecording && (
-        <div className="mt-16px p-12px bg-event-horizon border border-basalt-border">
+        <div className="mt-[8px] p-[10px] bg-event-horizon border border-basalt-border">
           <p className="font-mono text-brutal-xs text-cathode-white/60 text-center">
             PRESS AND HOLD MODIFIER KEYS (CTRL, ALT, SHIFT) THEN PRESS A LETTER OR NUMBER
           </p>

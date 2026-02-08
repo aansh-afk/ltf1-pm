@@ -64,7 +64,7 @@ export function BrutalistStepLoader() {
         {[...Array(5)].map((_, index) => (
           <div
             key={index}
-            className="w-16px border-2"
+            className="w-4 border-2"
             style={{
               height: `${(index + 1) * 12}px`,
               backgroundColor: 'var(--theme-background)',
@@ -105,12 +105,12 @@ export function BrutalistTerminalLoader() {
   
   return (
     <div className="min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
-      <div className="font-mono text-[var(--theme-primary)] text-brutal-lg uppercase">
-        <span className="mr-8px">&gt;</span>
+      <div className="font-mono text-[var(--theme-primary)] text-[14px] font-semibold uppercase">
+        <span className="mr-[8px]">&gt;</span>
         <span>INITIALIZING</span>
         <span className="inline-block w-5 text-left">{dots}</span>
         <span 
-          className="inline-block w-12px h-20px ml-4px"
+          className="inline-block w-[12px] h-[20px] ml-[4px]"
           style={{
             backgroundColor: 'var(--theme-primary)',
             animation: 'brutalBlink 1s infinite step-end',

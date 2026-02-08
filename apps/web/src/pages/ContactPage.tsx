@@ -88,7 +88,7 @@ export default function ContactPage() {
 
       {/* Hero */}
       <section className="pt-32 pb-16 md:pt-40 md:pb-24">
-        <div className="max-w-4xl mx-auto px-6 text-center">
+        <div className="max-w-4xl mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -106,8 +106,8 @@ export default function ContactPage() {
       </section>
 
       {/* Primary Cards — Sales & Support */}
-      <section className="pb-16 md:pb-24">
-        <div className="max-w-4xl mx-auto px-6">
+      <section className="pb-10 md:pb-14">
+        <div className="max-w-4xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {primaryCards.map((card, i) => (
               <motion.div
@@ -120,18 +120,18 @@ export default function ContactPage() {
                   variants={cardVariants}
                   initial="rest"
                   whileHover="hover"
-                  className="bg-[#111111] border-2 border-[#2E2E35] p-8 md:p-10 flex flex-col h-full"
+                  className="bg-[#111111] border-2 border-[#2E2E35] p-5 md:p-6 flex flex-col h-full"
                 >
                   {/* Icon + Title */}
                   <div className="flex items-center gap-3 mb-4">
                     <span className="text-[#6B7280] text-lg font-mono">{card.icon}</span>
-                    <h2 className="text-xl font-bold text-[#F9FAFB]">
+                    <h2 className="text-lg font-bold text-[#F9FAFB]">
                       {card.title}
                     </h2>
                   </div>
 
                   {/* Description */}
-                  <p className="text-sm text-[#9CA3AF] leading-relaxed mb-6 flex-1">
+                  <p className="text-sm text-[#9CA3AF] leading-relaxed mb-3 flex-1">
                     {card.description}
                   </p>
 
@@ -155,9 +155,9 @@ export default function ContactPage() {
       </section>
 
       {/* Secondary Cards — Community, Email, Docs, GitHub */}
-      <section className="pb-24 md:pb-32">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
+      <section className="pb-14 md:pb-20">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
             {secondaryCards.map((card, i) => (
               <motion.div
                 key={card.title}
@@ -188,7 +188,7 @@ export default function ContactPage() {
       </section>
 
       {/* Status Line */}
-      <section className="pb-16 md:pb-20">
+      <section className="pb-10 md:pb-12">
         <div className="text-center">
           <span className="inline-flex items-center gap-2 text-xs font-mono text-[#6B7280]">
             <span className="w-2 h-2 bg-[#10B981]" />

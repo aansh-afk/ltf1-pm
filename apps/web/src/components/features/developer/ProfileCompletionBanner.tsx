@@ -10,9 +10,9 @@ export default function ProfileCompletionBanner() {
   if (!shouldShowPrompt) return null
 
   return (
-    <div className="bg-[var(--theme-background)] border-2 border-primary-brutalist p-16px mb-24px">
+    <div className="bg-[var(--theme-background)] border-2 border-primary-brutalist p-[10px] mb-[12px]">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-16px flex-1">
+        <div className="flex items-center gap-[10px] flex-1">
           {/* Progress indicator */}
           <div className="hidden sm:block">
             <div className="w-80px h-8px bg-basalt-border">
@@ -27,14 +27,14 @@ export default function ProfileCompletionBanner() {
           {/* Message */}
           <div className="text-brutal-sm">
             <span className="font-bold uppercase">COMPLETE YOUR DEVELOPER PROFILE</span>
-            <span className="hidden md:inline text-[var(--theme-foreground)]/60 ml-8px">
+            <span className="hidden md:inline text-[var(--theme-foreground)]/60 ml-[8px]">
               TO UNLOCK TEAM FEATURES AND IMPROVE COLLABORATION
             </span>
           </div>
         </div>
         
         {/* Actions */}
-        <div className="flex items-center gap-8px">
+        <div className="flex items-center gap-[8px]">
           <button
             onClick={() => dismissPrompt('session')}
             className="text-brutal-xs uppercase hover:text-primary-brutalist transition-colors"
@@ -52,7 +52,7 @@ export default function ProfileCompletionBanner() {
             className="p-4px hover:bg-basalt-border/20 transition-colors"
             title="Dismiss for a week"
           >
-            <HiOutlineX className="w-16px h-16px" />
+            <HiOutlineX className="w-4 h-4" />
           </button>
         </div>
       </div>

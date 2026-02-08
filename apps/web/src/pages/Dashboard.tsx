@@ -38,11 +38,11 @@ export default function Dashboard() {
   }, [workspaces])
 
   return (
-    <div className="p-6 min-h-screen bg-[var(--theme-background)]">
+    <div className="p-4 min-h-screen bg-[var(--theme-background)]">
       {/* HEADER SECTION */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b-2 border-[var(--theme-border)] pb-6">
+      <div className="mb-4 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b-2 border-[var(--theme-border)] pb-3">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
             Dashboard
           </h1>
           <p className="font-mono text-sm text-[var(--theme-foreground)]/60">
@@ -61,14 +61,14 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="mb-8"
+          className="mb-4"
         >
           <BrutalCard variant="neon" className="relative overflow-hidden group">
             <div className="absolute inset-0 bg-[var(--theme-warning)]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 relative z-10">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 border-2 border-[var(--theme-warning)] flex items-center justify-center bg-black">
-                  <HiOutlineUser className="w-6 h-6 text-[var(--theme-warning)]" />
+                <div className="w-8 h-8 border-2 border-[var(--theme-warning)] flex items-center justify-center bg-black">
+                  <HiOutlineUser className="w-5 h-5 text-[var(--theme-warning)]" />
                 </div>
                 <div>
                   <h3 className="font-bold text-lg text-[var(--theme-warning)] uppercase tracking-wider">Complete Your Profile</h3>
@@ -88,7 +88,7 @@ export default function Dashboard() {
       )}
 
       {/* MAIN GRID LAYOUT */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
 
         {/* STATS ROW */}
         {stats.map((stat, index) => (
@@ -99,8 +99,8 @@ export default function Dashboard() {
               transition={{ delay: index * 0.1 }}
             >
               <BrutalCard variant="default" className="h-full hover:border-[var(--theme-primary)] transition-colors group">
-                <div className="flex justify-between items-start mb-4">
-                  <stat.icon className="w-8 h-8 opacity-50 group-hover:opacity-100 transition-opacity" style={{ color: stat.color }} />
+                <div className="flex justify-between items-start mb-3">
+                  <stat.icon className="w-6 h-6 opacity-50 group-hover:opacity-100 transition-opacity" style={{ color: stat.color }} />
                   <span className="font-mono text-xs opacity-50">ID_0{index + 1}</span>
                 </div>
                 <div className="text-4xl font-black tracking-tighter mb-1" style={{ color: stat.color }}>
@@ -117,8 +117,8 @@ export default function Dashboard() {
         {/* ACTIVITY FEED - 8 COLUMNS */}
         <div className="col-span-1 md:col-span-12 lg:col-span-8">
           <BrutalCard variant="elevated" className="h-full min-h-[400px]">
-            <div className="flex items-center justify-between mb-6 border-b-2 border-[var(--theme-border)] pb-4">
-              <h2 className="text-xl font-bold uppercase tracking-wider flex items-center gap-2">
+            <div className="flex items-center justify-between mb-3 border-b-2 border-[var(--theme-border)] pb-3">
+              <h2 className="text-lg font-bold uppercase tracking-wider flex items-center gap-2">
                 <HiOutlineTerminal className="w-5 h-5" /> Activity Log
               </h2>
               <div className="flex items-center gap-2 font-mono text-xs">
@@ -168,11 +168,11 @@ export default function Dashboard() {
         </div>
 
         {/* SIDEBAR WIDGETS - 4 COLUMNS */}
-        <div className="col-span-1 md:col-span-12 lg:col-span-4 space-y-6">
+        <div className="col-span-1 md:col-span-12 lg:col-span-4 space-y-3">
 
           {/* WORKSPACES WIDGET */}
           <BrutalCard variant="default">
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between">
               <h3 className="font-bold uppercase tracking-wider">Workspaces</h3>
               <Link to="/workspaces" className="text-xs font-mono hover:text-[var(--theme-primary)] hover:underline">
                 VIEW ALL
@@ -204,7 +204,7 @@ export default function Dashboard() {
 
           {/* SYSTEM METRICS WIDGET */}
           <BrutalCard variant="glitch" className="bg-black text-white border-white">
-            <h3 className="font-mono text-xs mb-4 border-b border-white/20 pb-2">
+            <h3 className="font-mono text-xs mb-3 border-b border-white/20 pb-2">
               System Metrics
             </h3>
             <div className="space-y-2 font-mono text-xs">

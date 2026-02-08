@@ -197,8 +197,8 @@ export default function PricingPage() {
       <PublicNavigation />
 
       {/* Hero */}
-      <section className="pt-32 pb-20 md:pt-40 md:pb-28">
-        <div className="max-w-6xl mx-auto px-6 text-center">
+      <section className="pt-32 pb-12 md:pt-40 md:pb-16">
+        <div className="max-w-6xl mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -219,8 +219,8 @@ export default function PricingPage() {
       </section>
 
       {/* Tier Cards */}
-      <section className="pb-24 md:pb-32">
-        <div className="max-w-5xl mx-auto px-6">
+      <section className="pb-14 md:pb-20">
+        <div className="max-w-5xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {tiers.map((tier, i) => (
               <motion.div
@@ -237,9 +237,9 @@ export default function PricingPage() {
                     tier.highlight ? 'border-[#6366F1]/60' : 'border-[#2E2E35]'
                   }`}
                 >
-                  <div className="p-6 md:p-8 flex flex-col flex-1">
+                  <div className="p-4 md:p-5 flex flex-col flex-1">
                     {/* Name + Badge */}
-                    <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center justify-between mb-3">
                       <span className="text-xs font-mono text-[#6B7280] uppercase tracking-wider">
                         {tier.name}
                       </span>
@@ -251,7 +251,7 @@ export default function PricingPage() {
                     </div>
 
                     {/* Price */}
-                    <div className="mb-6">
+                    <div className="mb-3">
                       <span className="text-4xl font-bold text-[#F9FAFB]">
                         {tier.price}
                       </span>
@@ -261,7 +261,7 @@ export default function PricingPage() {
                     </div>
 
                     {/* Features */}
-                    <div className="space-y-2.5 mb-8 flex-1">
+                    <div className="space-y-2.5 mb-4 flex-1">
                       {tier.features.map((f) => (
                         <div key={f} className="flex items-start gap-2.5 text-xs font-mono">
                           <span className="text-[#F9FAFB] mt-px">+</span>
@@ -302,8 +302,8 @@ export default function PricingPage() {
       </section>
 
       {/* Feature Comparison Table */}
-      <section className="pb-24 md:pb-32">
-        <div className="max-w-5xl mx-auto px-6">
+      <section className="pb-14 md:pb-20">
+        <div className="max-w-5xl mx-auto px-4">
           {/* Sticky header row */}
           <div className="border-b-2 border-[#2E2E35] pb-4 mb-0 sticky top-0 bg-[#050505] z-20 pt-4">
             <div className="grid grid-cols-4 gap-4">
@@ -348,7 +348,7 @@ export default function PricingPage() {
           ))}
 
           {/* Bottom CTA row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
             {tiers.map((t) => (
               <div key={t.name}>
                 {t.cta.style === 'primary' ? (
@@ -373,15 +373,15 @@ export default function PricingPage() {
       </section>
 
       {/* Bottom CTA Banner */}
-      <section className="py-20 md:py-28 border-t border-[#2E2E35]">
-        <div className="max-w-4xl mx-auto px-6 text-center">
+      <section className="py-12 md:py-16 border-t border-[#2E2E35]">
+        <div className="max-w-4xl mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#F9FAFB] mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#F9FAFB] mb-4">
               Ship faster. Track smarter.
             </h2>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

@@ -28,7 +28,7 @@ export default function ComingSoonPage() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-24 md:py-32">
         <div className="w-full max-w-4xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-16">
+          <div className="text-center mb-10">
             <h1 className="font-['Inter',sans-serif] font-extrabold text-4xl md:text-6xl tracking-tight text-[#F9FAFB] mb-4">
               We're building something special
             </h1>
@@ -38,9 +38,9 @@ export default function ComingSoonPage() {
           </div>
 
           {/* Stats & Graph */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
             {/* Counter Card */}
-            <div className="bg-[#111111] border-2 border-[#2E2E35] rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-6 flex flex-col justify-center items-center">
+            <div className="bg-[#111111] border-2 border-[#2E2E35] rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-4 flex flex-col justify-center items-center">
               <p className="text-sm text-[#9CA3AF] mb-2">Total Interest</p>
               <div className="text-5xl font-bold text-[#6366F1]">
                 {stats ? stats.totalCount.toLocaleString() : '...'}
@@ -49,7 +49,7 @@ export default function ComingSoonPage() {
             </div>
 
             {/* Graph Card */}
-            <div className="md:col-span-2 bg-[#111111] border-2 border-[#2E2E35] rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-6 h-[300px] flex flex-col">
+            <div className="md:col-span-2 bg-[#111111] border-2 border-[#2E2E35] rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-4 h-[300px] flex flex-col">
               <h3 className="text-sm text-[#9CA3AF] mb-4">Waitlist Growth</h3>
               <div className="flex-1 w-full min-h-0">
                 {stats && stats.graphData.length > 0 ? (
@@ -111,9 +111,9 @@ export default function ComingSoonPage() {
           </div>
 
           {/* Waitlist + Hype */}
-          <div className="flex flex-col md:flex-row gap-6 max-w-2xl mx-auto">
+          <div className="flex flex-col md:flex-row gap-3 max-w-2xl mx-auto">
             {/* Waitlist Form */}
-            <div className="flex-1 bg-[#111111] border-2 border-[#2E2E35] rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-6 hover:border-[#6366F1] transition-colors duration-300">
+            <div className="flex-1 bg-[#111111] border-2 border-[#2E2E35] rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-4 hover:border-[#6366F1] transition-colors duration-300">
               <h3 className="text-sm font-semibold text-[#9CA3AF] mb-4 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
                 Join the waitlist
@@ -144,7 +144,7 @@ export default function ComingSoonPage() {
                     // Ignore errors for spam clicking
                   }
                 }}
-                className="w-full h-full min-h-[140px] bg-[#111111] border-2 border-[#2E2E35] rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-6 flex flex-col items-center justify-center gap-4 hover:border-[#6366F1] hover:-translate-y-0.5 transition-all duration-300 group"
+                className="w-full h-full min-h-[140px] bg-[#111111] border-2 border-[#2E2E35] rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-4 flex flex-col items-center justify-center gap-4 hover:border-[#6366F1] hover:-translate-y-0.5 transition-all duration-300 group"
               >
                 <span className="text-4xl filter grayscale group-hover:grayscale-0 transition-all duration-300">
                   🔥
@@ -158,7 +158,7 @@ export default function ComingSoonPage() {
           </div>
 
           {/* Status indicators */}
-          <div className="mt-16 flex items-center justify-center gap-6 text-xs text-[#6B7280]">
+          <div className="mt-10 flex items-center justify-center gap-3 text-xs text-[#6B7280]">
             <span className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
               System online

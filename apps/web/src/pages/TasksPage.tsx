@@ -219,11 +219,11 @@ export default function TasksPage() {
   // Show workspace selector for pages without URL workspace context
   if (!currentWorkspaceId && workspaces && workspaces.length > 0) {
     return (
-      <div className="p-8 min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
-        <BrutalCard variant="glitch" className="max-w-md w-full p-8 text-center border-2 border-[var(--theme-primary)]">
-          <HiOutlineClipboardList className="w-16 h-16 mx-auto mb-6 text-[var(--theme-primary)]" />
-          <h1 className="text-2xl font-bold uppercase mb-4 tracking-tight">Select Workspace</h1>
-          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 mb-8">
+      <div className="p-5 min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
+        <BrutalCard variant="glitch" className="max-w-md w-full p-5 text-center border-2 border-[var(--theme-primary)]">
+          <HiOutlineClipboardList className="w-12 h-12 mx-auto mb-3 text-[var(--theme-primary)]" />
+          <h1 className="text-xl font-bold uppercase mb-4 tracking-tight">Select Workspace</h1>
+          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 mb-4">
             Please select a workspace to view tasks.
           </p>
           <div className="bg-[var(--theme-background-secondary)] p-4 border border-[var(--theme-border)]">
@@ -237,11 +237,11 @@ export default function TasksPage() {
   // Show empty state if no workspaces exist
   if (!currentWorkspaceId && (!workspaces || workspaces.length === 0)) {
     return (
-      <div className="p-8 min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
-        <BrutalCard variant="glitch" className="max-w-md w-full p-8 text-center border-dashed border-[var(--theme-error)]">
-          <HiOutlineClipboardList className="w-16 h-16 mx-auto mb-6 text-[var(--theme-error)]" />
-          <h1 className="text-2xl font-bold uppercase mb-4 tracking-tight text-[var(--theme-error)]">NO_WORKSPACES_DETECTED</h1>
-          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 mb-8">
+      <div className="p-5 min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
+        <BrutalCard variant="glitch" className="max-w-md w-full p-5 text-center border-dashed border-[var(--theme-error)]">
+          <HiOutlineClipboardList className="w-12 h-12 mx-auto mb-3 text-[var(--theme-error)]" />
+          <h1 className="text-xl font-bold uppercase mb-4 tracking-tight text-[var(--theme-error)]">NO_WORKSPACES_DETECTED</h1>
+          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 mb-4">
             SYSTEM_HALTED: Create a workspace to initialize task matrix.
           </p>
         </BrutalCard>
@@ -259,11 +259,11 @@ export default function TasksPage() {
 
   if (projects.length === 0) {
     return (
-      <div className="p-8 min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
-        <BrutalCard variant="default" className="max-w-md w-full p-8 text-center border-dashed">
-          <HiOutlineClipboardList className="w-16 h-16 mx-auto mb-6 text-[var(--theme-foreground)]/20" />
-          <h1 className="text-xl font-bold uppercase mb-4 tracking-tight">NO_PROJECTS_FOUND</h1>
-          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 mb-8">
+      <div className="p-5 min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
+        <BrutalCard variant="default" className="max-w-md w-full p-5 text-center border-dashed">
+          <HiOutlineClipboardList className="w-12 h-12 mx-auto mb-3 text-[var(--theme-foreground)]/20" />
+          <h1 className="text-lg font-bold uppercase mb-4 tracking-tight">NO_PROJECTS_FOUND</h1>
+          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 mb-4">
             Initialize a project to enable task tracking protocols.
           </p>
         </BrutalCard>
@@ -279,13 +279,13 @@ export default function TasksPage() {
 
   return (
     <div className="flex flex-col h-screen bg-[var(--theme-background)] overflow-hidden">
-      <div className="p-6 pb-0 flex-none z-10">
+      <div className="p-4 pb-0 flex-none z-10">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8 border-b-2 border-[var(--theme-border)] pb-6 gap-6">
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-4 border-b-2 border-[var(--theme-border)] pb-3 gap-3">
           <div>
             <div className="flex items-center gap-4 mb-2">
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight flex items-center gap-4">
-                <HiOutlineClipboardList className="w-8 h-8 md:w-10 md:h-10 text-[var(--theme-primary)]" />
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-4">
+                <HiOutlineClipboardList className="w-6 h-6 md:w-7 md:h-7 text-[var(--theme-primary)]" />
                 TASK_MATRIX
               </h1>
             </div>
@@ -330,7 +330,7 @@ export default function TasksPage() {
         </div>
 
         {/* Controls Bar */}
-        <BrutalCard className="mb-6 p-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <BrutalCard className="mb-3 p-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center gap-2 w-full md:w-auto">
             {/* Search */}
             <div className="relative flex-1 md:flex-none">
@@ -392,7 +392,7 @@ export default function TasksPage() {
 
         {/* Filter Presets */}
         {currentWorkspaceId && (
-          <div className="mb-6">
+          <div className="mb-3">
             <FilterPresets
               workspaceId={currentWorkspaceId}
               currentFilters={effectiveFilters}
@@ -403,15 +403,15 @@ export default function TasksPage() {
       </div>
 
       {/* Task Content - Flexible Area */}
-      <div className="flex-1 min-h-0 px-6 pb-6 overflow-hidden">
+      <div className="flex-1 min-h-0 px-4 pb-4 overflow-hidden">
         {tasks === undefined ? (
           <div className="flex items-center justify-center h-full">
             <LoadingSpinner size="lg" />
           </div>
         ) : tasks.length === 0 ? (
-          <BrutalCard variant="default" className="p-12 text-center border-dashed h-full flex flex-col items-center justify-center">
-            <HiOutlineClipboardList className="w-16 h-16 mx-auto mb-6 text-[var(--theme-foreground)]/20" />
-            <h2 className="text-xl font-bold uppercase mb-2">NO_TASKS_DETECTED</h2>
+          <BrutalCard variant="default" className="p-8 text-center border-dashed h-full flex flex-col items-center justify-center">
+            <HiOutlineClipboardList className="w-12 h-12 mx-auto mb-3 text-[var(--theme-foreground)]/20" />
+            <h2 className="text-lg font-bold uppercase mb-2">NO_TASKS_DETECTED</h2>
             <p className="font-mono text-sm text-[var(--theme-foreground)]/60">
               {hasActiveFilters ? "ADJUST_FILTERS_TO_EXPAND_SEARCH_MATRIX" : "INITIATE_NEW_TASK_SEQUENCE"}
             </p>

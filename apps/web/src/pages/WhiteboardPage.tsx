@@ -92,7 +92,7 @@ export default function WhiteboardPage() {
     return (
       <div className="h-screen flex flex-col bg-[var(--theme-background)]">
         {/* Whiteboard Header */}
-        <div className="h-16 border-b-2 border-[var(--theme-border)] flex items-center justify-between px-6 bg-[var(--theme-background)]">
+        <div className="h-16 border-b-2 border-[var(--theme-border)] flex items-center justify-between px-4 bg-[var(--theme-background)]">
           <div className="flex items-center gap-4">
             <BrutalButton
               variant="ghost"
@@ -142,12 +142,12 @@ export default function WhiteboardPage() {
   }
 
   return (
-    <div className="p-6 min-h-screen bg-[var(--theme-background)]">
+    <div className="p-4 min-h-screen bg-[var(--theme-background)]">
       {/* Page Header */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="mb-4 flex flex-col md:flex-row md:items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 flex items-center gap-3">
-            <HiOutlinePencil className="w-8 h-8 md:w-10 md:h-10 text-[var(--theme-primary)]" />
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+            <HiOutlinePencil className="w-6 h-6 md:w-7 md:h-7 text-[var(--theme-primary)]" />
             WHITEBOARD
           </h1>
           <p className="font-mono text-sm text-[var(--theme-foreground)]/60 uppercase tracking-wide">
@@ -183,7 +183,7 @@ export default function WhiteboardPage() {
       </div>
 
       {/* Whiteboard Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {whiteboards?.map(whiteboard => {
           const project = whiteboard.projectId
             ? projects?.find(p => p._id === whiteboard.projectId)
@@ -196,7 +196,7 @@ export default function WhiteboardPage() {
               className="group cursor-pointer hover:border-[var(--theme-primary)] transition-all relative overflow-hidden"
               onClick={() => setActiveWhiteboardId(whiteboard._id)}
             >
-              <div className="p-6">
+              <div className="p-4">
                 {/* Context badges */}
                 <div className="flex flex-wrap items-center gap-2 mb-4">
                   <BrutalBadge variant="outline" className="flex items-center gap-1">
@@ -211,10 +211,10 @@ export default function WhiteboardPage() {
                   )}
                 </div>
 
-                <h3 className="text-xl font-bold mb-2 group-hover:text-[var(--theme-primary)] transition-colors">
+                <h3 className="text-lg font-bold mb-2 group-hover:text-[var(--theme-primary)] transition-colors">
                   {whiteboard.name}
                 </h3>
-                <p className="text-sm font-mono text-[var(--theme-foreground)]/60 mb-6 line-clamp-2">
+                <p className="text-sm font-mono text-[var(--theme-foreground)]/60 mb-3 line-clamp-2">
                   {whiteboard.description || 'No description'}
                 </p>
 
@@ -247,12 +247,12 @@ export default function WhiteboardPage() {
         {/* Empty State */}
         {(!whiteboards || whiteboards.length === 0) && (
           <div className="col-span-full py-12">
-            <BrutalCard className="p-12 text-center border-dashed flex flex-col items-center justify-center">
-              <div className="w-16 h-16 bg-[var(--theme-background-secondary)] rounded-full flex items-center justify-center mb-6">
-                <HiOutlinePencil className="w-8 h-8 text-[var(--theme-foreground)]/40" />
+            <BrutalCard className="p-8 text-center border-dashed flex flex-col items-center justify-center">
+              <div className="w-12 h-12 bg-[var(--theme-background-secondary)] rounded-full flex items-center justify-center mb-3">
+                <HiOutlinePencil className="w-6 h-6 text-[var(--theme-foreground)]/40" />
               </div>
-              <h3 className="text-xl font-bold mb-2 uppercase">No Whiteboards Yet</h3>
-              <p className="text-[var(--theme-foreground)]/60 font-mono text-sm mb-8 max-w-md">
+              <h3 className="text-lg font-bold mb-2 uppercase">No Whiteboards Yet</h3>
+              <p className="text-[var(--theme-foreground)]/60 font-mono text-sm mb-4 max-w-md">
                 {currentWorkspace ? `Create your first whiteboard for ${currentWorkspace.name} to start collaborating visually.` : 'Select a workspace to get started'}
               </p>
               <BrutalButton

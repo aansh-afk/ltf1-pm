@@ -66,9 +66,9 @@ export default function WorkspaceManagementPage() {
 
   if (workspace === null) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
-        <BrutalCard variant="glitch" className="p-8 text-center max-w-md border-[var(--theme-error)]">
-          <h1 className="text-2xl font-bold uppercase mb-4 text-[var(--theme-error)]">WORKSPACE NOT FOUND</h1>
+      <div className="p-5 flex items-center justify-center min-h-screen">
+        <BrutalCard variant="glitch" className="p-5 text-center max-w-md border-[var(--theme-error)]">
+          <h1 className="text-xl font-bold uppercase mb-3 text-[var(--theme-error)]">WORKSPACE NOT FOUND</h1>
           <p className="font-mono text-sm text-[var(--theme-foreground)]/70">
             The requested workspace does not exist or you do not have permission to view it.
           </p>
@@ -116,9 +116,9 @@ export default function WorkspaceManagementPage() {
       {/* Sidebar Navigation */}
       <aside className="w-full md:w-64 lg:w-72 bg-[var(--theme-background)] border-r-2 border-[var(--theme-border)] flex flex-col">
         {/* Workspace Header */}
-        <div className="p-6 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/30">
+        <div className="p-4 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/30">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 bg-[var(--theme-primary)] flex items-center justify-center font-bold text-black">
+            <div className="w-6 h-6 bg-[var(--theme-primary)] flex items-center justify-center font-bold text-black text-xs">
               {workspace.name.substring(0, 2).toUpperCase()}
             </div>
             <h1 className="font-bold uppercase tracking-wider text-sm truncate">{workspace.name}</h1>
@@ -190,10 +190,10 @@ export default function WorkspaceManagementPage() {
 // Overview Tab Component
 function OverviewTab({ workspace, projects, members }: any) {
   return (
-    <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-5 space-y-4 max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black uppercase tracking-tighter flex items-center gap-3">
-          <HiOutlineViewGrid className="w-6 h-6 text-[var(--theme-primary)]" />
+        <h2 className="text-xl font-black uppercase tracking-tighter flex items-center gap-3">
+          <HiOutlineViewGrid className="w-5 h-5 text-[var(--theme-primary)]" />
           Workspace Overview
         </h2>
         <div className="font-mono text-xs opacity-60">
@@ -202,10 +202,10 @@ function OverviewTab({ workspace, projects, members }: any) {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         <BrutalCard variant="default" className="group hover:border-[var(--theme-primary)] transition-colors">
-          <div className="flex items-center justify-between mb-4">
-            <HiOutlineFolder className="w-6 h-6 text-[var(--theme-primary)] opacity-50 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between mb-3">
+            <HiOutlineFolder className="w-5 h-5 text-[var(--theme-primary)] opacity-50 group-hover:opacity-100 transition-opacity" />
             <span className="font-mono text-xs opacity-50">Active Projects</span>
           </div>
           <div className="text-4xl font-black tracking-tighter mb-1">{projects?.length || 0}</div>
@@ -215,8 +215,8 @@ function OverviewTab({ workspace, projects, members }: any) {
         </BrutalCard>
 
         <BrutalCard variant="default" className="group hover:border-[var(--theme-info)] transition-colors">
-          <div className="flex items-center justify-between mb-4">
-            <HiOutlineUsers className="w-6 h-6 text-[var(--theme-info)] opacity-50 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between mb-3">
+            <HiOutlineUsers className="w-5 h-5 text-[var(--theme-info)] opacity-50 group-hover:opacity-100 transition-opacity" />
             <span className="font-mono text-xs opacity-50">Members</span>
           </div>
           <div className="text-4xl font-black tracking-tighter mb-1">{members?.length || 0}</div>
@@ -226,8 +226,8 @@ function OverviewTab({ workspace, projects, members }: any) {
         </BrutalCard>
 
         <BrutalCard variant="default" className="group hover:border-[var(--theme-success)] transition-colors">
-          <div className="flex items-center justify-between mb-4">
-            <HiOutlinePlay className="w-6 h-6 text-[var(--theme-success)] opacity-50 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between mb-3">
+            <HiOutlinePlay className="w-5 h-5 text-[var(--theme-success)] opacity-50 group-hover:opacity-100 transition-opacity" />
             <span className="font-mono text-xs opacity-50">Sprint Velocity</span>
           </div>
           <div className="text-4xl font-black tracking-tighter mb-1">100%</div>
@@ -237,8 +237,8 @@ function OverviewTab({ workspace, projects, members }: any) {
         </BrutalCard>
 
         <BrutalCard variant="default" className="group hover:border-[var(--theme-warning)] transition-colors">
-          <div className="flex items-center justify-between mb-4">
-            <HiOutlineClock className="w-6 h-6 text-[var(--theme-warning)] opacity-50 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between mb-3">
+            <HiOutlineClock className="w-5 h-5 text-[var(--theme-warning)] opacity-50 group-hover:opacity-100 transition-opacity" />
             <span className="font-mono text-xs opacity-50">Pending Tasks</span>
           </div>
           <div className="text-4xl font-black tracking-tighter mb-1">42</div>
@@ -249,10 +249,10 @@ function OverviewTab({ workspace, projects, members }: any) {
       </div>
 
       {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <div className="lg:col-span-2">
           <BrutalCard variant="elevated" className="h-full">
-            <div className="flex items-center justify-between mb-6 border-b border-[var(--theme-border)] pb-4">
+            <div className="flex items-center justify-between mb-3 border-b border-[var(--theme-border)] pb-3">
               <h3 className="font-bold uppercase tracking-wider flex items-center gap-2">
                 <HiOutlineTerminal className="w-5 h-5" /> Activity Log
               </h3>
@@ -273,10 +273,10 @@ function OverviewTab({ workspace, projects, members }: any) {
           </BrutalCard>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-3">
           <BrutalCard variant="bordered">
-            <h3 className="font-bold uppercase tracking-wider mb-4 text-xs opacity-70">System Status</h3>
-            <div className="space-y-4 font-mono text-xs">
+            <h3 className="font-bold uppercase tracking-wider mb-3 text-xs opacity-70">System Status</h3>
+            <div className="space-y-2 font-mono text-xs">
               <div className="flex justify-between items-center">
                 <span>API Gateway</span>
                 <span className="text-[var(--theme-success)]">Online</span>
@@ -316,9 +316,9 @@ function ProjectsTab({ workspaceId, projects }: any) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-black uppercase tracking-tighter">Projects</h2>
+    <div className="p-4 md:p-5 max-w-7xl mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-black uppercase tracking-tighter">Projects</h2>
         <BrutalButton
           onClick={() => setIsCreateModalOpen(true)}
           variant="primary"
@@ -328,14 +328,14 @@ function ProjectsTab({ workspaceId, projects }: any) {
         </BrutalButton>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {projects?.map((project: any) => (
           <BrutalCard key={project._id} variant="default" className="group hover:border-[var(--theme-primary)] transition-all">
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex justify-between items-start mb-3">
               <h3 className="text-lg font-bold uppercase">{project.name}</h3>
               <BrutalBadge variant="info">{project.status}</BrutalBadge>
             </div>
-            <p className="font-mono text-xs text-[var(--theme-foreground)]/70 mb-6 h-10 line-clamp-2">
+            <p className="font-mono text-xs text-[var(--theme-foreground)]/70 mb-3 h-10 line-clamp-2">
               {project.description || 'No description available'}
             </p>
             <div className="flex items-center justify-between pt-4 border-t border-[var(--theme-border)]">
@@ -356,8 +356,8 @@ function ProjectsTab({ workspaceId, projects }: any) {
           onClick={() => setIsCreateModalOpen(true)}
           className="border-2 border-dashed border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/30 hover:bg-[var(--theme-background-secondary)] hover:border-[var(--theme-primary)] transition-all p-6 flex flex-col items-center justify-center cursor-pointer min-h-[200px] group"
         >
-          <div className="w-12 h-12 border-2 border-[var(--theme-border)] group-hover:border-[var(--theme-primary)] rounded-full flex items-center justify-center mb-4 transition-colors">
-            <HiOutlinePlus className="w-6 h-6 opacity-50 group-hover:opacity-100 group-hover:text-[var(--theme-primary)] transition-all" />
+          <div className="w-8 h-8 border-2 border-[var(--theme-border)] group-hover:border-[var(--theme-primary)] rounded-full flex items-center justify-center mb-3 transition-colors">
+            <HiOutlinePlus className="w-5 h-5 opacity-50 group-hover:opacity-100 group-hover:text-[var(--theme-primary)] transition-all" />
           </div>
           <span className="font-mono text-xs font-bold opacity-50 group-hover:opacity-100 group-hover:text-[var(--theme-primary)] transition-all">Create New Project</span>
         </div>
@@ -375,9 +375,9 @@ function ProjectsTab({ workspaceId, projects }: any) {
 // Members Tab Component
 function MembersTab({ workspaceId, members }: any) {
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-black uppercase tracking-tighter">Team Members</h2>
+    <div className="p-4 md:p-5 max-w-7xl mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-black uppercase tracking-tighter">Team Members</h2>
         <BrutalButton variant="secondary">Invite Member</BrutalButton>
       </div>
 
@@ -436,12 +436,12 @@ function MembersTab({ workspaceId, members }: any) {
 // Settings Tab Component
 function SettingsTab({ workspace }: any) {
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-black uppercase tracking-tighter mb-8">Workspace Settings</h2>
+    <div className="p-4 md:p-5 max-w-4xl mx-auto">
+      <h2 className="text-xl font-black uppercase tracking-tighter mb-4">Workspace Settings</h2>
 
-      <BrutalCard variant="bordered" className="mb-8">
-        <h3 className="font-bold uppercase tracking-wider mb-6 border-b border-[var(--theme-border)] pb-2">General Settings</h3>
-        <div className="space-y-6">
+      <BrutalCard variant="bordered" className="mb-4">
+        <h3 className="font-bold uppercase tracking-wider mb-3 border-b border-[var(--theme-border)] pb-2">General Settings</h3>
+        <div className="space-y-3">
           <div>
             <label className="block font-mono text-xs font-bold mb-2 uppercase">Workspace Name</label>
             <input
@@ -469,10 +469,10 @@ function SettingsTab({ workspace }: any) {
 // Other tab components with placeholder content
 function AnalyticsTab({ workspaceId }: any) {
   return (
-    <div className="p-6 md:p-8 flex flex-col items-center justify-center min-h-[50vh]">
-      <BrutalCard variant="glitch" className="p-12 text-center max-w-lg border-dashed">
-        <HiOutlineChartBar className="w-24 h-24 mx-auto mb-6 text-[var(--theme-foreground)]/20" />
-        <h2 className="text-xl font-bold uppercase mb-2">Analytics Unavailable</h2>
+    <div className="p-4 md:p-5 flex flex-col items-center justify-center min-h-[50vh]">
+      <BrutalCard variant="glitch" className="p-8 text-center max-w-lg border-dashed">
+        <HiOutlineChartBar className="w-24 h-24 mx-auto mb-3 text-[var(--theme-foreground)]/20" />
+        <h2 className="text-lg font-bold uppercase mb-2">Analytics Unavailable</h2>
         <p className="font-mono text-sm text-[var(--theme-foreground)]/60">
           Analytics features are coming soon. Check back later for system updates.
         </p>
@@ -484,10 +484,10 @@ function AnalyticsTab({ workspaceId }: any) {
 
 function BillingTab({ workspace }: any) {
   return (
-    <div className="p-6 md:p-8 flex flex-col items-center justify-center min-h-[50vh]">
-      <BrutalCard variant="glitch" className="p-12 text-center max-w-lg border-dashed">
-        <HiOutlineCreditCard className="w-24 h-24 mx-auto mb-6 text-[var(--theme-foreground)]/20" />
-        <h2 className="text-xl font-bold uppercase mb-2">Billing & Plans</h2>
+    <div className="p-4 md:p-5 flex flex-col items-center justify-center min-h-[50vh]">
+      <BrutalCard variant="glitch" className="p-8 text-center max-w-lg border-dashed">
+        <HiOutlineCreditCard className="w-24 h-24 mx-auto mb-3 text-[var(--theme-foreground)]/20" />
+        <h2 className="text-lg font-bold uppercase mb-2">Billing & Plans</h2>
         <p className="font-mono text-sm text-[var(--theme-foreground)]/60">
           Billing management is currently unavailable.
         </p>
@@ -498,17 +498,17 @@ function BillingTab({ workspace }: any) {
 
 function DangerTab({ workspace }: any) {
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-black uppercase tracking-tighter mb-8 text-[var(--theme-error)]">Danger Zone</h2>
+    <div className="p-4 md:p-5 max-w-4xl mx-auto">
+      <h2 className="text-xl font-black uppercase tracking-tighter mb-4 text-[var(--theme-error)]">Danger Zone</h2>
 
       <BrutalCard variant="bordered" className="border-[var(--theme-error)] bg-[var(--theme-error)]/5">
-        <div className="flex items-start gap-6">
-          <div className="p-4 border-2 border-[var(--theme-error)] bg-[var(--theme-background)]">
-            <HiOutlineExclamation className="w-8 h-8 text-[var(--theme-error)]" />
+        <div className="flex items-start gap-3">
+          <div className="p-3 border-2 border-[var(--theme-error)] bg-[var(--theme-background)]">
+            <HiOutlineExclamation className="w-6 h-6 text-[var(--theme-error)]" />
           </div>
           <div className="flex-1">
             <h3 className="font-bold uppercase tracking-wider mb-2 text-[var(--theme-error)]">Delete Workspace</h3>
-            <p className="font-mono text-sm text-[var(--theme-foreground)]/70 mb-6">
+            <p className="font-mono text-sm text-[var(--theme-foreground)]/70 mb-3">
               Permanently delete this workspace and all associated data. This action cannot be undone.
             </p>
             <BrutalButton variant="danger">

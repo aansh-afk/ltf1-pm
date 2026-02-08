@@ -44,11 +44,11 @@ export default function TeamsPage() {
     if (isUserLoading) return <BrutalistLoader />
 
     return (
-        <div className="p-8 max-w-7xl mx-auto min-h-screen bg-[var(--theme-background)]">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+        <div className="p-5 max-w-7xl mx-auto min-h-screen bg-[var(--theme-background)]">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 gap-4">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 flex items-center gap-3">
-                        <HiOutlineUsers className="w-8 h-8 md:w-10 md:h-10 text-[var(--theme-primary)]" />
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+                        <HiOutlineUsers className="w-6 h-6 md:w-7 md:h-7 text-[var(--theme-primary)]" />
                         TEAMS
                     </h1>
                     <p className="font-mono text-sm text-[var(--theme-foreground)]/60 uppercase tracking-wide">
@@ -65,7 +65,7 @@ export default function TeamsPage() {
                 </BrutalButton>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {teams?.map((team) => (
                     <BrutalCard
                         key={team._id}
@@ -78,15 +78,15 @@ export default function TeamsPage() {
                             </BrutalButton>
                         </div>
 
-                        <div className="p-6">
+                        <div className="p-4">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 bg-[var(--theme-primary)]/10 flex items-center justify-center border border-[var(--theme-primary)]/20">
+                                <div className="w-7 h-7 bg-[var(--theme-primary)]/10 flex items-center justify-center border border-[var(--theme-primary)]/20">
                                     <HiOutlineUsers className="w-5 h-5 text-[var(--theme-primary)]" />
                                 </div>
-                                <h3 className="text-xl font-bold truncate font-mono uppercase">{team.name}</h3>
+                                <h3 className="text-lg font-bold truncate font-mono uppercase">{team.name}</h3>
                             </div>
 
-                            <p className="text-[var(--theme-foreground)]/60 text-sm font-mono mb-6 line-clamp-2 h-10 border-l-2 border-[var(--theme-border)] pl-3">
+                            <p className="text-[var(--theme-foreground)]/60 text-sm font-mono mb-3 line-clamp-2 h-10 border-l-2 border-[var(--theme-border)] pl-3">
                                 {team.description || "NO DESCRIPTION PROVIDED."}
                             </p>
 
@@ -105,10 +105,10 @@ export default function TeamsPage() {
 
                 {teams?.length === 0 && (
                     <div className="col-span-full">
-                        <BrutalCard className="flex flex-col items-center justify-center py-20 border-dashed">
-                            <HiOutlineUsers className="w-16 h-16 text-[var(--theme-foreground)]/20 mb-4" />
-                            <h3 className="text-xl font-bold mb-2 uppercase">NO TEAMS FOUND</h3>
-                            <p className="text-[var(--theme-foreground)]/60 mb-6 font-mono text-sm">Create your first team to get started.</p>
+                        <BrutalCard className="flex flex-col items-center justify-center py-12 border-dashed">
+                            <HiOutlineUsers className="w-12 h-12 text-[var(--theme-foreground)]/20 mb-4" />
+                            <h3 className="text-lg font-bold mb-2 uppercase">NO TEAMS FOUND</h3>
+                            <p className="text-[var(--theme-foreground)]/60 mb-3 font-mono text-sm">Create your first team to get started.</p>
                             <BrutalButton
                                 onClick={() => setIsCreateModalOpen(true)}
                                 variant="secondary"
@@ -126,7 +126,7 @@ export default function TeamsPage() {
                 onClose={() => setIsCreateModalOpen(false)}
                 title="CREATE NEW TEAM"
             >
-                <form onSubmit={handleCreateTeam} className="space-y-6">
+                <form onSubmit={handleCreateTeam} className="space-y-3">
                     <div>
                         <label className="block text-xs font-bold uppercase tracking-wider mb-2 font-mono">TEAM NAME</label>
                         <input

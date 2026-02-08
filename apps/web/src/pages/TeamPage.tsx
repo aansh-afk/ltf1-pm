@@ -79,9 +79,9 @@ export default function TeamPage() {
 
   if (!currentWorkspace) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-screen bg-[var(--theme-background)]">
-        <BrutalCard variant="glitch" className="max-w-md text-center p-8 border-2 border-[var(--theme-border)]">
-          <h2 className="text-xl font-bold mb-4 uppercase">No Workspace Selected</h2>
+      <div className="p-5 flex items-center justify-center min-h-screen bg-[var(--theme-background)]">
+        <BrutalCard variant="glitch" className="max-w-md text-center p-5 border-2 border-[var(--theme-border)]">
+          <h2 className="text-lg font-bold mb-4 uppercase">No Workspace Selected</h2>
           <p className="text-[var(--theme-foreground)]/60 font-mono text-sm">Create or select a workspace to view team members</p>
         </BrutalCard>
       </div>
@@ -110,7 +110,7 @@ export default function TeamPage() {
   }, {} as Record<string, number>)
 
   const renderMembersTab = () => (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Status Summary */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[
@@ -177,12 +177,12 @@ export default function TeamPage() {
 
       {/* Team Grid */}
       {filteredMembers.length === 0 ? (
-        <BrutalCard variant="default" className="p-12 text-center border-dashed">
-          <HiOutlineUser className="w-12 h-12 text-[var(--theme-foreground)]/20 mx-auto mb-4" />
+        <BrutalCard variant="default" className="p-8 text-center border-dashed">
+          <HiOutlineUser className="w-8 h-8 text-[var(--theme-foreground)]/20 mx-auto mb-4" />
           <p className="text-[var(--theme-foreground)]/60 font-mono">No team members found</p>
         </BrutalCard>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredMembers.map((member) => (
             <DeveloperProfileCard
               key={member.userId}
@@ -199,7 +199,7 @@ export default function TeamPage() {
   )
 
   const renderSprintsTab = () => (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Project Selector & Actions */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4 w-full md:w-auto">
@@ -262,11 +262,11 @@ export default function TeamPage() {
       {/* Current Sprint Info (Only in Board View) */}
       {sprintViewMode === 'board' && currentSprint && (
         <BrutalCard variant="neon" className="border-[var(--theme-primary)]">
-          <div className="flex flex-col md:flex-row items-start justify-between gap-6">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-3">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <HiOutlinePlay className="w-6 h-6 text-[var(--theme-primary)]" />
-                <h2 className="text-xl font-bold uppercase tracking-tight">
+                <HiOutlinePlay className="w-5 h-5 text-[var(--theme-primary)]" />
+                <h2 className="text-lg font-bold uppercase tracking-tight">
                   {currentSprint.name}
                 </h2>
                 <BrutalBadge variant="default">ACTIVE</BrutalBadge>
@@ -276,7 +276,7 @@ export default function TeamPage() {
                   {currentSprint.goal}
                 </p>
               )}
-              <div className="flex flex-wrap gap-6 text-sm font-mono">
+              <div className="flex flex-wrap gap-3 text-sm font-mono">
                 <div className="flex items-center gap-2">
                   <HiOutlineCalendar className="w-4 h-4 text-[var(--theme-primary)]" />
                   <span>{currentSprint.daysRemaining} DAYS LEFT</span>
@@ -343,12 +343,12 @@ export default function TeamPage() {
   )
 
   return (
-    <div className="p-6 min-h-screen bg-[var(--theme-background)]">
+    <div className="p-4 min-h-screen bg-[var(--theme-background)]">
       {/* Page Header */}
-      <div className="mb-8 border-b-2 border-[var(--theme-border)] pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="mb-4 border-b-2 border-[var(--theme-border)] pb-3 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 flex items-center gap-3">
-            <HiOutlineUserGroup className="w-8 h-8 md:w-10 md:h-10 text-[var(--theme-primary)]" />
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+            <HiOutlineUserGroup className="w-6 h-6 md:w-7 md:h-7 text-[var(--theme-primary)]" />
             TEAM & SPRINTS
           </h1>
           <p className="font-mono text-sm text-[var(--theme-foreground)]/60 uppercase tracking-wide">
@@ -361,9 +361,9 @@ export default function TeamPage() {
           <button
             onClick={() => setActiveTab('members')}
             className={clsx(
-              "px-6 py-2 font-mono text-sm font-bold uppercase transition-all border-t-2 border-x-2",
+              "px-4 py-2 font-mono text-sm font-bold uppercase transition-all border-t-2 border-x-2",
               activeTab === 'members'
-                ? "bg-[var(--theme-background)] border-[var(--theme-border)] text-[var(--theme-primary)] -mb-[26px] z-10 pb-8"
+                ? "bg-[var(--theme-background)] border-[var(--theme-border)] text-[var(--theme-primary)] -mb-[26px] z-10 pb-5"
                 : "bg-[var(--theme-background-secondary)] border-transparent text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)]"
             )}
           >
@@ -372,9 +372,9 @@ export default function TeamPage() {
           <button
             onClick={() => setActiveTab('sprints')}
             className={clsx(
-              "px-6 py-2 font-mono text-sm font-bold uppercase transition-all border-t-2 border-x-2",
+              "px-4 py-2 font-mono text-sm font-bold uppercase transition-all border-t-2 border-x-2",
               activeTab === 'sprints'
-                ? "bg-[var(--theme-background)] border-[var(--theme-border)] text-[var(--theme-primary)] -mb-[26px] z-10 pb-8"
+                ? "bg-[var(--theme-background)] border-[var(--theme-border)] text-[var(--theme-primary)] -mb-[26px] z-10 pb-5"
                 : "bg-[var(--theme-background-secondary)] border-transparent text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)]"
             )}
           >
@@ -384,7 +384,7 @@ export default function TeamPage() {
       </div>
 
       {/* Tab Content */}
-      <div className="mt-8">
+      <div className="mt-4">
         {activeTab === 'members' ? renderMembersTab() : renderSprintsTab()}
       </div>
 

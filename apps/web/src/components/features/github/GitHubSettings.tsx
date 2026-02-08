@@ -107,13 +107,13 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
               </h3>
               
               {isConnected ? (
-                <div className="flex items-center gap-8px text-brutal-success">
-                  <FaCheckCircle className="w-20px h-20px" />
+                <div className="flex items-center gap-[8px] text-brutal-success">
+                  <FaCheckCircle className="w-5 h-5" />
                   <span className="font-mono text-brutal-sm">CONNECTED</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-8px text-[var(--theme-foreground)]/40">
-                  <FaTimesCircle className="w-20px h-20px" />
+                <div className="flex items-center gap-[8px] text-[var(--theme-foreground)]/40">
+                  <FaTimesCircle className="w-5 h-5" />
                   <span className="font-mono text-brutal-sm">NOT CONNECTED</span>
                 </div>
               )}
@@ -138,7 +138,7 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
                   <div>
                     <div className="text-brutal-xs uppercase text-[var(--theme-foreground)]/60 mb-4px">Last Synced</div>
                     <div className="font-mono font-bold flex items-center gap-4px">
-                      {isStale && <FaExclamationCircle className="w-12px h-12px text-brutal-warning" />}
+                      {isStale && <FaExclamationCircle className="w-[12px] h-[12px] text-brutal-warning" />}
                       {githubStats.lastSynced 
                         ? format(new Date(githubStats.lastSynced), 'MMM d, h:mm a')
                         : 'Never'}
@@ -152,7 +152,7 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
                     onClick={handleSyncStats}
                     disabled={isSyncing}
                   >
-                    <FaSync className={`w-16px h-16px mr-8px ${isSyncing ? 'animate-spin' : ''}`} />
+                    <FaSync className={`w-4 h-4 mr-[8px] ${isSyncing ? 'animate-spin' : ''}`} />
                     {isSyncing ? 'SYNCING...' : 'SYNC NOW'}
                   </BrutalButton>
                   
@@ -160,10 +160,10 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
                     href={`https://github.com/${githubStats.username}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-8px text-primary-brutalist hover:underline"
+                    className="inline-flex items-center gap-[8px] text-primary-brutalist hover:underline"
                   >
                     View Profile
-                    <HiOutlineExternalLink className="w-16px h-16px" />
+                    <HiOutlineExternalLink className="w-4 h-4" />
                   </a>
                 </div>
               </div>
@@ -209,20 +209,20 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
                   Install the GitHub App to enable automatic repository syncing and advanced features.
                 </p>
                 
-                <div className="space-y-8px text-brutal-sm">
-                  <div className="flex items-center gap-8px">
+                <div className="space-y-[8px] text-brutal-sm">
+                  <div className="flex items-center gap-[8px]">
                     <div className="w-4px h-4px bg-primary-brutalist" />
                     <span>Automatic commit and PR tracking</span>
                   </div>
-                  <div className="flex items-center gap-8px">
+                  <div className="flex items-center gap-[8px]">
                     <div className="w-4px h-4px bg-primary-brutalist" />
                     <span>Real-time webhook notifications</span>
                   </div>
-                  <div className="flex items-center gap-8px">
+                  <div className="flex items-center gap-[8px]">
                     <div className="w-4px h-4px bg-primary-brutalist" />
                     <span>Task-code linking</span>
                   </div>
-                  <div className="flex items-center gap-8px">
+                  <div className="flex items-center gap-[8px]">
                     <div className="w-4px h-4px bg-primary-brutalist" />
                     <span>Repository activity monitoring</span>
                   </div>
@@ -284,7 +284,7 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
               </div>
             </div>
             <input type="checkbox" className="sr-only" defaultChecked />
-            <div className="w-48px h-24px bg-basalt-border relative rounded-none">
+            <div className="w-6 h-4 bg-basalt-border relative rounded-none">
               <div className="absolute top-0 left-0 w-4 h-4 bg-primary-brutalist transition-transform" />
             </div>
           </label>
@@ -297,7 +297,7 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
               </div>
             </div>
             <input type="checkbox" className="sr-only" defaultChecked />
-            <div className="w-48px h-24px bg-basalt-border relative rounded-none">
+            <div className="w-6 h-4 bg-basalt-border relative rounded-none">
               <div className="absolute top-0 left-0 w-4 h-4 bg-primary-brutalist transition-transform" />
             </div>
           </label>
@@ -310,7 +310,7 @@ export function GitHubSettings({ currentUser }: GitHubSettingsProps) {
               </div>
             </div>
             <input type="checkbox" className="sr-only" />
-            <div className="w-48px h-24px bg-basalt-border relative rounded-none">
+            <div className="w-6 h-4 bg-basalt-border relative rounded-none">
               <div className="absolute top-0 left-0 w-4 h-4 bg-basalt-border transition-transform" />
             </div>
           </label>
