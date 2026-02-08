@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, internalMutation, query } from "../../_generated/server";
-import { api } from "../../_generated/api";
+import { api, internal } from "../../_generated/api";
 
 // Store GitHub OAuth state for CSRF protection
 export const createOAuthState = mutation({
@@ -201,6 +201,20 @@ export const storeGitHubConnection = mutation({
           updatedAt: Date.now(),
         });
       }
+    }
+
+    // Schedule stats sync if an installation is available
+    const installations = await ctx.db
+      .query("githubInstallations")
+      .collect();
+
+    const activeInstallation = installations.find((inst) => !inst.suspendedAt);
+    if (activeInstallation) {
+      await ctx.scheduler.runAfter(0, internal.integrations.github.syncActions.syncDeveloperGitHubStats, {
+        userId: user._id,
+        githubUsername: args.githubUsername,
+        installationId: activeInstallation.installationId,
+      });
     }
 
     return {

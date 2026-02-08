@@ -5,6 +5,41 @@ import { internal } from "../../_generated/api";
 import { v } from "convex/values";
 import { Octokit } from "@octokit/rest";
 
+// Process developer stats sync for all connected users (called by cron)
+export const processStatsSyncQueue = internalAction({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    try {
+      const users = await ctx.runQuery(internal.integrations.github.sync.getUsersForStatsSync, {});
+
+      console.log(`[Stats Sync] Processing ${users.length} users`);
+
+      for (const user of users) {
+        try {
+          console.log(`[Stats Sync] Syncing stats for @${user.githubUsername}`);
+
+          await ctx.runAction(internal.integrations.github.syncActions.syncDeveloperGitHubStats, {
+            userId: user.userId,
+            githubUsername: user.githubUsername,
+            installationId: user.installationId,
+          });
+
+          console.log(`[Stats Sync] Completed sync for @${user.githubUsername}`);
+        } catch (error) {
+          console.error(`[Stats Sync] Error syncing user @${user.githubUsername}:`, error);
+        }
+      }
+
+      console.log(`[Stats Sync] Finished processing all users`);
+      return null;
+    } catch (error) {
+      console.error("[Stats Sync] Error in processStatsSyncQueue:", error);
+      return null;
+    }
+  },
+});
+
 // Process repository sync for all active installations (called by cron)
 export const processRepositorySyncQueue = internalAction({
   args: {},

@@ -11,11 +11,11 @@ interface CreateSprintModalProps {
   onSuccess?: () => void
 }
 
-export default function CreateSprintModal({ 
-  isOpen, 
-  onClose, 
+export default function CreateSprintModal({
+  isOpen,
+  onClose,
   projectId,
-  onSuccess 
+  onSuccess
 }: CreateSprintModalProps) {
   const [name, setName] = useState('')
   const [goal, setGoal] = useState('')
@@ -27,27 +27,27 @@ export default function CreateSprintModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!name.trim()) {
       toast.error('Sprint name is required')
       return
     }
-    
+
     if (!startDate || !endDate) {
       toast.error('Start and end dates are required')
       return
     }
-    
+
     const start = new Date(startDate).getTime()
     const end = new Date(endDate).getTime()
-    
+
     if (end <= start) {
       toast.error('End date must be after start date')
       return
     }
 
     setIsCreating(true)
-    
+
     try {
       await createSprint({
         projectId: projectId as any,
@@ -56,11 +56,11 @@ export default function CreateSprintModal({
         startDate: startDate,
         endDate: endDate,
       })
-      
+
       toast.success('Sprint created successfully')
       onSuccess?.()
       onClose()
-      
+
       // Reset form
       setName('')
       setGoal('')
@@ -79,10 +79,10 @@ export default function CreateSprintModal({
       onClose={onClose}
       title="CREATE NEW SPRINT"
     >
-      <form onSubmit={handleSubmit} className="space-y-[12px]">
+      <form onSubmit={handleSubmit} className="space-y-3">
         {/* Sprint Name */}
         <div>
-          <label className="block text-brutal-sm uppercase mb-[4px]">
+          <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
             SPRINT NAME
           </label>
           <input
@@ -90,16 +90,14 @@ export default function CreateSprintModal({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="SPRINT 1"
-            className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
-                     font-mono text-brutal-sm uppercase placeholder:text-neutral-600
-                     focus:border-primary-brutalist focus:outline-none transition-colors"
+            className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] font-mono text-xs text-[#F9FAFB] uppercase placeholder:text-[#6B7280] focus:border-[#6366F1] focus:outline-none transition-colors"
             required
           />
         </div>
 
         {/* Sprint Goal */}
         <div>
-          <label className="block text-brutal-sm uppercase mb-[4px]">
+          <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
             SPRINT GOAL
           </label>
           <textarea
@@ -107,57 +105,51 @@ export default function CreateSprintModal({
             onChange={(e) => setGoal(e.target.value)}
             placeholder="DELIVER USER AUTHENTICATION AND DASHBOARD..."
             rows={3}
-            className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
-                     font-mono text-brutal-sm uppercase placeholder:text-neutral-600
-                     focus:border-primary-brutalist focus:outline-none transition-colors resize-none"
+            className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] font-mono text-xs text-[#F9FAFB] uppercase placeholder:text-[#6B7280] focus:border-[#6366F1] focus:outline-none transition-colors resize-none"
           />
         </div>
 
         {/* Date Range */}
-        <div className="grid grid-cols-2 gap-[8px]">
+        <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-brutal-sm uppercase mb-[4px]">
+            <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
               START DATE
             </label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
-                       font-mono text-brutal-sm
-                       focus:border-primary-brutalist focus:outline-none transition-colors"
+              className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] font-mono text-xs text-[#F9FAFB] focus:border-[#6366F1] focus:outline-none transition-colors"
               required
             />
           </div>
           <div>
-            <label className="block text-brutal-sm uppercase mb-[4px]">
+            <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
               END DATE
             </label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
-                       font-mono text-brutal-sm
-                       focus:border-primary-brutalist focus:outline-none transition-colors"
+              className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] font-mono text-xs text-[#F9FAFB] focus:border-[#6366F1] focus:outline-none transition-colors"
               required
             />
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-[8px] justify-end pt-[12px] border-t-2 border-[var(--theme-border)]">
+        <div className="flex gap-2 justify-end pt-3 border-t border-[#1F1F23]">
           <button
             type="button"
             onClick={onClose}
-            className="brutal-btn-secondary"
+            className="px-3 py-2 bg-[#111111] border-2 border-[#2E2E35] text-[#9CA3AF] font-mono text-xs uppercase tracking-wider hover:border-[#6366F1] hover:text-[#F9FAFB] disabled:opacity-50"
             disabled={isCreating}
           >
             CANCEL
           </button>
           <button
             type="submit"
-            className="brutal-btn"
+            className="px-3 py-2 bg-[#6366F1] text-white font-mono text-xs uppercase tracking-wider font-bold border-2 border-[#4F46E5] hover:bg-[#4F46E5] disabled:opacity-50"
             disabled={isCreating}
           >
             {isCreating ? 'CREATING...' : 'CREATE SPRINT'}

@@ -26,6 +26,7 @@ import CommandTerminal from '../terminal/CommandTerminal'
 import GlobalSearchModal from '../features/search/GlobalSearchModal'
 import WorkspaceMobileBlocker from '../common/WorkspaceMobileBlocker'
 import ProductionAccessGate from '../common/ProductionAccessGate'
+import FeedbackWidget from '../features/feedback/FeedbackWidget'
 
 
 const NAV_ITEMS = [
@@ -402,6 +403,9 @@ export default function DashboardLayout() {
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
       />
+
+      {/* Feedback Widget */}
+      <FeedbackWidget />
     </div>
   )
 }

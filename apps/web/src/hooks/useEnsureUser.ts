@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { useAuth } from '@clerk/clerk-react'
+import posthog from 'posthog-js'
 
 export function useEnsureUser() {
   const { isSignedIn } = useAuth()
@@ -17,6 +18,7 @@ export function useEnsureUser() {
       createCurrentUser().catch(console.error)
     } else if (currentUser !== null && wasJustCreated) {
       // User was created and now exists, reset the flag
+      posthog.capture('user_created')
       setWasJustCreated(false)
     }
   }, [isSignedIn, currentUser, createCurrentUser, wasJustCreated])

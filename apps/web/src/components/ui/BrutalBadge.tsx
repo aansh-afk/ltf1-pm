@@ -15,10 +15,10 @@ export default function BrutalBadge({
   className 
 }: BrutalBadgeProps) {
   const sizeClasses = {
-    xs: 'px-4px py-1px text-[10px]',
-    sm: 'px-8px py-2px text-xs',
-    md: 'px-[10px] py-8px text-sm',
-    lg: 'px-[12px] py-[8px] text-base'
+    xs: 'px-1 py-px text-[10px]',
+    sm: 'px-1.5 py-0.5 text-[10px]',
+    md: 'px-2 py-1 text-xs',
+    lg: 'px-2.5 py-1.5 text-sm'
   }
 
   const variantClasses = {
