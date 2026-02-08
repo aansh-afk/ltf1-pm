@@ -36,7 +36,7 @@ export default function ShortcutHint({
   }
   
   const variantClasses = {
-    inline: 'bg-event-horizon border border-basalt-border ml-8px',
+    inline: 'bg-event-horizon border border-basalt-border ml-[8px]',
     tooltip: 'bg-carbon-plate border-2 border-basalt-border absolute',
     badge: 'bg-primary-brutalist/20 border border-primary-brutalist'
   }
@@ -76,7 +76,7 @@ export function ButtonWithShortcut({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={clsx('flex items-center justify-between gap-8px', className)}
+      className={clsx('flex items-center justify-between gap-[8px]', className)}
     >
       <span>{children}</span>
       <ShortcutHint shortcutId={shortcutId} keys={keys} size="xs" />
@@ -104,14 +104,14 @@ export function MenuItemWithShortcut({
     <button
       onClick={onClick}
       className={clsx(
-        'w-full px-16px py-12px flex items-center justify-between',
+        'w-full px-[10px] py-[8px] flex items-center justify-between',
         'font-mono text-brutal-sm uppercase transition-colors',
         active 
           ? 'bg-primary-brutalist text-event-horizon' 
           : 'hover:bg-primary-brutalist/20'
       )}
     >
-      <div className="flex items-center gap-12px">
+      <div className="flex items-center gap-[6px]">
         {icon}
         <span>{label}</span>
       </div>

@@ -92,11 +92,11 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
   }
 
   return (
-    <div className="space-y-24px">
+    <div className="space-y-[12px]">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-brutal-lg font-bold uppercase">WORKSPACE MEMBERS</h2>
+          <h2 className="text-[14px] font-semibold font-bold uppercase">WORKSPACE MEMBERS</h2>
           <p className="text-brutal-sm text-neutral-500">
             {workspace.members?.length || 0} MEMBERS
           </p>
@@ -105,7 +105,7 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
         {canManageMembers && (
           <button
             onClick={() => setShowInviteModal(true)}
-            className="brutal-btn flex items-center gap-8px"
+            className="brutal-btn flex items-center gap-[4px]"
           >
             <HiOutlineUserAdd className="w-16px h-16px" />
             INVITE MEMBER
@@ -115,7 +115,7 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
 
       {/* Members List */}
       <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
-        <div className="grid grid-cols-12 gap-16px p-16px font-mono text-brutal-sm uppercase border-b-2 border-[var(--theme-border)]">
+        <div className="grid grid-cols-12 gap-[8px] p-[10px] font-mono text-brutal-sm uppercase border-b-2 border-[var(--theme-border)]">
           <div className="col-span-5">MEMBER</div>
           <div className="col-span-3">ROLE</div>
           <div className="col-span-2">JOINED</div>
@@ -129,10 +129,10 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
           return (
             <div
               key={member._id}
-              className="grid grid-cols-12 gap-16px p-16px items-center border-b-2 border-[var(--theme-border)] last:border-b-0 hover:bg-[var(--theme-background-secondary)]/10"
+              className="grid grid-cols-12 gap-[8px] p-[10px] items-center border-b-2 border-[var(--theme-border)] last:border-b-0 hover:bg-[var(--theme-background-secondary)]/10"
             >
               {/* Member Info */}
-              <div className="col-span-5 flex items-center gap-12px">
+              <div className="col-span-5 flex items-center gap-[6px]">
                 <div className="w-40px h-40px bg-primary-brutalist border-2 border-[var(--theme-border)] flex items-center justify-center">
                   {member.user?.avatarUrl ? (
                     <img
@@ -141,13 +141,13 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <HiOutlineUser className="w-24px h-24px text-event-horizon" />
+                    <HiOutlineUser className="w-4 h-4 text-event-horizon" />
                   )}
                 </div>
                 <div>
                   <div className="font-mono text-brutal-sm">
                     {member.user?.name || 'Unknown User'}
-                    {isCurrentUser && <span className="text-neutral-500 ml-8px">(YOU)</span>}
+                    {isCurrentUser && <span className="text-neutral-500 ml-[4px]">(YOU)</span>}
                   </div>
                   <div className="text-brutal-xs text-neutral-500 flex items-center gap-4px">
                     <HiOutlineMail className="w-12px h-12px" />
@@ -162,7 +162,7 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
                   <select
                     value={member.role}
                     onChange={(e) => handleRoleChange(member.userId, e.target.value as any)}
-                    className="px-12px py-6px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+                    className="px-[8px] py-6px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                              font-mono text-brutal-xs uppercase
                              focus:border-primary-brutalist focus:outline-none transition-colors"
                   >
@@ -172,7 +172,7 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
                   </select>
                 ) : (
                   <div className={clsx(
-                    "inline-flex items-center gap-4px px-8px py-4px",
+                    "inline-flex items-center gap-4px px-[4px] py-4px",
                     roleConfig[member.role as keyof typeof roleConfig].color,
                     "font-mono text-brutal-xs uppercase text-event-horizon"
                   )}>
@@ -195,7 +195,7 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
                       setSelectedMember(member)
                       setShowRemoveConfirm(true)
                     }}
-                    className="p-8px border-2 border-[var(--theme-error)] text-[var(--theme-error)] hover:bg-[var(--theme-error)] hover:text-[var(--theme-foreground)] transition-colors"
+                    className="p-[4px] border-2 border-[var(--theme-error)] text-[var(--theme-error)] hover:bg-[var(--theme-error)] hover:text-[var(--theme-foreground)] transition-colors"
                   >
                     <HiOutlineTrash className="w-16px h-16px" />
                   </button>
@@ -213,26 +213,26 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
         title="INVITE MEMBER"
         size="md"
       >
-        <div className="space-y-24px">
+        <div className="space-y-[12px]">
           <div>
-            <label className="block text-brutal-sm mb-8px">EMAIL ADDRESS</label>
+            <label className="block text-brutal-sm mb-[4px]">EMAIL ADDRESS</label>
             <input
               type="email"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="user@example.com"
-              className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-md placeholder:text-neutral-600
                        focus:border-primary-brutalist focus:outline-none transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-brutal-sm mb-8px">ROLE</label>
+            <label className="block text-brutal-sm mb-[4px]">ROLE</label>
             <select
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value as any)}
-              className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-md uppercase
                        focus:border-primary-brutalist focus:outline-none transition-colors"
             >
@@ -242,7 +242,7 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
             </select>
           </div>
 
-          <div className="flex justify-end gap-16px">
+          <div className="flex justify-end gap-[8px]">
             <button
               onClick={() => setShowInviteModal(false)}
               className="brutal-btn-secondary"
@@ -271,7 +271,7 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
         title="REMOVE MEMBER"
         size="sm"
       >
-        <div className="space-y-24px">
+        <div className="space-y-[12px]">
           <p className="text-brutal-sm">
             Are you sure you want to remove <strong>{selectedMember?.user?.name}</strong> from this workspace?
           </p>
@@ -279,7 +279,7 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
             This action cannot be undone.
           </p>
 
-          <div className="flex justify-end gap-16px">
+          <div className="flex justify-end gap-[8px]">
             <button
               onClick={() => {
                 setShowRemoveConfirm(false)
@@ -291,7 +291,7 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
             </button>
             <button
               onClick={handleRemoveMember}
-              className="px-24px py-12px bg-[var(--theme-error)] border-2 border-[var(--theme-border)] 
+              className="px-[12px] py-[8px] bg-[var(--theme-error)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm uppercase tracking-wider text-[var(--theme-foreground)]
                        hover:bg-[#CC0000] transition-colors"
             >

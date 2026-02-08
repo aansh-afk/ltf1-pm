@@ -170,7 +170,7 @@ export default function KanbanBoard({
 
     return (
         <>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-16px h-full">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-[8px] h-full">
                 {columns.map((column) => (
                     <KanbanColumn
                         key={column.id}

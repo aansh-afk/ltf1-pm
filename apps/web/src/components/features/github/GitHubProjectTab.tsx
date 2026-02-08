@@ -80,21 +80,21 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
 
   if (!project?.repository) {
     return (
-      <div className="space-y-24px">
+      <div className="space-y-[12px]">
         <BrutalCard className="p-0 overflow-hidden border-2 border-dashed border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/30 hover:bg-[var(--theme-background-secondary)]/50 transition-colors group">
-          <div className="p-48px flex flex-col items-center justify-center text-center">
-            <div className="w-80px h-80px rounded-xl bg-[var(--theme-background)] border border-[var(--theme-border)] flex items-center justify-center mb-24px shadow-sm group-hover:scale-105 transition-transform duration-300">
+          <div className="p-[24px] flex flex-col items-center justify-center text-center">
+            <div className="w-80px h-80px rounded-xl bg-[var(--theme-background)] border border-[var(--theme-border)] flex items-center justify-center mb-[12px] shadow-sm group-hover:scale-105 transition-transform duration-300">
               <FaGithub className="w-40px h-40px text-[var(--theme-foreground)]" />
             </div>
 
-            <h3 className="text-brutal-xl font-bold mb-12px tracking-tight">Connect to GitHub</h3>
+            <h3 className="text-[16px] font-bold mb-12px tracking-tight">Connect to GitHub</h3>
             <p className="text-brutal-md text-[var(--theme-foreground)]/60 mb-40px max-w-lg leading-relaxed">
               Supercharge your workflow by linking a repository. Automatically sync commits, track pull requests, and link code to tasks.
             </p>
 
             {!hasGitHubInstallation ? (
-              <div className="flex flex-col items-center gap-16px">
-                <p className="font-mono text-brutal-xs text-brutal-warning bg-brutal-warning/10 px-16px py-8px rounded-md border border-brutal-warning/20">
+              <div className="flex flex-col items-center gap-[8px]">
+                <p className="font-mono text-brutal-xs text-brutal-warning bg-brutal-warning/10 px-[10px] py-8px rounded-md border border-brutal-warning/20">
                   ⚠️ No GitHub App installed in this workspace
                 </p>
                 <BrutalButton
@@ -103,7 +103,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                     const rawSlug = appSlug.replace('https://github.com/apps/', '');
                     window.open(`https://github.com/apps/${rawSlug}/installations/new`, 'github-install');
                   }}
-                  className="h-48px px-32px text-brutal-sm font-bold tracking-wide"
+                  className="h-[24px] px-[16px] text-brutal-sm font-bold tracking-wide"
                 >
                   INSTALL GITHUB APP
                   <FaArrowRight className="ml-8px w-12px h-12px" />
@@ -112,7 +112,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
             ) : (
               <BrutalButton
                 onClick={() => setShowConnectRepoModal(true)}
-                className="h-48px px-32px bg-[#24292F] text-white hover:bg-[#24292F]/90 text-brutal-sm font-bold tracking-wide shadow-lg hover:shadow-xl transition-all"
+                className="h-[24px] px-[16px] bg-[#24292F] text-white hover:bg-[#24292F]/90 text-brutal-sm font-bold tracking-wide shadow-lg hover:shadow-xl transition-all"
               >
                 <FaGithub className="mr-8px w-16px h-16px" />
                 CONNECT REPOSITORY
@@ -142,11 +142,11 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
   };
 
   return (
-    <div className="space-y-32px">
+    <div className="space-y-[16px]">
       {/* Header Section */}
       <div>
         <div className="flex items-center justify-between mb-8px">
-          <div className="flex items-center gap-12px text-brutal-xl font-bold tracking-tight">
+          <div className="flex items-center gap-[6px] text-[16px] font-bold tracking-tight">
             <FaGithub className="text-[var(--theme-foreground)]" />
             <div className="flex items-center gap-2px">
               <span className="text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] transition-colors cursor-pointer" onClick={() => window.open(`https://github.com/${repository.owner}`, '_blank')}>
@@ -162,10 +162,10 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
             </span>
           </div>
 
-          <div className="flex items-center gap-12px">
+          <div className="flex items-center gap-[6px]">
             <BrutalButton
               onClick={() => window.open(repository.url, '_blank')}
-              className="h-32px px-16px text-brutal-xs bg-[var(--theme-background)] border border-[var(--theme-border)] text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
+              className="h-[16px] px-[10px] text-brutal-xs bg-[var(--theme-background)] border border-[var(--theme-border)] text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
             >
               <HiOutlineExternalLink className="mr-6px w-14px h-14px" />
               VIEW ON GITHUB
@@ -175,14 +175,14 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                 navigator.clipboard.writeText(`git clone ${repository.url}.git`);
                 toast.success('Clone URL copied to clipboard');
               }}
-              className="h-32px px-16px text-brutal-xs bg-[var(--theme-background)] border border-[var(--theme-border)] text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
+              className="h-[16px] px-[10px] text-brutal-xs bg-[var(--theme-background)] border border-[var(--theme-border)] text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
             >
               <HiOutlineTerminal className="mr-6px w-14px h-14px" />
               CLONE
             </BrutalButton>
           </div>
         </div>
-        <div className="flex items-center gap-24px">
+        <div className="flex items-center gap-[12px]">
           <a href={`${repository.url}/commits`} target="_blank" rel="noreferrer" className="text-brutal-sm text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] flex items-center gap-6px transition-colors">
             <HiOutlineCode className="w-16px h-16px" />
             Commits
@@ -199,7 +199,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-16px">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-[8px]">
         {/* Stars */}
         <BrutalCard className="p-20px flex flex-col justify-between h-[100px] border-[var(--theme-border)] hover:border-brutal-warning/50 transition-colors group">
           <div className="flex items-center justify-between text-[var(--theme-foreground)]/60">
@@ -245,11 +245,11 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
         </BrutalCard>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-24px">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-[12px]">
         {/* Main Content (Activity Feed) */}
         <div className="lg:col-span-2">
-          <BrutalCard className="p-24px h-full flex flex-col">
-            <div className="flex items-center justify-between mb-24px">
+          <BrutalCard className="p-[16px] h-full flex flex-col">
+            <div className="flex items-center justify-between mb-[12px]">
               <h3 className="text-brutal-md font-bold text-[var(--theme-foreground)]">REPOSITORY ACTIVITY</h3>
 
               <div className="flex items-center gap-8px">
@@ -257,7 +257,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                   <button
                     key={filter}
                     onClick={() => setSelectedActivity(filter as any)}
-                    className={`px-16px py-8px font-mono text-brutal-xs uppercase border transition-all ${selectedActivity === filter
+                    className={`px-[10px] py-8px font-mono text-brutal-xs uppercase border transition-all ${selectedActivity === filter
                       ? 'bg-primary-brutalist text-event-horizon border-primary-brutalist font-bold shadow-sm'
                       : 'bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)]/60 border-[var(--theme-border)] hover:border-primary-brutalist hover:text-[var(--theme-foreground)]'
                       }`}
@@ -270,7 +270,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
 
             {filteredActivities.length === 0 ? (
               <div className="text-center py-64px flex flex-col items-center justify-center border-2 border-dashed border-[var(--theme-border)] rounded-lg bg-[var(--theme-background-secondary)]/30">
-                <FaCodeBranch className="w-32px h-32px text-[var(--theme-foreground)]/20 mb-16px" />
+                <FaCodeBranch className="w-5 h-5 text-[var(--theme-foreground)]/20 mb-[8px]" />
                 <p className="text-brutal-sm font-bold text-[var(--theme-foreground)]/60">No activity found</p>
                 <p className="text-brutal-xs text-[var(--theme-foreground)]/40 mt-4px max-w-[300px]">
                   {selectedActivity === 'all'
@@ -279,11 +279,11 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                 </p>
               </div>
             ) : (
-              <div className="space-y-12px overflow-y-auto pr-8px -mr-8px flex-1 min-h-[400px]">
+              <div className="space-y-[6px] overflow-y-auto pr-8px -mr-8px flex-1 min-h-[400px]">
                 {filteredActivities.map((activity: any) => (
                   <div
                     key={activity._id}
-                    className="group relative p-16px pl-20px border border-[var(--theme-border)] bg-[var(--theme-background)] hover:border-primary-brutalist transition-colors duration-200 shadow-sm hover:shadow-md rounded-md"
+                    className="group relative p-[10px] pl-20px border border-[var(--theme-border)] bg-[var(--theme-background)] hover:border-primary-brutalist transition-colors duration-200 shadow-sm hover:shadow-md rounded-md"
                   >
                     {/* Left Accent Bar */}
                     <div className={`absolute left-0 top-0 bottom-0 w-4px rounded-l-md ${activity.type === 'commit' || activity.type === 'push' ? 'bg-brutal-info' :
@@ -291,9 +291,9 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                           'bg-brutal-warning'
                       }`} />
 
-                    <div className="flex items-start gap-16px">
+                    <div className="flex items-start gap-[8px]">
                       {/* Activity Icon */}
-                      <div className={`mt-2px w-32px h-32px rounded-full flex items-center justify-center border border-[var(--theme-border)] bg-[var(--theme-background-secondary)] shrink-0 ${activity.type === 'commit' || activity.type === 'push' ? 'text-brutal-info' :
+                      <div className={`mt-2px w-5 h-5 rounded-full flex items-center justify-center border border-[var(--theme-border)] bg-[var(--theme-background-secondary)] shrink-0 ${activity.type === 'commit' || activity.type === 'push' ? 'text-brutal-info' :
                           activity.type === 'pull_request' ? 'text-brutal-success' :
                             'text-brutal-warning'
                         }`}>
@@ -304,7 +304,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
 
                       {/* Activity Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between mb-4px gap-16px">
+                        <div className="flex items-start justify-between mb-4px gap-[8px]">
                           <h4 className="text-brutal-sm font-bold text-[var(--theme-foreground)] truncate" title={getActivityTitle(activity)}>
                             {getActivityTitle(activity)}
                           </h4>
@@ -346,7 +346,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                           )}
                         </div>
 
-                        <div className="flex items-center gap-12px font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
+                        <div className="flex items-center gap-[6px] font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
                           <div className="flex items-center gap-6px">
                             <div className="w-16px h-16px rounded-full bg-gradient-to-br from-primary-brutalist to-[var(--theme-border)] flex items-center justify-center text-[8px] font-bold text-white shrink-0">
                               {(activity.actor || activity.actorUsername || '?').charAt(0).toUpperCase()}
@@ -384,14 +384,14 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
         </div>
 
         {/* Sidebar Info */}
-        <div className="space-y-24px">
-          <BrutalCard className="p-24px bg-[var(--theme-background-secondary)]/20">
-            <h3 className="text-brutal-sm font-bold uppercase mb-16px text-[var(--theme-foreground)]/80">About</h3>
-            <p className="text-brutal-sm text-[var(--theme-foreground)]/70 leading-relaxed mb-24px">
+        <div className="space-y-[12px]">
+          <BrutalCard className="p-[16px] bg-[var(--theme-background-secondary)]/20">
+            <h3 className="text-brutal-sm font-bold uppercase mb-[8px] text-[var(--theme-foreground)]/80">About</h3>
+            <p className="text-brutal-sm text-[var(--theme-foreground)]/70 leading-relaxed mb-[12px]">
               {repository.description || "No description available for this repository."}
             </p>
 
-            <div className="space-y-12px">
+            <div className="space-y-[6px]">
               <div className="flex items-center justify-between text-brutal-sm">
                 <span className="text-[var(--theme-foreground)]/60">Topics</span>
               </div>
@@ -408,7 +408,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
               </div>
             </div>
 
-            <div className="mt-24px pt-24px border-t border-[var(--theme-border)]">
+            <div className="mt-[12px] pt-[12px] border-t border-[var(--theme-border)]">
               <div className="flex items-center justify-between text-brutal-xs text-[var(--theme-foreground)]/50">
                 <span>Last synced</span>
                 <span className="font-mono">

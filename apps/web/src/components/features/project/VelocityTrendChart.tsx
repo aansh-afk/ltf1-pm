@@ -70,8 +70,8 @@ export default function VelocityTrendChart({ sprints, tasks }: VelocityTrendChar
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-8px">
-          <p className="text-brutal-xs font-bold mb-4px">{label}</p>
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[4px]">
+          <p className="text-brutal-xs font-bold mb-[2px]">{label}</p>
           <p className="text-brutal-xs" style={{ color: 'var(--theme-info)' }}>
             Committed: {data.committed} pts
           </p>
@@ -106,15 +106,15 @@ export default function VelocityTrendChart({ sprints, tasks }: VelocityTrendChar
   
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-16px">
+      <div className="flex items-center justify-between mb-[8px]">
         <h3 className="text-brutal-md font-bold uppercase">Sprint Velocity Trend</h3>
-        <div className="flex items-center gap-16px">
-          <div className="flex items-center gap-8px">
+        <div className="flex items-center gap-[8px]">
+          <div className="flex items-center gap-[4px]">
             <span className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Avg Velocity:</span>
             <span className="text-brutal-sm font-bold">{Math.round(avgVelocity)} pts</span>
           </div>
           <div 
-            className="flex items-center gap-4px px-8px py-4px border"
+            className="flex items-center gap-4px px-[4px] py-4px border"
             style={{ 
               borderColor: getTrendColor(),
               backgroundColor: getTrendColor() + '20',
@@ -189,11 +189,11 @@ export default function VelocityTrendChart({ sprints, tasks }: VelocityTrendChar
       </ResponsiveContainer>
       
       {/* Insights */}
-      <div className="mt-16px p-12px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-16px text-brutal-xs">
+      <div className="mt-[8px] p-[8px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-[8px] text-brutal-xs">
           <div>
             <span className="text-[var(--theme-foreground-secondary)]">Completion Rate:</span>
-            <span className="ml-8px font-bold">
+            <span className="ml-[4px] font-bold">
               {completedSprints.length > 0 
                 ? `${Math.round(completedSprints.reduce((sum, s) => sum + (s.completed / s.committed * 100), 0) / completedSprints.length)}%`
                 : 'N/A'
@@ -202,7 +202,7 @@ export default function VelocityTrendChart({ sprints, tasks }: VelocityTrendChar
           </div>
           <div>
             <span className="text-[var(--theme-foreground-secondary)]">Best Sprint:</span>
-            <span className="ml-8px font-bold">
+            <span className="ml-[4px] font-bold">
               {completedSprints.length > 0 
                 ? `${Math.max(...completedSprints.map(s => s.completed))} pts`
                 : 'N/A'
@@ -211,7 +211,7 @@ export default function VelocityTrendChart({ sprints, tasks }: VelocityTrendChar
           </div>
           <div>
             <span className="text-[var(--theme-foreground-secondary)]">Predictability:</span>
-            <span className="ml-8px font-bold">
+            <span className="ml-[4px] font-bold">
               {completedSprints.length > 1
                 ? (() => {
                     const variance = completedSprints.map(s => s.completed)

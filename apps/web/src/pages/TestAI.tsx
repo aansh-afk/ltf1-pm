@@ -89,9 +89,9 @@ export default function TestAI() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-green-500 p-8 font-mono">
+    <div className="min-h-screen bg-black text-green-500 p-5 font-mono">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-white">
+        <h1 className="text-2xl font-bold mb-4 text-white">
           LTF1 AI FEATURES TEST
         </h1>
 
@@ -107,8 +107,8 @@ export default function TestAI() {
           </div>
         )}
 
-        <div className="mb-8 p-4 border border-green-500">
-          <h2 className="text-xl font-bold mb-4 text-white">TASK DESCRIPTION</h2>
+        <div className="mb-4 p-4 border border-green-500">
+          <h2 className="text-lg font-bold mb-4 text-white">TASK DESCRIPTION</h2>
           <textarea
             value={taskDescription}
             onChange={(e) => setTaskDescription(e.target.value)}
@@ -118,7 +118,7 @@ export default function TestAI() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-4">
           <button
             onClick={testTaskIntelligence}
             disabled={ai.loading}
@@ -151,14 +151,14 @@ export default function TestAI() {
 
         {Object.keys(results).length > 0 && (
           <div className="p-4 border border-green-500">
-            <h2 className="text-xl font-bold mb-4 text-white">RESULTS</h2>
+            <h2 className="text-lg font-bold mb-4 text-white">RESULTS</h2>
             <pre className="text-green-500 overflow-x-auto">
               {JSON.stringify(results, null, 2)}
             </pre>
           </div>
         )}
 
-        <div className="mt-8 p-4 border border-yellow-500 text-yellow-500">
+        <div className="mt-4 p-4 border border-yellow-500 text-yellow-500">
           <h3 className="font-bold mb-2">CONFIGURATION STATUS</h3>
           <p>API Key: {import.meta.env.VITE_GEMINI_API_KEY ? '✓ CONFIGURED' : '✗ NOT SET'}</p>
           <p className="text-sm mt-2">

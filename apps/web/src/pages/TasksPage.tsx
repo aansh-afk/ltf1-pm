@@ -14,8 +14,6 @@ import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
 import { useShortcut } from '../contexts/ShortcutContext'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
-import BrutalCard from '@/components/ui/BrutalCard'
-import BrutalButton from '@/components/ui/BrutalButton'
 
 const defaultFilters: TaskFiltersType = {
   search: '',
@@ -119,52 +117,35 @@ export default function TasksPage() {
 
       switch (command) {
         case 'toggleTaskComplete':
-          // This will be handled by individual task components
           break
-
         case 'editTask':
-          // This will be handled by individual task components
           break
-
         case 'deleteTask':
-          // This will be handled by individual task components
           break
-
         case 'assignTaskToMe':
-          // This will be handled by individual task components
           break
-
         case 'setPriorityUrgent':
         case 'setPriorityHigh':
         case 'setPriorityMedium':
         case 'setPriorityLow':
-          // These will be handled by individual task components
           break
-
         case 'addTaskLabel':
-          // This will be handled by individual task components
           break
-
         case 'setTaskDueDate':
-          // This will be handled by individual task components
           break
       }
     }
 
     const handleNewTask = () => {
-      // This event should trigger the new task modal
-      // The actual modal component should listen for this event
       toast.success('New task shortcut triggered')
     }
 
     // Keyboard shortcuts for view switching
     const handleKeyPress = (e: KeyboardEvent) => {
-      // Don't trigger if user is typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return
       }
 
-      // View switching shortcuts
       if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
         switch (e.key.toLowerCase()) {
           case 'b':
@@ -184,7 +165,6 @@ export default function TasksPage() {
             break
           case '/':
             e.preventDefault()
-            // Focus search input
             const searchInput = document.querySelector('input[placeholder*="SEARCH"]') as HTMLInputElement
             searchInput?.focus()
             break
@@ -203,14 +183,13 @@ export default function TasksPage() {
     }
   }, [isFiltersOpen])
 
-  // Use specific shortcuts
   useShortcut('newTask', () => {
     window.dispatchEvent(new CustomEvent('open-new-task'))
   })
 
   if (workspaceLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[var(--theme-background)]">
+      <div className="flex items-center justify-center h-screen bg-[#050505]">
         <LoadingSpinner size="lg" />
       </div>
     )
@@ -219,17 +198,19 @@ export default function TasksPage() {
   // Show workspace selector for pages without URL workspace context
   if (!currentWorkspaceId && workspaces && workspaces.length > 0) {
     return (
-      <div className="p-8 min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
-        <BrutalCard variant="glitch" className="max-w-md w-full p-8 text-center border-2 border-[var(--theme-primary)]">
-          <HiOutlineClipboardList className="w-16 h-16 mx-auto mb-6 text-[var(--theme-primary)]" />
-          <h1 className="text-2xl font-bold uppercase mb-4 tracking-tight">Select Workspace</h1>
-          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 mb-8">
-            Please select a workspace to view tasks.
+      <div className="p-4 min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="max-w-md w-full bg-[#111111] border-2 border-[#2E2E35] p-5 text-center">
+          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[#6366F1]">
+            <HiOutlineClipboardList className="w-5 h-5 text-[#6366F1]" />
+          </div>
+          <h1 className="text-lg font-bold uppercase mb-2 tracking-tight text-[#F9FAFB]">Select Workspace</h1>
+          <p className="font-mono text-xs text-[#6B7280] mb-4">
+            Select a workspace to view tasks.
           </p>
-          <div className="bg-[var(--theme-background-secondary)] p-4 border border-[var(--theme-border)]">
+          <div className="bg-[#0A0A0A] p-3 border border-[#1F1F23]">
             <WorkspaceSelector size="lg" showLabel={false} />
           </div>
-        </BrutalCard>
+        </div>
       </div>
     )
   }
@@ -237,21 +218,23 @@ export default function TasksPage() {
   // Show empty state if no workspaces exist
   if (!currentWorkspaceId && (!workspaces || workspaces.length === 0)) {
     return (
-      <div className="p-8 min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
-        <BrutalCard variant="glitch" className="max-w-md w-full p-8 text-center border-dashed border-[var(--theme-error)]">
-          <HiOutlineClipboardList className="w-16 h-16 mx-auto mb-6 text-[var(--theme-error)]" />
-          <h1 className="text-2xl font-bold uppercase mb-4 tracking-tight text-[var(--theme-error)]">NO_WORKSPACES_DETECTED</h1>
-          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 mb-8">
-            SYSTEM_HALTED: Create a workspace to initialize task matrix.
+      <div className="p-4 min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="border-2 border-dashed border-[#EF4444]/40 p-8 text-center max-w-md w-full">
+          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[#2E2E35] text-[#6B7280]">
+            <HiOutlineClipboardList className="w-5 h-5" />
+          </div>
+          <h1 className="text-sm font-bold uppercase mb-1 text-[#F9FAFB]">No Workspaces</h1>
+          <p className="font-mono text-xs text-[#6B7280]">
+            Create a workspace to initialize task tracking.
           </p>
-        </BrutalCard>
+        </div>
       </div>
     )
   }
 
   if (projects === undefined) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[var(--theme-background)]">
+      <div className="flex items-center justify-center h-screen bg-[#050505]">
         <LoadingSpinner size="lg" />
       </div>
     )
@@ -259,14 +242,16 @@ export default function TasksPage() {
 
   if (projects.length === 0) {
     return (
-      <div className="p-8 min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
-        <BrutalCard variant="default" className="max-w-md w-full p-8 text-center border-dashed">
-          <HiOutlineClipboardList className="w-16 h-16 mx-auto mb-6 text-[var(--theme-foreground)]/20" />
-          <h1 className="text-xl font-bold uppercase mb-4 tracking-tight">NO_PROJECTS_FOUND</h1>
-          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 mb-8">
-            Initialize a project to enable task tracking protocols.
+      <div className="p-4 min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="border-2 border-dashed border-[#2E2E35] p-8 text-center max-w-md w-full">
+          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[#2E2E35] text-[#6B7280]">
+            <HiOutlineClipboardList className="w-5 h-5" />
+          </div>
+          <h1 className="text-sm font-bold uppercase mb-1 text-[#F9FAFB]">No Projects Found</h1>
+          <p className="font-mono text-xs text-[#6B7280] mb-4 max-w-sm mx-auto">
+            Create a project in your workspace to start tracking tasks.
           </p>
-        </BrutalCard>
+        </div>
       </div>
     )
   }
@@ -278,41 +263,26 @@ export default function TasksPage() {
   const currentWorkspace = workspaces?.find(w => w && w._id === currentWorkspaceId)
 
   return (
-    <div className="flex flex-col h-screen bg-[var(--theme-background)] overflow-hidden">
-      <div className="p-6 pb-0 flex-none z-10">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8 border-b-2 border-[var(--theme-border)] pb-6 gap-6">
-          <div>
-            <div className="flex items-center gap-4 mb-2">
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight flex items-center gap-4">
-                <HiOutlineClipboardList className="w-8 h-8 md:w-10 md:h-10 text-[var(--theme-primary)]" />
-                TASK_MATRIX
-              </h1>
-            </div>
-            <div className="flex items-center gap-2 font-mono text-sm text-[var(--theme-foreground)]/60 pl-2">
-              {!hasWorkspaceContext && (
-                <>
-                  <span className="uppercase">{currentWorkspace?.name || 'WORKSPACE'}</span>
-                  <span className="text-[var(--theme-primary)]">/</span>
-                </>
-              )}
-              <span className="uppercase tracking-wide">OPERATIONAL_TASKS</span>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-4">
-            {/* Show workspace selector for global routes */}
-            {!hasWorkspaceContext && (
-              <div className="hidden md:block">
-                <WorkspaceSelector size="sm" showLabel={false} />
-              </div>
+    <div className="flex flex-col h-screen bg-[#050505] overflow-hidden">
+      {/* Single compact toolbar */}
+      <div className="flex-none z-10 border-b-2 border-[#2E2E35] bg-[#0A0A0A]">
+        {/* Row 1: breadcrumb + project selector + view toggles */}
+        <div className="flex items-center justify-between px-3 py-1.5 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <HiOutlineClipboardList className="w-4 h-4 text-[#6366F1] shrink-0" />
+            <span className="font-mono text-xs font-bold uppercase text-[#F9FAFB] shrink-0">TASKS</span>
+            {!hasWorkspaceContext && currentWorkspace && (
+              <>
+                <span className="text-[#2E2E35] shrink-0">/</span>
+                <span className="font-mono text-[10px] uppercase text-[#6B7280] truncate">{currentWorkspace.name}</span>
+              </>
             )}
-
-            <div className="relative">
+            <span className="text-[#2E2E35] shrink-0">/</span>
+            <div className="relative shrink-0">
               <select
-                className="appearance-none pl-4 pr-10 py-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                         font-mono text-sm uppercase font-bold
-                         focus:border-[var(--theme-primary)] focus:outline-none transition-colors cursor-pointer min-w-[200px]"
+                className="appearance-none pl-2 pr-6 py-0.5 bg-transparent border border-[#2E2E35]
+                         font-mono text-[10px] uppercase font-bold text-[#F9FAFB]
+                         focus:border-[#6366F1] focus:outline-none transition-colors cursor-pointer max-w-[160px]"
                 value={selectedProjectId}
                 onChange={(e) => setSelectedProjectId(e.target.value)}
               >
@@ -322,100 +292,116 @@ export default function TasksPage() {
                   </option>
                 ))}
               </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-[var(--theme-foreground)]" />
+              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[4px] border-t-[#6B7280]" />
               </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {!hasWorkspaceContext && (
+              <div className="hidden md:block">
+                <WorkspaceSelector size="sm" showLabel={false} />
+              </div>
+            )}
+
+            {/* View Mode Toggles */}
+            <div className="flex border border-[#2E2E35]">
+              {[
+                { id: 'board', icon: HiOutlineViewBoards, label: 'BOARD' },
+                { id: 'list', icon: HiOutlineViewList, label: 'LIST' },
+                { id: 'calendar', icon: HiOutlineCalendar, label: 'CAL' },
+                { id: 'table', icon: HiOutlineViewGrid, label: 'GRID' }
+              ].map((mode) => (
+                <button
+                  key={mode.id}
+                  className={clsx(
+                    "w-7 h-7 flex items-center justify-center transition-all",
+                    "border-r border-[#2E2E35] last:border-r-0",
+                    viewMode === mode.id
+                      ? "bg-[#6366F1] text-white"
+                      : "text-[#6B7280] hover:text-[#F9FAFB] hover:bg-[#111111]"
+                  )}
+                  onClick={() => setViewMode(mode.id as any)}
+                  title={`${mode.label} View`}
+                >
+                  <mode.icon className="w-3.5 h-3.5" />
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Controls Bar */}
-        <BrutalCard className="mb-6 p-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            {/* Search */}
-            <div className="relative flex-1 md:flex-none">
-              <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--theme-foreground)]/40" />
-              <input
-                type="text"
-                placeholder="QUERY_TASKS..."
-                className="w-full md:w-[240px] pl-9 pr-4 py-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                         font-mono text-xs uppercase placeholder:text-[var(--theme-foreground)]/40
-                         focus:border-[var(--theme-primary)] focus:outline-none transition-colors"
-                value={quickSearch}
-                onChange={(e) => setQuickSearch(e.target.value)}
-              />
-            </div>
-
-            {/* Filter Button */}
-            <BrutalButton
-              variant={getActiveFilterCount() > 0 ? "primary" : "secondary"}
-              size="sm"
-              onClick={() => setIsFiltersOpen(true)}
-              title="Filter Tasks"
-              className="flex items-center gap-2"
-            >
-              <HiOutlineFilter className="w-4 h-4" />
-              <span className="hidden sm:inline">FILTERS</span>
-              {getActiveFilterCount() > 0 && (
-                <span className="bg-[var(--theme-background)] text-[var(--theme-primary)] text-[10px] font-bold px-1.5 py-0.5 ml-1">
-                  {getActiveFilterCount()}
-                </span>
-              )}
-            </BrutalButton>
-          </div>
-
-          {/* View Mode Toggles */}
-          <div className="flex bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
-            {[
-              { id: 'board', icon: HiOutlineViewBoards, label: 'BOARD' },
-              { id: 'list', icon: HiOutlineViewList, label: 'LIST' },
-              { id: 'calendar', icon: HiOutlineCalendar, label: 'CAL' },
-              { id: 'table', icon: HiOutlineViewGrid, label: 'GRID' }
-            ].map((mode) => (
-              <button
-                key={mode.id}
-                className={clsx(
-                  "w-10 h-10 flex items-center justify-center transition-all",
-                  "border-r-2 border-[var(--theme-border)] last:border-r-0",
-                  viewMode === mode.id
-                    ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
-                    : "text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
-                )}
-                onClick={() => setViewMode(mode.id as any)}
-                title={`${mode.label} View`}
-              >
-                <mode.icon className="w-5 h-5" />
-              </button>
-            ))}
-          </div>
-        </BrutalCard>
-
-        {/* Filter Presets */}
-        {currentWorkspaceId && (
-          <div className="mb-6">
-            <FilterPresets
-              workspaceId={currentWorkspaceId}
-              currentFilters={effectiveFilters}
-              onApplyPreset={handlePresetApply}
+        {/* Row 2: search + filter presets + filter button */}
+        <div className="flex items-center gap-2 px-3 py-1.5 border-t border-[#1F1F23]">
+          <div className="relative shrink-0">
+            <HiOutlineSearch className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#6B7280]" />
+            <input
+              type="text"
+              placeholder="SEARCH..."
+              className="w-[160px] pl-7 pr-2 py-1 bg-[#050505] border border-[#2E2E35]
+                       font-mono text-[10px] uppercase text-[#F9FAFB] placeholder:text-[#6B7280]
+                       focus:border-[#6366F1] focus:outline-none transition-colors"
+              value={quickSearch}
+              onChange={(e) => setQuickSearch(e.target.value)}
             />
           </div>
-        )}
+
+          <div className="h-4 w-px bg-[#2E2E35] shrink-0" />
+
+          {/* Inline filter presets */}
+          {currentWorkspaceId && (
+            <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
+              <FilterPresets
+                workspaceId={currentWorkspaceId}
+                currentFilters={effectiveFilters}
+                onApplyPreset={handlePresetApply}
+              />
+            </div>
+          )}
+
+          <div className="h-4 w-px bg-[#2E2E35] shrink-0" />
+
+          {/* Filter Button */}
+          <button
+            onClick={() => setIsFiltersOpen(true)}
+            title="Filter Tasks"
+            className={clsx(
+              "flex items-center gap-1.5 px-2 py-1 border font-mono text-[10px] uppercase font-semibold transition-colors shrink-0",
+              getActiveFilterCount() > 0
+                ? "bg-[#6366F1] border-[#4F46E5] text-white"
+                : "bg-transparent border-[#2E2E35] text-[#6B7280] hover:border-[#6366F1] hover:text-[#F9FAFB]"
+            )}
+          >
+            <HiOutlineFilter className="w-3 h-3" />
+            <span className="hidden sm:inline">FILTER</span>
+            {getActiveFilterCount() > 0 && (
+              <span className="bg-[#050505] text-[#6366F1] text-[9px] font-bold px-1 py-px">
+                {getActiveFilterCount()}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Task Content - Flexible Area */}
-      <div className="flex-1 min-h-0 px-6 pb-6 overflow-hidden">
+      {/* Task Content - Maximum area */}
+      <div className="flex-1 min-h-0 p-2 overflow-hidden">
         {tasks === undefined ? (
           <div className="flex items-center justify-center h-full">
             <LoadingSpinner size="lg" />
           </div>
         ) : tasks.length === 0 ? (
-          <BrutalCard variant="default" className="p-12 text-center border-dashed h-full flex flex-col items-center justify-center">
-            <HiOutlineClipboardList className="w-16 h-16 mx-auto mb-6 text-[var(--theme-foreground)]/20" />
-            <h2 className="text-xl font-bold uppercase mb-2">NO_TASKS_DETECTED</h2>
-            <p className="font-mono text-sm text-[var(--theme-foreground)]/60">
-              {hasActiveFilters ? "ADJUST_FILTERS_TO_EXPAND_SEARCH_MATRIX" : "INITIATE_NEW_TASK_SEQUENCE"}
+          <div className="border-2 border-dashed border-[#2E2E35] p-6 text-center h-full flex flex-col items-center justify-center">
+            <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center border-2 border-[#2E2E35] text-[#6B7280]">
+              <HiOutlineClipboardList className="w-4 h-4" />
+            </div>
+            <h2 className="text-sm font-bold text-[#F9FAFB] mb-0.5">
+              {hasActiveFilters ? "No Matching Tasks" : "No Tasks Yet"}
+            </h2>
+            <p className="font-mono text-[10px] text-[#6B7280] max-w-sm mx-auto">
+              {hasActiveFilters ? "Adjust your filters to expand the search." : "Create your first task to get started."}
             </p>
-          </BrutalCard>
+          </div>
         ) : (
           <div className="h-full">
             {viewMode === 'board' ? (
@@ -425,7 +411,7 @@ export default function TasksPage() {
                 onTaskUpdate={() => { }}
               />
             ) : viewMode === 'list' ? (
-              <div className="h-full overflow-y-auto pr-2 custom-scrollbar">
+              <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
                 <TaskList
                   tasks={tasks}
                   projectId={selectedProjectId}
@@ -433,7 +419,7 @@ export default function TasksPage() {
                 />
               </div>
             ) : viewMode === 'calendar' ? (
-              <div className="h-full overflow-y-auto pr-2 custom-scrollbar">
+              <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
                 <TaskCalendar
                   tasks={tasks}
                   projectId={selectedProjectId}
@@ -441,7 +427,7 @@ export default function TasksPage() {
                 />
               </div>
             ) : (
-              <div className="h-full overflow-y-auto pr-2 custom-scrollbar">
+              <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
                 <TaskTable
                   tasks={tasks}
                   projectId={selectedProjectId}

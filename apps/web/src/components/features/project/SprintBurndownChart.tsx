@@ -99,7 +99,7 @@ export default function SprintBurndownChart({ sprint, tasks, showPrediction = tr
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-8px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[4px]">
           <p className="text-brutal-xs font-bold">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-brutal-xs" style={{ color: entry.color }}>
@@ -122,14 +122,14 @@ export default function SprintBurndownChart({ sprint, tasks, showPrediction = tr
   
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-16px">
+      <div className="flex items-center justify-between mb-[8px]">
         <h3 className="text-brutal-md font-bold uppercase">Sprint Burndown</h3>
-        <div className="flex items-center gap-16px">
+        <div className="flex items-center gap-[8px]">
           <span className="text-brutal-xs font-mono">
             {Math.round(currentActual)} / {sprint.totalPoints} pts remaining
           </span>
           <span 
-            className="text-brutal-xs font-mono px-8px py-4px border"
+            className="text-brutal-xs font-mono px-[4px] py-4px border"
             style={{ 
               borderColor: healthColor,
               backgroundColor: healthColor + '20',
@@ -220,17 +220,17 @@ export default function SprintBurndownChart({ sprint, tasks, showPrediction = tr
       </ResponsiveContainer>
       
       {/* Legend and insights */}
-      <div className="mt-16px flex items-center gap-24px text-brutal-xs">
-        <div className="flex items-center gap-8px">
+      <div className="mt-[8px] flex items-center gap-[12px] text-brutal-xs">
+        <div className="flex items-center gap-[4px]">
           <div className="w-16px h-2px bg-[var(--theme-border)]" style={{ borderStyle: 'dashed' }} />
           <span>Ideal Pace</span>
         </div>
-        <div className="flex items-center gap-8px">
+        <div className="flex items-center gap-[4px]">
           <div className="w-16px h-3px bg-[var(--theme-primary)]" />
           <span>Actual Progress</span>
         </div>
         {showPrediction && (
-          <div className="flex items-center gap-8px">
+          <div className="flex items-center gap-[4px]">
             <div className="w-16px h-2px bg-[var(--theme-info)]" style={{ borderStyle: 'dashed' }} />
             <span>Predicted</span>
           </div>

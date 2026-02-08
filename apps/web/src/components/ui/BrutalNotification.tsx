@@ -57,14 +57,14 @@ export default function BrutalNotification({
       exit={{ opacity: 0, x: 100, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
       className={clsx(
-        'border-2 shadow-brutal-lg p-16px min-w-[300px] max-w-[500px]',
+        'border-2 shadow-brutal-lg p-[10px] min-w-[300px] max-w-[500px]',
         'bg-[var(--theme-background)]',
         colorScheme.border
       )}
     >
-      <div className="flex items-start gap-12px">
-        <div className={clsx('p-8px', colorScheme.bg)}>
-          <Icon className={clsx('w-24px h-24px', colorScheme.icon)} />
+      <div className="flex items-start gap-[6px]">
+        <div className={clsx('p-[8px]', colorScheme.bg)}>
+          <Icon className={clsx('w-4 h-4', colorScheme.icon)} />
         </div>
         
         <div className="flex-1">
@@ -79,7 +79,7 @@ export default function BrutalNotification({
             onClick={onClose}
             className="p-4px hover:bg-[var(--theme-background-secondary)] transition-colors text-[var(--theme-foreground)]"
           >
-            <HiOutlineXCircle className="w-20px h-20px" />
+            <HiOutlineXCircle className="w-5 h-5" />
           </button>
         )}
       </div>

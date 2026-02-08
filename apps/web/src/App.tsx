@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useAuth } from '@clerk/clerk-react'
 import { Toaster } from 'react-hot-toast'
 import React, { lazy, Suspense, useState, useEffect, useMemo } from 'react'
-import { useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 
 // Helper to detect if we're in a production environment
@@ -16,9 +16,11 @@ function isProductionEnvironment(): boolean {
 }
 import ErrorBoundary from './components/common/ErrorBoundary'
 import { OptionalConvexProvider } from './providers/OptionalConvexProvider'
+import { PostHogProvider } from './providers/PostHogProvider'
 import { ShortcutProvider } from './contexts/ShortcutContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import DashboardLayout from './components/layout/DashboardLayout'
+import RequireAuth from './components/common/RequireAuth'
 
 // Eager imports - public pages that need fast initial load
 import LandingPage from './pages/LandingPage'
@@ -56,12 +58,16 @@ import ShortcutHelp from './components/shortcuts/ShortcutHelp'
 import OnboardingFlow from './components/onboarding/OnboardingFlow'
 import BrutalistLoader from './components/common/BrutalistLoader'
 import PageTransition from './components/common/PageTransition'
+import FeedbackWidget from './components/features/feedback/FeedbackWidget'
+import NpsSurveyModal from './components/features/nps/NpsSurveyModal'
 
 // Create a wrapper component that handles authentication state
 function AuthenticatedAppContent() {
   const { isLoading, isFirstTimeUser, user } = useEnsureUser()
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showNps, setShowNps] = useState(false)
   const updatePreferences = useMutation(api.auth.users.updateUserPreferences)
+  const npsCompleted = useQuery(api.nps.hasCompletedNps)
 
   // Check session storage to see if we've already shown/completed onboarding this session
   const getOnboardingDismissed = () => {
@@ -103,6 +109,16 @@ function AuthenticatedAppContent() {
     }
   }
 
+  // NPS survey trigger: show 7 days after account creation
+  useEffect(() => {
+    if (!user || npsCompleted === undefined) return
+    if (npsCompleted) return
+    const sevenDays = 7 * 24 * 60 * 60 * 1000
+    if (user.createdAt < Date.now() - sevenDays) {
+      setShowNps(true)
+    }
+  }, [user, npsCompleted])
+
   // Memoize environment check to avoid re-calculating on every render
   const isProduction = useMemo(() => isProductionEnvironment(), [])
 
@@ -130,6 +146,7 @@ function AuthenticatedAppContent() {
           onComplete={handleOnboardingComplete}
         />
       )}
+      {showNps && <NpsSurveyModal onClose={() => setShowNps(false)} />}
       <AppRoutes isAuthenticated={true} />
     </>
   )
@@ -193,8 +210,8 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
         {/* CLI Authentication */}
         <Route path="/cli-auth" element={<CLIAuthPage />} />
 
-        {/* Protected routes - show without authentication requirement */}
-        <Route path="/" element={<DashboardLayout />}>
+        {/* Protected routes - require authentication */}
+        <Route path="/" element={<RequireAuth><DashboardLayout /></RequireAuth>}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="profile" element={<MyProfilePage />} />
           <Route path="workspaces" element={<WorkspacesPage />} />
@@ -213,6 +230,8 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
         {/* 404 Page - Catch all unmatched routes */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+
+      {isAuthenticated && <FeedbackWidget />}
 
       <Toaster
         position="bottom-right"
@@ -254,9 +273,11 @@ function App() {
         <Router>
           <PageTransition />
           <ThemeProvider>
-            <ShortcutProvider>
-              <AppContent />
-            </ShortcutProvider>
+            <PostHogProvider>
+              <ShortcutProvider>
+                <AppContent />
+              </ShortcutProvider>
+            </PostHogProvider>
           </ThemeProvider>
         </Router>
       </OptionalConvexProvider>

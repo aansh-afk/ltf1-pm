@@ -90,16 +90,16 @@ export default function CreateTaskModal({
       title="Create New Task"
       size="xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-24px">
+      <form onSubmit={handleSubmit} className="space-y-[12px]">
         {/* TITLE */}
         <div>
-          <label className="block text-brutal-sm mb-8px">
+          <label className="block text-brutal-sm mb-[4px]">
             TITLE
           </label>
           <input
             type="text"
             placeholder="TASK TITLE"
-            className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+            className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-md uppercase placeholder:text-neutral-600
                      focus:border-primary-brutalist focus:outline-none transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed"
@@ -112,12 +112,12 @@ export default function CreateTaskModal({
 
         {/* DESCRIPTION */}
         <div>
-          <label className="block text-brutal-sm mb-8px">
+          <label className="block text-brutal-sm mb-[4px]">
             DESCRIPTION (OPTIONAL)
           </label>
           <textarea
             placeholder="ADD A DESCRIPTION..."
-            className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+            className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-md placeholder:text-neutral-600
                      focus:border-primary-brutalist focus:outline-none transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed resize-none"
@@ -129,13 +129,13 @@ export default function CreateTaskModal({
         </div>
 
         {/* TYPE & PRIORITY */}
-        <div className="grid grid-cols-2 gap-16px">
+        <div className="grid grid-cols-2 gap-[8px]">
           <div>
-            <label className="block text-brutal-sm mb-8px">
+            <label className="block text-brutal-sm mb-[4px]">
               TYPE
             </label>
             <select
-              className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-md uppercase
                        focus:border-primary-brutalist focus:outline-none transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
@@ -152,11 +152,11 @@ export default function CreateTaskModal({
           </div>
 
           <div>
-            <label className="block text-brutal-sm mb-8px">
+            <label className="block text-brutal-sm mb-[4px]">
               PRIORITY
             </label>
             <select
-              className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-md uppercase
                        focus:border-primary-brutalist focus:outline-none transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
@@ -173,14 +173,14 @@ export default function CreateTaskModal({
         </div>
 
         {/* DATES */}
-        <div className="grid grid-cols-2 gap-16px">
+        <div className="grid grid-cols-2 gap-[8px]">
           <div>
-            <label className="block text-brutal-sm mb-8px">
+            <label className="block text-brutal-sm mb-[4px]">
               START DATE (OPTIONAL)
             </label>
             <input
               type="date"
-              className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-md
                        focus:border-primary-brutalist focus:outline-none transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
@@ -191,12 +191,12 @@ export default function CreateTaskModal({
           </div>
 
           <div>
-            <label className="block text-brutal-sm mb-8px">
+            <label className="block text-brutal-sm mb-[4px]">
               DUE DATE (OPTIONAL)
             </label>
             <input
               type="date"
-              className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-md
                        focus:border-primary-brutalist focus:outline-none transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
@@ -208,7 +208,7 @@ export default function CreateTaskModal({
         </div>
 
         {/* ASSIGNEE & ESTIMATE */}
-        <div className="space-y-16px">
+        <div className="space-y-[8px]">
           <div className="flex items-center justify-between">
             <label className="block text-brutal-sm">
               TASK ASSIGNMENT
@@ -216,7 +216,7 @@ export default function CreateTaskModal({
             <button
               type="button"
               onClick={() => setUseSmartAssignment(!useSmartAssignment)}
-              className="flex items-center gap-8px font-mono text-brutal-xs text-primary-brutalist hover:text-brutal-info transition-colors"
+              className="flex items-center gap-[4px] font-mono text-brutal-xs text-primary-brutalist hover:text-brutal-info transition-colors"
             >
               {useSmartAssignment ? (
                 <>
@@ -244,13 +244,13 @@ export default function CreateTaskModal({
                 mode="compact"
               />
               <div>
-                <label className="block text-brutal-sm mb-8px">
+                <label className="block text-brutal-sm mb-[4px]">
                   ESTIMATE (HOURS)
                 </label>
                 <input
                   type="number"
                   placeholder="0"
-                  className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+                  className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                            font-mono text-brutal-md placeholder:text-neutral-600
                            focus:border-primary-brutalist focus:outline-none transition-colors
                            disabled:opacity-50 disabled:cursor-not-allowed"
@@ -263,9 +263,9 @@ export default function CreateTaskModal({
               </div>
             </>
           ) : (
-            <div className="grid grid-cols-2 gap-16px">
+            <div className="grid grid-cols-2 gap-[8px]">
               <div>
-                <label className="block text-brutal-sm mb-8px">
+                <label className="block text-brutal-sm mb-[4px]">
                   ASSIGNEES (OPTIONAL)
                 </label>
                 <MultiSelect
@@ -282,13 +282,13 @@ export default function CreateTaskModal({
               </div>
 
               <div>
-                <label className="block text-brutal-sm mb-8px">
+                <label className="block text-brutal-sm mb-[4px]">
                   ESTIMATE (HOURS)
                 </label>
                 <input
                   type="number"
                   placeholder="0"
-                  className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+                  className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                            font-mono text-brutal-md placeholder:text-neutral-600
                            focus:border-primary-brutalist focus:outline-none transition-colors
                            disabled:opacity-50 disabled:cursor-not-allowed"
@@ -305,13 +305,13 @@ export default function CreateTaskModal({
 
         {/* LABELS */}
         <div>
-          <label className="block text-brutal-sm mb-8px">
+          <label className="block text-brutal-sm mb-[4px]">
             LABELS (COMMA-SEPARATED)
           </label>
           <input
             type="text"
             placeholder="FRONTEND, URGENT, REFACTOR"
-            className="w-full px-16px py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+            className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-md uppercase placeholder:text-neutral-600
                      focus:border-primary-brutalist focus:outline-none transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed"
@@ -322,10 +322,10 @@ export default function CreateTaskModal({
         </div>
 
         {/* ACTIONS */}
-        <div className="flex justify-end gap-16px pt-24px border-t-2 border-[var(--theme-border)]">
+        <div className="flex justify-end gap-[8px] pt-[12px] border-t-2 border-[var(--theme-border)]">
           <button 
             type="button" 
-            className="px-24px py-12px bg-transparent border-2 border-[var(--theme-border)] 
+            className="px-[12px] py-[8px] bg-transparent border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-md uppercase tracking-wider
                      hover:bg-basalt-border transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed"
@@ -336,11 +336,11 @@ export default function CreateTaskModal({
           </button>
           <button 
             type="submit" 
-            className="px-24px py-12px bg-primary-brutalist border-2 border-[var(--theme-border)] 
+            className="px-[12px] py-[8px] bg-primary-brutalist border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-md uppercase tracking-wider text-event-horizon
                      hover:bg-yellow-400 transition-colors shadow-brutal-sm
                      disabled:opacity-50 disabled:cursor-not-allowed
-                     flex items-center gap-8px"
+                     flex items-center gap-[4px]"
             disabled={isCreating}
           >
             {isCreating ? (

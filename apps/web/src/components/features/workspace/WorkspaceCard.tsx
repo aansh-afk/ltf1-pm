@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { HiOutlineUsers, HiOutlineFolder } from 'react-icons/hi'
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
-import BrutalBadge from '../../ui/BrutalBadge'
 
 interface WorkspaceCardProps {
   workspace: any
@@ -10,82 +9,58 @@ interface WorkspaceCardProps {
 }
 
 export default function WorkspaceCard({ workspace, index }: WorkspaceCardProps) {
-  const roleVariants = {
-    owner: 'error' as const,
-    admin: 'warning' as const,
-    member: 'info' as const,
-    viewer: 'default' as const,
+  const roleColors: Record<string, { text: string; border: string; bg: string }> = {
+    owner: { text: '#EF4444', border: 'border-[#EF4444]/30', bg: 'bg-[#EF4444]/10' },
+    admin: { text: '#F59E0B', border: 'border-[#F59E0B]/30', bg: 'bg-[#F59E0B]/10' },
+    member: { text: '#6366F1', border: 'border-[#6366F1]/30', bg: 'bg-[#6366F1]/10' },
+    viewer: { text: '#6B7280', border: 'border-[#2E2E35]', bg: 'bg-[#2E2E35]/30' },
   }
 
-  const roleBorders = {
-    owner: 'border-brutal-error',
-    admin: 'border-brutal-warning',
-    member: 'border-brutal-info',
-    viewer: 'border-[var(--theme-border)]',
-  }
+  const role = workspace.role as string || 'viewer'
+  const colors = roleColors[role] || roleColors.viewer
 
   return (
-    <Link 
+    <Link
       to={`/workspace/${workspace._id}`}
-      className={clsx(
-        'block bg-[var(--theme-background)] border-2 shadow-brutal',
-        'hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px]',
-        'transition-all duration-200 ease-brutal-out',
-        'relative overflow-hidden',
-        roleBorders[workspace.role as keyof typeof roleBorders]
-      )}
-      style={{ 
-        borderRadius: '0 !important',
-        animationDelay: `${index * 100}ms`
-      }}
+      className="block bg-[#111111] border-2 border-[#2E2E35] hover:border-[#6366F1] transition-all duration-200 group"
     >
-      {/* Role indicator bar */}
-      <div 
-        className={clsx(
-          'absolute top-0 left-0 h-full w-2px',
-          workspace.role === 'owner' && 'bg-brutal-error',
-          workspace.role === 'admin' && 'bg-brutal-warning',
-          workspace.role === 'member' && 'bg-brutal-info',
-          workspace.role === 'viewer' && 'bg-basalt-border'
-        )}
-      />
-      
-      <div className="p-32px">
-        <div className="flex items-start justify-between gap-16px mb-24px">
-          <div className="flex-1">
-            <h3 className="text-xl font-bold uppercase tracking-wider text-[var(--theme-foreground)] mb-16px">
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-[#F9FAFB] truncate">
               {workspace.name}
             </h3>
             {workspace.description && (
-              <p className="text-sm font-mono text-[var(--theme-foreground)]/70 line-clamp-2">
+              <p className="text-xs font-mono text-[#6B7280] line-clamp-1 mt-1">
                 {workspace.description}
               </p>
             )}
           </div>
-          <BrutalBadge variant={roleVariants[workspace.role as keyof typeof roleVariants]}>
+          <span
+            className={clsx(
+              'px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider border shrink-0',
+              colors.border, colors.bg
+            )}
+            style={{ color: colors.text }}
+          >
             {workspace.role}
-          </BrutalBadge>
+          </span>
         </div>
 
-        <div className="flex items-center gap-24px text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/60 pb-16px border-b-2 border-[var(--theme-border)]">
-          <div className="flex items-center gap-8px">
-            <HiOutlineUsers className="w-16px h-16px" />
-            <span>{workspace.memberCount} MEMBERS</span>
+        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-wider text-[#6B7280] py-2 border-t border-[#1F1F23]">
+          <div className="flex items-center gap-1">
+            <HiOutlineUsers className="w-3.5 h-3.5" />
+            <span>{workspace.memberCount} members</span>
           </div>
-          <div className="flex items-center gap-8px">
-            <HiOutlineFolder className="w-16px h-16px" />
-            <span>{workspace.projectCount || 0} PROJECTS</span>
+          <div className="flex items-center gap-1">
+            <HiOutlineFolder className="w-3.5 h-3.5" />
+            <span>{workspace.projectCount || 0} projects</span>
           </div>
         </div>
 
-        <div className="mt-16px text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/50">
-          CREATED {formatDistanceToNow(new Date(workspace.createdAt)).toUpperCase()} AGO
+        <div className="mt-1.5 text-[10px] font-mono text-[#6B7280]/60">
+          Created {formatDistanceToNow(new Date(workspace.createdAt))} ago
         </div>
-
-        {/* Active indicator */}
-        {workspace.isActive && (
-          <div className="absolute top-16px right-16px w-8px h-8px bg-brutal-success animate-brutal-pulse" />
-        )}
       </div>
     </Link>
   )

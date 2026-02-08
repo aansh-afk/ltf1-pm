@@ -118,22 +118,22 @@ export default function TimeTracker({
   }
 
   return (
-    <div className="flex items-center gap-12px p-16px bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
+    <div className="flex items-center gap-[6px] p-[10px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
       {/* Time Display */}
-      <div className="flex items-center gap-8px">
+      <div className="flex items-center gap-[4px]">
         <HiOutlineClock className="w-16px h-16px text-neutral-400" />
-        <span className="font-mono text-brutal-lg font-bold min-w-80px">
+        <span className="font-mono text-[14px] font-semibold font-bold min-w-80px">
           {formatTime(elapsedTime)}
         </span>
       </div>
 
       {/* Control Buttons */}
-      <div className="flex items-center gap-8px">
+      <div className="flex items-center gap-[4px]">
         {!localIsRunning ? (
           <button
             onClick={handleStart}
             className={clsx(
-              "p-8px border-2 border-[var(--theme-border)] transition-colors",
+              "p-[4px] border-2 border-[var(--theme-border)] transition-colors",
               "hover:bg-primary-brutalist hover:text-event-horizon",
               "flex items-center justify-center"
             )}
@@ -145,7 +145,7 @@ export default function TimeTracker({
           <button
             onClick={handlePause}
             className={clsx(
-              "p-8px border-2 border-[var(--theme-border)] transition-colors",
+              "p-[4px] border-2 border-[var(--theme-border)] transition-colors",
               "bg-warning-brutalist text-event-horizon",
               "hover:bg-warning-brutalist/80",
               "flex items-center justify-center"
@@ -160,7 +160,7 @@ export default function TimeTracker({
           <button
             onClick={handleStop}
             className={clsx(
-              "p-8px border-2 border-[var(--theme-border)] transition-colors",
+              "p-[4px] border-2 border-[var(--theme-border)] transition-colors",
               "hover:bg-danger-brutalist hover:text-[var(--theme-foreground)]",
               "flex items-center justify-center"
             )}

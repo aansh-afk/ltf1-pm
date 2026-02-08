@@ -33,10 +33,10 @@ const BrutalButton = forwardRef<HTMLButtonElement, BrutalButtonProps>(
     }
 
     const sizes = {
-      sm: 'px-4 py-2 text-xs',
-      md: 'px-6 py-3 text-sm',
-      lg: 'px-8 py-4 text-base',
-      xl: 'px-10 py-5 text-lg',
+      sm: 'px-3 py-1.5 text-[11px]',
+      md: 'px-4 py-2 text-xs',
+      lg: 'px-5 py-2.5 text-sm',
+      xl: 'px-6 py-3 text-sm',
     }
 
     const isDisabled = disabled || loading

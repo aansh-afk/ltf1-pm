@@ -52,7 +52,7 @@ export default function StaticMarqueeBackground({
         {Array.from({ length: 10 }, (_, i) => (
           <span
             key={i}
-            className="text-[#3A3A3A] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-32px select-none"
+            className="text-[#3A3A3A] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-[16px] select-none"
             style={{ opacity: 0.25 }}
           >
             {text}
@@ -62,7 +62,7 @@ export default function StaticMarqueeBackground({
 
       {/* Second row - moves at 0.2x speed with offset */}
       <div
-        className="flex whitespace-nowrap mt-56px"
+        className="flex whitespace-nowrap mt-[28px]"
         style={{
           transform: `translateX(-200px) translateY(${scrollY * 0.2}px)`
         }}
@@ -70,7 +70,7 @@ export default function StaticMarqueeBackground({
         {Array.from({ length: 10 }, (_, i) => (
           <span
             key={i}
-            className="text-[#333333] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-32px select-none"
+            className="text-[#333333] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-[16px] select-none"
             style={{ opacity: 0.20 }}
           >
             {text}
@@ -80,7 +80,7 @@ export default function StaticMarqueeBackground({
 
       {/* Third row - moves at 0.3x speed */}
       <div
-        className="flex whitespace-nowrap mt-56px"
+        className="flex whitespace-nowrap mt-[28px]"
         style={{
           transform: `translateX(-100px) translateY(${scrollY * 0.3}px)`
         }}
@@ -88,7 +88,7 @@ export default function StaticMarqueeBackground({
         {Array.from({ length: 10 }, (_, i) => (
           <span
             key={i}
-            className="text-[#2F2F2F] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-32px select-none"
+            className="text-[#2F2F2F] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-[16px] select-none"
             style={{ opacity: 0.15 }}
           >
             {text}
@@ -98,7 +98,7 @@ export default function StaticMarqueeBackground({
 
       {/* Fourth row - moves at 0.15x speed */}
       <div
-        className="flex whitespace-nowrap mt-56px"
+        className="flex whitespace-nowrap mt-[28px]"
         style={{
           transform: `translateX(-300px) translateY(${scrollY * 0.15}px)`
         }}
@@ -106,7 +106,7 @@ export default function StaticMarqueeBackground({
         {Array.from({ length: 10 }, (_, i) => (
           <span
             key={i}
-            className="text-[#2A2A2A] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-32px select-none"
+            className="text-[#2A2A2A] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-[16px] select-none"
             style={{ opacity: 0.10 }}
           >
             {text}
@@ -116,7 +116,7 @@ export default function StaticMarqueeBackground({
 
       {/* Fifth row - moves at 0.25x speed */}
       <div
-        className="flex whitespace-nowrap mt-56px"
+        className="flex whitespace-nowrap mt-[28px]"
         style={{
           transform: `translateX(-50px) translateY(${scrollY * 0.25}px)`
         }}
@@ -124,7 +124,7 @@ export default function StaticMarqueeBackground({
         {Array.from({ length: 10 }, (_, i) => (
           <span
             key={i}
-            className="text-[#252525] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-32px select-none"
+            className="text-[#252525] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-[16px] select-none"
             style={{ opacity: 0.08 }}
           >
             {text}

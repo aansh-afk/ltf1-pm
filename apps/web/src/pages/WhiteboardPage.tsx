@@ -5,21 +5,15 @@ import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import WhiteboardCanvas from '@/components/features/whiteboard/WhiteboardCanvasKonva'
 import BrutalistLoader from '@/components/common/BrutalistLoader'
-import BrutalCard from '@/components/ui/BrutalCard'
 import BrutalButton from '@/components/ui/BrutalButton'
-import BrutalBadge from '@/components/ui/BrutalBadge'
 import {
   HiOutlinePlus,
-  HiOutlineBriefcase,
-  HiOutlineFolder,
   HiOutlineShare,
   HiOutlineChatAlt2,
   HiOutlinePencil,
-  HiOutlineTrash,
-  HiOutlineDuplicate
 } from 'react-icons/hi'
 import toast from 'react-hot-toast'
-import clsx from 'clsx'
+import { motion } from 'framer-motion'
 
 export default function WhiteboardPage() {
   const { workspaceId, projectId } = useParams<{ workspaceId: string; projectId?: string }>()
@@ -82,46 +76,49 @@ export default function WhiteboardPage() {
 
   if (!currentWorkspace) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[var(--theme-background)]">
+      <div className="flex items-center justify-center min-h-screen bg-[#050505]">
         <BrutalistLoader />
       </div>
     )
   }
 
+  // ── Active whiteboard view ──
   if (activeWhiteboardId) {
     return (
-      <div className="h-screen flex flex-col bg-[var(--theme-background)]">
+      <div className="h-screen flex flex-col bg-[#050505]">
         {/* Whiteboard Header */}
-        <div className="h-16 border-b-2 border-[var(--theme-border)] flex items-center justify-between px-6 bg-[var(--theme-background)]">
-          <div className="flex items-center gap-4">
+        <div className="h-12 border-b-2 border-[#2E2E35] flex items-center justify-between px-4 bg-[#0A0A0A]">
+          <div className="flex items-center gap-3">
             <BrutalButton
               variant="ghost"
+              size="sm"
               onClick={() => setActiveWhiteboardId(null)}
-              className="font-mono text-xs uppercase"
             >
               ← Back
             </BrutalButton>
-            <div className="h-8 w-[2px] bg-[var(--theme-border)]"></div>
-            <h2 className="font-mono text-lg font-bold uppercase">
+            <div className="h-6 w-px bg-[#2E2E35]" />
+            <h2 className="font-mono text-sm font-bold uppercase text-[#F9FAFB]">
               {whiteboards?.find(w => w._id === activeWhiteboardId)?.name || 'Whiteboard'}
             </h2>
-            <BrutalBadge variant="default">LIVE</BrutalBadge>
+            <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/30">
+              LIVE
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
             <BrutalButton
               variant="secondary"
+              size="sm"
               onClick={handleShare}
               className="flex items-center gap-2"
             >
               <HiOutlineShare className="w-4 h-4" />
               Share
             </BrutalButton>
-            {/* Placeholder for future chat integration */}
             <BrutalButton
               variant="ghost"
+              size="sm"
               onClick={() => toast('Team chat coming soon', { icon: '💬' })}
-              className="flex items-center gap-2"
             >
               <HiOutlineChatAlt2 className="w-4 h-4" />
             </BrutalButton>
@@ -141,26 +138,34 @@ export default function WhiteboardPage() {
     )
   }
 
+  // ── Listing view ──
   return (
-    <div className="p-6 min-h-screen bg-[var(--theme-background)]">
+    <div className="p-4">
       {/* Page Header */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mb-4 flex items-start justify-between"
+      >
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 flex items-center gap-3">
-            <HiOutlinePencil className="w-8 h-8 md:w-10 md:h-10 text-[var(--theme-primary)]" />
-            WHITEBOARD
+          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6366F1] inline-block mb-1.5">
+            Canvas
+          </span>
+          <h1 className="text-xl font-bold tracking-tight text-[#F9FAFB]">
+            Whiteboard
           </h1>
-          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 uppercase tracking-wide">
-            Collaborate visually • {currentWorkspace.name}
+          <p className="text-xs text-[#6B7280] mt-1 font-mono">
+            Collaborate visually · {currentWorkspace.name}
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           {workspaces && workspaces.length > 1 && (
             <select
               value={currentWorkspace._id}
               onChange={(e) => setSelectedWorkspaceId(e.target.value as Id<"workspaces">)}
-              className="px-4 py-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-xs uppercase font-bold focus:border-[var(--theme-primary)] focus:outline-none cursor-pointer"
+              className="px-3 py-1.5 bg-[#111111] border-2 border-[#2E2E35] font-mono text-xs text-[#9CA3AF] focus:border-[#6366F1] focus:outline-none"
             >
               {workspaces.map(workspace => (
                 <option key={workspace._id} value={workspace._id}>
@@ -173,98 +178,88 @@ export default function WhiteboardPage() {
           <BrutalButton
             onClick={handleCreateWhiteboard}
             variant="primary"
+            size="sm"
             disabled={isCreating}
             className="flex items-center gap-2"
           >
             <HiOutlinePlus className="w-4 h-4" />
-            {isCreating ? 'CREATING...' : 'NEW WHITEBOARD'}
+            {isCreating ? 'Creating...' : 'New Whiteboard'}
           </BrutalButton>
         </div>
-      </div>
+      </motion.div>
 
       {/* Whiteboard Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {whiteboards?.map(whiteboard => {
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {whiteboards?.map((whiteboard, i) => {
           const project = whiteboard.projectId
             ? projects?.find(p => p._id === whiteboard.projectId)
             : null
 
           return (
-            <BrutalCard
+            <motion.div
               key={whiteboard._id}
-              variant="default"
-              className="group cursor-pointer hover:border-[var(--theme-primary)] transition-all relative overflow-hidden"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: i * 0.06 }}
               onClick={() => setActiveWhiteboardId(whiteboard._id)}
+              className="group cursor-pointer bg-[#111111] border-2 border-[#2E2E35] hover:border-[#6366F1] transition-colors p-4"
             >
-              <div className="p-6">
-                {/* Context badges */}
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                  <BrutalBadge variant="outline" className="flex items-center gap-1">
-                    <HiOutlineBriefcase className="w-3 h-3" />
-                    {currentWorkspace?.name}
-                  </BrutalBadge>
-                  {project && (
-                    <BrutalBadge variant="outline" className="flex items-center gap-1">
-                      <HiOutlineFolder className="w-3 h-3" />
-                      {project.name}
-                    </BrutalBadge>
-                  )}
-                </div>
-
-                <h3 className="text-xl font-bold mb-2 group-hover:text-[var(--theme-primary)] transition-colors">
-                  {whiteboard.name}
-                </h3>
-                <p className="text-sm font-mono text-[var(--theme-foreground)]/60 mb-6 line-clamp-2">
-                  {whiteboard.description || 'No description'}
-                </p>
-
-                <div className="flex items-center justify-between text-xs font-mono text-[var(--theme-foreground)]/40 pt-4 border-t-2 border-[var(--theme-border)]">
-                  <span>{whiteboard.elements.length} ELEMENTS</span>
-                  <span>{whiteboard.collaborators.length} USERS</span>
-                </div>
+              {/* Context badges */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-[#6B7280] px-1.5 py-0.5 border border-[#2E2E35] bg-[#0A0A0A]">
+                  {currentWorkspace?.name}
+                </span>
+                {project && (
+                  <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-[#6B7280] px-1.5 py-0.5 border border-[#2E2E35] bg-[#0A0A0A]">
+                    {project.name}
+                  </span>
+                )}
               </div>
 
-              {/* Hover Actions Overlay */}
-              <div className="absolute inset-0 bg-[var(--theme-background)]/90 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 pointer-events-none group-hover:pointer-events-auto">
-                <BrutalButton variant="primary" onClick={(e) => {
-                  e.stopPropagation()
-                  setActiveWhiteboardId(whiteboard._id)
-                }}>
-                  OPEN
-                </BrutalButton>
-                <BrutalButton variant="secondary" onClick={(e) => {
-                  e.stopPropagation()
-                  // Duplicate logic would go here
-                  toast('Duplicate coming soon', { icon: '📋' })
-                }}>
-                  <HiOutlineDuplicate className="w-4 h-4" />
-                </BrutalButton>
+              <h3 className="text-sm font-bold text-[#F9FAFB] mb-1 group-hover:text-[#6366F1] transition-colors">
+                {whiteboard.name}
+              </h3>
+              <p className="text-xs text-[#6B7280] mb-3 line-clamp-2">
+                {whiteboard.description || 'No description'}
+              </p>
+
+              <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-[#6B7280] pt-3 border-t border-[#1F1F23]">
+                <span>{whiteboard.elements.length} elements</span>
+                <span>{whiteboard.collaborators.length} users</span>
               </div>
-            </BrutalCard>
+            </motion.div>
           )
         })}
 
         {/* Empty State */}
         {(!whiteboards || whiteboards.length === 0) && (
-          <div className="col-span-full py-12">
-            <BrutalCard className="p-12 text-center border-dashed flex flex-col items-center justify-center">
-              <div className="w-16 h-16 bg-[var(--theme-background-secondary)] rounded-full flex items-center justify-center mb-6">
-                <HiOutlinePencil className="w-8 h-8 text-[var(--theme-foreground)]/40" />
+          <div className="col-span-full">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="border-2 border-[#2E2E35] border-dashed p-8 text-center"
+            >
+              <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[#2E2E35] bg-[#0A0A0A] text-[#6B7280]">
+                <HiOutlinePencil className="w-5 h-5" />
               </div>
-              <h3 className="text-xl font-bold mb-2 uppercase">No Whiteboards Yet</h3>
-              <p className="text-[var(--theme-foreground)]/60 font-mono text-sm mb-8 max-w-md">
-                {currentWorkspace ? `Create your first whiteboard for ${currentWorkspace.name} to start collaborating visually.` : 'Select a workspace to get started'}
+              <h3 className="text-sm font-bold text-[#F9FAFB] mb-1">No Whiteboards Yet</h3>
+              <p className="text-xs text-[#6B7280] mb-4 max-w-sm mx-auto font-mono">
+                {currentWorkspace
+                  ? `Create your first whiteboard for ${currentWorkspace.name} to start collaborating visually.`
+                  : 'Select a workspace to get started'}
               </p>
               <BrutalButton
                 onClick={handleCreateWhiteboard}
                 variant="primary"
+                size="sm"
                 disabled={isCreating}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 mx-auto"
               >
                 <HiOutlinePlus className="w-4 h-4" />
-                {isCreating ? 'CREATING...' : 'CREATE FIRST WHITEBOARD'}
+                {isCreating ? 'Creating...' : 'Create First Whiteboard'}
               </BrutalButton>
-            </BrutalCard>
+            </motion.div>
           </div>
         )}
       </div>

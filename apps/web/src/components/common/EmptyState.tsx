@@ -13,15 +13,15 @@ interface EmptyStateProps {
 
 export default function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-64px text-center">
+    <div className="flex flex-col items-center justify-center p-[32px] text-center">
       {icon && (
-        <div className="mb-24px text-cathode-white/30 border-2 border-basalt-border p-24px">
+        <div className="mb-[12px] text-cathode-white/30 border-2 border-basalt-border p-[12px]">
           {icon}
         </div>
       )}
-      <h3 className="text-brutal-xl mb-16px uppercase">{title}</h3>
+      <h3 className="text-[14px] font-bold mb-[8px] uppercase">{title}</h3>
       {description && (
-        <p className="text-brutal-sm text-cathode-white/60 mb-32px max-w-md uppercase">{description}</p>
+        <p className="text-[12px] text-cathode-white/60 mb-[16px] max-w-md uppercase">{description}</p>
       )}
       {action && (
         <BrutalButton 

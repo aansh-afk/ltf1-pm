@@ -58,7 +58,7 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
       
       {/* Modal - Higher z-index to prevent conflicts */}
       <div 
-        className="fixed inset-0 flex items-center justify-center p-24px" 
+        className="fixed inset-0 flex items-center justify-center p-[16px]" 
         style={{ zIndex: 9999, pointerEvents: 'none' }}
       >
         <div 
@@ -66,27 +66,27 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
           style={{ pointerEvents: 'auto' }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-24px border-b-2 border-[var(--theme-border)]">
-            <h2 className="text-brutal-lg font-bold uppercase">USER PROFILE</h2>
+          <div className="flex items-center justify-between p-[16px] border-b-2 border-[var(--theme-border)]">
+            <h2 className="text-[14px] font-semibold font-bold uppercase">USER PROFILE</h2>
             <button
               onClick={onClose}
-              className="brutal-hover p-8px"
+              className="brutal-hover p-[8px]"
             >
-              <HiOutlineX className="w-20px h-20px" />
+              <HiOutlineX className="w-5 h-5" />
             </button>
           </div>
 
           <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
             {!user || !profile ? (
-              <div className="p-48px text-center">
+              <div className="p-[24px] text-center">
                 <LoadingSpinner size="lg" />
-                <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mt-16px">LOADING PROFILE...</p>
+                <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mt-[8px]">LOADING PROFILE...</p>
               </div>
             ) : (
               <>
                 {/* User Info Header */}
-                <div className="p-24px border-b-2 border-[var(--theme-border)]">
-                  <div className="flex items-start gap-24px">
+                <div className="p-[16px] border-b-2 border-[var(--theme-border)]">
+                  <div className="flex items-start gap-[16px]">
                     <BrutalAvatar
                       size="xl"
                       src={user.avatarUrl}
@@ -94,19 +94,19 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                     />
                     
                     <div className="flex-1">
-                      <div className="flex items-center gap-12px mb-8px">
-                        <h3 className="text-brutal-xl font-bold">{user.name || 'UNNAMED USER'}</h3>
+                      <div className="flex items-center gap-[6px] mb-[8px]">
+                        <h3 className="text-[16px] font-bold font-bold">{user.name || 'UNNAMED USER'}</h3>
                         {profile.isVerified && (
-                          <HiOutlineBadgeCheck className="w-20px h-20px text-brutal-success" />
+                          <HiOutlineBadgeCheck className="w-5 h-5 text-brutal-success" />
                         )}
                       </div>
                       
-                      <div className="flex items-center gap-8px mb-12px">
-                        <HiOutlineMail className="w-16px h-16px text-[var(--theme-foreground)]/60" />
+                      <div className="flex items-center gap-[8px] mb-[6px]">
+                        <HiOutlineMail className="w-4 h-4 text-[var(--theme-foreground)]/60" />
                         <span className="text-brutal-sm text-[var(--theme-foreground)]/80 font-mono">{user.email}</span>
                       </div>
 
-                      <div className="flex items-center gap-16px mb-16px">
+                      <div className="flex items-center gap-[8px] mb-[8px]">
                         <DeveloperStatusIndicator 
                           status={profile.status} 
                           lastSeen={profile.lastSeen}
@@ -114,7 +114,7 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                         />
                         {profile.location && (
                           <div className="flex items-center gap-4px text-brutal-xs text-[var(--theme-foreground)]/60">
-                            <HiOutlineLocationMarker className="w-12px h-12px" />
+                            <HiOutlineLocationMarker className="w-[12px] h-[12px]" />
                             <span>{profile.location}</span>
                           </div>
                         )}
@@ -139,14 +139,14 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
                         className={clsx(
-                          'flex items-center gap-8px px-24px py-16px text-brutal-sm font-mono uppercase',
+                          'flex items-center gap-[8px] px-[12px] py-[8px] text-brutal-sm font-mono uppercase',
                           'border-r-2 border-[var(--theme-border)] transition-colors',
                           activeTab === tab.id
                             ? 'bg-[var(--theme-background-secondary)] text-primary-brutalist'
                             : 'hover:bg-[var(--theme-background-secondary)]/50'
                         )}
                       >
-                        <tab.icon className="w-16px h-16px" />
+                        <tab.icon className="w-4 h-4" />
                         {tab.label}
                       </button>
                     ))}
@@ -154,14 +154,14 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                 </div>
 
                 {/* Tab Content */}
-                <div className="p-24px">
+                <div className="p-[16px]">
                   {activeTab === 'profile' && (
-                    <div className="space-y-24px">
+                    <div className="space-y-[12px]">
                       {/* Basic Info */}
                       <div>
-                        <h4 className="text-brutal-md font-bold mb-16px">BASIC INFO</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-16px">
-                          <div className="space-y-12px">
+                        <h4 className="text-brutal-md font-bold mb-[8px]">BASIC INFO</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-[8px]">
+                          <div className="space-y-[6px]">
                             <InfoItem
                               icon={HiOutlineCalendar}
                               label="JOINED"
@@ -175,7 +175,7 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                               />
                             )}
                           </div>
-                          <div className="space-y-12px">
+                          <div className="space-y-[6px]">
                             {profile.githubUsername && (
                               <InfoItem
                                 icon={HiOutlineLink}
@@ -199,9 +199,9 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                       {/* Work Preferences */}
                       {profile.workPreferences && (
                         <div>
-                          <h4 className="text-brutal-md font-bold mb-16px">WORK PREFERENCES</h4>
-                          <div className="bg-[var(--theme-background-secondary)] p-16px border-2 border-[var(--theme-border)]">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12px text-brutal-sm">
+                          <h4 className="text-brutal-md font-bold mb-[8px]">WORK PREFERENCES</h4>
+                          <div className="bg-[var(--theme-background-secondary)] p-[10px] border-2 border-[var(--theme-border)]">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-[6px] text-brutal-sm">
                               <div>
                                 <span className="text-[var(--theme-foreground)]/60">COMMUNICATION:</span>{' '}
                                 <span className="uppercase">{profile.workPreferences.communicationStyle}</span>
@@ -226,24 +226,24 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                   )}
 
                   {activeTab === 'activity' && (
-                    <div className="space-y-16px">
+                    <div className="space-y-[8px]">
                       <h4 className="text-brutal-md font-bold">RECENT ACTIVITY</h4>
-                      <div className="text-center py-32px text-[var(--theme-foreground)]/60">
-                        <HiOutlineClock className="w-48px h-48px mx-auto mb-16px" />
+                      <div className="text-center py-[16px] text-[var(--theme-foreground)]/60">
+                        <HiOutlineClock className="w-6 h-6 mx-auto mb-[8px]" />
                         <p>Activity tracking coming soon...</p>
                       </div>
                     </div>
                   )}
 
                   {activeTab === 'skills' && (
-                    <div className="space-y-24px">
+                    <div className="space-y-[12px]">
                       {/* Tech Stack */}
                       {profile.techStack && profile.techStack.length > 0 && (
                         <div>
-                          <h4 className="text-brutal-md font-bold mb-16px">TECH STACK</h4>
-                          <div className="flex flex-wrap gap-8px">
+                          <h4 className="text-brutal-md font-bold mb-[8px]">TECH STACK</h4>
+                          <div className="flex flex-wrap gap-[8px]">
                             {profile.techStack.map((tech: any) => (
-                              <div key={tech.name} className="flex items-center gap-8px">
+                              <div key={tech.name} className="flex items-center gap-[8px]">
                                 <BrutalBadge variant="info" size="sm">
                                   {tech.name}
                                 </BrutalBadge>
@@ -252,7 +252,7 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                                     <div
                                       key={level}
                                       className={clsx(
-                                        'w-8px h-8px',
+                                        'w-[8px] h-[8px]',
                                         level <= tech.level ? 'bg-primary-brutalist' : 'bg-basalt-border'
                                       )}
                                     />
@@ -267,8 +267,8 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                       {/* Expertise Areas */}
                       {profile.expertiseAreas && profile.expertiseAreas.length > 0 && (
                         <div>
-                          <h4 className="text-brutal-md font-bold mb-16px">EXPERTISE AREAS</h4>
-                          <div className="flex flex-wrap gap-8px">
+                          <h4 className="text-brutal-md font-bold mb-[8px]">EXPERTISE AREAS</h4>
+                          <div className="flex flex-wrap gap-[8px]">
                             {profile.expertiseAreas.map((area: string) => (
                               <BrutalBadge key={area} variant="success" size="sm">
                                 {area}
@@ -281,8 +281,8 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                       {/* GitHub Stats */}
                       {profile.githubStats && (
                         <div>
-                          <h4 className="text-brutal-md font-bold mb-16px">GITHUB STATS</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-16px">
+                          <h4 className="text-brutal-md font-bold mb-[8px]">GITHUB STATS</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-[8px]">
                             <StatCard
                               label="REPOS"
                               value={profile.githubStats.publicRepos}
@@ -323,8 +323,8 @@ function InfoItem({ icon: Icon, label, value, link }: {
   link?: string
 }) {
   const content = (
-    <div className="flex items-center gap-8px">
-      <Icon className="w-16px h-16px text-[var(--theme-foreground)]/60" />
+    <div className="flex items-center gap-[8px]">
+      <Icon className="w-4 h-4 text-[var(--theme-foreground)]/60" />
       <span className="text-brutal-xs text-[var(--theme-foreground)]/60">{label}:</span>
       <span className="text-brutal-sm font-mono">{value}</span>
     </div>
@@ -348,8 +348,8 @@ function InfoItem({ icon: Icon, label, value, link }: {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-16px text-center">
-      <div className="text-brutal-lg font-bold text-primary-brutalist">{value}</div>
+    <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-[10px] text-center">
+      <div className="text-[14px] font-semibold font-bold text-primary-brutalist">{value}</div>
       <div className="text-brutal-xs text-[var(--theme-foreground)]/60">{label}</div>
     </div>
   )

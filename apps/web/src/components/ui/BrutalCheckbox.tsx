@@ -59,7 +59,7 @@ const BrutalCheckbox = forwardRef<HTMLInputElement, BrutalCheckboxProps>(({
   return (
     <div className={clsx('flex', className)}>
       <label className={clsx(
-        'flex items-start gap-12px',
+        'flex items-start gap-[6px]',
         disabled && 'opacity-50 cursor-not-allowed',
         !disabled && 'cursor-pointer'
       )}>
@@ -127,7 +127,7 @@ const BrutalCheckbox = forwardRef<HTMLInputElement, BrutalCheckboxProps>(({
             )}
             {error && (
               <span className="text-brutal-xs text-[var(--theme-error)] flex items-center gap-4px">
-                <HiOutlineX className="w-12px h-12px" />
+                <HiOutlineX className="w-[12px] h-[12px]" />
                 {error}
               </span>
             )}

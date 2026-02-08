@@ -159,10 +159,10 @@ export default function ShortcutSettings() {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Header Controls */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-        <h2 className="text-xl font-bold uppercase">KEYBIND_CONFIG</h2>
+        <h2 className="text-lg font-bold uppercase">KEYBIND_CONFIG</h2>
         <div className="flex gap-2">
           <BrutalButton
             size="sm"
@@ -219,8 +219,8 @@ export default function ShortcutSettings() {
 
       {/* Import/Export Panel */}
       {showImportExport && (
-        <BrutalCard className="p-6 border-dashed">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <BrutalCard className="p-4 border-dashed">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <h3 className="font-bold uppercase text-sm mb-2">EXPORT_CONFIG</h3>
               <p className="text-xs text-[var(--theme-foreground)]/60 mb-4 font-mono">
@@ -276,10 +276,10 @@ export default function ShortcutSettings() {
       )}
 
       {/* Shortcuts List */}
-      <div className="space-y-6">
+      <div className="space-y-3">
         {groupedShortcuts.length === 0 ? (
-          <BrutalCard className="p-12 text-center border-dashed">
-            <HiOutlineTerminal className="w-12 h-12 mx-auto mb-4 text-[var(--theme-foreground)]/40" />
+          <BrutalCard className="p-8 text-center border-dashed">
+            <HiOutlineTerminal className="w-8 h-8 mx-auto mb-4 text-[var(--theme-foreground)]/40" />
             <p className="text-[var(--theme-foreground)]/60 font-mono text-sm uppercase">
               NO_BINDINGS_FOUND
             </p>
