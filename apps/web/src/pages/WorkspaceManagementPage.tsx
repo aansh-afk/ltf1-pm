@@ -387,18 +387,26 @@ function MembersTab({ workspaceId, members, workspace }: any) {
   const [isInviting, setIsInviting] = useState(false)
 
   const inviteToWorkspace = useMutation(api.workspaces.mutations.inviteToWorkspace)
+  const pendingInvitations = useQuery(
+    api.workspaces.queries.getPendingInvitations,
+    workspaceId ? { workspaceId: workspaceId as any } : 'skip'
+  )
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!inviteEmail.trim()) return
     setIsInviting(true)
     try {
-      await inviteToWorkspace({
+      const result = await inviteToWorkspace({
         workspaceId: workspaceId as any,
         email: inviteEmail.trim(),
         role: inviteRole,
       })
-      toast.success('Member invited successfully')
+      if (result.status === 'added') {
+        toast.success(`${result.email} has been added to the workspace`)
+      } else {
+        toast.success(`Invitation sent to ${result.email}. They will be added when they sign up.`)
+      }
       setInviteEmail('')
       setInviteRole('member')
       setShowInviteModal(false)
@@ -475,6 +483,57 @@ function MembersTab({ workspaceId, members, workspace }: any) {
         </div>
       </div>
 
+      {/* Pending Invitations */}
+      {pendingInvitations && pendingInvitations.length > 0 && (
+        <div className="mt-4">
+          <div className="mb-2">
+            <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6B7280]">
+              Pending Invitations
+            </span>
+          </div>
+          <div className="bg-[#111111] border-2 border-[#2E2E35] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b-2 border-[#2E2E35] bg-[#0A0A0A]">
+                    <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Email</th>
+                    <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Role</th>
+                    <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Invited By</th>
+                    <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingInvitations.map((inv: any) => (
+                    <tr key={inv._id} className="border-b border-[#2E2E35]/50 hover:bg-[#0A0A0A]/50 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 bg-[#F59E0B]/20 border border-[#F59E0B]/30 flex items-center justify-center font-bold text-[#F59E0B] text-[10px] font-mono">
+                            @
+                          </div>
+                          <span className="font-mono text-xs text-[#F9FAFB]">{inv.email}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider border border-[#F59E0B]/30 text-[#F59E0B] bg-[#F59E0B]/10">
+                          {inv.role.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-[#9CA3AF]">{inv.invitedByName}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5 font-mono text-[10px] text-[#F59E0B]">
+                          <span className="w-1.5 h-1.5 bg-[#F59E0B] animate-pulse" />
+                          Pending Sign-up
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Invite Member Modal */}
       <BrutalModal
         isOpen={showInviteModal}
@@ -494,7 +553,7 @@ function MembersTab({ workspaceId, members, workspace }: any) {
           {/* Info Banner */}
           <div className="bg-[#6366F1]/10 border-2 border-[#6366F1] p-[10px]">
             <p className="font-mono text-xs text-[#6366F1]">
-              <span className="font-bold">NOTE:</span> The user must already have an account. They will be added immediately upon invite.
+              <span className="font-bold">NOTE:</span> If the user has an account, they'll be added immediately. Otherwise, they'll be added automatically when they sign up.
             </p>
           </div>
 
