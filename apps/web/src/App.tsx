@@ -19,6 +19,7 @@ import { OptionalConvexProvider } from './providers/OptionalConvexProvider'
 import { ShortcutProvider } from './contexts/ShortcutContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import DashboardLayout from './components/layout/DashboardLayout'
+import RequireAuth from './components/common/RequireAuth'
 
 // Eager imports - public pages that need fast initial load
 import LandingPage from './pages/LandingPage'
@@ -193,8 +194,8 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
         {/* CLI Authentication */}
         <Route path="/cli-auth" element={<CLIAuthPage />} />
 
-        {/* Protected routes - show without authentication requirement */}
-        <Route path="/" element={<DashboardLayout />}>
+        {/* Protected routes - require authentication */}
+        <Route path="/" element={<RequireAuth><DashboardLayout /></RequireAuth>}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="profile" element={<MyProfilePage />} />
           <Route path="workspaces" element={<WorkspacesPage />} />

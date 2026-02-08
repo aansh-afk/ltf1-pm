@@ -8,6 +8,18 @@ const FALL_DURATION = 0.25
 const RISE_DURATION = 0.25
 const HOLD = 0.12
 
+// Workspace/app routes where the monolith transition should be skipped
+const APP_ROUTE_PREFIXES = [
+  '/dashboard', '/profile', '/workspaces', '/workspace/',
+  '/projects', '/tasks', '/teams', '/team',
+  '/sprints', '/settings', '/whiteboard', '/custom-fields',
+  '/cli-auth',
+]
+
+function isAppRoute(path: string): boolean {
+  return APP_ROUTE_PREFIXES.some(prefix => path.startsWith(prefix))
+}
+
 function scrollToTop() {
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
   document.documentElement.scrollTop = 0
@@ -54,6 +66,17 @@ export default function PageTransition() {
       if (animating.current) return
       if (to === locationRef.current) return
 
+      const toPath = to.split('?')[0].split('#')[0]
+      const fromPath = locationRef.current
+
+      // Skip monolith animation for navigation within workspace/app routes
+      if (isAppRoute(fromPath) && isAppRoute(toPath)) {
+        interceptedNav.current = true
+        navigate(to)
+        locationRef.current = toPath
+        return
+      }
+
       animating.current = true
       interceptedNav.current = true
       setActive(true)
@@ -70,7 +93,7 @@ export default function PageTransition() {
 
       // Navigate while fully covered
       navigate(to)
-      locationRef.current = to.split('?')[0].split('#')[0]
+      locationRef.current = toPath
 
       await reveal()
     },
@@ -83,11 +106,17 @@ export default function PageTransition() {
   useLayoutEffect(() => {
     const newPath = location.pathname
     if (newPath === locationRef.current) return
+    const previousPath = locationRef.current
     locationRef.current = newPath
 
     // If this navigation came from our interceptor, it's already handled
     if (interceptedNav.current) {
       interceptedNav.current = false
+      return
+    }
+
+    // Skip monolith for app-to-app back/forward navigation
+    if (isAppRoute(newPath) && isAppRoute(previousPath)) {
       return
     }
 
