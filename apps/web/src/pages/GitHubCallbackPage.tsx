@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAction } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
@@ -25,6 +25,26 @@ export default function GitHubCallbackPage() {
       const state = searchParams.get('state');
       const error = searchParams.get('error');
       const errorDescription = searchParams.get('error_description');
+      const setupAction = searchParams.get('setup_action');
+      const installationId = searchParams.get('installation_id');
+
+      // GitHub App installation callback (not OAuth)
+      // Installation data is processed via webhooks — notify parent and close if popup
+      if (setupAction === 'install' && installationId) {
+        if (window.opener) {
+          window.opener.postMessage(
+            { type: 'github-app-installed', installationId },
+            window.location.origin
+          );
+          window.close();
+          return;
+        }
+        // Not a popup — show success and redirect
+        setStatus('success');
+        toast.success('GitHub App installed successfully! You can now link it to your workspace.');
+        setTimeout(() => navigate('/settings'), 2000);
+        return;
+      }
 
       if (error) {
         setStatus('error');
@@ -69,45 +89,46 @@ export default function GitHubCallbackPage() {
   }, [searchParams, navigate, handleCallback]);
 
   return (
-    <div className="min-h-screen bg-obsidian-black flex items-center justify-center p-24px">
-      <BrutalCard className="max-w-md w-full p-48px text-center">
-        <div className="mb-24px">
-          <FaGithub className="w-64px h-64px mx-auto text-[var(--theme-foreground)]/20" />
+    <div className="min-h-screen bg-obsidian-black flex items-center justify-center p-[16px]">
+      <BrutalCard className="max-w-md w-full p-[24px] text-center">
+        <div className="mb-[12px]">
+          <FaGithub className="w-8 h-8 mx-auto text-[var(--theme-foreground)]/20" />
         </div>
 
         {status === 'processing' && (
           <>
-            <h1 className="text-brutal-xl font-bold mb-16px">
+            <h1 className="text-[16px] font-bold mb-[8px]">
               CONNECTING GITHUB
             </h1>
-            <div className="text-[var(--theme-foreground)]/60 mb-24px">
+            <div className="text-[var(--theme-foreground)]/60 mb-[12px]">
               <div className="inline-block animate-spin">⚙️</div>
-              <p className="mt-16px">Processing authentication...</p>
+              <p className="mt-[8px]">Processing authentication...</p>
             </div>
           </>
         )}
 
         {status === 'success' && (
           <>
-            <div className="text-brutal-success mb-16px">
-              <FaCheckCircle className="w-48px h-48px mx-auto" />
+            <div className="text-brutal-success mb-[8px]">
+              <FaCheckCircle className="w-6 h-6 mx-auto" />
             </div>
-            <h1 className="text-brutal-xl font-bold mb-16px">
-              CONNECTED!
+            <h1 className="text-[16px] font-bold mb-[8px]">
+              {searchParams.get('setup_action') === 'install' ? 'INSTALLED!' : 'CONNECTED!'}
             </h1>
             <p className="text-[var(--theme-foreground)]/60">
-              Your GitHub account has been successfully connected.
-              Redirecting...
+              {searchParams.get('setup_action') === 'install'
+                ? 'GitHub App installed successfully. Redirecting to settings...'
+                : 'Your GitHub account has been successfully connected. Redirecting...'}
             </p>
           </>
         )}
 
         {status === 'error' && (
           <>
-            <div className="text-brutal-error mb-16px">
-              <FaTimesCircle className="w-48px h-48px mx-auto" />
+            <div className="text-brutal-error mb-[8px]">
+              <FaTimesCircle className="w-6 h-6 mx-auto" />
             </div>
-            <h1 className="text-brutal-xl font-bold mb-16px">
+            <h1 className="text-[16px] font-bold mb-[8px]">
               CONNECTION FAILED
             </h1>
             <p className="text-[var(--theme-foreground)]/60 mb-8px">

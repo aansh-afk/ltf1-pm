@@ -12,7 +12,9 @@ import {
   HiOutlineCode,
   HiOutlineLightningBolt,
   HiOutlineUser,
-  HiOutlineTerminal
+  HiOutlineTerminal,
+  HiOutlineChevronRight,
+  HiOutlineServer
 } from 'react-icons/hi'
 import BrutalCard from '../components/ui/BrutalCard'
 import BrutalButton from '../components/ui/BrutalButton'
@@ -23,6 +25,16 @@ const STAT_ICONS = [
   { label: 'TEAM MEMBERS', icon: HiOutlineUsers, color: 'var(--theme-warning)' },
   { label: 'MEETINGS', icon: HiOutlineCalendar, color: 'var(--theme-success)' },
 ] as const
+
+const staggerContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06 } },
+}
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+}
 
 export default function Dashboard() {
   const dashboardData = useQuery(api.dashboard.queries.getDashboardData)
@@ -38,22 +50,30 @@ export default function Dashboard() {
   }, [workspaces])
 
   return (
-    <div className="p-6 min-h-screen bg-[var(--theme-background)]">
+    <div className="p-4 min-h-screen bg-[var(--theme-background)]">
       {/* HEADER SECTION */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b-2 border-[var(--theme-border)] pb-6">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
+      <div className="mb-4 flex items-start justify-between">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-foreground)]/40 inline-block mb-1">
+            Command Center
+          </span>
+          <h1 className="text-xl font-bold tracking-tight text-[var(--theme-foreground)]">
             Dashboard
           </h1>
-          <p className="font-mono text-sm text-[var(--theme-foreground)]/60">
-            Welcome back.
-          </p>
-        </div>
-        <div className="flex gap-2">
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
           <BrutalButton variant="primary" size="sm">
             <HiOutlineLightningBolt className="w-4 h-4" /> Quick Action
           </BrutalButton>
-        </div>
+        </motion.div>
       </div>
 
       {/* PROFILE COMPLETION BANNER */}
@@ -61,178 +81,217 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="mb-8"
+          className="mb-3"
         >
-          <BrutalCard variant="neon" className="relative overflow-hidden group">
-            <div className="absolute inset-0 bg-[var(--theme-warning)]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 relative z-10">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 border-2 border-[var(--theme-warning)] flex items-center justify-center bg-black">
-                  <HiOutlineUser className="w-6 h-6 text-[var(--theme-warning)]" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg text-[var(--theme-warning)] uppercase tracking-wider">Complete Your Profile</h3>
-                  <p className="font-mono text-xs text-[var(--theme-foreground)]/80">
-                    Missing data: {missingFields.join(', ')}
-                  </p>
-                </div>
+          <div className="border-2 border-[var(--theme-warning)] bg-[var(--theme-warning)]/5 p-3 flex flex-col md:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 border-2 border-[var(--theme-warning)] flex items-center justify-center shrink-0">
+                <HiOutlineUser className="w-4 h-4 text-[var(--theme-warning)]" />
               </div>
-              <Link to="/profile">
-                <BrutalButton variant="secondary" size="sm" className="border-[var(--theme-warning)] text-[var(--theme-warning)] hover:bg-[var(--theme-warning)] hover:text-black">
-                  COMPLETE PROFILE
-                </BrutalButton>
-              </Link>
+              <div>
+                <h3 className="font-bold text-xs text-[var(--theme-warning)] uppercase tracking-wider">Complete Your Profile</h3>
+                <p className="font-mono text-[11px] text-[var(--theme-foreground)]/60 mt-0.5">
+                  Missing: {missingFields.join(', ')}
+                </p>
+              </div>
             </div>
-          </BrutalCard>
+            <Link to="/profile">
+              <BrutalButton variant="secondary" size="sm" className="border-[var(--theme-warning)] text-[var(--theme-warning)] hover:bg-[var(--theme-warning)] hover:text-black">
+                COMPLETE PROFILE
+              </BrutalButton>
+            </Link>
+          </div>
         </motion.div>
       )}
 
-      {/* MAIN GRID LAYOUT */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-
-        {/* STATS ROW */}
-        {stats.map((stat, index) => (
-          <div key={stat.label} className="col-span-1 md:col-span-6 lg:col-span-3">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <BrutalCard variant="default" className="h-full hover:border-[var(--theme-primary)] transition-colors group">
-                <div className="flex justify-between items-start mb-4">
-                  <stat.icon className="w-8 h-8 opacity-50 group-hover:opacity-100 transition-opacity" style={{ color: stat.color }} />
-                  <span className="font-mono text-xs opacity-50">ID_0{index + 1}</span>
-                </div>
-                <div className="text-4xl font-black tracking-tighter mb-1" style={{ color: stat.color }}>
-                  {stat.value}
-                </div>
-                <div className="font-mono text-xs uppercase tracking-widest opacity-70">
+      {/* STATS ROW */}
+      <motion.div
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show"
+      >
+        {stats.map((stat) => (
+          <motion.div key={stat.label} variants={fadeUp}>
+            <BrutalCard variant="default" padding="sm" className="h-full hover:border-[var(--theme-primary)] group">
+              <div className="flex items-center gap-2 mb-2">
+                <stat.icon className="w-4 h-4 opacity-40 group-hover:opacity-80" style={{ color: stat.color }} />
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--theme-foreground)]/40">
                   {stat.label}
-                </div>
-              </BrutalCard>
-            </motion.div>
-          </div>
+                </span>
+              </div>
+              <div className="text-2xl font-bold font-mono tracking-tight" style={{ color: stat.color }}>
+                {stat.value}
+              </div>
+            </BrutalCard>
+          </motion.div>
         ))}
+      </motion.div>
+
+      {/* MAIN CONTENT GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
 
         {/* ACTIVITY FEED - 8 COLUMNS */}
-        <div className="col-span-1 md:col-span-12 lg:col-span-8">
-          <BrutalCard variant="elevated" className="h-full min-h-[400px]">
-            <div className="flex items-center justify-between mb-6 border-b-2 border-[var(--theme-border)] pb-4">
-              <h2 className="text-xl font-bold uppercase tracking-wider flex items-center gap-2">
-                <HiOutlineTerminal className="w-5 h-5" /> Activity Log
-              </h2>
-              <div className="flex items-center gap-2 font-mono text-xs">
-                <span className="w-2 h-2 bg-[var(--theme-success)] animate-pulse" />
-                Live
-              </div>
-            </div>
-
-            <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-              {recentActivities.length > 0 ? (
-                recentActivities.map((activity: any, i: number) => (
-                  <motion.div
-                    key={activity._id || i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="group flex items-start gap-4 p-3 border border-[var(--theme-border)] hover:bg-[var(--theme-background-secondary)] hover:border-[var(--theme-primary)] transition-all cursor-pointer"
-                  >
-                    <div className="font-mono text-xs opacity-50 w-16 pt-1">
-                      {activity.timeAgo || 'NOW'}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-bold text-sm" style={{ color: activity.color }}>
-                          {activity.actor?.initials || 'Sys'}
-                        </span>
-                        <span className="text-xs uppercase tracking-wider opacity-70">
-                          {activity.formattedAction}
-                        </span>
-                      </div>
-                      <div className="font-mono text-xs text-[var(--theme-foreground)]/80">
-                        {activity.formattedTarget}
-                      </div>
-                    </div>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <HiOutlineCode className="w-4 h-4" />
-                    </div>
-                  </motion.div>
-                ))
-              ) : (
-                <div className="text-center py-12 opacity-50 font-mono text-sm">
-                  // No recent activity
+        <div className="lg:col-span-8">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <BrutalCard variant="default" padding="sm" className="h-full">
+              <div className="flex items-center justify-between mb-2 pb-2 border-b border-[var(--theme-border)]/50">
+                <div className="flex items-center gap-2">
+                  <HiOutlineTerminal className="w-4 h-4 text-[var(--theme-foreground)]/40" />
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)]">
+                    Activity Log
+                  </h2>
                 </div>
-              )}
-            </div>
-          </BrutalCard>
+                <div className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--theme-foreground)]/50">
+                  <span className="w-1.5 h-1.5 bg-[var(--theme-success)] animate-pulse" />
+                  LIVE
+                </div>
+              </div>
+
+              <div className="space-y-1 max-h-[480px] overflow-y-auto pr-1 custom-scrollbar">
+                {recentActivities.length > 0 ? (
+                  recentActivities.map((activity: any, i: number) => (
+                    <motion.div
+                      key={activity._id || i}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.03 }}
+                      className="group flex items-center gap-3 px-2 py-2 border border-transparent hover:border-[var(--theme-border)] hover:bg-[var(--theme-background-secondary)] cursor-pointer"
+                    >
+                      <span className="font-mono text-[10px] text-[var(--theme-foreground)]/30 w-12 shrink-0 uppercase">
+                        {activity.timeAgo || 'now'}
+                      </span>
+                      <span
+                        className="font-bold text-xs w-8 shrink-0"
+                        style={{ color: activity.color || 'var(--theme-foreground)' }}
+                      >
+                        {activity.actor?.initials || 'SYS'}
+                      </span>
+                      <span className="text-[11px] uppercase tracking-wider text-[var(--theme-foreground)]/50 shrink-0">
+                        {activity.formattedAction}
+                      </span>
+                      <span className="font-mono text-xs text-[var(--theme-foreground)]/70 truncate">
+                        {activity.formattedTarget}
+                      </span>
+                      <HiOutlineCode className="w-3.5 h-3.5 opacity-0 group-hover:opacity-40 shrink-0 ml-auto" />
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="border-2 border-[var(--theme-border)] border-dashed p-8 text-center">
+                    <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center border-2 border-[var(--theme-border)] text-[var(--theme-foreground)]/30">
+                      <HiOutlineTerminal className="w-4 h-4" />
+                    </div>
+                    <p className="text-xs font-bold text-[var(--theme-foreground)] mb-0.5">No Recent Activity</p>
+                    <p className="text-[11px] text-[var(--theme-foreground)]/40 font-mono">Activity will appear here as your team works</p>
+                  </div>
+                )}
+              </div>
+            </BrutalCard>
+          </motion.div>
         </div>
 
         {/* SIDEBAR WIDGETS - 4 COLUMNS */}
-        <div className="col-span-1 md:col-span-12 lg:col-span-4 space-y-6">
+        <div className="lg:col-span-4 space-y-3">
 
           {/* WORKSPACES WIDGET */}
-          <BrutalCard variant="default">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-bold uppercase tracking-wider">Workspaces</h3>
-              <Link to="/workspaces" className="text-xs font-mono hover:text-[var(--theme-primary)] hover:underline">
-                VIEW ALL
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {workspaces.slice(0, 3).map((ws: any) => (
-                <div key={ws._id} className="p-3 border border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:translate-x-1 transition-transform cursor-pointer">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-sm">{ws.name}</span>
-                    <span className="text-[10px] font-mono border border-[var(--theme-border)] px-1">
-                      {ws.role}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 text-xs opacity-60 font-mono">
-                    <span>{ws.memberCount} MEM</span>
-                    <span>{ws.projectCount} PROJ</span>
-                  </div>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            <BrutalCard variant="default" padding="sm">
+              <div className="flex items-center justify-between mb-2 pb-2 border-b border-[var(--theme-border)]/50">
+                <div className="flex items-center gap-2">
+                  <HiOutlineBriefcase className="w-4 h-4 text-[var(--theme-foreground)]/40" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)]">Workspaces</h3>
                 </div>
-              ))}
-              {workspaces.length === 0 && (
-                <div className="text-center py-8 border border-dashed border-[var(--theme-border)]">
-                  <p className="text-xs font-mono mb-2">NO WORKSPACES</p>
-                  <BrutalButton variant="secondary" size="sm">CREATE NEW</BrutalButton>
-                </div>
-              )}
-            </div>
-          </BrutalCard>
+                <Link to="/workspaces" className="text-[10px] font-mono uppercase tracking-wider text-[var(--theme-foreground)]/40 hover:text-[var(--theme-primary)]">
+                  View All
+                </Link>
+              </div>
+              <div className="space-y-1.5">
+                {workspaces.slice(0, 3).map((ws: any) => (
+                  <Link
+                    key={ws._id}
+                    to={`/workspace/${ws._id}`}
+                    className="block p-2.5 border border-[var(--theme-border)] bg-[var(--theme-background)] hover:border-[var(--theme-primary)] group cursor-pointer"
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-bold text-sm text-[var(--theme-foreground)]">{ws.name}</span>
+                      <HiOutlineChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-60" />
+                    </div>
+                    <div className="flex items-center gap-3 text-[10px] text-[var(--theme-foreground)]/40 font-mono uppercase tracking-wider">
+                      <span>{ws.memberCount} mem</span>
+                      <span>{ws.projectCount} proj</span>
+                    </div>
+                  </Link>
+                ))}
+                {workspaces.length === 0 && (
+                  <div className="border-2 border-[var(--theme-border)] border-dashed p-6 text-center">
+                    <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center border-2 border-[var(--theme-border)] text-[var(--theme-foreground)]/30">
+                      <HiOutlineBriefcase className="w-4 h-4" />
+                    </div>
+                    <p className="text-xs font-bold text-[var(--theme-foreground)] mb-0.5">No Workspaces</p>
+                    <p className="text-[11px] text-[var(--theme-foreground)]/40 font-mono mb-3">Create your first workspace to get started</p>
+                    <Link to="/workspaces">
+                      <BrutalButton variant="primary" size="sm">Create Workspace</BrutalButton>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </BrutalCard>
+          </motion.div>
 
           {/* SYSTEM METRICS WIDGET */}
-          <BrutalCard variant="glitch" className="bg-black text-white border-white">
-            <h3 className="font-mono text-xs mb-4 border-b border-white/20 pb-2">
-              System Metrics
-            </h3>
-            <div className="space-y-2 font-mono text-xs">
-              <div className="flex justify-between">
-                <span>CPU Load</span>
-                <span className="text-[var(--theme-success)]">12%</span>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.35 }}
+          >
+            <BrutalCard variant="default" padding="sm">
+              <div className="flex items-center gap-2 mb-2 pb-2 border-b border-[var(--theme-border)]/50">
+                <HiOutlineServer className="w-4 h-4 text-[var(--theme-foreground)]/40" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)]">
+                  System Metrics
+                </h3>
               </div>
-              <div className="w-full h-1 bg-white/20">
-                <div className="h-full bg-[var(--theme-success)] w-[12%]" />
-              </div>
+              <div className="space-y-3 font-mono text-xs">
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-[var(--theme-foreground)]/50 uppercase text-[10px] tracking-wider">CPU Load</span>
+                    <span className="text-[var(--theme-success)] font-bold">12%</span>
+                  </div>
+                  <div className="w-full h-1 bg-[var(--theme-border)]/30">
+                    <div className="h-full bg-[var(--theme-success)] w-[12%]" />
+                  </div>
+                </div>
 
-              <div className="flex justify-between mt-4">
-                <span>Memory Usage</span>
-                <span className="text-[var(--theme-warning)]">64%</span>
-              </div>
-              <div className="w-full h-1 bg-white/20">
-                <div className="h-full bg-[var(--theme-warning)] w-[64%]" />
-              </div>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-[var(--theme-foreground)]/50 uppercase text-[10px] tracking-wider">Memory Usage</span>
+                    <span className="text-[var(--theme-warning)] font-bold">64%</span>
+                  </div>
+                  <div className="w-full h-1 bg-[var(--theme-border)]/30">
+                    <div className="h-full bg-[var(--theme-warning)] w-[64%]" />
+                  </div>
+                </div>
 
-              <div className="flex justify-between mt-4">
-                <span>Network Traffic</span>
-                <span className="text-[var(--theme-info)]">1.2 GB/s</span>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-[var(--theme-foreground)]/50 uppercase text-[10px] tracking-wider">Network Traffic</span>
+                    <span className="text-[var(--theme-info)] font-bold">1.2 GB/s</span>
+                  </div>
+                  <div className="w-full h-1 bg-[var(--theme-border)]/30">
+                    <div className="h-full bg-[var(--theme-info)] w-[45%]" />
+                  </div>
+                </div>
               </div>
-              <div className="w-full h-1 bg-white/20">
-                <div className="h-full bg-[var(--theme-info)] w-[45%] animate-pulse" />
-              </div>
-            </div>
-          </BrutalCard>
+            </BrutalCard>
+          </motion.div>
 
         </div>
       </div>

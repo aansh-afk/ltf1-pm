@@ -46,8 +46,8 @@ export default function WorkspaceSwitcher() {
 
   if (!workspaces) {
     return (
-      <div className="h-48px px-16px flex items-center gap-8px">
-        <div className="w-32px h-32px bg-[var(--theme-background)] animate-pulse" />
+      <div className="h-48px px-[10px] flex items-center gap-[4px]">
+        <div className="w-5 h-5 bg-[var(--theme-background)] animate-pulse" />
         <div className="w-120px h-20px bg-[var(--theme-background)] animate-pulse" />
       </div>
     )
@@ -58,7 +58,7 @@ export default function WorkspaceSwitcher() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={clsx(
-          "h-48px px-16px flex items-center gap-8px",
+          "h-48px px-[10px] flex items-center gap-[4px]",
           "border-2 border-[var(--theme-border)] bg-[var(--theme-background)]",
           "hover:bg-[var(--theme-background-secondary)] hover:text-primary-brutalist",
           "transition-colors duration-200",
@@ -66,7 +66,7 @@ export default function WorkspaceSwitcher() {
           isOpen && "bg-[var(--theme-background-secondary)] text-primary-brutalist"
         )}
       >
-        <div className="w-32px h-32px bg-primary-brutalist border-2 border-[var(--theme-border)] flex items-center justify-center">
+        <div className="w-5 h-5 bg-primary-brutalist border-2 border-[var(--theme-border)] flex items-center justify-center">
           {currentWorkspace?.logoUrl ? (
             <img 
               src={currentWorkspace.logoUrl} 
@@ -99,7 +99,7 @@ export default function WorkspaceSwitcher() {
           
           {/* Menu */}
           <div className={clsx(
-            "absolute top-full left-0 mt-8px z-50",
+            "absolute top-full left-0 mt-[4px] z-50",
             "min-w-280px max-w-360px",
             "bg-[var(--theme-background)] border-2 border-[var(--theme-border)]",
             "shadow-brutal-lg"
@@ -111,8 +111,8 @@ export default function WorkspaceSwitcher() {
                   key={workspace._id}
                   onClick={() => handleWorkspaceChange(workspace)}
                   className={clsx(
-                    "w-full px-16px py-12px",
-                    "flex items-center gap-12px",
+                    "w-full px-[10px] py-[8px]",
+                    "flex items-center gap-[6px]",
                     "hover:bg-[var(--theme-background-secondary)] hover:text-primary-brutalist",
                     "transition-colors duration-200",
                     "font-mono text-brutal-sm uppercase",
@@ -120,7 +120,7 @@ export default function WorkspaceSwitcher() {
                     workspace._id === currentWorkspaceId && "bg-primary-brutalist text-event-horizon"
                   )}
                 >
-                  <div className="w-24px h-24px bg-cathode-white border border-[var(--theme-border)] flex items-center justify-center flex-shrink-0">
+                  <div className="w-4 h-4 bg-cathode-white border border-[var(--theme-border)] flex items-center justify-center flex-shrink-0">
                     {workspace.logoUrl ? (
                       <img 
                         src={workspace.logoUrl} 
@@ -151,8 +151,8 @@ export default function WorkspaceSwitcher() {
               <button
                 onClick={handleCreateWorkspace}
                 className={clsx(
-                  "w-full px-16px py-12px",
-                  "flex items-center gap-12px",
+                  "w-full px-[10px] py-[8px]",
+                  "flex items-center gap-[6px]",
                   "hover:bg-[var(--theme-background-secondary)] hover:text-primary-brutalist",
                   "transition-colors duration-200",
                   "font-mono text-brutal-sm uppercase"
@@ -166,8 +166,8 @@ export default function WorkspaceSwitcher() {
                 <button
                   onClick={() => navigate(`/workspace/${currentWorkspaceId}/settings`)}
                   className={clsx(
-                    "w-full px-16px py-12px",
-                    "flex items-center gap-12px",
+                    "w-full px-[10px] py-[8px]",
+                    "flex items-center gap-[6px]",
                     "hover:bg-[var(--theme-background-secondary)] hover:text-primary-brutalist",
                     "transition-colors duration-200",
                     "font-mono text-brutal-sm uppercase",

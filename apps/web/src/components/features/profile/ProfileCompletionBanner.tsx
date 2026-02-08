@@ -54,9 +54,9 @@ export function ProfileCompletionBanner() {
 
   return (
     <div className="bg-brutal-warning border-b-2 border-[var(--theme-border)]">
-      <div className="px-24px py-12px flex items-center justify-between">
-        <div className="flex items-center gap-16px flex-1">
-          <HiOutlineExclamationCircle className="w-24px h-24px text-event-horizon flex-shrink-0" />
+      <div className="px-[12px] py-[8px] flex items-center justify-between">
+        <div className="flex items-center gap-[8px] flex-1">
+          <HiOutlineExclamationCircle className="w-4 h-4 text-event-horizon flex-shrink-0" />
           <div className="flex-1">
             <p className="font-mono text-brutal-sm text-event-horizon">
               <span className="font-bold">PROFILE INCOMPLETE:</span> {' '}
@@ -68,7 +68,7 @@ export function ProfileCompletionBanner() {
           </div>
           <Link
             to="/profile?edit=true"
-            className="px-16px py-8px bg-[var(--theme-background-secondary)] text-brutal-warning border-2 border-event-horizon
+            className="px-[10px] py-[8px] bg-[var(--theme-background-secondary)] text-brutal-warning border-2 border-event-horizon
                      font-mono text-brutal-xs uppercase tracking-wider font-bold
                      hover:bg-brutal-warning/90 transition-colors flex-shrink-0"
           >
@@ -76,10 +76,10 @@ export function ProfileCompletionBanner() {
           </Link>
           <button
             onClick={handleDismiss}
-            className="p-8px text-event-horizon hover:bg-[var(--theme-background-secondary)]/10 transition-colors"
+            className="p-[8px] text-event-horizon hover:bg-[var(--theme-background-secondary)]/10 transition-colors"
             title="Dismiss for this session"
           >
-            <HiOutlineX className="w-16px h-16px" />
+            <HiOutlineX className="w-4 h-4" />
           </button>
         </div>
       </div>

@@ -184,38 +184,38 @@ export default function AIDocumentationHub({
   }
 
   return (
-    <div className="space-y-24px">
+    <div className="space-y-[12px]">
       {/* Header */}
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-        <div className="flex items-center justify-between mb-16px">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
+        <div className="flex items-center justify-between mb-[8px]">
           <div>
-            <h2 className="text-brutal-lg font-bold uppercase flex items-center gap-8px">
-              <HiOutlineSparkles className="w-24px h-24px text-primary-brutalist" />
+            <h2 className="text-brutal-lg font-bold uppercase flex items-center gap-[8px]">
+              <HiOutlineSparkles className="w-4 h-4 text-primary-brutalist" />
               AI DOCUMENTATION HUB
             </h2>
             <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mt-8px">
               Generate PRs, PRDs, API docs, and technical documentation with AI
             </p>
           </div>
-          <div className="flex items-center gap-12px">
+          <div className="flex items-center gap-[6px]">
             <button 
               onClick={() => setShowPreview(!showPreview)}
-              className="brutal-btn-secondary flex items-center gap-8px"
+              className="brutal-btn-secondary flex items-center gap-[8px]"
             >
-              <HiOutlineDocumentText className="w-16px h-16px" />
+              <HiOutlineDocumentText className="w-4 h-4" />
               {showPreview ? 'HIDE' : 'SHOW'} PREVIEW
             </button>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-24px">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-[16px]">
         {/* Template Selection & Configuration */}
-        <div className="lg:col-span-1 space-y-24px">
+        <div className="lg:col-span-1 space-y-[12px]">
           {/* Document Templates */}
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-            <h3 className="text-brutal-md font-bold uppercase mb-16px">DOCUMENT TYPE</h3>
-            <div className="space-y-12px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
+            <h3 className="text-brutal-md font-bold uppercase mb-[8px]">DOCUMENT TYPE</h3>
+            <div className="space-y-[6px]">
               {DOCUMENT_TEMPLATES.map((template) => {
                 const Icon = template.icon
                 return (
@@ -227,15 +227,15 @@ export default function AIDocumentationHub({
                       setDocumentContent('')
                     }}
                     className={clsx(
-                      'w-full p-16px border-2 text-left transition-all',
+                      'w-full p-[10px] border-2 text-left transition-all',
                       'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal',
                       selectedTemplate === template.id 
                         ? `${template.color} ${template.bgColor} shadow-brutal`
                         : 'border-[var(--theme-border)] hover:border-primary-brutalist'
                     )}
                   >
-                    <div className="flex items-start gap-12px">
-                      <Icon className="w-20px h-20px flex-shrink-0 mt-2px" />
+                    <div className="flex items-start gap-[6px]">
+                      <Icon className="w-5 h-5 flex-shrink-0 mt-2px" />
                       <div className="flex-1">
                         <h4 className="font-mono text-brutal-sm font-bold uppercase">
                           {template.title}
@@ -252,46 +252,46 @@ export default function AIDocumentationHub({
           </div>
 
           {/* Context Configuration */}
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-            <h3 className="text-brutal-md font-bold uppercase mb-16px">AI CONTEXT</h3>
-            <div className="space-y-12px">
-              <label className="flex items-center gap-8px cursor-pointer">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
+            <h3 className="text-brutal-md font-bold uppercase mb-[8px]">AI CONTEXT</h3>
+            <div className="space-y-[6px]">
+              <label className="flex items-center gap-[8px] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={contextData.includeTaskData}
                   onChange={(e) => setContextData({...contextData, includeTaskData: e.target.checked})}
-                  className="w-16px h-16px"
+                  className="w-4 h-4"
                 />
                 <span className="text-brutal-sm">Include recent tasks</span>
               </label>
-              <label className="flex items-center gap-8px cursor-pointer">
+              <label className="flex items-center gap-[8px] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={contextData.includeSprintData}
                   onChange={(e) => setContextData({...contextData, includeSprintData: e.target.checked})}
-                  className="w-16px h-16px"
+                  className="w-4 h-4"
                 />
                 <span className="text-brutal-sm">Include sprint data</span>
               </label>
-              <label className="flex items-center gap-8px cursor-pointer">
+              <label className="flex items-center gap-[8px] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={contextData.includeProjectInfo}
                   onChange={(e) => setContextData({...contextData, includeProjectInfo: e.target.checked})}
-                  className="w-16px h-16px"
+                  className="w-4 h-4"
                 />
                 <span className="text-brutal-sm">Include project info</span>
               </label>
               
-              <div className="mt-16px">
-                <label className="block text-brutal-xs uppercase mb-8px">
+              <div className="mt-[8px]">
+                <label className="block text-brutal-xs uppercase mb-[8px]">
                   ADDITIONAL CONTEXT
                 </label>
                 <textarea
                   value={contextData.customContext}
                   onChange={(e) => setContextData({...contextData, customContext: e.target.value})}
                   placeholder="Add specific details, requirements, or context for the AI..."
-                  className="w-full h-80px px-12px py-8px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm resize-none"
+                  className="w-full h-80px px-[12px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm resize-none"
                 />
               </div>
             </div>
@@ -300,7 +300,7 @@ export default function AIDocumentationHub({
               onClick={handleGenerateDocument}
               disabled={!selectedTemplate || generatingDoc}
               className={clsx(
-                'w-full mt-16px brutal-btn flex items-center justify-center gap-8px',
+                'w-full mt-[8px] brutal-btn flex items-center justify-center gap-[8px]',
                 (!selectedTemplate || generatingDoc) && 'opacity-50 cursor-not-allowed'
               )}
             >
@@ -311,7 +311,7 @@ export default function AIDocumentationHub({
                 </>
               ) : (
                 <>
-                  <HiOutlineSparkles className="w-16px h-16px" />
+                  <HiOutlineSparkles className="w-4 h-4" />
                   GENERATE WITH AI
                 </>
               )}
@@ -320,62 +320,62 @@ export default function AIDocumentationHub({
         </div>
 
         {/* Document Editor & Preview */}
-        <div className="lg:col-span-2 space-y-24px">
+        <div className="lg:col-span-2 space-y-[12px]">
           {/* Editor */}
           <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
-            <div className="flex items-center justify-between p-16px border-b-2 border-[var(--theme-border)]">
+            <div className="flex items-center justify-between p-[10px] border-b-2 border-[var(--theme-border)]">
               <input
                 type="text"
                 value={documentTitle}
                 onChange={(e) => setDocumentTitle(e.target.value)}
                 placeholder="Document Title..."
-                className="flex-1 px-12px py-8px bg-transparent font-mono text-brutal-md font-bold uppercase focus:outline-none"
+                className="flex-1 px-[12px] py-[8px] bg-transparent font-mono text-brutal-md font-bold uppercase focus:outline-none"
               />
-              <div className="flex items-center gap-8px">
+              <div className="flex items-center gap-[8px]">
                 <button
                   onClick={handleCopyToClipboard}
                   disabled={!documentContent}
-                  className="p-8px hover:bg-[var(--theme-background-secondary)] transition-colors disabled:opacity-50"
+                  className="p-[8px] hover:bg-[var(--theme-background-secondary)] transition-colors disabled:opacity-50"
                   title="Copy to clipboard"
                 >
-                  <HiOutlineClipboardCopy className="w-16px h-16px" />
+                  <HiOutlineClipboardCopy className="w-4 h-4" />
                 </button>
                 <button
                   onClick={handleExportMarkdown}
                   disabled={!documentContent}
-                  className="p-8px hover:bg-[var(--theme-background-secondary)] transition-colors disabled:opacity-50"
+                  className="p-[8px] hover:bg-[var(--theme-background-secondary)] transition-colors disabled:opacity-50"
                   title="Export as Markdown"
                 >
-                  <HiOutlineDownload className="w-16px h-16px" />
+                  <HiOutlineDownload className="w-4 h-4" />
                 </button>
                 <button
                   onClick={handleSaveDocument}
                   disabled={!documentContent}
-                  className="p-8px hover:bg-[var(--theme-background-secondary)] transition-colors disabled:opacity-50"
+                  className="p-[8px] hover:bg-[var(--theme-background-secondary)] transition-colors disabled:opacity-50"
                   title="Save document"
                 >
-                  <HiOutlineCheck className="w-16px h-16px" />
+                  <HiOutlineCheck className="w-4 h-4" />
                 </button>
               </div>
             </div>
             
-            <div className="p-24px">
+            <div className="p-[16px]">
               <textarea
                 value={documentContent}
                 onChange={(e) => setDocumentContent(e.target.value)}
                 placeholder={generatingDoc ? "AI is generating your document..." : "Start typing or generate with AI..."}
-                className="w-full h-400px px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm resize-none"
+                className="w-full h-400px px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm resize-none"
                 disabled={generatingDoc}
               />
               
               {documentContent && (
-                <div className="mt-16px flex items-center justify-between">
+                <div className="mt-[8px] flex items-center justify-between">
                   <div className="text-brutal-xs text-[var(--theme-foreground)]/60">
                     {documentContent.split(' ').length} words • {documentContent.length} characters
                   </div>
                   <button
                     onClick={() => handleGenerateDocument()}
-                    className="brutal-btn-secondary flex items-center gap-8px"
+                    className="brutal-btn-secondary flex items-center gap-[8px]"
                   >
                     <HiOutlineRefresh className="w-14px h-14px" />
                     REGENERATE
@@ -390,17 +390,17 @@ export default function AIDocumentationHub({
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px"
+              className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]"
             >
-              <h3 className="text-brutal-md font-bold uppercase mb-16px">PREVIEW</h3>
+              <h3 className="text-brutal-md font-bold uppercase mb-[8px]">PREVIEW</h3>
               <div className="prose prose-invert max-w-none">
                 <div 
                   className="font-mono text-brutal-sm whitespace-pre-wrap"
                   dangerouslySetInnerHTML={{ 
                     __html: documentContent
-                      .replace(/^# (.+)$/gm, '<h1 class="text-brutal-lg font-bold uppercase mb-16px">$1</h1>')
-                      .replace(/^## (.+)$/gm, '<h2 class="text-brutal-md font-bold uppercase mb-12px mt-24px">$1</h2>')
-                      .replace(/^### (.+)$/gm, '<h3 class="text-brutal-sm font-bold uppercase mb-8px mt-16px">$1</h3>')
+                      .replace(/^# (.+)$/gm, '<h1 class="text-brutal-lg font-bold uppercase mb-[8px]">$1</h1>')
+                      .replace(/^## (.+)$/gm, '<h2 class="text-brutal-md font-bold uppercase mb-[6px] mt-[12px]">$1</h2>')
+                      .replace(/^### (.+)$/gm, '<h3 class="text-brutal-sm font-bold uppercase mb-[8px] mt-[8px]">$1</h3>')
                       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
                       .replace(/\*(.+?)\*/g, '<em>$1</em>')
                       .replace(/`(.+?)`/g, '<code class="px-4px py-2px bg-[var(--theme-background-secondary)] text-primary-brutalist">$1</code>')
@@ -415,9 +415,9 @@ export default function AIDocumentationHub({
 
       {/* Saved Documents */}
       {savedDocuments.length > 0 && (
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-          <h3 className="text-brutal-md font-bold uppercase mb-16px">SAVED DOCUMENTS</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
+          <h3 className="text-brutal-md font-bold uppercase mb-[8px]">SAVED DOCUMENTS</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[10px]">
             {savedDocuments.map((doc) => {
               const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.type)
               const Icon = template?.icon || HiOutlineDocumentText
@@ -426,7 +426,7 @@ export default function AIDocumentationHub({
                 <div
                   key={doc.id}
                   className={clsx(
-                    'p-16px border-2 cursor-pointer transition-all',
+                    'p-[10px] border-2 cursor-pointer transition-all',
                     'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal',
                     template?.color || 'border-[var(--theme-border)]'
                   )}
@@ -436,8 +436,8 @@ export default function AIDocumentationHub({
                     setSelectedTemplate(doc.type)
                   }}
                 >
-                  <div className="flex items-start justify-between mb-8px">
-                    <Icon className="w-20px h-20px" />
+                  <div className="flex items-start justify-between mb-[8px]">
+                    <Icon className="w-5 h-5" />
                     <button
                       onClick={(e) => {
                         e.stopPropagation()

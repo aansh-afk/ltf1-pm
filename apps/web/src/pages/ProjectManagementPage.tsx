@@ -290,9 +290,9 @@ export default function ProjectManagementPage() {
 
   if (!project) {
     return (
-      <div className="p-24px">
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-          <h1 className="text-brutal-xl font-bold uppercase text-brutal-error mb-8px">PROJECT NOT FOUND</h1>
+      <div className="p-[16px]">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
+          <h1 className="text-[16px] font-bold font-bold uppercase text-brutal-error mb-8px">PROJECT NOT FOUND</h1>
           <p className="font-mono text-brutal-sm">The requested project does not exist or you don't have access.</p>
         </div>
       </div>
@@ -346,46 +346,47 @@ export default function ProjectManagementPage() {
     const activeSprint = allSprints?.find(s => s.status === 'active')
 
     return (
-      <div className="space-y-8">
+      <div className="space-y-4">
         {/* Mission Brief & Stats Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Project Overview */}
-          <BrutalCard variant="default" className="lg:col-span-2">
-            <div className="flex items-center gap-4 mb-6 border-b-2 border-[var(--theme-border)] pb-4">
-              <HiOutlineChip className="w-6 h-6 text-[var(--theme-primary)]" />
-              <h3 className="text-lg font-bold uppercase tracking-tight">Project Overview</h3>
+          <BrutalCard variant="default" className="lg:col-span-2" padding="sm">
+            <div className="flex items-center gap-3 mb-3 border-b-2 border-[var(--theme-border)] pb-3">
+              <HiOutlineChip className="w-5 h-5 text-[var(--theme-primary)]" />
+              <h3 className="text-sm font-bold uppercase tracking-wider">Project Overview</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="bg-[var(--theme-background-secondary)] p-4 border border-[var(--theme-border)]">
-                <span className="block text-xs font-mono text-[var(--theme-foreground)]/60 mb-1">PROJECT LEAD</span>
-                <span className="block font-bold text-lg truncate">{project.lead?.name || 'Unassigned'}</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+              <div className="bg-[var(--theme-background-secondary)] p-3 border border-[var(--theme-border)]">
+                <span className="block text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider mb-1">PROJECT LEAD</span>
+                <span className="block font-bold text-sm truncate">{project.lead?.name || 'Unassigned'}</span>
               </div>
-              <div className="bg-[var(--theme-background-secondary)] p-4 border border-[var(--theme-border)]">
-                <span className="block text-xs font-mono text-[var(--theme-foreground)]/60 mb-1">TEAM SIZE</span>
-                <span className="block font-bold text-lg">{project.members?.length || 0} Members</span>
+              <div className="bg-[var(--theme-background-secondary)] p-3 border border-[var(--theme-border)]">
+                <span className="block text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider mb-1">TEAM SIZE</span>
+                <span className="block font-bold text-sm">{project.members?.length || 0} Members</span>
               </div>
-              <div className="bg-[var(--theme-background-secondary)] p-4 border border-[var(--theme-border)]">
-                <span className="block text-xs font-mono text-[var(--theme-foreground)]/60 mb-1">WORKFLOW</span>
-                <span className="block font-bold text-lg uppercase">{project.settings?.workflowType || 'Kanban'}</span>
+              <div className="bg-[var(--theme-background-secondary)] p-3 border border-[var(--theme-border)]">
+                <span className="block text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider mb-1">WORKFLOW</span>
+                <span className="block font-bold text-sm uppercase">{project.settings?.workflowType || 'Kanban'}</span>
               </div>
             </div>
 
             {project.description && (
-              <div className="font-mono text-sm text-[var(--theme-foreground)]/80 leading-relaxed border-l-4 border-[var(--theme-primary)] pl-4">
+              <div className="font-mono text-xs text-[var(--theme-foreground)]/80 leading-relaxed border-l-4 border-[var(--theme-primary)] pl-3">
                 {project.description}
               </div>
             )}
           </BrutalCard>
 
           {/* System Status (Health Cards) */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             {healthCards.map((card) => (
               <BrutalCard
                 key={card.title}
                 variant="bordered"
+                padding="sm"
                 className={clsx(
-                  "transition-all hover:translate-x-1",
+                  "hover:translate-x-1",
                   card.status === 'error' && "border-[var(--theme-error)]",
                   card.status === 'warning' && "border-[var(--theme-warning)]",
                   card.status === 'success' && "border-[var(--theme-success)]"
@@ -393,11 +394,11 @@ export default function ProjectManagementPage() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-xs font-mono text-[var(--theme-foreground)]/60 uppercase mb-1">{card.title}</div>
-                    <div className="text-2xl font-bold">{card.value}</div>
+                    <div className="text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider mb-1">{card.title}</div>
+                    <div className="text-xl font-bold">{card.value}</div>
                   </div>
                   <div className={clsx(
-                    "p-2 border-2",
+                    "p-1.5 border-2",
                     card.status === 'error' ? "border-[var(--theme-error)] text-[var(--theme-error)]" :
                       card.status === 'warning' ? "border-[var(--theme-warning)] text-[var(--theme-warning)]" :
                         card.status === 'success' ? "border-[var(--theme-success)] text-[var(--theme-success)]" :
@@ -412,11 +413,11 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Analytics & Insights */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <BrutalCard variant="default" className="min-h-[300px]">
-            <div className="flex items-center gap-3 mb-4">
-              <HiOutlineLightningBolt className="w-5 h-5 text-[var(--theme-primary)]" />
-              <h3 className="font-bold uppercase">AI Insights</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <BrutalCard variant="default" padding="sm" className="min-h-[260px]">
+            <div className="flex items-center gap-2 mb-3">
+              <HiOutlineLightningBolt className="w-4 h-4 text-[var(--theme-primary)]" />
+              <h3 className="text-xs font-bold uppercase tracking-wider">AI Insights</h3>
             </div>
             <AIInsightsPanel
               projectId={project._id}
@@ -425,11 +426,11 @@ export default function ProjectManagementPage() {
             />
           </BrutalCard>
 
-          <div className="space-y-8">
-            <BrutalCard variant="default">
-              <div className="flex items-center gap-3 mb-4">
-                <HiOutlineChartBar className="w-5 h-5 text-[var(--theme-primary)]" />
-                <h3 className="font-bold uppercase">Velocity</h3>
+          <div className="space-y-4">
+            <BrutalCard variant="default" padding="sm">
+              <div className="flex items-center gap-2 mb-3">
+                <HiOutlineChartBar className="w-4 h-4 text-[var(--theme-primary)]" />
+                <h3 className="text-xs font-bold uppercase tracking-wider">Velocity</h3>
               </div>
               {activeSprint ? (
                 <SprintBurndownChart
@@ -438,16 +439,16 @@ export default function ProjectManagementPage() {
                   showPrediction={true}
                 />
               ) : (
-                <div className="h-40 flex items-center justify-center border-2 border-dashed border-[var(--theme-border)]">
-                  <span className="font-mono text-xs text-[var(--theme-foreground)]/40">No Active Sprint Data</span>
+                <div className="h-32 flex items-center justify-center border-2 border-dashed border-[var(--theme-border)]">
+                  <span className="font-mono text-[10px] text-[var(--theme-foreground)]/40 uppercase tracking-wider">No Active Sprint Data</span>
                 </div>
               )}
             </BrutalCard>
 
-            <BrutalCard variant="default">
-              <div className="flex items-center gap-3 mb-4">
-                <HiOutlineClock className="w-5 h-5 text-[var(--theme-primary)]" />
-                <h3 className="font-bold uppercase">Activity</h3>
+            <BrutalCard variant="default" padding="sm">
+              <div className="flex items-center gap-2 mb-3">
+                <HiOutlineClock className="w-4 h-4 text-[var(--theme-primary)]" />
+                <h3 className="text-xs font-bold uppercase tracking-wider">Activity</h3>
               </div>
               <GitHubStyleHeatmap
                 tasks={tasks || []}
@@ -458,7 +459,7 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Task Generator */}
-        <BrutalCard variant="bordered" className="border-dashed">
+        <BrutalCard variant="bordered" padding="sm" className="border-dashed">
           <NaturalLanguageTaskCreator
             projectId={project._id}
             sprintId={activeSprint?._id}
@@ -475,8 +476,8 @@ export default function ProjectManagementPage() {
     // Safety check
     if (!project || !workspaceId) {
       return (
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-48px text-center">
-          <h3 className="font-mono text-brutal-sm uppercase mb-16px">LOADING PROJECT DATA...</h3>
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[24px] text-center">
+          <h3 className="font-mono text-brutal-sm uppercase mb-[8px]">LOADING PROJECT DATA...</h3>
         </div>
       )
     }
@@ -604,7 +605,7 @@ export default function ProjectManagementPage() {
 
     return (
       <div className={clsx(
-        "space-y-24px",
+        "space-y-[12px]",
         taskView === 'kanban' && "h-full flex flex-col space-y-0 gap-6"
       )}>
         {/* Filter Info Bar */}
@@ -867,9 +868,9 @@ export default function ProjectManagementPage() {
 
         {/* Sprint Metrics Bar */}
         {sprintProgress && (
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[10px]">
             <div className="flex items-center justify-between mb-12px">
-              <div className="flex items-center gap-24px font-mono text-brutal-sm">
+              <div className="flex items-center gap-[16px] font-mono text-brutal-sm">
                 <span>VELOCITY: <span className="font-bold text-primary-brutalist">{sprintProgress.velocity}/day</span></span>
                 <span>COMPLETE: <span className="font-bold text-brutal-success">{sprintProgress.percentage}%</span></span>
                 <span>BLOCKED: <span className="font-bold text-brutal-error">{sprintProgress.blockedTasks}</span></span>
@@ -940,9 +941,9 @@ export default function ProjectManagementPage() {
         )}
 
         {taskView === 'sprint' && !activeSprint && (
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-48px text-center">
-            <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO ACTIVE SPRINT</h3>
-            <p className="text-[var(--theme-foreground)]/60 mb-24px">Create a sprint to start organizing your tasks</p>
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[24px] text-center">
+            <h3 className="font-mono text-brutal-sm uppercase mb-[8px]">NO ACTIVE SPRINT</h3>
+            <p className="text-[var(--theme-foreground)]/60 mb-[12px]">Create a sprint to start organizing your tasks</p>
             <button
               onClick={() => setShowCreateSprintModal(true)}
               className="brutal-btn"
@@ -953,30 +954,30 @@ export default function ProjectManagementPage() {
         )}
 
         {/* Task Activity Timeline */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-          <div className="flex items-center justify-between mb-16px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
+          <div className="flex items-center justify-between mb-[8px]">
             <h3 className="font-mono text-brutal-sm uppercase">TASK ACTIVITY FEED</h3>
             <button className="text-brutal-xs font-mono uppercase text-primary-brutalist/60 hover:text-primary-brutalist">
               FILTER ▼
             </button>
           </div>
           <div className="space-y-8px font-mono text-brutal-sm">
-            <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
+            <div className="flex items-center gap-[10px] p-8px hover:bg-basalt-border/20 transition-colors">
               <span className="text-brutal-xs text-primary-brutalist/60">10:45</span>
               <span className="text-brutal-info">TASK-445</span>
               <span className="text-primary-brutalist/80">Branch created: feature/task-445-auth-middleware</span>
             </div>
-            <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
+            <div className="flex items-center gap-[10px] p-8px hover:bg-basalt-border/20 transition-colors">
               <span className="text-brutal-xs text-primary-brutalist/60">10:32</span>
               <span className="text-brutal-info">TASK-445</span>
               <span className="text-primary-brutalist/80">Timer started (current: 2:34:15)</span>
             </div>
-            <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
+            <div className="flex items-center gap-[10px] p-8px hover:bg-basalt-border/20 transition-colors">
               <span className="text-brutal-xs text-primary-brutalist/60">09:15</span>
               <span className="text-brutal-info">TASK-443</span>
               <span className="text-primary-brutalist/80">PR #142 opened - awaiting review</span>
             </div>
-            <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
+            <div className="flex items-center gap-[10px] p-8px hover:bg-basalt-border/20 transition-colors">
               <span className="text-brutal-xs text-primary-brutalist/60">08:45</span>
               <span className="text-brutal-info">TASK-441</span>
               <span className="text-primary-brutalist/80">Deployed to staging</span>
@@ -1008,7 +1009,7 @@ export default function ProjectManagementPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8px">
             {task.assigneeId && (
-              <div className="w-24px h-24px bg-primary-brutalist border-2 border-[var(--theme-border)] flex items-center justify-center">
+              <div className="w-4 h-4 bg-primary-brutalist border-2 border-[var(--theme-border)] flex items-center justify-center">
                 <span className="text-brutal-xs font-bold text-event-horizon">JD</span>
               </div>
             )}
@@ -1071,102 +1072,102 @@ export default function ProjectManagementPage() {
     }
 
     return (
-      <div className="space-y-24px">
+      <div className="space-y-3">
         {/* Team Header */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-          <div className="flex items-center justify-between mb-16px">
-            <h2 className="text-brutal-lg font-bold uppercase">PROJECT TEAM</h2>
-            <div className="flex items-center gap-12px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-xs font-bold uppercase tracking-wider">PROJECT TEAM</h2>
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowExpertiseMatrix(true)}
-                className="brutal-btn-secondary flex items-center gap-8px"
+                className="brutal-btn-secondary flex items-center gap-1 text-[10px] px-3 py-1.5"
               >
-                <HiOutlineChartBar className="w-16px h-16px" />
+                <HiOutlineChartBar className="w-3.5 h-3.5" />
                 EXPERTISE MATRIX
               </button>
               <button
                 onClick={() => setShowProjectInviteModal(true)}
-                className="brutal-btn-secondary flex items-center gap-8px"
+                className="brutal-btn-secondary flex items-center gap-1 text-[10px] px-3 py-1.5"
               >
-                <HiOutlineUserGroup className="w-16px h-16px" />
+                <HiOutlineUserGroup className="w-3.5 h-3.5" />
                 INVITE MEMBERS
               </button>
             </div>
           </div>
-          <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
+          <p className="text-[10px] text-[var(--theme-foreground)]/60 uppercase tracking-wider">
             Manage your project team, view workload distribution, and track productivity metrics.
           </p>
         </div>
 
         {/* Team Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16px">
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-            <div className="flex items-center justify-between mb-8px">
-              <HiOutlineUserGroup className="w-20px h-20px text-primary-brutalist" />
-              <span className="font-mono text-brutal-xs text-primary-brutalist/60">TEAM SIZE</span>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-3">
+            <div className="flex items-center justify-between mb-1">
+              <HiOutlineUserGroup className="w-4 h-4 text-primary-brutalist" />
+              <span className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">TEAM SIZE</span>
             </div>
-            <div className="text-brutal-2xl font-bold">{members.length}</div>
-            <div className="font-mono text-brutal-xs text-primary-brutalist/60">MEMBERS</div>
+            <div className="text-lg font-bold">{members.length}</div>
+            <div className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">MEMBERS</div>
           </div>
 
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-            <div className="flex items-center justify-between mb-8px">
-              <HiOutlineClipboardList className="w-20px h-20px text-brutal-info" />
-              <span className="font-mono text-brutal-xs text-primary-brutalist/60">ACTIVE TASKS</span>
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-3">
+            <div className="flex items-center justify-between mb-1">
+              <HiOutlineClipboardList className="w-4 h-4 text-brutal-info" />
+              <span className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">ACTIVE TASKS</span>
             </div>
-            <div className="text-brutal-2xl font-bold">{teamTotals.totalTasks}</div>
-            <div className="font-mono text-brutal-xs text-primary-brutalist/60">ACROSS TEAM</div>
+            <div className="text-lg font-bold">{teamTotals.totalTasks}</div>
+            <div className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">ACROSS TEAM</div>
           </div>
 
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-            <div className="flex items-center justify-between mb-8px">
-              <HiOutlineClock className="w-20px h-20px text-brutal-warning" />
-              <span className="font-mono text-brutal-xs text-primary-brutalist/60">HOURS TRACKED</span>
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-3">
+            <div className="flex items-center justify-between mb-1">
+              <HiOutlineClock className="w-4 h-4 text-brutal-warning" />
+              <span className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">HOURS TRACKED</span>
             </div>
-            <div className="text-brutal-2xl font-bold">{Math.round(teamTotals.hoursTracked)}</div>
-            <div className="font-mono text-brutal-xs text-primary-brutalist/60">TOTAL HOURS</div>
+            <div className="text-lg font-bold">{Math.round(teamTotals.hoursTracked)}</div>
+            <div className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">TOTAL HOURS</div>
           </div>
 
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-            <div className="flex items-center justify-between mb-8px">
-              <HiOutlineChartBar className="w-20px h-20px text-brutal-success" />
-              <span className="font-mono text-brutal-xs text-primary-brutalist/60">PRODUCTIVITY</span>
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-3">
+            <div className="flex items-center justify-between mb-1">
+              <HiOutlineChartBar className="w-4 h-4 text-brutal-success" />
+              <span className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">PRODUCTIVITY</span>
             </div>
-            <div className="text-brutal-2xl font-bold">{teamTotals.avgProductivity}%</div>
-            <div className="font-mono text-brutal-xs text-primary-brutalist/60">AVG COMPLETION</div>
+            <div className="text-lg font-bold">{teamTotals.avgProductivity}%</div>
+            <div className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">AVG COMPLETION</div>
           </div>
         </div>
 
         {/* Workload Distribution - Enhanced */}
         <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
           {/* Header with Controls */}
-          <div className="flex items-center justify-between p-24px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
-            <div className="flex items-center gap-16px">
-              <h3 className="text-brutal-lg font-bold uppercase">WORKLOAD DISTRIBUTION</h3>
-              <div className="flex items-center gap-8px font-mono text-brutal-xs">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+            <div className="flex items-center gap-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider">WORKLOAD DISTRIBUTION</h3>
+              <div className="flex items-center gap-1.5 font-mono text-[10px]">
                 <span className="text-primary-brutalist/60">AVG:</span>
                 <span className="font-bold">{Math.round(teamTotals.totalTasks / memberStats.length || 0)} TASKS</span>
               </div>
             </div>
-            <div className="flex items-center gap-12px">
-              <div className="flex items-center gap-8px">
-                <div className="w-12px h-12px bg-brutal-success border border-[var(--theme-border)]"></div>
-                <span className="font-mono text-brutal-xs">OPTIMAL</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 bg-brutal-success border border-[var(--theme-border)]"></div>
+                <span className="font-mono text-[10px]">OPTIMAL</span>
               </div>
-              <div className="flex items-center gap-8px">
-                <div className="w-12px h-12px bg-brutal-warning border border-[var(--theme-border)]"></div>
-                <span className="font-mono text-brutal-xs">HIGH</span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 bg-brutal-warning border border-[var(--theme-border)]"></div>
+                <span className="font-mono text-[10px]">HIGH</span>
               </div>
-              <div className="flex items-center gap-8px">
-                <div className="w-12px h-12px bg-brutal-error border border-[var(--theme-border)]"></div>
-                <span className="font-mono text-brutal-xs">OVERLOAD</span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 bg-brutal-error border border-[var(--theme-border)]"></div>
+                <span className="font-mono text-[10px]">OVERLOAD</span>
               </div>
             </div>
           </div>
 
           {/* Workload Visualization */}
-          <div className="p-24px">
-            <div className="space-y-16px">
+          <div className="p-4">
+            <div className="space-y-2">
               {memberStats.map((member: any, index: number) => {
                 const taskCount = member.tasksAssigned
                 const completionRate = member.tasksAssigned > 0 ? Math.round((member.tasksCompleted / member.tasksAssigned) * 100) : 0
@@ -1176,83 +1177,68 @@ export default function ProjectManagementPage() {
 
                 return (
                   <div key={member._id} className={clsx(
-                    "group relative bg-[var(--theme-background-secondary)] border-2 p-20px transition-all duration-200 hover:shadow-brutal-sm",
+                    "group relative bg-[var(--theme-background-secondary)] border-2 p-3 hover:shadow-brutal-sm",
                     isHighLoad ? "border-brutal-error" :
                       isMediumLoad ? "border-brutal-warning" : "border-[var(--theme-border)]"
                   )}>
                     {/* Member Info Header */}
-                    <div className="flex items-center justify-between mb-16px">
-                      <div className="flex items-center gap-16px">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
                         <UserDisplay
                           userId={member._id}
                           size="sm"
                           showName={true}
                           showStatus={true}
                         />
-                        <div className="flex items-center gap-12px font-mono text-brutal-xs">
+                        <div className="flex items-center gap-1.5 font-mono text-[10px]">
                           <span className="text-primary-brutalist/60">ROLE:</span>
                           <span className="font-bold uppercase">{member.role || 'DEVELOPER'}</span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-16px">
-                        {/* Status Indicators */}
+                      <div className="flex items-center gap-2">
                         {isHighLoad && (
-                          <div className="flex items-center gap-4px px-8px py-2px bg-brutal-error/20 border-2 border-brutal-error">
-                            <span className="w-4px h-4px bg-brutal-error"></span>
-                            <span className="font-mono text-brutal-xs text-brutal-error font-bold">OVERLOADED</span>
+                          <div className="flex items-center gap-1 px-2 py-0.5 bg-brutal-error/20 border-2 border-brutal-error">
+                            <span className="w-1 h-1 bg-brutal-error"></span>
+                            <span className="font-mono text-[10px] text-brutal-error font-bold">OVERLOADED</span>
                           </div>
                         )}
                         {isLowProductivity && taskCount > 0 && (
-                          <div className="flex items-center gap-4px px-8px py-2px bg-brutal-warning/20 border-2 border-brutal-warning">
-                            <span className="w-4px h-4px bg-brutal-warning"></span>
-                            <span className="font-mono text-brutal-xs text-brutal-warning font-bold">LOW VELOCITY</span>
+                          <div className="flex items-center gap-1 px-2 py-0.5 bg-brutal-warning/20 border-2 border-brutal-warning">
+                            <span className="w-1 h-1 bg-brutal-warning"></span>
+                            <span className="font-mono text-[10px] text-brutal-warning font-bold">LOW VELOCITY</span>
                           </div>
                         )}
 
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-8px opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            className="brutal-btn-secondary text-xs px-8px py-4px"
-                            title="Reassign tasks"
-                          >
-                            BALANCE
-                          </button>
-                          <button
-                            className="brutal-btn-secondary text-xs px-8px py-4px"
-                            title="View task details"
-                          >
-                            DETAILS
-                          </button>
+                        <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100">
+                          <button className="brutal-btn-secondary text-[10px] px-2 py-0.5" title="Reassign tasks">BALANCE</button>
+                          <button className="brutal-btn-secondary text-[10px] px-2 py-0.5" title="View task details">DETAILS</button>
                         </div>
                       </div>
                     </div>
 
                     {/* Workload Visualization */}
-                    <div className="space-y-12px">
+                    <div className="space-y-2">
                       {/* Main Progress Bar */}
                       <div className="relative">
-                        <div className="flex items-center justify-between mb-8px">
-                          <span className="font-mono text-brutal-xs text-primary-brutalist/60">TASK LOAD</span>
-                          <span className="font-mono text-brutal-xs font-bold">{taskCount} / {workloadData.max} TASKS</span>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">TASK LOAD</span>
+                          <span className="font-mono text-[10px] font-bold">{taskCount} / {workloadData.max} TASKS</span>
                         </div>
-                        <div className="h-32px bg-basalt-border border-2 border-[var(--theme-border)] relative overflow-hidden">
-                          {/* Background capacity markers */}
+                        <div className="h-6 bg-basalt-border border-2 border-[var(--theme-border)] relative overflow-hidden">
                           <div className="absolute inset-0">
                             <div className="absolute h-full border-r-2 border-brutal-warning/30" style={{ left: '66.7%' }} title="High load threshold"></div>
                             <div className="absolute h-full border-r-2 border-brutal-error/30" style={{ left: '83.3%' }} title="Overload threshold"></div>
                           </div>
-
-                          {/* Progress fill */}
                           <div
                             className={clsx(
-                              "absolute inset-y-0 left-0 transition-all duration-500 flex items-center justify-center",
+                              "absolute inset-y-0 left-0 flex items-center justify-center",
                               isHighLoad ? "bg-brutal-error" :
                                 isMediumLoad ? "bg-brutal-warning" : "bg-brutal-success"
                             )}
                             style={{ width: `${Math.min(100, (taskCount / workloadData.max) * 100)}%` }}
                           >
-                            <span className="font-mono text-brutal-xs font-bold text-event-horizon">
+                            <span className="font-mono text-[10px] font-bold text-event-horizon">
                               {Math.round((taskCount / workloadData.max) * 100)}%
                             </span>
                           </div>
@@ -1260,26 +1246,25 @@ export default function ProjectManagementPage() {
                       </div>
 
                       {/* Task Breakdown */}
-                      <div className="grid grid-cols-3 gap-12px">
+                      <div className="grid grid-cols-3 gap-2">
                         <div className="text-center">
-                          <div className="font-mono text-brutal-lg font-bold text-brutal-success">{member.tasksCompleted}</div>
-                          <div className="font-mono text-brutal-xs text-primary-brutalist/60">COMPLETED</div>
+                          <div className="font-mono text-sm font-bold text-brutal-success">{member.tasksCompleted}</div>
+                          <div className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">COMPLETED</div>
                         </div>
                         <div className="text-center">
-                          <div className="font-mono text-brutal-lg font-bold text-brutal-warning">{member.tasksInProgress}</div>
-                          <div className="font-mono text-brutal-xs text-primary-brutalist/60">IN PROGRESS</div>
+                          <div className="font-mono text-sm font-bold text-brutal-warning">{member.tasksInProgress}</div>
+                          <div className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">IN PROGRESS</div>
                         </div>
                         <div className="text-center">
-                          <div className="font-mono text-brutal-lg font-bold text-primary-brutalist">{completionRate}%</div>
-                          <div className="font-mono text-brutal-xs text-primary-brutalist/60">COMPLETION</div>
+                          <div className="font-mono text-sm font-bold text-primary-brutalist">{completionRate}%</div>
+                          <div className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">COMPLETION</div>
                         </div>
                       </div>
 
-                      {/* Time Tracking */}
                       {member.hoursTracked > 0 && (
-                        <div className="flex items-center justify-between pt-8px border-t border-[var(--theme-border)]/50">
-                          <span className="font-mono text-brutal-xs text-primary-brutalist/60">TIME TRACKED:</span>
-                          <span className="font-mono text-brutal-xs font-bold">{member.hoursTracked}H THIS WEEK</span>
+                        <div className="flex items-center justify-between pt-1.5 border-t border-[var(--theme-border)]/50">
+                          <span className="font-mono text-[10px] text-primary-brutalist/60">TIME TRACKED:</span>
+                          <span className="font-mono text-[10px] font-bold">{member.hoursTracked}H THIS WEEK</span>
                         </div>
                       )}
                     </div>
@@ -1289,185 +1274,128 @@ export default function ProjectManagementPage() {
             </div>
 
             {/* Team Summary Footer */}
-            <div className="mt-24px pt-24px border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/50 p-20px">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-16px font-mono text-center">
+            <div className="mt-3 pt-3 border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/50 p-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono text-center">
                 <div>
-                  <div className="text-brutal-lg font-bold text-primary-brutalist">{teamTotals.totalTasks}</div>
-                  <div className="text-brutal-xs text-primary-brutalist/60">TOTAL TASKS</div>
+                  <div className="text-sm font-bold text-primary-brutalist">{teamTotals.totalTasks}</div>
+                  <div className="text-[10px] text-primary-brutalist/60 uppercase tracking-wider">TOTAL TASKS</div>
                 </div>
                 <div>
-                  <div className="text-brutal-lg font-bold text-brutal-success">{teamTotals.completedTasks}</div>
-                  <div className="text-brutal-xs text-primary-brutalist/60">COMPLETED</div>
+                  <div className="text-sm font-bold text-brutal-success">{teamTotals.completedTasks}</div>
+                  <div className="text-[10px] text-primary-brutalist/60 uppercase tracking-wider">COMPLETED</div>
                 </div>
                 <div>
-                  <div className="text-brutal-lg font-bold text-brutal-warning">{teamTotals.inProgressTasks}</div>
-                  <div className="text-brutal-xs text-primary-brutalist/60">IN PROGRESS</div>
+                  <div className="text-sm font-bold text-brutal-warning">{teamTotals.inProgressTasks}</div>
+                  <div className="text-[10px] text-primary-brutalist/60 uppercase tracking-wider">IN PROGRESS</div>
                 </div>
                 <div>
-                  <div className="text-brutal-lg font-bold text-primary-brutalist">{teamTotals.avgProductivity}%</div>
-                  <div className="text-brutal-xs text-primary-brutalist/60">AVG VELOCITY</div>
+                  <div className="text-sm font-bold text-primary-brutalist">{teamTotals.avgProductivity}%</div>
+                  <div className="text-[10px] text-primary-brutalist/60 uppercase tracking-wider">AVG VELOCITY</div>
                 </div>
               </div>
 
-              {/* Smart Recommendations */}
-              <div className="mt-16px">
-                {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && (
-                  <div className="flex items-center gap-8px p-12px bg-brutal-error/10 border-2 border-brutal-error">
-                    <div className="w-8px h-8px bg-brutal-error animate-pulse"></div>
-                    <span className="font-mono text-brutal-xs text-brutal-error font-bold">
-                      {memberStats.filter((m: any) => m.tasksAssigned > 15).length} MEMBER(S) OVERLOADED - CONSIDER REDISTRIBUTING TASKS
-                    </span>
-                    <button className="ml-auto brutal-btn-secondary text-xs text-brutal-error border-brutal-error">
-                      AUTO-BALANCE
-                    </button>
-                  </div>
-                )}
-              </div>
+              {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && (
+                <div className="flex items-center gap-2 p-2.5 mt-2 bg-brutal-error/10 border-2 border-brutal-error">
+                  <div className="w-2 h-2 bg-brutal-error animate-pulse"></div>
+                  <span className="font-mono text-[10px] text-brutal-error font-bold">
+                    {memberStats.filter((m: any) => m.tasksAssigned > 15).length} MEMBER(S) OVERLOADED - CONSIDER REDISTRIBUTING TASKS
+                  </span>
+                  <button className="ml-auto brutal-btn-secondary text-[10px] text-brutal-error border-brutal-error px-2 py-0.5">
+                    AUTO-BALANCE
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Team Members Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16px">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {memberStats.map((member: any) => (
-            <div key={member._id} className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200">
-              {/* Header with enhanced user display */}
-              <div className="p-20px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+            <div key={member._id} className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px]">
+              <div className="px-3 py-2.5 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
                 <div className="flex items-center justify-between">
-                  <UserDisplay
-                    userId={member._id}
-                    size="sm"
-                    showName={true}
-                    showStatus={true}
-                    compact={false}
-                    className="flex-1"
-                  />
-                  <div className="flex items-center gap-8px">
+                  <UserDisplay userId={member._id} size="sm" showName={true} showStatus={true} compact={false} className="flex-1" />
+                  <div className="flex items-center gap-2">
                     <div className="text-right">
-                      <div className="text-brutal-xs font-mono text-[var(--theme-foreground)]/60">ROLE</div>
-                      <div className="text-brutal-xs font-bold text-primary-brutalist uppercase">
-                        {member.role || 'DEVELOPER'}
-                      </div>
+                      <div className="text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider">ROLE</div>
+                      <div className="text-[10px] font-bold text-primary-brutalist uppercase">{member.role || 'DEVELOPER'}</div>
                     </div>
-                    <button className="p-4px hover:bg-basalt-border/30 transition-colors">
-                      <HiOutlineDotsVertical className="w-16px h-16px text-[var(--theme-foreground)]/60" />
+                    <button className="p-1 hover:bg-basalt-border/30">
+                      <HiOutlineDotsVertical className="w-3.5 h-3.5 text-[var(--theme-foreground)]/60" />
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Stats Section */}
-              <div className="p-20px">
-                {/* Task Statistics Grid */}
-                <div className="grid grid-cols-2 gap-12px mb-20px">
-                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-12px text-center">
-                    <div className="text-brutal-md font-bold text-primary-brutalist">
-                      {member.tasksAssigned}
-                    </div>
-                    <div className="text-brutal-xs font-mono text-[var(--theme-foreground)]/60 uppercase">
-                      ASSIGNED
-                    </div>
+              <div className="p-3">
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-2 text-center">
+                    <div className="text-sm font-bold text-primary-brutalist">{member.tasksAssigned}</div>
+                    <div className="text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider">ASSIGNED</div>
                   </div>
-                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-12px text-center">
-                    <div className="text-brutal-md font-bold text-brutal-success">
-                      {member.tasksCompleted}
-                    </div>
-                    <div className="text-brutal-xs font-mono text-[var(--theme-foreground)]/60 uppercase">
-                      COMPLETED
-                    </div>
+                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-2 text-center">
+                    <div className="text-sm font-bold text-brutal-success">{member.tasksCompleted}</div>
+                    <div className="text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider">COMPLETED</div>
                   </div>
-                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-12px text-center">
-                    <div className="text-brutal-md font-bold text-brutal-info">
-                      {member.tasksInProgress}
-                    </div>
-                    <div className="text-brutal-xs font-mono text-[var(--theme-foreground)]/60 uppercase">
-                      IN PROGRESS
-                    </div>
+                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-2 text-center">
+                    <div className="text-sm font-bold text-brutal-info">{member.tasksInProgress}</div>
+                    <div className="text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider">IN PROGRESS</div>
                   </div>
-                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-12px text-center">
-                    <div className={clsx(
-                      "text-brutal-md font-bold",
-                      member.tasksBlocked > 0 ? "text-brutal-error" : "text-[var(--theme-foreground)]/40"
-                    )}>
+                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-2 text-center">
+                    <div className={clsx("text-sm font-bold", member.tasksBlocked > 0 ? "text-brutal-error" : "text-[var(--theme-foreground)]/40")}>
                       {member.tasksBlocked}
                     </div>
-                    <div className="text-brutal-xs font-mono text-[var(--theme-foreground)]/60 uppercase">
-                      BLOCKED
-                    </div>
+                    <div className="text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider">BLOCKED</div>
                   </div>
                 </div>
 
-                {/* Productivity Section */}
-                <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-16px mb-20px">
-                  <div className="flex items-center justify-between mb-12px">
-                    <div className="font-mono text-brutal-sm font-bold">
-                      PRODUCTIVITY
-                    </div>
+                <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-2.5 mb-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="font-mono text-[10px] font-bold uppercase tracking-wider">PRODUCTIVITY</div>
                     <div className={clsx(
-                      "font-mono text-brutal-sm font-bold",
+                      "font-mono text-xs font-bold",
                       member.productivity >= 90 ? "text-brutal-success" :
                         member.productivity >= 70 ? "text-brutal-warning" : "text-brutal-error"
-                    )}>
-                      {member.productivity}%
-                    </div>
+                    )}>{member.productivity}%</div>
                   </div>
-
-                  <div className="h-8px bg-basalt-border mb-8px">
+                  <div className="h-1.5 bg-basalt-border mb-1.5">
                     <div
                       className={clsx(
-                        "h-full transition-all duration-500 ease-out",
+                        "h-full",
                         member.productivity >= 90 ? "bg-brutal-success" :
                           member.productivity >= 70 ? "bg-brutal-warning" : "bg-brutal-error"
                       )}
                       style={{ width: `${member.productivity}%` }}
                     />
                   </div>
-
-                  <div className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
+                  <div className="font-mono text-[10px] text-[var(--theme-foreground)]/60 uppercase tracking-wider">
                     LAST ACTIVE: {member.lastActive || 'UNKNOWN'}
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-12px">
+                <div className="flex gap-2">
                   <button
-                    onClick={() => {
-                      setActiveTab('tasks')
-                      setTaskFilters(prev => ({
-                        ...prev,
-                        assigneeIds: [member._id]
-                      }))
-                    }}
-                    className="flex-1 brutal-btn-secondary text-brutal-xs py-12px"
-                  >
-                    VIEW TASKS
-                  </button>
+                    onClick={() => { setActiveTab('tasks'); setTaskFilters(prev => ({ ...prev, assigneeIds: [member._id] })) }}
+                    className="flex-1 brutal-btn-secondary text-[10px] py-1.5"
+                  >VIEW TASKS</button>
                   <button
-                    onClick={() => {
-                      setShowCreateTaskModal(true)
-                      toast.info('Creating task for ' + (member.name || 'team member'))
-                    }}
-                    className="flex-1 brutal-btn-secondary text-brutal-xs py-12px"
-                  >
-                    ASSIGN TASK
-                  </button>
+                    onClick={() => { setShowCreateTaskModal(true); toast.info('Creating task for ' + (member.name || 'team member')) }}
+                    className="flex-1 brutal-btn-secondary text-[10px] py-1.5"
+                  >ASSIGN TASK</button>
                 </div>
               </div>
             </div>
           ))}
 
           {/* Add New Member Card */}
-          <div className="bg-[var(--theme-background)] border-2 border-dashed border-[var(--theme-border)] hover:border-primary-brutalist transition-all duration-200 cursor-pointer group">
-            <div className="p-40px text-center">
-              <div className="w-64px h-64px bg-basalt-border/20 border-2 border-dashed border-[var(--theme-border)] group-hover:border-primary-brutalist mx-auto mb-16px flex items-center justify-center transition-all">
-                <HiOutlinePlus className="w-24px h-24px text-[var(--theme-foreground)]/60 group-hover:text-primary-brutalist" />
+          <div className="bg-[var(--theme-background)] border-2 border-dashed border-[var(--theme-border)] hover:border-primary-brutalist cursor-pointer group">
+            <div className="p-8 text-center">
+              <div className="w-8 h-8 bg-basalt-border/20 border-2 border-dashed border-[var(--theme-border)] group-hover:border-primary-brutalist mx-auto mb-2 flex items-center justify-center">
+                <HiOutlinePlus className="w-4 h-4 text-[var(--theme-foreground)]/60 group-hover:text-primary-brutalist" />
               </div>
-              <h4 className="font-bold text-brutal-sm text-[var(--theme-foreground)]/60 group-hover:text-primary-brutalist mb-8px">
-                ADD TEAM MEMBER
-              </h4>
-              <p className="text-brutal-xs text-[var(--theme-foreground)]/40 group-hover:text-[var(--theme-foreground)]/60">
-                Invite someone to join this project
-              </p>
+              <h4 className="font-bold text-xs text-[var(--theme-foreground)]/60 group-hover:text-primary-brutalist mb-1 uppercase tracking-wider">ADD TEAM MEMBER</h4>
+              <p className="text-[10px] text-[var(--theme-foreground)]/40 group-hover:text-[var(--theme-foreground)]/60">Invite someone to join this project</p>
             </div>
           </div>
         </div>
@@ -1482,213 +1410,119 @@ export default function ProjectManagementPage() {
 
         {/* Quick Actions - Functional */}
         <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
-          <div className="p-24px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+          <div className="px-4 py-2.5 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
             <div className="flex items-center justify-between">
-              <h3 className="text-brutal-lg font-bold uppercase">QUICK ACTIONS</h3>
-              <div className="flex items-center gap-8px font-mono text-brutal-xs">
+              <h3 className="text-xs font-bold uppercase tracking-wider">QUICK ACTIONS</h3>
+              <div className="flex items-center gap-1.5 font-mono text-[10px]">
                 <span className="text-primary-brutalist/60">SHORTCUTS FOR TEAM MANAGEMENT</span>
-                <div className="w-4px h-4px bg-primary-brutalist animate-pulse"></div>
+                <div className="w-1 h-1 bg-primary-brutalist animate-pulse"></div>
               </div>
             </div>
           </div>
 
-          <div className="p-24px">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-16px">
-              {/* Add Member Action */}
+          <div className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
               <div className="group relative">
-                <button
-                  onClick={() => setShowProjectInviteModal(true)}
-                  className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
-                >
-                  <div className="flex items-center justify-center w-40px h-40px bg-basalt-border border-2 border-[var(--theme-border)]">
-                    <HiOutlinePlus className="w-20px h-20px text-primary-brutalist" />
+                <button onClick={() => setShowProjectInviteModal(true)} className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]">
+                  <div className="flex items-center justify-center w-8 h-8 bg-basalt-border border-2 border-[var(--theme-border)]">
+                    <HiOutlinePlus className="w-4 h-4 text-primary-brutalist" />
                   </div>
                   <div className="text-center">
-                    <div className="font-mono text-brutal-sm font-bold">ADD MEMBER</div>
-                    <div className="font-mono text-brutal-xs text-primary-brutalist/60 mt-4px">INVITE TO PROJECT</div>
+                    <div className="font-mono text-[10px] font-bold">ADD MEMBER</div>
+                    <div className="font-mono text-[9px] text-primary-brutalist/60 mt-0.5">INVITE TO PROJECT</div>
                   </div>
                 </button>
-                <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-[var(--theme-border)] font-mono text-brutal-xs text-event-horizon">
-                    SHIFT+A
-                  </div>
-                </div>
               </div>
 
-              {/* Bulk Reassign Action */}
               <div className="group relative">
                 <button
                   onClick={() => {
                     const overloadedMembers = memberStats.filter((m: any) => m.tasksAssigned > 15)
-                    if (overloadedMembers.length > 0) {
-                      // Open bulk reassign modal with overloaded members pre-selected
-                      console.log('Opening bulk reassign for overloaded members:', overloadedMembers)
-                    } else {
-                      // Open general bulk reassign modal
-                      console.log('Opening general bulk reassign modal')
-                    }
+                    if (overloadedMembers.length > 0) { console.log('Opening bulk reassign for overloaded members:', overloadedMembers) }
+                    else { console.log('Opening general bulk reassign modal') }
                   }}
                   className={clsx(
-                    "w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]",
+                    "w-full brutal-btn-secondary flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]",
                     memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && "border-brutal-warning bg-brutal-warning/10"
                   )}
                 >
-                  <div className={clsx(
-                    "flex items-center justify-center w-40px h-40px border-2 border-[var(--theme-border)]",
-                    memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 ? "bg-brutal-warning" : "bg-basalt-border"
-                  )}>
-                    <HiOutlineUserGroup className={clsx(
-                      "w-20px h-20px",
-                      memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 ? "text-event-horizon" : "text-primary-brutalist"
-                    )} />
+                  <div className={clsx("flex items-center justify-center w-8 h-8 border-2 border-[var(--theme-border)]", memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 ? "bg-brutal-warning" : "bg-basalt-border")}>
+                    <HiOutlineUserGroup className={clsx("w-4 h-4", memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 ? "text-event-horizon" : "text-primary-brutalist")} />
                   </div>
                   <div className="text-center">
-                    <div className="font-mono text-brutal-sm font-bold">BULK REASSIGN</div>
-                    <div className="font-mono text-brutal-xs text-primary-brutalist/60 mt-4px">
-                      {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0
-                        ? `${memberStats.filter((m: any) => m.tasksAssigned > 15).length} OVERLOADED`
-                        : 'BALANCE WORKLOAD'
-                      }
+                    <div className="font-mono text-[10px] font-bold">BULK REASSIGN</div>
+                    <div className="font-mono text-[9px] text-primary-brutalist/60 mt-0.5">
+                      {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 ? `${memberStats.filter((m: any) => m.tasksAssigned > 15).length} OVERLOADED` : 'BALANCE WORKLOAD'}
                     </div>
                   </div>
-                  {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && (
-                    <div className="absolute top-8px right-8px w-8px h-8px bg-brutal-error animate-pulse"></div>
-                  )}
                 </button>
-                <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-[var(--theme-border)] font-mono text-brutal-xs text-event-horizon">
-                    SHIFT+B
-                  </div>
-                </div>
               </div>
 
-              {/* Export Report Action */}
               <div className="group relative">
                 <button
                   onClick={() => {
-                    // Generate and download team performance report
-                    const reportData = {
-                      project: project.name,
-                      date: new Date().toISOString(),
-                      teamSize: memberStats.length,
-                      totalTasks: teamTotals.totalTasks,
-                      completedTasks: teamTotals.completedTasks,
-                      avgProductivity: teamTotals.avgProductivity,
-                      members: memberStats.map((m: any) => ({
-                        name: m.name,
-                        role: m.role,
-                        tasksAssigned: m.tasksAssigned,
-                        tasksCompleted: m.tasksCompleted,
-                        productivity: m.productivity,
-                        hoursTracked: m.hoursTracked
-                      }))
-                    }
-
+                    const reportData = { project: project.name, date: new Date().toISOString(), teamSize: memberStats.length, totalTasks: teamTotals.totalTasks, completedTasks: teamTotals.completedTasks, avgProductivity: teamTotals.avgProductivity, members: memberStats.map((m: any) => ({ name: m.name, role: m.role, tasksAssigned: m.tasksAssigned, tasksCompleted: m.tasksCompleted, productivity: m.productivity, hoursTracked: m.hoursTracked })) }
                     const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' })
                     const url = URL.createObjectURL(blob)
-                    const a = document.createElement('a')
-                    a.href = url
-                    a.download = `${project.name}-team-report-${new Date().toISOString().split('T')[0]}.json`
-                    document.body.appendChild(a)
-                    a.click()
-                    document.body.removeChild(a)
-                    URL.revokeObjectURL(url)
+                    const a = document.createElement('a'); a.href = url; a.download = `${project.name}-team-report-${new Date().toISOString().split('T')[0]}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
                   }}
-                  className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
+                  className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
                 >
-                  <div className="flex items-center justify-center w-40px h-40px bg-basalt-border border-2 border-[var(--theme-border)]">
-                    <HiOutlineChartBar className="w-20px h-20px text-primary-brutalist" />
+                  <div className="flex items-center justify-center w-8 h-8 bg-basalt-border border-2 border-[var(--theme-border)]">
+                    <HiOutlineChartBar className="w-4 h-4 text-primary-brutalist" />
                   </div>
                   <div className="text-center">
-                    <div className="font-mono text-brutal-sm font-bold">EXPORT REPORT</div>
-                    <div className="font-mono text-brutal-xs text-primary-brutalist/60 mt-4px">TEAM PERFORMANCE</div>
+                    <div className="font-mono text-[10px] font-bold">EXPORT REPORT</div>
+                    <div className="font-mono text-[9px] text-primary-brutalist/60 mt-0.5">TEAM PERFORMANCE</div>
                   </div>
                 </button>
-                <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-[var(--theme-border)] font-mono text-brutal-xs text-event-horizon">
-                    SHIFT+E
-                  </div>
-                </div>
               </div>
 
-              {/* Team Settings Action */}
               <div className="group relative">
-                <button
-                  onClick={() => {
-                    // Open team settings modal
-                    console.log('Opening team settings modal')
-                  }}
-                  className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
-                >
-                  <div className="flex items-center justify-center w-40px h-40px bg-basalt-border border-2 border-[var(--theme-border)]">
-                    <HiOutlineCog className="w-20px h-20px text-primary-brutalist" />
+                <button onClick={() => console.log('Opening team settings modal')} className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]">
+                  <div className="flex items-center justify-center w-8 h-8 bg-basalt-border border-2 border-[var(--theme-border)]">
+                    <HiOutlineCog className="w-4 h-4 text-primary-brutalist" />
                   </div>
                   <div className="text-center">
-                    <div className="font-mono text-brutal-sm font-bold">TEAM SETTINGS</div>
-                    <div className="font-mono text-brutal-xs text-primary-brutalist/60 mt-4px">CONFIGURE PROJECT</div>
+                    <div className="font-mono text-[10px] font-bold">TEAM SETTINGS</div>
+                    <div className="font-mono text-[9px] text-primary-brutalist/60 mt-0.5">CONFIGURE PROJECT</div>
                   </div>
                 </button>
-                <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-[var(--theme-border)] font-mono text-brutal-xs text-event-horizon">
-                    SHIFT+S
-                  </div>
-                </div>
               </div>
 
-              {/* Find Expert Action */}
               <div className="group relative">
-                <button
-                  onClick={() => setShowExpertiseSearch(true)}
-                  className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-12px p-20px min-h-120px transition-all duration-200 group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
-                >
-                  <div className="flex items-center justify-center w-40px h-40px bg-basalt-border border-2 border-[var(--theme-border)]">
-                    <HiOutlineSearch className="w-20px h-20px text-primary-brutalist" />
+                <button onClick={() => setShowExpertiseSearch(true)} className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]">
+                  <div className="flex items-center justify-center w-8 h-8 bg-basalt-border border-2 border-[var(--theme-border)]">
+                    <HiOutlineSearch className="w-4 h-4 text-primary-brutalist" />
                   </div>
                   <div className="text-center">
-                    <div className="font-mono text-brutal-sm font-bold">FIND EXPERT</div>
-                    <div className="font-mono text-brutal-xs text-primary-brutalist/60 mt-4px">SEARCH EXPERTISE</div>
+                    <div className="font-mono text-[10px] font-bold">FIND EXPERT</div>
+                    <div className="font-mono text-[9px] text-primary-brutalist/60 mt-0.5">SEARCH EXPERTISE</div>
                   </div>
                 </button>
-                <div className="absolute -top-8px -right-8px opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="px-8px py-2px bg-primary-brutalist border-2 border-[var(--theme-border)] font-mono text-brutal-xs text-event-horizon">
-                    SHIFT+F
-                  </div>
-                </div>
               </div>
             </div>
 
             {/* Smart Suggestions Bar */}
-            <div className="mt-24px pt-20px border-t-2 border-[var(--theme-border)]">
+            <div className="mt-3 pt-3 border-t-2 border-[var(--theme-border)]">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-12px">
-                  <div className="w-8px h-8px bg-primary-brutalist animate-pulse"></div>
-                  <span className="font-mono text-brutal-xs font-bold text-primary-brutalist">SMART SUGGESTIONS:</span>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 bg-primary-brutalist animate-pulse"></div>
+                  <span className="font-mono text-[10px] font-bold text-primary-brutalist">SMART SUGGESTIONS:</span>
                 </div>
-                <div className="flex items-center gap-8px">
+                <div className="flex items-center gap-2">
                   {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && (
-                    <button
-                      onClick={() => {
-                        // Quick balance action
-                        console.log('Quick balancing overloaded members')
-                      }}
-                      className="px-12px py-6px bg-brutal-error/20 border-2 border-brutal-error font-mono text-brutal-xs text-brutal-error hover:bg-brutal-error hover:text-event-horizon transition-colors"
-                    >
+                    <button onClick={() => console.log('Quick balancing overloaded members')} className="px-2.5 py-1 bg-brutal-error/20 border-2 border-brutal-error font-mono text-[10px] text-brutal-error hover:bg-brutal-error hover:text-event-horizon">
                       BALANCE {memberStats.filter((m: any) => m.tasksAssigned > 15).length} OVERLOADED
                     </button>
                   )}
                   {memberStats.filter((m: any) => m.tasksAssigned === 0).length > 0 && (
-                    <button
-                      onClick={() => {
-                        // Assign tasks to idle members
-                        console.log('Assigning tasks to idle members')
-                      }}
-                      className="px-12px py-6px bg-brutal-info/20 border-2 border-brutal-info font-mono text-brutal-xs text-brutal-info hover:bg-brutal-info hover:text-event-horizon transition-colors"
-                    >
+                    <button onClick={() => console.log('Assigning tasks to idle members')} className="px-2.5 py-1 bg-brutal-info/20 border-2 border-brutal-info font-mono text-[10px] text-brutal-info hover:bg-brutal-info hover:text-event-horizon">
                       ASSIGN TO {memberStats.filter((m: any) => m.tasksAssigned === 0).length} IDLE
                     </button>
                   )}
                   {memberStats.filter((m: any) => m.productivity < 40 && m.tasksAssigned > 0).length > 0 && (
-                    <div className="px-12px py-6px bg-brutal-warning/20 border-2 border-brutal-warning font-mono text-brutal-xs text-brutal-warning">
+                    <div className="px-2.5 py-1 bg-brutal-warning/20 border-2 border-brutal-warning font-mono text-[10px] text-brutal-warning">
                       {memberStats.filter((m: any) => m.productivity < 40 && m.tasksAssigned > 0).length} LOW VELOCITY
                     </div>
                   )}
@@ -1705,10 +1539,10 @@ export default function ProjectManagementPage() {
     // Check if project has repository configured
     if (!project?.repository) {
       return (
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-48px text-center">
-          <HiOutlineCode className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
-          <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO REPOSITORY CONNECTED</h3>
-          <p className="text-[var(--theme-foreground)]/60 mb-24px">Connect a GitHub repository to enable code tracking and PR management</p>
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-5 text-center">
+          <HiOutlineCode className="w-5 h-5 text-primary-brutalist/30 mx-auto mb-2" />
+          <h3 className="font-mono text-brutal-xs uppercase mb-2">NO REPOSITORY CONNECTED</h3>
+          <p className="text-[var(--theme-foreground)]/60 text-brutal-xs mb-3">Connect a GitHub repository to enable code tracking and PR management</p>
           <button
             onClick={() => setShowConnectRepoModal(true)}
             className="brutal-btn"
@@ -1745,18 +1579,18 @@ export default function ProjectManagementPage() {
     ]
 
     return (
-      <div className="space-y-24px">
+      <div className="space-y-3">
         {/* Repository Overview */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-          <div className="flex items-center justify-between mb-16px">
-            <div className="flex items-center gap-16px">
-              <HiOutlineCode className="w-24px h-24px text-primary-brutalist" />
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <HiOutlineCode className="w-4 h-4 text-primary-brutalist" />
               <div>
-                <h2 className="text-brutal-lg font-bold uppercase">{repository.provider.toUpperCase()} REPOSITORY</h2>
+                <h2 className="text-xs font-semibold font-bold uppercase">{repository.provider.toUpperCase()} REPOSITORY</h2>
                 <p className="font-mono text-brutal-xs text-primary-brutalist/60">{repository.url}</p>
               </div>
             </div>
-            <div className="flex items-center gap-12px">
+            <div className="flex items-center gap-[6px]">
               <button
                 onClick={() => {
                   const cloneUrl = repository.url.endsWith('.git') ? repository.url : `${repository.url}.git`
@@ -1776,20 +1610,20 @@ export default function ProjectManagementPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-16px">
-            <div className="border-2 border-[var(--theme-border)] p-16px">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="border-2 border-[var(--theme-border)] p-2.5">
               <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-4px">DEFAULT BRANCH</div>
               <div className="font-bold">{repository.defaultBranch}</div>
             </div>
-            <div className="border-2 border-[var(--theme-border)] p-16px">
+            <div className="border-2 border-[var(--theme-border)] p-2.5">
               <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-4px">OPEN PRS</div>
               <div className="font-bold text-brutal-info">{pullRequests.filter(pr => pr.status === 'open').length}</div>
             </div>
-            <div className="border-2 border-[var(--theme-border)] p-16px">
+            <div className="border-2 border-[var(--theme-border)] p-2.5">
               <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-4px">ACTIVE BRANCHES</div>
               <div className="font-bold">{branches.length}</div>
             </div>
-            <div className="border-2 border-[var(--theme-border)] p-16px">
+            <div className="border-2 border-[var(--theme-border)] p-2.5">
               <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-4px">CI STATUS</div>
               <div className="font-bold text-brutal-success">PASSING</div>
             </div>
@@ -1797,10 +1631,10 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Pull Request Queue */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-          <div className="flex items-center justify-between mb-16px">
-            <h3 className="text-brutal-lg font-bold uppercase">PULL REQUEST QUEUE</h3>
-            <div className="flex items-center gap-12px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-semibold font-bold uppercase">PULL REQUEST QUEUE</h3>
+            <div className="flex items-center gap-[6px]">
               <button className="font-mono text-brutal-xs uppercase text-primary-brutalist/60 hover:text-primary-brutalist">
                 FILTER ▼
               </button>
@@ -1818,17 +1652,17 @@ export default function ProjectManagementPage() {
 
           <div className="space-y-12px">
             {pullRequests.length > 0 ? pullRequests.map((pr) => (
-              <div key={pr.id} className="border-2 border-[var(--theme-border)] p-16px hover:border-primary-brutalist transition-all">
-                <div className="flex items-start justify-between mb-12px">
+              <div key={pr.id} className="border-2 border-[var(--theme-border)] p-3 hover:border-primary-brutalist transition-all">
+                <div className="flex items-start justify-between mb-2">
                   <div>
-                    <div className="flex items-center gap-12px mb-4px">
+                    <div className="flex items-center gap-1.5 mb-1">
                       <span className="font-mono text-brutal-sm font-bold">#{pr.number}</span>
                       <h4 className="font-bold">{pr.title}</h4>
                       {pr.draft && (
                         <span className="px-8px py-2px bg-basalt-border text-brutal-xs font-mono uppercase">DRAFT</span>
                       )}
                     </div>
-                    <div className="flex items-center gap-16px font-mono text-brutal-xs text-primary-brutalist/60">
+                    <div className="flex items-center gap-2 font-mono text-brutal-xs text-primary-brutalist/60">
                       <span>by {pr.author}</span>
                       <span>•</span>
                       <span>{pr.createdAt}</span>
@@ -1847,9 +1681,9 @@ export default function ProjectManagementPage() {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-24px">
+                  <div className="flex items-center gap-3">
                     {/* Review Status */}
-                    <div className="flex items-center gap-8px">
+                    <div className="flex items-center gap-1.5">
                       {pr.reviewStatus === 'approved' && (
                         <>
                           <HiOutlineCheckCircle className="w-16px h-16px text-brutal-success" />
@@ -1888,9 +1722,9 @@ export default function ProjectManagementPage() {
                 </div>
               </div>
             )) : (
-              <div className="text-center py-32px">
-                <HiOutlineCode className="w-32px h-32px text-primary-brutalist/30 mx-auto mb-12px" />
-                <p className="font-mono text-brutal-sm text-primary-brutalist/60">
+              <div className="text-center py-6">
+                <HiOutlineCode className="w-5 h-5 text-primary-brutalist/30 mx-auto mb-2" />
+                <p className="font-mono text-brutal-xs text-primary-brutalist/60">
                   No pull requests found
                 </p>
                 <p className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
@@ -1902,9 +1736,9 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Branch Management */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-          <div className="flex items-center justify-between mb-16px">
-            <h3 className="text-brutal-lg font-bold uppercase">BRANCH MANAGEMENT</h3>
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-semibold font-bold uppercase">BRANCH MANAGEMENT</h3>
             <button className="brutal-btn-sm">CREATE BRANCH</button>
           </div>
 
@@ -1921,22 +1755,22 @@ export default function ProjectManagementPage() {
               <tbody>
                 {branches.length > 0 ? branches.map((branch) => (
                   <tr key={branch.name} className="border-b border-[var(--theme-border)] hover:bg-basalt-border/10">
-                    <td className="py-12px">
-                      <div className="flex items-center gap-8px">
+                    <td className="py-2">
+                      <div className="flex items-center gap-2">
                         {branch.isDefault && <HiOutlineHome className="w-16px h-16px text-primary-brutalist" />}
                         <span className={clsx(branch.isDefault && "font-bold")}>{branch.name}</span>
                       </div>
                     </td>
-                    <td className="py-12px">
-                      <div className="flex items-center gap-12px">
+                    <td className="py-2">
+                      <div className="flex items-center gap-1.5">
                         {branch.ahead > 0 && <span className="text-brutal-success">↑{branch.ahead}</span>}
                         {branch.behind > 0 && <span className="text-brutal-error">↓{branch.behind}</span>}
                         {branch.ahead === 0 && branch.behind === 0 && <span className="text-primary-brutalist/60">UP TO DATE</span>}
                       </div>
                     </td>
-                    <td className="py-12px text-primary-brutalist/60">{branch.lastCommit}</td>
-                    <td className="py-12px text-right">
-                      <div className="flex items-center justify-end gap-8px">
+                    <td className="py-2 text-primary-brutalist/60">{branch.lastCommit}</td>
+                    <td className="py-2 text-right">
+                      <div className="flex items-center justify-end gap-2">
                         {!branch.isDefault && (
                           <>
                             <button className="text-brutal-xs uppercase hover:text-primary-brutalist">MERGE</button>
@@ -1948,9 +1782,9 @@ export default function ProjectManagementPage() {
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={4} className="py-32px text-center">
-                      <HiOutlineCode className="w-32px h-32px text-primary-brutalist/30 mx-auto mb-12px" />
-                      <p className="font-mono text-brutal-sm text-primary-brutalist/60">
+                    <td colSpan={4} className="py-6 text-center">
+                      <HiOutlineCode className="w-5 h-5 text-primary-brutalist/30 mx-auto mb-2" />
+                      <p className="font-mono text-brutal-xs text-primary-brutalist/60">
                         No branches found
                       </p>
                       <p className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
@@ -1965,10 +1799,10 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Code Review Analytics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16px">
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-            <h3 className="text-brutal-lg font-bold uppercase mb-16px">CODE REVIEW METRICS</h3>
-            <div className="space-y-12px">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+            <h3 className="text-xs font-semibold font-bold uppercase mb-2">CODE REVIEW METRICS</h3>
+            <div className="space-y-2">
               <div className="flex justify-between font-mono text-brutal-sm">
                 <span className="text-primary-brutalist/60">AVG REVIEW TIME:</span>
                 <span className="font-bold">{codeReviewStats.averageTime}</span>
@@ -1983,8 +1817,8 @@ export default function ProjectManagementPage() {
               </div>
             </div>
 
-            <div className="mt-16px pt-16px border-t-2 border-[var(--theme-border)]">
-              <h4 className="font-mono text-brutal-xs text-primary-brutalist/60 uppercase mb-8px">TOP REVIEWERS</h4>
+            <div className="mt-2 pt-3 border-t-2 border-[var(--theme-border)]">
+              <h4 className="font-mono text-brutal-xs text-primary-brutalist/60 uppercase mb-1.5">TOP REVIEWERS</h4>
               {codeReviewStats.topReviewers.map((reviewer, index) => (
                 <div key={reviewer.name} className="flex items-center justify-between py-4px">
                   <span className="font-mono text-brutal-sm">{index + 1}. {reviewer.name}</span>
@@ -1997,18 +1831,18 @@ export default function ProjectManagementPage() {
           </div>
 
           {/* CI/CD Pipeline Status */}
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-            <h3 className="text-brutal-lg font-bold uppercase mb-16px">CI/CD PIPELINE</h3>
-            <div className="space-y-8px">
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+            <h3 className="text-xs font-semibold font-bold uppercase mb-2">CI/CD PIPELINE</h3>
+            <div className="space-y-2">
               {ciPipeline.map((stage) => (
-                <div key={stage.name} className="flex items-center justify-between p-12px bg-[var(--theme-background-secondary)]/10 border border-[var(--theme-border)]">
-                  <div className="flex items-center gap-12px">
+                <div key={stage.name} className="flex items-center justify-between p-2.5 bg-[var(--theme-background-secondary)]/10 border border-[var(--theme-border)]">
+                  <div className="flex items-center gap-1.5">
                     {stage.status === 'success' && <HiOutlineCheckCircle className="w-16px h-16px text-brutal-success" />}
                     {stage.status === 'running' && <HiOutlinePlay className="w-16px h-16px text-brutal-info animate-pulse" />}
                     {stage.status === 'failed' && <HiOutlineXCircle className="w-16px h-16px text-brutal-error" />}
                     <span className="font-mono text-brutal-sm">{stage.name}</span>
                   </div>
-                  <div className="flex items-center gap-16px font-mono text-brutal-xs text-primary-brutalist/60">
+                  <div className="flex items-center gap-2 font-mono text-brutal-xs text-primary-brutalist/60">
                     <span>{stage.duration}</span>
                     <span>{stage.timestamp}</span>
                   </div>
@@ -2016,7 +1850,7 @@ export default function ProjectManagementPage() {
               ))}
             </div>
 
-            <div className="mt-16px flex items-center gap-12px">
+            <div className="mt-2 flex items-center gap-1.5">
               <button className="brutal-btn-sm flex-1">VIEW LOGS</button>
               <button className="brutal-btn-sm bg-brutal-error border-brutal-error">CANCEL PIPELINE</button>
             </div>
@@ -2024,28 +1858,28 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Recent Commits */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-          <div className="flex items-center justify-between mb-16px">
-            <h3 className="text-brutal-lg font-bold uppercase">RECENT COMMITS</h3>
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-semibold font-bold uppercase">RECENT COMMITS</h3>
             <button className="font-mono text-brutal-xs uppercase text-primary-brutalist/60 hover:text-primary-brutalist">
               VIEW ALL →
             </button>
           </div>
 
-          <div className="space-y-8px font-mono text-brutal-sm">
-            <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
+          <div className="space-y-1 font-mono text-brutal-xs">
+            <div className="flex items-center gap-2 p-1.5 hover:bg-basalt-border/20 transition-colors">
               <span className="text-brutal-xs text-primary-brutalist/60">7a8f9d2</span>
               <span className="text-primary-brutalist">fix: Resolve memory leak in worker process</span>
               <span className="text-primary-brutalist/60">by john.doe</span>
               <span className="text-brutal-xs text-primary-brutalist/60 ml-auto">10 minutes ago</span>
             </div>
-            <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
+            <div className="flex items-center gap-2 p-1.5 hover:bg-basalt-border/20 transition-colors">
               <span className="text-brutal-xs text-primary-brutalist/60">b5c3e1a</span>
               <span className="text-primary-brutalist">feat: Add user authentication middleware</span>
               <span className="text-primary-brutalist/60">by jane.smith</span>
               <span className="text-brutal-xs text-primary-brutalist/60 ml-auto">2 hours ago</span>
             </div>
-            <div className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors">
+            <div className="flex items-center gap-2 p-1.5 hover:bg-basalt-border/20 transition-colors">
               <span className="text-brutal-xs text-primary-brutalist/60">c9d4f2b</span>
               <span className="text-primary-brutalist">chore: Update dependencies to latest versions</span>
               <span className="text-primary-brutalist/60">by alice.jones</span>
@@ -2069,11 +1903,11 @@ export default function ProjectManagementPage() {
         return <GitHubProjectTab project={project} workspaceId={workspaceId as any} />
       case 'meetings':
         return (
-          <div className="space-y-24px">
+          <div className="space-y-3">
             {/* Header */}
-            <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-              <div className="flex items-center justify-between mb-16px">
-                <h2 className="text-brutal-lg font-bold uppercase">PROJECT MEETINGS</h2>
+            <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-xs font-semibold font-bold uppercase">PROJECT MEETINGS</h2>
                 <button
                   onClick={() => setShowScheduleMeetingModal(true)}
                   className="brutal-btn"
@@ -2083,7 +1917,7 @@ export default function ProjectManagementPage() {
               </div>
 
               {/* Quick Actions */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-12px">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
                 <button
                   onClick={() => {
                     setShowScheduleMeetingModal(true)
@@ -2124,16 +1958,16 @@ export default function ProjectManagementPage() {
             </div>
 
             {/* Meetings List */}
-            <div className="space-y-16px">
+            <div className="space-y-2">
               {projectMeetings && projectMeetings.length > 0 ? (
                 <>
                   {/* Upcoming Meetings */}
                   {projectMeetings.filter((m: any) => m.startTime > Date.now()).length > 0 && (
                     <div>
-                      <h3 className="text-brutal-sm font-bold uppercase mb-12px text-primary-brutalist">
+                      <h3 className="text-brutal-xs font-bold uppercase mb-2 text-primary-brutalist">
                         UPCOMING MEETINGS
                       </h3>
-                      <div className="space-y-12px">
+                      <div className="space-y-2">
                         {projectMeetings
                           .filter((m: any) => m.startTime > Date.now())
                           .slice(0, 5)
@@ -2159,10 +1993,10 @@ export default function ProjectManagementPage() {
                   {/* Past Meetings */}
                   {projectMeetings.filter((m: any) => m.endTime < Date.now()).length > 0 && (
                     <div>
-                      <h3 className="text-brutal-sm font-bold uppercase mb-12px text-[var(--theme-foreground)]/60">
+                      <h3 className="text-brutal-xs font-bold uppercase mb-2 text-[var(--theme-foreground)]/60">
                         RECENT MEETINGS
                       </h3>
-                      <div className="space-y-12px">
+                      <div className="space-y-2">
                         {projectMeetings
                           .filter((m: any) => m.endTime < Date.now())
                           .slice(0, 3)
@@ -2182,10 +2016,10 @@ export default function ProjectManagementPage() {
                   )}
                 </>
               ) : (
-                <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-48px text-center">
-                  <HiOutlineVideoCamera className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
-                  <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO MEETINGS SCHEDULED</h3>
-                  <p className="text-[var(--theme-foreground)]/60 mb-24px">
+                <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-5 text-center">
+                  <HiOutlineVideoCamera className="w-5 h-5 text-primary-brutalist/30 mx-auto mb-2" />
+                  <h3 className="font-mono text-brutal-xs uppercase mb-2">NO MEETINGS SCHEDULED</h3>
+                  <p className="text-[var(--theme-foreground)]/60 text-brutal-xs mb-3">
                     Schedule standup meetings, sprint reviews, and planning sessions for your team
                   </p>
                   <button
@@ -2217,38 +2051,38 @@ export default function ProjectManagementPage() {
         )
       case 'settings':
         return (
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-            <h2 className="text-brutal-lg font-bold uppercase mb-24px">PROJECT SETTINGS</h2>
+          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+            <h2 className="text-xs font-semibold font-bold uppercase mb-3">PROJECT SETTINGS</h2>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-24px">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* General Settings */}
-              <div className="space-y-24px">
+              <div className="space-y-3">
                 <div>
-                  <h3 className="text-brutal-sm font-bold uppercase mb-16px">GENERAL</h3>
-                  <div className="space-y-16px">
+                  <h3 className="text-brutal-xs font-bold uppercase mb-2">GENERAL</h3>
+                  <div className="space-y-2">
                     <div>
-                      <label className="block text-brutal-xs uppercase mb-8px">PROJECT NAME</label>
+                      <label className="block text-brutal-xs uppercase mb-1">PROJECT NAME</label>
                       <input
                         type="text"
                         defaultValue={project.name}
-                        className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm"
+                        className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-brutal-xs uppercase mb-8px">DESCRIPTION</label>
+                      <label className="block text-brutal-xs uppercase mb-1">DESCRIPTION</label>
                       <textarea
                         defaultValue={project.description}
                         rows={3}
-                        className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm resize-none"
+                        className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-xs resize-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-brutal-xs uppercase mb-8px">PROJECT KEY</label>
+                      <label className="block text-brutal-xs uppercase mb-1">PROJECT KEY</label>
                       <input
                         type="text"
                         defaultValue={project.key}
                         disabled
-                        className="w-full px-16px py-12px bg-basalt-border border-2 border-[var(--theme-border)] font-mono text-brutal-sm text-[var(--theme-foreground)]/60"
+                        className="w-full px-2.5 py-2 bg-basalt-border border-2 border-[var(--theme-border)] font-mono text-brutal-xs text-[var(--theme-foreground)]/60"
                       />
                       <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-4px">Project key cannot be changed</p>
                     </div>
@@ -2257,13 +2091,13 @@ export default function ProjectManagementPage() {
 
                 {/* Workflow Settings */}
                 <div>
-                  <h3 className="text-brutal-sm font-bold uppercase mb-16px">WORKFLOW</h3>
-                  <div className="space-y-16px">
+                  <h3 className="text-brutal-xs font-bold uppercase mb-2">WORKFLOW</h3>
+                  <div className="space-y-2">
                     <div>
-                      <label className="block text-brutal-xs uppercase mb-8px">WORKFLOW TYPE</label>
+                      <label className="block text-brutal-xs uppercase mb-1">WORKFLOW TYPE</label>
                       <select
                         defaultValue={project.settings?.workflowType || 'kanban'}
-                        className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm"
+                        className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-xs"
                       >
                         <option value="kanban">KANBAN</option>
                         <option value="scrum">SCRUM</option>
@@ -2278,16 +2112,16 @@ export default function ProjectManagementPage() {
 
               {/* Team Assignment */}
               <div>
-                <h3 className="text-brutal-sm font-bold uppercase mb-16px">TEAM ASSIGNMENT</h3>
-                <div className="space-y-16px">
+                <h3 className="text-brutal-xs font-bold uppercase mb-2">TEAM ASSIGNMENT</h3>
+                <div className="space-y-2">
                   <div>
-                    <label className="block text-brutal-xs uppercase mb-8px">ASSIGNED TEAMS</label>
-                    <div className="flex flex-wrap gap-8px mb-12px">
+                    <label className="block text-brutal-xs uppercase mb-1">ASSIGNED TEAMS</label>
+                    <div className="flex flex-wrap gap-2 mb-3">
                       {project.teamIds && project.teamIds.length > 0 ? (
                         project.teamIds.map((teamId: string) => {
                           const team = availableTeams?.find(t => t._id === teamId)
                           return (
-                            <span key={teamId} className="px-12px py-6px bg-primary-brutalist/10 border border-primary-brutalist text-brutal-xs font-mono uppercase flex items-center gap-8px">
+                            <span key={teamId} className="px-2.5 py-1 bg-primary-brutalist/10 border border-primary-brutalist text-brutal-xs font-mono uppercase flex items-center gap-2">
                               {team?.name || 'Unknown Team'}
                               {/* <button className="hover:text-brutal-error">×</button> */}
                             </span>
@@ -2298,9 +2132,9 @@ export default function ProjectManagementPage() {
                       )}
                     </div>
 
-                    <div className="flex gap-8px">
+                    <div className="flex gap-2">
                       <select
-                        className="flex-1 px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm"
+                        className="flex-1 px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-xs"
                         onChange={async (e) => {
                           if (e.target.value) {
                             try {
@@ -2328,12 +2162,12 @@ export default function ProjectManagementPage() {
               </div>
 
               {/* Danger Zone */}
-              <div className="space-y-24px">
+              <div className="space-y-3">
                 <div>
-                  <h3 className="text-brutal-sm font-bold uppercase mb-16px text-brutal-error">DANGER ZONE</h3>
-                  <div className="border-2 border-brutal-error p-16px">
-                    <h4 className="text-brutal-xs font-bold uppercase mb-8px">ARCHIVE PROJECT</h4>
-                    <p className="text-brutal-xs text-[var(--theme-foreground)]/80 mb-16px">
+                  <h3 className="text-brutal-xs font-bold uppercase mb-2 text-brutal-error">DANGER ZONE</h3>
+                  <div className="border-2 border-brutal-error p-2.5">
+                    <h4 className="text-brutal-xs font-bold uppercase mb-1.5">ARCHIVE PROJECT</h4>
+                    <p className="text-brutal-xs text-[var(--theme-foreground)]/80 mb-2">
                       Archive this project. It will be hidden from the workspace but data will be preserved.
                     </p>
                     <button className="brutal-btn bg-brutal-error border-brutal-error">
@@ -2344,7 +2178,7 @@ export default function ProjectManagementPage() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-16px mt-32px pt-24px border-t-2 border-[var(--theme-border)]">
+            <div className="flex justify-end gap-3 mt-4 pt-4 border-t-2 border-[var(--theme-border)]">
               <button className="brutal-btn-secondary">CANCEL</button>
               <button className="brutal-btn">SAVE CHANGES</button>
             </div>
@@ -2359,8 +2193,8 @@ export default function ProjectManagementPage() {
     <div className="min-h-screen bg-[var(--theme-background)] flex flex-col">
       {/* Project Header */}
       <div className="border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)] sticky top-0 z-40">
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-6">
+        <div className="px-5 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => navigate(`/workspace/${workspaceId}`)}
               className="group flex items-center gap-2 font-mono text-xs text-[var(--theme-foreground)]/60 hover:text-[var(--theme-primary)] transition-colors"
@@ -2403,13 +2237,13 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Project Navigation Tabs */}
-        <div className="px-6 flex items-end gap-1 overflow-x-auto no-scrollbar border-t border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/30">
+        <div className="px-5 flex items-end gap-0.5 overflow-x-auto no-scrollbar border-t border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/30">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
               className={clsx(
-                "relative px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider transition-all",
+                "relative px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-wider transition-all",
                 "border-r border-[var(--theme-border)]",
                 activeTab === tab.id
                   ? "bg-[var(--theme-background)] text-[var(--theme-primary)] border-t-2 border-t-[var(--theme-primary)]"
@@ -2435,7 +2269,7 @@ export default function ProjectManagementPage() {
 
       {/* Main Viewport */}
       <main className={clsx(
-        "flex-1 p-6",
+        "flex-1 p-4",
         (activeTab === 'tasks' && taskView === 'kanban') ? "overflow-hidden flex flex-col" : "overflow-y-auto"
       )}>
         <motion.div

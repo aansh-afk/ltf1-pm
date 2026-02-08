@@ -9,7 +9,7 @@ export default function FeaturesPage() {
       <PublicNavigation />
 
       {/* Hero */}
-      <section className="pt-32 pb-8 md:pt-40 md:pb-12">
+      <section className="pt-32 pb-4 md:pt-40 md:pb-6">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

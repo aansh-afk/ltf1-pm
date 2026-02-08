@@ -266,26 +266,26 @@ export default function ScheduleMeetingModal({
       title={meeting ? "EDIT MEETING" : "SCHEDULE MEETING"}
       size="lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-24px">
+      <form onSubmit={handleSubmit} className="space-y-[12px]">
         {/* Meeting Type Selection */}
         <div>
-          <label className="block text-brutal-sm uppercase mb-12px">
-            <HiOutlineTemplate className="inline w-16px h-16px mr-8px" />
+          <label className="block text-brutal-sm uppercase mb-[6px]">
+            <HiOutlineTemplate className="inline w-16px h-16px mr-[4px]" />
             MEETING TYPE
           </label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8px">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-[4px]">
             {meetingTypes.map((meetingType) => (
               <button
                 key={meetingType.value}
                 type="button"
                 onClick={() => setType(meetingType.value as 'standup' | 'retrospective' | 'planning' | 'review' | 'custom')}
-                className={`p-12px border-2 text-center transition-colors ${
+                className={`p-[8px] border-2 text-center transition-colors ${
                   type === meetingType.value
                     ? 'bg-primary-brutalist border-primary-brutalist text-event-horizon'
                     : 'bg-[var(--theme-background-secondary)] border-[var(--theme-border)] text-[var(--theme-foreground)] hover:border-primary-brutalist'
                 }`}
               >
-                <div className="text-lg mb-4px">{meetingType.icon}</div>
+                <div className="text-lg mb-[2px]">{meetingType.icon}</div>
                 <div className="font-mono text-brutal-xs uppercase">{meetingType.label}</div>
                 <div className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60">{meetingType.duration}min</div>
               </button>
@@ -294,69 +294,69 @@ export default function ScheduleMeetingModal({
         </div>
 
         {/* Title & Description */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16px">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[8px]">
           <div>
-            <label className="block text-brutal-sm uppercase mb-8px">TITLE</label>
+            <label className="block text-brutal-sm uppercase mb-[4px]">TITLE</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none"
               required
             />
           </div>
           <div>
-            <label className="block text-brutal-sm uppercase mb-8px">DURATION (MINUTES)</label>
+            <label className="block text-brutal-sm uppercase mb-[4px]">DURATION (MINUTES)</label>
             <input
               type="number"
               value={duration}
               onChange={(e) => setDuration(parseInt(e.target.value) || 30)}
               min={5}
               max={480}
-              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-brutal-sm uppercase mb-8px">DESCRIPTION</label>
+          <label className="block text-brutal-sm uppercase mb-[4px]">DESCRIPTION</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+            className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                      font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none resize-none"
           />
         </div>
 
         {/* Date & Time */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16px">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[8px]">
           <div>
-            <label className="block text-brutal-sm uppercase mb-8px">
-              <HiOutlineCalendar className="inline w-16px h-16px mr-8px" />
+            <label className="block text-brutal-sm uppercase mb-[4px]">
+              <HiOutlineCalendar className="inline w-16px h-16px mr-[4px]" />
               DATE
             </label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none"
               required
             />
           </div>
           <div>
-            <label className="block text-brutal-sm uppercase mb-8px">
-              <HiOutlineClock className="inline w-16px h-16px mr-8px" />
+            <label className="block text-brutal-sm uppercase mb-[4px]">
+              <HiOutlineClock className="inline w-16px h-16px mr-[4px]" />
               TIME
             </label>
             <input
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none"
               required
             />
@@ -364,10 +364,10 @@ export default function ScheduleMeetingModal({
         </div>
 
         {/* Location & Meeting URL */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16px">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[8px]">
           <div>
-            <label className="block text-brutal-sm uppercase mb-8px">
-              <HiOutlineLocationMarker className="inline w-16px h-16px mr-8px" />
+            <label className="block text-brutal-sm uppercase mb-[4px]">
+              <HiOutlineLocationMarker className="inline w-16px h-16px mr-[4px]" />
               LOCATION
             </label>
             <input
@@ -375,14 +375,14 @@ export default function ScheduleMeetingModal({
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="CONFERENCE ROOM A"
-              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm placeholder:text-neutral-600
                        focus:border-primary-brutalist focus:outline-none"
             />
           </div>
           <div>
-            <label className="block text-brutal-sm uppercase mb-8px">
-              <HiOutlineVideoCamera className="inline w-16px h-16px mr-8px" />
+            <label className="block text-brutal-sm uppercase mb-[4px]">
+              <HiOutlineVideoCamera className="inline w-16px h-16px mr-[4px]" />
               MEETING URL
             </label>
             <input
@@ -390,7 +390,7 @@ export default function ScheduleMeetingModal({
               value={meetingUrl}
               onChange={(e) => setMeetingUrl(e.target.value)}
               placeholder="HTTPS://MEET.GOOGLE.COM/..."
-              className="w-full px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-sm placeholder:text-neutral-600
                        focus:border-primary-brutalist focus:outline-none"
             />
@@ -399,8 +399,8 @@ export default function ScheduleMeetingModal({
 
         {/* Attendees */}
         <div>
-          <label className="block text-brutal-sm uppercase mb-8px">
-            <HiOutlineUsers className="inline w-16px h-16px mr-8px" />
+          <label className="block text-brutal-sm uppercase mb-[4px]">
+            <HiOutlineUsers className="inline w-16px h-16px mr-[4px]" />
             ATTENDEES
           </label>
           <MultiSelect
@@ -413,7 +413,7 @@ export default function ScheduleMeetingModal({
 
         {/* Recurring Options */}
         <div>
-          <label className="flex items-center gap-8px mb-16px">
+          <label className="flex items-center gap-[4px] mb-[8px]">
             <input
               type="checkbox"
               checked={isRecurring}
@@ -425,13 +425,13 @@ export default function ScheduleMeetingModal({
           </label>
           
           {isRecurring && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-16px p-16px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-[8px] p-[10px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
               <div>
-                <label className="block text-brutal-xs uppercase mb-8px">FREQUENCY</label>
+                <label className="block text-brutal-xs uppercase mb-[4px]">FREQUENCY</label>
                 <select
                   value={recurrenceFreq}
                   onChange={(e) => setRecurrenceFreq(e.target.value as 'daily' | 'weekly' | 'monthly')}
-                  className="w-full px-12px py-8px bg-[var(--theme-background)] border border-[var(--theme-border)] font-mono text-brutal-xs"
+                  className="w-full px-[8px] py-[4px] bg-[var(--theme-background)] border border-[var(--theme-border)] font-mono text-brutal-xs"
                 >
                   <option value="daily">DAILY</option>
                   <option value="weekly">WEEKLY</option>
@@ -439,23 +439,23 @@ export default function ScheduleMeetingModal({
                 </select>
               </div>
               <div>
-                <label className="block text-brutal-xs uppercase mb-8px">INTERVAL</label>
+                <label className="block text-brutal-xs uppercase mb-[4px]">INTERVAL</label>
                 <input
                   type="number"
                   value={recurrenceInterval}
                   onChange={(e) => setRecurrenceInterval(parseInt(e.target.value) || 1)}
                   min={1}
                   max={12}
-                  className="w-full px-12px py-8px bg-[var(--theme-background)] border border-[var(--theme-border)] font-mono text-brutal-xs"
+                  className="w-full px-[8px] py-[4px] bg-[var(--theme-background)] border border-[var(--theme-border)] font-mono text-brutal-xs"
                 />
               </div>
               <div>
-                <label className="block text-brutal-xs uppercase mb-8px">END DATE</label>
+                <label className="block text-brutal-xs uppercase mb-[4px]">END DATE</label>
                 <input
                   type="date"
                   value={recurrenceEndDate}
                   onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                  className="w-full px-12px py-8px bg-[var(--theme-background)] border border-[var(--theme-border)] font-mono text-brutal-xs"
+                  className="w-full px-[8px] py-[4px] bg-[var(--theme-background)] border border-[var(--theme-border)] font-mono text-brutal-xs"
                 />
               </div>
             </div>
@@ -464,16 +464,16 @@ export default function ScheduleMeetingModal({
 
         {/* Agenda */}
         <div>
-          <label className="block text-brutal-sm uppercase mb-8px">AGENDA</label>
-          <div className="space-y-8px">
+          <label className="block text-brutal-sm uppercase mb-[4px]">AGENDA</label>
+          <div className="space-y-[4px]">
             {agenda.map((item, index) => (
-              <div key={index} className="flex gap-8px">
+              <div key={index} className="flex gap-[4px]">
                 <input
                   type="text"
                   value={item}
                   onChange={(e) => updateAgendaItem(index, e.target.value)}
                   placeholder={`AGENDA ITEM ${index + 1}`}
-                  className="flex-1 px-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+                  className="flex-1 px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                            font-mono text-brutal-sm placeholder:text-neutral-600
                            focus:border-primary-brutalist focus:outline-none"
                 />
@@ -481,7 +481,7 @@ export default function ScheduleMeetingModal({
                   <button
                     type="button"
                     onClick={() => removeAgendaItem(index)}
-                    className="px-12px py-12px bg-brutal-error border-2 border-brutal-error text-white hover:bg-brutal-error/80"
+                    className="px-[8px] py-[8px] bg-brutal-error border-2 border-brutal-error text-white hover:bg-brutal-error/80"
                   >
                     ✕
                   </button>
@@ -491,7 +491,7 @@ export default function ScheduleMeetingModal({
             <button
               type="button"
               onClick={addAgendaItem}
-              className="w-full px-16px py-12px border-2 border-dashed border-[var(--theme-border)] 
+              className="w-full px-[10px] py-[8px] border-2 border-dashed border-[var(--theme-border)] 
                        text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] hover:border-primary-brutalist 
                        transition-colors font-mono text-brutal-sm"
             >
@@ -501,7 +501,7 @@ export default function ScheduleMeetingModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-16px justify-end pt-24px border-t-2 border-[var(--theme-border)]">
+        <div className="flex gap-[8px] justify-end pt-[12px] border-t-2 border-[var(--theme-border)]">
           <button
             type="button"
             onClick={onClose}

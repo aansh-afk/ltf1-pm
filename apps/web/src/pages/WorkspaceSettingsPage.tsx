@@ -148,13 +148,13 @@ export default function WorkspaceSettingsPage() {
   const canDelete = memberRole === 'owner'
 
   return (
-    <div className="p-6 md:p-8 bg-[var(--theme-background)] min-h-screen">
+    <div className="p-4 md:p-5 bg-[var(--theme-background)] min-h-screen">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-4">
           <div className="flex items-center gap-3 mb-2">
-            <HiOutlineOfficeBuilding className="w-8 h-8 text-[var(--theme-primary)]" />
-            <h1 className="text-3xl font-bold uppercase tracking-tight">WORKSPACE SETTINGS</h1>
+            <HiOutlineOfficeBuilding className="w-6 h-6 text-[var(--theme-primary)]" />
+            <h1 className="text-2xl font-bold uppercase tracking-tight">WORKSPACE SETTINGS</h1>
           </div>
           <p className="font-mono text-sm text-[var(--theme-foreground)]/60 uppercase tracking-wide border-l-2 border-[var(--theme-border)] pl-3">
             {workspace.name} • {memberRole}
@@ -162,7 +162,7 @@ export default function WorkspaceSettingsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-1 mb-8 border-b-2 border-[var(--theme-border)]">
+        <div className="flex flex-wrap gap-1 mb-4 border-b-2 border-[var(--theme-border)]">
           {tabs.map((tab) => {
             const Icon = tab.icon
             return (
@@ -185,7 +185,7 @@ export default function WorkspaceSettingsPage() {
         </div>
 
         {/* Tab Content */}
-        <div className="space-y-8">
+        <div className="space-y-4">
           {/* General Tab */}
           {activeTab === 'general' && (
             <>
@@ -193,7 +193,7 @@ export default function WorkspaceSettingsPage() {
                 title="WORKSPACE INFORMATION"
                 description="Basic information about your workspace"
               >
-                <div className="space-y-6">
+                <div className="space-y-3">
                   <div>
                     <label className="block text-xs font-bold uppercase font-mono mb-2">WORKSPACE NAME</label>
                     <input
@@ -260,14 +260,14 @@ export default function WorkspaceSettingsPage() {
               {canDelete && (
                 <BrutalCard
                   variant="default"
-                  className="border-[var(--theme-error)] mt-12 bg-[var(--theme-error)]/5"
+                  className="border-[var(--theme-error)] mt-6 bg-[var(--theme-error)]/5"
                 >
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 mb-4 text-[var(--theme-error)]">
-                      <HiOutlineExclamation className="w-6 h-6" />
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 mb-3 text-[var(--theme-error)]">
+                      <HiOutlineExclamation className="w-5 h-5" />
                       <h3 className="text-lg font-bold uppercase">DANGER ZONE</h3>
                     </div>
-                    <p className="text-sm font-mono text-[var(--theme-foreground)]/80 mb-6">
+                    <p className="text-sm font-mono text-[var(--theme-foreground)]/80 mb-3">
                       Irreversible and destructive actions. Deleting a workspace will permanently remove all projects, tasks, and data.
                     </p>
 
@@ -279,7 +279,7 @@ export default function WorkspaceSettingsPage() {
                         DELETE WORKSPACE
                       </BrutalButton>
                     ) : (
-                      <div className="space-y-4 p-4 bg-[var(--theme-background)] border-2 border-[var(--theme-error)]">
+                      <div className="space-y-2 p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-error)]">
                         <p className="text-sm font-mono">
                           Type <span className="font-bold">{workspace.name}</span> to confirm deletion:
                         </p>
@@ -364,10 +364,10 @@ export default function WorkspaceSettingsPage() {
               title="EXTERNAL INTEGRATIONS"
               description="Connect your workspace with external services"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <BrutalCard className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <BrutalCard className="p-4">
                   <h3 className="font-mono font-bold text-sm uppercase mb-2">GITHUB INTEGRATION</h3>
-                  <p className="text-xs font-mono text-[var(--theme-foreground)]/60 mb-6 min-h-[40px]">
+                  <p className="text-xs font-mono text-[var(--theme-foreground)]/60 mb-3 min-h-[40px]">
                     Connect GitHub repositories to sync issues and pull requests
                   </p>
                   <BrutalButton
@@ -380,9 +380,9 @@ export default function WorkspaceSettingsPage() {
                   </BrutalButton>
                 </BrutalCard>
 
-                <BrutalCard className="p-6">
+                <BrutalCard className="p-4">
                   <h3 className="font-mono font-bold text-sm uppercase mb-2">GOOGLE CALENDAR</h3>
-                  <p className="text-xs font-mono text-[var(--theme-foreground)]/60 mb-6 min-h-[40px]">
+                  <p className="text-xs font-mono text-[var(--theme-foreground)]/60 mb-3 min-h-[40px]">
                     Sync meetings with Google Calendar
                   </p>
                   <BrutalButton
@@ -395,9 +395,9 @@ export default function WorkspaceSettingsPage() {
                   </BrutalButton>
                 </BrutalCard>
 
-                <BrutalCard className="p-6">
+                <BrutalCard className="p-4">
                   <h3 className="font-mono font-bold text-sm uppercase mb-2">SLACK</h3>
-                  <p className="text-xs font-mono text-[var(--theme-foreground)]/60 mb-6 min-h-[40px]">
+                  <p className="text-xs font-mono text-[var(--theme-foreground)]/60 mb-3 min-h-[40px]">
                     Send notifications to Slack channels
                   </p>
                   <BrutalButton
@@ -419,9 +419,9 @@ export default function WorkspaceSettingsPage() {
               title="SUBSCRIPTION & BILLING"
               description="Manage your workspace subscription"
             >
-              <BrutalCard variant="neon" className="p-8 text-center">
-                <p className="text-2xl font-bold uppercase mb-2">FREE PLAN</p>
-                <p className="text-sm font-mono text-[var(--theme-foreground)]/60 mb-8">
+              <BrutalCard variant="neon" className="p-5 text-center">
+                <p className="text-xl font-bold uppercase mb-2">FREE PLAN</p>
+                <p className="text-sm font-mono text-[var(--theme-foreground)]/60 mb-4">
                   You're currently on the free plan with up to 5 members.
                 </p>
                 <BrutalButton variant="primary">
@@ -434,8 +434,8 @@ export default function WorkspaceSettingsPage() {
 
         {/* Save Indicator */}
         {(hasUnsavedGeneral || hasUnsavedFeatures) && (
-          <div className="fixed bottom-6 right-6 z-50 animate-bounce">
-            <BrutalCard variant="elevated" className="p-4 border-[var(--theme-primary)] flex items-center gap-4 bg-[var(--theme-background)]">
+          <div className="fixed bottom-4 right-4 z-50 animate-bounce">
+            <BrutalCard variant="elevated" className="p-3 border-[var(--theme-primary)] flex items-center gap-3 bg-[var(--theme-background)]">
               <div>
                 <p className="text-xs font-bold uppercase text-[var(--theme-primary)] mb-1">UNSAVED CHANGES</p>
                 <p className="text-[10px] font-mono text-[var(--theme-foreground)]/60">

@@ -69,15 +69,15 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
     <BrutalModal isOpen={isOpen} onClose={onClose} size="lg">
       <div className="p-0">
         {/* Header */}
-        <div className="p-24px border-b-2 border-[var(--theme-border)]">
-          <div className="flex items-start justify-between gap-16px">
+        <div className="p-[16px] border-b-2 border-[var(--theme-border)]">
+          <div className="flex items-start justify-between gap-[8px]">
             <div className="flex-1">
-              <div className="flex items-center gap-12px mb-8px">
+              <div className="flex items-center gap-[6px] mb-[4px]">
                 <span className="text-brutal-xs font-mono text-neutral-400 uppercase">
                   {task.project?.key}-{task.number}
                 </span>
                 <span className={clsx(
-                  'px-8px py-2px border text-brutal-xs font-mono uppercase',
+                  'px-[4px] py-2px border text-brutal-xs font-mono uppercase',
                   priorityColors[task.priority as keyof typeof priorityColors]
                 )}>
                   {task.priority}
@@ -89,13 +89,13 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
                   {task.status.replace('_', ' ')}
                 </span>
               </div>
-              <h2 className="text-brutal-xl font-bold uppercase">
+              <h2 className="text-[16px] font-bold font-bold uppercase">
                 {task.title}
               </h2>
             </div>
             <button
               onClick={onClose}
-              className="p-8px hover:bg-[var(--theme-background-secondary)]/20 transition-colors"
+              className="p-[4px] hover:bg-[var(--theme-background-secondary)]/20 transition-colors"
             >
               <HiOutlineX className="w-20px h-20px" />
             </button>
@@ -109,7 +109,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={clsx(
-                'px-24px py-16px text-brutal-sm font-mono uppercase transition-colors',
+                'px-[12px] py-[8px] text-brutal-sm font-mono uppercase transition-colors',
                 'border-b-4 -mb-2px',
                 activeTab === tab.id
                   ? 'border-primary-brutalist bg-[var(--theme-background-secondary)]/10 text-primary-brutalist'
@@ -122,24 +122,24 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
         </div>
 
         {/* Tab Content */}
-        <div className="p-24px max-h-[600px] overflow-y-auto">
+        <div className="p-[16px] max-h-[600px] overflow-y-auto">
           {activeTab === 'details' && (
-            <div className="space-y-24px">
+            <div className="space-y-[12px]">
               {/* Description */}
               {task.description && (
                 <div>
-                  <h3 className="text-brutal-sm font-mono uppercase mb-12px">DESCRIPTION</h3>
-                  <div className="p-16px bg-[var(--theme-background-secondary)]/5 border-2 border-[var(--theme-border)]">
+                  <h3 className="text-brutal-sm font-mono uppercase mb-[6px]">DESCRIPTION</h3>
+                  <div className="p-[10px] bg-[var(--theme-background-secondary)]/5 border-2 border-[var(--theme-border)]">
                     <p className="text-brutal-sm whitespace-pre-wrap">{task.description}</p>
                   </div>
                 </div>
               )}
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-2 gap-16px">
-                <div className="space-y-16px">
+              <div className="grid grid-cols-2 gap-[8px]">
+                <div className="space-y-[8px]">
                   {/* Assignee */}
-                  <div className="flex items-center gap-12px">
+                  <div className="flex items-center gap-[6px]">
                     <HiOutlineUser className="w-16px h-16px text-neutral-400" />
                     <div>
                       <div className="text-brutal-xs text-neutral-400 uppercase">ASSIGNEE</div>
@@ -151,7 +151,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
 
                   {/* Due Date */}
                   {task.dueDate && (
-                    <div className="flex items-center gap-12px">
+                    <div className="flex items-center gap-[6px]">
                       <HiOutlineCalendar className="w-16px h-16px text-neutral-400" />
                       <div>
                         <div className="text-brutal-xs text-neutral-400 uppercase">DUE DATE</div>
@@ -163,9 +163,9 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
                   )}
                 </div>
 
-                <div className="space-y-16px">
+                <div className="space-y-[8px]">
                   {/* Time Tracked */}
-                  <div className="flex items-center gap-12px">
+                  <div className="flex items-center gap-[6px]">
                     <HiOutlineClock className="w-16px h-16px text-neutral-400" />
                     <div>
                       <div className="text-brutal-xs text-neutral-400 uppercase">TIME TRACKED</div>
@@ -178,7 +178,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
                   </div>
 
                   {/* Created */}
-                  <div className="flex items-center gap-12px">
+                  <div className="flex items-center gap-[6px]">
                     <HiOutlineFlag className="w-16px h-16px text-neutral-400" />
                     <div>
                       <div className="text-brutal-xs text-neutral-400 uppercase">CREATED</div>
@@ -193,15 +193,15 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
               {/* Labels */}
               {task.labels && task.labels.length > 0 && (
                 <div>
-                  <h3 className="text-brutal-sm font-mono uppercase mb-12px flex items-center gap-8px">
+                  <h3 className="text-brutal-sm font-mono uppercase mb-[6px] flex items-center gap-[4px]">
                     <HiOutlineTag className="w-16px h-16px" />
                     LABELS
                   </h3>
-                  <div className="flex flex-wrap gap-8px">
+                  <div className="flex flex-wrap gap-[4px]">
                     {task.labels.map((label: string) => (
                       <span
                         key={label}
-                        className="px-12px py-4px bg-[var(--theme-background-secondary)]/10 border border-[var(--theme-border)] text-brutal-xs font-mono uppercase"
+                        className="px-[8px] py-4px bg-[var(--theme-background-secondary)]/10 border border-[var(--theme-border)] text-brutal-xs font-mono uppercase"
                       >
                         {label}
                       </span>
@@ -213,10 +213,10 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
           )}
 
           {activeTab === 'time' && (
-            <div className="space-y-24px">
+            <div className="space-y-[12px]">
               {/* Time Tracker */}
               <div>
-                <h3 className="text-brutal-sm font-mono uppercase mb-12px">ACTIVE TIMER</h3>
+                <h3 className="text-brutal-sm font-mono uppercase mb-[6px]">ACTIVE TIMER</h3>
                 <TimeTracker
                   taskId={taskId}
                   isRunning={!!activeTimeEntry}
@@ -227,12 +227,12 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
               {/* Time Entries History */}
               {timeEntries && timeEntries.length > 0 && (
                 <div>
-                  <h3 className="text-brutal-sm font-mono uppercase mb-12px">TIME ENTRIES</h3>
-                  <div className="space-y-8px">
+                  <h3 className="text-brutal-sm font-mono uppercase mb-[6px]">TIME ENTRIES</h3>
+                  <div className="space-y-[4px]">
                     {timeEntries.map((entry: any) => (
                       <div
                         key={entry._id}
-                        className="p-16px bg-[var(--theme-background-secondary)]/5 border border-[var(--theme-border)]"
+                        className="p-[10px] bg-[var(--theme-background-secondary)]/5 border border-[var(--theme-border)]"
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -262,7 +262,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
             <div>
               <div className="text-center py-32px text-neutral-400">
                 <div className="text-brutal-sm font-mono uppercase">COMMENTS COMING SOON</div>
-                <div className="text-brutal-xs mt-8px">Task comments and collaboration features</div>
+                <div className="text-brutal-xs mt-[4px]">Task comments and collaboration features</div>
               </div>
             </div>
           )}

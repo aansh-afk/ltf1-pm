@@ -77,7 +77,7 @@ export default function TaskDistributionCharts({ tasks, team }: TaskDistribution
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-8px">
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[4px]">
           <p className="text-brutal-xs font-bold">{payload[0].name}</p>
           <p className="text-brutal-xs">Count: {payload[0].value}</p>
           <p className="text-brutal-xs">
@@ -90,12 +90,12 @@ export default function TaskDistributionCharts({ tasks, team }: TaskDistribution
   }
   
   return (
-    <div className="space-y-24px">
+    <div className="space-y-[12px]">
       {/* Distribution Charts Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-24px">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-[12px]">
         {/* Status Distribution */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-          <h3 className="text-brutal-sm font-bold uppercase mb-12px">Task Status</h3>
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[10px]">
+          <h3 className="text-brutal-sm font-bold uppercase mb-[6px]">Task Status</h3>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
@@ -115,7 +115,7 @@ export default function TaskDistributionCharts({ tasks, team }: TaskDistribution
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
-          <div className="mt-8px space-y-4px">
+          <div className="mt-[4px] space-y-4px">
             {statusData.map((item, index) => (
               <div key={index} className="flex items-center justify-between text-brutal-xs">
                 <div className="flex items-center gap-4px">
@@ -129,8 +129,8 @@ export default function TaskDistributionCharts({ tasks, team }: TaskDistribution
         </div>
         
         {/* Priority Distribution */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-          <h3 className="text-brutal-sm font-bold uppercase mb-12px">Priority</h3>
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[10px]">
+          <h3 className="text-brutal-sm font-bold uppercase mb-[6px]">Priority</h3>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
@@ -150,7 +150,7 @@ export default function TaskDistributionCharts({ tasks, team }: TaskDistribution
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
-          <div className="mt-8px space-y-4px">
+          <div className="mt-[4px] space-y-4px">
             {priorityData.map((item, index) => (
               <div key={index} className="flex items-center justify-between text-brutal-xs">
                 <div className="flex items-center gap-4px">
@@ -166,8 +166,8 @@ export default function TaskDistributionCharts({ tasks, team }: TaskDistribution
       
       {/* Team Workload Bar Chart */}
       {workloadData.length > 0 && (
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-          <h3 className="text-brutal-sm font-bold uppercase mb-12px">Team Workload</h3>
+        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[10px]">
+          <h3 className="text-brutal-sm font-bold uppercase mb-[6px]">Team Workload</h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={workloadData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="0" stroke="var(--theme-border)" strokeOpacity={0.3} />

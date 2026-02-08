@@ -55,7 +55,7 @@ export default function UserDisplay({
     return (
       <div 
         className={clsx(
-          'flex items-center gap-8px text-[var(--theme-foreground)]/60',
+          'flex items-center gap-[8px] text-[var(--theme-foreground)]/60',
           className
         )}
       >
@@ -86,7 +86,7 @@ export default function UserDisplay({
   if (!user) {
     return (
       <div className={clsx(
-        'flex items-center gap-8px animate-pulse',
+        'flex items-center gap-[8px] animate-pulse',
         className
       )}>
         <div className={clsx(
@@ -98,7 +98,7 @@ export default function UserDisplay({
           size === 'xl' && 'w-16 h-16'
         )} />
         {showName && (
-          <div className="h-14px bg-basalt-border w-64px" />
+          <div className="h-[14px] bg-basalt-border w-8" />
         )}
       </div>
     )
@@ -109,7 +109,7 @@ export default function UserDisplay({
       <div
         onClick={handleClick}
         className={clsx(
-          'flex items-center gap-8px cursor-pointer group relative',
+          'flex items-center gap-[8px] cursor-pointer group relative',
           'hover:bg-[var(--theme-background-secondary)]/20 transition-colors',
           compact ? 'p-2px' : 'p-4px',
           className
@@ -177,7 +177,7 @@ export default function UserDisplay({
 
         {/* Tooltip for compact mode */}
         {compact && showTooltip && (
-          <div className="absolute left-full ml-8px px-8px py-4px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 whitespace-nowrap z-50 pointer-events-none">
+          <div className="absolute left-full ml-[8px] px-[8px] py-4px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 whitespace-nowrap z-50 pointer-events-none">
             <div className="text-brutal-xs">
               <div className="font-semibold">{user.name || user.email}</div>
               {profile && (

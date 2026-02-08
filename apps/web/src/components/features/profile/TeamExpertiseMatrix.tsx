@@ -156,7 +156,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
 
   if (!processedData) {
     return (
-      <div className="p-48px text-center">
+      <div className="p-[24px] text-center">
         <div className="animate-pulse text-brutal-sm">Loading expertise matrix...</div>
       </div>
     )
@@ -166,7 +166,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
   const containerProps = isModal ? {
     className: "fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background-secondary)]/80"
   } : {
-    className: "p-24px"
+    className: "p-[16px]"
   }
 
   return (
@@ -176,32 +176,32 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
         isModal ? "w-full max-w-7xl max-h-[90vh] overflow-hidden shadow-brutal" : ""
       )}>
         {/* Header */}
-        <div className="p-24px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+        <div className="p-[16px] border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-brutal-lg font-bold mb-8px flex items-center gap-12px">
-                <HiOutlineChartBar className="w-24px h-24px" />
+              <h2 className="text-[14px] font-semibold font-bold mb-[4px] flex items-center gap-[6px]">
+                <HiOutlineChartBar className="w-4 h-4" />
                 TEAM EXPERTISE MATRIX
               </h2>
               <p className="font-mono text-brutal-sm text-primary-brutalist/80">
                 {processedData.members.length} MEMBERS • {processedData.technologies.length} TECHNOLOGIES
               </p>
             </div>
-            <div className="flex items-center gap-12px">
+            <div className="flex items-center gap-[6px]">
               <button
                 onClick={exportMatrix}
-                className="brutal-btn-secondary flex items-center gap-8px px-12px py-8px"
+                className="brutal-btn-secondary flex items-center gap-[4px] px-[8px] py-[4px]"
                 title="Export as CSV"
               >
-                <HiOutlineDownload className="w-16px h-16px" />
+                <HiOutlineDownload className="w-4 h-4" />
                 <span className="font-mono text-brutal-xs">EXPORT</span>
               </button>
               {isModal && onClose && (
                 <button
                   onClick={onClose}
-                  className="brutal-btn-secondary p-8px"
+                  className="brutal-btn-secondary p-[4px]"
                 >
-                  <HiOutlineX className="w-20px h-20px" />
+                  <HiOutlineX className="w-5 h-5" />
                 </button>
               )}
             </div>
@@ -209,26 +209,26 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
         </div>
 
         {/* Controls */}
-        <div className="p-16px border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)]/50">
-          <div className="flex flex-wrap items-center gap-12px">
+        <div className="p-[10px] border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)]/50">
+          <div className="flex flex-wrap items-center gap-[6px]">
             {/* Search */}
             <div className="flex-1 min-w-200px relative">
-              <HiOutlineSearch className="absolute left-12px top-50% transform -translate-y-50% w-16px h-16px text-primary-brutalist/60" />
+              <HiOutlineSearch className="absolute left-12px top-50% transform -translate-y-50% w-4 h-4 text-primary-brutalist/60" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="brutal-input w-full pl-40px pr-12px py-8px text-brutal-sm"
+                className="brutal-input w-full pl-40px pr-[6px] py-[4px] text-brutal-sm"
                 placeholder="Search technologies..."
               />
             </div>
 
             {/* View Mode */}
-            <div className="flex items-center gap-8px">
+            <div className="flex items-center gap-[4px]">
               <button
                 onClick={() => setViewMode('matrix')}
                 className={clsx(
-                  "px-12px py-8px font-mono text-brutal-xs font-bold transition-all",
+                  "px-[8px] py-[4px] font-mono text-brutal-xs font-bold transition-all",
                   viewMode === 'matrix' 
                     ? "bg-primary-brutalist text-event-horizon" 
                     : "bg-basalt-border text-primary-brutalist hover:bg-primary-brutalist/20"
@@ -239,7 +239,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
               <button
                 onClick={() => setViewMode('grouped')}
                 className={clsx(
-                  "px-12px py-8px font-mono text-brutal-xs font-bold transition-all",
+                  "px-[8px] py-[4px] font-mono text-brutal-xs font-bold transition-all",
                   viewMode === 'grouped' 
                     ? "bg-primary-brutalist text-event-horizon" 
                     : "bg-basalt-border text-primary-brutalist hover:bg-primary-brutalist/20"
@@ -250,12 +250,12 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
             </div>
 
             {/* Sort */}
-            <div className="flex items-center gap-8px">
+            <div className="flex items-center gap-[4px]">
               <span className="font-mono text-brutal-xs text-primary-brutalist/60">SORT:</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="brutal-input px-8px py-4px text-brutal-xs"
+                className="brutal-input px-[4px] py-4px text-brutal-xs"
               >
                 <option value="name">NAME</option>
                 <option value="expertise">EXPERTISE</option>
@@ -266,15 +266,15 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                 className="brutal-btn-secondary p-6px"
               >
                 {sortAsc ? (
-                  <HiOutlineSortAscending className="w-16px h-16px" />
+                  <HiOutlineSortAscending className="w-4 h-4" />
                 ) : (
-                  <HiOutlineSortDescending className="w-16px h-16px" />
+                  <HiOutlineSortDescending className="w-4 h-4" />
                 )}
               </button>
             </div>
 
             {/* Filters */}
-            <div className="flex items-center gap-12px">
+            <div className="flex items-center gap-[6px]">
               <label className="flex items-center gap-6px">
                 <input
                   type="checkbox"
@@ -295,7 +295,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                   onChange={(e) => setMinLevel(parseInt(e.target.value))}
                   className="w-60px"
                 />
-                <span className="font-mono text-brutal-xs font-bold w-20px">{minLevel}</span>
+                <span className="font-mono text-brutal-xs font-bold w-5">{minLevel}</span>
               </div>
             </div>
           </div>
@@ -308,17 +308,17 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
               <table className="w-full">
                 <thead>
                   <tr className="border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] sticky top-0 z-10">
-                    <th className="p-12px text-left font-mono text-brutal-xs font-bold text-primary-brutalist sticky left-0 bg-[var(--theme-background-secondary)] border-r-2 border-[var(--theme-border)] min-w-200px">
+                    <th className="p-[8px] text-left font-mono text-brutal-xs font-bold text-primary-brutalist sticky left-0 bg-[var(--theme-background-secondary)] border-r-2 border-[var(--theme-border)] min-w-200px">
                       TEAM MEMBER
                     </th>
-                    <th className="p-12px text-center font-mono text-brutal-xs font-bold text-primary-brutalist border-r-2 border-[var(--theme-border)]">
+                    <th className="p-[8px] text-center font-mono text-brutal-xs font-bold text-primary-brutalist border-r-2 border-[var(--theme-border)]">
                       STATUS
                     </th>
                     {processedData.technologies.map((tech) => (
                       <th
                         key={tech}
                         className={clsx(
-                          "p-12px text-center font-mono text-brutal-xs font-bold text-primary-brutalist border-r border-[var(--theme-border)]/50 cursor-pointer hover:bg-primary-brutalist/10",
+                          "p-[8px] text-center font-mono text-brutal-xs font-bold text-primary-brutalist border-r border-[var(--theme-border)]/50 cursor-pointer hover:bg-primary-brutalist/10",
                           selectedTech === tech && "bg-primary-brutalist/20"
                         )}
                         onClick={() => setSelectedTech(selectedTech === tech ? null : tech)}
@@ -341,16 +341,16 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                       )}
                     >
                       <td 
-                        className="p-12px font-mono text-brutal-sm font-bold sticky left-0 border-r-2 border-[var(--theme-border)] cursor-pointer hover:text-primary-brutalist"
+                        className="p-[8px] font-mono text-brutal-sm font-bold sticky left-0 border-r-2 border-[var(--theme-border)] cursor-pointer hover:text-primary-brutalist"
                         style={{ backgroundColor: idx % 2 === 0 ? 'var(--carbon-plate)' : 'var(--event-horizon)' }}
                         onClick={() => handleMemberClick(member.userId)}
                       >
-                        <div className="flex items-center gap-8px">
-                          <HiOutlineUser className="w-16px h-16px" />
+                        <div className="flex items-center gap-[4px]">
+                          <HiOutlineUser className="w-4 h-4" />
                           {member.name || 'UNKNOWN'}
                         </div>
                       </td>
-                      <td className="p-12px text-center border-r-2 border-[var(--theme-border)]">
+                      <td className="p-[8px] text-center border-r-2 border-[var(--theme-border)]">
                         <DeveloperStatusIndicator 
                           userId={member.userId as Id<"users">}
                           size="sm"
@@ -363,13 +363,13 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                           <td
                             key={tech}
                             className={clsx(
-                              "p-8px text-center border-r border-[var(--theme-border)]/30",
+                              "p-[4px] text-center border-r border-[var(--theme-border)]/30",
                               selectedTech === tech && "bg-primary-brutalist/10"
                             )}
                           >
                             {expertise && (
                               <div className={clsx(
-                                "inline-flex items-center justify-center w-32px h-24px font-mono text-brutal-xs font-bold",
+                                "inline-flex items-center justify-center w-5 h-4 font-mono text-brutal-xs font-bold",
                                 expertise.color,
                                 expertise.textColor
                               )}>
@@ -386,7 +386,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
             </div>
           ) : (
             // Grouped View
-            <div className="p-24px grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16px">
+            <div className="p-[16px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[8px]">
               {processedData.technologies.map((tech) => {
                 const experts = processedData.members.filter(member =>
                   member.expertise.some(e => e.name === tech && e.level >= minLevel)
@@ -399,16 +399,16 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                 if (!showEmptySkills && experts.length === 0) return null
 
                 return (
-                  <div key={tech} className="brutal-card p-16px">
-                    <h3 className="font-mono text-brutal-sm font-bold mb-12px flex items-center gap-8px">
-                      <HiOutlineCode className="w-16px h-16px" />
+                  <div key={tech} className="brutal-card p-[10px]">
+                    <h3 className="font-mono text-brutal-sm font-bold mb-[6px] flex items-center gap-[4px]">
+                      <HiOutlineCode className="w-4 h-4" />
                       {tech}
                       <span className="text-brutal-xs text-primary-brutalist/60">({experts.length})</span>
                     </h3>
                     {experts.length === 0 ? (
                       <p className="font-mono text-brutal-xs text-primary-brutalist/40">No experts</p>
                     ) : (
-                      <div className="space-y-8px">
+                      <div className="space-y-[4px]">
                         {experts.map((member) => {
                           const expertise = member.expertise.find(e => e.name === tech)!
                           const level = getExpertiseLevel(expertise.level)!
@@ -416,10 +416,10 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                           return (
                             <div
                               key={member.userId}
-                              className="flex items-center justify-between p-8px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] hover:border-primary-brutalist cursor-pointer transition-all"
+                              className="flex items-center justify-between p-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] hover:border-primary-brutalist cursor-pointer transition-all"
                               onClick={() => handleMemberClick(member.userId)}
                             >
-                              <div className="flex items-center gap-8px">
+                              <div className="flex items-center gap-[4px]">
                                 <DeveloperStatusIndicator 
                                   userId={member.userId as Id<"users">}
                                   size="sm"
@@ -430,7 +430,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                                 </span>
                               </div>
                               <div className={clsx(
-                                "px-8px py-4px font-mono text-brutal-xs font-bold",
+                                "px-[4px] py-4px font-mono text-brutal-xs font-bold",
                                 level.color,
                                 level.textColor
                               )}>
@@ -449,31 +449,31 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
         </div>
 
         {/* Legend */}
-        <div className="p-16px border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+        <div className="p-[10px] border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-16px">
+            <div className="flex items-center gap-[8px]">
               <span className="font-mono text-brutal-xs font-bold text-primary-brutalist">EXPERTISE LEVELS:</span>
-              <div className="flex items-center gap-12px">
+              <div className="flex items-center gap-[6px]">
                 <div className="flex items-center gap-4px">
-                  <div className="w-32px h-20px bg-primary-brutalist/30 flex items-center justify-center">
+                  <div className="w-5 h-5 bg-primary-brutalist/30 flex items-center justify-center">
                     <span className="font-mono text-brutal-xs font-bold">BEG</span>
                   </div>
                   <span className="font-mono text-brutal-xs text-primary-brutalist/60">BEGINNER (2-3)</span>
                 </div>
                 <div className="flex items-center gap-4px">
-                  <div className="w-32px h-20px bg-brutal-warning flex items-center justify-center">
+                  <div className="w-5 h-5 bg-brutal-warning flex items-center justify-center">
                     <span className="font-mono text-brutal-xs font-bold text-event-horizon">INT</span>
                   </div>
                   <span className="font-mono text-brutal-xs text-primary-brutalist/60">INTERMEDIATE (4-5)</span>
                 </div>
                 <div className="flex items-center gap-4px">
-                  <div className="w-32px h-20px bg-brutal-info flex items-center justify-center">
+                  <div className="w-5 h-5 bg-brutal-info flex items-center justify-center">
                     <span className="font-mono text-brutal-xs font-bold text-event-horizon">ADV</span>
                   </div>
                   <span className="font-mono text-brutal-xs text-primary-brutalist/60">ADVANCED (6-7)</span>
                 </div>
                 <div className="flex items-center gap-4px">
-                  <div className="w-32px h-20px bg-brutal-success flex items-center justify-center">
+                  <div className="w-5 h-5 bg-brutal-success flex items-center justify-center">
                     <span className="font-mono text-brutal-xs font-bold text-event-horizon">EXP</span>
                   </div>
                   <span className="font-mono text-brutal-xs text-primary-brutalist/60">EXPERT (8-10)</span>

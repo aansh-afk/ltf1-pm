@@ -212,9 +212,9 @@ export default function CommandPalette() {
       {/* Command Palette */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-600px h-[80vh] bg-carbon-plate border-4 border-basalt-border shadow-brutal-xl z-[9999] flex flex-col">
         {/* Search Header */}
-        <div className="p-16px border-b-2 border-basalt-border">
+        <div className="p-[10px] border-b-2 border-basalt-border">
           <div className="relative">
-            <HiOutlineSearch className="absolute left-12px top-1/2 -translate-y-1/2 w-20px h-20px text-cathode-white/60" />
+            <HiOutlineSearch className="absolute left-12px top-1/2 -translate-y-1/2 w-5 h-5 text-cathode-white/60" />
             <input
               ref={searchInputRef}
               type="text"
@@ -224,13 +224,13 @@ export default function CommandPalette() {
                 setSelectedIndex(0)
               }}
               placeholder="TYPE A COMMAND OR SEARCH..."
-              className="w-full pl-44px pr-44px py-12px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-sm placeholder:text-neutral-600 focus:border-primary-brutalist focus:outline-none"
+              className="w-full pl-44px pr-44px py-[8px] bg-event-horizon border-2 border-basalt-border font-mono text-brutal-sm placeholder:text-neutral-600 focus:border-primary-brutalist focus:outline-none"
             />
             <button
               onClick={handleClose}
               className="absolute right-12px top-1/2 -translate-y-1/2 p-4px hover:bg-primary-brutalist/20 transition-colors"
             >
-              <HiOutlineX className="w-20px h-20px" />
+              <HiOutlineX className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -238,7 +238,7 @@ export default function CommandPalette() {
         {/* Commands List */}
         <div ref={listRef} className="flex-1 overflow-y-auto">
           {flatCommands.length === 0 ? (
-            <div className="p-32px text-center">
+            <div className="p-[20px] text-center">
               <p className="text-cathode-white/60 font-mono text-brutal-sm uppercase">
                 NO COMMANDS FOUND
               </p>
@@ -248,10 +248,10 @@ export default function CommandPalette() {
               {groupedCommands.map(([category, cmds]) => (
                 <div key={category}>
                   {/* Category Header */}
-                  <div className="px-16px py-8px">
-                    <h3 className="font-mono text-brutal-xs uppercase text-cathode-white/60 flex items-center gap-8px">
-                      {category === 'Pinned' && <HiOutlineStar className="w-14px h-14px" />}
-                      {category === 'Recent' && <HiOutlineClock className="w-14px h-14px" />}
+                  <div className="px-[10px] py-8px">
+                    <h3 className="font-mono text-brutal-xs uppercase text-cathode-white/60 flex items-center gap-[8px]">
+                      {category === 'Pinned' && <HiOutlineStar className="w-[14px] h-[14px]" />}
+                      {category === 'Recent' && <HiOutlineClock className="w-[14px] h-[14px]" />}
                       {category}
                     </h3>
                   </div>
@@ -267,7 +267,7 @@ export default function CommandPalette() {
                         key={cmd.id}
                         data-command-item
                         className={clsx(
-                          "px-16px py-12px flex items-center justify-between cursor-pointer transition-colors",
+                          "px-[10px] py-[8px] flex items-center justify-between cursor-pointer transition-colors",
                           isSelected 
                             ? "bg-primary-brutalist text-event-horizon" 
                             : "hover:bg-event-horizon/50"
@@ -275,10 +275,10 @@ export default function CommandPalette() {
                         onClick={() => handleExecuteCommand(cmd)}
                         onMouseEnter={() => setSelectedIndex(globalIndex)}
                       >
-                        <div className="flex items-center gap-12px flex-1">
+                        <div className="flex items-center gap-[6px] flex-1">
                           {/* Icon */}
-                          <div className="w-32px h-32px bg-event-horizon border-2 border-basalt-border flex items-center justify-center">
-                            {cmd.icon || <HiOutlineLightningBolt className="w-16px h-16px" />}
+                          <div className="w-5 h-5 bg-event-horizon border-2 border-basalt-border flex items-center justify-center">
+                            {cmd.icon || <HiOutlineLightningBolt className="w-4 h-4" />}
                           </div>
 
                           {/* Name and Description */}
@@ -308,14 +308,14 @@ export default function CommandPalette() {
                             )}
                           >
                             <HiOutlineStar className={clsx(
-                              "w-16px h-16px",
+                              "w-4 h-4",
                               isPinned && "fill-current"
                             )} />
                           </button>
 
                           {/* Arrow */}
                           <HiOutlineChevronRight className={clsx(
-                            "w-16px h-16px",
+                            "w-4 h-4",
                             isSelected ? "text-event-horizon" : "text-cathode-white/30"
                           )} />
                         </div>
@@ -329,8 +329,8 @@ export default function CommandPalette() {
         </div>
 
         {/* Footer */}
-        <div className="p-12px border-t-2 border-basalt-border flex items-center justify-between">
-          <div className="flex items-center gap-16px text-brutal-xs text-cathode-white/60">
+        <div className="p-[10px] border-t-2 border-basalt-border flex items-center justify-between">
+          <div className="flex items-center gap-[10px] text-brutal-xs text-cathode-white/60">
             <span className="flex items-center gap-4px">
               <kbd className="px-4px py-2px bg-event-horizon border border-basalt-border">↑</kbd>
               <kbd className="px-4px py-2px bg-event-horizon border border-basalt-border">↓</kbd>

@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
-import { HiOutlinePlus, HiOutlineBriefcase, HiOutlineGlobeAlt, HiOutlineUsers } from 'react-icons/hi'
+import { HiOutlinePlus, HiOutlineBriefcase, HiOutlineGlobeAlt } from 'react-icons/hi'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import CreateWorkspaceModal from '@/components/features/workspace/CreateWorkspaceModal'
 import WorkspaceCard from '@/components/features/workspace/WorkspaceCard'
 import BrutalButton from '@/components/ui/BrutalButton'
-import BrutalCard from '@/components/ui/BrutalCard'
 import { motion } from 'framer-motion'
 
 export default function WorkspacesPage() {
@@ -15,60 +14,64 @@ export default function WorkspacesPage() {
 
   if (workspaces === undefined) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[var(--theme-background)]">
+      <div className="flex items-center justify-center h-screen">
         <LoadingSpinner size="lg" />
       </div>
     )
   }
 
   return (
-    <div className="p-6 min-h-screen bg-[var(--theme-background)]">
+    <div className="p-4">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8 border-b-2 border-[var(--theme-border)] pb-6 gap-4">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2 flex items-center gap-4">
-            <HiOutlineGlobeAlt className="w-12 h-12 md:w-16 md:h-16 text-[var(--theme-primary)] animate-pulse" />
-            MISSION_SELECT
+          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6B7280] inline-block mb-1.5">
+            Workspaces
+          </span>
+          <h1 className="text-xl font-bold tracking-tight text-[#F9FAFB] flex items-center gap-2">
+            <HiOutlineGlobeAlt className="w-5 h-5 text-[#6366F1]" />
+            Mission Select
           </h1>
-          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 uppercase tracking-widest pl-2">
-            SELECT ACTIVE THEATER OF OPERATIONS
+          <p className="text-xs text-[#6B7280] mt-1 font-mono">
+            Select active theater of operations
           </p>
         </div>
         <BrutalButton
           onClick={() => setShowCreateModal(true)}
-          variant="glitch"
-          className="flex items-center gap-2"
+          variant="primary"
+          size="sm"
+          className="flex items-center gap-1.5"
         >
-          <HiOutlinePlus className="w-5 h-5" />
-          ESTABLISH NEW BASE
+          <HiOutlinePlus className="w-3.5 h-3.5" />
+          New Workspace
         </BrutalButton>
       </div>
 
       {/* Workspaces Grid */}
       {workspaces.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24">
-          <BrutalCard variant="glitch" className="p-12 text-center border-dashed max-w-lg">
-            <HiOutlineBriefcase className="w-24 h-24 text-[var(--theme-foreground)]/20 mx-auto mb-6" />
-            <h2 className="text-2xl font-bold mb-4">NO ACTIVE OPERATIONS</h2>
-            <p className="font-mono text-sm text-[var(--theme-foreground)]/60 mb-8">
-              No workspaces detected in the system. Initialize a new workspace to begin operations.
-            </p>
-            <BrutalButton
-              onClick={() => setShowCreateModal(true)}
-              variant="primary"
-            >
-              INITIALIZE WORKSPACE
-            </BrutalButton>
-          </BrutalCard>
+        <div className="border-2 border-[#2E2E35] border-dashed p-8 text-center">
+          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[#2E2E35] text-[#6B7280]">
+            <HiOutlineBriefcase className="w-5 h-5" />
+          </div>
+          <h3 className="text-sm font-bold text-[#F9FAFB] mb-1">No Active Workspaces</h3>
+          <p className="text-xs text-[#6B7280] mb-4 max-w-sm mx-auto">
+            No workspaces detected. Initialize a new workspace to begin operations.
+          </p>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 bg-[#6366F1] text-white text-xs font-semibold font-mono uppercase tracking-wider border-2 border-[#4F46E5]"
+          >
+            Initialize Workspace
+          </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {workspaces.map((workspace: any, index: number) => (
             <motion.div
               key={workspace._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: index * 0.06, duration: 0.5 }}
             >
               <WorkspaceCard
                 workspace={workspace}
@@ -81,16 +84,16 @@ export default function WorkspacesPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: workspaces.length * 0.1 }}
+            transition={{ delay: workspaces.length * 0.06, duration: 0.5 }}
             onClick={() => setShowCreateModal(true)}
             className="group cursor-pointer"
           >
-            <div className="h-full min-h-[200px] border-2 border-dashed border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/50 hover:bg-[var(--theme-background-secondary)] hover:border-[var(--theme-primary)] transition-all flex flex-col items-center justify-center p-6 gap-4">
-              <div className="w-16 h-16 border-2 border-[var(--theme-border)] group-hover:border-[var(--theme-primary)] flex items-center justify-center rounded-full transition-colors">
-                <HiOutlinePlus className="w-8 h-8 text-[var(--theme-foreground)]/50 group-hover:text-[var(--theme-primary)] transition-colors" />
+            <div className="h-full min-h-[140px] border-2 border-dashed border-[#2E2E35] bg-[#0A0A0A]/50 hover:bg-[#0A0A0A] hover:border-[#6366F1] transition-all flex flex-col items-center justify-center p-4 gap-3">
+              <div className="w-10 h-10 border-2 border-[#2E2E35] group-hover:border-[#6366F1] flex items-center justify-center transition-colors">
+                <HiOutlinePlus className="w-5 h-5 text-[#6B7280] group-hover:text-[#6366F1] transition-colors" />
               </div>
-              <span className="font-mono text-sm font-bold text-[var(--theme-foreground)]/50 group-hover:text-[var(--theme-primary)] transition-colors">
-                DEPLOY NEW WORKSPACE
+              <span className="font-mono text-xs font-semibold text-[#6B7280] group-hover:text-[#6366F1] uppercase tracking-wider transition-colors">
+                Deploy New Workspace
               </span>
             </div>
           </motion.div>

@@ -102,33 +102,33 @@ export default function BrutalCalendar({
   return (
     <div className={clsx("bg-[var(--theme-background)] border-2 border-[var(--theme-border)]", className)}>
       {/* Calendar Header */}
-      <div className="p-16px border-b-2 border-[var(--theme-border)]">
-        <div className="flex items-center justify-between mb-16px">
-          <div className="flex items-center gap-16px">
+      <div className="p-[10px] border-b-2 border-[var(--theme-border)]">
+        <div className="flex items-center justify-between mb-[8px]">
+          <div className="flex items-center gap-[10px]">
             <button
               onClick={handlePreviousMonth}
-              className="p-8px border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] transition-colors text-[var(--theme-foreground)]"
+              className="p-[8px] border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] transition-colors text-[var(--theme-foreground)]"
             >
-              <HiOutlineChevronLeft className="w-16px h-16px" />
+              <HiOutlineChevronLeft className="w-4 h-4" />
             </button>
             
-            <h2 className="font-mono text-brutal-lg uppercase min-w-200px text-center text-[var(--theme-foreground)]">
+            <h2 className="font-mono text-[14px] font-semibold uppercase min-w-200px text-center text-[var(--theme-foreground)]">
               {format(currentDate, 'MMMM yyyy')}
             </h2>
             
             <button
               onClick={handleNextMonth}
-              className="p-8px border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] transition-colors text-[var(--theme-foreground)]"
+              className="p-[8px] border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] transition-colors text-[var(--theme-foreground)]"
             >
-              <HiOutlineChevronRight className="w-16px h-16px" />
+              <HiOutlineChevronRight className="w-4 h-4" />
             </button>
           </div>
           
           <button
             onClick={handleToday}
-            className="brutal-btn flex items-center gap-8px"
+            className="brutal-btn flex items-center gap-[8px]"
           >
-            <HiOutlineCalendar className="w-16px h-16px" />
+            <HiOutlineCalendar className="w-4 h-4" />
             TODAY
           </button>
         </div>
@@ -139,7 +139,7 @@ export default function BrutalCalendar({
         {weekDays.map(day => (
           <div
             key={day}
-            className="p-8px text-center font-mono text-brutal-xs uppercase bg-[var(--theme-background-secondary)] border-r-2 border-[var(--theme-border)] last:border-r-0 text-[var(--theme-foreground)]"
+            className="p-[8px] text-center font-mono text-brutal-xs uppercase bg-[var(--theme-background-secondary)] border-r-2 border-[var(--theme-border)] last:border-r-0 text-[var(--theme-foreground)]"
           >
             {day}
           </div>
@@ -163,7 +163,7 @@ export default function BrutalCalendar({
               onMouseEnter={() => setHoveredDate(day)}
               onMouseLeave={() => setHoveredDate(null)}
               className={clsx(
-                "min-h-100px p-8px border-r-2 border-b-2 border-[var(--theme-border)] last:border-r-0 bg-[var(--theme-background)]",
+                "min-h-100px p-[8px] border-r-2 border-b-2 border-[var(--theme-border)] last:border-r-0 bg-[var(--theme-background)]",
                 "cursor-pointer transition-all duration-200",
                 !isCurrentMonth && "opacity-40",
                 isSelected && "bg-[var(--theme-primary)]",

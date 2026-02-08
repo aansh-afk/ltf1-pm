@@ -241,9 +241,9 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
           >
             <div className="bg-[var(--theme-background-secondary)] border-4 border-[var(--theme-border)] shadow-[var(--theme-box-shadow-hover)]">
               {/* Search Header */}
-              <div className="p-24px border-b-2 border-[var(--theme-border)]">
-                <div className="flex items-center gap-16px">
-                  <HiOutlineSearch className="w-24px h-24px text-[var(--theme-foreground)]" />
+              <div className="p-[16px] border-b-2 border-[var(--theme-border)]">
+                <div className="flex items-center gap-[8px]">
+                  <HiOutlineSearch className="w-4 h-4 text-[var(--theme-foreground)]" />
                   <input
                     ref={inputRef}
                     type="text"
@@ -255,7 +255,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
                   />
                   <button
                     onClick={onClose}
-                    className="p-8px hover:bg-[var(--theme-hover)] transition-colors"
+                    className="p-[4px] hover:bg-[var(--theme-hover)] transition-colors"
                     aria-label="Close search"
                   >
                     <HiOutlineX className="w-20px h-20px" />
@@ -263,7 +263,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
                 </div>
                 
                 {/* Filters */}
-                <div className="flex gap-8px mt-16px">
+                <div className="flex gap-[4px] mt-[8px]">
                   {filters.map((filter) => (
                     <button
                       key={filter.value}
@@ -271,7 +271,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
                         activeFilter === filter.value ? null : filter.value
                       )}
                       className={clsx(
-                        'px-16px py-8px text-xs font-bold border-2 transition-all',
+                        'px-[10px] py-[4px] text-xs font-bold border-2 transition-all',
                         activeFilter === filter.value
                           ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]'
                           : 'bg-transparent text-[var(--theme-foreground)] border-[var(--theme-border)] hover:border-[var(--theme-primary)]'
@@ -289,7 +289,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
                 className="max-h-[400px] overflow-y-auto"
               >
                 {isSearching ? (
-                  <div className="p-32px text-center text-[var(--theme-foreground)]/60">
+                  <div className="p-[20px] text-center text-[var(--theme-foreground)]/60">
                     <div className="animate-pulse">SEARCHING...</div>
                   </div>
                 ) : results.length > 0 ? (
@@ -303,27 +303,27 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
                         onClick={() => handleSelectResult(result)}
                         onMouseEnter={() => setSelectedIndex(index)}
                         className={clsx(
-                          'w-full p-16px text-left border-b border-[var(--theme-border)] transition-all',
+                          'w-full p-[10px] text-left border-b border-[var(--theme-border)] transition-all',
                           index === selectedIndex
                             ? 'bg-[var(--theme-hover)] translate-x-8px'
                             : 'hover:bg-[var(--theme-hover)]/50'
                         )}
                       >
-                        <div className="flex items-start gap-16px">
+                        <div className="flex items-start gap-[8px]">
                           <Icon className={clsx('w-20px h-20px flex-shrink-0 mt-2px', colorClass)} />
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-8px mb-4px">
+                            <div className="flex items-center gap-[4px] mb-[2px]">
                               <span className="font-bold text-[var(--theme-foreground)]">
                                 {result.title}
                               </span>
                               {result.status && (
-                                <span className="text-xs px-8px py-2px bg-[var(--theme-info)]/20 text-[var(--theme-info)]">
+                                <span className="text-xs px-[4px] py-2px bg-[var(--theme-info)]/20 text-[var(--theme-info)]">
                                   {result.status.toUpperCase()}
                                 </span>
                               )}
                               {result.priority && (
                                 <span className={clsx(
-                                  'text-xs px-8px py-2px',
+                                  'text-xs px-[4px] py-2px',
                                   result.priority === 'high' && 'bg-[var(--theme-error)]/20 text-[var(--theme-error)]',
                                   result.priority === 'medium' && 'bg-[var(--theme-warning)]/20 text-[var(--theme-warning)]',
                                   result.priority === 'low' && 'bg-[var(--theme-info)]/20 text-[var(--theme-info)]'
@@ -346,19 +346,19 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
                     )
                   })
                 ) : searchQuery ? (
-                  <div className="p-32px text-center text-[var(--theme-foreground)]/60">
+                  <div className="p-[20px] text-center text-[var(--theme-foreground)]/60">
                     NO RESULTS FOUND FOR "{searchQuery.toUpperCase()}"
                   </div>
                 ) : (
-                  <div className="p-32px text-center text-[var(--theme-foreground)]/60">
+                  <div className="p-[20px] text-center text-[var(--theme-foreground)]/60">
                     START TYPING TO SEARCH...
                   </div>
                 )}
               </div>
               
               {/* Footer */}
-              <div className="p-16px border-t-2 border-[var(--theme-border)] flex items-center justify-between text-xs text-[var(--theme-foreground)]/60">
-                <div className="flex gap-16px">
+              <div className="p-[10px] border-t-2 border-[var(--theme-border)] flex items-center justify-between text-xs text-[var(--theme-foreground)]/60">
+                <div className="flex gap-[8px]">
                   <span><kbd>↑↓</kbd> NAVIGATE</span>
                   <span><kbd>ENTER</kbd> SELECT</span>
                   <span><kbd>ESC</kbd> CLOSE</span>

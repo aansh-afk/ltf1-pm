@@ -28,4 +28,12 @@ crons.interval(
   {}
 );
 
+// Sync developer GitHub stats every 30 minutes
+crons.interval(
+  "process-github-stats-sync",
+  { minutes: 30 },
+  internal.integrations.github.syncActions.processStatsSyncQueue,
+  {}
+);
+
 export default crons;

@@ -252,15 +252,15 @@ export default function TeamActivityFeed({
 
   if (!activities) {
     return (
-      <div className={clsx('bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px', className)}>
-        <div className="flex items-center justify-between mb-16px">
-          <h3 className="text-brutal-lg font-bold uppercase">TEAM ACTIVITY</h3>
+      <div className={clsx('bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]', className)}>
+        <div className="flex items-center justify-between mb-[8px]">
+          <h3 className="text-[14px] font-semibold font-bold uppercase">TEAM ACTIVITY</h3>
         </div>
         <div className="animate-pulse space-y-8px">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-16px p-8px bg-basalt-border/20">
+            <div key={i} className="flex items-center gap-[8px] p-8px bg-basalt-border/20">
               <div className="w-40px h-12px bg-basalt-border"></div>
-              <div className="w-24px h-24px bg-basalt-border rounded"></div>
+              <div className="w-4 h-4 bg-basalt-border rounded"></div>
               <div className="w-80px h-12px bg-basalt-border"></div>
               <div className="flex-1 h-12px bg-basalt-border"></div>
             </div>
@@ -271,12 +271,12 @@ export default function TeamActivityFeed({
   }
 
   return (
-    <div className={clsx('bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px', className)}>
-      <div className="flex items-center justify-between mb-16px">
-        <h3 className="text-brutal-lg font-bold uppercase">TEAM ACTIVITY</h3>
+    <div className={clsx('bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]', className)}>
+      <div className="flex items-center justify-between mb-[8px]">
+        <h3 className="text-[14px] font-semibold font-bold uppercase">TEAM ACTIVITY</h3>
         
         {showFilters && (
-          <div className="flex items-center gap-16px">
+          <div className="flex items-center gap-[8px]">
             {/* Time Filter */}
             <div className="relative">
               <select
@@ -329,14 +329,14 @@ export default function TeamActivityFeed({
             return (
               <div 
                 key={`${activity._id}-${index}`}
-                className="flex items-center gap-16px p-8px hover:bg-basalt-border/20 transition-colors border-l-2 border-transparent hover:border-primary-brutalist/30"
+                className="flex items-center gap-[8px] p-8px hover:bg-basalt-border/20 transition-colors border-l-2 border-transparent hover:border-primary-brutalist/30"
               >
                 <span className="text-brutal-xs text-primary-brutalist/60 min-w-40px">
                   {formatTime((activity as any).timestamp || Date.now())}
                 </span>
                 
                 <div className={clsx(
-                  'w-24px h-24px border-2 border-[var(--theme-border)] flex items-center justify-center',
+                  'w-4 h-4 border-2 border-[var(--theme-border)] flex items-center justify-center',
                   config.bgColor
                 )}>
                   <Icon className={clsx('w-12px h-12px', config.color)} />
@@ -380,9 +380,9 @@ export default function TeamActivityFeed({
             )
           })
         ) : (
-          <div className="text-center py-48px">
-            <HiOutlineTerminal className="w-48px h-48px text-primary-brutalist/30 mx-auto mb-16px" />
-            <h3 className="font-mono text-brutal-sm uppercase mb-16px">NO RECENT ACTIVITY</h3>
+          <div className="text-center py-[24px]">
+            <HiOutlineTerminal className="w-6 h-6 text-primary-brutalist/30 mx-auto mb-[8px]" />
+            <h3 className="font-mono text-brutal-sm uppercase mb-[8px]">NO RECENT ACTIVITY</h3>
             <p className="text-[var(--theme-foreground)]/60">
               Team activity will appear here as actions are performed
             </p>

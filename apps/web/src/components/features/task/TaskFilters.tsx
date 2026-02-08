@@ -172,36 +172,36 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
       {/* Filter Panel */}
       <div className="fixed right-0 top-0 h-full w-480px bg-[var(--theme-background)] border-l-4 border-[var(--theme-border)] z-50 overflow-y-auto">
         {/* Header */}
-        <div className="p-24px border-b-2 border-[var(--theme-border)]">
+        <div className="p-[16px] border-b-2 border-[var(--theme-border)]">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-12px">
+            <div className="flex items-center gap-[6px]">
               <HiOutlineFilter className="w-20px h-20px" />
-              <h2 className="font-mono text-brutal-lg uppercase">FILTERS</h2>
+              <h2 className="font-mono text-[14px] font-semibold uppercase">FILTERS</h2>
               {getActiveFilterCount() > 0 && (
-                <span className="px-8px py-2px bg-primary-brutalist text-event-horizon text-brutal-xs font-bold">
+                <span className="px-[4px] py-2px bg-primary-brutalist text-event-horizon text-brutal-xs font-bold">
                   {getActiveFilterCount()}
                 </span>
               )}
             </div>
             <button 
               onClick={onClose}
-              className="brutal-hover p-8px"
+              className="brutal-hover p-[4px]"
             >
               <HiOutlineX className="w-20px h-20px" />
             </button>
           </div>
         </div>
 
-        <div className="p-24px space-y-32px">
+        <div className="p-[16px] space-y-32px">
           {/* Search */}
           <div>
-            <label className="block text-brutal-sm mb-8px uppercase">SEARCH</label>
+            <label className="block text-brutal-sm mb-[4px] uppercase">SEARCH</label>
             <div className="relative">
               <HiOutlineSearch className="absolute left-12px top-1/2 -translate-y-1/2 w-16px h-16px text-neutral-500" />
               <input
                 type="text"
                 placeholder="SEARCH TASKS..."
-                className="w-full pl-40px pr-16px py-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+                className="w-full pl-40px pr-[8px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                          font-mono text-brutal-sm uppercase placeholder:text-neutral-600
                          focus:border-primary-brutalist focus:outline-none transition-colors"
                 value={localFilters.search}
@@ -214,7 +214,7 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
           <div>
             <button
               onClick={() => setActiveSection(activeSection === 'status' ? null : 'status')}
-              className="flex items-center justify-between w-full text-brutal-sm mb-8px uppercase hover:text-primary-brutalist transition-colors"
+              className="flex items-center justify-between w-full text-brutal-sm mb-[4px] uppercase hover:text-primary-brutalist transition-colors"
             >
               <span>STATUS ({localFilters.status.length})</span>
               <HiOutlineChevronDown className={clsx(
@@ -223,9 +223,9 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
               )} />
             </button>
             {activeSection === 'status' && (
-              <div className="space-y-8px">
+              <div className="space-y-[4px]">
                 {statusOptions.map(option => (
-                  <label key={option.value} className="flex items-center gap-12px cursor-pointer">
+                  <label key={option.value} className="flex items-center gap-[6px] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={localFilters.status.includes(option.value)}
@@ -233,7 +233,7 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
                       className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                     />
                     <div className={clsx(
-                      "px-8px py-4px text-brutal-xs font-bold text-event-horizon",
+                      "px-[4px] py-4px text-brutal-xs font-bold text-event-horizon",
                       option.color
                     )}>
                       {option.label}
@@ -248,7 +248,7 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
           <div>
             <button
               onClick={() => setActiveSection(activeSection === 'priority' ? null : 'priority')}
-              className="flex items-center justify-between w-full text-brutal-sm mb-8px uppercase hover:text-primary-brutalist transition-colors"
+              className="flex items-center justify-between w-full text-brutal-sm mb-[4px] uppercase hover:text-primary-brutalist transition-colors"
             >
               <span>PRIORITY ({localFilters.priority.length})</span>
               <HiOutlineChevronDown className={clsx(
@@ -257,9 +257,9 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
               )} />
             </button>
             {activeSection === 'priority' && (
-              <div className="space-y-8px">
+              <div className="space-y-[4px]">
                 {priorityOptions.map(option => (
-                  <label key={option.value} className="flex items-center gap-12px cursor-pointer">
+                  <label key={option.value} className="flex items-center gap-[6px] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={localFilters.priority.includes(option.value)}
@@ -279,7 +279,7 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
           <div>
             <button
               onClick={() => setActiveSection(activeSection === 'type' ? null : 'type')}
-              className="flex items-center justify-between w-full text-brutal-sm mb-8px uppercase hover:text-primary-brutalist transition-colors"
+              className="flex items-center justify-between w-full text-brutal-sm mb-[4px] uppercase hover:text-primary-brutalist transition-colors"
             >
               <span>TYPE ({localFilters.type.length})</span>
               <HiOutlineChevronDown className={clsx(
@@ -288,9 +288,9 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
               )} />
             </button>
             {activeSection === 'type' && (
-              <div className="space-y-8px">
+              <div className="space-y-[4px]">
                 {typeOptions.map(option => (
-                  <label key={option.value} className="flex items-center gap-12px cursor-pointer">
+                  <label key={option.value} className="flex items-center gap-[6px] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={localFilters.type.includes(option.value)}
@@ -298,7 +298,7 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
                       className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                     />
                     <div className={clsx(
-                      "px-8px py-4px text-brutal-xs font-bold text-event-horizon",
+                      "px-[4px] py-4px text-brutal-xs font-bold text-event-horizon",
                       option.color
                     )}>
                       {option.label}
@@ -314,7 +314,7 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
             <div>
               <button
                 onClick={() => setActiveSection(activeSection === 'assignee' ? null : 'assignee')}
-                className="flex items-center justify-between w-full text-brutal-sm mb-8px uppercase hover:text-primary-brutalist transition-colors"
+                className="flex items-center justify-between w-full text-brutal-sm mb-[4px] uppercase hover:text-primary-brutalist transition-colors"
               >
                 <span>ASSIGNEE ({localFilters.assigneeIds.length})</span>
                 <HiOutlineChevronDown className={clsx(
@@ -323,8 +323,8 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
                 )} />
               </button>
               {activeSection === 'assignee' && (
-                <div className="space-y-8px">
-                  <label className="flex items-center gap-12px cursor-pointer">
+                <div className="space-y-[4px]">
+                  <label className="flex items-center gap-[6px] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={localFilters.assigneeIds.includes('unassigned')}
@@ -334,15 +334,15 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
                     <span className="font-mono text-brutal-sm text-neutral-500">UNASSIGNED</span>
                   </label>
                   {workspaceMembers.map(member => (
-                    <label key={member.userId} className="flex items-center gap-12px cursor-pointer">
+                    <label key={member.userId} className="flex items-center gap-[6px] cursor-pointer">
                       <input
                         type="checkbox"
                         checked={localFilters.assigneeIds.includes(member.userId)}
                         onChange={() => toggleArrayFilter('assigneeIds', member.userId)}
                         className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                       />
-                      <div className="flex items-center gap-8px">
-                        <div className="w-24px h-24px bg-primary-brutalist border border-[var(--theme-border)] flex items-center justify-center">
+                      <div className="flex items-center gap-[4px]">
+                        <div className="w-4 h-4 bg-primary-brutalist border border-[var(--theme-border)] flex items-center justify-center">
                           <HiOutlineUser className="w-16px h-16px text-event-horizon" />
                         </div>
                         <span className="font-mono text-brutal-sm">{member.user.name}</span>
@@ -359,7 +359,7 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
             <div>
               <button
                 onClick={() => setActiveSection(activeSection === 'labels' ? null : 'labels')}
-                className="flex items-center justify-between w-full text-brutal-sm mb-8px uppercase hover:text-primary-brutalist transition-colors"
+                className="flex items-center justify-between w-full text-brutal-sm mb-[4px] uppercase hover:text-primary-brutalist transition-colors"
               >
                 <span>LABELS ({localFilters.labels.length})</span>
                 <HiOutlineChevronDown className={clsx(
@@ -368,16 +368,16 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
                 )} />
               </button>
               {activeSection === 'labels' && (
-                <div className="space-y-8px">
+                <div className="space-y-[4px]">
                   {workspaceLabels.map(label => (
-                    <label key={label} className="flex items-center gap-12px cursor-pointer">
+                    <label key={label} className="flex items-center gap-[6px] cursor-pointer">
                       <input
                         type="checkbox"
                         checked={localFilters.labels.includes(label)}
                         onChange={() => toggleArrayFilter('labels', label)}
                         className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                       />
-                      <div className="flex items-center gap-8px">
+                      <div className="flex items-center gap-[4px]">
                         <HiOutlineTag className="w-16px h-16px text-primary-brutalist" />
                         <span className="font-mono text-brutal-sm">{label}</span>
                       </div>
@@ -392,7 +392,7 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
           <div>
             <button
               onClick={() => setActiveSection(activeSection === 'dueDate' ? null : 'dueDate')}
-              className="flex items-center justify-between w-full text-brutal-sm mb-8px uppercase hover:text-primary-brutalist transition-colors"
+              className="flex items-center justify-between w-full text-brutal-sm mb-[4px] uppercase hover:text-primary-brutalist transition-colors"
             >
               <span>DUE DATE</span>
               <HiOutlineChevronDown className={clsx(
@@ -401,12 +401,12 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
               )} />
             </button>
             {activeSection === 'dueDate' && (
-              <div className="space-y-12px">
+              <div className="space-y-[6px]">
                 <div>
-                  <label className="block text-brutal-xs mb-4px text-neutral-500">FROM</label>
+                  <label className="block text-brutal-xs mb-[2px] text-neutral-500">FROM</label>
                   <input
                     type="date"
-                    className="w-full px-12px py-8px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+                    className="w-full px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                              font-mono text-brutal-sm
                              focus:border-primary-brutalist focus:outline-none transition-colors"
                     value={localFilters.dueDateRange.start || ''}
@@ -414,10 +414,10 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
                   />
                 </div>
                 <div>
-                  <label className="block text-brutal-xs mb-4px text-neutral-500">TO</label>
+                  <label className="block text-brutal-xs mb-[2px] text-neutral-500">TO</label>
                   <input
                     type="date"
-                    className="w-full px-12px py-8px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+                    className="w-full px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
                              font-mono text-brutal-sm
                              focus:border-primary-brutalist focus:outline-none transition-colors"
                     value={localFilters.dueDateRange.end || ''}
@@ -430,13 +430,13 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
 
           {/* Special Filters */}
           <div>
-            <h3 className="text-brutal-sm mb-12px uppercase">SPECIAL FILTERS</h3>
-            <div className="space-y-8px">
-              <div className="flex items-center gap-12px">
+            <h3 className="text-brutal-sm mb-[6px] uppercase">SPECIAL FILTERS</h3>
+            <div className="space-y-[4px]">
+              <div className="flex items-center gap-[6px]">
                 <button
                   onClick={() => handleBooleanFilter('hasTimeTracked', localFilters.hasTimeTracked === true ? null : true)}
                   className={clsx(
-                    "px-12px py-6px border-2 border-[var(--theme-border)] font-mono text-brutal-xs uppercase transition-colors",
+                    "px-[8px] py-6px border-2 border-[var(--theme-border)] font-mono text-brutal-xs uppercase transition-colors",
                     localFilters.hasTimeTracked === true
                       ? "bg-primary-brutalist text-event-horizon"
                       : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
@@ -445,11 +445,11 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
                   HAS TIME TRACKED
                 </button>
               </div>
-              <div className="flex items-center gap-12px">
+              <div className="flex items-center gap-[6px]">
                 <button
                   onClick={() => handleBooleanFilter('isOverdue', localFilters.isOverdue === true ? null : true)}
                   className={clsx(
-                    "px-12px py-6px border-2 border-[var(--theme-border)] font-mono text-brutal-xs uppercase transition-colors",
+                    "px-[8px] py-6px border-2 border-[var(--theme-border)] font-mono text-brutal-xs uppercase transition-colors",
                     localFilters.isOverdue === true
                       ? "bg-[var(--theme-error)] text-[var(--theme-foreground)]"
                       : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
@@ -463,8 +463,8 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
         </div>
 
         {/* Footer Actions */}
-        <div className="sticky bottom-0 p-24px bg-[var(--theme-background)] border-t-2 border-[var(--theme-border)]">
-          <div className="flex gap-12px">
+        <div className="sticky bottom-0 p-[16px] bg-[var(--theme-background)] border-t-2 border-[var(--theme-border)]">
+          <div className="flex gap-[6px]">
             <button
               onClick={handleResetFilters}
               className="flex-1 brutal-btn-secondary"

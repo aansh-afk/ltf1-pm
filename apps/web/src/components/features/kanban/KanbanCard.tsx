@@ -10,8 +10,6 @@ import {
 } from 'react-icons/hi'
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
-import BrutalCard from '../../ui/BrutalCard'
-import BrutalBadge from '../../ui/BrutalBadge'
 import UserDisplay from '../user/UserDisplay'
 import toast from 'react-hot-toast'
 
@@ -57,20 +55,20 @@ export default function KanbanCard({
         }
     }, [showMenu])
 
-    const priorityColors = {
-        urgent: 'border-brutal-error',
-        high: 'border-brutal-warning',
-        medium: 'border-brutal-info',
-        low: 'border-[var(--theme-border)]',
+    const priorityBorderColors = {
+        urgent: 'border-l-[#EF4444]',
+        high: 'border-l-[#F59E0B]',
+        medium: 'border-l-[#6366F1]',
+        low: 'border-l-[#2E2E35]',
     }
 
     const statusIndicators = {
-        todo: { color: 'bg-basalt-border', label: 'TODO' },
-        in_progress: { color: 'bg-brutal-info', label: 'IN_PROGRESS' },
-        blocked: { color: 'bg-brutal-error', label: 'BLOCKED' },
-        done: { color: 'bg-brutal-success', label: 'DONE' },
-        backlog: { color: 'bg-[var(--theme-border)]', label: 'BACKLOG' },
-        in_review: { color: 'bg-brutal-warning', label: 'REVIEW' },
+        todo: { color: 'bg-[#6366F1]' },
+        in_progress: { color: 'bg-[#06B6D4]' },
+        blocked: { color: 'bg-[#EF4444]' },
+        done: { color: 'bg-[#22C55E]' },
+        backlog: { color: 'bg-[#6B7280]' },
+        in_review: { color: 'bg-[#F59E0B]' },
     }
 
     const typeIcons = {
@@ -97,15 +95,13 @@ export default function KanbanCard({
     }
 
     return (
-        <BrutalCard
-            variant="elevated"
-            padding={isCompact ? 'sm' : 'md'}
-            hoverable={true}
+        <div
             className={clsx(
                 'relative overflow-hidden transition-all duration-200 group',
-                priorityColors[task.priority as keyof typeof priorityColors]
+                'bg-[#0A0A0A] border-2 border-[#2E2E35] border-l-[3px]',
+                'hover:border-[#F9FAFB]/20 hover:-translate-y-[1px]',
+                priorityBorderColors[task.priority as keyof typeof priorityBorderColors]
             )}
-            style={{ borderRadius: '0 !important' }}
             role="article"
             aria-label={`Task: ${task.title}`}
             tabIndex={0}
@@ -115,80 +111,66 @@ export default function KanbanCard({
             {/* Status indicator bar */}
             <div
                 className={clsx(
-                    'absolute top-0 left-0 w-full',
-                    isCompact ? 'h-1px' : 'h-2px',
-                    statusIndicators[task.status as keyof typeof statusIndicators]?.color || 'bg-[var(--theme-border)]'
+                    'absolute top-0 left-0 w-full h-[2px]',
+                    statusIndicators[task.status as keyof typeof statusIndicators]?.color || 'bg-[#2E2E35]'
                 )}
             />
 
             <div className={clsx(
-                isCompact ? "space-y-4px" : "space-y-12px"
+                isCompact ? "p-1.5 space-y-0.5" : "px-2.5 py-2 space-y-1"
             )}>
-                {/* Header with type, number, and menu */}
-                <div className="flex items-center justify-between mb-4px">
-                    <div className="flex items-center gap-8px">
+                {/* Header: type + number + menu */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1 min-w-0">
                         <span className={clsx(
-                            "text-xs font-bold px-6px py-2px",
-                            task.type === 'bug' && "text-brutal-error bg-brutal-error/10",
-                            task.type === 'feature' && "text-brutal-success bg-brutal-success/10",
-                            task.type === 'improvement' && "text-brutal-info bg-brutal-info/10",
-                            task.type === 'task' && "text-[var(--theme-foreground)] bg-basalt-border/20",
-                            task.type === 'epic' && "text-brutal-warning bg-brutal-warning/10"
+                            "text-[10px] font-mono font-bold shrink-0",
+                            task.type === 'bug' && "text-[#EF4444]",
+                            task.type === 'feature' && "text-[#22C55E]",
+                            task.type === 'improvement' && "text-[#06B6D4]",
+                            task.type === 'task' && "text-[#6B7280]",
+                            task.type === 'epic' && "text-[#F59E0B]"
                         )}>
                             {typeIcons[task.type as keyof typeof typeIcons] || '[TASK]'}
                         </span>
-                        <span className="text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/60">
+                        <span className="text-[10px] font-mono text-[#6B7280] truncate">
                             {task.project?.key ? `${task.project.key}-${task.number}` : `#${task.number}`}
                         </span>
-                        {(task.priority === 'urgent' || task.priority === 'high') && (
-                            <span className={clsx(
-                                "text-xs font-bold px-4px py-1px",
-                                task.priority === 'urgent' && "text-brutal-error bg-brutal-error/20 animate-brutal-pulse",
-                                task.priority === 'high' && "text-brutal-warning bg-brutal-warning/20"
-                            )}>
-                                {task.priority === 'urgent' ? '🔥' : '⚡'}
-                            </span>
+                        {task.priority === 'urgent' && (
+                            <span className="text-[10px] font-bold text-[#EF4444] animate-pulse shrink-0">!</span>
                         )}
                     </div>
 
-                    {/* Three dots menu */}
-                    <div className="relative">
+                    <div className="relative shrink-0">
                         <button
                             ref={buttonRef}
                             onClick={(e) => {
                                 e.stopPropagation()
                                 setShowMenu(!showMenu)
                             }}
-                            className="p-4px hover:bg-[var(--theme-background-secondary)] transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            className="p-0.5 hover:bg-[#111111] transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                             aria-label="Task options"
                         >
-                            <HiOutlineDotsVertical className="w-16px h-16px" />
+                            <HiOutlineDotsVertical className="w-3 h-3 text-[#6B7280]" />
                         </button>
 
                         {showMenu && (
                             <div
                                 ref={menuRef}
-                                className="absolute right-0 top-full mt-4px z-50 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal min-w-[160px]"
+                                className="absolute right-0 top-full mt-1 z-50 bg-[#0A0A0A] border-2 border-[#2E2E35] shadow-[4px_4px_0px_#000000] min-w-[130px]"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <button
-                                    onClick={() => {
-                                        setShowMenu(false)
-                                        onEdit?.(task)
-                                    }}
-                                    className="w-full px-16px py-8px text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-8px"
+                                    onClick={() => { setShowMenu(false); onEdit?.(task) }}
+                                    className="w-full px-2.5 py-1.5 text-[10px] font-mono uppercase text-left text-[#9CA3AF] hover:bg-[#111111] hover:text-[#F9FAFB] transition-colors flex items-center gap-1.5"
                                 >
-                                    <HiOutlinePencil className="w-16px h-16px" />
+                                    <HiOutlinePencil className="w-3 h-3" />
                                     EDIT
                                 </button>
                                 <button
-                                    onClick={() => {
-                                        setShowMenu(false)
-                                        onDuplicate?.(task)
-                                    }}
-                                    className="w-full px-16px py-8px text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-8px"
+                                    onClick={() => { setShowMenu(false); onDuplicate?.(task) }}
+                                    className="w-full px-2.5 py-1.5 text-[10px] font-mono uppercase text-left text-[#9CA3AF] hover:bg-[#111111] hover:text-[#F9FAFB] transition-colors flex items-center gap-1.5"
                                 >
-                                    <HiOutlineDuplicate className="w-16px h-16px" />
+                                    <HiOutlineDuplicate className="w-3 h-3" />
                                     DUPLICATE
                                 </button>
                                 <button
@@ -197,17 +179,17 @@ export default function KanbanCard({
                                         toast.success('Link copied!')
                                         setShowMenu(false)
                                     }}
-                                    className="w-full px-16px py-8px text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-8px"
+                                    className="w-full px-2.5 py-1.5 text-[10px] font-mono uppercase text-left text-[#9CA3AF] hover:bg-[#111111] hover:text-[#F9FAFB] transition-colors flex items-center gap-1.5"
                                 >
-                                    <HiOutlineLink className="w-16px h-16px" />
+                                    <HiOutlineLink className="w-3 h-3" />
                                     COPY LINK
                                 </button>
-                                <div className="border-t-2 border-[var(--theme-border)]" />
+                                <div className="border-t border-[#2E2E35]" />
                                 <button
                                     onClick={handleDelete}
-                                    className="w-full px-16px py-8px text-xs font-mono uppercase text-left hover:bg-brutal-error hover:text-white transition-colors flex items-center gap-8px text-brutal-error"
+                                    className="w-full px-2.5 py-1.5 text-[10px] font-mono uppercase text-left text-[#EF4444] hover:bg-[#EF4444] hover:text-white transition-colors flex items-center gap-1.5"
                                 >
-                                    <HiOutlineTrash className="w-16px h-16px" />
+                                    <HiOutlineTrash className="w-3 h-3" />
                                     DELETE
                                 </button>
                             </div>
@@ -215,68 +197,57 @@ export default function KanbanCard({
                     </div>
                 </div>
 
-                {/* Title */}
-                <div>
-                    <h4 className="font-bold text-sm uppercase tracking-wider text-[var(--theme-foreground)] break-words line-clamp-2 mb-4px">
-                        {task.title}
-                    </h4>
-                    {!isCompact && task.description && (
-                        <p className="text-xs font-mono text-[var(--theme-foreground)]/60 line-clamp-2 break-words">
-                            {task.description}
-                        </p>
-                    )}
-                </div>
+                {/* Title only — no description on board cards */}
+                <h4 className="font-semibold text-[13px] leading-snug text-[#F9FAFB] break-words line-clamp-2">
+                    {task.title}
+                </h4>
 
-                {/* Labels */}
+                {/* Inline labels as tiny chips */}
                 {!isCompact && task.labels && task.labels.length > 0 && (
-                    <div className="flex flex-wrap gap-8px">
-                        {task.labels.slice(0, 3).map((label: string) => (
-                            <BrutalBadge key={label} size="sm">{label}</BrutalBadge>
+                    <div className="flex flex-wrap gap-1">
+                        {task.labels.slice(0, 2).map((label: string) => (
+                            <span key={label} className="text-[9px] font-mono uppercase tracking-wider text-[#9CA3AF] bg-[#111111] px-1 py-px border border-[#2E2E35] truncate max-w-[80px]">
+                                {label}
+                            </span>
                         ))}
-                        {task.labels.length > 3 && (
-                            <BrutalBadge size="sm" variant="info">+{task.labels.length - 3}</BrutalBadge>
+                        {task.labels.length > 2 && (
+                            <span className="text-[9px] font-mono text-[#6B7280]">+{task.labels.length - 2}</span>
                         )}
                     </div>
                 )}
 
-                {/* Footer */}
+                {/* Compact footer */}
                 {!isCompact && (
-                    <div className="flex items-center justify-between pt-8px border-t border-[var(--theme-border)]/50">
-                        <div className="flex items-center gap-12px">
+                    <div className="flex items-center justify-between pt-1 border-t border-[#1F1F23]">
+                        <div className="flex items-center gap-1.5">
                             <UserDisplay
                                 userId={task.assigneeId || (task.assigneeIds && task.assigneeIds[0])}
                                 size="sm"
-                                showStatus={true}
+                                showStatus={false}
                                 compact={true}
                             />
-
                             {task.commentCount > 0 && (
-                                <div className="flex items-center gap-4px text-xs font-mono uppercase text-[var(--theme-foreground)]/60">
-                                    <HiOutlineChat className="w-12px h-12px" />
-                                    <span>{task.commentCount}</span>
-                                </div>
+                                <span className="text-[10px] font-mono text-[#6B7280] flex items-center gap-0.5">
+                                    <HiOutlineChat className="w-2.5 h-2.5" />
+                                    {task.commentCount}
+                                </span>
                             )}
-                        </div>
-
-                        <div className="flex items-center gap-8px">
                             {task.points && (
-                                <div className="text-xs font-mono text-primary-brutalist">
-                                    {task.points}pts
-                                </div>
-                            )}
-                            {task.dueDate && (
-                                <div className={clsx(
-                                    "flex items-center gap-4px text-xs font-mono uppercase",
-                                    new Date(task.dueDate) < new Date() ? 'text-brutal-error' : 'text-[var(--theme-foreground)]/60'
-                                )}>
-                                    <HiOutlineClock className="w-12px h-12px" />
-                                    <span>{formatDistanceToNow(new Date(task.dueDate), { addSuffix: true })}</span>
-                                </div>
+                                <span className="text-[10px] font-mono text-[#6366F1]">{task.points}pt</span>
                             )}
                         </div>
+                        {task.dueDate && (
+                            <span className={clsx(
+                                "text-[10px] font-mono flex items-center gap-0.5",
+                                new Date(task.dueDate) < new Date() ? 'text-[#EF4444]' : 'text-[#6B7280]'
+                            )}>
+                                <HiOutlineClock className="w-2.5 h-2.5" />
+                                {formatDistanceToNow(new Date(task.dueDate), { addSuffix: true })}
+                            </span>
+                        )}
                     </div>
                 )}
             </div>
-        </BrutalCard>
+        </div>
     )
 }

@@ -30,8 +30,8 @@ export default function DeveloperTimeline({ projectId }: DeveloperTimelineProps)
 
   if (!activity) {
     return (
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-        <h2 className="text-brutal-lg font-bold uppercase mb-16px flex items-center gap-8px">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
+        <h2 className="text-[14px] font-semibold font-bold uppercase mb-[8px] flex items-center gap-[4px]">
           <HiOutlineClock className="w-20px h-20px" />
           DEVELOPER TIMELINE
         </h2>
@@ -46,13 +46,13 @@ export default function DeveloperTimeline({ projectId }: DeveloperTimelineProps)
 
   if (activity.combined.length === 0) {
     return (
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-        <h2 className="text-brutal-lg font-bold uppercase mb-16px flex items-center gap-8px">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
+        <h2 className="text-[14px] font-semibold font-bold uppercase mb-[8px] flex items-center gap-[4px]">
           <HiOutlineClock className="w-20px h-20px" />
           DEVELOPER TIMELINE
         </h2>
         <div className="text-center py-32px text-[var(--theme-foreground-secondary)]">
-          <p className="mb-8px">No GitHub activity found.</p>
+          <p className="mb-[4px]">No GitHub activity found.</p>
           <p className="text-brutal-xs">Connect a repository or sync GitHub data to see activity.</p>
         </div>
       </div>
@@ -130,14 +130,14 @@ export default function DeveloperTimeline({ projectId }: DeveloperTimelineProps)
   }
 
   return (
-    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-      <div className="flex items-center justify-between mb-16px">
-        <h2 className="text-brutal-lg font-bold uppercase flex items-center gap-8px">
+    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
+      <div className="flex items-center justify-between mb-[8px]">
+        <h2 className="text-[14px] font-semibold font-bold uppercase flex items-center gap-[4px]">
           <HiOutlineClock className="w-20px h-20px" />
           DEVELOPER TIMELINE
         </h2>
         {stats && (
-          <div className="flex items-center gap-16px text-brutal-xs font-mono">
+          <div className="flex items-center gap-[8px] text-brutal-xs font-mono">
             <span className="text-[var(--theme-foreground-secondary)]">
               {stats.totalCommits} commits
             </span>
@@ -166,14 +166,14 @@ export default function DeveloperTimeline({ projectId }: DeveloperTimelineProps)
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-start gap-12px p-8px hover:bg-[var(--theme-hover)] transition-colors rounded-none border-l-2 border-transparent hover:border-[var(--theme-primary)] cursor-pointer"
+                  className="flex items-start gap-[6px] p-[4px] hover:bg-[var(--theme-hover)] transition-colors rounded-none border-l-2 border-transparent hover:border-[var(--theme-primary)] cursor-pointer"
                 >
-                  <div className="flex items-center gap-8px min-w-[80px]">
+                  <div className="flex items-center gap-[4px] min-w-[80px]">
                     <span className="text-brutal-xs font-mono text-[var(--theme-foreground-secondary)]">
                       {formatDistanceToNow(new Date(item.timestamp), { addSuffix: false })}
                     </span>
                   </div>
-                  <div className="flex items-start gap-8px flex-1">
+                  <div className="flex items-start gap-[4px] flex-1">
                     <span style={{ color: getActivityColor(item.type, state) }}>
                       {getActivityIcon(item.type, state)}
                     </span>
@@ -188,13 +188,13 @@ export default function DeveloperTimeline({ projectId }: DeveloperTimelineProps)
                   </div>
                 </a>
               ) : (
-                <div className="flex items-start gap-12px p-8px">
-                  <div className="flex items-center gap-8px min-w-[80px]">
+                <div className="flex items-start gap-[6px] p-[4px]">
+                  <div className="flex items-center gap-[4px] min-w-[80px]">
                     <span className="text-brutal-xs font-mono text-[var(--theme-foreground-secondary)]">
                       {formatDistanceToNow(new Date(item.timestamp), { addSuffix: false })}
                     </span>
                   </div>
-                  <div className="flex items-start gap-8px flex-1">
+                  <div className="flex items-start gap-[4px] flex-1">
                     <span style={{ color: getActivityColor(item.type, state) }}>
                       {getActivityIcon(item.type, state)}
                     </span>
@@ -215,7 +215,7 @@ export default function DeveloperTimeline({ projectId }: DeveloperTimelineProps)
       </div>
 
       {activity.combined.length >= 10 && (
-        <div className="mt-16px pt-16px border-t border-[var(--theme-border)]">
+        <div className="mt-[8px] pt-[8px] border-t border-[var(--theme-border)]">
           <p className="text-brutal-xs text-[var(--theme-foreground-secondary)] text-center">
             Showing last 10 activities
           </p>

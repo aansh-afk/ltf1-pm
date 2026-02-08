@@ -125,8 +125,8 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
   
   if (loading && !insights) {
     return (
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px">
-        <div className="flex items-center gap-12px">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
+        <div className="flex items-center gap-[6px]">
           <HiOutlineSparkles className="w-20px h-20px animate-pulse text-[var(--theme-primary)]" />
           <span className="text-brutal-sm">Generating AI insights...</span>
         </div>
@@ -136,15 +136,15 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
   
   if (error) {
     return (
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-error)] p-24px">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-error)] p-[16px]">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-12px">
+          <div className="flex items-center gap-[6px]">
             <HiOutlineExclamation className="w-20px h-20px text-[var(--theme-error)]" />
             <span className="text-brutal-sm">Failed to load insights</span>
           </div>
           <button
             onClick={fetchInsights}
-            className="p-8px hover:bg-[var(--theme-hover)] transition-colors"
+            className="p-[4px] hover:bg-[var(--theme-hover)] transition-colors"
             title="Retry"
           >
             <HiOutlineRefresh className="w-16px h-16px" />
@@ -159,9 +159,9 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
   if (compact) {
     // Compact view for overview tab
     return (
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-16px">
-        <div className="flex items-center justify-between mb-12px">
-          <div className="flex items-center gap-8px">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[10px]">
+        <div className="flex items-center justify-between mb-[6px]">
+          <div className="flex items-center gap-[4px]">
             <HiOutlineSparkles className="w-16px h-16px text-[var(--theme-primary)]" />
             <h3 className="text-brutal-sm font-bold uppercase">AI Insights</h3>
             {insights.aiGenerated && (
@@ -180,9 +180,9 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
           </button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12px">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-[6px]">
           {/* Sprint Health */}
-          <div className="flex items-center gap-8px">
+          <div className="flex items-center gap-[4px]">
             {getHealthIcon(insights.sprintHealth.prediction)}
             <div>
               <div className="text-brutal-sm font-bold" style={{ color: getHealthColor(insights.sprintHealth.prediction) }}>
@@ -195,7 +195,7 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
           </div>
           
           {/* Key Metric */}
-          <div className="flex items-center gap-8px">
+          <div className="flex items-center gap-[4px]">
             {insights.metrics.currentVelocity > insights.metrics.avgVelocity ? (
               <HiOutlineTrendingUp className="w-20px h-20px text-[var(--theme-success)]" />
             ) : (
@@ -213,7 +213,7 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
           
           {/* Top Risk or Suggestion */}
           {(insights.risks.length > 0 || insights.sprintHealth.suggestions.length > 0) && (
-            <div className="flex items-center gap-8px">
+            <div className="flex items-center gap-[4px]">
               <HiOutlineLightBulb className="w-20px h-20px text-[var(--theme-info)]" />
               <div className="text-brutal-xs">
                 {insights.risks.length > 0 
@@ -230,21 +230,21 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
   
   // Full view
   return (
-    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px space-y-24px">
+    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px] space-y-[12px]">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-12px">
-          <HiOutlineSparkles className="w-24px h-24px text-[var(--theme-primary)]" />
-          <h2 className="text-brutal-lg font-bold uppercase">AI Project Insights</h2>
+        <div className="flex items-center gap-[6px]">
+          <HiOutlineSparkles className="w-4 h-4 text-[var(--theme-primary)]" />
+          <h2 className="text-[14px] font-semibold font-bold uppercase">AI Project Insights</h2>
           {insights.aiGenerated && (
-            <span className="text-brutal-xs text-[var(--theme-foreground-secondary)] px-8px py-4px bg-[var(--theme-primary)]/10 border border-[var(--theme-primary)]">
+            <span className="text-brutal-xs text-[var(--theme-foreground-secondary)] px-[4px] py-4px bg-[var(--theme-primary)]/10 border border-[var(--theme-primary)]">
               AI-POWERED
             </span>
           )}
         </div>
         <button
           onClick={fetchInsights}
-          className="p-8px hover:bg-[var(--theme-hover)] transition-colors"
+          className="p-[4px] hover:bg-[var(--theme-hover)] transition-colors"
           title="Refresh insights"
           disabled={loading}
         >
@@ -253,14 +253,14 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
       </div>
       
       {/* Sprint Health Score */}
-      <div className="border-2 p-16px" style={{ borderColor: getHealthColor(insights.sprintHealth.prediction) }}>
+      <div className="border-2 p-[10px]" style={{ borderColor: getHealthColor(insights.sprintHealth.prediction) }}>
         <div className="flex items-start justify-between">
           <div>
-            <div className="flex items-center gap-12px mb-8px">
+            <div className="flex items-center gap-[6px] mb-[4px]">
               {getHealthIcon(insights.sprintHealth.prediction)}
               <h3 className="text-brutal-md font-bold">Sprint Health Score</h3>
             </div>
-            <div className="text-brutal-2xl font-bold mb-4px" style={{ color: getHealthColor(insights.sprintHealth.prediction) }}>
+            <div className="text-[20px] font-bold font-bold mb-[2px]" style={{ color: getHealthColor(insights.sprintHealth.prediction) }}>
               {insights.sprintHealth.score}%
             </div>
             <div className="text-brutal-sm text-[var(--theme-foreground-secondary)]">
@@ -274,22 +274,22 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
           </div>
           
           {/* Metrics Summary */}
-          <div className="grid grid-cols-2 gap-16px">
+          <div className="grid grid-cols-2 gap-[8px]">
             <div>
               <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Completed</div>
-              <div className="text-brutal-lg font-bold">{insights.metrics.completedTasks}</div>
+              <div className="text-[14px] font-semibold font-bold">{insights.metrics.completedTasks}</div>
             </div>
             <div>
               <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">In Progress</div>
-              <div className="text-brutal-lg font-bold">{insights.metrics.inProgressTasks}</div>
+              <div className="text-[14px] font-semibold font-bold">{insights.metrics.inProgressTasks}</div>
             </div>
             <div>
               <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Blocked</div>
-              <div className="text-brutal-lg font-bold text-[var(--theme-error)]">{insights.metrics.blockedTasks}</div>
+              <div className="text-[14px] font-semibold font-bold text-[var(--theme-error)]">{insights.metrics.blockedTasks}</div>
             </div>
             <div>
               <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Velocity</div>
-              <div className="text-brutal-lg font-bold">{insights.metrics.currentVelocity}</div>
+              <div className="text-[14px] font-semibold font-bold">{insights.metrics.currentVelocity}</div>
             </div>
           </div>
         </div>
@@ -298,13 +298,13 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
       {/* Suggestions */}
       {insights.sprintHealth.suggestions.length > 0 && (
         <div>
-          <h3 className="text-brutal-sm font-bold uppercase mb-12px flex items-center gap-8px">
+          <h3 className="text-brutal-sm font-bold uppercase mb-[6px] flex items-center gap-[4px]">
             <HiOutlineLightBulb className="w-16px h-16px" />
             AI Suggestions
           </h3>
-          <div className="space-y-8px">
+          <div className="space-y-[4px]">
             {insights.sprintHealth.suggestions.map((suggestion, index) => (
-              <div key={index} className="flex items-start gap-8px p-8px bg-[var(--theme-info)]/10 border border-[var(--theme-info)]">
+              <div key={index} className="flex items-start gap-[4px] p-[4px] bg-[var(--theme-info)]/10 border border-[var(--theme-info)]">
                 <span className="text-brutal-xs">💡</span>
                 <span className="text-brutal-sm">{suggestion}</span>
               </div>
@@ -316,15 +316,15 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
       {/* Risks */}
       {insights.risks.length > 0 && (
         <div>
-          <h3 className="text-brutal-sm font-bold uppercase mb-12px flex items-center gap-8px">
+          <h3 className="text-brutal-sm font-bold uppercase mb-[6px] flex items-center gap-[4px]">
             <HiOutlineExclamation className="w-16px h-16px" />
             Identified Risks
           </h3>
-          <div className="space-y-8px">
+          <div className="space-y-[4px]">
             {insights.risks.map((risk, index) => (
               <div 
                 key={index} 
-                className="flex items-start gap-8px p-8px border"
+                className="flex items-start gap-[4px] p-[4px] border"
                 style={{ 
                   borderColor: getSeverityColor(risk.severity),
                   backgroundColor: getSeverityColor(risk.severity) + '10'
@@ -343,12 +343,12 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
       {/* Team Insights */}
       {insights.teamInsights && (
         <div>
-          <h3 className="text-brutal-sm font-bold uppercase mb-12px">Team Insights</h3>
-          <div className="space-y-8px">
-            <div className="flex items-center gap-8px">
+          <h3 className="text-brutal-sm font-bold uppercase mb-[6px]">Team Insights</h3>
+          <div className="space-y-[4px]">
+            <div className="flex items-center gap-[4px]">
               <span className="text-brutal-sm">Team Sentiment:</span>
               <span 
-                className="text-brutal-sm font-bold px-8px py-4px border"
+                className="text-brutal-sm font-bold px-[4px] py-4px border"
                 style={{
                   borderColor: insights.teamInsights.sentiment === 'positive' ? 'var(--theme-success)' :
                                insights.teamInsights.sentiment === 'concerned' ? 'var(--theme-warning)' :
@@ -373,10 +373,10 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
       {/* Recommendations */}
       {insights.recommendations && insights.recommendations.length > 0 && (
         <div>
-          <h3 className="text-brutal-sm font-bold uppercase mb-12px">Recommendations</h3>
-          <div className="space-y-8px">
+          <h3 className="text-brutal-sm font-bold uppercase mb-[6px]">Recommendations</h3>
+          <div className="space-y-[4px]">
             {insights.recommendations.map((rec, index) => (
-              <div key={index} className="flex items-start gap-8px">
+              <div key={index} className="flex items-start gap-[4px]">
                 <span className="text-brutal-sm text-[var(--theme-primary)]">{index + 1}.</span>
                 <span className="text-brutal-sm">{rec}</span>
               </div>
@@ -386,7 +386,7 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
       )}
       
       {/* Footer */}
-      <div className="pt-16px border-t border-[var(--theme-border)] flex items-center justify-between">
+      <div className="pt-[8px] border-t border-[var(--theme-border)] flex items-center justify-between">
         <span className="text-brutal-xs text-[var(--theme-foreground-tertiary)]">
           Last updated: {lastRefresh.toLocaleTimeString()}
         </span>

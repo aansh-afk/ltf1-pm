@@ -25,7 +25,7 @@ function MarqueeTextStrip({ text, sizes, opacity, color, animationClass, delay }
       {Array.from({ length: 12 }, (_, i) => (
         <span 
           key={i} 
-          className={`${getRandomSize()} font-bold uppercase tracking-wider mx-24px md:mx-48px select-none`}
+          className={`${getRandomSize()} font-bold uppercase tracking-wider mx-[12px] md:mx-[24px] select-none`}
           style={{ 
             color,
             opacity,
@@ -64,7 +64,7 @@ export default function EnhancedMarqueeBackground() {
       </div>
       
       {/* Layer 2: Medium speed, medium text */}
-      <div className="flex whitespace-nowrap mt-32px">
+      <div className="flex whitespace-nowrap mt-[16px]">
         <MarqueeTextStrip 
           text={text}
           sizes={['text-3xl', 'text-4xl', 'text-5xl']}
@@ -84,7 +84,7 @@ export default function EnhancedMarqueeBackground() {
       </div>
       
       {/* Layer 3: Slow, large text, low opacity */}
-      <div className="flex whitespace-nowrap mt-48px">
+      <div className="flex whitespace-nowrap mt-[24px]">
         <MarqueeTextStrip 
           text={text}
           sizes={['text-5xl', 'text-6xl', 'text-7xl']}
@@ -104,7 +104,7 @@ export default function EnhancedMarqueeBackground() {
       </div>
       
       {/* Layer 4: Very slow, mixed sizes, very low opacity */}
-      <div className="flex whitespace-nowrap mt-64px">
+      <div className="flex whitespace-nowrap mt-[32px]">
         <MarqueeTextStrip 
           text={text}
           sizes={['text-3xl', 'text-4xl', 'text-5xl', 'text-6xl', 'text-7xl', 'text-8xl']}
@@ -124,7 +124,7 @@ export default function EnhancedMarqueeBackground() {
       </div>
       
       {/* Additional scattered layer for more depth */}
-      <div className="flex whitespace-nowrap mt-32px">
+      <div className="flex whitespace-nowrap mt-[16px]">
         <MarqueeTextStrip 
           text={text}
           sizes={['text-4xl', 'text-5xl', 'text-6xl']}
