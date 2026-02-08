@@ -193,7 +193,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                 className="brutal-btn-secondary flex items-center gap-[4px] px-[8px] py-[4px]"
                 title="Export as CSV"
               >
-                <HiOutlineDownload className="w-16px h-16px" />
+                <HiOutlineDownload className="w-4 h-4" />
                 <span className="font-mono text-brutal-xs">EXPORT</span>
               </button>
               {isModal && onClose && (
@@ -201,7 +201,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                   onClick={onClose}
                   className="brutal-btn-secondary p-[4px]"
                 >
-                  <HiOutlineX className="w-20px h-20px" />
+                  <HiOutlineX className="w-5 h-5" />
                 </button>
               )}
             </div>
@@ -213,7 +213,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
           <div className="flex flex-wrap items-center gap-[6px]">
             {/* Search */}
             <div className="flex-1 min-w-200px relative">
-              <HiOutlineSearch className="absolute left-12px top-50% transform -translate-y-50% w-16px h-16px text-primary-brutalist/60" />
+              <HiOutlineSearch className="absolute left-12px top-50% transform -translate-y-50% w-4 h-4 text-primary-brutalist/60" />
               <input
                 type="text"
                 value={searchQuery}
@@ -266,9 +266,9 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                 className="brutal-btn-secondary p-6px"
               >
                 {sortAsc ? (
-                  <HiOutlineSortAscending className="w-16px h-16px" />
+                  <HiOutlineSortAscending className="w-4 h-4" />
                 ) : (
-                  <HiOutlineSortDescending className="w-16px h-16px" />
+                  <HiOutlineSortDescending className="w-4 h-4" />
                 )}
               </button>
             </div>
@@ -295,7 +295,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                   onChange={(e) => setMinLevel(parseInt(e.target.value))}
                   className="w-60px"
                 />
-                <span className="font-mono text-brutal-xs font-bold w-20px">{minLevel}</span>
+                <span className="font-mono text-brutal-xs font-bold w-5">{minLevel}</span>
               </div>
             </div>
           </div>
@@ -346,7 +346,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                         onClick={() => handleMemberClick(member.userId)}
                       >
                         <div className="flex items-center gap-[4px]">
-                          <HiOutlineUser className="w-16px h-16px" />
+                          <HiOutlineUser className="w-4 h-4" />
                           {member.name || 'UNKNOWN'}
                         </div>
                       </td>
@@ -369,7 +369,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                           >
                             {expertise && (
                               <div className={clsx(
-                                "inline-flex items-center justify-center w-32px h-24px font-mono text-brutal-xs font-bold",
+                                "inline-flex items-center justify-center w-5 h-4 font-mono text-brutal-xs font-bold",
                                 expertise.color,
                                 expertise.textColor
                               )}>
@@ -401,7 +401,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                 return (
                   <div key={tech} className="brutal-card p-[10px]">
                     <h3 className="font-mono text-brutal-sm font-bold mb-[6px] flex items-center gap-[4px]">
-                      <HiOutlineCode className="w-16px h-16px" />
+                      <HiOutlineCode className="w-4 h-4" />
                       {tech}
                       <span className="text-brutal-xs text-primary-brutalist/60">({experts.length})</span>
                     </h3>
@@ -455,25 +455,25 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
               <span className="font-mono text-brutal-xs font-bold text-primary-brutalist">EXPERTISE LEVELS:</span>
               <div className="flex items-center gap-[6px]">
                 <div className="flex items-center gap-4px">
-                  <div className="w-32px h-20px bg-primary-brutalist/30 flex items-center justify-center">
+                  <div className="w-5 h-5 bg-primary-brutalist/30 flex items-center justify-center">
                     <span className="font-mono text-brutal-xs font-bold">BEG</span>
                   </div>
                   <span className="font-mono text-brutal-xs text-primary-brutalist/60">BEGINNER (2-3)</span>
                 </div>
                 <div className="flex items-center gap-4px">
-                  <div className="w-32px h-20px bg-brutal-warning flex items-center justify-center">
+                  <div className="w-5 h-5 bg-brutal-warning flex items-center justify-center">
                     <span className="font-mono text-brutal-xs font-bold text-event-horizon">INT</span>
                   </div>
                   <span className="font-mono text-brutal-xs text-primary-brutalist/60">INTERMEDIATE (4-5)</span>
                 </div>
                 <div className="flex items-center gap-4px">
-                  <div className="w-32px h-20px bg-brutal-info flex items-center justify-center">
+                  <div className="w-5 h-5 bg-brutal-info flex items-center justify-center">
                     <span className="font-mono text-brutal-xs font-bold text-event-horizon">ADV</span>
                   </div>
                   <span className="font-mono text-brutal-xs text-primary-brutalist/60">ADVANCED (6-7)</span>
                 </div>
                 <div className="flex items-center gap-4px">
-                  <div className="w-32px h-20px bg-brutal-success flex items-center justify-center">
+                  <div className="w-5 h-5 bg-brutal-success flex items-center justify-center">
                     <span className="font-mono text-brutal-xs font-bold text-event-horizon">EXP</span>
                   </div>
                   <span className="font-mono text-brutal-xs text-primary-brutalist/60">EXPERT (8-10)</span>

@@ -116,10 +116,10 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
 
   // Progress indicator component
   const ProgressIndicator = () => (
-    <div className="flex items-center gap-16px mb-32px">
-      <div className="flex items-center gap-8px">
+    <div className="flex items-center gap-[8px] mb-[16px]">
+      <div className="flex items-center gap-[8px]">
         <div 
-          className="w-32px h-32px border-2 flex items-center justify-center cursor-pointer"
+          className="w-5 h-5 border-2 flex items-center justify-center cursor-pointer"
           style={{ 
             backgroundColor: currentStep === 'theme' || currentStep === 'ai' || currentStep === 'complete' 
               ? 'var(--theme-primary)' : 'var(--theme-background)',
@@ -143,9 +143,9 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
         style={{ backgroundColor: currentStep === 'ai' || currentStep === 'complete' 
           ? 'var(--theme-primary)' : 'var(--theme-border)' }}
       />
-      <div className="flex items-center gap-8px">
+      <div className="flex items-center gap-[8px]">
         <div 
-          className="w-32px h-32px border-2 flex items-center justify-center"
+          className="w-5 h-5 border-2 flex items-center justify-center"
           style={{ 
             backgroundColor: currentStep === 'ai' || currentStep === 'complete' 
               ? 'var(--theme-primary)' : 'var(--theme-background)',
@@ -176,21 +176,21 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
         size="sm"
         showCloseButton={true}
       >
-        <div className="text-center py-32px">
+        <div className="text-center py-[16px]">
           <div 
-            className="w-64px h-64px mx-auto mb-24px border-2 flex items-center justify-center"
+            className="w-8 h-8 mx-auto mb-[12px] border-2 flex items-center justify-center"
             style={{ 
               borderColor: 'var(--theme-success)',
               backgroundColor: 'var(--theme-success)'
             }}
           >
             <HiOutlineCheck 
-              className="w-32px h-32px"
+              className="w-5 h-5"
               style={{ color: 'var(--theme-background)' }}
             />
           </div>
           <h2 
-            className="text-brutal-lg uppercase mb-16px"
+            className="text-[14px] font-semibold uppercase mb-[8px]"
             style={{ color: 'var(--theme-foreground)' }}
           >
             Setup Complete!
@@ -214,7 +214,7 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
       size="lg"
       showCloseButton={true}
     >
-      <div className="space-y-24px">
+      <div className="space-y-[12px]">
         {/* Progress Indicator - Always visible */}
         <ProgressIndicator />
 
@@ -223,20 +223,20 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
           <>
             {/* Theme Selection Header */}
             <div 
-              className="p-16px border-2"
+              className="p-[10px] border-2"
               style={{ 
                 backgroundColor: 'var(--theme-background-secondary)',
                 borderColor: 'var(--theme-info)'
               }}
             >
-              <div className="flex items-start gap-12px">
+              <div className="flex items-start gap-[6px]">
                 <HiOutlineColorSwatch 
-                  className="w-24px h-24px flex-shrink-0" 
+                  className="w-4 h-4 flex-shrink-0" 
                   style={{ color: 'var(--theme-info)' }}
                 />
                 <div>
                   <h3 
-                    className="text-brutal-md uppercase mb-8px"
+                    className="text-brutal-md uppercase mb-[8px]"
                     style={{ color: 'var(--theme-foreground)' }}
                   >
                     Personalize Your Command Center
@@ -246,13 +246,13 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
             </div>
 
             {/* Theme Switcher */}
-            <div className="py-24px">
+            <div className="py-[12px]">
               <ThemeSwitcher size="xl" variant="grid" showLabel={true} />
             </div>
 
             {/* Current Theme Info */}
             <div 
-              className="p-16px border-2"
+              className="p-[10px] border-2"
               style={{ 
                 backgroundColor: 'var(--theme-background-tertiary)',
                 borderColor: 'var(--theme-border)'
@@ -283,16 +283,16 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
             </div>
 
             {/* Tips */}
-            <div className="space-y-8px">
+            <div className="space-y-[8px]">
               <p 
-                className="text-brutal-xs flex items-center gap-8px"
+                className="text-brutal-xs flex items-center gap-[8px]"
                 style={{ color: 'var(--theme-foreground-secondary)' }}
               >
                 <span style={{ color: 'var(--theme-info)' }}>💡</span>
                 Press Ctrl+Shift+T to quickly cycle through themes
               </p>
               <p 
-                className="text-brutal-xs flex items-center gap-8px"
+                className="text-brutal-xs flex items-center gap-[8px]"
                 style={{ color: 'var(--theme-foreground-secondary)' }}
               >
                 <span style={{ color: 'var(--theme-info)' }}>💡</span>
@@ -301,10 +301,10 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
             </div>
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between pt-16px">
+            <div className="flex justify-between pt-[8px]">
               <button
                 onClick={handleSkipWithConfirmation}
-                className="px-24px py-12px border-2 font-mono text-brutal-sm uppercase"
+                className="px-[12px] py-[8px] border-2 font-mono text-brutal-sm uppercase"
                 style={{
                   backgroundColor: showSkipConfirm ? 'var(--theme-warning)' : 'var(--theme-background)',
                   borderColor: 'var(--theme-border)',
@@ -315,7 +315,7 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
               </button>
               <button
                 onClick={handleThemeComplete}
-                className="px-32px py-16px border-2 font-mono text-brutal-md uppercase flex items-center gap-12px"
+                className="px-[16px] py-[8px] border-2 font-mono text-brutal-md uppercase flex items-center gap-[6px]"
                 style={{
                   backgroundColor: 'var(--theme-primary)',
                   borderColor: 'var(--theme-border)',
@@ -324,7 +324,7 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
                 }}
               >
                 Continue to AI Setup
-                <HiOutlineArrowRight className="w-20px h-20px" />
+                <HiOutlineArrowRight className="w-5 h-5" />
               </button>
             </div>
           </>
@@ -335,20 +335,20 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
           <>
             {/* AI Setup Header */}
             <div 
-              className="p-16px border-2"
+              className="p-[10px] border-2"
               style={{ 
                 backgroundColor: 'var(--theme-background-secondary)',
                 borderColor: 'var(--theme-info)'
               }}
             >
-              <div className="flex items-start gap-12px">
+              <div className="flex items-start gap-[6px]">
                 <HiOutlineSparkles 
-                  className="w-24px h-24px flex-shrink-0" 
+                  className="w-4 h-4 flex-shrink-0" 
                   style={{ color: 'var(--theme-info)' }}
                 />
                 <div>
                   <h3 
-                    className="text-brutal-md uppercase mb-8px"
+                    className="text-brutal-md uppercase mb-[8px]"
                     style={{ color: 'var(--theme-foreground)' }}
                   >
                     AI-Powered Features Available
@@ -383,13 +383,13 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
                   : 'none'
               }}
             >
-              <div className="flex items-start gap-16px">
-                <HiOutlineCreditCard className="w-24px h-24px flex-shrink-0 mt-2px" />
+              <div className="flex items-start gap-[8px]">
+                <HiOutlineCreditCard className="w-4 h-4 flex-shrink-0 mt-2px" />
                 <div className="flex-1">
-                  <h3 className="text-brutal-md uppercase mb-8px">
+                  <h3 className="text-brutal-md uppercase mb-[8px]">
                     Start with Free Credits
                   </h3>
-                  <p className="text-brutal-sm mb-8px opacity-90">
+                  <p className="text-brutal-sm mb-[8px] opacity-90">
                     Get 100 free AI credits per month. Perfect for trying out AI features.
                   </p>
                   <ul className="text-brutal-xs space-y-4px opacity-75">
@@ -421,13 +421,13 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
                   : 'none'
               }}
             >
-              <div className="flex items-start gap-16px">
-                <HiOutlineKey className="w-24px h-24px flex-shrink-0 mt-2px" />
+              <div className="flex items-start gap-[8px]">
+                <HiOutlineKey className="w-4 h-4 flex-shrink-0 mt-2px" />
                 <div className="flex-1">
-                  <h3 className="text-brutal-md uppercase mb-8px">
+                  <h3 className="text-brutal-md uppercase mb-[8px]">
                     Bring Your Own API Key (BYOK)
                   </h3>
-                  <p className="text-brutal-sm mb-8px opacity-90">
+                  <p className="text-brutal-sm mb-[8px] opacity-90">
                     Use your own Google Gemini API key for unlimited AI features.
                   </p>
                   <ul className="text-brutal-xs space-y-4px opacity-75">
@@ -442,7 +442,7 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
 
             {/* API Key Input (shown when BYOK is selected) */}
             {aiSetupChoice === 'byok' && (
-              <div className="space-y-12px animate-fadeIn">
+              <div className="space-y-[6px] animate-fadeIn">
                 <label 
                   className="block text-brutal-sm uppercase"
                   style={{ color: 'var(--theme-foreground)' }}
@@ -454,16 +454,16 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="AIza..."
-                  className="w-full px-16px py-12px border-2 font-mono text-brutal-sm"
+                  className="w-full px-[10px] py-[8px] border-2 font-mono text-brutal-sm"
                   style={{
                     backgroundColor: 'var(--theme-background)',
                     borderColor: 'var(--theme-border)',
                     color: 'var(--theme-foreground)'
                   }}
                 />
-                <div className="flex items-start gap-8px">
+                <div className="flex items-start gap-[8px]">
                   <HiOutlineInformationCircle 
-                    className="w-16px h-16px flex-shrink-0 mt-1px"
+                    className="w-4 h-4 flex-shrink-0 mt-1px"
                     style={{ color: 'var(--theme-info)' }}
                   />
                   <p 
@@ -507,23 +507,23 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
             </button>
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between pt-16px">
+            <div className="flex justify-between pt-[8px]">
               <button
                 onClick={handleBack}
-                className="px-24px py-12px border-2 font-mono text-brutal-sm uppercase flex items-center gap-8px"
+                className="px-[12px] py-[8px] border-2 font-mono text-brutal-sm uppercase flex items-center gap-[8px]"
                 style={{
                   backgroundColor: 'var(--theme-background)',
                   borderColor: 'var(--theme-border)',
                   color: 'var(--theme-foreground)'
                 }}
               >
-                <HiOutlineArrowLeft className="w-16px h-16px" />
+                <HiOutlineArrowLeft className="w-4 h-4" />
                 Back to Theme
               </button>
               <button
                 onClick={handleAIComplete}
                 disabled={!aiSetupChoice || (aiSetupChoice === 'byok' && !apiKey) || isValidating}
-                className="px-32px py-16px border-2 font-mono text-brutal-md uppercase disabled:opacity-50"
+                className="px-[16px] py-[8px] border-2 font-mono text-brutal-md uppercase disabled:opacity-50"
                 style={{
                   backgroundColor: aiSetupChoice ? 'var(--theme-success)' : 'var(--theme-background-secondary)',
                   borderColor: 'var(--theme-border)',

@@ -201,9 +201,9 @@ export default function BlogPage() {
                 placeholder="SEARCH POSTS, TAGS, AUTHORS..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-[12px] md:px-[24px] py-12px md:py-[8px] bg-event-horizon border-2 border-basalt-border text-cathode-white focus:border-brutal-info outline-none uppercase text-sm md:text-base"
+                className="w-full px-[12px] md:px-[24px] py-[8px] md:py-[8px] bg-event-horizon border-2 border-basalt-border text-cathode-white focus:border-brutal-info outline-none uppercase text-sm md:text-base"
               />
-              <HiSearch className="absolute left-12px md:left-16px top-1/2 -translate-y-1/2 text-cathode-white/50 text-lg md:text-xl" />
+              <HiSearch className="absolute left-[10px] md:left-[10px] top-1/2 -translate-y-1/2 text-cathode-white/50 text-lg md:text-xl" />
             </div>
           </motion.div>
         </div>
@@ -212,7 +212,7 @@ export default function BlogPage() {
       {/* CATEGORIES */}
       <section className="py-[12px] md:py-32px px-[10px] md:px-[12px] border-b-2 border-basalt-border bg-event-horizon">
         <div className="max-w-full md:max-w-7xl mx-auto">
-          <div className="flex flex-wrap gap-8px md:gap-[10px] justify-center">
+          <div className="flex flex-wrap gap-[8px] md:gap-[10px] justify-center">
             {categories.map((category, index) => (
               <motion.button
                 key={category.name}
@@ -221,7 +221,7 @@ export default function BlogPage() {
                 transition={{ delay: index * 0.05 }}
                 onClick={() => setSelectedCategory(category.name)}
                 className={`
-                  brutal-btn px-[12px] py-12px
+                  brutal-btn px-[12px] py-[8px]
                   ${selectedCategory === category.name ? 'border-brutal-info text-brutal-info' : ''}
                 `}
               >
@@ -241,7 +241,7 @@ export default function BlogPage() {
             </h2>
 
             <div className="relative">
-              <div className="flex lg:grid lg:grid-cols-3 gap-[16px] overflow-x-auto lg:overflow-x-visible pb-16px lg:pb-0 snap-x snap-mandatory lg:snap-none"
+              <div className="flex lg:grid lg:grid-cols-3 gap-[16px] overflow-x-auto lg:overflow-x-visible pb-[8px] lg:pb-0 snap-x snap-mandatory lg:snap-none"
                    style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
               {blogPosts.filter(post => post.featured).map((post, index) => (
                 <motion.article
@@ -251,13 +251,13 @@ export default function BlogPage() {
                   transition={{ delay: index * 0.1 }}
                   className="snap-start flex-shrink-0 lg:flex-shrink-auto w-[85vw] lg:w-auto brutal-card p-[16px] hover:border-brutal-info group"
                 >
-                  <div className="flex items-center gap-8px mb-[8px]">
+                  <div className="flex items-center gap-[8px] mb-[8px]">
                     <span className="text-xs font-bold text-brutal-info">{post.category}</span>
                     <span className="text-xs text-cathode-white/50">&bull;</span>
                     <span className="text-xs text-cathode-white/50">{post.readTime}</span>
                   </div>
 
-                  <h3 className="text-xl font-bold mb-12px text-cathode-white group-hover:text-brutal-info">
+                  <h3 className="text-xl font-bold mb-[8px] text-cathode-white group-hover:text-brutal-info">
                     {post.title}
                   </h3>
 
@@ -281,7 +281,7 @@ export default function BlogPage() {
                 </motion.article>
               ))}
               </div>
-              <div className="absolute right-0 top-0 bottom-0 w-24px bg-gradient-to-l from-carbon-plate to-transparent lg:hidden flex items-center justify-end pr-8px pointer-events-none">
+              <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-carbon-plate to-transparent lg:hidden flex items-center justify-end pr-[8px] pointer-events-none">
                 <div className="text-brutal-info text-xs animate-pulse">&rarr;</div>
               </div>
             </div>
@@ -307,7 +307,7 @@ export default function BlogPage() {
               >
                 <div className="grid lg:grid-cols-12 gap-[20px]">
                   <div className="lg:col-span-9">
-                    <div className="flex flex-wrap items-center gap-8px mb-[8px]">
+                    <div className="flex flex-wrap items-center gap-[8px] mb-[8px]">
                       <span className="text-sm font-bold text-brutal-info">{post.category}</span>
                       <span className="text-sm text-cathode-white/50">&bull;</span>
                       <span className="text-sm text-cathode-white/50">{post.readTime}</span>
@@ -335,7 +335,7 @@ export default function BlogPage() {
                     </Link>
                   </div>
 
-                  <div className="lg:col-span-3 border-l-2 border-basalt-border pl-32px">
+                  <div className="lg:col-span-3 border-l-2 border-basalt-border pl-[16px]">
                     <div className="space-y-[8px]">
                       <div>
                         <div className="text-sm text-cathode-white/50 mb-4px">AUTHOR</div>
@@ -394,11 +394,11 @@ export default function BlogPage() {
           </form>
 
           <div className="flex items-center justify-center gap-[20px] mt-[16px]">
-            <a href="/rss" className="flex items-center gap-8px text-cathode-white hover:text-brutal-info">
+            <a href="/rss" className="flex items-center gap-[8px] text-cathode-white hover:text-brutal-info">
               <HiRss className="text-xl" />
               <span>RSS FEED</span>
             </a>
-            <a href="mailto:blog@ltf1.dev" className="flex items-center gap-8px text-cathode-white hover:text-brutal-info">
+            <a href="mailto:blog@ltf1.dev" className="flex items-center gap-[8px] text-cathode-white hover:text-brutal-info">
               <HiMail className="text-xl" />
               <span>SUBMIT POST</span>
             </a>

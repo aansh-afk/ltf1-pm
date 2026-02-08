@@ -220,17 +220,17 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
   }
 
   return (
-    <div className="space-y-24px">
+    <div className="space-y-[12px]">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-brutal-2xl font-bold">WORKFLOW AUTOMATION</h2>
-        <div className="flex items-center gap-12px">
+        <h2 className="text-[20px] font-bold font-bold">WORKFLOW AUTOMATION</h2>
+        <div className="flex items-center gap-[6px]">
           {/* View Toggle */}
           <div className="flex border-2 border-[var(--theme-border)]">
             <button
               onClick={() => setViewMode('list')}
               className={clsx(
-                "px-16px py-8px text-xs font-bold uppercase transition-all",
+                "px-[10px] py-[8px] text-xs font-bold uppercase transition-all",
                 viewMode === 'list'
                   ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
                   : "bg-[var(--theme-background)] text-[var(--theme-foreground)] hover:bg-[var(--theme-hover)]"
@@ -241,7 +241,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
             <button
               onClick={() => setViewMode('flow')}
               className={clsx(
-                "px-16px py-8px text-xs font-bold uppercase border-l-2 border-[var(--theme-border)] transition-all",
+                "px-[10px] py-[8px] text-xs font-bold uppercase border-l-2 border-[var(--theme-border)] transition-all",
                 viewMode === 'flow'
                   ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
                   : "bg-[var(--theme-background)] text-[var(--theme-foreground)] hover:bg-[var(--theme-hover)]"
@@ -254,7 +254,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
           <BrutalButton
             onClick={() => setShowCreateModal(true)}
             variant="primary"
-            icon={<HiOutlinePlus className="w-20px h-20px" />}
+            icon={<HiOutlinePlus className="w-5 h-5" />}
           >
             CREATE WORKFLOW
           </BrutalButton>
@@ -263,12 +263,12 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
 
       {/* List View */}
       {viewMode === 'list' && (
-        <div className="grid gap-16px">
+        <div className="grid gap-[10px]">
         {workflows.length === 0 ? (
-          <BrutalCard className="p-48px text-center">
-            <HiOutlineLightningBolt className="w-48px h-48px mx-auto mb-16px text-[var(--theme-muted)]" />
-            <p className="text-brutal-lg font-bold mb-8px">NO WORKFLOWS YET</p>
-            <p className="text-[var(--theme-muted)] mb-24px">
+          <BrutalCard className="p-[24px] text-center">
+            <HiOutlineLightningBolt className="w-6 h-6 mx-auto mb-[8px] text-[var(--theme-muted)]" />
+            <p className="text-[14px] font-semibold font-bold mb-[8px]">NO WORKFLOWS YET</p>
+            <p className="text-[var(--theme-muted)] mb-[12px]">
               Create automated workflows to streamline your processes
             </p>
             <BrutalButton
@@ -283,12 +283,12 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
             const TriggerIcon = TRIGGER_TYPES[workflow.trigger.type.toUpperCase() as keyof typeof TRIGGER_TYPES]?.icon || HiOutlineLightningBolt
             
             return (
-              <BrutalCard key={workflow._id} className="p-24px">
+              <BrutalCard key={workflow._id} className="p-[16px]">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-12px mb-8px">
-                      <TriggerIcon className="w-20px h-20px text-[var(--theme-primary)]" />
-                      <h3 className="text-brutal-lg font-bold">{workflow.name}</h3>
+                    <div className="flex items-center gap-[6px] mb-[8px]">
+                      <TriggerIcon className="w-5 h-5 text-[var(--theme-primary)]" />
+                      <h3 className="text-[14px] font-semibold font-bold">{workflow.name}</h3>
                       <span className={clsx(
                         "px-8px py-2px text-xs font-bold uppercase",
                         workflow.enabled 
@@ -300,12 +300,12 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
                     </div>
                     
                     {workflow.description && (
-                      <p className="text-sm text-[var(--theme-muted)] mb-12px">
+                      <p className="text-sm text-[var(--theme-muted)] mb-[6px]">
                         {workflow.description}
                       </p>
                     )}
 
-                    <div className="flex flex-wrap gap-8px mb-12px">
+                    <div className="flex flex-wrap gap-[8px] mb-[6px]">
                       <span className="px-8px py-4px bg-[var(--theme-background-secondary)] text-xs font-mono">
                         TRIGGER: {workflow.trigger.type.toUpperCase()}
                       </span>
@@ -324,20 +324,20 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
                       )}
                     </div>
 
-                    <div className="flex items-center gap-8px text-xs text-[var(--theme-muted)]">
+                    <div className="flex items-center gap-[8px] text-xs text-[var(--theme-muted)]">
                       <span>RUNS: {workflow.runCount || 0}</span>
                       <span>•</span>
                       <span>LAST RUN: {workflow.lastRunAt ? new Date(workflow.lastRunAt).toLocaleString() : 'Never'}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-8px">
+                  <div className="flex items-center gap-[8px]">
                     {workflow.trigger.type === 'manual' && (
                       <BrutalButton
                         onClick={() => handleRunWorkflow(workflow._id)}
                         variant="secondary"
                         size="sm"
-                        icon={<HiOutlinePlay className="w-16px h-16px" />}
+                        icon={<HiOutlinePlay className="w-4 h-4" />}
                       >
                         RUN
                       </BrutalButton>
@@ -348,8 +348,8 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
                       variant="secondary"
                       size="sm"
                       icon={workflow.enabled ? 
-                        <HiOutlinePause className="w-16px h-16px" /> : 
-                        <HiOutlinePlay className="w-16px h-16px" />
+                        <HiOutlinePause className="w-4 h-4" /> : 
+                        <HiOutlinePlay className="w-4 h-4" />
                       }
                     >
                       {workflow.enabled ? 'PAUSE' : 'ENABLE'}
@@ -374,14 +374,14 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
                       }}
                       variant="secondary"
                       size="sm"
-                      icon={<HiOutlinePencil className="w-16px h-16px" />}
+                      icon={<HiOutlinePencil className="w-4 h-4" />}
                     />
 
                     <BrutalButton
                       onClick={() => handleDeleteWorkflow(workflow._id)}
                       variant="secondary"
                       size="sm"
-                      icon={<HiOutlineTrash className="w-16px h-16px" />}
+                      icon={<HiOutlineTrash className="w-4 h-4" />}
                     />
                   </div>
                 </div>
@@ -394,12 +394,12 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
 
       {/* Flow View */}
       {viewMode === 'flow' && (
-        <div className="space-y-16px">
+        <div className="space-y-[8px]">
           {workflows.length === 0 ? (
-            <BrutalCard className="p-48px text-center">
-              <HiOutlineLightningBolt className="w-48px h-48px mx-auto mb-16px text-[var(--theme-muted)]" />
-              <p className="text-brutal-lg font-bold mb-8px">NO WORKFLOWS TO VISUALIZE</p>
-              <p className="text-[var(--theme-muted)] mb-24px">
+            <BrutalCard className="p-[24px] text-center">
+              <HiOutlineLightningBolt className="w-6 h-6 mx-auto mb-[8px] text-[var(--theme-muted)]" />
+              <p className="text-[14px] font-semibold font-bold mb-[8px]">NO WORKFLOWS TO VISUALIZE</p>
+              <p className="text-[var(--theme-muted)] mb-[12px]">
                 Create a workflow first to see it visualized in the flow canvas
               </p>
               <BrutalButton
@@ -412,7 +412,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
           ) : (
             <>
               {/* Workflow Selector */}
-              <div className="flex items-center gap-12px">
+              <div className="flex items-center gap-[6px]">
                 <label className="text-xs font-bold uppercase">SELECT WORKFLOW:</label>
                 <select
                   value={selectedWorkflowForFlow?._id || ''}
@@ -420,7 +420,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
                     const workflow = workflows.find((w: any) => w._id === e.target.value)
                     setSelectedWorkflowForFlow(workflow)
                   }}
-                  className="px-12px py-8px border-2 border-[var(--theme-border)] bg-[var(--theme-background)] text-brutal-sm font-bold"
+                  className="px-12px py-[8px] border-2 border-[var(--theme-border)] bg-[var(--theme-background)] text-brutal-sm font-bold"
                 >
                   <option value="">Select a workflow...</option>
                   {workflows.map((workflow: any) => (
@@ -435,7 +435,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
               {selectedWorkflowForFlow ? (
                 <FlowCanvas workflow={selectedWorkflowForFlow} />
               ) : (
-                <BrutalCard className="p-48px text-center">
+                <BrutalCard className="p-[24px] text-center">
                   <p className="text-[var(--theme-muted)]">
                     Select a workflow above to visualize it in the flow canvas
                   </p>
@@ -456,9 +456,9 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
         title={editingWorkflow ? 'EDIT WORKFLOW' : 'CREATE WORKFLOW'}
         size="xl"
       >
-        <div className="space-y-24px">
+        <div className="space-y-[12px]">
           {/* Basic Info */}
-          <div className="space-y-16px">
+          <div className="space-y-[8px]">
             <BrutalInput
               label="Workflow Name"
               value={workflowName}
@@ -475,22 +475,22 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
           </div>
 
           {/* Trigger Configuration */}
-          <div className="space-y-16px">
+          <div className="space-y-[8px]">
             <label className="text-xs font-bold uppercase">TRIGGER TYPE</label>
-            <div className="grid grid-cols-2 gap-12px">
+            <div className="grid grid-cols-2 gap-[6px]">
               {Object.values(TRIGGER_TYPES).map((trigger) => (
                 <button
                   key={trigger.value}
                   onClick={() => setSelectedTriggerType(trigger.value)}
                   className={clsx(
-                    "p-16px border-2 text-left transition-all",
+                    "p-[10px] border-2 text-left transition-all",
                     selectedTriggerType === trigger.value
                       ? "border-[var(--theme-primary)] bg-[var(--theme-primary)]/10"
                       : "border-[var(--theme-border)] hover:border-[var(--theme-primary)]/50"
                   )}
                 >
-                  <div className="flex items-center gap-12px mb-8px">
-                    <trigger.icon className="w-20px h-20px" />
+                  <div className="flex items-center gap-[6px] mb-[8px]">
+                    <trigger.icon className="w-5 h-5" />
                     <span className="font-bold">{trigger.label}</span>
                   </div>
                   <p className="text-xs text-[var(--theme-muted)]">
@@ -503,11 +503,11 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
             {/* Trigger-specific configuration */}
             {selectedTriggerType === 'event' && (
               <div>
-                <label className="text-xs font-bold uppercase mb-8px block">SELECT EVENT</label>
+                <label className="text-xs font-bold uppercase mb-[8px] block">SELECT EVENT</label>
                 <select
                   value={selectedEvent}
                   onChange={(e) => setSelectedEvent(e.target.value)}
-                  className="w-full px-12px py-8px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
+                  className="w-full px-12px py-[8px] border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                 >
                   <option value="">Select an event...</option>
                   {EVENT_TYPES.map((event) => (
@@ -530,7 +530,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
             )}
 
             {selectedTriggerType === 'webhook' && (
-              <div className="space-y-12px">
+              <div className="space-y-[6px]">
                 <BrutalInput
                   label="Webhook URL"
                   value={webhookUrl}
@@ -546,21 +546,21 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
           </div>
 
           {/* Conditions */}
-          <div className="space-y-16px">
+          <div className="space-y-[8px]">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold uppercase">CONDITIONS (OPTIONAL)</label>
               <BrutalButton
                 onClick={addCondition}
                 variant="secondary"
                 size="sm"
-                icon={<HiOutlinePlus className="w-16px h-16px" />}
+                icon={<HiOutlinePlus className="w-4 h-4" />}
               >
                 ADD CONDITION
               </BrutalButton>
             </div>
             
             {conditions.map((condition, index) => (
-              <div key={index} className="flex items-center gap-8px p-12px border-2 border-[var(--theme-border)]">
+              <div key={index} className="flex items-center gap-[8px] p-[10px] border-2 border-[var(--theme-border)]">
                 <input
                   type="text"
                   value={condition.field}
@@ -602,28 +602,28 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
                   onClick={() => removeCondition(index)}
                   className="p-4px text-brutal-error hover:bg-brutal-error hover:text-event-horizon"
                 >
-                  <HiOutlineTrash className="w-16px h-16px" />
+                  <HiOutlineTrash className="w-4 h-4" />
                 </button>
               </div>
             ))}
           </div>
 
           {/* Actions */}
-          <div className="space-y-16px">
+          <div className="space-y-[8px]">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold uppercase">ACTIONS</label>
               <BrutalButton
                 onClick={addAction}
                 variant="secondary"
                 size="sm"
-                icon={<HiOutlinePlus className="w-16px h-16px" />}
+                icon={<HiOutlinePlus className="w-4 h-4" />}
               >
                 ADD ACTION
               </BrutalButton>
             </div>
             
             {actions.map((action, index) => (
-              <div key={index} className="p-12px border-2 border-[var(--theme-border)] space-y-8px">
+              <div key={index} className="p-[10px] border-2 border-[var(--theme-border)] space-y-[8px]">
                 <div className="flex items-center justify-between">
                   <select
                     value={action.type}
@@ -638,15 +638,15 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
                   </select>
                   <button
                     onClick={() => removeAction(index)}
-                    className="ml-8px p-4px text-brutal-error hover:bg-brutal-error hover:text-event-horizon"
+                    className="ml-[8px] p-4px text-brutal-error hover:bg-brutal-error hover:text-event-horizon"
                   >
-                    <HiOutlineTrash className="w-16px h-16px" />
+                    <HiOutlineTrash className="w-4 h-4" />
                   </button>
                 </div>
                 
                 {/* Action-specific configuration */}
                 {action.type === 'create_task' && (
-                  <div className="space-y-8px">
+                  <div className="space-y-[8px]">
                     <input
                       type="text"
                       placeholder="Task title"
@@ -669,7 +669,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
                 )}
                 
                 {action.type === 'send_notification' && (
-                  <div className="space-y-8px">
+                  <div className="space-y-[8px]">
                     <input
                       type="text"
                       placeholder="Notification message"
@@ -685,14 +685,14 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
             ))}
             
             {actions.length === 0 && (
-              <p className="text-sm text-[var(--theme-muted)] text-center py-16px">
+              <p className="text-sm text-[var(--theme-muted)] text-center py-[8px]">
                 Add at least one action for your workflow
               </p>
             )}
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-12px">
+          <div className="flex justify-end gap-[6px]">
             <BrutalButton
               onClick={() => {
                 setShowCreateModal(false)

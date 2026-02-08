@@ -21,11 +21,11 @@ export default function SlackPage() {
   }
 
   return (
-    <div className="p-6 min-h-screen bg-[var(--theme-background)]">
+    <div className="p-4 min-h-screen bg-[var(--theme-background)]">
       {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 flex items-center gap-3">
-          <HiOutlineTerminal className="w-8 h-8 md:w-10 md:h-10 text-[var(--theme-primary)]" />
+      <div className="mb-4">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+          <HiOutlineTerminal className="w-6 h-6 md:w-7 md:h-7 text-[var(--theme-primary)]" />
           SLACK INTEGRATION
         </h1>
         <p className="font-mono text-sm text-[var(--theme-foreground)]/60 uppercase tracking-wide">

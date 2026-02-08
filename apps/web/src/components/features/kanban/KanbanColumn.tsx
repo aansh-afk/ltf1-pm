@@ -72,7 +72,7 @@ const KanbanColumn = memo(function KanbanColumn({
         >
             {/* Column Header */}
             <div className={clsx(
-                "p-12px border-b-2",
+                "p-[10px] border-b-2",
                 "flex items-center justify-between",
                 "bg-[var(--theme-background-secondary)]",
                 borderColor
@@ -81,7 +81,7 @@ const KanbanColumn = memo(function KanbanColumn({
                     "font-mono text-brutal-sm font-bold uppercase",
                     textColor
                 )}>{title}</h3>
-                <div className="flex items-center gap-8px">
+                <div className="flex items-center gap-[8px]">
                     <span className={clsx(
                         "px-8px py-2px text-brutal-xs font-mono font-bold",
                         "border-2",
@@ -104,7 +104,7 @@ const KanbanColumn = memo(function KanbanColumn({
                 ref={columnRef}
                 className={clsx(
                     "flex-1 overflow-y-auto custom-scrollbar",
-                    "p-12px space-y-8px",
+                    "p-[10px] space-y-[8px]",
                     "relative"
                 )}
                 style={{
@@ -120,7 +120,7 @@ const KanbanColumn = memo(function KanbanColumn({
                                 {/* Drop Position Indicator */}
                                 {showDropIndicatorBefore && draggedTask && (
                                     <div
-                                        className="relative mb-8px transition-all duration-150"
+                                        className="relative mb-[8px] transition-all duration-150"
                                         style={{ height: isCompact ? 64 : 136 }}
                                     >
                                         <div className="absolute inset-0 border-2 border-dashed border-primary-brutalist bg-primary-brutalist/10 flex items-center justify-center animate-pulse">
@@ -178,10 +178,10 @@ const KanbanColumn = memo(function KanbanColumn({
                     <BrutalButton
                         onClick={() => onAddTask?.(id)}
                         variant="secondary"
-                        className="w-full border-dashed flex items-center justify-center gap-8px opacity-50 hover:opacity-100"
+                        className="w-full border-dashed flex items-center justify-center gap-[8px] opacity-50 hover:opacity-100"
                         size={isCompact ? "sm" : "md"}
                     >
-                        <HiOutlinePlus className="w-16px h-16px" />
+                        <HiOutlinePlus className="w-4 h-4" />
                         {!isCompact && <span>ADD TASK</span>}
                     </BrutalButton>
                 </div>
@@ -189,8 +189,8 @@ const KanbanColumn = memo(function KanbanColumn({
 
             {/* Scroll Indicator */}
             {hasOverflow && (
-                <div className="absolute bottom-0 left-0 right-0 h-24px bg-gradient-to-t from-carbon-plate to-transparent pointer-events-none flex items-end justify-center pb-4px">
-                    <div className="w-24px h-2px bg-primary-brutalist/40 animate-pulse" />
+                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-carbon-plate to-transparent pointer-events-none flex items-end justify-center pb-4px">
+                    <div className="w-4 h-2px bg-primary-brutalist/40 animate-pulse" />
                 </div>
             )}
         </BrutalCard>

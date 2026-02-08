@@ -31,8 +31,8 @@ export default function BrutalTable<T extends { id?: string; _id?: string }>({
   if (isLoading) {
     return (
       <div className="border-2 border-[var(--theme-border)]">
-        <div className="p-48px text-center">
-          <div className="animate-pulse text-brutal-lg text-[var(--theme-foreground)]/50">
+        <div className="p-[24px] text-center">
+          <div className="animate-pulse text-[14px] font-semibold text-[var(--theme-foreground)]/50">
             LOADING DATA...
           </div>
         </div>
@@ -43,7 +43,7 @@ export default function BrutalTable<T extends { id?: string; _id?: string }>({
   if (data.length === 0) {
     return (
       <div className="border-2 border-[var(--theme-border)]">
-        <div className="p-48px text-center">
+        <div className="p-[24px] text-center">
           <p className="text-brutal-sm text-[var(--theme-foreground)]/50">{emptyMessage}</p>
         </div>
       </div>
@@ -60,7 +60,7 @@ export default function BrutalTable<T extends { id?: string; _id?: string }>({
                 <th
                   key={column.key}
                   className={clsx(
-                    'px-16px py-12px text-left text-brutal-sm font-bold text-[var(--theme-foreground)]',
+                    'px-[10px] py-[8px] text-left text-brutal-sm font-bold text-[var(--theme-foreground)]',
                     column.width,
                     {
                       'text-left': column.align === 'left' || !column.align,
@@ -89,7 +89,7 @@ export default function BrutalTable<T extends { id?: string; _id?: string }>({
                   <td
                     key={column.key}
                     className={clsx(
-                      'px-16px py-12px text-sm',
+                      'px-[10px] py-[8px] text-sm',
                       {
                         'text-left': column.align === 'left' || !column.align,
                         'text-center': column.align === 'center',

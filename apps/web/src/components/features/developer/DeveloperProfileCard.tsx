@@ -20,12 +20,12 @@ export default function DeveloperProfileCard({
   if (!developerData) {
     return (
       <div className={clsx(
-        'bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px',
+        'bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]',
         'animate-pulse',
         className
       )}>
-        <div className="h-24px bg-basalt-border mb-16px" />
-        <div className="h-16px bg-basalt-border w-3/4" />
+        <div className="h-4 bg-basalt-border mb-[8px]" />
+        <div className="h-4 bg-basalt-border w-3/4" />
       </div>
     )
   }
@@ -38,18 +38,18 @@ export default function DeveloperProfileCard({
     return (
       <div 
         className={clsx(
-          'bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px',
+          'bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]',
           'hover:border-primary-brutalist transition-colors cursor-pointer',
           className
         )}
         onClick={onClick}
       >
-        <div className="flex items-center justify-between mb-16px">
-          <h3 className="text-brutal-lg font-bold uppercase">{developerData.name}</h3>
+        <div className="flex items-center justify-between mb-[8px]">
+          <h3 className="text-[14px] font-semibold font-bold uppercase">{developerData.name}</h3>
           <DeveloperStatusIndicator status={profile.status || 'AVAILABLE'} showLabel />
         </div>
         
-        <div className="text-[var(--theme-foreground)]/60 text-brutal-sm mb-16px">
+        <div className="text-[var(--theme-foreground)]/60 text-brutal-sm mb-[8px]">
           No developer profile set up yet
         </div>
         
@@ -63,7 +63,7 @@ export default function DeveloperProfileCard({
   return (
     <div 
       className={clsx(
-        'bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-24px',
+        'bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]',
         'hover:border-primary-brutalist transition-colors',
         onClick && 'cursor-pointer',
         className
@@ -71,21 +71,21 @@ export default function DeveloperProfileCard({
       onClick={onClick}
     >
       {/* Header with name and status */}
-      <div className="flex items-center justify-between mb-16px">
-        <h3 className="text-brutal-lg font-bold uppercase">{developerData.name}</h3>
+      <div className="flex items-center justify-between mb-[8px]">
+        <h3 className="text-[14px] font-semibold font-bold uppercase">{developerData.name}</h3>
         <DeveloperStatusIndicator status={profile.status || 'AVAILABLE'} showLabel />
       </div>
       
       {/* Status message if any */}
       {profile.statusMessage && (
-        <div className="text-brutal-sm text-[var(--theme-foreground)]/80 mb-16px font-mono">
+        <div className="text-brutal-sm text-[var(--theme-foreground)]/80 mb-[8px] font-mono">
           "{profile.statusMessage}"
         </div>
       )}
       
       {/* Current focus */}
       {profile.currentFocus && (
-        <div className="mb-16px">
+        <div className="mb-[8px]">
           <div className="text-brutal-xs text-primary-brutalist/60 uppercase mb-4px">
             CURRENT FOCUS
           </div>
@@ -95,7 +95,7 @@ export default function DeveloperProfileCard({
       
       {/* Tech stack */}
       {topSkills.length > 0 && (
-        <div className="mb-16px">
+        <div className="mb-[8px]">
           <div className="text-brutal-xs text-primary-brutalist/60 uppercase mb-8px">
             EXPERTISE
           </div>
@@ -103,7 +103,7 @@ export default function DeveloperProfileCard({
             {topSkills.map((tech) => (
               <div key={tech.name} className="flex items-center justify-between">
                 <span className="text-brutal-sm font-mono">{tech.name}</span>
-                <div className="flex items-center gap-8px">
+                <div className="flex items-center gap-[8px]">
                   <div className="h-8px bg-basalt-border" style={{ width: '80px' }}>
                     <div 
                       className={clsx(
@@ -136,15 +136,15 @@ export default function DeveloperProfileCard({
       
       {/* Work hours */}
       {profile.workHours && (
-        <div className="flex items-center gap-8px text-brutal-xs text-[var(--theme-foreground)]/60">
-          <HiOutlineClock className="w-16px h-16px" />
+        <div className="flex items-center gap-[8px] text-brutal-xs text-[var(--theme-foreground)]/60">
+          <HiOutlineClock className="w-4 h-4" />
           <span>{profile.workHours.start} - {profile.workHours.end}</span>
           <span>({profile.timezone || 'UTC'})</span>
         </div>
       )}
       
       {/* Profile completeness */}
-      <div className="mt-16px">
+      <div className="mt-[8px]">
         <div className="flex justify-between text-brutal-xs mb-4px">
           <span className="text-primary-brutalist/60">PROFILE COMPLETENESS</span>
           <span className="font-mono">{profile.profileCompleteness}%</span>

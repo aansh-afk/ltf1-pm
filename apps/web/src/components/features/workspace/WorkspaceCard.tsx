@@ -69,11 +69,11 @@ export default function WorkspaceCard({ workspace, index }: WorkspaceCardProps) 
 
         <div className="flex items-center gap-[12px] text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/60 pb-[8px] border-b-2 border-[var(--theme-border)]">
           <div className="flex items-center gap-[4px]">
-            <HiOutlineUsers className="w-16px h-16px" />
+            <HiOutlineUsers className="w-4 h-4" />
             <span>{workspace.memberCount} MEMBERS</span>
           </div>
           <div className="flex items-center gap-[4px]">
-            <HiOutlineFolder className="w-16px h-16px" />
+            <HiOutlineFolder className="w-4 h-4" />
             <span>{workspace.projectCount || 0} PROJECTS</span>
           </div>
         </div>
@@ -84,7 +84,7 @@ export default function WorkspaceCard({ workspace, index }: WorkspaceCardProps) 
 
         {/* Active indicator */}
         {workspace.isActive && (
-          <div className="absolute top-16px right-16px w-8px h-8px bg-brutal-success animate-brutal-pulse" />
+          <div className="absolute top-16px right-16px w-[8px] h-[8px] bg-brutal-success animate-brutal-pulse" />
         )}
       </div>
     </Link>

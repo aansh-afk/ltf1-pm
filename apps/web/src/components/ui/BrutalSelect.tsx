@@ -23,7 +23,7 @@ const BrutalSelect = forwardRef<HTMLSelectElement, BrutalSelectProps>(
     const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`
 
     return (
-      <div className={clsx('space-y-8px', fullWidth && 'w-full')}>
+      <div className={clsx('space-y-[8px]', fullWidth && 'w-full')}>
         {label && (
           <label htmlFor={selectId} className="block text-brutal-sm text-[var(--theme-foreground)]">
             {label}
@@ -35,7 +35,7 @@ const BrutalSelect = forwardRef<HTMLSelectElement, BrutalSelectProps>(
             ref={ref}
             id={selectId}
             className={clsx(
-              'bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 px-16px py-8px pr-40px',
+              'bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 px-[10px] py-8px pr-40px',
               'transition-all duration-200 ease-brutal-out appearance-none',
               'cursor-pointer',
               error
@@ -55,8 +55,8 @@ const BrutalSelect = forwardRef<HTMLSelectElement, BrutalSelectProps>(
           </select>
           
           {/* BRUTAL DROPDOWN ARROW */}
-          <div className="absolute right-16px top-1/2 -translate-y-1/2 pointer-events-none">
-            <svg className="w-16px h-16px text-[var(--theme-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="absolute right-[10px] top-1/2 -translate-y-1/2 pointer-events-none">
+            <svg className="w-4 h-4 text-[var(--theme-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>

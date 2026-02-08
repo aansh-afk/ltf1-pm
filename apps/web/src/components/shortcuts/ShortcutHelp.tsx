@@ -84,38 +84,38 @@ export default function ShortcutHelp() {
       {/* Help Modal */}
       <div className="fixed inset-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[90vw] md:max-w-900px md:h-[80vh] bg-carbon-plate border-4 border-basalt-border shadow-brutal-xl z-[9999] flex flex-col">
         {/* Header */}
-        <div className="bg-carbon-plate border-b-4 border-basalt-border p-24px print:border-b-2">
-          <div className="flex items-center justify-between mb-16px">
+        <div className="bg-carbon-plate border-b-4 border-basalt-border p-[16px] print:border-b-2">
+          <div className="flex items-center justify-between mb-[8px]">
             <h1 className="text-2xl font-mono uppercase">KEYBOARD SHORTCUTS</h1>
             
-            <div className="flex items-center gap-12px print:hidden">
+            <div className="flex items-center gap-[6px] print:hidden">
               <button
                 onClick={handlePrint}
                 className="brutal-btn-sm"
                 title="Print cheat sheet"
               >
-                <HiOutlinePrinter className="w-16px h-16px" />
+                <HiOutlinePrinter className="w-4 h-4" />
               </button>
               <button
                 onClick={handleOpenSettings}
                 className="brutal-btn-sm"
                 title="Customize shortcuts"
               >
-                <HiOutlineCog className="w-16px h-16px" />
+                <HiOutlineCog className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setHelpOpen(false)}
-                className="p-8px hover:bg-primary-brutalist/20 transition-colors"
+                className="p-[8px] hover:bg-primary-brutalist/20 transition-colors"
               >
-                <HiOutlineX className="w-20px h-20px" />
+                <HiOutlineX className="w-5 h-5" />
               </button>
             </div>
           </div>
 
           {/* Search and Filter */}
-          <div className="flex items-center gap-16px print:hidden">
+          <div className="flex items-center gap-[8px] print:hidden">
             <div className="relative flex-1 max-w-400px">
-              <HiOutlineSearch className="absolute left-12px top-1/2 -translate-y-1/2 w-16px h-16px text-cathode-white/60" />
+              <HiOutlineSearch className="absolute left-12px top-1/2 -translate-y-1/2 w-4 h-4 text-cathode-white/60" />
               <input
                 type="text"
                 placeholder="SEARCH SHORTCUTS..."
@@ -131,7 +131,7 @@ export default function ShortcutHelp() {
                   key={cat}
                   onClick={() => setSelectedCategory(cat as any)}
                   className={clsx(
-                    "px-12px py-8px font-mono text-brutal-xs uppercase transition-colors",
+                    "px-[10px] py-[8px] font-mono text-brutal-xs uppercase transition-colors",
                     selectedCategory === cat
                       ? "bg-primary-brutalist text-event-horizon"
                       : "bg-carbon-plate border-2 border-basalt-border hover:border-primary-brutalist"
@@ -145,18 +145,18 @@ export default function ShortcutHelp() {
         </div>
 
         {/* Shortcuts List */}
-        <div className="flex-1 overflow-y-auto p-24px print:p-16px">
+        <div className="flex-1 overflow-y-auto p-[16px] print:p-[10px]">
           {groupedShortcuts.length === 0 ? (
-            <div className="text-center py-48px">
+            <div className="text-center py-[24px]">
               <p className="text-cathode-white/60 font-mono text-brutal-sm uppercase">
                 NO SHORTCUTS FOUND
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-32px print:gap-16px">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-[16px] print:gap-[8px]">
               {groupedShortcuts.map(({ category, shortcuts, info }) => (
                 <div key={category} className="print:break-inside-avoid">
-                  <div className="mb-12px border-b-2 border-basalt-border pb-8px">
+                  <div className="mb-[8px] border-b-2 border-basalt-border pb-8px">
                     <h2 className="font-mono text-lg uppercase text-primary-brutalist">
                       {info?.name || category}
                     </h2>
@@ -167,13 +167,13 @@ export default function ShortcutHelp() {
                     )}
                   </div>
 
-                  <div className="space-y-8px">
+                  <div className="space-y-[8px]">
                     {shortcuts.map(shortcut => (
                       <div
                         key={shortcut.id}
                         className="flex items-center justify-between py-6px"
                       >
-                        <div className="flex-1 pr-12px">
+                        <div className="flex-1 pr-[8px]">
                           <div className="font-mono text-brutal-sm">
                             {shortcut.name}
                           </div>
@@ -182,8 +182,8 @@ export default function ShortcutHelp() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-8px">
-                          <div className="px-12px py-6px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-xs whitespace-nowrap">
+                        <div className="flex items-center gap-[8px]">
+                          <div className="px-[10px] py-6px bg-event-horizon border-2 border-basalt-border font-mono text-brutal-xs whitespace-nowrap">
                             {formatKeyCombo(shortcut.customKeys || shortcut.defaultKeys)}
                           </div>
                           {shortcut.customKeys && (
@@ -202,7 +202,7 @@ export default function ShortcutHelp() {
         </div>
 
         {/* Footer */}
-        <div className="bg-carbon-plate border-t-2 border-basalt-border p-16px print:hidden">
+        <div className="bg-carbon-plate border-t-2 border-basalt-border p-[10px] print:hidden">
           <div className="flex items-center justify-between">
             <p className="font-mono text-brutal-xs text-cathode-white/60">
               PRESS ESC TO CLOSE • CTRL+K TO OPEN COMMAND PALETTE

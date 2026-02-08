@@ -222,15 +222,15 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                         checked={selectedTasks.size === tasks.length && tasks.length > 0}
                         onChange={handleSelectAll}
                         size="sm"
-                        className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
+                        className="w-4 h-4 border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                       />
                     ) : (
                       <div className="flex items-center gap-[4px]">
                         {column.label}
                         {column.sortable && sortBy === column.key && (
                           sortOrder === 'asc' 
-                            ? <HiOutlineChevronUp className="w-12px h-12px" />
-                            : <HiOutlineChevronDown className="w-12px h-12px" />
+                            ? <HiOutlineChevronUp className="w-[12px] h-[12px]" />
+                            : <HiOutlineChevronDown className="w-[12px] h-[12px]" />
                         )}
                       </div>
                     )}
@@ -256,7 +256,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                         checked={selectedTasks.has(task._id)}
                         onChange={() => handleSelectTask(task._id)}
                         size="sm"
-                        className="w-16px h-16px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
+                        className="w-4 h-4 border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                       />
                     </td>
 
@@ -344,7 +344,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                         }}
                         className="p-4px hover:bg-[var(--theme-background-secondary)]/20 transition-colors"
                       >
-                        <HiOutlineDotsVertical className="w-16px h-16px" />
+                        <HiOutlineDotsVertical className="w-4 h-4" />
                       </button>
 
                       {showContextMenu === task._id && (
@@ -355,7 +355,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                             }}
                             className="w-full px-[10px] py-[4px] text-left font-mono text-brutal-sm hover:bg-[var(--theme-background-secondary)]/20 flex items-center gap-[4px]"
                           >
-                            <HiOutlinePencil className="w-16px h-16px" />
+                            <HiOutlinePencil className="w-4 h-4" />
                             EDIT
                           </button>
                           <button
@@ -364,7 +364,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                             }}
                             className="w-full px-[10px] py-[4px] text-left font-mono text-brutal-sm hover:bg-[var(--theme-background-secondary)]/20 flex items-center gap-[4px]"
                           >
-                            <HiOutlineDuplicate className="w-16px h-16px" />
+                            <HiOutlineDuplicate className="w-4 h-4" />
                             DUPLICATE
                           </button>
                           <button
@@ -373,14 +373,14 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                             }}
                             className="w-full px-[10px] py-[4px] text-left font-mono text-brutal-sm hover:bg-[var(--theme-background-secondary)]/20 flex items-center gap-[4px]"
                           >
-                            <HiOutlineClock className="w-16px h-16px" />
+                            <HiOutlineClock className="w-4 h-4" />
                             LOG TIME
                           </button>
                           <button
                             onClick={() => handleDeleteTask(task._id)}
                             className="w-full px-[10px] py-[4px] text-left font-mono text-brutal-sm hover:bg-[var(--theme-error)] hover:text-[var(--theme-foreground)] flex items-center gap-[4px]"
                           >
-                            <HiOutlineTrash className="w-16px h-16px" />
+                            <HiOutlineTrash className="w-4 h-4" />
                             DELETE
                           </button>
                         </div>
@@ -400,7 +400,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                             </div>
                           )}
                           
-                          <div className="flex gap-32px">
+                          <div className="flex gap-[16px]">
                             {task.startDate && (
                               <div>
                                 <h4 className="font-mono text-brutal-sm uppercase mb-[2px]">START DATE</h4>

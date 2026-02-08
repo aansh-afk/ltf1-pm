@@ -34,9 +34,9 @@ function TriggerNode({ data }: { data: CustomNodeData }) {
   const Icon = data.icon || HiOutlineLightningBolt
 
   return (
-    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-primary)] p-16px min-w-200px">
-      <div className="flex items-center gap-8px mb-8px">
-        <Icon className="w-20px h-20px text-[var(--theme-primary)]" />
+    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-primary)] p-[10px] min-w-200px">
+      <div className="flex items-center gap-[8px] mb-[8px]">
+        <Icon className="w-5 h-5 text-[var(--theme-primary)]" />
         <span className="text-xs font-bold uppercase text-[var(--theme-primary)]">TRIGGER</span>
       </div>
       <div className="text-brutal-sm font-bold mb-4px">{data.label}</div>
@@ -49,9 +49,9 @@ function TriggerNode({ data }: { data: CustomNodeData }) {
 
 function ConditionNode({ data }: { data: CustomNodeData }) {
   return (
-    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-warning)] p-16px min-w-200px">
-      <div className="flex items-center gap-8px mb-8px">
-        <HiOutlineFilter className="w-20px h-20px text-[var(--theme-warning)]" />
+    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-warning)] p-[10px] min-w-200px">
+      <div className="flex items-center gap-[8px] mb-[8px]">
+        <HiOutlineFilter className="w-5 h-5 text-[var(--theme-warning)]" />
         <span className="text-xs font-bold uppercase text-[var(--theme-warning)]">CONDITION</span>
       </div>
       <div className="text-brutal-sm font-bold mb-4px">{data.label}</div>
@@ -64,9 +64,9 @@ function ConditionNode({ data }: { data: CustomNodeData }) {
 
 function ActionNode({ data }: { data: CustomNodeData }) {
   return (
-    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-success)] p-16px min-w-200px">
-      <div className="flex items-center gap-8px mb-8px">
-        <HiOutlineCheckCircle className="w-20px h-20px text-[var(--theme-success)]" />
+    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-success)] p-[10px] min-w-200px">
+      <div className="flex items-center gap-[8px] mb-[8px]">
+        <HiOutlineCheckCircle className="w-5 h-5 text-[var(--theme-success)]" />
         <span className="text-xs font-bold uppercase text-[var(--theme-success)]">ACTION</span>
       </div>
       <div className="text-brutal-sm font-bold mb-4px">{data.label}</div>
@@ -248,30 +248,30 @@ export default function FlowCanvas({ workflow, onSave }: FlowCanvasProps) {
   return (
     <div className="h-600px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]">
       {/* Toolbar */}
-      <div className="h-48px border-b-2 border-[var(--theme-border)] flex items-center justify-between px-16px bg-[var(--theme-background-secondary)]">
-        <div className="flex items-center gap-8px">
+      <div className="h-6 border-b-2 border-[var(--theme-border)] flex items-center justify-between px-[10px] bg-[var(--theme-background-secondary)]">
+        <div className="flex items-center gap-[8px]">
           <button
             onClick={() => addNode('trigger')}
-            className="px-12px py-6px border-2 border-[var(--theme-primary)] text-[var(--theme-primary)] hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] text-xs font-bold uppercase"
+            className="px-[12px] py-6px border-2 border-[var(--theme-primary)] text-[var(--theme-primary)] hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] text-xs font-bold uppercase"
           >
             + TRIGGER
           </button>
           <button
             onClick={() => addNode('condition')}
-            className="px-12px py-6px border-2 border-[var(--theme-warning)] text-[var(--theme-warning)] hover:bg-[var(--theme-warning)] hover:text-[var(--theme-background)] text-xs font-bold uppercase"
+            className="px-[12px] py-6px border-2 border-[var(--theme-warning)] text-[var(--theme-warning)] hover:bg-[var(--theme-warning)] hover:text-[var(--theme-background)] text-xs font-bold uppercase"
           >
             + CONDITION
           </button>
           <button
             onClick={() => addNode('action')}
-            className="px-12px py-6px border-2 border-[var(--theme-success)] text-[var(--theme-success)] hover:bg-[var(--theme-success)] hover:text-[var(--theme-background)] text-xs font-bold uppercase"
+            className="px-[12px] py-6px border-2 border-[var(--theme-success)] text-[var(--theme-success)] hover:bg-[var(--theme-success)] hover:text-[var(--theme-background)] text-xs font-bold uppercase"
           >
             + ACTION
           </button>
         </div>
         <button
           onClick={handleSave}
-          className="px-16px py-6px bg-[var(--theme-primary)] text-[var(--theme-background)] text-xs font-bold uppercase hover:opacity-80"
+          className="px-[10px] py-6px bg-[var(--theme-primary)] text-[var(--theme-background)] text-xs font-bold uppercase hover:opacity-80"
         >
           SAVE FLOW
         </button>

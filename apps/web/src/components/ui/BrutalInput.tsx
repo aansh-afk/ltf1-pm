@@ -21,7 +21,7 @@ const BrutalInput = forwardRef<HTMLInputElement, BrutalInputProps>(
     const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`
 
     return (
-      <div className={clsx('space-y-8px', fullWidth && 'w-full')}>
+      <div className={clsx('space-y-[8px]', fullWidth && 'w-full')}>
         {label && (
           <label htmlFor={inputId} className="block text-brutal-sm text-[var(--theme-foreground)]">
             {label}
@@ -35,7 +35,7 @@ const BrutalInput = forwardRef<HTMLInputElement, BrutalInputProps>(
           aria-invalid={!!error}
           aria-describedby={error || helperText ? `${inputId}-description` : undefined}
           className={clsx(
-            'bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 px-16px py-8px',
+            'bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 px-[10px] py-8px',
             'transition-all duration-200 ease-brutal-out',
             'placeholder:text-[var(--theme-foreground)]/50 placeholder:uppercase placeholder:text-xs',
             error

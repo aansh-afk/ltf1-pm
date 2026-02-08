@@ -72,9 +72,9 @@ export default function MyProfilePage() {
 
   if (!currentUser) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-[50vh]">
+      <div className="p-4 flex items-center justify-center min-h-[50vh]">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[var(--theme-primary)] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-[var(--theme-primary)] border-t-transparent rounded-full animate-spin" />
           <p className="font-mono text-sm animate-pulse">Loading Profile...</p>
         </div>
       </div>
@@ -82,14 +82,14 @@ export default function MyProfilePage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto min-h-screen bg-[var(--theme-background)]">
+    <div className="p-4 max-w-7xl mx-auto min-h-screen bg-[var(--theme-background)]">
       {/* Profile Completion Banner */}
       {!profileComplete && (
-        <div className="mb-8">
+        <div className="mb-4">
           <BrutalCard variant="glitch" className="bg-[var(--theme-error)]/10 border-[var(--theme-error)]">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <HiOutlineExclamationCircle className="w-8 h-8 text-[var(--theme-error)] animate-pulse" />
+                <HiOutlineExclamationCircle className="w-6 h-6 text-[var(--theme-error)] animate-pulse" />
                 <div>
                   <h3 className="font-bold text-[var(--theme-error)] uppercase tracking-wider">Profile Incomplete</h3>
                   <p className="font-mono text-xs text-[var(--theme-foreground)]/80">
@@ -112,10 +112,10 @@ export default function MyProfilePage() {
       )}
 
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8 border-b-2 border-[var(--theme-border)] pb-6 gap-4">
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-4 border-b-2 border-[var(--theme-border)] pb-3 gap-4">
         <div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2 flex items-center gap-4">
-            <HiOutlineIdentification className="w-12 h-12 md:w-16 md:h-16 text-[var(--theme-primary)]" />
+          <h1 className="text-3xl md:text-4xl font-black tracking-tighter mb-2 flex items-center gap-4">
+            <HiOutlineIdentification className="w-8 h-8 md:w-10 md:h-10 text-[var(--theme-primary)]" />
             MY PROFILE
           </h1>
           <p className="font-mono text-sm text-[var(--theme-foreground)]/60 uppercase tracking-widest pl-2">
@@ -134,18 +134,18 @@ export default function MyProfilePage() {
 
       {/* Profile Content */}
       {developerProfile ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
 
           {/* LEFT COLUMN - IDENTITY & STATUS (4 cols) */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-4 space-y-3">
             <BrutalCard variant="bordered" className="relative overflow-hidden">
-              <div className="flex flex-col items-center text-center mb-6 relative z-10 pt-6">
+              <div className="flex flex-col items-center text-center mb-3 relative z-10 pt-4">
                 <div className="w-32 h-32 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-primary)] flex items-center justify-center mb-4 relative group overflow-hidden rounded-full">
                   <HiOutlineUser className="w-16 h-16 text-[var(--theme-primary)] group-hover:scale-110 transition-transform duration-300" />
                   <div className="absolute inset-0 bg-[var(--theme-primary)]/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
 
-                <h2 className="text-2xl font-bold uppercase tracking-wider mb-1">{currentUser.name || 'UNKNOWN AGENT'}</h2>
+                <h2 className="text-xl font-bold uppercase tracking-wider mb-1">{currentUser.name || 'UNKNOWN AGENT'}</h2>
                 <p className="font-mono text-sm text-[var(--theme-primary)] mb-4">
                   {developerProfile.profile?.role?.toUpperCase() || 'UNASSIGNED ROLE'}
                 </p>
@@ -161,7 +161,7 @@ export default function MyProfilePage() {
 
             {/* Availability Matrix */}
             <BrutalCard variant="default">
-              <h3 className="font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+              <h3 className="font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
                 <HiOutlineClock className="w-5 h-5" /> Availability
               </h3>
               <div className="space-y-3 font-mono text-xs">
@@ -186,11 +186,11 @@ export default function MyProfilePage() {
           </div>
 
           {/* RIGHT COLUMN - DETAILS & STATS (8 cols) */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lg:col-span-8 space-y-3">
 
             {/* Bio Section */}
             <BrutalCard variant="elevated">
-              <h3 className="font-bold uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-[var(--theme-border)] pb-2">
+              <h3 className="font-bold uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-[var(--theme-border)] pb-2">
                 <HiOutlineTerminal className="w-5 h-5" /> Bio
               </h3>
               <p className="font-mono text-sm leading-relaxed text-[var(--theme-foreground)]/80 whitespace-pre-wrap">
@@ -199,9 +199,9 @@ export default function MyProfilePage() {
             </BrutalCard>
 
             {/* Tech Stack Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <BrutalCard variant="default">
-                <h3 className="font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                <h3 className="font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
                   <HiOutlineChip className="w-5 h-5" /> Technologies
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -224,10 +224,10 @@ export default function MyProfilePage() {
               </BrutalCard>
 
               <BrutalCard variant="default">
-                <h3 className="font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                <h3 className="font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
                   <HiOutlineCode className="w-5 h-5" /> Skills & Interests
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-2">
                   <div>
                     <div className="font-mono text-[10px] opacity-60 mb-2">SKILLS</div>
                     <div className="flex flex-wrap gap-2">
@@ -265,10 +265,10 @@ export default function MyProfilePage() {
         </div>
       ) : (
         // No Profile State
-        <BrutalCard variant="glitch" className="p-12 text-center border-dashed">
-          <HiOutlineUser className="w-24 h-24 text-[var(--theme-foreground)]/20 mx-auto mb-6" />
-          <h2 className="text-2xl font-bold mb-4">PROFILE NOT FOUND</h2>
-          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 mb-8 max-w-md mx-auto">
+        <BrutalCard variant="glitch" className="p-8 text-center border-dashed">
+          <HiOutlineUser className="w-24 h-24 text-[var(--theme-foreground)]/20 mx-auto mb-3" />
+          <h2 className="text-xl font-bold mb-3">PROFILE NOT FOUND</h2>
+          <p className="font-mono text-sm text-[var(--theme-foreground)]/60 mb-4 max-w-md mx-auto">
             Create your developer profile to initialize your identity within the system. This is required for team assignment.
           </p>
           <BrutalButton

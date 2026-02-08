@@ -497,7 +497,7 @@ export default function FeatureDetailPage() {
 
       {/* Hero */}
       <section className="pt-32 pb-16 md:pt-40 md:pb-24">
-        <div className="max-w-5xl mx-auto px-6">
+        <div className="max-w-5xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -515,12 +515,12 @@ export default function FeatureDetailPage() {
             </div>
 
             {/* Title */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#F9FAFB] mb-6 whitespace-pre-line">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#F9FAFB] mb-3 whitespace-pre-line">
               {feature.heroTitle}
             </h1>
 
             {/* Subtitle */}
-            <p className="text-lg text-[#6B7280] max-w-2xl mb-12">
+            <p className="text-lg text-[#6B7280] max-w-2xl mb-6">
               {feature.heroSubtitle}
             </p>
           </motion.div>
@@ -530,7 +530,7 @@ export default function FeatureDetailPage() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-6 md:p-10 overflow-x-auto"
+            className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-4 md:p-6 overflow-x-auto"
           >
             <ColoredPre
               text={feature.heroAscii}
@@ -542,15 +542,15 @@ export default function FeatureDetailPage() {
 
       {/* Feature Sections */}
       {feature.sections.map((section, i) => (
-        <section key={section.headline} className="py-16 md:py-24">
-          <div className="max-w-5xl mx-auto px-6">
+        <section key={section.headline} className="py-10 md:py-14">
+          <div className="max-w-5xl mx-auto px-4">
             <motion.div
               variants={sectionVariants}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: '-80px' }}
               transition={{ duration: 0.5 }}
-              className={`grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center ${
+              className={`grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 items-center ${
                 section.align === 'right' ? 'md:[direction:rtl]' : ''
               }`}
             >
@@ -559,7 +559,7 @@ export default function FeatureDetailPage() {
                 <span className="text-xs font-mono text-[#6B7280] uppercase tracking-wider">
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                <h2 className="text-2xl md:text-3xl font-bold text-[#F9FAFB] mt-2 mb-4">
+                <h2 className="text-xl md:text-2xl font-bold text-[#F9FAFB] mt-2 mb-4">
                   {section.headline}
                 </h2>
                 <p className="text-base text-[#6B7280] leading-relaxed">
@@ -568,7 +568,7 @@ export default function FeatureDetailPage() {
               </div>
 
               {/* ASCII block */}
-              <div className={`bg-[#0A0A0A] border border-[#2E2E35] p-6 overflow-x-auto ${
+              <div className={`bg-[#0A0A0A] border border-[#2E2E35] p-4 overflow-x-auto ${
                 section.align === 'right' ? 'md:[direction:ltr]' : ''
               }`}>
                 <ColoredPre
@@ -582,18 +582,18 @@ export default function FeatureDetailPage() {
       ))}
 
       {/* Bottom CTA */}
-      <section className="py-20 md:py-28 border-t border-[#2E2E35]">
-        <div className="max-w-4xl mx-auto px-6 text-center">
+      <section className="py-12 md:py-16 border-t border-[#2E2E35]">
+        <div className="max-w-4xl mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#F9FAFB] mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#F9FAFB] mb-4">
               {feature.ctaTitle}
             </h2>
-            <p className="text-base text-[#6B7280] mb-8">
+            <p className="text-base text-[#6B7280] mb-4">
               {feature.ctaDescription}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

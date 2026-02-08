@@ -322,7 +322,7 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
                     className="w-full border-dashed flex items-center justify-center gap-[4px]"
                     size={isCompactView ? "sm" : "md"}
                   >
-                    <HiOutlinePlus className="w-16px h-16px" />
+                    <HiOutlinePlus className="w-4 h-4" />
                     {!isCompactView && <span>ADD TASK</span>}
                   </BrutalButton>
                 </div>
@@ -330,8 +330,8 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
 
               {/* Scroll Indicator */}
               {hasOverflow[column.id] && (
-                <div className="absolute bottom-0 left-0 right-0 h-24px bg-gradient-to-t from-carbon-plate to-transparent pointer-events-none flex items-end justify-center pb-4px">
-                  <div className="w-24px h-2px bg-primary-brutalist/40 animate-pulse" />
+                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-carbon-plate to-transparent pointer-events-none flex items-end justify-center pb-4px">
+                  <div className="w-4 h-2px bg-primary-brutalist/40 animate-pulse" />
                 </div>
               )}
             </BrutalCard>

@@ -76,24 +76,24 @@ export default function AISetupModal({
       title={isFirstTimeUser ? "Welcome! Let's Set Up AI Features" : "AI Configuration"}
       size="lg"
     >
-      <div className="space-y-24px">
+      <div className="space-y-[12px]">
         {/* Welcome message for first-time users */}
         {isFirstTimeUser && (
           <div 
-            className="p-16px border-2 mb-24px"
+            className="p-[10px] border-2 mb-[12px]"
             style={{ 
               backgroundColor: 'var(--theme-background-secondary)',
               borderColor: 'var(--theme-info)'
             }}
           >
-            <div className="flex items-start gap-12px">
+            <div className="flex items-start gap-[6px]">
               <HiOutlineSparkles 
-                className="w-24px h-24px flex-shrink-0" 
+                className="w-4 h-4 flex-shrink-0" 
                 style={{ color: 'var(--theme-info)' }}
               />
               <div>
                 <h3 
-                  className="text-brutal-md uppercase mb-8px"
+                  className="text-brutal-md uppercase mb-[8px]"
                   style={{ color: 'var(--theme-foreground)' }}
                 >
                   AI-Powered Features Available
@@ -129,13 +129,13 @@ export default function AISetupModal({
               : 'none'
           }}
         >
-          <div className="flex items-start gap-16px">
-            <HiOutlineCreditCard className="w-24px h-24px flex-shrink-0 mt-2px" />
+          <div className="flex items-start gap-[10px]">
+            <HiOutlineCreditCard className="w-4 h-4 flex-shrink-0 mt-2px" />
             <div className="flex-1">
-              <h3 className="text-brutal-md uppercase mb-8px">
+              <h3 className="text-brutal-md uppercase mb-[8px]">
                 Start with Free Credits
               </h3>
-              <p className="text-brutal-sm mb-8px opacity-90">
+              <p className="text-brutal-sm mb-[8px] opacity-90">
                 Get 100 free AI credits per month. Perfect for trying out AI features.
               </p>
               <ul className="text-brutal-xs space-y-4px opacity-75">
@@ -167,13 +167,13 @@ export default function AISetupModal({
               : 'none'
           }}
         >
-          <div className="flex items-start gap-16px">
-            <HiOutlineKey className="w-24px h-24px flex-shrink-0 mt-2px" />
+          <div className="flex items-start gap-[10px]">
+            <HiOutlineKey className="w-4 h-4 flex-shrink-0 mt-2px" />
             <div className="flex-1">
-              <h3 className="text-brutal-md uppercase mb-8px">
+              <h3 className="text-brutal-md uppercase mb-[8px]">
                 Bring Your Own API Key (BYOK)
               </h3>
-              <p className="text-brutal-sm mb-8px opacity-90">
+              <p className="text-brutal-sm mb-[8px] opacity-90">
                 Use your own Google Gemini API key for unlimited AI features.
               </p>
               <ul className="text-brutal-xs space-y-4px opacity-75">
@@ -188,7 +188,7 @@ export default function AISetupModal({
 
         {/* API Key Input (shown when BYOK is selected) */}
         {setupChoice === 'byok' && (
-          <div className="space-y-12px animate-fadeIn">
+          <div className="space-y-[6px] animate-fadeIn">
             <label 
               className="block text-brutal-sm uppercase"
               style={{ color: 'var(--theme-foreground)' }}
@@ -200,16 +200,16 @@ export default function AISetupModal({
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="AIza..."
-              className="w-full px-16px py-12px border-2 font-mono text-brutal-sm"
+              className="w-full px-[10px] py-[8px] border-2 font-mono text-brutal-sm"
               style={{
                 backgroundColor: 'var(--theme-background)',
                 borderColor: 'var(--theme-border)',
                 color: 'var(--theme-foreground)'
               }}
             />
-            <div className="flex items-start gap-8px">
+            <div className="flex items-start gap-[8px]">
               <HiOutlineInformationCircle 
-                className="w-16px h-16px flex-shrink-0 mt-1px"
+                className="w-4 h-4 flex-shrink-0 mt-1px"
                 style={{ color: 'var(--theme-info)' }}
               />
               <p 
@@ -258,14 +258,14 @@ export default function AISetupModal({
 
         {/* Pro Plan Info */}
         <div 
-          className="p-16px border-2"
+          className="p-[10px] border-2"
           style={{ 
             backgroundColor: 'var(--theme-background-tertiary)',
             borderColor: 'var(--theme-border)'
           }}
         >
           <h4 
-            className="text-brutal-sm uppercase mb-8px"
+            className="text-brutal-sm uppercase mb-[8px]"
             style={{ color: 'var(--theme-warning)' }}
           >
             ⭐ Pro Plan Available
@@ -280,11 +280,11 @@ export default function AISetupModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-16px pt-16px">
+        <div className="flex gap-[10px] pt-[8px]">
           {!isFirstTimeUser && (
             <button
               onClick={onClose}
-              className="flex-1 px-24px py-12px border-2 font-mono text-brutal-sm uppercase"
+              className="flex-1 px-[12px] py-[8px] border-2 font-mono text-brutal-sm uppercase"
               style={{
                 backgroundColor: 'var(--theme-background)',
                 borderColor: 'var(--theme-border)',
@@ -297,7 +297,7 @@ export default function AISetupModal({
           <button
             onClick={handleSetup}
             disabled={!setupChoice || (setupChoice === 'byok' && !apiKey) || isValidating}
-            className="flex-1 px-24px py-12px border-2 font-mono text-brutal-sm uppercase disabled:opacity-50"
+            className="flex-1 px-[12px] py-[8px] border-2 font-mono text-brutal-sm uppercase disabled:opacity-50"
             style={{
               backgroundColor: setupChoice ? 'var(--theme-success)' : 'var(--theme-background-secondary)',
               borderColor: 'var(--theme-border)',

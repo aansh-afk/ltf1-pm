@@ -239,12 +239,12 @@ export default function MeetingsPage() {
   }, [meetings, currentUser])
 
   return (
-    <div className="h-full flex flex-col p-6 bg-[var(--theme-background)]">
+    <div className="h-full flex flex-col p-4 bg-[var(--theme-background)]">
       {/* Header */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="mb-4 flex flex-col md:flex-row md:items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 flex items-center gap-3">
-            <HiOutlineCalendar className="w-8 h-8 md:w-10 md:h-10 text-[var(--theme-primary)]" />
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+            <HiOutlineCalendar className="w-6 h-6 md:w-7 md:h-7 text-[var(--theme-primary)]" />
             SCHEDULE GRID
           </h1>
           <p className="font-mono text-sm text-[var(--theme-foreground)]/60 uppercase tracking-wide">
@@ -307,7 +307,7 @@ export default function MeetingsPage() {
       </div>
 
       {/* Controls Bar */}
-      <BrutalCard className="mb-6 p-4 flex flex-wrap items-center justify-between gap-4">
+      <BrutalCard className="mb-3 p-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-4 flex-1">
           <div className="relative flex-1 max-w-md">
             <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--theme-foreground)]/60" />
@@ -348,7 +348,7 @@ export default function MeetingsPage() {
 
       {/* Filters Panel */}
       {showFilters && (
-        <BrutalCard className="mb-6 p-4 border-t-0 -mt-6">
+        <BrutalCard className="mb-3 p-3 border-t-0 -mt-3">
           <div className="flex items-center gap-4">
             <select
               value={filters.type || ''}
@@ -572,7 +572,7 @@ function CalendarView({
       {calendarView !== 'month' && (
         <div className="flex-1 flex items-center justify-center bg-[var(--theme-background)]">
           <div className="text-center">
-            <HiOutlineCalendar className="w-12 h-12 text-[var(--theme-foreground)]/20 mx-auto mb-4" />
+            <HiOutlineCalendar className="w-8 h-8 text-[var(--theme-foreground)]/20 mx-auto mb-3" />
             <p className="font-mono text-sm text-[var(--theme-foreground)]/60">
               {calendarView.toUpperCase()} VIEW COMING SOON
             </p>
@@ -600,23 +600,23 @@ function ListView({
   onView
 }: any) {
   return (
-    <div className="h-full overflow-y-auto p-6 bg-[var(--theme-background)]">
+    <div className="h-full overflow-y-auto p-4 bg-[var(--theme-background)]">
       {groupedMeetings.length === 0 ? (
         <div className="text-center py-12 border-2 border-dashed border-[var(--theme-border)]">
           <p className="text-[var(--theme-foreground)]/60 font-mono text-sm uppercase">NO MEETINGS FOUND</p>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-4">
           {groupedMeetings.map(({ date, meetings }: any) => (
             <div key={date}>
-              <div className="flex items-center gap-4 mb-4">
+              <div className="flex items-center gap-4 mb-3">
                 <h3 className="font-mono text-sm font-bold uppercase text-[var(--theme-primary)]">
                   {format(new Date(date), 'EEEE, MMMM d, yyyy')}
                 </h3>
                 <div className="h-[2px] flex-1 bg-[var(--theme-border)]"></div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {meetings.map((meeting: any) => (
                   <div key={meeting._id} className="flex items-start gap-4 group">
                     <input
@@ -660,27 +660,27 @@ function DashboardView({
   onQuickRSVP
 }: any) {
   return (
-    <div className="h-full overflow-y-auto p-6 bg-[var(--theme-background)]">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="h-full overflow-y-auto p-4 bg-[var(--theme-background)]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* Stats Cards */}
-        <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             { label: 'Upcoming', value: stats?.upcoming || 0 },
             { label: 'Today', value: stats?.today || 0 },
             { label: 'Hours (Month)', value: `${stats?.totalHours || 0}h` },
             { label: 'Acceptance Rate', value: `${stats?.acceptanceRate || 0}%` },
           ].map((stat) => (
-            <BrutalCard key={stat.label} className="p-4 text-center hover:border-[var(--theme-primary)] transition-colors">
+            <BrutalCard key={stat.label} className="p-3 text-center hover:border-[var(--theme-primary)] transition-colors">
               <div className="text-[10px] font-mono uppercase text-[var(--theme-foreground)]/60 mb-2">{stat.label}</div>
-              <div className="text-3xl font-bold font-mono">{stat.value}</div>
+              <div className="text-2xl font-bold font-mono">{stat.value}</div>
             </BrutalCard>
           ))}
         </div>
 
         {/* Next Meetings */}
         <div className="lg:col-span-2">
-          <BrutalCard className="p-6 h-full">
-            <h3 className="font-mono text-sm font-bold uppercase mb-6 flex items-center gap-2">
+          <BrutalCard className="p-4 h-full">
+            <h3 className="font-mono text-sm font-bold uppercase mb-3 flex items-center gap-2">
               <HiOutlineClock className="w-4 h-4 text-[var(--theme-primary)]" />
               UPCOMING MEETINGS
             </h3>
@@ -718,10 +718,10 @@ function DashboardView({
 
         {/* Quick Actions or Info */}
         <div className="lg:col-span-1">
-          <BrutalCard className="p-6 h-full bg-[var(--theme-background-secondary)] border-dashed">
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-              <div className="w-12 h-12 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] flex items-center justify-center">
-                <HiOutlineVideoCamera className="w-6 h-6 text-[var(--theme-primary)]" />
+          <BrutalCard className="p-4 h-full bg-[var(--theme-background-secondary)] border-dashed">
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-2">
+              <div className="w-8 h-8 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] flex items-center justify-center">
+                <HiOutlineVideoCamera className="w-5 h-5 text-[var(--theme-primary)]" />
               </div>
               <div>
                 <h4 className="font-bold font-mono uppercase mb-1">Quick Join</h4>
