@@ -25,7 +25,6 @@ import { GitHubMonitor } from '../features/github/GitHubMonitor'
 import CommandTerminal from '../terminal/CommandTerminal'
 import GlobalSearchModal from '../features/search/GlobalSearchModal'
 import WorkspaceMobileBlocker from '../common/WorkspaceMobileBlocker'
-import ProductionAccessGate from '../common/ProductionAccessGate'
 import FeedbackWidget from '../features/feedback/FeedbackWidget'
 
 
@@ -305,11 +304,9 @@ export default function DashboardLayout() {
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="h-full"
           >
-            <ProductionAccessGate>
               <WorkspaceMobileBlocker>
                 <Outlet />
               </WorkspaceMobileBlocker>
-            </ProductionAccessGate>
           </motion.div>
         </main>
 
