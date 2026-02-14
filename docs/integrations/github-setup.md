@@ -70,18 +70,47 @@ LTF1 uses a GitHub App to:
 2. Click **"Generate a private key"**
 3. Save the downloaded `.pem` file securely
 
-## Step 3: Configure Environment Variables
+## Step 3: Collect Credentials
 
-Add these to your Convex deployment:
+From the app settings page (General tab):
+
+| What | Where | Env variable |
+|------|-------|-------------|
+| App ID | Near the top, under "About" | `GITHUB_APP_ID` |
+| App slug | In the URL: `github.com/settings/apps/YOUR-SLUG` | `VITE_GITHUB_APP_SLUG` |
+| Client ID | Under "About" (starts with `Iv`) | `VITE_GITHUB_CLIENT_ID` |
+
+Then generate:
+- **Client Secret**: "Client secrets" section > "Generate a new client secret"
+- **Webhook Secret**: `openssl rand -hex 32`
+
+## Step 4: Configure Environment Variables
+
+### Local (`.env.local`)
 
 ```bash
-# In Convex dashboard or using CLI
-npx convex env set GITHUB_APP_ID "your-app-id"
-npx convex env set GITHUB_WEBHOOK_SECRET "your-webhook-secret"
-npx convex env set GITHUB_PRIVATE_KEY "$(cat path-to-your-private-key.pem)"
+GITHUB_APP_ID=<app-id>
+VITE_GITHUB_APP_SLUG=<app-slug>
+VITE_GITHUB_CLIENT_ID=<client-id>
+GITHUB_CLIENT_SECRET=<client-secret>
+GITHUB_WEBHOOK_SECRET=<webhook-secret>
+GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----
+<private key content>
+-----END RSA PRIVATE KEY-----"
 ```
 
-## Step 4: Install the GitHub App
+> `VITE_*` variables are frontend-only (bundled by Vite) and do NOT need to be in Convex.
+
+### Convex Backend
+
+```bash
+npx convex env set GITHUB_APP_ID <value>
+npx convex env set GITHUB_CLIENT_SECRET <value>
+npx convex env set GITHUB_WEBHOOK_SECRET <value>
+npx convex env set GITHUB_APP_PRIVATE_KEY -- "$(cat path-to-your-private-key.pem)"
+```
+
+## Step 5: Install the GitHub App
 
 1. Go to your GitHub App's public page:
    `https://github.com/apps/your-app-name`
@@ -94,7 +123,7 @@ npx convex env set GITHUB_PRIVATE_KEY "$(cat path-to-your-private-key.pem)"
 
 4. Click **"Install"**
 
-## Step 5: Connect Repository to Project
+## Step 6: Connect Repository to Project
 
 In LTF1:
 
