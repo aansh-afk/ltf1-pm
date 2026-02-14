@@ -138,10 +138,6 @@ export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({ children }) 
       case 'commandPalette':
         setCommandPaletteOpen(true)
         break
-      case 'terminal':
-        // Open terminal
-        window.dispatchEvent(new CustomEvent('open-terminal'))
-        break
       case 'search':
         // Open search dialog
         setCommandPaletteOpen(true)
@@ -185,7 +181,15 @@ export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({ children }) 
         // Toggle sidebar
         window.dispatchEvent(new CustomEvent('toggle-sidebar'))
         break
-        
+      case 'undo':
+        // Trigger undo action
+        window.dispatchEvent(new CustomEvent('undo-action'))
+        break
+      case 'redo':
+        // Trigger redo action
+        window.dispatchEvent(new CustomEvent('redo-action'))
+        break
+
       // Task operations
       case 'toggleTaskComplete':
       case 'editTask':

@@ -117,8 +117,11 @@ export default function ShortcutSettings() {
     a.download = 'keyboard-shortcuts.json'
     document.body.appendChild(a)
     a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    // Delay cleanup so the browser has time to initiate the download
+    setTimeout(() => {
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }, 100)
     toast.success('SETTINGS_EXPORTED')
   }
 
