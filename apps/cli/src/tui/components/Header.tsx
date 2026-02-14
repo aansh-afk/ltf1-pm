@@ -46,6 +46,9 @@ interface HeaderProps {
   sprintTotal?: number;
   sprintProgress?: number;
   sprintName?: string;
+  projectName?: string;
+  workspaceName?: string;
+  activeTimer?: { taskTitle: string; elapsed: string } | null;
 }
 
 export function Header({
@@ -54,6 +57,9 @@ export function Header({
   sprintTotal = 12,
   sprintProgress = 0.67,
   sprintName = "SPRINT 12",
+  projectName,
+  workspaceName,
+  activeTimer,
 }: HeaderProps) {
   const now = new Date();
   const dateStr = formatDate(now);
@@ -68,7 +74,7 @@ export function Header({
           <Text color={theme.colors.text} bold>
             {dateStr}
           </Text>
-          <Text color={theme.colors.dim}>───────</Text>
+          <Text color={theme.colors.dim}>{"───────"}</Text>
           <Text color={theme.colors.muted}>
             {" "}
             DAY: {sprintDay.toString().padStart(2, "0")}
@@ -85,13 +91,13 @@ export function Header({
         <Box flexDirection="column" alignItems="center">
           <Text color={theme.colors.primary}>{waveform}</Text>
           <Text color={theme.colors.text}>
-            {sprintName} · {Math.round(sprintProgress * 100)}% COMPLETE
+            {sprintName} {"\u00B7"} {Math.round(sprintProgress * 100)}% COMPLETE
           </Text>
           <Box marginTop={1}>
-            <Text color={theme.colors.dim}>┌─────────────────────┐</Text>
+            <Text color={theme.colors.dim}>{"┌─────────────────────┐"}</Text>
           </Box>
           <Box>
-            <Text color={theme.colors.dim}>│ </Text>
+            <Text color={theme.colors.dim}>{"│ "}</Text>
             <Text color={theme.colors.primary}>
               {theme.progress.filled.repeat(Math.floor(sprintProgress * 18))}
             </Text>
@@ -100,10 +106,10 @@ export function Header({
                 18 - Math.floor(sprintProgress * 18),
               )}
             </Text>
-            <Text color={theme.colors.dim}> │</Text>
+            <Text color={theme.colors.dim}>{" │"}</Text>
           </Box>
           <Box>
-            <Text color={theme.colors.dim}>└─────────────────────┘</Text>
+            <Text color={theme.colors.dim}>{"└─────────────────────┘"}</Text>
           </Box>
         </Box>
 
@@ -111,10 +117,14 @@ export function Header({
           <Text color={theme.colors.text} bold>
             {dayName}
           </Text>
-          <Text color={theme.colors.dim}>───────</Text>
-          <Text color={theme.colors.muted}>CITY: SYD</Text>
-          <Text color={theme.colors.muted}>TEMP: 24°C</Text>
-          <Text color={theme.colors.dim}>─────────</Text>
+          <Text color={theme.colors.dim}>{"───────"}</Text>
+          <Text color={theme.colors.muted}>{projectName ?? 'No Project'}</Text>
+          <Text color={theme.colors.muted}>{workspaceName ?? ''}</Text>
+          {activeTimer ? (
+            <Text color={theme.colors.primary}>[REC] {activeTimer.taskTitle} {activeTimer.elapsed}</Text>
+          ) : (
+            <Text color={theme.colors.dim}>{"─────────"}</Text>
+          )}
         </Box>
       </Box>
     </Box>

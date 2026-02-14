@@ -1,12 +1,185 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { toast } from 'react-hot-toast'
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { Link } from 'react-router-dom'
 import PublicNavigation from '../components/common/PublicNavigation'
 import Footer from '../components/common/Footer'
 import WaitlistForm from '../components/landing/WaitlistForm'
 
+// ── Radar ping component ──
+function RadarPing() {
+  return (
+    <div className="relative w-[200px] h-[200px] sm:w-[260px] sm:h-[260px]">
+      {/* Concentric rings */}
+      {[1, 2, 3, 4].map((ring) => (
+        <div
+          key={ring}
+          className="absolute inset-0 border border-[#6366F1]/10 rounded-full"
+          style={{
+            transform: `scale(${ring * 0.25})`,
+          }}
+        />
+      ))}
+
+      {/* Sweeping arm */}
+      <div
+        className="absolute top-1/2 left-1/2 w-1/2 h-[1px] origin-left"
+        style={{
+          background: 'linear-gradient(90deg, #6366F1 0%, transparent 100%)',
+          animation: 'radarSweep 3s linear infinite',
+        }}
+      />
+
+      {/* Sweep trail */}
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: 'conic-gradient(from 0deg, transparent 0deg, rgba(99,102,241,0.06) 0deg, transparent 60deg)',
+          animation: 'radarSweep 3s linear infinite',
+        }}
+      />
+
+      {/* Center dot */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+        <div className="w-2 h-2 bg-[#6366F1] rounded-full" />
+        <div className="absolute inset-0 w-2 h-2 bg-[#6366F1] rounded-full animate-ping opacity-40" />
+      </div>
+
+      {/* Blips — fake signals on the radar */}
+      {[
+        { x: 30, y: 25, delay: 0.5 },
+        { x: 70, y: 40, delay: 1.2 },
+        { x: 55, y: 75, delay: 2.0 },
+        { x: 20, y: 60, delay: 0.8 },
+        { x: 80, y: 70, delay: 1.8 },
+      ].map((blip, i) => (
+        <div
+          key={i}
+          className="absolute w-1.5 h-1.5 rounded-full bg-[#22C55E]"
+          style={{
+            left: `${blip.x}%`,
+            top: `${blip.y}%`,
+            animation: `radarBlip 3s ease-in-out ${blip.delay}s infinite`,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+// ── Progress bar segments ──
+function BuildProgress() {
+  const stages = [
+    { label: 'FOUNDATION', pct: 100, color: '#22C55E' },
+    { label: 'CORE ENGINE', pct: 100, color: '#22C55E' },
+    { label: 'FEATURES', pct: 85, color: '#6366F1' },
+    { label: 'POLISH', pct: 40, color: '#F59E0B' },
+    { label: 'LAUNCH', pct: 5, color: '#EF4444' },
+  ]
+
+  return (
+    <div className="space-y-2.5 w-full">
+      {stages.map((stage, i) => (
+        <div key={i}>
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#9CA3AF] uppercase tracking-wider">
+              {stage.label}
+            </span>
+            <span className="font-['IBM_Plex_Mono',monospace] text-[10px]" style={{ color: stage.color }}>
+              {stage.pct}%
+            </span>
+          </div>
+          <div className="h-1.5 bg-[#111111] border border-[#1F1F23] overflow-hidden">
+            <div
+              className="h-full transition-all duration-1000 ease-out"
+              style={{
+                width: `${stage.pct}%`,
+                backgroundColor: stage.color,
+                boxShadow: `0 0 8px ${stage.color}40`,
+                animation: `progressFill 1.5s ease-out ${i * 0.15}s both`,
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ── Live log feed ──
+function LiveLog() {
+  const [lines, setLines] = useState<Array<{ text: string; color: string; time: string }>>([])
+  const logRef = useRef<HTMLDivElement>(null)
+
+  const logMessages = useMemo(() => [
+    { text: 'Compiling feature modules...', color: '#9CA3AF' },
+    { text: '[OK] Dashboard engine initialized', color: '#22C55E' },
+    { text: 'Running integration tests... 847/847 passed', color: '#22C55E' },
+    { text: '[WARN] Launch sequence pending approval', color: '#F59E0B' },
+    { text: 'Optimizing query performance...', color: '#9CA3AF' },
+    { text: '[OK] Real-time sync layer active', color: '#22C55E' },
+    { text: 'Building sprint analytics module...', color: '#6366F1' },
+    { text: '[OK] Workspace isolation verified', color: '#22C55E' },
+    { text: 'Deploying collaboration engine...', color: '#9CA3AF' },
+    { text: '[OK] GitHub integration connected', color: '#22C55E' },
+    { text: '[WARN] Rate limiter calibrating', color: '#F59E0B' },
+    { text: 'Preparing AI task routing...', color: '#6366F1' },
+    { text: '[OK] Encryption layer verified', color: '#22C55E' },
+    { text: 'Loading team management module...', color: '#9CA3AF' },
+    { text: '[OK] Permission system initialized', color: '#22C55E' },
+    { text: 'Stress testing concurrent sessions...', color: '#6366F1' },
+  ], [])
+
+  useEffect(() => {
+    let idx = 0
+    const interval = setInterval(() => {
+      const msg = logMessages[idx % logMessages.length]
+      const now = new Date()
+      const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`
+
+      setLines((prev) => {
+        const next = [...prev, { ...msg, time }]
+        return next.length > 8 ? next.slice(-8) : next
+      })
+      idx++
+    }, 2800)
+
+    return () => clearInterval(interval)
+  }, [logMessages])
+
+  useEffect(() => {
+    if (logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight
+    }
+  }, [lines])
+
+  return (
+    <div
+      ref={logRef}
+      className="h-[180px] overflow-hidden font-['IBM_Plex_Mono',monospace] text-[10px] sm:text-[11px] leading-relaxed space-y-0.5"
+    >
+      {lines.map((line, i) => (
+        <div
+          key={i}
+          className="flex gap-2"
+          style={{
+            animation: 'logFadeIn 0.3s ease-out',
+            opacity: i < lines.length - 6 ? 0.4 : 1,
+          }}
+        >
+          <span className="text-[#6B7280]/50 shrink-0">{line.time}</span>
+          <span style={{ color: line.color }}>{line.text}</span>
+        </div>
+      ))}
+      <div className="flex items-center gap-1 text-[#6B7280]/40">
+        <span className="inline-block w-1.5 h-3 bg-[#6366F1] animate-pulse" />
+      </div>
+    </div>
+  )
+}
+
+// ── Main page ──
 export default function ComingSoonPage() {
   const stats = useQuery(api.waitlist.getWaitlistStats)
   const addToWishlist = useMutation(api.waitlist.addToWishlist)
@@ -21,157 +194,309 @@ export default function ComingSoonPage() {
     setFingerprint(fp)
   }, [])
 
+  const handleBoost = async () => {
+    try {
+      const success = await addToWishlist({ fingerprint })
+      toast.custom(
+        () => (
+          <div
+            className="font-['IBM_Plex_Mono',monospace] text-[12px] px-4 py-3 border-2 shadow-[3px_3px_0px_rgba(0,0,0,0.5)]"
+            style={{
+              backgroundColor: '#0A0A0A',
+              borderColor: success ? '#22C55E' : '#6366F1',
+              color: success ? '#22C55E' : '#6366F1',
+            }}
+          >
+            {success ? '> Signal accepted. You are on the radar.' : '> Signal already recorded.'}
+          </div>
+        ),
+        { duration: 3000 }
+      )
+    } catch {
+      // ignore
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-[#050505] flex flex-col">
+    <div className="min-h-screen bg-[#050505] flex flex-col relative overflow-hidden">
       <PublicNavigation />
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-24 md:py-32">
-        <div className="w-full max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-10">
-            <h1 className="font-['Inter',sans-serif] font-extrabold text-4xl md:text-6xl tracking-tight text-[#F9FAFB] mb-4">
-              We're building something special
-            </h1>
-            <p className="text-xl text-[#9CA3AF] max-w-2xl mx-auto">
-              We are currently in private beta. Join the waitlist to get early access.
-            </p>
-          </div>
+      {/* Subtle dot grid background */}
+      <div
+        className="fixed inset-0 pointer-events-none opacity-[0.035]"
+        style={{
+          backgroundImage: 'radial-gradient(circle, #6366F1 0.5px, transparent 0.5px)',
+          backgroundSize: '24px 24px',
+        }}
+      />
 
-          {/* Stats & Graph */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-            {/* Counter Card */}
-            <div className="bg-[#111111] border-2 border-[#2E2E35] rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-4 flex flex-col justify-center items-center">
-              <p className="text-sm text-[#9CA3AF] mb-2">Total Interest</p>
-              <div className="text-5xl font-bold text-[#6366F1]">
-                {stats ? stats.totalCount.toLocaleString() : '...'}
-              </div>
-              <p className="text-xs text-[#6B7280] mt-2">people waiting</p>
-            </div>
-
-            {/* Graph Card */}
-            <div className="md:col-span-2 bg-[#111111] border-2 border-[#2E2E35] rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-4 h-[300px] flex flex-col">
-              <h3 className="text-sm text-[#9CA3AF] mb-4">Waitlist Growth</h3>
-              <div className="flex-1 w-full min-h-0">
-                {stats && stats.graphData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={stats.graphData} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
-                      <defs>
-                        <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#6366F1" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#6366F1" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1F1F23" opacity={0.5} vertical={false} />
-                      <XAxis
-                        dataKey="date"
-                        tick={{ fill: '#6B7280', fontSize: 10 }}
-                        tickLine={{ stroke: '#1F1F23' }}
-                        axisLine={{ stroke: '#1F1F23' }}
-                        tickFormatter={(str) => {
-                          const d = new Date(str)
-                          return `${d.getDate()}/${d.getMonth() + 1}`
-                        }}
-                        minTickGap={30}
-                      />
-                      <YAxis
-                        tick={{ fill: '#6B7280', fontSize: 10 }}
-                        tickLine={{ stroke: '#1F1F23' }}
-                        axisLine={{ stroke: '#1F1F23' }}
-                        domain={[0, (dataMax: number) => Math.max(100, Math.ceil(dataMax / 100) * 100)]}
-                        allowDataOverflow={true}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#111111',
-                          border: '1px solid #6366F1',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                        }}
-                        itemStyle={{ color: '#6366F1' }}
-                        cursor={{ stroke: '#6366F1', strokeWidth: 1, strokeDasharray: '4 4' }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="count"
-                        stroke="#6366F1"
-                        fillOpacity={1}
-                        fill="url(#colorCount)"
-                        strokeWidth={2}
-                        animationDuration={1500}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-[#6B7280] text-sm">
-                    Loading data...
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Waitlist + Hype */}
-          <div className="flex flex-col md:flex-row gap-3 max-w-2xl mx-auto">
-            {/* Waitlist Form */}
-            <div className="flex-1 bg-[#111111] border-2 border-[#2E2E35] rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-4 hover:border-[#6366F1] transition-colors duration-300">
-              <h3 className="text-sm font-semibold text-[#9CA3AF] mb-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-                Join the waitlist
-              </h3>
-              <WaitlistForm source="coming_soon" />
-            </div>
-
-            {/* Hype Button */}
-            <div className="md:w-1/3">
-              <button
-                onClick={async () => {
-                  try {
-                    const success = await addToWishlist({ fingerprint })
-                    if (success) {
-                      toast.custom(() => (
-                        <div className="bg-[#111111] border border-[#10B981] rounded-lg p-4 text-[#10B981] text-sm">
-                          Hype signal accepted
-                        </div>
-                      ), { duration: 3000 })
-                    } else {
-                      toast.custom(() => (
-                        <div className="bg-[#111111] border border-[#6366F1] rounded-lg p-4 text-[#6366F1] text-sm">
-                          Signal already recorded
-                        </div>
-                      ), { duration: 3000 })
-                    }
-                  } catch {
-                    // Ignore errors for spam clicking
-                  }
-                }}
-                className="w-full h-full min-h-[140px] bg-[#111111] border-2 border-[#2E2E35] rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-4 flex flex-col items-center justify-center gap-4 hover:border-[#6366F1] hover:-translate-y-0.5 transition-all duration-300 group"
-              >
-                <span className="text-4xl filter grayscale group-hover:grayscale-0 transition-all duration-300">
-                  🔥
-                </span>
-                <div className="text-center">
-                  <div className="text-[#6366F1] font-bold text-lg">Boost</div>
-                  <div className="text-[#6B7280] text-xs mt-1">Signal interest</div>
+      <div className="flex-1 relative z-10">
+        {/* ── HERO SECTION ── */}
+        <section className="px-6 pt-20 pb-16 sm:pt-28 sm:pb-20">
+          <div className="max-w-5xl mx-auto">
+            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+              {/* Left: Text */}
+              <div className="flex-1 text-center lg:text-left">
+                {/* Status badge */}
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 border-2 border-[#2E2E35] bg-[#0A0A0A] mb-6">
+                  <div className="w-1.5 h-1.5 bg-[#F59E0B] animate-pulse" />
+                  <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#F59E0B] uppercase tracking-widest font-semibold">
+                    Building in progress
+                  </span>
                 </div>
-              </button>
+
+                <h1 className="font-['Inter',sans-serif] font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-[#F9FAFB] leading-[1.1] mb-5">
+                  Something big is
+                  <br />
+                  <span className="text-[#6366F1]">loading</span>
+                </h1>
+
+                <p className="font-['Inter',sans-serif] text-base sm:text-lg text-[#9CA3AF] max-w-md mx-auto lg:mx-0 mb-8 leading-relaxed">
+                  We&apos;re engineering the next evolution of project management.
+                  Built by devs, for devs. No fluff, no noise.
+                </p>
+
+                {/* Waitlist count */}
+                <div className="flex items-center gap-4 justify-center lg:justify-start mb-8">
+                  <div className="flex items-center gap-2">
+                    <span className="font-['IBM_Plex_Mono',monospace] text-[28px] sm:text-[36px] font-bold text-[#6366F1]">
+                      {stats ? stats.totalCount.toLocaleString() : '—'}
+                    </span>
+                    <div className="text-left">
+                      <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">
+                        developers
+                      </div>
+                      <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">
+                        waiting
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-px h-10 bg-[#2E2E35]" />
+                  <button
+                    onClick={handleBoost}
+                    className="flex items-center gap-2 px-4 py-2.5 border-2 border-[#2E2E35] bg-[#0A0A0A] hover:border-[#6366F1] hover:bg-[#111111] transition-all duration-150 group"
+                  >
+                    <span className="font-['IBM_Plex_Mono',monospace] text-[18px] group-hover:scale-110 transition-transform duration-150">
+                      +1
+                    </span>
+                    <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#9CA3AF] uppercase tracking-wider group-hover:text-[#6366F1] transition-colors duration-150">
+                      Boost
+                    </span>
+                  </button>
+                </div>
+
+                {/* Email form */}
+                <div className="max-w-md mx-auto lg:mx-0">
+                  <WaitlistForm source="coming_soon" />
+                </div>
+              </div>
+
+              {/* Right: Radar */}
+              <div className="shrink-0 flex items-center justify-center">
+                <RadarPing />
+              </div>
             </div>
           </div>
+        </section>
 
-          {/* Status indicators */}
-          <div className="mt-10 flex items-center justify-center gap-3 text-xs text-[#6B7280]">
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
-              System online
-            </span>
-            <span className="text-[#2E2E35]">|</span>
-            <span className="bg-[#6366F1]/10 text-[#6366F1] text-xs font-mono font-semibold uppercase tracking-wider px-3 py-1 rounded-md border border-[#6366F1]/20">
-              Beta
-            </span>
+        {/* ── DASHBOARD: Build status + Live log ── */}
+        <section className="px-6 pb-16 sm:pb-24">
+          <div className="max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Build status card */}
+              <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1F1F23]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#6366F1]" />
+                    <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#9CA3AF] uppercase tracking-wider font-semibold">
+                      Build Status
+                    </span>
+                  </div>
+                  <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#22C55E] uppercase tracking-wider">
+                    Active
+                  </span>
+                </div>
+                <div className="p-4">
+                  <BuildProgress />
+                </div>
+              </div>
+
+              {/* Live log card */}
+              <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1F1F23]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#22C55E] animate-pulse" />
+                    <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#9CA3AF] uppercase tracking-wider font-semibold">
+                      Live Build Log
+                    </span>
+                  </div>
+                  <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">
+                    stdout
+                  </span>
+                </div>
+                <div className="p-4">
+                  <LiveLog />
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
+
+        {/* ── WHAT WE'RE BUILDING ── */}
+        <section className="px-6 pb-16 sm:pb-24">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-10">
+              <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6366F1] uppercase tracking-widest font-semibold">
+                Modules
+              </span>
+              <h2 className="font-['Inter',sans-serif] font-bold text-2xl sm:text-3xl text-[#F9FAFB] mt-2">
+                What&apos;s in the pipeline
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[
+                {
+                  tag: 'CORE',
+                  title: 'Sprint Engine',
+                  desc: 'Velocity tracking, burndown charts, and automated sprint planning.',
+                  status: 'live',
+                  color: '#22C55E',
+                },
+                {
+                  tag: 'CORE',
+                  title: 'Real-time Boards',
+                  desc: 'Kanban and whiteboard views with live multiplayer cursors.',
+                  status: 'live',
+                  color: '#22C55E',
+                },
+                {
+                  tag: 'AI',
+                  title: 'AI Task Routing',
+                  desc: 'Intelligent assignment based on skills, capacity, and context.',
+                  status: 'beta',
+                  color: '#6366F1',
+                },
+                {
+                  tag: 'INTEGRATION',
+                  title: 'GitHub Sync',
+                  desc: 'Bi-directional issue sync, PR tracking, and commit mapping.',
+                  status: 'live',
+                  color: '#22C55E',
+                },
+                {
+                  tag: 'TEAM',
+                  title: 'Team Analytics',
+                  desc: 'Workload distribution, bottleneck detection, and health scores.',
+                  status: 'building',
+                  color: '#F59E0B',
+                },
+                {
+                  tag: 'PLATFORM',
+                  title: 'CLI & API',
+                  desc: 'Full API access and a terminal-native CLI for power users.',
+                  status: 'planned',
+                  color: '#EF4444',
+                },
+              ].map((item, i) => (
+                <div
+                  key={i}
+                  className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-4 hover:border-[#6366F1]/50 transition-colors duration-200 group"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-['IBM_Plex_Mono',monospace] text-[9px] text-[#6B7280] uppercase tracking-widest">
+                      {item.tag}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
+                      <span
+                        className="font-['IBM_Plex_Mono',monospace] text-[9px] uppercase tracking-wider font-semibold"
+                        style={{ color: item.color }}
+                      >
+                        {item.status}
+                      </span>
+                    </div>
+                  </div>
+                  <h3 className="font-['Inter',sans-serif] font-semibold text-[15px] text-[#F9FAFB] mb-1.5 group-hover:text-[#6366F1] transition-colors duration-200">
+                    {item.title}
+                  </h3>
+                  <p className="font-['Inter',sans-serif] text-[13px] text-[#6B7280] leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── BOTTOM CTA ── */}
+        <section className="px-6 pb-20 sm:pb-28">
+          <div className="max-w-xl mx-auto text-center">
+            <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-6 sm:p-8">
+              <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6366F1] uppercase tracking-widest font-semibold mb-3">
+                Don&apos;t miss launch
+              </div>
+              <h3 className="font-['Inter',sans-serif] font-bold text-xl sm:text-2xl text-[#F9FAFB] mb-2">
+                Get early access
+              </h3>
+              <p className="font-['Inter',sans-serif] text-sm text-[#6B7280] mb-6">
+                First 100 users get Pro free for 3 months.
+              </p>
+
+              <div className="max-w-sm mx-auto mb-4">
+                <WaitlistForm source="coming_soon" compact />
+              </div>
+
+              <div className="flex items-center justify-center gap-4 text-[11px] font-['IBM_Plex_Mono',monospace]">
+                <Link
+                  to="/pricing"
+                  className="text-[#6B7280] hover:text-[#6366F1] transition-colors uppercase tracking-wider"
+                >
+                  Pricing
+                </Link>
+                <span className="text-[#2E2E35]">|</span>
+                <Link
+                  to="/features"
+                  className="text-[#6B7280] hover:text-[#6366F1] transition-colors uppercase tracking-wider"
+                >
+                  Features
+                </Link>
+                <span className="text-[#2E2E35]">|</span>
+                <a
+                  href="https://discord.gg/jWMS6Pcr"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#6B7280] hover:text-[#6366F1] transition-colors uppercase tracking-wider"
+                >
+                  Discord
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
 
       <Footer />
+
+      {/* Keyframes */}
+      <style>{`
+        @keyframes radarSweep {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes radarBlip {
+          0%, 100% { opacity: 0; transform: scale(0.5); }
+          15%, 50% { opacity: 1; transform: scale(1); }
+          80% { opacity: 0; transform: scale(0.5); }
+        }
+        @keyframes progressFill {
+          from { width: 0%; }
+        }
+        @keyframes logFadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   )
 }

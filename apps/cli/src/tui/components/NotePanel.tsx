@@ -10,20 +10,20 @@ interface NotePanelProps {
   workspace?: string;
   project?: string;
   lead?: string;
+  content?: string;
 }
 
 export function NotePanel({
   workspace = 'Iceberg',
   project = 'ICE-Web',
   lead = 'Aansh',
+  content,
 }: NotePanelProps) {
   return (
     <Box flexDirection="column">
       <Text color={theme.colors.muted} bold>NOTE</Text>
       <Text color={theme.colors.dim}>────</Text>
-      <Text color={theme.colors.text}>A sleek futuristic</Text>
-      <Text color={theme.colors.text}>HUD themed project</Text>
-      <Text color={theme.colors.text}>dashboard.</Text>
+      <Text color={theme.colors.text}>{content ?? 'No description'}</Text>
       <Text> </Text>
       <Text>
         <Text color={theme.colors.muted}>Workspace: </Text>

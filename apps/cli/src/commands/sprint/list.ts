@@ -31,6 +31,8 @@ interface SprintWithStats {
 interface ListOptions {
   status?: string;
   json?: boolean;
+  quiet?: boolean;
+  idsOnly?: boolean;
 }
 
 export async function listSprints(options: ListOptions): Promise<void> {
@@ -63,6 +65,20 @@ export async function listSprints(options: ListOptions): Promise<void> {
 
     if (options.json) {
       output.json(filteredSprints);
+      return;
+    }
+
+    if (options.idsOnly) {
+      for (const sprint of filteredSprints) {
+        console.log(sprint._id);
+      }
+      return;
+    }
+
+    if (options.quiet) {
+      for (const sprint of filteredSprints) {
+        console.log(`${sprint.name}\t${sprint.status}\t${sprint.progress}%\t${sprint.taskStats.done}/${sprint.taskStats.total} tasks`);
+      }
       return;
     }
 

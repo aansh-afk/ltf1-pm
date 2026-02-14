@@ -38,6 +38,8 @@ interface ListOptions {
   workspace?: string;
   json?: boolean;
   all?: boolean;
+  quiet?: boolean;
+  idsOnly?: boolean;
 }
 
 export async function listProjects(options: ListOptions): Promise<void> {
@@ -116,6 +118,20 @@ export async function listProjects(options: ListOptions): Promise<void> {
     // JSON output
     if (options.json) {
       output.json(allProjects);
+      return;
+    }
+
+    if (options.idsOnly) {
+      for (const project of allProjects) {
+        console.log(project._id);
+      }
+      return;
+    }
+
+    if (options.quiet) {
+      for (const project of allProjects) {
+        console.log(`${project.key}\t${project.name}\t${project.status}`);
+      }
       return;
     }
 

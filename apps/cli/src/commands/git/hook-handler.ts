@@ -142,14 +142,15 @@ async function handlePostCommit(): Promise<void> {
 
           // Output minimal info (visible in terminal if user is watching)
           console.log(`[LTF] Task ${context.projectKey}-${task.number}: ${task.status} -> ${newStatus}`);
-        } catch {
-          // Silently fail - don't block git
+        } catch (err) {
+          console.error(`[LTF] Hook error: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
     }
 
     silentExit(0);
-  } catch {
+  } catch (err) {
+    console.error(`[LTF] Hook error: ${err instanceof Error ? err.message : String(err)}`);
     silentExit(0);
   }
 }
@@ -208,7 +209,8 @@ async function handlePostCheckout(_prevRef?: string, _newRef?: string, branchFla
     console.log('');
 
     silentExit(0);
-  } catch {
+  } catch (err) {
+    console.error(`[LTF] Hook error: ${err instanceof Error ? err.message : String(err)}`);
     silentExit(0);
   }
 }
@@ -261,7 +263,8 @@ async function handlePrePush(_remote?: string, _url?: string): Promise<void> {
 
     // Always allow push - we don't want to block workflow
     silentExit(0);
-  } catch {
+  } catch (err) {
+    console.error(`[LTF] Hook error: ${err instanceof Error ? err.message : String(err)}`);
     silentExit(0);
   }
 }
@@ -329,8 +332,8 @@ async function handlePostMerge(_squashFlag?: string): Promise<void> {
               );
 
               console.log(`[LTF] Task ${context.projectKey}-${task.number}: in_review -> done (merged)`);
-            } catch {
-              // Silently fail
+            } catch (err) {
+              console.error(`[LTF] Hook error: ${err instanceof Error ? err.message : String(err)}`);
             }
           }
         }
@@ -338,7 +341,8 @@ async function handlePostMerge(_squashFlag?: string): Promise<void> {
     }
 
     silentExit(0);
-  } catch {
+  } catch (err) {
+    console.error(`[LTF] Hook error: ${err instanceof Error ? err.message : String(err)}`);
     silentExit(0);
   }
 }

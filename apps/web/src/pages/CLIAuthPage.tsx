@@ -12,7 +12,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, Navigate } from 'react-router-dom'
 import { useAuth, useUser } from '@clerk/clerk-react'
-import BrutalistLoader from '../components/common/BrutalistLoader'
 
 export default function CLIAuthPage() {
   const [searchParams] = useSearchParams()
@@ -96,7 +95,17 @@ export default function CLIAuthPage() {
 
   // Not loaded yet
   if (!isLoaded) {
-    return <BrutalistLoader />
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6">
+        <div className="max-w-[400px] w-full">
+          <div className="bg-[#0A0A0A] border border-[#2E2E35] rounded-xl p-10 text-center">
+            <div className="w-8 h-8 border-2 border-[#6366F1] border-t-transparent rounded-full animate-spin mx-auto mb-6" />
+            <p className="font-['IBM_Plex_Mono',monospace] text-[11px] tracking-[.08em] text-[#6B7280] mb-5">LTF1 CLI</p>
+            <p className="text-sm text-[#6B7280]">Loading...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // Not signed in - redirect to sign-in with return URL
@@ -108,72 +117,70 @@ export default function CLIAuthPage() {
   // Error state
   if (status === 'error') {
     return (
-      <div className="min-h-screen bg-[var(--theme-background)] flex items-center justify-center p-5">
-        <div className="max-w-md w-full">
-          <div className="border-3 border-red-500 p-6 bg-[var(--theme-background-secondary)]">
-            <div className="text-6xl text-center mb-3">✕</div>
-            <h1 className="text-xl font-bold text-red-500 uppercase tracking-wider text-center mb-4">
-              Authentication Failed
-            </h1>
-            <p className="text-[var(--theme-foreground-muted)] text-center mb-6 leading-relaxed">
-              {errorMessage}
-            </p>
-            <div className="border-t border-[var(--theme-border)] pt-4">
-              <p className="text-xs text-[var(--theme-foreground-muted)] uppercase tracking-widest text-center">
-                Close this window and try again
-              </p>
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6">
+        <div className="max-w-[400px] w-full animate-[fadeIn_.4s_ease-out]">
+          <div className="bg-[#0A0A0A] border border-[#2E2E35] rounded-xl p-10 text-center">
+            <div className="w-14 h-14 rounded-full bg-[rgba(239,68,68,.1)] border-[1.5px] border-[rgba(239,68,68,.25)] flex items-center justify-center mx-auto mb-6">
+              <svg className="w-6 h-6 text-[#EF4444]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
             </div>
+            <p className="font-['IBM_Plex_Mono',monospace] text-[11px] tracking-[.08em] text-[#6B7280] mb-5">LTF1 CLI</p>
+            <h1 className="text-lg font-semibold text-[#F9FAFB] mb-3">Authentication Failed</h1>
+            <p className="text-[.8125rem] text-[#9CA3AF] leading-relaxed mb-6">{errorMessage}</p>
+            <div className="h-px bg-[#1F1F23] mb-4" />
+            <p className="font-['IBM_Plex_Mono',monospace] text-[.6875rem] tracking-[.04em] text-[#6B7280]">
+              Close this window and try again
+            </p>
           </div>
         </div>
       </div>
     )
   }
 
-  // Success state (brief - will redirect)
+  // Success state (brief - will redirect to CLI callback)
   if (status === 'success') {
     return (
-      <div className="min-h-screen bg-[var(--theme-background)] flex items-center justify-center p-5">
-        <div className="max-w-md w-full">
-          <div className="border-3 border-[var(--theme-primary)] p-6 bg-[var(--theme-background-secondary)]">
-            <div className="text-6xl text-center mb-3">✓</div>
-            <h1 className="text-xl font-bold text-[var(--theme-primary)] uppercase tracking-wider text-center mb-4">
-              Authenticated
-            </h1>
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6">
+        <div className="max-w-[400px] w-full animate-[fadeIn_.4s_ease-out]">
+          <div className="bg-[#0A0A0A] border border-[#2E2E35] rounded-xl p-10 text-center">
+            <div className="w-14 h-14 rounded-full bg-[rgba(34,197,94,.1)] border-[1.5px] border-[rgba(34,197,94,.25)] flex items-center justify-center mx-auto mb-6 animate-[scaleIn_.35s_ease-out_.15s_both]">
+              <svg className="w-6 h-6 text-[#22C55E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+            </div>
+            <p className="font-['IBM_Plex_Mono',monospace] text-[11px] tracking-[.08em] text-[#6B7280] mb-5">LTF1 CLI</p>
+            <h1 className="text-lg font-semibold text-[#F9FAFB] mb-3">Authenticated</h1>
             {user?.primaryEmailAddress?.emailAddress && (
-              <div className="bg-[var(--theme-background)] border border-[var(--theme-border)] px-4 py-3 mb-3 text-center">
-                <span className="text-sm text-[var(--theme-foreground-muted)] font-mono">
-                  {user.primaryEmailAddress.emailAddress}
-                </span>
+              <div className="font-['IBM_Plex_Mono',monospace] text-[.8125rem] text-[#9CA3AF] bg-[#111111] border border-[#1F1F23] rounded-md px-4 py-2.5 mb-5 break-all">
+                {user.primaryEmailAddress.emailAddress}
               </div>
             )}
-            <p className="text-[var(--theme-foreground-muted)] text-center leading-relaxed mb-3">
-              Return to your terminal to continue.<br />
-              This window will close automatically.
+            <p className="text-[.8125rem] text-[#6B7280] leading-relaxed mb-6">
+              Redirecting to your terminal...
             </p>
-            <div className="border-t border-[var(--theme-border)] pt-4">
-              <p className="text-xs text-[var(--theme-foreground-muted)] uppercase tracking-widest text-center">
-                Redirecting...
-              </p>
-            </div>
+            <div className="h-px bg-[#1F1F23] mb-4" />
+            <p className="font-['IBM_Plex_Mono',monospace] text-[.6875rem] tracking-[.04em] text-[#6B7280]">
+              Completing authentication
+            </p>
           </div>
         </div>
       </div>
     )
   }
 
-  // Loading state
+  // Loading / authenticating state
   return (
-    <div className="min-h-screen bg-[var(--theme-background)] flex items-center justify-center p-5">
-      <div className="max-w-md w-full">
-        <div className="border-3 border-[var(--theme-border)] p-6 bg-[var(--theme-background-secondary)]">
-          <div className="flex justify-center mb-6">
-            <div className="animate-spin h-12 w-12 border-3 border-[var(--theme-primary)] border-t-transparent" />
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6">
+      <div className="max-w-[400px] w-full animate-[fadeIn_.4s_ease-out]">
+        <div className="bg-[#0A0A0A] border border-[#2E2E35] rounded-xl p-10 text-center">
+          <div className="w-14 h-14 rounded-full bg-[rgba(99,102,241,.1)] border-[1.5px] border-[rgba(99,102,241,.25)] flex items-center justify-center mx-auto mb-6">
+            <div className="w-5 h-5 border-2 border-[#6366F1] border-t-transparent rounded-full animate-spin" />
           </div>
-          <h1 className="text-xl font-bold text-[var(--theme-foreground)] uppercase tracking-wider text-center mb-4">
-            CLI Authentication
-          </h1>
-          <p className="text-[var(--theme-foreground-muted)] text-center leading-relaxed">
-            Connecting to LTF CLI...
+          <p className="font-['IBM_Plex_Mono',monospace] text-[11px] tracking-[.08em] text-[#6B7280] mb-5">LTF1 CLI</p>
+          <h1 className="text-lg font-semibold text-[#F9FAFB] mb-3">Authenticating</h1>
+          <p className="text-[.8125rem] text-[#6B7280] leading-relaxed">
+            Connecting to LTF1 CLI...
           </p>
         </div>
       </div>

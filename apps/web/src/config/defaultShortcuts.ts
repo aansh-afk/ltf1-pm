@@ -134,18 +134,6 @@ export const quickActionShortcuts: Shortcut[] = [
     global: true
   },
   {
-    id: 'action.terminal',
-    name: 'Open Terminal',
-    description: 'Open command terminal',
-    category: 'quick-actions',
-    defaultKeys: { modifiers: [mod], key: '`', display: `${platform.modifierSymbol}+\`` },
-    enabled: true,
-    context: 'global',
-    command: 'terminal',
-    preventInInput: true,
-    global: true
-  },
-  {
     id: 'action.newTask',
     name: 'New Task',
     description: 'Create a new task',

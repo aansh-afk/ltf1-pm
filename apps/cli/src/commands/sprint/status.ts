@@ -44,6 +44,7 @@ interface CurrentSprint {
 
 interface StatusOptions {
   json?: boolean;
+  quiet?: boolean;
 }
 
 export async function sprintStatus(options: StatusOptions): Promise<void> {
@@ -69,6 +70,10 @@ export async function sprintStatus(options: StatusOptions): Promise<void> {
     spin.stop();
 
     if (!sprint) {
+      if (options.quiet) {
+        console.log('none');
+        return;
+      }
       output.warning('No active sprint');
       output.log('');
       output.log(output.colors.muted('Create and start a sprint:'));
@@ -78,6 +83,11 @@ export async function sprintStatus(options: StatusOptions): Promise<void> {
 
     if (options.json) {
       output.json(sprint);
+      return;
+    }
+
+    if (options.quiet) {
+      console.log(`${sprint.name}\t${sprint.progress}%\t${sprint.daysRemaining}d left`);
       return;
     }
 

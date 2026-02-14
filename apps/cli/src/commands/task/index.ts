@@ -10,6 +10,9 @@ import { viewTaskCommand } from './view.js';
 import { updateTaskCommand } from './update.js';
 import { doneTaskCommand } from './done.js';
 import { assignTaskCommand } from './assign.js';
+import { deleteTaskCommand } from './delete.js';
+import { commentTaskCommand } from './comment.js';
+import { myTasksCommand } from './mine.js';
 
 export function registerTaskCommands(program: Command): void {
   const taskCommand = program
@@ -24,6 +27,9 @@ export function registerTaskCommands(program: Command): void {
   updateTaskCommand(taskCommand);
   doneTaskCommand(taskCommand);
   assignTaskCommand(taskCommand);
+  deleteTaskCommand(taskCommand);
+  commentTaskCommand(taskCommand);
+  myTasksCommand(taskCommand);
 
   // Default action (show list)
   taskCommand.action(async () => {

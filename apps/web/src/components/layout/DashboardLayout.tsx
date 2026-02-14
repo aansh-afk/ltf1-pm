@@ -10,7 +10,6 @@ import {
   HiOutlineCog,
   HiOutlineMenuAlt2,
   HiOutlineX,
-  HiOutlineTerminal,
   HiOutlineUserGroup,
   HiOutlineUser,
   HiOutlineSearch,
@@ -22,7 +21,6 @@ import { useResourceMonitor } from '../../hooks/useResourceMonitor'
 import { useAfkDetection } from '../../hooks/useAfkDetection'
 import { ProfileCompletionBanner } from '../features/profile/ProfileCompletionBanner'
 import { GitHubMonitor } from '../features/github/GitHubMonitor'
-import CommandTerminal from '../terminal/CommandTerminal'
 import GlobalSearchModal from '../features/search/GlobalSearchModal'
 import WorkspaceMobileBlocker from '../common/WorkspaceMobileBlocker'
 import FeedbackWidget from '../features/feedback/FeedbackWidget'
@@ -47,7 +45,6 @@ export default function DashboardLayout() {
     return saved ? JSON.parse(saved) : false
   })
   const [isHovered, setIsHovered] = useState(false)
-  const [terminalOpen, setTerminalOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const location = useLocation()
   const params = useParams()
@@ -64,16 +61,6 @@ export default function DashboardLayout() {
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', JSON.stringify(isCollapsed))
   }, [isCollapsed])
-
-  useEffect(() => {
-    const handleOpenTerminal = () => {
-      setTerminalOpen(true)
-    }
-    window.addEventListener('open-terminal', handleOpenTerminal)
-    return () => {
-      window.removeEventListener('open-terminal', handleOpenTerminal)
-    }
-  }, [])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -276,14 +263,6 @@ export default function DashboardLayout() {
               <HiOutlineSearch className="w-[14px] h-[14px]" />
               <span className="hidden sm:inline">SEARCH</span>
             </button>
-            <button
-              className="flex items-center gap-[4px] px-[8px] py-[4px] text-[11px] border border-[var(--theme-border)] hover:bg-[var(--theme-hover)]"
-              onClick={() => setTerminalOpen(true)}
-              title="Open Terminal"
-            >
-              <HiOutlineTerminal className="w-[14px] h-[14px]" />
-              <span className="hidden sm:inline">TERMINAL</span>
-            </button>
             <div className="text-[11px] hidden md:block">
               <span className="text-[var(--theme-info)]">STATUS:</span>{' '}
               <span className="text-[var(--theme-foreground)]/60">OK</span>
@@ -388,12 +367,6 @@ export default function DashboardLayout() {
           </div>
         </footer>
       </div>
-
-      {/* Command Terminal */}
-      <CommandTerminal
-        isOpen={terminalOpen}
-        onClose={() => setTerminalOpen(false)}
-      />
 
       {/* Global Search Modal */}
       <GlobalSearchModal
