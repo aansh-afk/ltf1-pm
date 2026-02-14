@@ -103,20 +103,15 @@ async function syncGitHub(options: SyncOptions): Promise<void> {
         totalRepos += repos.length;
 
         for (const repo of repos) {
-          spin.text = `Syncing ${repo.fullName}...`;
-
-          try {
-            // Trigger sync for this repository
-            // Note: This would typically call a mutation/action to trigger sync
-            // The actual sync happens through webhooks or cron jobs
-            syncedRepos++;
-          } catch (err) {
-            output.warning(`Failed to sync ${repo.fullName}`);
-          }
+          spin.text = `Checking ${repo.fullName}...`;
+          syncedRepos++;
         }
       }
 
-      spin.succeed(`Sync triggered for ${syncedRepos}/${totalRepos} repositories`);
+      spin.succeed(`Found ${syncedRepos}/${totalRepos} repositories`);
+
+      output.newline();
+      output.info('Sync is handled automatically via GitHub webhooks. Manual sync from CLI will be available in a future update.');
 
     } else {
       // Sync current project's repository
@@ -166,12 +161,10 @@ async function syncGitHub(options: SyncOptions): Promise<void> {
                 process.exit(1);
               }
 
-              // Trigger sync
-              spin.succeed(`Sync triggered for ${foundRepo.fullName}`);
+              spin.succeed(`Repository found: ${foundRepo.fullName}`);
 
               output.newline();
-              output.info('Sync will complete in the background');
-              output.info('Recent commits and PRs will be available shortly');
+              output.info('Sync is handled automatically via GitHub webhooks. Manual sync from CLI will be available in a future update.');
 
             } else {
               spin.fail('Could not parse repository URL');
@@ -202,30 +195,16 @@ async function syncGitHub(options: SyncOptions): Promise<void> {
 
         spin.text = `Syncing ${repoFullName}...`;
 
-        // Trigger sync through the backend
-        // Note: The actual sync mechanism would be through webhooks/cron
-
-        spin.succeed(`Sync triggered for ${repoFullName}`);
+        spin.succeed(`Repository found: ${repoFullName}`);
 
         output.newline();
         output.keyValue([
           ['Repository', repoFullName],
           ['Project', `${project.key} - ${project.name}`],
-          ['Mode', options.force ? 'Full resync' : 'Incremental sync'],
         ]);
 
-        if (options.commits) {
-          output.newline();
-          output.info('Syncing recent commits...');
-        }
-
-        if (options.prs) {
-          output.newline();
-          output.info('Syncing pull requests...');
-        }
-
         output.newline();
-        output.info('Sync will complete in the background');
+        output.info('Sync is handled automatically via GitHub webhooks. Manual sync from CLI will be available in a future update.');
       }
     }
 

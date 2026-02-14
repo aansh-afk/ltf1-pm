@@ -23,6 +23,8 @@ export function registerProjectCommands(program: Command): void {
     .option('-w, --workspace <id>', 'Filter by workspace ID or name')
     .option('-a, --all', 'Show projects from all workspaces')
     .option('--json', 'Output in JSON format')
+    .option('--quiet', 'Compact output without headers')
+    .option('--ids-only', 'Output only project IDs (for piping)')
     .action(async (options) => {
       await listProjects(options);
     });
@@ -44,6 +46,7 @@ export function registerProjectCommands(program: Command): void {
     .alias('show')
     .description('Show current project info')
     .option('--json', 'Output in JSON format')
+    .option('--quiet', 'Compact single-line output')
     .action(async (options) => {
       await showProjectInfo(options);
     });

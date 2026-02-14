@@ -31,6 +31,7 @@ export const api = {
       getProject: makeFunctionReference<'query'>('projects/queries:getProject'),
       getUserProjects: makeFunctionReference<'query'>('projects/queries:getUserProjects'),
       getProjectTeamMembers: makeFunctionReference<'query'>('projects/queries:getProjectTeamMembers'),
+      getProjectMembers: makeFunctionReference<'query'>('projects/members:getProjectMembers'),
     },
   },
   tasks: {
@@ -44,6 +45,7 @@ export const api = {
     mutations: {
       createTask: makeFunctionReference<'mutation'>('tasks/mutations:createTask'),
       updateTask: makeFunctionReference<'mutation'>('tasks/mutations:updateTask'),
+      deleteTask: makeFunctionReference<'mutation'>('tasks/mutations:deleteTask'),
     },
   },
   sprints: {
@@ -53,10 +55,60 @@ export const api = {
       getSprintById: makeFunctionReference<'query'>('sprints/queries:getSprintById'),
       getBacklogTasks: makeFunctionReference<'query'>('sprints/queries:getBacklogTasks'),
     },
+    mutations: {
+      createSprint: makeFunctionReference<'mutation'>('sprints/mutations:createSprint'),
+      updateSprint: makeFunctionReference<'mutation'>('sprints/mutations:updateSprint'),
+      addTasksToSprint: makeFunctionReference<'mutation'>('sprints/mutations:addTasksToSprint'),
+      removeTaskFromSprint: makeFunctionReference<'mutation'>('sprints/mutations:removeTaskFromSprint'),
+      deleteSprint: makeFunctionReference<'mutation'>('sprints/mutations:deleteSprint'),
+    },
+  },
+  comments: {
+    queries: {
+      getTaskComments: makeFunctionReference<'query'>('comments/queries:getTaskComments'),
+    },
+    mutations: {
+      createComment: makeFunctionReference<'mutation'>('comments/mutations:createComment'),
+      updateComment: makeFunctionReference<'mutation'>('comments/mutations:updateComment'),
+      deleteComment: makeFunctionReference<'mutation'>('comments/mutations:deleteComment'),
+    },
   },
   ai: {
     actions: {
       analyzeTask: makeFunctionReference<'action'>('ai/actions:analyzeTask'),
+    },
+  },
+  timeEntries: {
+    queries: {
+      getActiveTimeEntry: makeFunctionReference<'query'>('timeEntries/queries:getActiveTimeEntry'),
+      getTimeEntriesByUser: makeFunctionReference<'query'>('timeEntries/queries:getTimeEntriesByUser'),
+      getTimeStatsByUser: makeFunctionReference<'query'>('timeEntries/queries:getTimeStatsByUser'),
+    },
+    mutations: {
+      startTimer: makeFunctionReference<'mutation'>('timeEntries/mutations:startTimer'),
+      stopTimer: makeFunctionReference<'mutation'>('timeEntries/mutations:stopTimer'),
+      createManualEntry: makeFunctionReference<'mutation'>('timeEntries/mutations:createManualEntry'),
+    },
+  },
+  search: {
+    queries: {
+      globalSearch: makeFunctionReference<'query'>('search:globalSearch'),
+      quickSearch: makeFunctionReference<'query'>('search:quickSearch'),
+    },
+  },
+  notifications: {
+    queries: {
+      getNotifications: makeFunctionReference<'query'>('notifications/queries:getNotifications'),
+      getUnreadCount: makeFunctionReference<'query'>('notifications/queries:getUnreadCount'),
+    },
+    mutations: {
+      markNotificationRead: makeFunctionReference<'mutation'>('notifications/mutations:markNotificationRead'),
+      markAllNotificationsRead: makeFunctionReference<'mutation'>('notifications/mutations:markAllNotificationsRead'),
+    },
+  },
+  auth: {
+    queries: {
+      getCurrentUser: makeFunctionReference<'query'>('auth/users:getCurrentUser'),
     },
   },
 };
@@ -113,11 +165,9 @@ export function getAuthenticatedClient(): ConvexHttpClient {
  */
 export async function validateAuth(): Promise<boolean> {
   try {
-    // Try to get authenticated client - this will throw if not authenticated
-    // We'll implement a simple query to validate the token
-    // For now, just check if we have a token
-    void getAuthenticatedClient();
-    return isAuthenticated();
+    const client = getAuthenticatedClient();
+    await client.query(api.auth.queries.getCurrentUser, {});
+    return true;
   } catch {
     return false;
   }

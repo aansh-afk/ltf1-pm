@@ -18,6 +18,11 @@ import type { LoginState } from './pages/Dashboard.js';
 import { useTasksPage } from './pages/Tasks.js';
 import { useSprintPage } from './pages/Sprint.js';
 import { useGitPage } from './pages/Git.js';
+import { useSearchPage } from './pages/Search.js';
+import { useNotificationsPage } from './pages/Notifications.js';
+import { useHelpPage } from './pages/Help.js';
+import { useTimeTracking } from './hooks/useTimeTracking.js';
+import { useNotifications } from './hooks/useNotifications.js';
 import { login, refreshToken } from '../lib/auth.js';
 import { setContext, clearContext } from '../lib/config.js';
 
@@ -132,8 +137,13 @@ export function App({ initialView = 'dashboard' }: AppProps) {
   // Call all page hooks unconditionally (React rules of hooks)
   const dashboardResult = useDashboardPage({ width: W, height: H, timeStr, selectedIndex, selectorIndex, loginState, loginError, pressed, pressedAction });
   const tasksRows = useTasksPage({ width: W, height: H, timeStr, isActive: view === 'tasks' });
-  const sprintRows = useSprintPage({ width: W, height: H, timeStr });
+  const sprintRows = useSprintPage({ width: W, height: H, timeStr, isActive: view === 'sprint' });
   const gitRows = useGitPage({ width: W, height: H, timeStr, isActive: view === 'git' });
+  const searchRows = useSearchPage({ width: W, height: H, isActive: view === 'search' });
+  const notificationsRows = useNotificationsPage({ width: W, height: H, isActive: view === 'notifications' });
+  const helpRows = useHelpPage({ width: W, height: H, isActive: view === 'help' });
+  const { activeTimer, elapsed } = useTimeTracking();
+  const { unreadCount } = useNotifications();
 
   const { dashboardMode, selectorItemCount, selectableItems } = dashboardResult;
 
@@ -224,6 +234,10 @@ export function App({ initialView = 'dashboard' }: AppProps) {
       if (input === 't' || input === '1') { triggerPress('Tasks'); setView('tasks'); }
       if (input === 's' || input === '2') { triggerPress('Sprint'); setView('sprint'); }
       if (input === 'g' || input === '3') { triggerPress('Git'); setView('git'); }
+      if (input === '/' || input === '5') { triggerPress('Search'); setView('search'); }
+      if (input === 'n' || input === '6') { triggerPress('Notifications'); setView('notifications'); }
+      if (input === '?') { triggerPress('Help'); setView('help'); }
+      if (input === '7') { triggerPress('Help'); setView('help'); }
       if (input === 'w') { triggerPress('Workspace'); handleBackToWorkspaceSelector(); }
       if (input === 'p') { triggerPress('Project'); handleSwitchToProjectSelector(); }
     } else {
@@ -232,6 +246,8 @@ export function App({ initialView = 'dashboard' }: AppProps) {
       if (input === 's') setView('sprint');
       if (input === 'g') setView('git');
       if (input === 'd') setView('dashboard');
+      if (input === '?') setView('help');
+      if (input === 'n') setView('notifications');
     }
   });
 
@@ -303,10 +319,13 @@ export function App({ initialView = 'dashboard' }: AppProps) {
   // ── Route to active page ──
   let rows: Row[];
   switch (view) {
-    case 'dashboard': rows = dashboardResult.rows; break;
-    case 'tasks':     rows = tasksRows;             break;
-    case 'sprint':    rows = sprintRows;            break;
-    case 'git':       rows = gitRows;               break;
+    case 'dashboard':     rows = dashboardResult.rows;  break;
+    case 'tasks':         rows = tasksRows;              break;
+    case 'sprint':        rows = sprintRows;             break;
+    case 'git':           rows = gitRows;                break;
+    case 'search':        rows = searchRows;             break;
+    case 'notifications': rows = notificationsRows;      break;
+    case 'help':          rows = helpRows;               break;
   }
 
   return (

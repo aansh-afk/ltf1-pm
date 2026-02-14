@@ -65,6 +65,7 @@ interface Project {
 
 interface InfoOptions {
   json?: boolean;
+  quiet?: boolean;
 }
 
 export async function showProjectInfo(options: InfoOptions): Promise<void> {
@@ -99,6 +100,12 @@ export async function showProjectInfo(options: InfoOptions): Promise<void> {
     // JSON output
     if (options.json) {
       output.json(project);
+      return;
+    }
+
+    if (options.quiet) {
+      const taskStats = calculateTaskStats(project.tasks || []);
+      console.log(`${project.key}\t${project.name}\t${project.status}\t${taskStats.done}/${taskStats.total} tasks`);
       return;
     }
 
