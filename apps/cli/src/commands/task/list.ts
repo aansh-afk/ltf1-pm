@@ -37,6 +37,8 @@ interface ListOptions {
   type?: string;
   all?: boolean;
   json?: boolean;
+  quiet?: boolean;
+  idsOnly?: boolean;
 }
 
 export function listTasksCommand(program: Command): void {
@@ -50,6 +52,8 @@ export function listTasksCommand(program: Command): void {
     .option('-t, --type <type>', 'Filter by type (feature,bug,improvement,task,epic)')
     .option('--all', 'Show all tasks including done/cancelled')
     .option('--json', 'Output as JSON')
+    .option('--quiet', 'Compact output without headers')
+    .option('--ids-only', 'Output only task IDs (for piping)')
     .action(async (options: ListOptions) => {
       requireAuth();
 
@@ -106,6 +110,21 @@ export function listTasksCommand(program: Command): void {
 
         if (options.json) {
           output.json(filteredTasks);
+          return;
+        }
+
+        if (options.idsOnly) {
+          for (const task of filteredTasks) {
+            console.log(task._id);
+          }
+          return;
+        }
+
+        if (options.quiet) {
+          for (const task of filteredTasks) {
+            const projectKey = context?.projectKey || 'PROJ';
+            console.log(`${projectKey}-${task.number}\t${task.status}\t${task.title}`);
+          }
           return;
         }
 

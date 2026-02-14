@@ -41,6 +41,7 @@ const JoinProjectPage = lazy(() => import('./pages/JoinProjectPage'))
 const GitHubCallbackPage = lazy(() => import('./pages/GitHubCallbackPage'))
 const CLIAuthPage = lazy(() => import('./pages/CLIAuthPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
+const ComingSoonPage = lazy(() => import('./pages/ComingSoonPage'))
 import { useEnsureUser } from './hooks/useEnsureUser'
 import { DataMigrationBanner } from './components/admin/DataMigrationBanner'
 import CommandPalette from './components/shortcuts/CommandPalette'
@@ -171,6 +172,7 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
         <Route path="/features/:slug" element={<FeatureDetailPage />} />
         <Route path="/sign-in/*" element={<SignInPage />} />
         <Route path="/sign-up/*" element={<SignUpPage />} />
+        <Route path="/coming-soon" element={<ComingSoonPage />} />
 
         {/* Join Project Routes - accessible by anyone */}
         <Route path="/join-project" element={<JoinProjectPage />} />

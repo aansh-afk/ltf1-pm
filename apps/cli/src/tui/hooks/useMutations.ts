@@ -43,10 +43,11 @@ export function useMutations() {
     }
     if (!clientRef.current) {
       clientRef.current = getClient();
-      const auth = getAuth();
-      if (auth?.token) {
-        clientRef.current.setAuth(auth.token);
-      }
+    }
+    // Re-read auth if token might be stale
+    const auth = getAuth();
+    if (auth?.token) {
+      clientRef.current.setAuth(auth.token);
     }
     return clientRef.current;
   }, []);
@@ -100,10 +101,183 @@ export function useMutations() {
     return updateTask({ taskId, status });
   }, [updateTask]);
 
+  const deleteTask = useCallback(async (taskId: string): Promise<boolean> => {
+    const client = getClientInstance();
+    if (!client) return false;
+
+    setState({ loading: true, error: null });
+    try {
+      await client.mutation(api.tasks.mutations.deleteTask, {
+        taskId: taskId as never,
+      } as never);
+      setState({ loading: false, error: null });
+      return true;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Delete failed';
+      setState({ loading: false, error: msg });
+      return false;
+    }
+  }, [getClientInstance]);
+
+  const createComment = useCallback(async (taskId: string, content: string): Promise<boolean> => {
+    const client = getClientInstance();
+    if (!client) return false;
+
+    setState({ loading: true, error: null });
+    try {
+      await client.mutation(api.comments.mutations.createComment, {
+        taskId: taskId as never,
+        content,
+      } as never);
+      setState({ loading: false, error: null });
+      return true;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Comment failed';
+      setState({ loading: false, error: msg });
+      return false;
+    }
+  }, [getClientInstance]);
+
+  const createSprint = useCallback(async (args: {
+    projectId: string;
+    name: string;
+    goal?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<boolean> => {
+    const client = getClientInstance();
+    if (!client) return false;
+
+    setState({ loading: true, error: null });
+    try {
+      await client.mutation(api.sprints.mutations.createSprint, {
+        projectId: args.projectId as never,
+        name: args.name,
+        ...(args.goal && { goal: args.goal }),
+        ...(args.startDate && { startDate: args.startDate }),
+        ...(args.endDate && { endDate: args.endDate }),
+      } as never);
+      setState({ loading: false, error: null });
+      return true;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Create sprint failed';
+      setState({ loading: false, error: msg });
+      return false;
+    }
+  }, [getClientInstance]);
+
+  const updateSprint = useCallback(async (args: {
+    sprintId: string;
+    status?: string;
+    name?: string;
+    goal?: string;
+  }): Promise<boolean> => {
+    const client = getClientInstance();
+    if (!client) return false;
+
+    setState({ loading: true, error: null });
+    try {
+      await client.mutation(api.sprints.mutations.updateSprint, {
+        sprintId: args.sprintId as never,
+        ...(args.status && { status: args.status }),
+        ...(args.name && { name: args.name }),
+        ...(args.goal && { goal: args.goal }),
+      } as never);
+      setState({ loading: false, error: null });
+      return true;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Update sprint failed';
+      setState({ loading: false, error: msg });
+      return false;
+    }
+  }, [getClientInstance]);
+
+  const addTasksToSprint = useCallback(async (sprintId: string, taskIds: string[]): Promise<boolean> => {
+    const client = getClientInstance();
+    if (!client) return false;
+
+    setState({ loading: true, error: null });
+    try {
+      await client.mutation(api.sprints.mutations.addTasksToSprint, {
+        sprintId: sprintId as never,
+        taskIds: taskIds as never,
+      } as never);
+      setState({ loading: false, error: null });
+      return true;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Add tasks failed';
+      setState({ loading: false, error: msg });
+      return false;
+    }
+  }, [getClientInstance]);
+
+  const removeTaskFromSprint = useCallback(async (taskId: string): Promise<boolean> => {
+    const client = getClientInstance();
+    if (!client) return false;
+
+    setState({ loading: true, error: null });
+    try {
+      await client.mutation(api.sprints.mutations.removeTaskFromSprint, {
+        taskId: taskId as never,
+      } as never);
+      setState({ loading: false, error: null });
+      return true;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Remove task failed';
+      setState({ loading: false, error: msg });
+      return false;
+    }
+  }, [getClientInstance]);
+
+  const assignTask = useCallback(async (taskId: string, assigneeIds: string[]): Promise<boolean> => {
+    const client = getClientInstance();
+    if (!client) return false;
+    setState({ loading: true, error: null });
+    try {
+      await client.mutation(api.tasks.mutations.updateTask, {
+        taskId: taskId as never,
+        assigneeIds: assigneeIds as never,
+      } as never);
+      setState({ loading: false, error: null });
+      return true;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Assign failed';
+      setState({ loading: false, error: msg });
+      return false;
+    }
+  }, [getClientInstance]);
+
+  const linkTaskToBranch = useCallback(async (taskId: string, branch: string, prUrl?: string): Promise<boolean> => {
+    const client = getClientInstance();
+    if (!client) return false;
+    setState({ loading: true, error: null });
+    try {
+      await client.mutation(api.tasks.mutations.updateTask, {
+        taskId: taskId as never,
+        gitBranch: branch,
+        ...(prUrl && { gitPrUrl: prUrl }),
+      } as never);
+      setState({ loading: false, error: null });
+      return true;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Link failed';
+      setState({ loading: false, error: msg });
+      return false;
+    }
+  }, [getClientInstance]);
+
   return {
     createTask,
     updateTask,
     moveTask,
+    deleteTask,
+    createComment,
+    createSprint,
+    updateSprint,
+    addTasksToSprint,
+    removeTaskFromSprint,
+    assignTask,
+    linkTaskToBranch,
     loading: state.loading,
     error: state.error,
   };

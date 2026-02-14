@@ -109,59 +109,40 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
         // Error page template
         const errorPage = (title: string, message: string) => `
           <!DOCTYPE html>
-          <html>
+          <html lang="en">
             <head>
               <meta charset="UTF-8">
-              <title>LTF CLI - Error</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>LTF1 — Error</title>
+              <link rel="preconnect" href="https://fonts.googleapis.com">
+              <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
               <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body {
-                  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-                  background: #0a0a0a;
-                  color: #fafafa;
-                  min-height: 100vh;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  padding: 2rem;
-                }
-                .card {
-                  background: #141414;
-                  border: 3px solid #ef4444;
-                  padding: 3rem;
-                  max-width: 480px;
-                  width: 100%;
-                  text-align: center;
-                }
-                .icon { font-size: 4rem; margin-bottom: 1.5rem; }
-                h1 {
-                  color: #ef4444;
-                  font-size: 1.5rem;
-                  font-weight: 700;
-                  text-transform: uppercase;
-                  letter-spacing: 0.05em;
-                  margin-bottom: 1rem;
-                }
-                .message {
-                  color: #a1a1aa;
-                  font-size: 0.875rem;
-                  line-height: 1.6;
-                  margin-bottom: 1.5rem;
-                }
-                .hint {
-                  color: #52525b;
-                  font-size: 0.75rem;
-                  text-transform: uppercase;
-                  letter-spacing: 0.1em;
-                }
+                *{margin:0;padding:0;box-sizing:border-box}
+                body{font-family:'Inter',system-ui,sans-serif;background:#050505;color:#F9FAFB;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+                .wrapper{max-width:400px;width:100%;animation:fadeIn .4s ease-out}
+                .card{background:#0A0A0A;border:1px solid #2E2E35;border-radius:12px;padding:2.5rem 2rem;text-align:center}
+                .icon-ring{width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem}
+                .icon-ring svg{width:24px;height:24px;color:#EF4444}
+                .brand{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;color:#6B7280;margin-bottom:1.25rem}
+                h1{font-size:1.125rem;font-weight:600;color:#F9FAFB;margin-bottom:.75rem}
+                .message{color:#9CA3AF;font-size:.875rem;line-height:1.6;margin-bottom:1.5rem}
+                .divider{height:1px;background:#1F1F23;margin-bottom:1rem}
+                .hint{font-family:'IBM Plex Mono',monospace;color:#6B7280;font-size:.6875rem;letter-spacing:.04em}
+                @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
               </style>
             </head>
             <body>
-              <div class="card">
-                <div class="icon">✕</div>
-                <h1>${escapeHtml(title)}</h1>
-                <p class="message">${escapeHtml(message)}</p>
-                <p class="hint">Close this window and try again</p>
+              <div class="wrapper">
+                <div class="card">
+                  <div class="icon-ring">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                  </div>
+                  <p class="brand">LTF1 CLI</p>
+                  <h1>${escapeHtml(title)}</h1>
+                  <p class="message">${escapeHtml(message)}</p>
+                  <div class="divider"></div>
+                  <p class="hint">Close this window and try again</p>
+                </div>
               </div>
             </body>
           </html>
@@ -183,82 +164,56 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
           return;
         }
 
-        // Success response - brutalist style matching the web app
+        // Success response
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(`
           <!DOCTYPE html>
-          <html>
+          <html lang="en">
             <head>
               <meta charset="UTF-8">
-              <title>LTF CLI - Authenticated</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>LTF1 — Authenticated</title>
+              <link rel="preconnect" href="https://fonts.googleapis.com">
+              <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
               <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body {
-                  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-                  background: #0a0a0a;
-                  color: #fafafa;
-                  min-height: 100vh;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  padding: 2rem;
-                }
-                .card {
-                  background: #141414;
-                  border: 3px solid #fcd34d;
-                  padding: 3rem;
-                  max-width: 480px;
-                  width: 100%;
-                  text-align: center;
-                }
-                .icon {
-                  font-size: 4rem;
-                  margin-bottom: 1.5rem;
-                }
-                h1 {
-                  color: #fcd34d;
-                  font-size: 1.5rem;
-                  font-weight: 700;
-                  text-transform: uppercase;
-                  letter-spacing: 0.05em;
-                  margin-bottom: 1rem;
-                }
-                .email {
-                  color: #a1a1aa;
-                  font-size: 0.875rem;
-                  margin-bottom: 1.5rem;
-                  padding: 0.75rem;
-                  background: #0a0a0a;
-                  border: 1px solid #27272a;
-                }
-                .message {
-                  color: #71717a;
-                  font-size: 0.875rem;
-                  line-height: 1.6;
-                }
-                .closing {
-                  margin-top: 1.5rem;
-                  padding-top: 1.5rem;
-                  border-top: 1px solid #27272a;
-                  color: #52525b;
-                  font-size: 0.75rem;
-                  text-transform: uppercase;
-                  letter-spacing: 0.1em;
-                }
+                *{margin:0;padding:0;box-sizing:border-box}
+                body{font-family:'Inter',system-ui,sans-serif;background:#050505;color:#F9FAFB;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+                .wrapper{max-width:400px;width:100%;animation:fadeIn .4s ease-out}
+                .card{background:#0A0A0A;border:1px solid #2E2E35;border-radius:12px;padding:2.5rem 2rem;text-align:center}
+                .icon-ring{width:56px;height:56px;border-radius:50%;background:rgba(34,197,94,.1);border:1.5px solid rgba(34,197,94,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;animation:scaleIn .35s ease-out .15s both}
+                .icon-ring svg{width:24px;height:24px;color:#22C55E}
+                .brand{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;color:#6B7280;margin-bottom:1.25rem}
+                h1{font-size:1.125rem;font-weight:600;color:#F9FAFB;margin-bottom:.75rem}
+                .email{font-family:'IBM Plex Mono',monospace;color:#9CA3AF;font-size:.8125rem;background:#111111;border:1px solid #1F1F23;border-radius:6px;padding:.625rem 1rem;margin-bottom:1.25rem;word-break:break-all}
+                .message{color:#6B7280;font-size:.8125rem;line-height:1.6;margin-bottom:1.5rem}
+                .divider{height:1px;background:#1F1F23;margin-bottom:1rem}
+                .countdown{font-family:'IBM Plex Mono',monospace;color:#6B7280;font-size:.6875rem;letter-spacing:.04em}
+                .countdown span{color:#9CA3AF;font-variant-numeric:tabular-nums}
+                @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+                @keyframes scaleIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
               </style>
             </head>
             <body>
-              <div class="card">
-                <div class="icon">✓</div>
-                <h1>Authenticated</h1>
-                ${email ? `<div class="email">${escapeHtml(email)}</div>` : ''}
-                <p class="message">
-                  Return to your terminal to continue.<br>
-                  This window will close automatically.
-                </p>
-                <p class="closing">Closing in 3 seconds...</p>
+              <div class="wrapper">
+                <div class="card">
+                  <div class="icon-ring">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                  </div>
+                  <p class="brand">LTF1 CLI</p>
+                  <h1>Authenticated</h1>
+                  ${email ? `<div class="email">${escapeHtml(email)}</div>` : ''}
+                  <p class="message">
+                    Return to your terminal to continue.<br>
+                    This window will close automatically.
+                  </p>
+                  <div class="divider"></div>
+                  <p class="countdown">Closing in <span id="sec">3</span>s</p>
+                </div>
               </div>
-              <script>setTimeout(() => window.close(), 3000);</script>
+              <script>
+                let t=3;const el=document.getElementById('sec');
+                const iv=setInterval(()=>{t--;if(el)el.textContent=String(t);if(t<=0){clearInterval(iv);window.close()}},1000);
+              </script>
             </body>
           </html>
         `);

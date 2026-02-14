@@ -20,6 +20,7 @@ interface CreateOptions {
   labels?: string;
   estimate?: string;
   dueDate?: string;
+  assign?: string;
   json?: boolean;
 }
 
@@ -41,6 +42,7 @@ export function createTaskCommand(program: Command): void {
     .option('-l, --labels <labels>', 'Comma-separated labels')
     .option('-e, --estimate <points>', 'Story points estimate')
     .option('--due-date <date>', 'Due date (YYYY-MM-DD format)')
+    .option('--assign <user>', 'Assign after creation (use "me" for yourself, or email/name)')
     .option('--json', 'Output as JSON')
     .action(async (title: string, options: CreateOptions) => {
       requireAuth();
@@ -137,6 +139,12 @@ export function createTaskCommand(program: Command): void {
         }
         if (dueDate) {
           output.log(`  ${output.colors.muted('Due Date'.padEnd(12))}  ${new Date(dueDate).toLocaleDateString()}`);
+        }
+
+        // Handle --assign flag
+        if (options.assign) {
+          output.newline();
+          output.info(`To assign this task, run: ltf task assign ${taskId} --to ${options.assign}`);
         }
 
         output.newline();
