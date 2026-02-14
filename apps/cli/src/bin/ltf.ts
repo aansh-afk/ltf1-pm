@@ -13,6 +13,11 @@ import { registerSprintCommands } from "../commands/sprint/index.js";
 import { registerAICommands } from "../commands/ai/index.js";
 import { registerGitCommands } from "../commands/git/index.js";
 import { registerDaemonCommands } from "../commands/daemon/index.js";
+import { registerTimeCommands } from "../commands/time/index.js";
+import { registerSearchCommands } from "../commands/search/index.js";
+import { registerNotificationsCommands } from "../commands/notifications/index.js";
+import { registerConfigCommands } from "../commands/config/index.js";
+import { registerCompletionCommands } from "../commands/completions/index.js";
 import output from "../lib/output.js";
 import { startDashboard } from "../tui/index.js";
 
@@ -38,6 +43,11 @@ registerSprintCommands(program);
 registerAICommands(program);
 registerGitCommands(program);
 registerDaemonCommands(program);
+registerTimeCommands(program);
+registerSearchCommands(program);
+registerNotificationsCommands(program);
+registerConfigCommands(program);
+registerCompletionCommands(program);
 
 // Global options
 program

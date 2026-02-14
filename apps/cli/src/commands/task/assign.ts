@@ -6,7 +6,7 @@
 import { Command } from 'commander';
 import { requireAuth } from '../../lib/auth.js';
 import { getAuthenticatedClient, mutation, query } from '../../lib/convex.js';
-import { getContext, hasProjectContext } from '../../lib/config.js';
+import { getAuth, getContext, hasProjectContext } from '../../lib/config.js';
 import output from '../../lib/output.js';
 import { resolveTaskId } from './utils.js';
 import { getErrorMessage } from '../../lib/errors.js';
@@ -121,10 +121,11 @@ export function assignTaskCommand(program: Command): void {
 
         // Handle "me" - assign to current user
         if (targetUser.toLowerCase() === 'me') {
-          // We need to get the current user ID from a query
-          // For now, we'll use a workaround - fetch workspace members and match by auth
-          // This is a limitation - ideally we'd have a "getCurrentUser" query
           spin.text = 'Looking up your user ID...';
+
+          const auth = getAuth();
+          const currentEmail = auth?.email;
+          const currentUserId = auth?.userId;
 
           // Fetch workspace members
           const members = await query<Array<{ userId: string; user?: User }>>(
@@ -133,11 +134,21 @@ export function assignTaskCommand(program: Command): void {
             { workspaceId: context?.workspaceId }
           );
 
-          // Get the authenticated user's email from the config if available
-          // For now, we'll just assign to the first member if it's a small team
-          // or error out asking for explicit user
-          if (members.length === 1) {
-            targetUserId = members[0].userId;
+          // Try matching by email first, then by userId
+          let match = currentEmail
+            ? members.find(m => m.user?.email.toLowerCase() === currentEmail.toLowerCase())
+            : undefined;
+
+          if (!match && currentUserId) {
+            match = members.find(m => m.userId === currentUserId);
+          }
+
+          if (!match && members.length === 1) {
+            match = members[0];
+          }
+
+          if (match) {
+            targetUserId = match.userId;
           } else {
             spin.stop();
             output.error(

@@ -6,6 +6,8 @@ import React from 'react';
 import { Box, Text } from 'ink';
 import { theme } from '../styles/theme.js';
 
+const VERSION = '0.1.0-beta.2';
+
 export function Logo() {
   return (
     <Box flexDirection="column">
@@ -15,7 +17,7 @@ export function Logo() {
       <Text color={theme.colors.text}>██          ██     ██          ██</Text>
       <Text color={theme.colors.text}>████████    ██     ██        ████</Text>
       <Text color={theme.colors.dim}>──────────────────────────────────</Text>
-      <Text color={theme.colors.muted}>v0.1.0</Text>
+      <Text color={theme.colors.muted}>v{VERSION}</Text>
     </Box>
   );
 }

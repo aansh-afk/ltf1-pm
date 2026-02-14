@@ -128,16 +128,14 @@ async function linkBranchToTask(options: LinkOptions): Promise<void> {
 
     spin.text = 'Creating link...';
 
-    // Store the git link
-    // Note: This would typically call a mutation to store the link
-    // For now, we'll store it as task metadata
+    // Store the git link as task metadata
     await mutation(
       client,
       'tasks/mutations:updateTask',
       {
         taskId: task._id,
-        // Add git metadata - the backend would need to support this
-        // For now, just update the task to trigger activity
+        gitBranch: currentBranch,
+        ...(options.pr ? { gitPrUrl: `https://github.com/${repoInfo?.owner}/${repoInfo?.repo}/pull/${options.pr}` } : {}),
       }
     );
 
