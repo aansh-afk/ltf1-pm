@@ -182,6 +182,69 @@ export const storeInstallation = internalMutation({
       console.log(`Scheduled repository sync for installation ${args.installationId} (all repos selected)`);
     }
 
+    // Auto-link installation to workspaces of users who have connected this GitHub account
+    const accountLogin = args.account.login;
+    const accountType = args.account.type.toLowerCase() as "user" | "organization";
+
+    // Find GitHub connections matching this account login
+    const matchingConnections = await ctx.db
+      .query("githubConnections")
+      .collect();
+
+    const matchedUsers = matchingConnections.filter(
+      (c) => c.githubUsername.toLowerCase() === accountLogin.toLowerCase()
+    );
+
+    // Also check users table for githubUsername field
+    if (matchedUsers.length === 0) {
+      const allUsers = await ctx.db.query("users").collect();
+      const usersWithGithub = allUsers.filter(
+        (u: any) => u.githubUsername && u.githubUsername.toLowerCase() === accountLogin.toLowerCase()
+      );
+      for (const user of usersWithGithub) {
+        matchedUsers.push({ userId: user._id } as any);
+      }
+    }
+
+    for (const connection of matchedUsers) {
+      // Find all workspaces this user belongs to
+      const memberships = await ctx.db
+        .query("workspaceMembers")
+        .withIndex("by_user", (q) => q.eq("userId", connection.userId))
+        .collect();
+
+      for (const membership of memberships) {
+        // Check if this installation is already linked to this workspace
+        const existingLinks = await ctx.db
+          .query("workspaceGitHubInstallations")
+          .withIndex("by_workspace", (q) => q.eq("workspaceId", membership.workspaceId))
+          .collect();
+
+        const alreadyLinked = existingLinks.some(
+          (l) => l.installationId === args.installationId
+        );
+
+        if (!alreadyLinked) {
+          await ctx.db.insert("workspaceGitHubInstallations", {
+            workspaceId: membership.workspaceId,
+            installationId: args.installationId,
+            isPrimary: existingLinks.length === 0,
+            accountLogin,
+            accountType,
+            syncSettings: {
+              autoSyncIssues: false,
+              bidirectionalSync: false,
+              createTasksFromIssues: false,
+              syncLabels: false,
+            },
+            addedBy: connection.userId,
+            addedAt: Date.now(),
+          });
+          console.log(`[storeInstallation] Auto-linked installation ${args.installationId} to workspace ${membership.workspaceId}`);
+        }
+      }
+    }
+
     console.log(`[storeInstallation] GitHub App installed for ${args.account.login}`);
     return null;
   },

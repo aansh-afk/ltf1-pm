@@ -203,12 +203,49 @@ export const storeGitHubConnection = mutation({
       }
     }
 
-    // Schedule stats sync if an installation is available
-    const installations = await ctx.db
+    // Auto-link any existing GitHub App installations matching this user's account
+    const allInstallations = await ctx.db
       .query("githubInstallations")
       .collect();
 
-    const activeInstallation = installations.find((inst) => !inst.suspendedAt);
+    const matchingInstallations = allInstallations.filter(
+      (inst) => inst.accountName.toLowerCase() === args.githubUsername.toLowerCase() && !inst.suspendedAt
+    );
+
+    for (const installation of matchingInstallations) {
+      for (const membership of workspaceMemberships) {
+        const existingLinks = await ctx.db
+          .query("workspaceGitHubInstallations")
+          .withIndex("by_workspace", (q) => q.eq("workspaceId", membership.workspaceId))
+          .collect();
+
+        const alreadyLinked = existingLinks.some(
+          (l) => l.installationId === installation.installationId
+        );
+
+        if (!alreadyLinked) {
+          await ctx.db.insert("workspaceGitHubInstallations", {
+            workspaceId: membership.workspaceId,
+            installationId: installation.installationId,
+            isPrimary: existingLinks.length === 0,
+            accountLogin: installation.accountName,
+            accountType: installation.accountType,
+            syncSettings: {
+              autoSyncIssues: false,
+              bidirectionalSync: false,
+              createTasksFromIssues: false,
+              syncLabels: false,
+            },
+            addedBy: user._id,
+            addedAt: Date.now(),
+          });
+          console.log(`[OAuth] Auto-linked installation ${installation.installationId} to workspace ${membership.workspaceId}`);
+        }
+      }
+    }
+
+    // Schedule stats sync if an installation is available
+    const activeInstallation = allInstallations.find((inst) => !inst.suspendedAt);
     if (activeInstallation) {
       await ctx.scheduler.runAfter(0, internal.integrations.github.syncActions.syncDeveloperGitHubStats, {
         userId: user._id,
