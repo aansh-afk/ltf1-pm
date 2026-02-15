@@ -11,9 +11,7 @@ import TaskTable from '@/components/features/task/TaskTable'
 import TaskFilters, { type TaskFilters as TaskFiltersType } from '@/components/features/task/TaskFilters'
 import FilterPresets from '@/components/features/task/FilterPresets'
 import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
-import { useShortcut } from '../contexts/ShortcutContext'
 import clsx from 'clsx'
-import toast from 'react-hot-toast'
 
 const defaultFilters: TaskFiltersType = {
   search: '',
@@ -110,37 +108,8 @@ export default function TasksPage() {
     return count
   }
 
-  // Keyboard shortcuts integration
+  // Keyboard shortcuts for view switching
   useEffect(() => {
-    const handleCommand = (event: CustomEvent) => {
-      const { command } = event.detail
-
-      switch (command) {
-        case 'toggleTaskComplete':
-          break
-        case 'editTask':
-          break
-        case 'deleteTask':
-          break
-        case 'assignTaskToMe':
-          break
-        case 'setPriorityUrgent':
-        case 'setPriorityHigh':
-        case 'setPriorityMedium':
-        case 'setPriorityLow':
-          break
-        case 'addTaskLabel':
-          break
-        case 'setTaskDueDate':
-          break
-      }
-    }
-
-    const handleNewTask = () => {
-      toast.success('New task shortcut triggered')
-    }
-
-    // Keyboard shortcuts for view switching
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return
@@ -163,29 +132,13 @@ export default function TasksPage() {
           case 'f':
             setIsFiltersOpen(!isFiltersOpen)
             break
-          case '/':
-            e.preventDefault()
-            const searchInput = document.querySelector('input[placeholder*="SEARCH"]') as HTMLInputElement
-            searchInput?.focus()
-            break
         }
       }
     }
 
-    window.addEventListener('task-command' as any, handleCommand)
-    window.addEventListener('open-new-task' as any, handleNewTask)
     document.addEventListener('keydown', handleKeyPress)
-
-    return () => {
-      window.removeEventListener('task-command' as any, handleCommand)
-      window.removeEventListener('open-new-task' as any, handleNewTask)
-      document.removeEventListener('keydown', handleKeyPress)
-    }
+    return () => document.removeEventListener('keydown', handleKeyPress)
   }, [isFiltersOpen])
-
-  useShortcut('newTask', () => {
-    window.dispatchEvent(new CustomEvent('open-new-task'))
-  })
 
   if (workspaceLoading) {
     return (

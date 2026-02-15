@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /workspaces
+Disallow: /workspace/
+Disallow: /projects
+Disallow: /tasks
+Disallow: /teams
+Disallow: /team
+Disallow: /sprints
+Disallow: /settings
+Disallow: /whiteboard
+Disallow: /custom-fields
+Disallow: /profile
+Disallow: /cli-auth
+Disallow: /api/
+
+Sitemap: /sitemap.xml

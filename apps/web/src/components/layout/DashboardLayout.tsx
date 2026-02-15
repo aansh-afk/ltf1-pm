@@ -24,6 +24,7 @@ import { GitHubMonitor } from '../features/github/GitHubMonitor'
 import GlobalSearchModal from '../features/search/GlobalSearchModal'
 import WorkspaceMobileBlocker from '../common/WorkspaceMobileBlocker'
 import FeedbackWidget from '../features/feedback/FeedbackWidget'
+import ShortcutHelp from '../shortcuts/ShortcutHelp'
 
 
 const NAV_ITEMS = [
@@ -62,19 +63,13 @@ export default function DashboardLayout() {
     localStorage.setItem('sidebar-collapsed', JSON.stringify(isCollapsed))
   }, [isCollapsed])
 
+  // Listen for toggle-sidebar shortcut (Ctrl+B)
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        setSearchOpen(true)
-      }
-      if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
-        e.preventDefault()
-        setSearchOpen(true)
-      }
+    const handleToggleSidebar = () => {
+      setIsCollapsed(prev => !prev)
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener('toggle-sidebar' as any, handleToggleSidebar)
+    return () => window.removeEventListener('toggle-sidebar' as any, handleToggleSidebar)
   }, [])
 
   useEffect(() => {
@@ -376,6 +371,9 @@ export default function DashboardLayout() {
 
       {/* Feedback Widget */}
       <FeedbackWidget />
+
+      {/* Keyboard Shortcut Help Modal */}
+      <ShortcutHelp />
     </div>
   )
 }

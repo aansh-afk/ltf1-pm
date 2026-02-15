@@ -28,8 +28,8 @@ interface SprintBoardProps {
 
 const columns = [
   { id: 'todo', title: 'TODO', dotColor: 'bg-[#6B7280]' },
-  { id: 'in_progress', title: 'IN PROGRESS', dotColor: 'bg-[#3B82F6]' },
-  { id: 'in_review', title: 'IN REVIEW', dotColor: 'bg-[#8B5CF6]' },
+  { id: 'in_progress', title: 'IN PROGRESS', dotColor: 'bg-[#06B6D4]' },
+  { id: 'in_review', title: 'IN REVIEW', dotColor: 'bg-[#F59E0B]' },
   { id: 'done', title: 'DONE', dotColor: 'bg-[#22C55E]' }
 ]
 
@@ -142,7 +142,7 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
       <div className="flex justify-end">
         <button
           onClick={handleCompleteSprint}
-          className="px-3 py-1.5 bg-[#111111] border-2 border-[#2E2E35] text-xs font-mono text-[#9CA3AF] uppercase tracking-wider flex items-center gap-1.5 hover:border-[#22C55E] hover:text-[#22C55E]"
+          className="px-3 py-1.5 bg-[#111111] border-2 border-[#2E2E35] text-xs font-['IBM_Plex_Mono',monospace] text-[#9CA3AF] uppercase tracking-wider flex items-center gap-1.5 hover:border-[#22C55E] hover:text-[#22C55E] transition-all"
         >
           <HiOutlineCheck className="w-3.5 h-3.5" />
           Complete Sprint
@@ -158,11 +158,11 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
               <div className="bg-[#111111] border-2 border-[#2E2E35] p-3 mb-2">
                 <div className="flex items-center gap-2">
                   <div className={clsx("w-2 h-2 shrink-0", column.dotColor)} />
-                  <h3 className="font-mono text-xs uppercase tracking-wider text-[#F9FAFB]">
+                  <h3 className="font-['IBM_Plex_Mono',monospace] text-xs uppercase tracking-wider text-[#F9FAFB]">
                     {column.title}
                   </h3>
                 </div>
-                <p className="font-mono text-[10px] text-[#6B7280] mt-1 ml-4">
+                <p className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] mt-1 ml-4">
                   {tasksByStatus[column.id].length} tasks
                 </p>
               </div>
@@ -174,7 +174,7 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                     className={clsx(
-                      "flex-1 space-y-2 p-2 border-2 border-dashed min-h-[300px]",
+                      "flex-1 space-y-2 p-2 border-2 border-dashed min-h-[300px] bg-[#0A0A0A]",
                       snapshot.isDraggingOver
                         ? "border-[#6366F1] bg-[#6366F1]/5"
                         : "border-[#2E2E35]/50"
@@ -196,7 +196,7 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
                             {/* Task Header */}
                             <div className="flex items-start justify-between mb-1">
                               <div className="flex items-center gap-1.5">
-                                <span className="font-mono text-[10px] text-[#6B7280]">
+                                <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280]">
                                   {task.key}
                                 </span>
                                 <span className="text-xs">{typeIcons[task.type]}</span>
@@ -233,20 +233,20 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
                             {/* Task Meta */}
                             <div className="flex items-center gap-2 flex-wrap">
                               {task.assigneeName && (
-                                <div className="flex items-center gap-1 text-[10px] text-[#6B7280] font-mono">
+                                <div className="flex items-center gap-1 text-[10px] text-[#6B7280] font-['IBM_Plex_Mono',monospace]">
                                   <HiOutlineUser className="w-3 h-3" />
                                   {task.assigneeName}
                                 </div>
                               )}
                               {task.estimate?.points && (
-                                <div className="flex items-center gap-1 text-[10px] text-[#6B7280] font-mono">
+                                <div className="flex items-center gap-1 text-[10px] text-[#6B7280] font-['IBM_Plex_Mono',monospace]">
                                   <HiOutlineFlag className="w-3 h-3" />
                                   {task.estimate.points} pts
                                 </div>
                               )}
                               {task.dueDate && (
                                 <div className={clsx(
-                                  "flex items-center gap-1 text-[10px] font-mono",
+                                  "flex items-center gap-1 text-[10px] font-['IBM_Plex_Mono',monospace]",
                                   new Date(task.dueDate) < new Date() ? "text-[#EF4444]" : "text-[#6B7280]"
                                 )}>
                                   <HiOutlineClock className="w-3 h-3" />

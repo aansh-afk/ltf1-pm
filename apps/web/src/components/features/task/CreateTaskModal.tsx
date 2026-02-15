@@ -3,6 +3,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
 import toast from 'react-hot-toast'
+import posthog from 'posthog-js'
 import BrutalModal from '../../ui/BrutalModal'
 import MultiSelect from '../../ui/MultiSelect'
 import { TaskAssignmentHelper } from '../task/TaskAssignmentHelper'
@@ -64,6 +65,14 @@ export default function CreateTaskModal({
         dueDate: dueDate ? new Date(dueDate).getTime() : undefined,
       })
       
+      posthog.capture('task_created', {
+        type,
+        priority,
+        has_assignees: assigneeIds.length > 0,
+        has_estimate: !!estimateHours,
+        has_due_date: !!dueDate,
+        has_labels: !!labels,
+      })
       toast.success('Task created successfully!')
       setTitle('')
       setDescription('')
@@ -77,6 +86,7 @@ export default function CreateTaskModal({
       onSuccess?.()
       onClose()
     } catch (error: any) {
+      posthog.capture('task_creation_failed', { error: error.message })
       toast.error(error.message || 'Failed to create task')
     } finally {
       setIsCreating(false)

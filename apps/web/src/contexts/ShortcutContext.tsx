@@ -95,21 +95,12 @@ export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({ children }) 
   
   // Update context based on current route
   useEffect(() => {
-    const path = location.pathname
-    if (path.includes('/tasks')) {
-      setCurrentContext('task')
-    } else if (path.includes('/meetings')) {
-      setCurrentContext('meeting')
-    } else if (path.includes('/projects')) {
-      setCurrentContext('project')
-    } else {
-      setCurrentContext('global')
-    }
-    
+    setCurrentContext('global')
+
     if (managerRef.current) {
-      managerRef.current.setContext(currentContext)
+      managerRef.current.setContext('global')
     }
-  }, [location, currentContext])
+  }, [location])
   
   // Handle shortcut commands
   const handleShortcutCommand = useCallback((command: string) => {
@@ -121,99 +112,25 @@ export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({ children }) 
       case '/projects':
         navigate('/projects')
         break
-      case '/tasks':
-        navigate('/tasks')
-        break
-      case '/meetings':
-        navigate('/meetings')
-        break
-      case '/team':
-        navigate('/team')
-        break
       case '/settings':
         navigate('/settings')
         break
-        
+
       // Quick actions
       case 'commandPalette':
         setCommandPaletteOpen(true)
         break
-      case 'search':
-        // Open search dialog
-        setCommandPaletteOpen(true)
-        break
-      case 'newTask':
-        // Open new task modal
-        window.dispatchEvent(new CustomEvent('open-new-task'))
-        break
-      case 'newProject':
-        // Open new project modal
-        window.dispatchEvent(new CustomEvent('open-new-project'))
-        break
-      case 'newMeeting':
-        // Open new meeting modal
-        window.dispatchEvent(new CustomEvent('open-new-meeting'))
-        break
-      case 'inviteMember':
-        // Open invite member modal
-        window.dispatchEvent(new CustomEvent('open-invite-member'))
-        break
-      case 'switchWorkspace':
-        // Open workspace switcher
-        window.dispatchEvent(new CustomEvent('open-workspace-switcher'))
-        break
-        
+
       // General
       case 'showHelp':
         setHelpOpen(true)
         break
       case 'escape':
-        // Close any open modals
         setCommandPaletteOpen(false)
         setHelpOpen(false)
-        window.dispatchEvent(new CustomEvent('close-modals'))
-        break
-      case 'save':
-        // Trigger save action
-        window.dispatchEvent(new CustomEvent('save-current'))
         break
       case 'toggleSidebar':
-        // Toggle sidebar
         window.dispatchEvent(new CustomEvent('toggle-sidebar'))
-        break
-      case 'undo':
-        // Trigger undo action
-        window.dispatchEvent(new CustomEvent('undo-action'))
-        break
-      case 'redo':
-        // Trigger redo action
-        window.dispatchEvent(new CustomEvent('redo-action'))
-        break
-
-      // Task operations
-      case 'toggleTaskComplete':
-      case 'editTask':
-      case 'deleteTask':
-      case 'assignTaskToMe':
-      case 'setPriorityUrgent':
-      case 'setPriorityHigh':
-      case 'setPriorityMedium':
-      case 'setPriorityLow':
-      case 'addTaskLabel':
-      case 'setTaskDueDate':
-        // These will be handled by the task components
-        window.dispatchEvent(new CustomEvent('task-command', { detail: { command } }))
-        break
-        
-      // Meeting operations
-      case 'toggleCalendarView':
-      case 'calendarToday':
-      case 'calendarNext':
-      case 'calendarPrevious':
-      case 'joinMeeting':
-      case 'rsvpMeeting':
-        // These will be handled by the meeting components
-        window.dispatchEvent(new CustomEvent('meeting-command', { detail: { command } }))
         break
     }
   }, [navigate])

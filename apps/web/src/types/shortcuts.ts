@@ -1,12 +1,11 @@
-export type ShortcutCategory = 
-  | 'navigation' 
-  | 'quick-actions' 
-  | 'task-operations' 
-  | 'meeting-operations' 
+export type ShortcutCategory =
+  | 'navigation'
+  | 'quick-actions'
   | 'general'
+  | 'project'
   | 'custom'
 
-export type ShortcutContext = 'global' | 'modal' | 'page' | 'input' | 'task' | 'meeting'
+export type ShortcutContext = 'global' | 'modal' | 'page' | 'input'
 
 export type ModifierKey = 'ctrl' | 'alt' | 'shift' | 'meta'
 
