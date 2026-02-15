@@ -4,6 +4,7 @@ import { api } from '../../../../convex/_generated/api'
 import { motion } from 'framer-motion'
 import { useProfileCompletion } from '../hooks/useProfileCompletion'
 import { Link } from 'react-router-dom'
+import { usePageTitle } from '../hooks/usePageTitle'
 import {
   HiOutlineBriefcase,
   HiOutlineClipboardList,
@@ -37,6 +38,7 @@ const fadeUp = {
 }
 
 export default function Dashboard() {
+  usePageTitle('Dashboard')
   const dashboardData = useQuery(api.dashboard.queries.getDashboardData)
   const workspaces = dashboardData?.workspaces ?? []
   const recentActivities = dashboardData?.recentActivities ?? []
