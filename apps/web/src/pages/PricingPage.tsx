@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
 import { motion, type Variants } from 'framer-motion'
+import posthog from 'posthog-js'
 import PublicNavigation from '../components/common/PublicNavigation'
 import Footer from '../components/common/Footer'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 /* ─── Tier Data ─────────────────────────────────────────────── */
 
@@ -192,6 +194,7 @@ function CellValue({ value }: { value: string | boolean }) {
 /* ─── Component ─────────────────────────────────────────────── */
 
 export default function PricingPage() {
+  usePageTitle('Pricing — Simple, Transparent Plans')
   return (
     <div className="min-h-screen bg-[#050505]">
       <PublicNavigation />
@@ -274,6 +277,7 @@ export default function PricingPage() {
                     {tier.cta.style === 'primary' ? (
                       <Link
                         to={tier.cta.to}
+                        onClick={() => posthog.capture('pricing_cta_clicked', { tier: tier.name, label: tier.cta.label })}
                         className="block w-full text-center bg-[#F9FAFB] text-[#050505] font-bold text-sm px-6 py-3"
                       >
                         {tier.cta.label}
@@ -281,6 +285,7 @@ export default function PricingPage() {
                     ) : tier.cta.style === 'ghost' ? (
                       <Link
                         to={tier.cta.to}
+                        onClick={() => posthog.capture('pricing_cta_clicked', { tier: tier.name, label: tier.cta.label })}
                         className="block w-full text-center text-[#9CA3AF] font-bold text-sm px-6 py-3 border border-[#2E2E35]"
                       >
                         {tier.cta.label}

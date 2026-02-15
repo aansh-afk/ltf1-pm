@@ -2,6 +2,7 @@ import { SignUp } from '@clerk/clerk-react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PublicNavigation from '../components/common/PublicNavigation'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 const clerkAppearance = {
   variables: {
@@ -29,6 +30,7 @@ const clerkAppearance = {
 }
 
 export default function SignUpPage() {
+  usePageTitle('Sign Up — Start Free')
   return (
     <div className="min-h-screen bg-[#050505]">
       <PublicNavigation />

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
+import posthog from 'posthog-js'
 import BrutalModal from '../../ui/BrutalModal'
 
 interface CreateProjectModalProps {
@@ -45,6 +46,7 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
         workflowType,
       })
       
+      posthog.capture('project_created', { workflow_type: workflowType, has_description: !!description.trim() })
       toast.success('Project created successfully!')
       setName('')
       setKey('')
@@ -53,6 +55,7 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
       onSuccess?.()
       onClose()
     } catch (error: any) {
+      posthog.capture('project_creation_failed', { error: error.message })
       toast.error(error.message || 'Failed to create project')
     } finally {
       setIsCreating(false)

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
+import posthog from 'posthog-js'
 import BrutalModal from '../../ui/BrutalModal'
 
 interface CreateSprintModalProps {
@@ -57,6 +58,10 @@ export default function CreateSprintModal({
         endDate: endDate,
       })
 
+      posthog.capture('sprint_created', {
+        has_goal: !!goal.trim(),
+        duration_days: Math.ceil((end - start) / (1000 * 60 * 60 * 24)),
+      })
       toast.success('Sprint created successfully')
       onSuccess?.()
       onClose()
@@ -67,6 +72,7 @@ export default function CreateSprintModal({
       setStartDate('')
       setEndDate('')
     } catch (error: any) {
+      posthog.capture('sprint_creation_failed', { error: error.message })
       toast.error(error.message || 'Failed to create sprint')
     } finally {
       setIsCreating(false)

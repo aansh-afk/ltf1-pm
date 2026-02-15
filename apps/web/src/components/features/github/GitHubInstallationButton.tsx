@@ -1,5 +1,6 @@
 import BrutalButton from "@/components/ui/BrutalButton";
 import { Github } from "lucide-react";
+import posthog from "posthog-js";
 
 interface GitHubInstallationButtonProps {
   workspaceId: string;
@@ -19,6 +20,8 @@ export function GitHubInstallationButton({
 
     // Store workspace ID in session storage for post-install redirect
     sessionStorage.setItem('github_install_workspace', workspaceId);
+
+    posthog.capture('github_app_install_initiated');
 
     // Open GitHub installation flow in new window
     const width = 800;
