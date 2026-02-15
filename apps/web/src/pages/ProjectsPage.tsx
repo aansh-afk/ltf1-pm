@@ -31,15 +31,15 @@ export default function ProjectsPage() {
   if (!currentWorkspaceId && workspaces && workspaces.length > 0) {
     return (
       <div className="p-4 min-h-screen flex items-center justify-center">
-        <div className="max-w-sm w-full border-2 border-[#2E2E35] bg-[#111111] p-5 text-center">
-          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[#2E2E35] text-[#6B7280]">
+        <div className="max-w-sm w-full border-2 border-[var(--theme-border)] bg-[var(--theme-background-tertiary)] p-5 text-center">
+          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[var(--theme-border)] text-[var(--theme-foreground-tertiary)]">
             <HiOutlineGlobeAlt className="w-5 h-5" />
           </div>
-          <h1 className="text-sm font-bold uppercase mb-1 tracking-wider text-[#F9FAFB]">Select Workspace</h1>
-          <p className="font-mono text-xs text-[#6B7280] mb-4">
+          <h1 className="text-sm font-bold uppercase mb-1 tracking-wider text-[var(--theme-foreground)]">Select Workspace</h1>
+          <p className="font-mono text-xs text-[var(--theme-foreground-tertiary)] mb-4">
             Choose a workspace to view its projects.
           </p>
-          <div className="bg-[#0A0A0A] p-3 border border-[#1F1F23]">
+          <div className="bg-[var(--theme-background-secondary)] p-3 border border-[var(--theme-border)]">
             <WorkspaceSelector size="lg" showLabel={false} />
           </div>
         </div>
@@ -51,12 +51,12 @@ export default function ProjectsPage() {
   if (!currentWorkspaceId && (!workspaces || workspaces.length === 0)) {
     return (
       <div className="p-4 min-h-screen flex items-center justify-center">
-        <div className="max-w-sm w-full border-2 border-dashed border-[#EF4444]/30 bg-[#111111] p-5 text-center">
-          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[#EF4444]/30 text-[#EF4444]">
+        <div className="max-w-sm w-full border-2 border-dashed border-[var(--theme-error)]/30 bg-[var(--theme-background-tertiary)] p-5 text-center">
+          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[var(--theme-error)]/30 text-[var(--theme-error)]">
             <HiOutlineTerminal className="w-5 h-5" />
           </div>
-          <h1 className="text-sm font-bold uppercase mb-1 tracking-wider text-[#EF4444]">No Active Workspaces</h1>
-          <p className="font-mono text-xs text-[#6B7280]">
+          <h1 className="text-sm font-bold uppercase mb-1 tracking-wider text-[var(--theme-error)]">No Active Workspaces</h1>
+          <p className="font-mono text-xs text-[var(--theme-foreground-tertiary)]">
             No workspaces found. Create a new workspace to get started.
           </p>
         </div>
@@ -79,14 +79,14 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6B7280] inline-block mb-1.5">
+          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] inline-block mb-1.5">
             {!hasWorkspaceContext && currentWorkspace ? `${currentWorkspace.name} /` : ''} Projects
           </span>
-          <h1 className="text-xl font-bold tracking-tight text-[#F9FAFB] flex items-center gap-2">
-            <HiOutlineChip className="w-5 h-5 text-[#22C55E]" />
+          <h1 className="text-xl font-bold tracking-tight text-[var(--theme-foreground)] flex items-center gap-2">
+            <HiOutlineChip className="w-5 h-5 text-[var(--theme-success)]" />
             Active Deployments
           </h1>
-          <p className="text-xs text-[#6B7280] mt-1 font-mono">
+          <p className="text-xs text-[var(--theme-foreground-tertiary)] mt-1 font-mono">
             {projects.length} project{projects.length !== 1 ? 's' : ''} deployed in workspace
           </p>
         </div>
@@ -111,17 +111,17 @@ export default function ProjectsPage() {
 
       {/* Projects Grid */}
       {projects.length === 0 ? (
-        <div className="border-2 border-[#2E2E35] border-dashed p-8 text-center">
-          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[#2E2E35] text-[#6B7280]">
+        <div className="border-2 border-[var(--theme-border)] border-dashed p-8 text-center">
+          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[var(--theme-border)] text-[var(--theme-foreground-tertiary)]">
             <HiOutlineFolder className="w-5 h-5" />
           </div>
-          <h3 className="text-sm font-bold text-[#F9FAFB] mb-1">No Projects Found</h3>
-          <p className="text-xs text-[#6B7280] mb-4 max-w-sm mx-auto">
+          <h3 className="text-sm font-bold text-[var(--theme-foreground)] mb-1">No Projects Found</h3>
+          <p className="text-xs text-[var(--theme-foreground-tertiary)] mb-4 max-w-sm mx-auto">
             No projects in this workspace. Initialize a new project to begin tracking.
           </p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-[#22C55E] text-[#050505] text-xs font-semibold font-mono uppercase tracking-wider border-2 border-[#16A34A]"
+            className="px-4 py-2 bg-[var(--theme-success)] text-[var(--theme-background)] text-xs font-semibold font-mono uppercase tracking-wider border-2 border-[var(--theme-success)]"
           >
             Initialize Project
           </button>
@@ -151,11 +151,11 @@ export default function ProjectsPage() {
             onClick={() => setShowCreateModal(true)}
             className="group cursor-pointer"
           >
-            <div className="h-full min-h-[140px] border-2 border-dashed border-[#2E2E35] bg-[#0A0A0A]/50 hover:bg-[#0A0A0A] hover:border-[#22C55E] transition-all flex flex-col items-center justify-center p-4 gap-3">
-              <div className="w-10 h-10 border-2 border-[#2E2E35] group-hover:border-[#22C55E] flex items-center justify-center transition-colors">
-                <HiOutlinePlus className="w-5 h-5 text-[#6B7280] group-hover:text-[#22C55E] transition-colors" />
+            <div className="h-full min-h-[140px] border-2 border-dashed border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/50 hover:bg-[var(--theme-background-secondary)] hover:border-[var(--theme-success)] transition-all flex flex-col items-center justify-center p-4 gap-3">
+              <div className="w-10 h-10 border-2 border-[var(--theme-border)] group-hover:border-[var(--theme-success)] flex items-center justify-center transition-colors">
+                <HiOutlinePlus className="w-5 h-5 text-[var(--theme-foreground-tertiary)] group-hover:text-[var(--theme-success)] transition-colors" />
               </div>
-              <span className="font-mono text-xs font-semibold text-[#6B7280] group-hover:text-[#22C55E] uppercase tracking-wider transition-colors">
+              <span className="font-mono text-xs font-semibold text-[var(--theme-foreground-tertiary)] group-hover:text-[var(--theme-success)] uppercase tracking-wider transition-colors">
                 Deploy New Project
               </span>
             </div>

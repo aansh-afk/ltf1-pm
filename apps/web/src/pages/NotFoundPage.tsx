@@ -148,7 +148,7 @@ function GlitchFragments() {
       {fragments.map((f) => (
         <span
           key={f.id}
-          className="absolute font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6366F1] select-none"
+          className="absolute font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-primary)] select-none"
           style={{
             left: `${f.x}%`,
             top: `${f.y}%`,
@@ -219,7 +219,7 @@ export default function NotFoundPage() {
     }
   }, [phase])
 
-  const addTermLine = useCallback((text: string, color = '#9CA3AF') => {
+  const addTermLine = useCallback((text: string, color = 'var(--theme-foreground-secondary)') => {
     setTermLines((prev) => [...prev, { text, color }])
   }, [])
 
@@ -229,67 +229,67 @@ export default function NotFoundPage() {
 
       const raw = cmdInput.trim()
       const cmd = raw.toLowerCase()
-      addTermLine(`> ${raw}`, '#F9FAFB')
+      addTermLine(`> ${raw}`, 'var(--theme-foreground)')
       setCmdInput('')
 
       if (cmd === 'help') {
-        addTermLine('', '#6B7280')
-        addTermLine('AVAILABLE COMMANDS:', '#6366F1')
-        addTermLine('  home        Return to homepage', '#9CA3AF')
-        addTermLine('  back        Go to previous page', '#9CA3AF')
-        addTermLine('  dashboard   Open dashboard', '#9CA3AF')
-        addTermLine('  pricing     View pricing', '#9CA3AF')
-        addTermLine('  whereami    Show current path', '#9CA3AF')
-        addTermLine('  ls          List available routes', '#9CA3AF')
-        addTermLine('  clear       Clear terminal', '#9CA3AF')
-        addTermLine('  reboot      Restart system', '#9CA3AF')
-        addTermLine('', '#6B7280')
+        addTermLine('', 'var(--theme-foreground-tertiary)')
+        addTermLine('AVAILABLE COMMANDS:', 'var(--theme-primary)')
+        addTermLine('  home        Return to homepage', 'var(--theme-foreground-secondary)')
+        addTermLine('  back        Go to previous page', 'var(--theme-foreground-secondary)')
+        addTermLine('  dashboard   Open dashboard', 'var(--theme-foreground-secondary)')
+        addTermLine('  pricing     View pricing', 'var(--theme-foreground-secondary)')
+        addTermLine('  whereami    Show current path', 'var(--theme-foreground-secondary)')
+        addTermLine('  ls          List available routes', 'var(--theme-foreground-secondary)')
+        addTermLine('  clear       Clear terminal', 'var(--theme-foreground-secondary)')
+        addTermLine('  reboot      Restart system', 'var(--theme-foreground-secondary)')
+        addTermLine('', 'var(--theme-foreground-tertiary)')
       } else if (cmd === 'home' || cmd === 'cd /') {
-        addTermLine('Redirecting to /...', '#22C55E')
+        addTermLine('Redirecting to /...', 'var(--theme-success)')
         setTimeout(() => navigate('/'), 400)
       } else if (cmd === 'back' || cmd === 'cd ..') {
-        addTermLine('Going back...', '#22C55E')
+        addTermLine('Going back...', 'var(--theme-success)')
         setTimeout(() => navigate(-1), 400)
       } else if (cmd === 'dashboard') {
-        addTermLine('Loading dashboard...', '#22C55E')
+        addTermLine('Loading dashboard...', 'var(--theme-success)')
         setTimeout(() => navigate('/dashboard'), 400)
       } else if (cmd === 'pricing') {
-        addTermLine('Loading pricing...', '#22C55E')
+        addTermLine('Loading pricing...', 'var(--theme-success)')
         setTimeout(() => navigate('/pricing'), 400)
       } else if (cmd === 'whereami') {
-        addTermLine(`  ${location.pathname}`, '#EF4444')
-        addTermLine('  (this page does not exist)', '#6B7280')
+        addTermLine(`  ${location.pathname}`, 'var(--theme-error)')
+        addTermLine('  (this page does not exist)', 'var(--theme-foreground-tertiary)')
       } else if (cmd === 'ls') {
-        addTermLine('', '#6B7280')
-        addTermLine('  /              Landing page', '#9CA3AF')
-        addTermLine('  /dashboard     Main dashboard', '#9CA3AF')
-        addTermLine('  /projects      Projects view', '#9CA3AF')
-        addTermLine('  /tasks         Task manager', '#9CA3AF')
-        addTermLine('  /pricing       Pricing plans', '#9CA3AF')
-        addTermLine('  /contact       Contact us', '#9CA3AF')
-        addTermLine('', '#6B7280')
+        addTermLine('', 'var(--theme-foreground-tertiary)')
+        addTermLine('  /              Landing page', 'var(--theme-foreground-secondary)')
+        addTermLine('  /dashboard     Main dashboard', 'var(--theme-foreground-secondary)')
+        addTermLine('  /projects      Projects view', 'var(--theme-foreground-secondary)')
+        addTermLine('  /tasks         Task manager', 'var(--theme-foreground-secondary)')
+        addTermLine('  /pricing       Pricing plans', 'var(--theme-foreground-secondary)')
+        addTermLine('  /contact       Contact us', 'var(--theme-foreground-secondary)')
+        addTermLine('', 'var(--theme-foreground-tertiary)')
       } else if (cmd === 'clear') {
         setTermLines([])
       } else if (cmd === 'reboot') {
-        addTermLine('Rebooting system...', '#F59E0B')
-        addTermLine('', '#6B7280')
+        addTermLine('Rebooting system...', 'var(--theme-warning)')
+        addTermLine('', 'var(--theme-foreground-tertiary)')
         setTimeout(() => {
-          addTermLine('[  OK  ] Unmounting filesystems', '#22C55E')
+          addTermLine('[  OK  ] Unmounting filesystems', 'var(--theme-success)')
         }, 300)
         setTimeout(() => {
-          addTermLine('[  OK  ] Stopping all services', '#22C55E')
+          addTermLine('[  OK  ] Stopping all services', 'var(--theme-success)')
         }, 600)
         setTimeout(() => {
-          addTermLine('[  OK  ] System reboot', '#22C55E')
+          addTermLine('[  OK  ] System reboot', 'var(--theme-success)')
           setTimeout(() => navigate('/'), 500)
         }, 900)
       } else if (cmd === 'sudo rm -rf /') {
-        addTermLine('Nice try.', '#EF4444')
+        addTermLine('Nice try.', 'var(--theme-error)')
       } else if (cmd === 'exit') {
-        addTermLine('There is no escape.', '#6366F1')
+        addTermLine('There is no escape.', 'var(--theme-primary)')
       } else {
-        addTermLine(`command not found: ${raw}`, '#EF4444')
-        addTermLine('type "help" for available commands', '#6B7280')
+        addTermLine(`command not found: ${raw}`, 'var(--theme-error)')
+        addTermLine('type "help" for available commands', 'var(--theme-foreground-tertiary)')
       }
     },
     [cmdInput, navigate, location.pathname, addTermLine]
@@ -297,7 +297,7 @@ export default function NotFoundPage() {
 
   return (
     <div
-      className="min-h-screen bg-[#020204] flex flex-col relative overflow-hidden cursor-text select-none"
+      className="min-h-screen bg-[var(--theme-background)] flex flex-col relative overflow-hidden cursor-text select-none"
       onClick={() => inputRef.current?.focus()}
     >
       <NoiseCanvas />
@@ -336,7 +336,7 @@ export default function NotFoundPage() {
                 className="font-['IBM_Plex_Mono',monospace] text-[80px] sm:text-[100px] font-black leading-none tracking-tighter"
                 style={{
                   color: 'transparent',
-                  WebkitTextStroke: '2px #EF4444',
+                  WebkitTextStroke: '2px var(--theme-error)',
                   filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.15))',
                 }}
               >
@@ -345,23 +345,23 @@ export default function NotFoundPage() {
             </div>
 
             {/* Stack trace typewriter */}
-            <div className="bg-[#0A0A0A]/80 border border-[#1F1F23] p-4 font-['IBM_Plex_Mono',monospace] text-[11px] sm:text-[12px] leading-relaxed max-w-xl mx-auto">
+            <div className="bg-[var(--theme-background-secondary)]/80 border border-[var(--theme-border)] p-4 font-['IBM_Plex_Mono',monospace] text-[11px] sm:text-[12px] leading-relaxed max-w-xl mx-auto">
               {traceLines.map((line, i) => (
                 <div
                   key={i}
                   className={
                     i === 0
-                      ? 'text-[#EF4444] font-bold'
+                      ? 'text-[var(--theme-error)] font-bold'
                       : line?.includes('<-- FAULT')
-                        ? 'text-[#F59E0B]'
+                        ? 'text-[var(--theme-warning)]'
                         : line?.startsWith('  ')
-                          ? 'text-[#6B7280]'
-                          : 'text-[#9CA3AF]'
+                          ? 'text-[var(--theme-foreground-tertiary)]'
+                          : 'text-[var(--theme-foreground-secondary)]'
                   }
                 >
                   {line}
                   {i === traceLines.length - 1 && !traceDone && (
-                    <span className="text-[#6366F1]">{showCursor ? '█' : ' '}</span>
+                    <span className="text-[var(--theme-primary)]">{showCursor ? '█' : ' '}</span>
                   )}
                 </div>
               ))}
@@ -382,38 +382,38 @@ export default function NotFoundPage() {
                   className="font-['IBM_Plex_Mono',monospace] text-[48px] sm:text-[64px] font-black leading-none tracking-tighter"
                   style={{
                     color: 'transparent',
-                    WebkitTextStroke: '2px #EF4444',
+                    WebkitTextStroke: '2px var(--theme-error)',
                   }}
                 >
                   404
                 </span>
                 <div>
-                  <div className="font-['IBM_Plex_Mono',monospace] text-[13px] text-[#F9FAFB] font-semibold uppercase tracking-wider">
+                  <div className="font-['IBM_Plex_Mono',monospace] text-[13px] text-[var(--theme-foreground)] font-semibold uppercase tracking-wider">
                     Page not found
                   </div>
-                  <div className="font-['IBM_Plex_Mono',monospace] text-[11px] text-[#6B7280]">
+                  <div className="font-['IBM_Plex_Mono',monospace] text-[11px] text-[var(--theme-foreground-tertiary)]">
                     {location.pathname}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-[#EF4444] animate-pulse" />
-                <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#EF4444] uppercase tracking-widest">
+                <div className="w-2 h-2 bg-[var(--theme-error)] animate-pulse" />
+                <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-error)] uppercase tracking-widest">
                   fault
                 </span>
               </div>
             </div>
 
             {/* Terminal window */}
-            <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] shadow-[4px_4px_0px_rgba(0,0,0,0.8)]">
+            <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] shadow-[4px_4px_0px_rgba(0,0,0,0.8)]">
               {/* Title bar */}
-              <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#1F1F23] bg-[#111111]">
+              <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--theme-border)] bg-[var(--theme-background-tertiary)]">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 bg-[#EF4444]" />
-                  <div className="w-2 h-2 bg-[#F59E0B]" />
-                  <div className="w-2 h-2 bg-[#22C55E]" />
+                  <div className="w-2 h-2 bg-[var(--theme-error)]" />
+                  <div className="w-2 h-2 bg-[var(--theme-warning)]" />
+                  <div className="w-2 h-2 bg-[var(--theme-success)]" />
                 </div>
-                <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] tracking-wider uppercase">
+                <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-tertiary)] tracking-wider uppercase">
                   recovery_shell
                 </span>
                 <div className="w-12" />
@@ -423,26 +423,26 @@ export default function NotFoundPage() {
               <div
                 ref={termRef}
                 className="p-3 sm:p-4 h-[280px] sm:h-[320px] overflow-y-auto"
-                style={{ scrollbarWidth: 'thin', scrollbarColor: '#2E2E35 transparent' }}
+                style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--theme-border) transparent' }}
               >
                 {/* Welcome message */}
                 <div className="font-['IBM_Plex_Mono',monospace] text-[11px] sm:text-[12px] leading-relaxed mb-3">
-                  <div className="text-[#EF4444] font-bold">SYSTEM CRASH RECOVERY</div>
-                  <div className="text-[#6B7280] mt-1">
-                    The page at <span className="text-[#6366F1]">{location.pathname}</span> caused a fault.
+                  <div className="text-[var(--theme-error)] font-bold">SYSTEM CRASH RECOVERY</div>
+                  <div className="text-[var(--theme-foreground-tertiary)] mt-1">
+                    The page at <span className="text-[var(--theme-primary)]">{location.pathname}</span> caused a fault.
                   </div>
-                  <div className="text-[#6B7280]">
-                    Use this terminal to navigate. Type <span className="text-[#22C55E]">help</span> for commands.
+                  <div className="text-[var(--theme-foreground-tertiary)]">
+                    Use this terminal to navigate. Type <span className="text-[var(--theme-success)]">help</span> for commands.
                   </div>
 
                   {/* Mini hex dump */}
-                  <div className="mt-3 mb-1 text-[#6B7280]/50 text-[10px]">
+                  <div className="mt-3 mb-1 text-[var(--theme-foreground-tertiary)]/50 text-[10px]">
                     {hexDump.slice(0, 3).map((line, i) => (
                       <div key={i}>{line}</div>
                     ))}
                   </div>
 
-                  <div className="border-t border-[#1F1F23] mt-3 mb-2" />
+                  <div className="border-t border-[var(--theme-border)] mt-3 mb-2" />
                 </div>
 
                 {/* Command history */}
@@ -456,19 +456,19 @@ export default function NotFoundPage() {
 
                 {/* Input line */}
                 <div className="flex items-center gap-1.5 font-['IBM_Plex_Mono',monospace] text-[11px] sm:text-[12px] mt-1">
-                  <span className="text-[#22C55E] select-none">{'>'}</span>
+                  <span className="text-[var(--theme-success)] select-none">{'>'}</span>
                   <input
                     ref={inputRef}
                     type="text"
                     value={cmdInput}
                     onChange={(e) => setCmdInput(e.target.value)}
                     onKeyDown={handleCmd}
-                    className="bg-transparent border-none outline-none text-[#F9FAFB] flex-1 caret-[#6366F1] font-['IBM_Plex_Mono',monospace] text-[11px] sm:text-[12px]"
+                    className="bg-transparent border-none outline-none text-[var(--theme-foreground)] flex-1 caret-[var(--theme-primary)] font-['IBM_Plex_Mono',monospace] text-[11px] sm:text-[12px]"
                     spellCheck={false}
                     autoComplete="off"
                     autoFocus
                   />
-                  <span className="text-[#6366F1] select-none">{showCursor ? '█' : ' '}</span>
+                  <span className="text-[var(--theme-primary)] select-none">{showCursor ? '█' : ' '}</span>
                 </div>
               </div>
             </div>
@@ -477,27 +477,27 @@ export default function NotFoundPage() {
             <div className="flex flex-col sm:flex-row gap-2 mt-4">
               <button
                 onClick={() => navigate('/')}
-                className="flex-1 px-3 py-2.5 bg-[#F9FAFB] text-[#050505] font-['IBM_Plex_Mono',monospace] text-[11px] font-bold uppercase tracking-wider border-2 border-[#F9FAFB] shadow-[3px_3px_0px_rgba(0,0,0,0.6)] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[4px_4px_0px_rgba(0,0,0,0.6)] active:translate-x-0 active:translate-y-0 active:shadow-[2px_2px_0px_rgba(0,0,0,0.6)] transition-all duration-100"
+                className="flex-1 px-3 py-2.5 bg-[var(--theme-foreground)] text-[var(--theme-background)] font-['IBM_Plex_Mono',monospace] text-[11px] font-bold uppercase tracking-wider border-2 border-[var(--theme-foreground)] shadow-[3px_3px_0px_rgba(0,0,0,0.6)] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[4px_4px_0px_rgba(0,0,0,0.6)] active:translate-x-0 active:translate-y-0 active:shadow-[2px_2px_0px_rgba(0,0,0,0.6)] transition-all duration-100"
               >
                 HOME
               </button>
               <button
                 onClick={() => navigate(-1)}
-                className="flex-1 px-3 py-2.5 bg-transparent text-[#9CA3AF] font-['IBM_Plex_Mono',monospace] text-[11px] font-bold uppercase tracking-wider border-2 border-[#2E2E35] hover:border-[#9CA3AF] hover:text-[#F9FAFB] active:bg-[#111111] transition-all duration-100"
+                className="flex-1 px-3 py-2.5 bg-transparent text-[var(--theme-foreground-secondary)] font-['IBM_Plex_Mono',monospace] text-[11px] font-bold uppercase tracking-wider border-2 border-[var(--theme-border)] hover:border-[var(--theme-foreground-secondary)] hover:text-[var(--theme-foreground)] active:bg-[var(--theme-background-tertiary)] transition-all duration-100"
               >
                 BACK
               </button>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="flex-1 px-3 py-2.5 bg-[#6366F1] text-[#F9FAFB] font-['IBM_Plex_Mono',monospace] text-[11px] font-bold uppercase tracking-wider border-2 border-[#6366F1] shadow-[3px_3px_0px_rgba(0,0,0,0.6)] hover:bg-[#4F46E5] hover:border-[#4F46E5] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[4px_4px_0px_rgba(0,0,0,0.6)] active:translate-x-0 active:translate-y-0 active:shadow-[2px_2px_0px_rgba(0,0,0,0.6)] transition-all duration-100"
+                className="flex-1 px-3 py-2.5 bg-[var(--theme-primary)] text-[var(--theme-foreground)] font-['IBM_Plex_Mono',monospace] text-[11px] font-bold uppercase tracking-wider border-2 border-[var(--theme-primary)] shadow-[3px_3px_0px_rgba(0,0,0,0.6)] hover:bg-[var(--theme-primary-active)] hover:border-[var(--theme-primary-active)] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[4px_4px_0px_rgba(0,0,0,0.6)] active:translate-x-0 active:translate-y-0 active:shadow-[2px_2px_0px_rgba(0,0,0,0.6)] transition-all duration-100"
               >
                 DASHBOARD
               </button>
             </div>
 
             {/* Hint */}
-            <p className="text-center font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280]/60 mt-4 tracking-wide">
-              try typing <span className="text-[#6366F1]/60">sudo rm -rf /</span>
+            <p className="text-center font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-tertiary)]/60 mt-4 tracking-wide">
+              try typing <span className="text-[var(--theme-primary)]/60">sudo rm -rf /</span>
             </p>
           </div>
         )}

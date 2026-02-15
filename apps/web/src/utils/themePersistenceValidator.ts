@@ -127,7 +127,7 @@ export class ThemePersistenceValidator {
       }
       
       // Test theme storage
-      const testTheme: ThemeName = 'cyberpunk'
+      const testTheme: ThemeName = 'monokai'
       const storageKey = 'ltf1-global-theme'
       
       // Clear existing data
@@ -257,7 +257,7 @@ export class ThemePersistenceValidator {
         })
       } else {
         // Test default theme restoration
-        const defaultTheme = getGlobalTheme('brutalist')
+        const defaultTheme = getGlobalTheme('obsidian')
         
         this.addTestResult({
           testName: 'Default Theme Restoration',
@@ -336,13 +336,13 @@ export class ThemePersistenceValidator {
     try {
       // Simulate storage event (what happens when another tab changes theme)
       const storageKey = 'ltf1-global-theme'
-      const testTheme: ThemeName = 'neon'
+      const testTheme: ThemeName = 'tokyonight'
       
       // Create a storage event
       const storageEvent = new StorageEvent('storage', {
         key: storageKey,
         newValue: testTheme,
-        oldValue: 'brutalist',
+        oldValue: 'obsidian',
         storageArea: localStorage
       })
       
@@ -392,7 +392,7 @@ export class ThemePersistenceValidator {
       
       if (isIncognito) {
         // Test that app still functions without persistent storage
-        const theme = getGlobalTheme('brutalist')
+        const theme = getGlobalTheme('obsidian')
         const fallbackWorks = !!theme
         
         this.addTestResult({
@@ -450,7 +450,7 @@ export class ThemePersistenceValidator {
         })
       } catch (quotaError) {
         // Test that app handles quota exceeded gracefully
-        const theme = getGlobalTheme('brutalist')
+        const theme = getGlobalTheme('obsidian')
         const appStillWorks = !!theme
         
         this.addTestResult({
@@ -492,7 +492,7 @@ export class ThemePersistenceValidator {
       
       // Test that app recovers to default theme
       try {
-        const theme = getGlobalTheme('brutalist') // Should fallback to default
+        const theme = getGlobalTheme('obsidian') // Should fallback to default
         const recoveredSuccessfully = !!theme
         
         this.addTestResult({

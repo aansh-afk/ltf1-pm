@@ -3,13 +3,13 @@
  * Stores auth tokens, active workspace/project, and user preferences
  */
 
-import Conf from 'conf';
+import Conf from "conf";
 // Type import not directly used but kept for reference
 // import type { Id } from '../../../../convex/_generated/dataModel.js';
 
 export interface AuthConfig {
   token?: string;
-  tokenType: 'clerk' | 'api';
+  tokenType: "clerk" | "api";
   userId?: string;
   email?: string;
   expiresAt?: number;
@@ -29,9 +29,15 @@ export interface CLIConfig {
   auth?: AuthConfig;
   context?: ProjectContext;
   preferences?: {
-    defaultFormat?: 'table' | 'json' | 'compact';
+    defaultFormat?: "table" | "json" | "compact";
     colorOutput?: boolean;
     autoSync?: boolean;
+  };
+  server?: {
+    /** Custom web app URL (defaults to https://ltf1.dev) */
+    webUrl?: string;
+    /** Custom Convex deployment URL */
+    convexUrl?: string;
   };
   daemon?: {
     enabled?: boolean;
@@ -45,57 +51,64 @@ export interface CLIConfig {
 }
 
 const config = new Conf<CLIConfig>({
-  projectName: 'ltf',
-  projectVersion: '0.1.0',
+  projectName: "ltf",
+  projectVersion: "0.1.0",
   schema: {
     auth: {
-      type: 'object',
+      type: "object",
       properties: {
-        token: { type: 'string' },
-        tokenType: { type: 'string', enum: ['clerk', 'api'] },
-        userId: { type: 'string' },
-        email: { type: 'string' },
-        expiresAt: { type: 'number' },
-        sessionId: { type: 'string' },
+        token: { type: "string" },
+        tokenType: { type: "string", enum: ["clerk", "api"] },
+        userId: { type: "string" },
+        email: { type: "string" },
+        expiresAt: { type: "number" },
+        sessionId: { type: "string" },
       },
     },
     context: {
-      type: 'object',
+      type: "object",
       properties: {
-        workspaceId: { type: 'string' },
-        workspaceName: { type: 'string' },
-        projectId: { type: 'string' },
-        projectKey: { type: 'string' },
-        projectName: { type: 'string' },
+        workspaceId: { type: "string" },
+        workspaceName: { type: "string" },
+        projectId: { type: "string" },
+        projectKey: { type: "string" },
+        projectName: { type: "string" },
       },
     },
     preferences: {
-      type: 'object',
+      type: "object",
       properties: {
-        defaultFormat: { type: 'string', enum: ['table', 'json', 'compact'] },
-        colorOutput: { type: 'boolean' },
-        autoSync: { type: 'boolean' },
+        defaultFormat: { type: "string", enum: ["table", "json", "compact"] },
+        colorOutput: { type: "boolean" },
+        autoSync: { type: "boolean" },
+      },
+    },
+    server: {
+      type: "object",
+      properties: {
+        webUrl: { type: "string" },
+        convexUrl: { type: "string" },
       },
     },
     daemon: {
-      type: 'object',
+      type: "object",
       properties: {
-        enabled: { type: 'boolean' },
-        pid: { type: 'number' },
-        logFile: { type: 'string' },
+        enabled: { type: "boolean" },
+        pid: { type: "number" },
+        logFile: { type: "string" },
       },
     },
     gitHooks: {
-      type: 'object',
+      type: "object",
       properties: {
-        installed: { type: 'boolean' },
-        installedAt: { type: 'string' },
+        installed: { type: "boolean" },
+        installedAt: { type: "string" },
       },
     },
   },
   defaults: {
     preferences: {
-      defaultFormat: 'table',
+      defaultFormat: "table",
       colorOutput: true,
       autoSync: true,
     },
@@ -104,15 +117,15 @@ const config = new Conf<CLIConfig>({
 
 // Auth helpers
 export function getAuth(): AuthConfig | undefined {
-  return config.get('auth');
+  return config.get("auth");
 }
 
 export function setAuth(auth: AuthConfig): void {
-  config.set('auth', auth);
+  config.set("auth", auth);
 }
 
 export function clearAuth(): void {
-  config.delete('auth');
+  config.delete("auth");
 }
 
 export function isAuthenticated(): boolean {
@@ -127,16 +140,16 @@ export function isAuthenticated(): boolean {
 
 // Context helpers
 export function getContext(): ProjectContext | undefined {
-  return config.get('context');
+  return config.get("context");
 }
 
 export function setContext(context: Partial<ProjectContext>): void {
   const current = getContext() || {};
-  config.set('context', { ...current, ...context });
+  config.set("context", { ...current, ...context });
 }
 
 export function clearContext(): void {
-  config.delete('context');
+  config.delete("context");
 }
 
 export function hasProjectContext(): boolean {
@@ -146,35 +159,66 @@ export function hasProjectContext(): boolean {
 
 // Preferences helpers
 export function getPreferences() {
-  return config.get('preferences');
+  return config.get("preferences");
 }
 
-export function setPreference<K extends keyof NonNullable<CLIConfig['preferences']>>(
-  key: K,
-  value: NonNullable<CLIConfig['preferences']>[K]
-): void {
+export function setPreference<
+  K extends keyof NonNullable<CLIConfig["preferences"]>,
+>(key: K, value: NonNullable<CLIConfig["preferences"]>[K]): void {
   const prefs = getPreferences() || {};
-  config.set('preferences', { ...prefs, [key]: value });
+  config.set("preferences", { ...prefs, [key]: value });
 }
 
 // Daemon helpers
 export function getDaemonConfig() {
-  return config.get('daemon');
+  return config.get("daemon");
 }
 
-export function setDaemonConfig(daemon: Partial<NonNullable<CLIConfig['daemon']>>): void {
+export function setDaemonConfig(
+  daemon: Partial<NonNullable<CLIConfig["daemon"]>>,
+): void {
   const current = getDaemonConfig() || {};
-  config.set('daemon', { ...current, ...daemon });
+  config.set("daemon", { ...current, ...daemon });
 }
 
 // Git hooks helpers
 export function getGitHooksConfig() {
-  return config.get('gitHooks');
+  return config.get("gitHooks");
 }
 
-export function setGitHooksConfig(hooks: Partial<NonNullable<CLIConfig['gitHooks']>>): void {
+export function setGitHooksConfig(
+  hooks: Partial<NonNullable<CLIConfig["gitHooks"]>>,
+): void {
   const current = getGitHooksConfig() || {};
-  config.set('gitHooks', { ...current, ...hooks });
+  config.set("gitHooks", { ...current, ...hooks });
+}
+
+// Server configuration helpers
+export function getServerConfig() {
+  return config.get("server");
+}
+
+export function setServerConfig(
+  server: Partial<NonNullable<CLIConfig["server"]>>,
+): void {
+  const current = getServerConfig() || {};
+  config.set("server", { ...current, ...server });
+}
+
+export function getWebUrl(): string | undefined {
+  return config.get("server")?.webUrl;
+}
+
+export function setWebUrl(url: string): void {
+  setServerConfig({ webUrl: url });
+}
+
+export function getConvexUrl(): string | undefined {
+  return config.get("server")?.convexUrl;
+}
+
+export function setConvexUrl(url: string): void {
+  setServerConfig({ convexUrl: url });
 }
 
 // Full config access

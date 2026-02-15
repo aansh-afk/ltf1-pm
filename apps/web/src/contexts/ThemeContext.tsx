@@ -71,7 +71,7 @@ const loadThemePreference = (): ThemeName => {
   } catch (error) {
     console.warn('Failed to load theme preference:', error)
   }
-  return 'brutalist' // Default fallback
+  return 'obsidian' // Default fallback
 }
 
 const saveHighContrastPreference = (enabled: boolean): void => {
