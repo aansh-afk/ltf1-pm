@@ -81,7 +81,7 @@ export default function GitHubStyleHeatmap({
   function getActivityColor(level: number): string {
     switch (level) {
       case 0:
-        return 'bg-[#161b22]' // Empty (dimmed)
+        return 'bg-[#0A0A0A]' // Empty (matches surface)
       case 1:
         return 'bg-[#0e4429]' // Low
       case 2:
@@ -91,7 +91,7 @@ export default function GitHubStyleHeatmap({
       case 4:
         return 'bg-[#39d353]' // High
       default:
-        return 'bg-[#161b22]'
+        return 'bg-[#0A0A0A]'
     }
   }
 
@@ -102,10 +102,10 @@ export default function GitHubStyleHeatmap({
   return (
     <div className="w-full overflow-x-auto pb-4px">
       <div className="flex items-center justify-between mb-[8px] sticky left-0">
-        <h3 className="text-brutal-md font-bold uppercase tracking-tight">Activity</h3>
+        <h3 className="text-sm font-bold uppercase tracking-tight text-[#F9FAFB] font-['IBM_Plex_Mono',monospace]">Activity</h3>
         <div className="flex items-center gap-[8px]">
           {/* Legend */}
-          <div className="flex items-center gap-4px text-[10px] text-[#8b949e]">
+          <div className="flex items-center gap-4px text-[10px] text-[#6B7280]">
             <span className="mr-4px">Less</span>
             {[0, 1, 2, 3, 4].map(level => (
               <div
@@ -119,12 +119,12 @@ export default function GitHubStyleHeatmap({
         </div>
       </div>
 
-      <div className="min-w-max p-4 bg-[#0d1117] border border-[#30363d] rounded-none">
+      <div className="min-w-max p-4 bg-[#0A0A0A] border-2 border-[#2E2E35] rounded-none">
         <div className="flex">
           {/* Day Labels - Fixed width */}
           <div className="flex flex-col gap-[3px] mr-2 pt-[14px]">
             {['Mon', 'Wed', 'Fri'].map((day, i) => (
-              <div key={day} className="h-[10px] text-[9px] text-[#8b949e] leading-none flex items-center h-[10px] mt-[13px] first:mt-0">
+              <div key={day} className="h-[10px] text-[9px] text-[#6B7280] leading-none flex items-center h-[10px] mt-[13px] first:mt-0">
                 {day}
               </div>
             ))}
@@ -141,7 +141,7 @@ export default function GitHubStyleHeatmap({
                 return (
                   <div
                     key={d.toISOString()}
-                    className="absolute text-[10px] text-[#8b949e]"
+                    className="absolute text-[10px] text-[#6B7280]"
                     style={{ left: `${weeksDiff * 13}px` }}
                   >
                     {format(d, 'MMM')}
@@ -167,7 +167,7 @@ export default function GitHubStyleHeatmap({
                   <div
                     key={dateStr}
                     className={`
-                                w-[10px] h-[10px] 
+                                w-[10px] h-[10px]
                                 rounded-none
                                 ${getActivityColor(level)}
                                 ${isToday ? 'ring-1 ring-white z-10' : ''}
@@ -183,10 +183,10 @@ export default function GitHubStyleHeatmap({
         </div>
 
         {/* Summary Footer */}
-        <div className="mt-4 pt-4 border-t border-[#30363d] text-[10px] text-[#8b949e] flex justify-between">
+        <div className="mt-4 pt-4 border-t border-[#2E2E35] text-[10px] text-[#6B7280] flex justify-between">
           <span>Last {weeks} Weeks</span>
           <span>
-            <span className="text-white font-bold">{Array.from(heatmapData.activityMap.values()).reduce((a, b) => a + b, 0).toFixed(0)}</span> contributions
+            <span className="text-[#F9FAFB] font-bold">{Array.from(heatmapData.activityMap.values()).reduce((a, b) => a + b, 0).toFixed(0)}</span> contributions
           </span>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { api } from '../../../../convex/_generated/api';
 import { FaGithub, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import BrutalCard from '@/components/ui/BrutalCard';
 import toast from 'react-hot-toast';
+import posthog from 'posthog-js';
 
 export default function GitHubCallbackPage() {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ export default function GitHubCallbackPage() {
         }
         // Not a popup — show success and redirect
         setStatus('success');
+        posthog.capture('github_app_installed', { installationId });
         toast.success('GitHub App installed successfully! You can now link it to your workspace.');
         setTimeout(() => navigate('/settings'), 2000);
         return;
@@ -49,6 +51,7 @@ export default function GitHubCallbackPage() {
       if (error) {
         setStatus('error');
         setError(errorDescription || error);
+        posthog.capture('github_connection_failed', { error: errorDescription || error });
         toast.error(`GitHub OAuth error: ${errorDescription || error}`);
         setTimeout(() => navigate('/profile'), 3000);
         return;
@@ -67,6 +70,7 @@ export default function GitHubCallbackPage() {
 
         if (result.success) {
           setStatus('success');
+          posthog.capture('github_account_connected', { username: result.githubUsername });
           toast.success(`Successfully connected GitHub account: @${result.githubUsername}`);
 
           // Redirect to the return URL or profile
@@ -79,7 +83,9 @@ export default function GitHubCallbackPage() {
       } catch (error) {
         console.error('Error handling GitHub callback:', error);
         setStatus('error');
-        setError(error instanceof Error ? error.message : 'Failed to connect GitHub account');
+        const errorMsg = error instanceof Error ? error.message : 'Failed to connect GitHub account';
+        setError(errorMsg);
+        posthog.capture('github_connection_failed', { error: errorMsg });
         toast.error('Failed to connect GitHub account');
         setTimeout(() => navigate('/profile'), 3000);
       }

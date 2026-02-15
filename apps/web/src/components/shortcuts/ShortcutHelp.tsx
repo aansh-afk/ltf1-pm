@@ -126,7 +126,7 @@ export default function ShortcutHelp() {
             </div>
 
             <div className="flex items-center gap-4px">
-              {['all', 'navigation', 'quick-actions', 'task-operations', 'meeting-operations', 'general'].map(cat => (
+              {['all', 'navigation', 'quick-actions', 'general'].map(cat => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat as any)}

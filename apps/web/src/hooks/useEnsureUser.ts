@@ -18,7 +18,10 @@ export function useEnsureUser() {
       createCurrentUser().catch(console.error)
     } else if (currentUser !== null && wasJustCreated) {
       // User was created and now exists, reset the flag
-      posthog.capture('user_created')
+      posthog.capture('user_created', {
+        referrer: document.referrer || 'direct',
+        landing_page: window.location.pathname,
+      })
       setWasJustCreated(false)
     }
   }, [isSignedIn, currentUser, createCurrentUser, wasJustCreated])

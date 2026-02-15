@@ -5,6 +5,7 @@ import { useTheme } from '../../contexts/ThemeContext'
 import { useMutation, useAction } from 'convex/react'
 import { api } from '../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
+import posthog from 'posthog-js'
 import { 
   HiOutlineColorSwatch, 
   HiOutlineSparkles, 
@@ -51,6 +52,7 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
 
   const handleAIComplete = async () => {
     if (aiSetupChoice === 'skip') {
+      posthog.capture('onboarding_completed', { ai_setup: 'skipped', theme: themeName })
       setCurrentStep('complete')
       setTimeout(() => {
         onComplete()
@@ -79,13 +81,14 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
         toast.success('API key validated and saved successfully!')
       } else if (aiSetupChoice === 'free') {
         // Setup free tier credits
-        await setupAICredits({ 
+        await setupAICredits({
           tier: 'free',
-          setupType: 'free_credits' 
+          setupType: 'free_credits'
         })
         toast.success('Free AI credits activated! You have 100 credits to start.')
       }
-      
+
+      posthog.capture('onboarding_completed', { ai_setup: aiSetupChoice, theme: themeName })
       setCurrentStep('complete')
       setTimeout(() => {
         onComplete()

@@ -2,8 +2,10 @@ import { motion } from 'framer-motion'
 import PublicNavigation from '../components/common/PublicNavigation'
 import Footer from '../components/common/Footer'
 import ProductShowcaseSection from '../components/landing/sections/ProductShowcaseSection'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function FeaturesPage() {
+  usePageTitle('Features — Git-Native Project Management')
   return (
     <div className="min-h-screen bg-[#050505]">
       <PublicNavigation />
