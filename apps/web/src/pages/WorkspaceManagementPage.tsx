@@ -66,9 +66,9 @@ export default function WorkspaceManagementPage() {
   if (workspace === null) {
     return (
       <div className="p-4 flex items-center justify-center min-h-[60vh]">
-        <div className="bg-[#111111] border-2 border-[#EF4444] p-5 text-center max-w-md">
-          <h1 className="text-base font-bold uppercase mb-2 text-[#EF4444]">Workspace Not Found</h1>
-          <p className="font-mono text-xs text-[#6B7280]">
+        <div className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-error)] p-5 text-center max-w-md">
+          <h1 className="text-base font-bold uppercase mb-2 text-[var(--theme-error)]">Workspace Not Found</h1>
+          <p className="font-mono text-xs text-[var(--theme-foreground-tertiary)]">
             The requested workspace does not exist or you do not have permission to view it.
           </p>
         </div>
@@ -116,17 +116,17 @@ export default function WorkspaceManagementPage() {
   return (
     <div className="h-full flex flex-col md:flex-row">
       {/* Sidebar Navigation */}
-      <aside className="w-full md:w-56 lg:w-60 border-r-2 border-[#2E2E35] flex flex-col bg-[#050505]">
+      <aside className="w-full md:w-56 lg:w-60 border-r-2 border-[var(--theme-border)] flex flex-col bg-[var(--theme-background)]">
         {/* Workspace Header */}
-        <div className="p-4 border-b border-[#1F1F23]">
+        <div className="p-4 border-b border-[var(--theme-border)]">
           <div className="flex items-center gap-2.5 mb-1.5">
-            <div className="w-6 h-6 bg-[#6366F1] flex items-center justify-center font-bold text-black text-[10px] font-mono">
+            <div className="w-6 h-6 bg-[var(--theme-primary)] flex items-center justify-center font-bold text-black text-[10px] font-mono">
               {workspace.name.substring(0, 2).toUpperCase()}
             </div>
-            <h1 className="font-bold uppercase tracking-wider text-sm text-[#F9FAFB] truncate">{workspace.name}</h1>
+            <h1 className="font-bold uppercase tracking-wider text-sm text-[var(--theme-foreground)] truncate">{workspace.name}</h1>
           </div>
-          <div className="flex items-center gap-1.5 font-mono text-[10px] text-[#6B7280]">
-            <span className="w-1.5 h-1.5 bg-[#22C55E]" />
+          <div className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--theme-foreground-tertiary)]">
+            <span className="w-1.5 h-1.5 bg-[var(--theme-success)]" />
             Active
           </div>
         </div>
@@ -144,12 +144,12 @@ export default function WorkspaceManagementPage() {
                 className={clsx(
                   'w-full flex items-center justify-between px-4 py-2.5 text-xs font-mono transition-colors relative',
                   isActive
-                    ? 'bg-[#6366F1]/10 text-[#F9FAFB]'
-                    : 'text-[#6B7280] hover:bg-[#111111] hover:text-[#9CA3AF]'
+                    ? 'bg-[var(--theme-primary)]/10 text-[var(--theme-foreground)]'
+                    : 'text-[var(--theme-foreground-tertiary)] hover:bg-[var(--theme-hover)] hover:text-[var(--theme-foreground-secondary)]'
                 )}
               >
                 {isActive && (
-                  <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#6366F1]" />
+                  <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[var(--theme-primary)]" />
                 )}
                 <div className="flex items-center gap-2.5">
                   <Icon className="w-4 h-4" />
@@ -159,8 +159,8 @@ export default function WorkspaceManagementPage() {
                   <span className={clsx(
                     "px-1.5 py-0.5 text-[10px] font-mono border",
                     isActive
-                      ? "border-[#6366F1]/40 text-[#6366F1]"
-                      : "border-[#2E2E35] text-[#6B7280]"
+                      ? "border-[var(--theme-primary)]/40 text-[var(--theme-primary)]"
+                      : "border-[var(--theme-border)] text-[var(--theme-foreground-tertiary)]"
                   )}>
                     {tab.count}
                   </span>
@@ -171,7 +171,7 @@ export default function WorkspaceManagementPage() {
         </nav>
 
         {/* Footer Info */}
-        <div className="p-3 border-t border-[#1F1F23] font-mono text-[10px] text-[#6B7280]/50 text-center truncate">
+        <div className="p-3 border-t border-[var(--theme-border)] font-mono text-[10px] text-[var(--theme-foreground-tertiary)]/50 text-center truncate">
           {workspace._id}
         </div>
       </aside>
@@ -198,10 +198,10 @@ export default function WorkspaceManagementPage() {
 // Overview Tab Component
 function OverviewTab({ workspace, projects, members }: any) {
   const stats = [
-    { icon: HiOutlineFolder, label: 'Active Projects', value: projects?.length || 0, color: '#6366F1', width: 'w-3/4' },
-    { icon: HiOutlineUsers, label: 'Members', value: members?.length || 0, color: '#06B6D4', width: 'w-1/2' },
-    { icon: HiOutlinePlay, label: 'Sprint Velocity', value: '100%', color: '#22C55E', width: 'w-full' },
-    { icon: HiOutlineClock, label: 'Pending Tasks', value: '42', color: '#F59E0B', width: 'w-1/4' },
+    { icon: HiOutlineFolder, label: 'Active Projects', value: projects?.length || 0, color: 'var(--theme-primary)', width: 'w-3/4' },
+    { icon: HiOutlineUsers, label: 'Members', value: members?.length || 0, color: 'var(--theme-info)', width: 'w-1/2' },
+    { icon: HiOutlinePlay, label: 'Sprint Velocity', value: '100%', color: 'var(--theme-success)', width: 'w-full' },
+    { icon: HiOutlineClock, label: 'Pending Tasks', value: '42', color: 'var(--theme-warning)', width: 'w-1/4' },
   ]
 
   return (
@@ -209,15 +209,15 @@ function OverviewTab({ workspace, projects, members }: any) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6B7280] inline-block mb-1">
+          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] inline-block mb-1">
             Overview
           </span>
-          <h2 className="text-lg font-bold text-[#F9FAFB] flex items-center gap-2">
-            <HiOutlineViewGrid className="w-4 h-4 text-[#6366F1]" />
+          <h2 className="text-lg font-bold text-[var(--theme-foreground)] flex items-center gap-2">
+            <HiOutlineViewGrid className="w-4 h-4 text-[var(--theme-primary)]" />
             Workspace Overview
           </h2>
         </div>
-        <span className="font-mono text-[10px] text-[#6B7280]">
+        <span className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)]">
           Last Updated: {new Date().toLocaleTimeString()}
         </span>
       </div>
@@ -227,13 +227,13 @@ function OverviewTab({ workspace, projects, members }: any) {
         {stats.map((stat) => {
           const Icon = stat.icon
           return (
-            <div key={stat.label} className="bg-[#111111] border-2 border-[#2E2E35] p-4 group hover:border-[#6366F1] transition-colors">
+            <div key={stat.label} className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] p-4 group hover:border-[var(--theme-primary)] transition-colors">
               <div className="flex items-center justify-between mb-2">
                 <Icon className="w-4 h-4" style={{ color: stat.color }} />
-                <span className="text-[10px] font-mono uppercase tracking-wider text-[#6B7280]">{stat.label}</span>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">{stat.label}</span>
               </div>
-              <div className="text-2xl font-bold font-mono text-[#F9FAFB]">{stat.value}</div>
-              <div className="w-full h-0.5 bg-[#2E2E35] mt-2 overflow-hidden">
+              <div className="text-2xl font-bold font-mono text-[var(--theme-foreground)]">{stat.value}</div>
+              <div className="w-full h-0.5 bg-[var(--theme-border)] mt-2 overflow-hidden">
                 <div className={clsx("h-full", stat.width)} style={{ backgroundColor: stat.color }} />
               </div>
             </div>
@@ -244,24 +244,24 @@ function OverviewTab({ workspace, projects, members }: any) {
       {/* Activity + Sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* Activity Log */}
-        <div className="lg:col-span-2 bg-[#111111] border-2 border-[#2E2E35] p-4">
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#1F1F23]">
-            <h3 className="text-sm font-bold text-[#F9FAFB] flex items-center gap-2">
-              <HiOutlineTerminal className="w-4 h-4 text-[#6366F1]" />
+        <div className="lg:col-span-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] p-4">
+          <div className="flex items-center justify-between mb-3 pb-2 border-b border-[var(--theme-border)]">
+            <h3 className="text-sm font-bold text-[var(--theme-foreground)] flex items-center gap-2">
+              <HiOutlineTerminal className="w-4 h-4 text-[var(--theme-primary)]" />
               Activity Log
             </h3>
-            <span className="px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider bg-[#22C55E]/10 border border-[#22C55E]/30 text-[#22C55E]">
+            <span className="px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider bg-[var(--theme-success)]/10 border border-[var(--theme-success)]/30 text-[var(--theme-success)]">
               Live
             </span>
           </div>
           <div className="space-y-1">
             {[1, 2, 3, 4, 5].map((item) => (
-              <div key={item} className="flex items-center gap-3 px-3 py-2 border border-[#1F1F23] bg-[#0A0A0A]/50 hover:bg-[#0A0A0A] transition-colors font-mono text-xs">
-                <span className="text-[10px] text-[#6B7280] w-10 shrink-0">0{item}:00</span>
+              <div key={item} className="flex items-center gap-3 px-3 py-2 border border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/50 hover:bg-[var(--theme-background-secondary)] transition-colors font-mono text-xs">
+                <span className="text-[10px] text-[var(--theme-foreground-tertiary)] w-10 shrink-0">0{item}:00</span>
                 <div className="flex-1">
-                  <span className="text-[#6366F1] font-semibold">User_{item}</span>
-                  <span className="text-[#9CA3AF]"> updated </span>
-                  <span className="text-[#F59E0B]">task-{item}</span>
+                  <span className="text-[var(--theme-primary)] font-semibold">User_{item}</span>
+                  <span className="text-[var(--theme-foreground-secondary)]"> updated </span>
+                  <span className="text-[var(--theme-warning)]">task-{item}</span>
                 </div>
               </div>
             ))}
@@ -271,33 +271,33 @@ function OverviewTab({ workspace, projects, members }: any) {
         {/* Right Column */}
         <div className="space-y-3">
           {/* System Status */}
-          <div className="bg-[#111111] border-2 border-[#2E2E35] p-4">
-            <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6B7280] mb-3">System Status</h3>
+          <div className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] p-4">
+            <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] mb-3">System Status</h3>
             <div className="space-y-2 font-mono text-xs">
               <div className="flex justify-between items-center">
-                <span className="text-[#9CA3AF]">API Gateway</span>
-                <span className="text-[#22C55E]">Online</span>
+                <span className="text-[var(--theme-foreground-secondary)]">API Gateway</span>
+                <span className="text-[var(--theme-success)]">Online</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#9CA3AF]">Database</span>
-                <span className="text-[#22C55E]">Online</span>
+                <span className="text-[var(--theme-foreground-secondary)]">Database</span>
+                <span className="text-[var(--theme-success)]">Online</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#9CA3AF]">Storage</span>
-                <span className="text-[#F59E0B]">Degraded</span>
+                <span className="text-[var(--theme-foreground-secondary)]">Storage</span>
+                <span className="text-[var(--theme-warning)]">Degraded</span>
               </div>
             </div>
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-[#111111] border-2 border-[#6366F1] p-4">
+          <div className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-primary)] p-4">
             <div className="flex items-center gap-2 mb-3">
-              <HiOutlineLightningBolt className="w-4 h-4 text-[#6366F1]" />
-              <span className="text-xs font-bold uppercase tracking-wider text-[#F9FAFB]">Quick Actions</span>
+              <HiOutlineLightningBolt className="w-4 h-4 text-[var(--theme-primary)]" />
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)]">Quick Actions</span>
             </div>
             <div className="grid grid-cols-2 gap-2">
               {['New Project', 'Invite User', 'View Logs', 'Deploy'].map((action) => (
-                <button key={action} className="p-2 border border-[#2E2E35] hover:border-[#6366F1] hover:bg-[#6366F1]/5 text-xs font-mono text-[#9CA3AF] hover:text-[#F9FAFB] text-left transition-colors">
+                <button key={action} className="p-2 border border-[var(--theme-border)] hover:border-[var(--theme-primary)] hover:bg-[var(--theme-primary)]/5 text-xs font-mono text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-foreground)] text-left transition-colors">
                   {action}
                 </button>
               ))}
@@ -318,10 +318,10 @@ function ProjectsTab({ workspaceId, projects }: any) {
     <div className="p-4">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6B7280] inline-block mb-1">
+          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] inline-block mb-1">
             Projects
           </span>
-          <h2 className="text-lg font-bold text-[#F9FAFB]">Projects</h2>
+          <h2 className="text-lg font-bold text-[var(--theme-foreground)]">Projects</h2>
         </div>
         <BrutalButton
           onClick={() => setIsCreateModalOpen(true)}
@@ -335,18 +335,18 @@ function ProjectsTab({ workspaceId, projects }: any) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {projects?.map((project: any) => (
-          <div key={project._id} className="bg-[#111111] border-2 border-[#2E2E35] p-4 group hover:border-[#6366F1] transition-colors">
+          <div key={project._id} className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] p-4 group hover:border-[var(--theme-primary)] transition-colors">
             <div className="flex justify-between items-start mb-2">
-              <h3 className="text-sm font-bold text-[#F9FAFB] uppercase">{project.name}</h3>
-              <span className="px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider border border-[#6366F1]/30 text-[#6366F1] bg-[#6366F1]/10">
+              <h3 className="text-sm font-bold text-[var(--theme-foreground)] uppercase">{project.name}</h3>
+              <span className="px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider border border-[var(--theme-primary)]/30 text-[var(--theme-primary)] bg-[var(--theme-primary)]/10">
                 {project.status}
               </span>
             </div>
-            <p className="font-mono text-xs text-[#6B7280] mb-3 h-8 line-clamp-2">
+            <p className="font-mono text-xs text-[var(--theme-foreground-tertiary)] mb-3 h-8 line-clamp-2">
               {project.description || 'No description available'}
             </p>
-            <div className="flex items-center justify-between pt-3 border-t border-[#1F1F23]">
-              <span className="font-mono text-[10px] text-[#6B7280]/60">ID: {project._id.substring(0, 8)}</span>
+            <div className="flex items-center justify-between pt-3 border-t border-[var(--theme-border)]">
+              <span className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)]/60">ID: {project._id.substring(0, 8)}</span>
               <BrutalButton
                 size="sm"
                 variant="ghost"
@@ -361,12 +361,12 @@ function ProjectsTab({ workspaceId, projects }: any) {
         {/* New Project Placeholder */}
         <div
           onClick={() => setIsCreateModalOpen(true)}
-          className="border-2 border-dashed border-[#2E2E35] bg-[#0A0A0A]/50 hover:bg-[#0A0A0A] hover:border-[#6366F1] transition-all p-4 flex flex-col items-center justify-center cursor-pointer min-h-[140px] group"
+          className="border-2 border-dashed border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/50 hover:bg-[var(--theme-background-secondary)] hover:border-[var(--theme-primary)] transition-all p-4 flex flex-col items-center justify-center cursor-pointer min-h-[140px] group"
         >
-          <div className="w-8 h-8 border-2 border-[#2E2E35] group-hover:border-[#6366F1] flex items-center justify-center mb-2 transition-colors">
-            <HiOutlinePlus className="w-4 h-4 text-[#6B7280] group-hover:text-[#6366F1] transition-colors" />
+          <div className="w-8 h-8 border-2 border-[var(--theme-border)] group-hover:border-[var(--theme-primary)] flex items-center justify-center mb-2 transition-colors">
+            <HiOutlinePlus className="w-4 h-4 text-[var(--theme-foreground-tertiary)] group-hover:text-[var(--theme-primary)] transition-colors" />
           </div>
-          <span className="font-mono text-[10px] font-semibold text-[#6B7280] group-hover:text-[#6366F1] uppercase tracking-wider transition-colors">Create New Project</span>
+          <span className="font-mono text-[10px] font-semibold text-[var(--theme-foreground-tertiary)] group-hover:text-[var(--theme-primary)] uppercase tracking-wider transition-colors">Create New Project</span>
         </div>
       </div>
 
@@ -421,36 +421,36 @@ function MembersTab({ workspaceId, members, workspace }: any) {
     <div className="p-4">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6B7280] inline-block mb-1">
+          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] inline-block mb-1">
             Team
           </span>
-          <h2 className="text-lg font-bold text-[#F9FAFB]">Members</h2>
+          <h2 className="text-lg font-bold text-[var(--theme-foreground)]">Members</h2>
         </div>
         <BrutalButton variant="secondary" size="sm" onClick={() => setShowInviteModal(true)}>Invite Member</BrutalButton>
       </div>
 
-      <div className="bg-[#111111] border-2 border-[#2E2E35] overflow-hidden">
+      <div className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b-2 border-[#2E2E35] bg-[#0A0A0A]">
-                <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Member</th>
-                <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Role</th>
-                <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Status</th>
-                <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] text-right">Actions</th>
+              <tr className="border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+                <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">Member</th>
+                <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">Role</th>
+                <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">Status</th>
+                <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {members?.map((member: any) => (
-                <tr key={member.userId} className="border-b border-[#2E2E35]/50 hover:bg-[#0A0A0A]/50 transition-colors">
+                <tr key={member.userId} className="border-b border-[var(--theme-border)]/50 hover:bg-[var(--theme-background-secondary)]/50 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 bg-[#6366F1] flex items-center justify-center font-bold text-black text-[10px] font-mono">
+                      <div className="w-7 h-7 bg-[var(--theme-primary)] flex items-center justify-center font-bold text-black text-[10px] font-mono">
                         {(member.user?.name || 'U').substring(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-semibold text-xs text-[#F9FAFB]">{member.user?.name || 'Unknown User'}</div>
-                        <div className="font-mono text-[10px] text-[#6B7280]">{member.user?.email}</div>
+                        <div className="font-semibold text-xs text-[var(--theme-foreground)]">{member.user?.name || 'Unknown User'}</div>
+                        <div className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)]">{member.user?.email}</div>
                       </div>
                     </div>
                   </td>
@@ -458,22 +458,22 @@ function MembersTab({ workspaceId, members, workspace }: any) {
                     <span className={clsx(
                       "px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider border",
                       member.role === 'admin'
-                        ? "border-[#EF4444]/30 text-[#EF4444] bg-[#EF4444]/10"
-                        : "border-[#6366F1]/30 text-[#6366F1] bg-[#6366F1]/10"
+                        ? "border-[var(--theme-error)]/30 text-[var(--theme-error)] bg-[var(--theme-error)]/10"
+                        : "border-[var(--theme-primary)]/30 text-[var(--theme-primary)] bg-[var(--theme-primary)]/10"
                     )}>
                       {member.role.toUpperCase()}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5 font-mono text-[10px] text-[#22C55E]">
-                      <span className="w-1.5 h-1.5 bg-[#22C55E]" />
+                    <div className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--theme-success)]">
+                      <span className="w-1.5 h-1.5 bg-[var(--theme-success)]" />
                       Active
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-3">
-                      <button className="text-[10px] font-mono text-[#9CA3AF] hover:text-[#6366F1] transition-colors">Edit</button>
-                      <button className="text-[10px] font-mono text-[#EF4444] hover:text-[#EF4444]/80 transition-colors">Remove</button>
+                      <button className="text-[10px] font-mono text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-primary)] transition-colors">Edit</button>
+                      <button className="text-[10px] font-mono text-[var(--theme-error)] hover:text-[var(--theme-error)]/80 transition-colors">Remove</button>
                     </div>
                   </td>
                 </tr>
@@ -487,41 +487,41 @@ function MembersTab({ workspaceId, members, workspace }: any) {
       {pendingInvitations && pendingInvitations.length > 0 && (
         <div className="mt-4">
           <div className="mb-2">
-            <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6B7280]">
+            <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">
               Pending Invitations
             </span>
           </div>
-          <div className="bg-[#111111] border-2 border-[#2E2E35] overflow-hidden">
+          <div className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b-2 border-[#2E2E35] bg-[#0A0A0A]">
-                    <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Email</th>
-                    <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Role</th>
-                    <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Invited By</th>
-                    <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Status</th>
+                  <tr className="border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+                    <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">Email</th>
+                    <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">Role</th>
+                    <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">Invited By</th>
+                    <th className="px-4 py-3 font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pendingInvitations.map((inv: any) => (
-                    <tr key={inv._id} className="border-b border-[#2E2E35]/50 hover:bg-[#0A0A0A]/50 transition-colors">
+                    <tr key={inv._id} className="border-b border-[var(--theme-border)]/50 hover:bg-[var(--theme-background-secondary)]/50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 bg-[#F59E0B]/20 border border-[#F59E0B]/30 flex items-center justify-center font-bold text-[#F59E0B] text-[10px] font-mono">
+                          <div className="w-7 h-7 bg-[var(--theme-warning)]/20 border border-[var(--theme-warning)]/30 flex items-center justify-center font-bold text-[var(--theme-warning)] text-[10px] font-mono">
                             @
                           </div>
-                          <span className="font-mono text-xs text-[#F9FAFB]">{inv.email}</span>
+                          <span className="font-mono text-xs text-[var(--theme-foreground)]">{inv.email}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider border border-[#F59E0B]/30 text-[#F59E0B] bg-[#F59E0B]/10">
+                        <span className="px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider border border-[var(--theme-warning)]/30 text-[var(--theme-warning)] bg-[var(--theme-warning)]/10">
                           {inv.role.toUpperCase()}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-[#9CA3AF]">{inv.invitedByName}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-[var(--theme-foreground-secondary)]">{inv.invitedByName}</td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5 font-mono text-[10px] text-[#F59E0B]">
-                          <span className="w-1.5 h-1.5 bg-[#F59E0B] animate-pulse" />
+                        <div className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--theme-warning)]">
+                          <span className="w-1.5 h-1.5 bg-[var(--theme-warning)] animate-pulse" />
                           Pending Sign-up
                         </div>
                       </td>
@@ -543,28 +543,28 @@ function MembersTab({ workspaceId, members, workspace }: any) {
       >
         <form onSubmit={handleInvite} className="space-y-[12px]">
           {/* Context Header */}
-          <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-[10px]">
-            <h3 className="font-mono text-sm font-bold text-[#F9FAFB] mb-[4px]">INVITING TO: {workspace?.name || 'WORKSPACE'}</h3>
-            <p className="font-mono text-xs text-[#F9FAFB]/60">
+          <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-[10px]">
+            <h3 className="font-mono text-sm font-bold text-[var(--theme-foreground)] mb-[4px]">INVITING TO: {workspace?.name || 'WORKSPACE'}</h3>
+            <p className="font-mono text-xs text-[var(--theme-foreground)]/60">
               Enter an email address to invite someone to this workspace.
             </p>
           </div>
 
           {/* Info Banner */}
-          <div className="bg-[#6366F1]/10 border-2 border-[#6366F1] p-[10px]">
-            <p className="font-mono text-xs text-[#6366F1]">
+          <div className="bg-[var(--theme-primary)]/10 border-2 border-[var(--theme-primary)] p-[10px]">
+            <p className="font-mono text-xs text-[var(--theme-primary)]">
               <span className="font-bold">NOTE:</span> If the user has an account, they'll be added immediately. Otherwise, they'll be added automatically when they sign up.
             </p>
           </div>
 
           {/* Email Section */}
           <div className="space-y-[8px]">
-            <h4 className="font-mono text-xs font-bold text-[#F9FAFB]">EMAIL ADDRESS</h4>
+            <h4 className="font-mono text-xs font-bold text-[var(--theme-foreground)]">EMAIL ADDRESS</h4>
             <input
               type="email"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
-              className="w-full px-[10px] py-[8px] bg-[#050505] border-2 border-[#2E2E35] font-mono text-sm text-[#6366F1] font-bold focus:border-[#6366F1] focus:outline-none placeholder:text-[#6B7280] placeholder:font-normal"
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm text-[var(--theme-primary)] font-bold focus:border-[var(--theme-primary)] focus:outline-none placeholder:text-[var(--theme-foreground-tertiary)] placeholder:font-normal"
               placeholder="user@example.com"
               required
               autoFocus
@@ -573,7 +573,7 @@ function MembersTab({ workspaceId, members, workspace }: any) {
 
           {/* Role Section */}
           <div className="space-y-[8px]">
-            <h4 className="font-mono text-xs font-bold text-[#F9FAFB]">ASSIGN ROLE</h4>
+            <h4 className="font-mono text-xs font-bold text-[var(--theme-foreground)]">ASSIGN ROLE</h4>
             <div className="grid grid-cols-3 gap-[4px]">
               {([
                 { value: 'member' as const, label: 'MEMBER', desc: 'Standard access' },
@@ -587,67 +587,67 @@ function MembersTab({ workspaceId, members, workspace }: any) {
                   className={clsx(
                     "p-[10px] border-2 font-mono text-left transition-colors",
                     inviteRole === role.value
-                      ? 'border-[#6366F1] bg-[#6366F1]/10'
-                      : 'border-[#2E2E35] bg-[#0A0A0A] hover:border-[#6366F1]/50'
+                      ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)]/10'
+                      : 'border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:border-[var(--theme-primary)]/50'
                   )}
                 >
                   <span className={clsx(
                     "block text-[10px] font-bold uppercase tracking-wider mb-[2px]",
-                    inviteRole === role.value ? 'text-[#6366F1]' : 'text-[#F9FAFB]'
+                    inviteRole === role.value ? 'text-[var(--theme-primary)]' : 'text-[var(--theme-foreground)]'
                   )}>
                     {role.label}
                   </span>
-                  <span className="block text-[10px] text-[#6B7280]">{role.desc}</span>
+                  <span className="block text-[10px] text-[var(--theme-foreground-tertiary)]">{role.desc}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Permissions Info */}
-          <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-[10px]">
+          <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-[10px]">
             <div className="flex items-center gap-[4px] mb-[6px]">
-              <HiOutlineCog className="w-4 h-4 text-[#6366F1]" />
-              <h4 className="font-mono text-xs font-bold text-[#F9FAFB]">ROLE PERMISSIONS</h4>
+              <HiOutlineCog className="w-4 h-4 text-[var(--theme-primary)]" />
+              <h4 className="font-mono text-xs font-bold text-[var(--theme-foreground)]">ROLE PERMISSIONS</h4>
             </div>
             <div className="grid grid-cols-2 gap-[8px] font-mono text-[10px]">
               <div>
-                <span className="text-[#6B7280]">Can Edit:</span>{' '}
-                <span className={inviteRole === 'viewer' ? 'text-[#EF4444]' : 'text-[#22C55E]'}>
+                <span className="text-[var(--theme-foreground-tertiary)]">Can Edit:</span>{' '}
+                <span className={inviteRole === 'viewer' ? 'text-[var(--theme-error)]' : 'text-[var(--theme-success)]'}>
                   {inviteRole === 'viewer' ? 'NO' : 'YES'}
                 </span>
               </div>
               <div>
-                <span className="text-[#6B7280]">Can Invite:</span>{' '}
-                <span className={inviteRole === 'admin' ? 'text-[#22C55E]' : 'text-[#EF4444]'}>
+                <span className="text-[var(--theme-foreground-tertiary)]">Can Invite:</span>{' '}
+                <span className={inviteRole === 'admin' ? 'text-[var(--theme-success)]' : 'text-[var(--theme-error)]'}>
                   {inviteRole === 'admin' ? 'YES' : 'NO'}
                 </span>
               </div>
               <div>
-                <span className="text-[#6B7280]">Can Manage:</span>{' '}
-                <span className={inviteRole === 'admin' ? 'text-[#22C55E]' : 'text-[#EF4444]'}>
+                <span className="text-[var(--theme-foreground-tertiary)]">Can Manage:</span>{' '}
+                <span className={inviteRole === 'admin' ? 'text-[var(--theme-success)]' : 'text-[var(--theme-error)]'}>
                   {inviteRole === 'admin' ? 'YES' : 'NO'}
                 </span>
               </div>
               <div>
-                <span className="text-[#6B7280]">Can View:</span>{' '}
-                <span className="text-[#22C55E]">YES</span>
+                <span className="text-[var(--theme-foreground-tertiary)]">Can View:</span>{' '}
+                <span className="text-[var(--theme-success)]">YES</span>
               </div>
             </div>
           </div>
 
           {/* Footer Actions */}
-          <div className="flex gap-[8px] pt-[8px] border-t-2 border-[#2E2E35]">
+          <div className="flex gap-[8px] pt-[8px] border-t-2 border-[var(--theme-border)]">
             <button
               type="button"
               onClick={() => setShowInviteModal(false)}
-              className="flex-1 px-[10px] py-[10px] bg-[#0A0A0A] border-2 border-[#2E2E35] text-[#9CA3AF] font-mono text-xs font-bold uppercase tracking-wider hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors"
+              className="flex-1 px-[10px] py-[10px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] font-mono text-xs font-bold uppercase tracking-wider hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] transition-colors"
             >
               CANCEL
             </button>
             <button
               type="submit"
               disabled={isInviting || !inviteEmail.trim()}
-              className="flex-1 px-[10px] py-[10px] bg-[#6366F1] border-2 border-[#4F46E5] text-white font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#4F46E5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-[10px] py-[10px] bg-[var(--theme-primary)] border-2 border-[var(--theme-primary-active)] text-white font-mono text-xs font-bold uppercase tracking-wider hover:bg-[var(--theme-primary-active)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isInviting ? 'INVITING...' : 'SEND INVITE'}
             </button>
@@ -663,28 +663,28 @@ function SettingsTab({ workspace }: any) {
   return (
     <div className="p-4 max-w-3xl">
       <div className="mb-4">
-        <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6B7280] inline-block mb-1">
+        <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] inline-block mb-1">
           Configuration
         </span>
-        <h2 className="text-lg font-bold text-[#F9FAFB]">Workspace Settings</h2>
+        <h2 className="text-lg font-bold text-[var(--theme-foreground)]">Workspace Settings</h2>
       </div>
 
-      <div className="bg-[#111111] border-2 border-[#2E2E35] p-4 mb-4">
-        <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6B7280] mb-3 pb-2 border-b border-[#1F1F23]">General Settings</h3>
+      <div className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] p-4 mb-4">
+        <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] mb-3 pb-2 border-b border-[var(--theme-border)]">General Settings</h3>
         <div className="space-y-3">
           <div>
-            <label className="block font-mono text-[10px] font-semibold mb-1.5 uppercase tracking-wider text-[#9CA3AF]">Workspace Name</label>
+            <label className="block font-mono text-[10px] font-semibold mb-1.5 uppercase tracking-wider text-[var(--theme-foreground-secondary)]">Workspace Name</label>
             <input
               type="text"
               defaultValue={workspace.name}
-              className="w-full px-3 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] font-mono text-sm text-[#F9FAFB] placeholder-[#6B7280] focus:border-[#6366F1] focus:outline-none transition-colors"
+              className="w-full px-3 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-sm text-[var(--theme-foreground)] placeholder-[var(--theme-foreground-tertiary)] focus:border-[var(--theme-primary)] focus:outline-none transition-colors"
             />
           </div>
           <div>
-            <label className="block font-mono text-[10px] font-semibold mb-1.5 uppercase tracking-wider text-[#9CA3AF]">Description</label>
+            <label className="block font-mono text-[10px] font-semibold mb-1.5 uppercase tracking-wider text-[var(--theme-foreground-secondary)]">Description</label>
             <textarea
               defaultValue={workspace.description}
-              className="w-full px-3 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] font-mono text-sm text-[#F9FAFB] h-24 placeholder-[#6B7280] focus:border-[#6366F1] focus:outline-none transition-colors resize-none"
+              className="w-full px-3 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-sm text-[var(--theme-foreground)] h-24 placeholder-[var(--theme-foreground-tertiary)] focus:border-[var(--theme-primary)] focus:outline-none transition-colors resize-none"
             />
           </div>
           <div className="flex justify-end">
@@ -700,12 +700,12 @@ function SettingsTab({ workspace }: any) {
 function AnalyticsTab({ workspaceId }: any) {
   return (
     <div className="p-4 flex flex-col items-center justify-center min-h-[50vh]">
-      <div className="border-2 border-[#2E2E35] border-dashed p-8 text-center max-w-md">
-        <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[#2E2E35] text-[#6B7280]">
+      <div className="border-2 border-[var(--theme-border)] border-dashed p-8 text-center max-w-md">
+        <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[var(--theme-border)] text-[var(--theme-foreground-tertiary)]">
           <HiOutlineChartBar className="w-5 h-5" />
         </div>
-        <h3 className="text-sm font-bold text-[#F9FAFB] mb-1">Analytics Unavailable</h3>
-        <p className="text-xs text-[#6B7280] max-w-sm mx-auto">
+        <h3 className="text-sm font-bold text-[var(--theme-foreground)] mb-1">Analytics Unavailable</h3>
+        <p className="text-xs text-[var(--theme-foreground-tertiary)] max-w-sm mx-auto">
           Analytics features are coming soon. Check back later for system updates.
         </p>
       </div>
@@ -716,12 +716,12 @@ function AnalyticsTab({ workspaceId }: any) {
 function BillingTab({ workspace }: any) {
   return (
     <div className="p-4 flex flex-col items-center justify-center min-h-[50vh]">
-      <div className="border-2 border-[#2E2E35] border-dashed p-8 text-center max-w-md">
-        <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[#2E2E35] text-[#6B7280]">
+      <div className="border-2 border-[var(--theme-border)] border-dashed p-8 text-center max-w-md">
+        <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[var(--theme-border)] text-[var(--theme-foreground-tertiary)]">
           <HiOutlineCreditCard className="w-5 h-5" />
         </div>
-        <h3 className="text-sm font-bold text-[#F9FAFB] mb-1">Billing & Plans</h3>
-        <p className="text-xs text-[#6B7280] max-w-sm mx-auto">
+        <h3 className="text-sm font-bold text-[var(--theme-foreground)] mb-1">Billing & Plans</h3>
+        <p className="text-xs text-[var(--theme-foreground-tertiary)] max-w-sm mx-auto">
           Billing management is currently unavailable.
         </p>
       </div>
@@ -733,20 +733,20 @@ function DangerTab({ workspace }: any) {
   return (
     <div className="p-4 max-w-3xl">
       <div className="mb-4">
-        <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#EF4444] inline-block mb-1">
+        <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-error)] inline-block mb-1">
           Caution
         </span>
-        <h2 className="text-lg font-bold text-[#EF4444]">Danger Zone</h2>
+        <h2 className="text-lg font-bold text-[var(--theme-error)]">Danger Zone</h2>
       </div>
 
-      <div className="bg-[#111111] border-2 border-[#EF4444] p-4">
+      <div className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-error)] p-4">
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 border-2 border-[#EF4444] flex items-center justify-center shrink-0">
-            <HiOutlineExclamation className="w-4 h-4 text-[#EF4444]" />
+          <div className="w-8 h-8 border-2 border-[var(--theme-error)] flex items-center justify-center shrink-0">
+            <HiOutlineExclamation className="w-4 h-4 text-[var(--theme-error)]" />
           </div>
           <div className="flex-1">
-            <h3 className="text-sm font-bold uppercase tracking-wider mb-1 text-[#EF4444]">Delete Workspace</h3>
-            <p className="font-mono text-xs text-[#6B7280] mb-3">
+            <h3 className="text-sm font-bold uppercase tracking-wider mb-1 text-[var(--theme-error)]">Delete Workspace</h3>
+            <p className="font-mono text-xs text-[var(--theme-foreground-tertiary)] mb-3">
               Permanently delete this workspace and all associated data. This action cannot be undone.
             </p>
             <BrutalButton variant="danger" size="sm">

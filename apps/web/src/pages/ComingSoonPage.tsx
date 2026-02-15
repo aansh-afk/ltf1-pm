@@ -15,7 +15,7 @@ function RadarPing() {
       {[1, 2, 3, 4].map((ring) => (
         <div
           key={ring}
-          className="absolute inset-0 border border-[#6366F1]/10 rounded-full"
+          className="absolute inset-0 border border-[var(--theme-primary)]/10 rounded-full"
           style={{
             transform: `scale(${ring * 0.25})`,
           }}
@@ -26,7 +26,7 @@ function RadarPing() {
       <div
         className="absolute top-1/2 left-1/2 w-1/2 h-[1px] origin-left"
         style={{
-          background: 'linear-gradient(90deg, #6366F1 0%, transparent 100%)',
+          background: 'linear-gradient(90deg, var(--theme-primary) 0%, transparent 100%)',
           animation: 'radarSweep 3s linear infinite',
         }}
       />
@@ -42,8 +42,8 @@ function RadarPing() {
 
       {/* Center dot */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-        <div className="w-2 h-2 bg-[#6366F1] rounded-full" />
-        <div className="absolute inset-0 w-2 h-2 bg-[#6366F1] rounded-full animate-ping opacity-40" />
+        <div className="w-2 h-2 bg-[var(--theme-primary)] rounded-full" />
+        <div className="absolute inset-0 w-2 h-2 bg-[var(--theme-primary)] rounded-full animate-ping opacity-40" />
       </div>
 
       {/* Blips — fake signals on the radar */}
@@ -56,7 +56,7 @@ function RadarPing() {
       ].map((blip, i) => (
         <div
           key={i}
-          className="absolute w-1.5 h-1.5 rounded-full bg-[#22C55E]"
+          className="absolute w-1.5 h-1.5 rounded-full bg-[var(--theme-success)]"
           style={{
             left: `${blip.x}%`,
             top: `${blip.y}%`,
@@ -71,11 +71,11 @@ function RadarPing() {
 // ── Progress bar segments ──
 function BuildProgress() {
   const stages = [
-    { label: 'FOUNDATION', pct: 100, color: '#22C55E' },
-    { label: 'CORE ENGINE', pct: 100, color: '#22C55E' },
-    { label: 'FEATURES', pct: 85, color: '#6366F1' },
-    { label: 'POLISH', pct: 40, color: '#F59E0B' },
-    { label: 'LAUNCH', pct: 5, color: '#EF4444' },
+    { label: 'FOUNDATION', pct: 100, color: 'var(--theme-success)' },
+    { label: 'CORE ENGINE', pct: 100, color: 'var(--theme-success)' },
+    { label: 'FEATURES', pct: 85, color: 'var(--theme-primary)' },
+    { label: 'POLISH', pct: 40, color: 'var(--theme-warning)' },
+    { label: 'LAUNCH', pct: 5, color: 'var(--theme-error)' },
   ]
 
   return (
@@ -83,14 +83,14 @@ function BuildProgress() {
       {stages.map((stage, i) => (
         <div key={i}>
           <div className="flex items-center justify-between mb-1">
-            <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#9CA3AF] uppercase tracking-wider">
+            <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-secondary)] uppercase tracking-wider">
               {stage.label}
             </span>
             <span className="font-['IBM_Plex_Mono',monospace] text-[10px]" style={{ color: stage.color }}>
               {stage.pct}%
             </span>
           </div>
-          <div className="h-1.5 bg-[#111111] border border-[#1F1F23] overflow-hidden">
+          <div className="h-1.5 bg-[var(--theme-background-tertiary)] border border-[var(--theme-border)] overflow-hidden">
             <div
               className="h-full transition-all duration-1000 ease-out"
               style={{
@@ -113,22 +113,22 @@ function LiveLog() {
   const logRef = useRef<HTMLDivElement>(null)
 
   const logMessages = useMemo(() => [
-    { text: 'Compiling feature modules...', color: '#9CA3AF' },
-    { text: '[OK] Dashboard engine initialized', color: '#22C55E' },
-    { text: 'Running integration tests... 847/847 passed', color: '#22C55E' },
-    { text: '[WARN] Launch sequence pending approval', color: '#F59E0B' },
-    { text: 'Optimizing query performance...', color: '#9CA3AF' },
-    { text: '[OK] Real-time sync layer active', color: '#22C55E' },
-    { text: 'Building sprint analytics module...', color: '#6366F1' },
-    { text: '[OK] Workspace isolation verified', color: '#22C55E' },
-    { text: 'Deploying collaboration engine...', color: '#9CA3AF' },
-    { text: '[OK] GitHub integration connected', color: '#22C55E' },
-    { text: '[WARN] Rate limiter calibrating', color: '#F59E0B' },
-    { text: 'Preparing AI task routing...', color: '#6366F1' },
-    { text: '[OK] Encryption layer verified', color: '#22C55E' },
-    { text: 'Loading team management module...', color: '#9CA3AF' },
-    { text: '[OK] Permission system initialized', color: '#22C55E' },
-    { text: 'Stress testing concurrent sessions...', color: '#6366F1' },
+    { text: 'Compiling feature modules...', color: 'var(--theme-foreground-secondary)' },
+    { text: '[OK] Dashboard engine initialized', color: 'var(--theme-success)' },
+    { text: 'Running integration tests... 847/847 passed', color: 'var(--theme-success)' },
+    { text: '[WARN] Launch sequence pending approval', color: 'var(--theme-warning)' },
+    { text: 'Optimizing query performance...', color: 'var(--theme-foreground-secondary)' },
+    { text: '[OK] Real-time sync layer active', color: 'var(--theme-success)' },
+    { text: 'Building sprint analytics module...', color: 'var(--theme-primary)' },
+    { text: '[OK] Workspace isolation verified', color: 'var(--theme-success)' },
+    { text: 'Deploying collaboration engine...', color: 'var(--theme-foreground-secondary)' },
+    { text: '[OK] GitHub integration connected', color: 'var(--theme-success)' },
+    { text: '[WARN] Rate limiter calibrating', color: 'var(--theme-warning)' },
+    { text: 'Preparing AI task routing...', color: 'var(--theme-primary)' },
+    { text: '[OK] Encryption layer verified', color: 'var(--theme-success)' },
+    { text: 'Loading team management module...', color: 'var(--theme-foreground-secondary)' },
+    { text: '[OK] Permission system initialized', color: 'var(--theme-success)' },
+    { text: 'Stress testing concurrent sessions...', color: 'var(--theme-primary)' },
   ], [])
 
   useEffect(() => {
@@ -168,12 +168,12 @@ function LiveLog() {
             opacity: i < lines.length - 6 ? 0.4 : 1,
           }}
         >
-          <span className="text-[#6B7280]/50 shrink-0">{line.time}</span>
+          <span className="text-[var(--theme-foreground-tertiary)]/50 shrink-0">{line.time}</span>
           <span style={{ color: line.color }}>{line.text}</span>
         </div>
       ))}
-      <div className="flex items-center gap-1 text-[#6B7280]/40">
-        <span className="inline-block w-1.5 h-3 bg-[#6366F1] animate-pulse" />
+      <div className="flex items-center gap-1 text-[var(--theme-foreground-tertiary)]/40">
+        <span className="inline-block w-1.5 h-3 bg-[var(--theme-primary)] animate-pulse" />
       </div>
     </div>
   )
@@ -202,9 +202,9 @@ export default function ComingSoonPage() {
           <div
             className="font-['IBM_Plex_Mono',monospace] text-[12px] px-4 py-3 border-2 shadow-[3px_3px_0px_rgba(0,0,0,0.5)]"
             style={{
-              backgroundColor: '#0A0A0A',
-              borderColor: success ? '#22C55E' : '#6366F1',
-              color: success ? '#22C55E' : '#6366F1',
+              backgroundColor: 'var(--theme-background-secondary)',
+              borderColor: success ? 'var(--theme-success)' : 'var(--theme-primary)',
+              color: success ? 'var(--theme-success)' : 'var(--theme-primary)',
             }}
           >
             {success ? '> Signal accepted. You are on the radar.' : '> Signal already recorded.'}
@@ -218,14 +218,14 @@ export default function ComingSoonPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--theme-background)] flex flex-col relative overflow-hidden">
       <PublicNavigation />
 
       {/* Subtle dot grid background */}
       <div
         className="fixed inset-0 pointer-events-none opacity-[0.035]"
         style={{
-          backgroundImage: 'radial-gradient(circle, #6366F1 0.5px, transparent 0.5px)',
+          backgroundImage: 'radial-gradient(circle, var(--theme-primary) 0.5px, transparent 0.5px)',
           backgroundSize: '24px 24px',
         }}
       />
@@ -238,20 +238,20 @@ export default function ComingSoonPage() {
               {/* Left: Text */}
               <div className="flex-1 text-center lg:text-left">
                 {/* Status badge */}
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 border-2 border-[#2E2E35] bg-[#0A0A0A] mb-6">
-                  <div className="w-1.5 h-1.5 bg-[#F59E0B] animate-pulse" />
-                  <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#F59E0B] uppercase tracking-widest font-semibold">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] mb-6">
+                  <div className="w-1.5 h-1.5 bg-[var(--theme-warning)] animate-pulse" />
+                  <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-warning)] uppercase tracking-widest font-semibold">
                     Building in progress
                   </span>
                 </div>
 
-                <h1 className="font-['Inter',sans-serif] font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-[#F9FAFB] leading-[1.1] mb-5">
+                <h1 className="font-['Inter',sans-serif] font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-[var(--theme-foreground)] leading-[1.1] mb-5">
                   Something big is
                   <br />
-                  <span className="text-[#6366F1]">loading</span>
+                  <span className="text-[var(--theme-primary)]">loading</span>
                 </h1>
 
-                <p className="font-['Inter',sans-serif] text-base sm:text-lg text-[#9CA3AF] max-w-md mx-auto lg:mx-0 mb-8 leading-relaxed">
+                <p className="font-['Inter',sans-serif] text-base sm:text-lg text-[var(--theme-foreground-secondary)] max-w-md mx-auto lg:mx-0 mb-8 leading-relaxed">
                   We&apos;re engineering the next evolution of project management.
                   Built by devs, for devs. No fluff, no noise.
                 </p>
@@ -259,27 +259,27 @@ export default function ComingSoonPage() {
                 {/* Waitlist count */}
                 <div className="flex items-center gap-4 justify-center lg:justify-start mb-8">
                   <div className="flex items-center gap-2">
-                    <span className="font-['IBM_Plex_Mono',monospace] text-[28px] sm:text-[36px] font-bold text-[#6366F1]">
+                    <span className="font-['IBM_Plex_Mono',monospace] text-[28px] sm:text-[36px] font-bold text-[var(--theme-primary)]">
                       {stats ? stats.totalCount.toLocaleString() : '—'}
                     </span>
                     <div className="text-left">
-                      <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">
+                      <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-tertiary)] uppercase tracking-wider">
                         developers
                       </div>
-                      <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">
+                      <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-tertiary)] uppercase tracking-wider">
                         waiting
                       </div>
                     </div>
                   </div>
-                  <div className="w-px h-10 bg-[#2E2E35]" />
+                  <div className="w-px h-10 bg-[var(--theme-border)]" />
                   <button
                     onClick={handleBoost}
-                    className="flex items-center gap-2 px-4 py-2.5 border-2 border-[#2E2E35] bg-[#0A0A0A] hover:border-[#6366F1] hover:bg-[#111111] transition-all duration-150 group"
+                    className="flex items-center gap-2 px-4 py-2.5 border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:border-[var(--theme-border-hover)] hover:bg-[var(--theme-background-tertiary)] transition-all duration-150 group"
                   >
                     <span className="font-['IBM_Plex_Mono',monospace] text-[18px] group-hover:scale-110 transition-transform duration-150">
                       +1
                     </span>
-                    <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#9CA3AF] uppercase tracking-wider group-hover:text-[#6366F1] transition-colors duration-150">
+                    <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-secondary)] uppercase tracking-wider group-hover:text-[var(--theme-primary)] transition-colors duration-150">
                       Boost
                     </span>
                   </button>
@@ -304,15 +304,15 @@ export default function ComingSoonPage() {
           <div className="max-w-5xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Build status card */}
-              <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1F1F23]">
+              <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--theme-border)]">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-[#6366F1]" />
-                    <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#9CA3AF] uppercase tracking-wider font-semibold">
+                    <div className="w-2 h-2 bg-[var(--theme-primary)]" />
+                    <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-secondary)] uppercase tracking-wider font-semibold">
                       Build Status
                     </span>
                   </div>
-                  <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#22C55E] uppercase tracking-wider">
+                  <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-success)] uppercase tracking-wider">
                     Active
                   </span>
                 </div>
@@ -322,15 +322,15 @@ export default function ComingSoonPage() {
               </div>
 
               {/* Live log card */}
-              <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1F1F23]">
+              <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--theme-border)]">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-[#22C55E] animate-pulse" />
-                    <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#9CA3AF] uppercase tracking-wider font-semibold">
+                    <div className="w-2 h-2 bg-[var(--theme-success)] animate-pulse" />
+                    <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-secondary)] uppercase tracking-wider font-semibold">
                       Live Build Log
                     </span>
                   </div>
-                  <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">
+                  <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-tertiary)] uppercase tracking-wider">
                     stdout
                   </span>
                 </div>
@@ -346,10 +346,10 @@ export default function ComingSoonPage() {
         <section className="px-6 pb-16 sm:pb-24">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-10">
-              <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6366F1] uppercase tracking-widest font-semibold">
+              <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-primary)] uppercase tracking-widest font-semibold">
                 Modules
               </span>
-              <h2 className="font-['Inter',sans-serif] font-bold text-2xl sm:text-3xl text-[#F9FAFB] mt-2">
+              <h2 className="font-['Inter',sans-serif] font-bold text-2xl sm:text-3xl text-[var(--theme-foreground)] mt-2">
                 What&apos;s in the pipeline
               </h2>
             </div>
@@ -361,50 +361,50 @@ export default function ComingSoonPage() {
                   title: 'Sprint Engine',
                   desc: 'Velocity tracking, burndown charts, and automated sprint planning.',
                   status: 'live',
-                  color: '#22C55E',
+                  color: 'var(--theme-success)',
                 },
                 {
                   tag: 'CORE',
                   title: 'Real-time Boards',
                   desc: 'Kanban and whiteboard views with live multiplayer cursors.',
                   status: 'live',
-                  color: '#22C55E',
+                  color: 'var(--theme-success)',
                 },
                 {
                   tag: 'AI',
                   title: 'AI Task Routing',
                   desc: 'Intelligent assignment based on skills, capacity, and context.',
                   status: 'beta',
-                  color: '#6366F1',
+                  color: 'var(--theme-primary)',
                 },
                 {
                   tag: 'INTEGRATION',
                   title: 'GitHub Sync',
                   desc: 'Bi-directional issue sync, PR tracking, and commit mapping.',
                   status: 'live',
-                  color: '#22C55E',
+                  color: 'var(--theme-success)',
                 },
                 {
                   tag: 'TEAM',
                   title: 'Team Analytics',
                   desc: 'Workload distribution, bottleneck detection, and health scores.',
                   status: 'building',
-                  color: '#F59E0B',
+                  color: 'var(--theme-warning)',
                 },
                 {
                   tag: 'PLATFORM',
                   title: 'CLI & API',
                   desc: 'Full API access and a terminal-native CLI for power users.',
                   status: 'planned',
-                  color: '#EF4444',
+                  color: 'var(--theme-error)',
                 },
               ].map((item, i) => (
                 <div
                   key={i}
-                  className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-4 hover:border-[#6366F1]/50 transition-colors duration-200 group"
+                  className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-4 hover:border-[var(--theme-border-hover)]/50 transition-colors duration-200 group"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <span className="font-['IBM_Plex_Mono',monospace] text-[9px] text-[#6B7280] uppercase tracking-widest">
+                    <span className="font-['IBM_Plex_Mono',monospace] text-[9px] text-[var(--theme-foreground-tertiary)] uppercase tracking-widest">
                       {item.tag}
                     </span>
                     <div className="flex items-center gap-1.5">
@@ -417,10 +417,10 @@ export default function ComingSoonPage() {
                       </span>
                     </div>
                   </div>
-                  <h3 className="font-['Inter',sans-serif] font-semibold text-[15px] text-[#F9FAFB] mb-1.5 group-hover:text-[#6366F1] transition-colors duration-200">
+                  <h3 className="font-['Inter',sans-serif] font-semibold text-[15px] text-[var(--theme-foreground)] mb-1.5 group-hover:text-[var(--theme-primary)] transition-colors duration-200">
                     {item.title}
                   </h3>
-                  <p className="font-['Inter',sans-serif] text-[13px] text-[#6B7280] leading-relaxed">
+                  <p className="font-['Inter',sans-serif] text-[13px] text-[var(--theme-foreground-tertiary)] leading-relaxed">
                     {item.desc}
                   </p>
                 </div>
@@ -432,14 +432,14 @@ export default function ComingSoonPage() {
         {/* ── BOTTOM CTA ── */}
         <section className="px-6 pb-20 sm:pb-28">
           <div className="max-w-xl mx-auto text-center">
-            <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-6 sm:p-8">
-              <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6366F1] uppercase tracking-widest font-semibold mb-3">
+            <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-6 sm:p-8">
+              <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-primary)] uppercase tracking-widest font-semibold mb-3">
                 Don&apos;t miss launch
               </div>
-              <h3 className="font-['Inter',sans-serif] font-bold text-xl sm:text-2xl text-[#F9FAFB] mb-2">
+              <h3 className="font-['Inter',sans-serif] font-bold text-xl sm:text-2xl text-[var(--theme-foreground)] mb-2">
                 Get early access
               </h3>
-              <p className="font-['Inter',sans-serif] text-sm text-[#6B7280] mb-6">
+              <p className="font-['Inter',sans-serif] text-sm text-[var(--theme-foreground-tertiary)] mb-6">
                 First 100 users get Pro free for 3 months.
               </p>
 
@@ -450,23 +450,23 @@ export default function ComingSoonPage() {
               <div className="flex items-center justify-center gap-4 text-[11px] font-['IBM_Plex_Mono',monospace]">
                 <Link
                   to="/pricing"
-                  className="text-[#6B7280] hover:text-[#6366F1] transition-colors uppercase tracking-wider"
+                  className="text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-primary)] transition-colors uppercase tracking-wider"
                 >
                   Pricing
                 </Link>
-                <span className="text-[#2E2E35]">|</span>
+                <span className="text-[var(--theme-border)]">|</span>
                 <Link
                   to="/features"
-                  className="text-[#6B7280] hover:text-[#6366F1] transition-colors uppercase tracking-wider"
+                  className="text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-primary)] transition-colors uppercase tracking-wider"
                 >
                   Features
                 </Link>
-                <span className="text-[#2E2E35]">|</span>
+                <span className="text-[var(--theme-border)]">|</span>
                 <a
                   href="https://discord.gg/jWMS6Pcr"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#6B7280] hover:text-[#6366F1] transition-colors uppercase tracking-wider"
+                  className="text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-primary)] transition-colors uppercase tracking-wider"
                 >
                   Discord
                 </a>
