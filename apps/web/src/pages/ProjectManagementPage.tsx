@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
@@ -26,8 +26,6 @@ import {
   HiOutlineViewList,
   HiOutlinePlay,
   HiOutlinePause,
-  HiOutlineBan,
-  HiOutlineLink,
   HiOutlineChip,
   HiOutlineUser,
   HiOutlineDotsVertical,
@@ -43,7 +41,6 @@ import TaskList from '@/components/features/task/TaskList'
 import { GitHubProjectTab } from '@/components/features/github/GitHubProjectTab'
 import SprintBoard from '@/components/features/sprint/SprintBoard'
 import CreateSprintModal from '@/components/features/sprint/CreateSprintModal'
-import TaskCard from '@/components/features/task/TaskCard'
 import TaskFilters from '@/components/features/task/TaskFilters'
 import ScheduleMeetingModal from '@/components/features/meetings/ScheduleMeetingModal'
 import MeetingCard from '@/components/features/meetings/MeetingCard'
@@ -64,6 +61,7 @@ import { ExpertiseSearchModal } from '@/components/features/profile/ExpertiseSea
 import { TeamExpertiseMatrix } from '@/components/features/profile/TeamExpertiseMatrix'
 import AIDocumentationHub from '@/components/features/documentation/AIDocumentationHub'
 import type { TaskFilters as TaskFiltersType } from '@/components/features/task/TaskFilters'
+import { useTemporaryShortcut } from '@/contexts/ShortcutContext'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 import { formatDistanceToNow } from 'date-fns'
@@ -101,7 +99,6 @@ export default function ProjectManagementPage() {
   const [showExpertiseSearch, setShowExpertiseSearch] = useState(false)
   const [showExpertiseMatrix, setShowExpertiseMatrix] = useState(false)
   const [selectedTask, setSelectedTask] = useState<any>(null)
-  const [quickFilter, setQuickFilter] = useState<string | null>(null)
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [selectedSprintId, setSelectedSprintId] = useState<string | null>('all')
   const [taskFilters, setTaskFilters] = useState<TaskFiltersType>({
@@ -205,68 +202,81 @@ export default function ProjectManagementPage() {
     workspaceId ? { workspaceId: workspaceId as any } : 'skip'
   )
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      // Only handle shortcuts when not typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return
-      }
+  // Page-specific keyboard shortcuts via central shortcut system
+  const isInputFocused = useCallback(() => {
+    const el = document.activeElement
+    return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el?.getAttribute('contenteditable') === 'true'
+  }, [])
 
-      switch (e.key.toLowerCase()) {
-        case 'n':
-          if (activeTab === 'tasks') {
-            setShowCreateTaskModal(true)
-          }
-          break
-        case 'm':
-          if (activeTab === 'tasks') {
-            setShowMyTasks(!showMyTasks)
-          }
-          break
-        case 't':
-          if (activeTab === 'tasks' && selectedTask) {
-            // Toggle timer on selected task
-            setCurrentContext(currentContext === selectedTask.key ? null : selectedTask.key)
-            toast.info(currentContext === selectedTask.key ? 'Timer stopped' : `Timer started for ${selectedTask.key}`)
-          }
-          break
-        case 'b':
-          if (activeTab === 'tasks' && selectedTask) {
-            // Mark selected task as blocked (placeholder - would need task update mutation)
-            toast.info(`Task ${selectedTask.key} marked as blocked`)
-          }
-          break
-        case '/':
-          if (activeTab === 'tasks') {
-            e.preventDefault()
-            // Focus search input
-            const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement
-            if (searchInput) {
-              searchInput.focus()
-            }
-          }
-          break
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-          if (activeTab === 'tasks') {
-            // Switch to column by number
-            const columnMap = { '1': 'backlog', '2': 'todo', '3': 'in_progress', '4': 'in_review', '5': 'done' }
-            const columnName = columnMap[e.key as keyof typeof columnMap]
-            if (columnName) {
-              toast.info(`Switched focus to ${columnName.replace('_', ' ')} column`)
-            }
-          }
-          break
-      }
-    }
+  useTemporaryShortcut(
+    { modifiers: [], key: 'n', display: 'N' },
+    () => { if (!isInputFocused()) setShowCreateTaskModal(true) },
+    { enabled: activeTab === 'tasks' }
+  )
 
-    window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [activeTab, showMyTasks, setShowCreateTaskModal])
+  useTemporaryShortcut(
+    { modifiers: [], key: 'm', display: 'M' },
+    () => { if (!isInputFocused()) setShowMyTasks(prev => !prev) },
+    { enabled: activeTab === 'tasks' }
+  )
+
+  useTemporaryShortcut(
+    { modifiers: [], key: '/', display: '/' },
+    () => {
+      if (!isInputFocused()) {
+        const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement
+        if (searchInput) searchInput.focus()
+      }
+    },
+    { enabled: activeTab === 'tasks' }
+  )
+
+  useTemporaryShortcut(
+    { modifiers: [], key: 't', display: 'T' },
+    () => {
+      if (!isInputFocused() && selectedTask) {
+        setCurrentContext(currentContext === selectedTask.key ? null : selectedTask.key)
+        toast.success(currentContext === selectedTask.key ? 'Timer stopped' : `Timer started for ${selectedTask.key}`)
+      }
+    },
+    { enabled: activeTab === 'tasks' }
+  )
+
+  useTemporaryShortcut(
+    { modifiers: [], key: 'b', display: 'B' },
+    () => {
+      if (!isInputFocused() && selectedTask) {
+        toast.success(`Task ${selectedTask.key} marked as blocked`)
+      }
+    },
+    { enabled: activeTab === 'tasks' }
+  )
+
+  useTemporaryShortcut(
+    { modifiers: [], key: '1', display: '1' },
+    () => { if (!isInputFocused()) toast.success('Switched focus to backlog column') },
+    { enabled: activeTab === 'tasks' }
+  )
+  useTemporaryShortcut(
+    { modifiers: [], key: '2', display: '2' },
+    () => { if (!isInputFocused()) toast.success('Switched focus to todo column') },
+    { enabled: activeTab === 'tasks' }
+  )
+  useTemporaryShortcut(
+    { modifiers: [], key: '3', display: '3' },
+    () => { if (!isInputFocused()) toast.success('Switched focus to in progress column') },
+    { enabled: activeTab === 'tasks' }
+  )
+  useTemporaryShortcut(
+    { modifiers: [], key: '4', display: '4' },
+    () => { if (!isInputFocused()) toast.success('Switched focus to in review column') },
+    { enabled: activeTab === 'tasks' }
+  )
+  useTemporaryShortcut(
+    { modifiers: [], key: '5', display: '5' },
+    () => { if (!isInputFocused()) toast.success('Switched focus to done column') },
+    { enabled: activeTab === 'tasks' }
+  )
 
   const tabs = [
     { id: 'overview', label: 'OVERVIEW', icon: <HiOutlineHome className="w-14px h-14px" /> },
@@ -291,9 +301,9 @@ export default function ProjectManagementPage() {
   if (!project) {
     return (
       <div className="p-[16px]">
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
-          <h1 className="text-[16px] font-bold font-bold uppercase text-brutal-error mb-8px">PROJECT NOT FOUND</h1>
-          <p className="font-mono text-brutal-sm">The requested project does not exist or you don't have access.</p>
+        <div className="bg-[#050505] border-2 border-[#2E2E35] p-[16px]">
+          <h1 className="text-[16px] font-bold font-bold uppercase text-[#EF4444] mb-8px">PROJECT NOT FOUND</h1>
+          <p className="font-['IBM_Plex_Mono',monospace] text-sm">The requested project does not exist or you don't have access.</p>
         </div>
       </div>
     )
@@ -333,11 +343,11 @@ export default function ProjectManagementPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'success': return 'text-brutal-success border-brutal-success bg-brutal-success/10'
-      case 'warning': return 'text-brutal-warning border-brutal-warning bg-brutal-warning/10'
-      case 'error': return 'text-brutal-error border-brutal-error bg-brutal-error/10'
-      case 'info': return 'text-brutal-info border-brutal-info bg-brutal-info/10'
-      default: return 'text-primary-brutalist border-[var(--theme-border)]'
+      case 'success': return 'text-[#22C55E] border-[#22C55E] bg-[#22C55E]/10'
+      case 'warning': return 'text-[#F59E0B] border-[#F59E0B] bg-[#F59E0B]/10'
+      case 'error': return 'text-[#EF4444] border-[#EF4444] bg-[#EF4444]/10'
+      case 'info': return 'text-[#06B6D4] border-[#06B6D4] bg-[#06B6D4]/10'
+      default: return 'text-[#6366F1] border-[#2E2E35]'
     }
   }
 
@@ -346,33 +356,33 @@ export default function ProjectManagementPage() {
     const activeSprint = allSprints?.find(s => s.status === 'active')
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-5">
         {/* Mission Brief & Stats Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Project Overview */}
           <BrutalCard variant="default" className="lg:col-span-2" padding="sm">
-            <div className="flex items-center gap-3 mb-3 border-b-2 border-[var(--theme-border)] pb-3">
-              <HiOutlineChip className="w-5 h-5 text-[var(--theme-primary)]" />
+            <div className="flex items-center gap-3 mb-3 border-b-2 border-[#2E2E35] pb-3">
+              <HiOutlineChip className="w-5 h-5 text-[#6366F1]" />
               <h3 className="text-sm font-bold uppercase tracking-wider">Project Overview</h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-              <div className="bg-[var(--theme-background-secondary)] p-3 border border-[var(--theme-border)]">
-                <span className="block text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider mb-1">PROJECT LEAD</span>
+              <div className="bg-[#0A0A0A] p-3 border border-[#2E2E35]">
+                <span className="block text-[10px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]/60 uppercase tracking-wider mb-1">PROJECT LEAD</span>
                 <span className="block font-bold text-sm truncate">{project.lead?.name || 'Unassigned'}</span>
               </div>
-              <div className="bg-[var(--theme-background-secondary)] p-3 border border-[var(--theme-border)]">
-                <span className="block text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider mb-1">TEAM SIZE</span>
+              <div className="bg-[#0A0A0A] p-3 border border-[#2E2E35]">
+                <span className="block text-[10px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]/60 uppercase tracking-wider mb-1">TEAM SIZE</span>
                 <span className="block font-bold text-sm">{project.members?.length || 0} Members</span>
               </div>
-              <div className="bg-[var(--theme-background-secondary)] p-3 border border-[var(--theme-border)]">
-                <span className="block text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider mb-1">WORKFLOW</span>
+              <div className="bg-[#0A0A0A] p-3 border border-[#2E2E35]">
+                <span className="block text-[10px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]/60 uppercase tracking-wider mb-1">WORKFLOW</span>
                 <span className="block font-bold text-sm uppercase">{project.settings?.workflowType || 'Kanban'}</span>
               </div>
             </div>
 
             {project.description && (
-              <div className="font-mono text-xs text-[var(--theme-foreground)]/80 leading-relaxed border-l-4 border-[var(--theme-primary)] pl-3">
+              <div className="font-['IBM_Plex_Mono',monospace] text-xs text-[#F9FAFB]/80 leading-relaxed border-l-4 border-[#6366F1] pl-3">
                 {project.description}
               </div>
             )}
@@ -387,22 +397,22 @@ export default function ProjectManagementPage() {
                 padding="sm"
                 className={clsx(
                   "hover:translate-x-1",
-                  card.status === 'error' && "border-[var(--theme-error)]",
-                  card.status === 'warning' && "border-[var(--theme-warning)]",
-                  card.status === 'success' && "border-[var(--theme-success)]"
+                  card.status === 'error' && "border-[#EF4444]",
+                  card.status === 'warning' && "border-[#F59E0B]",
+                  card.status === 'success' && "border-[#22C55E]"
                 )}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider mb-1">{card.title}</div>
+                    <div className="text-[10px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]/60 uppercase tracking-wider mb-1">{card.title}</div>
                     <div className="text-xl font-bold">{card.value}</div>
                   </div>
                   <div className={clsx(
                     "p-1.5 border-2",
-                    card.status === 'error' ? "border-[var(--theme-error)] text-[var(--theme-error)]" :
-                      card.status === 'warning' ? "border-[var(--theme-warning)] text-[var(--theme-warning)]" :
-                        card.status === 'success' ? "border-[var(--theme-success)] text-[var(--theme-success)]" :
-                          "border-[var(--theme-primary)] text-[var(--theme-primary)]"
+                    card.status === 'error' ? "border-[#EF4444] text-[#EF4444]" :
+                      card.status === 'warning' ? "border-[#F59E0B] text-[#F59E0B]" :
+                        card.status === 'success' ? "border-[#22C55E] text-[#22C55E]" :
+                          "border-[#6366F1] text-[#6366F1]"
                   )}>
                     {card.icon}
                   </div>
@@ -416,7 +426,7 @@ export default function ProjectManagementPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <BrutalCard variant="default" padding="sm" className="min-h-[260px]">
             <div className="flex items-center gap-2 mb-3">
-              <HiOutlineLightningBolt className="w-4 h-4 text-[var(--theme-primary)]" />
+              <HiOutlineLightningBolt className="w-4 h-4 text-[#6366F1]" />
               <h3 className="text-xs font-bold uppercase tracking-wider">AI Insights</h3>
             </div>
             <AIInsightsPanel
@@ -429,7 +439,7 @@ export default function ProjectManagementPage() {
           <div className="space-y-4">
             <BrutalCard variant="default" padding="sm">
               <div className="flex items-center gap-2 mb-3">
-                <HiOutlineChartBar className="w-4 h-4 text-[var(--theme-primary)]" />
+                <HiOutlineChartBar className="w-4 h-4 text-[#6366F1]" />
                 <h3 className="text-xs font-bold uppercase tracking-wider">Velocity</h3>
               </div>
               {activeSprint ? (
@@ -439,15 +449,15 @@ export default function ProjectManagementPage() {
                   showPrediction={true}
                 />
               ) : (
-                <div className="h-32 flex items-center justify-center border-2 border-dashed border-[var(--theme-border)]">
-                  <span className="font-mono text-[10px] text-[var(--theme-foreground)]/40 uppercase tracking-wider">No Active Sprint Data</span>
+                <div className="h-32 flex items-center justify-center border-2 border-dashed border-[#2E2E35]">
+                  <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#F9FAFB]/40 uppercase tracking-wider">No Active Sprint Data</span>
                 </div>
               )}
             </BrutalCard>
 
             <BrutalCard variant="default" padding="sm">
               <div className="flex items-center gap-2 mb-3">
-                <HiOutlineClock className="w-4 h-4 text-[var(--theme-primary)]" />
+                <HiOutlineClock className="w-4 h-4 text-[#6366F1]" />
                 <h3 className="text-xs font-bold uppercase tracking-wider">Activity</h3>
               </div>
               <GitHubStyleHeatmap
@@ -476,8 +486,8 @@ export default function ProjectManagementPage() {
     // Safety check
     if (!project || !workspaceId) {
       return (
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[24px] text-center">
-          <h3 className="font-mono text-brutal-sm uppercase mb-[8px]">LOADING PROJECT DATA...</h3>
+        <div className="bg-[#050505] border-2 border-[#2E2E35] p-[24px] text-center">
+          <h3 className="font-['IBM_Plex_Mono',monospace] text-sm uppercase mb-[8px]">LOADING PROJECT DATA...</h3>
         </div>
       )
     }
@@ -550,38 +560,6 @@ export default function ProjectManagementPage() {
       )
     }
 
-    // Apply quick filters on top of advanced filters
-    if (quickFilter) {
-      switch (quickFilter) {
-        case 'my-tasks':
-          filteredTasks = filteredTasks.filter((t: any) =>
-            t.assigneeId === currentUser?._id ||
-            (t.assigneeIds && t.assigneeIds.includes(currentUser?._id))
-          )
-          break
-        case 'unassigned':
-          filteredTasks = filteredTasks.filter((t: any) => !t.assigneeId && (!t.assigneeIds || t.assigneeIds.length === 0))
-          break
-        case 'due-soon':
-          const threeDaysFromNow = new Date()
-          threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3)
-          filteredTasks = filteredTasks.filter((t: any) =>
-            t.dueDate && new Date(t.dueDate) <= threeDaysFromNow
-          )
-          break
-        case 'overdue':
-          filteredTasks = filteredTasks.filter((t: any) =>
-            t.dueDate && new Date(t.dueDate) < new Date()
-          )
-          break
-        case 'high-priority':
-          filteredTasks = filteredTasks.filter((t: any) =>
-            t.priority === 'urgent' || t.priority === 'high'
-          )
-          break
-      }
-    }
-
     // Task handlers are now defined at the component level
 
     // Mock task columns data - replace with real data
@@ -605,26 +583,20 @@ export default function ProjectManagementPage() {
 
     return (
       <div className={clsx(
-        "space-y-[12px]",
+        "space-y-5",
         taskView === 'kanban' && "h-full flex flex-col space-y-0 gap-6"
       )}>
         {/* Filter Info Bar */}
-        {(quickFilter || taskFilters.search || taskFilters.status.length > 0 || taskFilters.priority.length > 0 ||
+        {(taskFilters.search || taskFilters.status.length > 0 || taskFilters.priority.length > 0 ||
           taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
           taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== undefined ||
           taskFilters.isOverdue !== undefined) && (
-            <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-12px flex items-center justify-between">
-              <div className="font-mono text-brutal-sm">
-                SHOWING <span className="font-bold text-primary-brutalist">{filteredTasks.length}</span> OF <span className="font-bold">{tasks?.length || 0}</span> TASKS
-                {quickFilter && (
-                  <span className="ml-16px text-[var(--theme-foreground)]/60">
-                    QUICK: <span className="text-primary-brutalist">{quickFilter.replace('-', ' ').toUpperCase()}</span>
-                  </span>
-                )}
+            <div className="bg-[#050505] border-2 border-[#2E2E35] p-3 flex items-center justify-between">
+              <div className="font-['IBM_Plex_Mono',monospace] text-sm">
+                SHOWING <span className="font-bold text-[#6366F1]">{filteredTasks.length}</span> OF <span className="font-bold">{tasks?.length || 0}</span> TASKS
               </div>
               <button
                 onClick={() => {
-                  setQuickFilter(null)
                   setTaskFilters({
                     search: '',
                     status: [],
@@ -638,255 +610,142 @@ export default function ProjectManagementPage() {
                     isOverdue: undefined
                   })
                 }}
-                className="text-xs font-mono uppercase text-brutal-error hover:underline"
+                className="text-xs font-['IBM_Plex_Mono',monospace] uppercase text-[#EF4444] hover:underline cursor-pointer"
               >
                 CLEAR ALL FILTERS
               </button>
             </div>
           )}
 
-        {/* Header Controls - Compact */}
-        <div className="flex items-center justify-between overflow-x-auto">
-          <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
+        {/* Header Controls */}
+        <div className="flex items-center justify-between gap-3 overflow-x-auto">
+          <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
             <button
               onClick={() => setShowCreateTaskModal(true)}
-              className="h-[24px] px-3 flex items-center gap-1 bg-primary-brutalist text-event-horizon border border-primary-brutalist hover:bg-opacity-90 font-mono text-[10px] uppercase transition-colors"
+              className="h-[34px] px-4 flex items-center gap-1.5 bg-[#6366F1] text-[#050505] border border-[#6366F1] hover:bg-[#4F46E5] font-['IBM_Plex_Mono',monospace] text-xs uppercase transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:ring-offset-1 focus:ring-offset-[#050505]"
+              aria-label="Create new task"
             >
-              <HiOutlinePlus className="w-[12px] h-[12px]" />
+              <HiOutlinePlus className="w-3.5 h-3.5" />
               NEW
             </button>
 
-            {/* Compact Sprint Selector */}
+            {/* Sprint Selector */}
             <select
               value={selectedSprintId || 'all'}
               onChange={(e) => setSelectedSprintId(e.target.value === 'all' ? 'all' : e.target.value === 'backlog' ? null : e.target.value)}
-              className="h-[24px] px-2 bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-[10px] uppercase focus:border-primary-brutalist focus:outline-none transition-colors"
+              className="h-[32px] px-3 bg-[#0A0A0A] border border-[#2E2E35] font-['IBM_Plex_Mono',monospace] text-xs uppercase focus:border-[#6366F1] focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:ring-offset-1 focus:ring-offset-[#050505] transition-colors cursor-pointer"
             >
-              <option value="all">ALL</option>
+              <option value="all">ALL SPRINTS</option>
               <option value="backlog">BACKLOG</option>
               {allSprints?.map((sprint) => (
                 <option key={sprint._id} value={sprint._id}>
-                  {sprint.name} {sprint.status === 'active' ? '✓' : ''}
+                  {sprint.name} {sprint.status === 'active' ? '(Active)' : ''}
                 </option>
               ))}
             </select>
 
-            {/* Compact Filter Buttons - 3-Tier System */}
-            <div className="flex items-center gap-1">
-              {/* Tier 1: Primary Filters */}
-              <button
-                onClick={() => setQuickFilter(quickFilter === 'my-tasks' ? null : 'my-tasks')}
-                className={clsx(
-                  "h-[22px] px-2 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
-                  quickFilter === 'my-tasks'
-                    ? "bg-primary-brutalist text-event-horizon"
-                    : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
-                )}
-                title="Show only my tasks"
-              >
-                MINE
-              </button>
-              <button
-                onClick={() => setQuickFilter(quickFilter === 'unassigned' ? null : 'unassigned')}
-                className={clsx(
-                  "h-[22px] px-2 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
-                  quickFilter === 'unassigned'
-                    ? "bg-primary-brutalist text-event-horizon"
-                    : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
-                )}
-                title="Show unassigned tasks"
-              >
-                NONE
-              </button>
-
-              {/* Separator */}
-              <div className="w-[1px] h-[16px] bg-[var(--theme-border)]" />
-
-              {/* Tier 2: Status Filters */}
-              <button
-                onClick={() => {
-                  setTaskFilters(prev => ({
-                    ...prev,
-                    status: ['in_progress', 'in_review']
-                  }))
-                  setQuickFilter(null)
-                }}
-                className="h-[22px] px-2 border border-[var(--theme-border)] bg-blue-500/20 hover:bg-blue-500/30 font-mono text-[9px] uppercase transition-colors"
-                title="In progress or review"
-              >
-                WIP
-              </button>
-              <button
-                onClick={() => {
-                  setTaskFilters(prev => ({
-                    ...prev,
-                    status: ['blocked']
-                  }))
-                  setQuickFilter(null)
-                }}
-                className="h-[22px] px-2 border border-[var(--theme-border)] bg-red-500/20 hover:bg-red-500/30 font-mono text-[9px] uppercase transition-colors"
-                title="Blocked tasks"
-              >
-                BLOCK
-              </button>
-
-              {/* Separator */}
-              <div className="w-[1px] h-[16px] bg-[var(--theme-border)]" />
-
-              {/* Tier 3: Priority/Time Filters */}
-              <button
-                onClick={() => setQuickFilter(quickFilter === 'overdue' ? null : 'overdue')}
-                className={clsx(
-                  "h-[22px] px-2 border border-red-600 font-mono text-[9px] uppercase transition-colors",
-                  quickFilter === 'overdue'
-                    ? "bg-red-600 text-white"
-                    : "bg-red-600/20 text-red-600 hover:bg-red-600 hover:text-white"
-                )}
-                title="Overdue tasks"
-              >
-                !DUE
-              </button>
-              <button
-                onClick={() => setQuickFilter(quickFilter === 'high-priority' ? null : 'high-priority')}
-                className={clsx(
-                  "h-[22px] px-2 border border-orange-500 font-mono text-[9px] uppercase transition-colors",
-                  quickFilter === 'high-priority'
-                    ? "bg-orange-500 text-white"
-                    : "bg-orange-500/20 text-orange-600 hover:bg-orange-500 hover:text-white"
-                )}
-                title="High priority tasks"
-              >
-                !PRI
-              </button>
-              <button
-                onClick={() => setQuickFilter(quickFilter === 'due-soon' ? null : 'due-soon')}
-                className={clsx(
-                  "h-[22px] px-2 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
-                  quickFilter === 'due-soon'
-                    ? "bg-primary-brutalist text-event-horizon"
-                    : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
-                )}
-                title="Due within 7 days"
-              >
-                SOON
-              </button>
-            </div>
-
-            {/* Compact View Mode Selector */}
-            <div className="flex items-center bg-[var(--theme-background)] border border-[var(--theme-border)]">
-              <button
-                onClick={() => setTaskView('sprint')}
-                className={clsx(
-                  "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors",
-                  taskView === 'sprint' ? "bg-primary-brutalist text-event-horizon" : "hover:bg-[var(--theme-background-secondary)]"
-                )}
-              >
-                SPRINT
-              </button>
-              <button
-                onClick={() => setTaskView('kanban')}
-                className={clsx(
-                  "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors border-x border-[var(--theme-border)]",
-                  taskView === 'kanban' ? "bg-primary-brutalist text-event-horizon" : "hover:bg-[var(--theme-background-secondary)]"
-                )}
-              >
-                BOARD
-              </button>
-              <button
-                onClick={() => setTaskView('list')}
-                className={clsx(
-                  "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors border-r border-[var(--theme-border)]",
-                  taskView === 'list' ? "bg-primary-brutalist text-event-horizon" : "hover:bg-[var(--theme-background-secondary)]"
-                )}
-              >
-                LIST
-              </button>
-              <button
-                onClick={() => setTaskView('gantt')}
-                className={clsx(
-                  "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors border-r border-[var(--theme-border)]",
-                  taskView === 'gantt' ? "bg-primary-brutalist text-event-horizon" : "hover:bg-[var(--theme-background-secondary)]"
-                )}
-              >
-                GANTT
-              </button>
-              <button
-                onClick={() => setTaskView('calendar')}
-                className={clsx(
-                  "h-[22px] px-2 font-mono text-[9px] uppercase transition-colors",
-                  taskView === 'calendar' ? "bg-primary-brutalist text-event-horizon" : "hover:bg-[var(--theme-background-secondary)]"
-                )}
-              >
-                CAL
-              </button>
+            {/* View Mode Selector */}
+            <div className="flex items-center bg-[#050505] border border-[#2E2E35]" role="group" aria-label="Task view mode">
+              {(['sprint', 'kanban', 'list', 'gantt', 'calendar'] as const).map((view, i) => (
+                <button
+                  key={view}
+                  onClick={() => setTaskView(view)}
+                  className={clsx(
+                    "h-[32px] px-3 font-['IBM_Plex_Mono',monospace] text-xs uppercase transition-colors cursor-pointer",
+                    "focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:ring-offset-1 focus:ring-offset-[#050505]",
+                    i > 0 && "border-l border-[#2E2E35]",
+                    taskView === view ? "bg-[#6366F1] text-[#050505]" : "hover:bg-[#0A0A0A]"
+                  )}
+                >
+                  {view === 'kanban' ? 'BOARD' : view === 'calendar' ? 'CAL' : view.toUpperCase()}
+                </button>
+              ))}
             </div>
 
             {taskView === 'kanban' && (
               <button
                 onClick={() => setIsCompactView(!isCompactView)}
                 className={clsx(
-                  "h-[22px] px-2 flex items-center gap-1 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
+                  "h-[32px] px-3 flex items-center gap-1.5 border border-[#2E2E35] font-['IBM_Plex_Mono',monospace] text-xs uppercase transition-colors cursor-pointer",
+                  "focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:ring-offset-1 focus:ring-offset-[#050505]",
                   isCompactView
-                    ? "bg-primary-brutalist text-event-horizon"
-                    : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
+                    ? "bg-[#6366F1] text-[#050505]"
+                    : "bg-[#050505] hover:bg-[#0A0A0A]"
                 )}
                 title={isCompactView ? "Switch to normal view" : "Switch to compact view"}
               >
-                <HiOutlineViewGrid className="w-[10px] h-[10px]" />
-                {isCompactView ? 'NORM' : 'COMP'}
+                <HiOutlineViewGrid className="w-3 h-3" />
+                {isCompactView ? 'NORMAL' : 'COMPACT'}
               </button>
             )}
 
             <button
               onClick={() => setShowAdvancedFilters(true)}
               className={clsx(
-                "h-[22px] px-2 flex items-center gap-1 border border-[var(--theme-border)] font-mono text-[9px] uppercase transition-colors",
+                "h-[32px] px-3 flex items-center gap-1.5 border border-[#2E2E35] font-['IBM_Plex_Mono',monospace] text-xs uppercase transition-colors cursor-pointer",
+                "focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:ring-offset-1 focus:ring-offset-[#050505]",
                 (taskFilters.search || taskFilters.status.length > 0 || taskFilters.priority.length > 0 ||
                   taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
                   taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== null ||
                   taskFilters.isOverdue !== null)
-                  ? "bg-primary-brutalist text-event-horizon"
-                  : "bg-[var(--theme-background)] hover:bg-[var(--theme-background-secondary)]"
+                  ? "bg-[#6366F1] text-[#050505]"
+                  : "bg-[#050505] hover:bg-[#0A0A0A]"
               )}
+              aria-label="Advanced filters"
             >
-              <HiOutlineFilter className="w-[10px] h-[10px]" />
-              ADV
+              <HiOutlineFilter className="w-3 h-3" />
+              FILTERS
               {(taskFilters.search || taskFilters.status.length > 0 || taskFilters.priority.length > 0 ||
                 taskFilters.type.length > 0 || taskFilters.assigneeIds.length > 0 || taskFilters.labels.length > 0 ||
                 taskFilters.dueDateRange.start || taskFilters.dueDateRange.end || taskFilters.hasTimeTracked !== null ||
                 taskFilters.isOverdue !== null) && (
-                  <span className="px-1 bg-red-600 text-white text-[7px] font-bold">!</span>
+                  <span className="px-1.5 py-0.5 bg-red-600 text-white text-[8px] font-bold">!</span>
                 )}
             </button>
-          </div>
-
-          <div className="flex items-center gap-2 font-mono text-[10px]">
-            <span className="text-primary-brutalist/60">CONTEXT:</span>
-            <span className="text-primary-brutalist font-bold">{currentContext || 'NONE'}</span>
           </div>
         </div>
 
         {/* Sprint Metrics Bar */}
         {sprintProgress && (
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[10px]">
-            <div className="flex items-center justify-between mb-12px">
-              <div className="flex items-center gap-[16px] font-mono text-brutal-sm">
-                <span>VELOCITY: <span className="font-bold text-primary-brutalist">{sprintProgress.velocity}/day</span></span>
-                <span>COMPLETE: <span className="font-bold text-brutal-success">{sprintProgress.percentage}%</span></span>
-                <span>BLOCKED: <span className="font-bold text-brutal-error">{sprintProgress.blockedTasks}</span></span>
-                <span>IN REVIEW: <span className="font-bold text-brutal-info">{sprintProgress.inReview}</span></span>
-              </div>
-              <span className="font-mono text-brutal-sm text-primary-brutalist/60">
+          <div className="bg-[#050505] border-2 border-[#2E2E35] p-4">
+            <div className="flex items-center justify-between mb-4">
+              <span className="font-['IBM_Plex_Mono',monospace] text-xs font-bold uppercase tracking-wider">SPRINT METRICS</span>
+              <span className="font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280]">
                 {sprintProgress.daysLeft} DAYS LEFT
               </span>
             </div>
-            <div className="w-full h-8px bg-basalt-border">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div className="bg-[#0A0A0A] border border-[#2E2E35] p-3">
+                <span className="block text-[10px] font-['IBM_Plex_Mono',monospace] text-[#6B7280] uppercase tracking-wider mb-1">VELOCITY</span>
+                <span className="block text-lg font-bold text-[#6366F1] font-['IBM_Plex_Mono',monospace]">{sprintProgress.velocity}/day</span>
+              </div>
+              <div className="bg-[#0A0A0A] border border-[#2E2E35] p-3">
+                <span className="block text-[10px] font-['IBM_Plex_Mono',monospace] text-[#6B7280] uppercase tracking-wider mb-1">COMPLETE</span>
+                <span className="block text-lg font-bold text-[#22C55E] font-['IBM_Plex_Mono',monospace]">{sprintProgress.percentage}%</span>
+              </div>
+              <div className="bg-[#0A0A0A] border border-[#2E2E35] p-3">
+                <span className="block text-[10px] font-['IBM_Plex_Mono',monospace] text-[#6B7280] uppercase tracking-wider mb-1">BLOCKED</span>
+                <span className="block text-lg font-bold text-[#EF4444] font-['IBM_Plex_Mono',monospace]">{sprintProgress.blockedTasks}</span>
+              </div>
+              <div className="bg-[#0A0A0A] border border-[#2E2E35] p-3">
+                <span className="block text-[10px] font-['IBM_Plex_Mono',monospace] text-[#6B7280] uppercase tracking-wider mb-1">IN REVIEW</span>
+                <span className="block text-lg font-bold text-[#06B6D4] font-['IBM_Plex_Mono',monospace]">{sprintProgress.inReview}</span>
+              </div>
+            </div>
+            <div
+              className="w-full h-2 bg-[#2E2E35]"
+              role="progressbar"
+              aria-valuenow={sprintProgress.percentage}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Sprint progress: ${sprintProgress.percentage}% complete`}
+            >
               <div
-                className="h-full bg-primary-brutalist transition-all duration-300"
+                className="h-full bg-[#6366F1] transition-all duration-300"
                 style={{ width: `${sprintProgress.percentage}%` }}
               />
             </div>
-            <div className="mt-8px font-mono text-brutal-xs text-primary-brutalist/60">
+            <div className="mt-2 font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280]">
               {sprintProgress.completedTasks}/{sprintProgress.totalTasks} tasks
             </div>
           </div>
@@ -941,90 +800,18 @@ export default function ProjectManagementPage() {
         )}
 
         {taskView === 'sprint' && !activeSprint && (
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[24px] text-center">
-            <h3 className="font-mono text-brutal-sm uppercase mb-[8px]">NO ACTIVE SPRINT</h3>
-            <p className="text-[var(--theme-foreground)]/60 mb-[12px]">Create a sprint to start organizing your tasks</p>
+          <div className="bg-[#050505] border-2 border-[#2E2E35] p-[24px] text-center">
+            <h3 className="font-['IBM_Plex_Mono',monospace] text-sm uppercase mb-[8px]">NO ACTIVE SPRINT</h3>
+            <p className="text-[#F9FAFB]/60 mb-[12px]">Create a sprint to start organizing your tasks</p>
             <button
               onClick={() => setShowCreateSprintModal(true)}
-              className="brutal-btn"
+              className="bg-[#6366F1] text-white border-2 border-[#4F46E5] rounded-lg px-5 py-2.5 font-semibold text-sm font-['Inter',sans-serif] hover:bg-[#4F46E5] transition-colors"
             >
               CREATE NEW SPRINT
             </button>
           </div>
         )}
 
-        {/* Task Activity Timeline */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
-          <div className="flex items-center justify-between mb-[8px]">
-            <h3 className="font-mono text-brutal-sm uppercase">TASK ACTIVITY FEED</h3>
-            <button className="text-brutal-xs font-mono uppercase text-primary-brutalist/60 hover:text-primary-brutalist">
-              FILTER ▼
-            </button>
-          </div>
-          <div className="space-y-8px font-mono text-brutal-sm">
-            <div className="flex items-center gap-[10px] p-8px hover:bg-basalt-border/20 transition-colors">
-              <span className="text-brutal-xs text-primary-brutalist/60">10:45</span>
-              <span className="text-brutal-info">TASK-445</span>
-              <span className="text-primary-brutalist/80">Branch created: feature/task-445-auth-middleware</span>
-            </div>
-            <div className="flex items-center gap-[10px] p-8px hover:bg-basalt-border/20 transition-colors">
-              <span className="text-brutal-xs text-primary-brutalist/60">10:32</span>
-              <span className="text-brutal-info">TASK-445</span>
-              <span className="text-primary-brutalist/80">Timer started (current: 2:34:15)</span>
-            </div>
-            <div className="flex items-center gap-[10px] p-8px hover:bg-basalt-border/20 transition-colors">
-              <span className="text-brutal-xs text-primary-brutalist/60">09:15</span>
-              <span className="text-brutal-info">TASK-443</span>
-              <span className="text-primary-brutalist/80">PR #142 opened - awaiting review</span>
-            </div>
-            <div className="flex items-center gap-[10px] p-8px hover:bg-basalt-border/20 transition-colors">
-              <span className="text-brutal-xs text-primary-brutalist/60">08:45</span>
-              <span className="text-brutal-info">TASK-441</span>
-              <span className="text-primary-brutalist/80">Deployed to staging</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Remove the inline TaskCard component (we're using the imported one now)
-  const InlineTaskCard = ({ task, onContextSwitch }: any) => {
-    return (
-      <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-12px hover:border-primary-brutalist hover:shadow-brutal-sm transition-all cursor-move">
-        <div className="flex items-start justify-between mb-8px">
-          <div className="flex items-center gap-8px">
-            <span className="font-mono text-brutal-xs font-bold">{task.key || 'TASK-' + task.number}</span>
-            {task.isBlocked && <HiOutlineBan className="w-14px h-14px text-brutal-error" />}
-            {task.timeSpent > 0 && <HiOutlineClock className="w-14px h-14px text-brutal-info" />}
-            {task.prNumber && <HiOutlineLink className="w-14px h-14px text-brutal-success" />}
-          </div>
-          <button className="hover:bg-basalt-border/20 p-2px">
-            <HiOutlineDotsVertical className="w-16px h-16px text-primary-brutalist/60" />
-          </button>
-        </div>
-
-        <h4 className="text-brutal-sm mb-8px line-clamp-2">{task.title}</h4>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-8px">
-            {task.assigneeId && (
-              <div className="w-4 h-4 bg-primary-brutalist border-2 border-[var(--theme-border)] flex items-center justify-center">
-                <span className="text-brutal-xs font-bold text-event-horizon">JD</span>
-              </div>
-            )}
-            <span className="font-mono text-brutal-xs text-primary-brutalist/60">{task.points || 0} pts</span>
-          </div>
-
-          {task.status === 'in_progress' && task.timeTracking?.isRunning && (
-            <button
-              onClick={() => onContextSwitch(task.key || `TASK-${task.number}`)}
-              className="text-brutal-xs font-mono text-brutal-info hover:text-brutal-info/80"
-            >
-              ▶ 2:34:15
-            </button>
-          )}
-        </div>
       </div>
     )
   }
@@ -1072,95 +859,95 @@ export default function ProjectManagementPage() {
     }
 
     return (
-      <div className="space-y-3">
+      <div className="space-y-5">
         {/* Team Header */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+        <div className="bg-[#050505] border-2 border-[#2E2E35] p-4">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-xs font-bold uppercase tracking-wider">PROJECT TEAM</h2>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowExpertiseMatrix(true)}
-                className="brutal-btn-secondary flex items-center gap-1 text-[10px] px-3 py-1.5"
+                className="bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors flex items-center gap-1 text-[10px] px-3 py-1.5"
               >
                 <HiOutlineChartBar className="w-3.5 h-3.5" />
                 EXPERTISE MATRIX
               </button>
               <button
                 onClick={() => setShowProjectInviteModal(true)}
-                className="brutal-btn-secondary flex items-center gap-1 text-[10px] px-3 py-1.5"
+                className="bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors flex items-center gap-1 text-[10px] px-3 py-1.5"
               >
                 <HiOutlineUserGroup className="w-3.5 h-3.5" />
                 INVITE MEMBERS
               </button>
             </div>
           </div>
-          <p className="text-[10px] text-[var(--theme-foreground)]/60 uppercase tracking-wider">
+          <p className="text-[10px] text-[#F9FAFB]/60 uppercase tracking-wider">
             Manage your project team, view workload distribution, and track productivity metrics.
           </p>
         </div>
 
         {/* Team Overview */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-3">
+          <div className="bg-[#050505] border-2 border-[#2E2E35] p-3">
             <div className="flex items-center justify-between mb-1">
-              <HiOutlineUserGroup className="w-4 h-4 text-primary-brutalist" />
-              <span className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">TEAM SIZE</span>
+              <HiOutlineUserGroup className="w-4 h-4 text-[#6366F1]" />
+              <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">TEAM SIZE</span>
             </div>
             <div className="text-lg font-bold">{members.length}</div>
-            <div className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">MEMBERS</div>
+            <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">MEMBERS</div>
           </div>
 
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-3">
+          <div className="bg-[#050505] border-2 border-[#2E2E35] p-3">
             <div className="flex items-center justify-between mb-1">
-              <HiOutlineClipboardList className="w-4 h-4 text-brutal-info" />
-              <span className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">ACTIVE TASKS</span>
+              <HiOutlineClipboardList className="w-4 h-4 text-[#06B6D4]" />
+              <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">ACTIVE TASKS</span>
             </div>
             <div className="text-lg font-bold">{teamTotals.totalTasks}</div>
-            <div className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">ACROSS TEAM</div>
+            <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">ACROSS TEAM</div>
           </div>
 
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-3">
+          <div className="bg-[#050505] border-2 border-[#2E2E35] p-3">
             <div className="flex items-center justify-between mb-1">
-              <HiOutlineClock className="w-4 h-4 text-brutal-warning" />
-              <span className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">HOURS TRACKED</span>
+              <HiOutlineClock className="w-4 h-4 text-[#F59E0B]" />
+              <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">HOURS TRACKED</span>
             </div>
             <div className="text-lg font-bold">{Math.round(teamTotals.hoursTracked)}</div>
-            <div className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">TOTAL HOURS</div>
+            <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">TOTAL HOURS</div>
           </div>
 
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-3">
+          <div className="bg-[#050505] border-2 border-[#2E2E35] p-3">
             <div className="flex items-center justify-between mb-1">
-              <HiOutlineChartBar className="w-4 h-4 text-brutal-success" />
-              <span className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">PRODUCTIVITY</span>
+              <HiOutlineChartBar className="w-4 h-4 text-[#22C55E]" />
+              <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">PRODUCTIVITY</span>
             </div>
             <div className="text-lg font-bold">{teamTotals.avgProductivity}%</div>
-            <div className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">AVG COMPLETION</div>
+            <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">AVG COMPLETION</div>
           </div>
         </div>
 
         {/* Workload Distribution - Enhanced */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
+        <div className="bg-[#050505] border-2 border-[#2E2E35]">
           {/* Header with Controls */}
-          <div className="flex items-center justify-between px-4 py-2.5 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b-2 border-[#2E2E35] bg-[#0A0A0A]">
             <div className="flex items-center gap-3">
               <h3 className="text-xs font-bold uppercase tracking-wider">WORKLOAD DISTRIBUTION</h3>
-              <div className="flex items-center gap-1.5 font-mono text-[10px]">
-                <span className="text-primary-brutalist/60">AVG:</span>
+              <div className="flex items-center gap-1.5 font-['IBM_Plex_Mono',monospace] text-[10px]">
+                <span className="text-[#6B7280]">AVG:</span>
                 <span className="font-bold">{Math.round(teamTotals.totalTasks / memberStats.length || 0)} TASKS</span>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 bg-brutal-success border border-[var(--theme-border)]"></div>
-                <span className="font-mono text-[10px]">OPTIMAL</span>
+                <div className="w-2.5 h-2.5 bg-[#22C55E] border border-[#2E2E35]"></div>
+                <span className="font-['IBM_Plex_Mono',monospace] text-[10px]">OPTIMAL</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 bg-brutal-warning border border-[var(--theme-border)]"></div>
-                <span className="font-mono text-[10px]">HIGH</span>
+                <div className="w-2.5 h-2.5 bg-[#F59E0B] border border-[#2E2E35]"></div>
+                <span className="font-['IBM_Plex_Mono',monospace] text-[10px]">HIGH</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 bg-brutal-error border border-[var(--theme-border)]"></div>
-                <span className="font-mono text-[10px]">OVERLOAD</span>
+                <div className="w-2.5 h-2.5 bg-[#EF4444] border border-[#2E2E35]"></div>
+                <span className="font-['IBM_Plex_Mono',monospace] text-[10px]">OVERLOAD</span>
               </div>
             </div>
           </div>
@@ -1177,9 +964,9 @@ export default function ProjectManagementPage() {
 
                 return (
                   <div key={member._id} className={clsx(
-                    "group relative bg-[var(--theme-background-secondary)] border-2 p-3 hover:shadow-brutal-sm",
-                    isHighLoad ? "border-brutal-error" :
-                      isMediumLoad ? "border-brutal-warning" : "border-[var(--theme-border)]"
+                    "group relative bg-[#0A0A0A] border-2 p-3 hover:shadow-[2px_2px_0px_rgba(0,0,0,0.3)]",
+                    isHighLoad ? "border-[#EF4444]" :
+                      isMediumLoad ? "border-[#F59E0B]" : "border-[#2E2E35]"
                   )}>
                     {/* Member Info Header */}
                     <div className="flex items-center justify-between mb-2">
@@ -1190,29 +977,29 @@ export default function ProjectManagementPage() {
                           showName={true}
                           showStatus={true}
                         />
-                        <div className="flex items-center gap-1.5 font-mono text-[10px]">
-                          <span className="text-primary-brutalist/60">ROLE:</span>
+                        <div className="flex items-center gap-1.5 font-['IBM_Plex_Mono',monospace] text-[10px]">
+                          <span className="text-[#6B7280]">ROLE:</span>
                           <span className="font-bold uppercase">{member.role || 'DEVELOPER'}</span>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2">
                         {isHighLoad && (
-                          <div className="flex items-center gap-1 px-2 py-0.5 bg-brutal-error/20 border-2 border-brutal-error">
-                            <span className="w-1 h-1 bg-brutal-error"></span>
-                            <span className="font-mono text-[10px] text-brutal-error font-bold">OVERLOADED</span>
+                          <div className="flex items-center gap-1 px-2 py-0.5 bg-[#EF4444]/20 border-2 border-[#EF4444]">
+                            <span className="w-1 h-1 bg-[#EF4444]"></span>
+                            <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#EF4444] font-bold">OVERLOADED</span>
                           </div>
                         )}
                         {isLowProductivity && taskCount > 0 && (
-                          <div className="flex items-center gap-1 px-2 py-0.5 bg-brutal-warning/20 border-2 border-brutal-warning">
-                            <span className="w-1 h-1 bg-brutal-warning"></span>
-                            <span className="font-mono text-[10px] text-brutal-warning font-bold">LOW VELOCITY</span>
+                          <div className="flex items-center gap-1 px-2 py-0.5 bg-[#F59E0B]/20 border-2 border-[#F59E0B]">
+                            <span className="w-1 h-1 bg-[#F59E0B]"></span>
+                            <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#F59E0B] font-bold">LOW VELOCITY</span>
                           </div>
                         )}
 
                         <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100">
-                          <button className="brutal-btn-secondary text-[10px] px-2 py-0.5" title="Reassign tasks">BALANCE</button>
-                          <button className="brutal-btn-secondary text-[10px] px-2 py-0.5" title="View task details">DETAILS</button>
+                          <button className="bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors text-[10px] px-2 py-0.5" title="Reassign tasks">BALANCE</button>
+                          <button className="bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors text-[10px] px-2 py-0.5" title="View task details">DETAILS</button>
                         </div>
                       </div>
                     </div>
@@ -1222,23 +1009,23 @@ export default function ProjectManagementPage() {
                       {/* Main Progress Bar */}
                       <div className="relative">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">TASK LOAD</span>
-                          <span className="font-mono text-[10px] font-bold">{taskCount} / {workloadData.max} TASKS</span>
+                          <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">TASK LOAD</span>
+                          <span className="font-['IBM_Plex_Mono',monospace] text-[10px] font-bold">{taskCount} / {workloadData.max} TASKS</span>
                         </div>
-                        <div className="h-6 bg-basalt-border border-2 border-[var(--theme-border)] relative overflow-hidden">
+                        <div className="h-6 bg-[#2E2E35] border-2 border-[#2E2E35] relative overflow-hidden">
                           <div className="absolute inset-0">
-                            <div className="absolute h-full border-r-2 border-brutal-warning/30" style={{ left: '66.7%' }} title="High load threshold"></div>
-                            <div className="absolute h-full border-r-2 border-brutal-error/30" style={{ left: '83.3%' }} title="Overload threshold"></div>
+                            <div className="absolute h-full border-r-2 border-[#F59E0B]/30" style={{ left: '66.7%' }} title="High load threshold"></div>
+                            <div className="absolute h-full border-r-2 border-[#EF4444]/30" style={{ left: '83.3%' }} title="Overload threshold"></div>
                           </div>
                           <div
                             className={clsx(
                               "absolute inset-y-0 left-0 flex items-center justify-center",
-                              isHighLoad ? "bg-brutal-error" :
-                                isMediumLoad ? "bg-brutal-warning" : "bg-brutal-success"
+                              isHighLoad ? "bg-[#EF4444]" :
+                                isMediumLoad ? "bg-[#F59E0B]" : "bg-[#22C55E]"
                             )}
                             style={{ width: `${Math.min(100, (taskCount / workloadData.max) * 100)}%` }}
                           >
-                            <span className="font-mono text-[10px] font-bold text-event-horizon">
+                            <span className="font-['IBM_Plex_Mono',monospace] text-[10px] font-bold text-[#050505]">
                               {Math.round((taskCount / workloadData.max) * 100)}%
                             </span>
                           </div>
@@ -1248,23 +1035,23 @@ export default function ProjectManagementPage() {
                       {/* Task Breakdown */}
                       <div className="grid grid-cols-3 gap-2">
                         <div className="text-center">
-                          <div className="font-mono text-sm font-bold text-brutal-success">{member.tasksCompleted}</div>
-                          <div className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">COMPLETED</div>
+                          <div className="font-['IBM_Plex_Mono',monospace] text-sm font-bold text-[#22C55E]">{member.tasksCompleted}</div>
+                          <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">COMPLETED</div>
                         </div>
                         <div className="text-center">
-                          <div className="font-mono text-sm font-bold text-brutal-warning">{member.tasksInProgress}</div>
-                          <div className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">IN PROGRESS</div>
+                          <div className="font-['IBM_Plex_Mono',monospace] text-sm font-bold text-[#F59E0B]">{member.tasksInProgress}</div>
+                          <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">IN PROGRESS</div>
                         </div>
                         <div className="text-center">
-                          <div className="font-mono text-sm font-bold text-primary-brutalist">{completionRate}%</div>
-                          <div className="font-mono text-[10px] text-primary-brutalist/60 uppercase tracking-wider">COMPLETION</div>
+                          <div className="font-['IBM_Plex_Mono',monospace] text-sm font-bold text-[#6366F1]">{completionRate}%</div>
+                          <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280] uppercase tracking-wider">COMPLETION</div>
                         </div>
                       </div>
 
                       {member.hoursTracked > 0 && (
-                        <div className="flex items-center justify-between pt-1.5 border-t border-[var(--theme-border)]/50">
-                          <span className="font-mono text-[10px] text-primary-brutalist/60">TIME TRACKED:</span>
-                          <span className="font-mono text-[10px] font-bold">{member.hoursTracked}H THIS WEEK</span>
+                        <div className="flex items-center justify-between pt-1.5 border-t border-[#2E2E35]/50">
+                          <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#6B7280]">TIME TRACKED:</span>
+                          <span className="font-['IBM_Plex_Mono',monospace] text-[10px] font-bold">{member.hoursTracked}H THIS WEEK</span>
                         </div>
                       )}
                     </div>
@@ -1274,33 +1061,33 @@ export default function ProjectManagementPage() {
             </div>
 
             {/* Team Summary Footer */}
-            <div className="mt-3 pt-3 border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/50 p-3">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono text-center">
+            <div className="mt-3 pt-3 border-t-2 border-[#2E2E35] bg-[#0A0A0A]/50 p-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 font-['IBM_Plex_Mono',monospace] text-center">
                 <div>
-                  <div className="text-sm font-bold text-primary-brutalist">{teamTotals.totalTasks}</div>
-                  <div className="text-[10px] text-primary-brutalist/60 uppercase tracking-wider">TOTAL TASKS</div>
+                  <div className="text-sm font-bold text-[#6366F1]">{teamTotals.totalTasks}</div>
+                  <div className="text-[10px] text-[#6B7280] uppercase tracking-wider">TOTAL TASKS</div>
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-brutal-success">{teamTotals.completedTasks}</div>
-                  <div className="text-[10px] text-primary-brutalist/60 uppercase tracking-wider">COMPLETED</div>
+                  <div className="text-sm font-bold text-[#22C55E]">{teamTotals.completedTasks}</div>
+                  <div className="text-[10px] text-[#6B7280] uppercase tracking-wider">COMPLETED</div>
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-brutal-warning">{teamTotals.inProgressTasks}</div>
-                  <div className="text-[10px] text-primary-brutalist/60 uppercase tracking-wider">IN PROGRESS</div>
+                  <div className="text-sm font-bold text-[#F59E0B]">{teamTotals.inProgressTasks}</div>
+                  <div className="text-[10px] text-[#6B7280] uppercase tracking-wider">IN PROGRESS</div>
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-primary-brutalist">{teamTotals.avgProductivity}%</div>
-                  <div className="text-[10px] text-primary-brutalist/60 uppercase tracking-wider">AVG VELOCITY</div>
+                  <div className="text-sm font-bold text-[#6366F1]">{teamTotals.avgProductivity}%</div>
+                  <div className="text-[10px] text-[#6B7280] uppercase tracking-wider">AVG VELOCITY</div>
                 </div>
               </div>
 
               {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && (
-                <div className="flex items-center gap-2 p-2.5 mt-2 bg-brutal-error/10 border-2 border-brutal-error">
-                  <div className="w-2 h-2 bg-brutal-error animate-pulse"></div>
-                  <span className="font-mono text-[10px] text-brutal-error font-bold">
+                <div className="flex items-center gap-2 p-2.5 mt-2 bg-[#EF4444]/10 border-2 border-[#EF4444]">
+                  <div className="w-2 h-2 bg-[#EF4444] animate-pulse"></div>
+                  <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#EF4444] font-bold">
                     {memberStats.filter((m: any) => m.tasksAssigned > 15).length} MEMBER(S) OVERLOADED - CONSIDER REDISTRIBUTING TASKS
                   </span>
-                  <button className="ml-auto brutal-btn-secondary text-[10px] text-brutal-error border-brutal-error px-2 py-0.5">
+                  <button className="ml-auto bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors text-[10px] text-[#EF4444] border-[#EF4444] px-2 py-0.5">
                     AUTO-BALANCE
                   </button>
                 </div>
@@ -1312,17 +1099,17 @@ export default function ProjectManagementPage() {
         {/* Team Members Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {memberStats.map((member: any) => (
-            <div key={member._id} className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal hover:shadow-brutal-hover hover:translate-x-[-2px] hover:translate-y-[-2px]">
-              <div className="px-3 py-2.5 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+            <div key={member._id} className="bg-[#050505] border-2 border-[#2E2E35] shadow-[4px_4px_0px_rgba(0,0,0,0.5)] hover:shadow-[3px_3px_0px_rgba(0,0,0,0.4)] hover:translate-x-[-2px] hover:translate-y-[-2px]">
+              <div className="px-3 py-2.5 border-b-2 border-[#2E2E35] bg-[#0A0A0A]">
                 <div className="flex items-center justify-between">
                   <UserDisplay userId={member._id} size="sm" showName={true} showStatus={true} compact={false} className="flex-1" />
                   <div className="flex items-center gap-2">
                     <div className="text-right">
-                      <div className="text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider">ROLE</div>
-                      <div className="text-[10px] font-bold text-primary-brutalist uppercase">{member.role || 'DEVELOPER'}</div>
+                      <div className="text-[10px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]/60 uppercase tracking-wider">ROLE</div>
+                      <div className="text-[10px] font-bold text-[#6366F1] uppercase">{member.role || 'DEVELOPER'}</div>
                     </div>
-                    <button className="p-1 hover:bg-basalt-border/30">
-                      <HiOutlineDotsVertical className="w-3.5 h-3.5 text-[var(--theme-foreground)]/60" />
+                    <button className="p-1 hover:bg-[#2E2E35]/30">
+                      <HiOutlineDotsVertical className="w-3.5 h-3.5 text-[#F9FAFB]/60" />
                     </button>
                   </div>
                 </div>
@@ -1330,46 +1117,46 @@ export default function ProjectManagementPage() {
 
               <div className="p-3">
                 <div className="grid grid-cols-2 gap-2 mb-3">
-                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-2 text-center">
-                    <div className="text-sm font-bold text-primary-brutalist">{member.tasksAssigned}</div>
-                    <div className="text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider">ASSIGNED</div>
+                  <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-2 text-center">
+                    <div className="text-sm font-bold text-[#6366F1]">{member.tasksAssigned}</div>
+                    <div className="text-[10px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]/60 uppercase tracking-wider">ASSIGNED</div>
                   </div>
-                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-2 text-center">
-                    <div className="text-sm font-bold text-brutal-success">{member.tasksCompleted}</div>
-                    <div className="text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider">COMPLETED</div>
+                  <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-2 text-center">
+                    <div className="text-sm font-bold text-[#22C55E]">{member.tasksCompleted}</div>
+                    <div className="text-[10px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]/60 uppercase tracking-wider">COMPLETED</div>
                   </div>
-                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-2 text-center">
-                    <div className="text-sm font-bold text-brutal-info">{member.tasksInProgress}</div>
-                    <div className="text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider">IN PROGRESS</div>
+                  <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-2 text-center">
+                    <div className="text-sm font-bold text-[#06B6D4]">{member.tasksInProgress}</div>
+                    <div className="text-[10px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]/60 uppercase tracking-wider">IN PROGRESS</div>
                   </div>
-                  <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-2 text-center">
-                    <div className={clsx("text-sm font-bold", member.tasksBlocked > 0 ? "text-brutal-error" : "text-[var(--theme-foreground)]/40")}>
+                  <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-2 text-center">
+                    <div className={clsx("text-sm font-bold", member.tasksBlocked > 0 ? "text-[#EF4444]" : "text-[#F9FAFB]/40")}>
                       {member.tasksBlocked}
                     </div>
-                    <div className="text-[10px] font-mono text-[var(--theme-foreground)]/60 uppercase tracking-wider">BLOCKED</div>
+                    <div className="text-[10px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]/60 uppercase tracking-wider">BLOCKED</div>
                   </div>
                 </div>
 
-                <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-2.5 mb-3">
+                <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-2.5 mb-3">
                   <div className="flex items-center justify-between mb-1.5">
-                    <div className="font-mono text-[10px] font-bold uppercase tracking-wider">PRODUCTIVITY</div>
+                    <div className="font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase tracking-wider">PRODUCTIVITY</div>
                     <div className={clsx(
-                      "font-mono text-xs font-bold",
-                      member.productivity >= 90 ? "text-brutal-success" :
-                        member.productivity >= 70 ? "text-brutal-warning" : "text-brutal-error"
+                      "font-['IBM_Plex_Mono',monospace] text-xs font-bold",
+                      member.productivity >= 90 ? "text-[#22C55E]" :
+                        member.productivity >= 70 ? "text-[#F59E0B]" : "text-[#EF4444]"
                     )}>{member.productivity}%</div>
                   </div>
-                  <div className="h-1.5 bg-basalt-border mb-1.5">
+                  <div className="h-1.5 bg-[#2E2E35] mb-1.5">
                     <div
                       className={clsx(
                         "h-full",
-                        member.productivity >= 90 ? "bg-brutal-success" :
-                          member.productivity >= 70 ? "bg-brutal-warning" : "bg-brutal-error"
+                        member.productivity >= 90 ? "bg-[#22C55E]" :
+                          member.productivity >= 70 ? "bg-[#F59E0B]" : "bg-[#EF4444]"
                       )}
                       style={{ width: `${member.productivity}%` }}
                     />
                   </div>
-                  <div className="font-mono text-[10px] text-[var(--theme-foreground)]/60 uppercase tracking-wider">
+                  <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[#F9FAFB]/60 uppercase tracking-wider">
                     LAST ACTIVE: {member.lastActive || 'UNKNOWN'}
                   </div>
                 </div>
@@ -1377,11 +1164,11 @@ export default function ProjectManagementPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => { setActiveTab('tasks'); setTaskFilters(prev => ({ ...prev, assigneeIds: [member._id] })) }}
-                    className="flex-1 brutal-btn-secondary text-[10px] py-1.5"
+                    className="flex-1 bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors text-[10px] py-1.5"
                   >VIEW TASKS</button>
                   <button
                     onClick={() => { setShowCreateTaskModal(true); toast.info('Creating task for ' + (member.name || 'team member')) }}
-                    className="flex-1 brutal-btn-secondary text-[10px] py-1.5"
+                    className="flex-1 bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors text-[10px] py-1.5"
                   >ASSIGN TASK</button>
                 </div>
               </div>
@@ -1389,13 +1176,13 @@ export default function ProjectManagementPage() {
           ))}
 
           {/* Add New Member Card */}
-          <div className="bg-[var(--theme-background)] border-2 border-dashed border-[var(--theme-border)] hover:border-primary-brutalist cursor-pointer group">
+          <div className="bg-[#050505] border-2 border-dashed border-[#2E2E35] hover:border-[#6366F1] cursor-pointer group">
             <div className="p-8 text-center">
-              <div className="w-8 h-8 bg-basalt-border/20 border-2 border-dashed border-[var(--theme-border)] group-hover:border-primary-brutalist mx-auto mb-2 flex items-center justify-center">
-                <HiOutlinePlus className="w-4 h-4 text-[var(--theme-foreground)]/60 group-hover:text-primary-brutalist" />
+              <div className="w-8 h-8 bg-[#2E2E35]/20 border-2 border-dashed border-[#2E2E35] group-hover:border-[#6366F1] mx-auto mb-2 flex items-center justify-center">
+                <HiOutlinePlus className="w-4 h-4 text-[#F9FAFB]/60 group-hover:text-[#6366F1]" />
               </div>
-              <h4 className="font-bold text-xs text-[var(--theme-foreground)]/60 group-hover:text-primary-brutalist mb-1 uppercase tracking-wider">ADD TEAM MEMBER</h4>
-              <p className="text-[10px] text-[var(--theme-foreground)]/40 group-hover:text-[var(--theme-foreground)]/60">Invite someone to join this project</p>
+              <h4 className="font-bold text-xs text-[#F9FAFB]/60 group-hover:text-[#6366F1] mb-1 uppercase tracking-wider">ADD TEAM MEMBER</h4>
+              <p className="text-[10px] text-[#F9FAFB]/40 group-hover:text-[#F9FAFB]/60">Invite someone to join this project</p>
             </div>
           </div>
         </div>
@@ -1409,13 +1196,13 @@ export default function ProjectManagementPage() {
         />
 
         {/* Quick Actions - Functional */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
-          <div className="px-4 py-2.5 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+        <div className="bg-[#050505] border-2 border-[#2E2E35]">
+          <div className="px-4 py-2.5 border-b-2 border-[#2E2E35] bg-[#0A0A0A]">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider">QUICK ACTIONS</h3>
-              <div className="flex items-center gap-1.5 font-mono text-[10px]">
-                <span className="text-primary-brutalist/60">SHORTCUTS FOR TEAM MANAGEMENT</span>
-                <div className="w-1 h-1 bg-primary-brutalist animate-pulse"></div>
+              <div className="flex items-center gap-1.5 font-['IBM_Plex_Mono',monospace] text-[10px]">
+                <span className="text-[#6B7280]">SHORTCUTS FOR TEAM MANAGEMENT</span>
+                <div className="w-1 h-1 bg-[#6366F1] animate-pulse"></div>
               </div>
             </div>
           </div>
@@ -1423,13 +1210,13 @@ export default function ProjectManagementPage() {
           <div className="p-4">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
               <div className="group relative">
-                <button onClick={() => setShowProjectInviteModal(true)} className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]">
-                  <div className="flex items-center justify-center w-8 h-8 bg-basalt-border border-2 border-[var(--theme-border)]">
-                    <HiOutlinePlus className="w-4 h-4 text-primary-brutalist" />
+                <button onClick={() => setShowProjectInviteModal(true)} className="w-full bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-[3px_3px_0px_rgba(0,0,0,0.4)] group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]">
+                  <div className="flex items-center justify-center w-8 h-8 bg-[#2E2E35] border-2 border-[#2E2E35]">
+                    <HiOutlinePlus className="w-4 h-4 text-[#6366F1]" />
                   </div>
                   <div className="text-center">
-                    <div className="font-mono text-[10px] font-bold">ADD MEMBER</div>
-                    <div className="font-mono text-[9px] text-primary-brutalist/60 mt-0.5">INVITE TO PROJECT</div>
+                    <div className="font-['IBM_Plex_Mono',monospace] text-[10px] font-bold">ADD MEMBER</div>
+                    <div className="font-['IBM_Plex_Mono',monospace] text-[9px] text-[#6B7280] mt-0.5">INVITE TO PROJECT</div>
                   </div>
                 </button>
               </div>
@@ -1442,16 +1229,16 @@ export default function ProjectManagementPage() {
                     else { console.log('Opening general bulk reassign modal') }
                   }}
                   className={clsx(
-                    "w-full brutal-btn-secondary flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]",
-                    memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && "border-brutal-warning bg-brutal-warning/10"
+                    "w-full bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-[3px_3px_0px_rgba(0,0,0,0.4)] group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]",
+                    memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && "border-[#F59E0B] bg-[#F59E0B]/10"
                   )}
                 >
-                  <div className={clsx("flex items-center justify-center w-8 h-8 border-2 border-[var(--theme-border)]", memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 ? "bg-brutal-warning" : "bg-basalt-border")}>
-                    <HiOutlineUserGroup className={clsx("w-4 h-4", memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 ? "text-event-horizon" : "text-primary-brutalist")} />
+                  <div className={clsx("flex items-center justify-center w-8 h-8 border-2 border-[#2E2E35]", memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 ? "bg-[#F59E0B]" : "bg-[#2E2E35]")}>
+                    <HiOutlineUserGroup className={clsx("w-4 h-4", memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 ? "text-[#050505]" : "text-[#6366F1]")} />
                   </div>
                   <div className="text-center">
-                    <div className="font-mono text-[10px] font-bold">BULK REASSIGN</div>
-                    <div className="font-mono text-[9px] text-primary-brutalist/60 mt-0.5">
+                    <div className="font-['IBM_Plex_Mono',monospace] text-[10px] font-bold">BULK REASSIGN</div>
+                    <div className="font-['IBM_Plex_Mono',monospace] text-[9px] text-[#6B7280] mt-0.5">
                       {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 ? `${memberStats.filter((m: any) => m.tasksAssigned > 15).length} OVERLOADED` : 'BALANCE WORKLOAD'}
                     </div>
                   </div>
@@ -1466,63 +1253,63 @@ export default function ProjectManagementPage() {
                     const url = URL.createObjectURL(blob)
                     const a = document.createElement('a'); a.href = url; a.download = `${project.name}-team-report-${new Date().toISOString().split('T')[0]}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
                   }}
-                  className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
+                  className="w-full bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-[3px_3px_0px_rgba(0,0,0,0.4)] group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]"
                 >
-                  <div className="flex items-center justify-center w-8 h-8 bg-basalt-border border-2 border-[var(--theme-border)]">
-                    <HiOutlineChartBar className="w-4 h-4 text-primary-brutalist" />
+                  <div className="flex items-center justify-center w-8 h-8 bg-[#2E2E35] border-2 border-[#2E2E35]">
+                    <HiOutlineChartBar className="w-4 h-4 text-[#6366F1]" />
                   </div>
                   <div className="text-center">
-                    <div className="font-mono text-[10px] font-bold">EXPORT REPORT</div>
-                    <div className="font-mono text-[9px] text-primary-brutalist/60 mt-0.5">TEAM PERFORMANCE</div>
+                    <div className="font-['IBM_Plex_Mono',monospace] text-[10px] font-bold">EXPORT REPORT</div>
+                    <div className="font-['IBM_Plex_Mono',monospace] text-[9px] text-[#6B7280] mt-0.5">TEAM PERFORMANCE</div>
                   </div>
                 </button>
               </div>
 
               <div className="group relative">
-                <button onClick={() => console.log('Opening team settings modal')} className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]">
-                  <div className="flex items-center justify-center w-8 h-8 bg-basalt-border border-2 border-[var(--theme-border)]">
-                    <HiOutlineCog className="w-4 h-4 text-primary-brutalist" />
+                <button onClick={() => console.log('Opening team settings modal')} className="w-full bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-[3px_3px_0px_rgba(0,0,0,0.4)] group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]">
+                  <div className="flex items-center justify-center w-8 h-8 bg-[#2E2E35] border-2 border-[#2E2E35]">
+                    <HiOutlineCog className="w-4 h-4 text-[#6366F1]" />
                   </div>
                   <div className="text-center">
-                    <div className="font-mono text-[10px] font-bold">TEAM SETTINGS</div>
-                    <div className="font-mono text-[9px] text-primary-brutalist/60 mt-0.5">CONFIGURE PROJECT</div>
+                    <div className="font-['IBM_Plex_Mono',monospace] text-[10px] font-bold">TEAM SETTINGS</div>
+                    <div className="font-['IBM_Plex_Mono',monospace] text-[9px] text-[#6B7280] mt-0.5">CONFIGURE PROJECT</div>
                   </div>
                 </button>
               </div>
 
               <div className="group relative">
-                <button onClick={() => setShowExpertiseSearch(true)} className="w-full brutal-btn-secondary flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-brutal-hover group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]">
-                  <div className="flex items-center justify-center w-8 h-8 bg-basalt-border border-2 border-[var(--theme-border)]">
-                    <HiOutlineSearch className="w-4 h-4 text-primary-brutalist" />
+                <button onClick={() => setShowExpertiseSearch(true)} className="w-full bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] group-hover:shadow-[3px_3px_0px_rgba(0,0,0,0.4)] group-hover:translate-x-[-2px] group-hover:translate-y-[-2px]">
+                  <div className="flex items-center justify-center w-8 h-8 bg-[#2E2E35] border-2 border-[#2E2E35]">
+                    <HiOutlineSearch className="w-4 h-4 text-[#6366F1]" />
                   </div>
                   <div className="text-center">
-                    <div className="font-mono text-[10px] font-bold">FIND EXPERT</div>
-                    <div className="font-mono text-[9px] text-primary-brutalist/60 mt-0.5">SEARCH EXPERTISE</div>
+                    <div className="font-['IBM_Plex_Mono',monospace] text-[10px] font-bold">FIND EXPERT</div>
+                    <div className="font-['IBM_Plex_Mono',monospace] text-[9px] text-[#6B7280] mt-0.5">SEARCH EXPERTISE</div>
                   </div>
                 </button>
               </div>
             </div>
 
             {/* Smart Suggestions Bar */}
-            <div className="mt-3 pt-3 border-t-2 border-[var(--theme-border)]">
+            <div className="mt-3 pt-3 border-t-2 border-[#2E2E35]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 bg-primary-brutalist animate-pulse"></div>
-                  <span className="font-mono text-[10px] font-bold text-primary-brutalist">SMART SUGGESTIONS:</span>
+                  <div className="w-1.5 h-1.5 bg-[#6366F1] animate-pulse"></div>
+                  <span className="font-['IBM_Plex_Mono',monospace] text-[10px] font-bold text-[#6366F1]">SMART SUGGESTIONS:</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && (
-                    <button onClick={() => console.log('Quick balancing overloaded members')} className="px-2.5 py-1 bg-brutal-error/20 border-2 border-brutal-error font-mono text-[10px] text-brutal-error hover:bg-brutal-error hover:text-event-horizon">
+                    <button onClick={() => console.log('Quick balancing overloaded members')} className="px-2.5 py-1 bg-[#EF4444]/20 border-2 border-[#EF4444] font-['IBM_Plex_Mono',monospace] text-[10px] text-[#EF4444] hover:bg-[#EF4444] hover:text-[#050505]">
                       BALANCE {memberStats.filter((m: any) => m.tasksAssigned > 15).length} OVERLOADED
                     </button>
                   )}
                   {memberStats.filter((m: any) => m.tasksAssigned === 0).length > 0 && (
-                    <button onClick={() => console.log('Assigning tasks to idle members')} className="px-2.5 py-1 bg-brutal-info/20 border-2 border-brutal-info font-mono text-[10px] text-brutal-info hover:bg-brutal-info hover:text-event-horizon">
+                    <button onClick={() => console.log('Assigning tasks to idle members')} className="px-2.5 py-1 bg-[#06B6D4]/20 border-2 border-[#06B6D4] font-['IBM_Plex_Mono',monospace] text-[10px] text-[#06B6D4] hover:bg-[#06B6D4] hover:text-[#050505]">
                       ASSIGN TO {memberStats.filter((m: any) => m.tasksAssigned === 0).length} IDLE
                     </button>
                   )}
                   {memberStats.filter((m: any) => m.productivity < 40 && m.tasksAssigned > 0).length > 0 && (
-                    <div className="px-2.5 py-1 bg-brutal-warning/20 border-2 border-brutal-warning font-mono text-[10px] text-brutal-warning">
+                    <div className="px-2.5 py-1 bg-[#F59E0B]/20 border-2 border-[#F59E0B] font-['IBM_Plex_Mono',monospace] text-[10px] text-[#F59E0B]">
                       {memberStats.filter((m: any) => m.productivity < 40 && m.tasksAssigned > 0).length} LOW VELOCITY
                     </div>
                   )}
@@ -1539,13 +1326,13 @@ export default function ProjectManagementPage() {
     // Check if project has repository configured
     if (!project?.repository) {
       return (
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-5 text-center">
-          <HiOutlineCode className="w-5 h-5 text-primary-brutalist/30 mx-auto mb-2" />
-          <h3 className="font-mono text-brutal-xs uppercase mb-2">NO REPOSITORY CONNECTED</h3>
-          <p className="text-[var(--theme-foreground)]/60 text-brutal-xs mb-3">Connect a GitHub repository to enable code tracking and PR management</p>
+        <div className="bg-[#050505] border-2 border-[#2E2E35] p-5 text-center">
+          <HiOutlineCode className="w-5 h-5 text-[#6B7280]/40 mx-auto mb-2" />
+          <h3 className="font-['IBM_Plex_Mono',monospace] text-xs uppercase mb-2">NO REPOSITORY CONNECTED</h3>
+          <p className="text-[#F9FAFB]/60 text-xs mb-3">Connect a GitHub repository to enable code tracking and PR management</p>
           <button
             onClick={() => setShowConnectRepoModal(true)}
-            className="brutal-btn"
+            className="bg-[#6366F1] text-white border-2 border-[#4F46E5] rounded-lg px-5 py-2.5 font-semibold text-sm font-['Inter',sans-serif] hover:bg-[#4F46E5] transition-colors"
           >
             CONNECT REPOSITORY
           </button>
@@ -1581,13 +1368,13 @@ export default function ProjectManagementPage() {
     return (
       <div className="space-y-3">
         {/* Repository Overview */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+        <div className="bg-[#050505] border-2 border-[#2E2E35] p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
-              <HiOutlineCode className="w-4 h-4 text-primary-brutalist" />
+              <HiOutlineCode className="w-4 h-4 text-[#6366F1]" />
               <div>
                 <h2 className="text-xs font-semibold font-bold uppercase">{repository.provider.toUpperCase()} REPOSITORY</h2>
-                <p className="font-mono text-brutal-xs text-primary-brutalist/60">{repository.url}</p>
+                <p className="font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280]">{repository.url}</p>
               </div>
             </div>
             <div className="flex items-center gap-[6px]">
@@ -1597,13 +1384,13 @@ export default function ProjectManagementPage() {
                   navigator.clipboard.writeText(cloneUrl)
                   toast.success('Clone URL copied to clipboard')
                 }}
-                className="brutal-btn-sm"
+                className="bg-[#6366F1] text-white border border-[#4F46E5] rounded-lg px-3 py-1.5 font-semibold text-xs font-['Inter',sans-serif] hover:bg-[#4F46E5] transition-colors"
               >
                 CLONE
               </button>
               <button
                 onClick={() => window.open(repository.url, '_blank')}
-                className="brutal-btn-sm"
+                className="bg-[#6366F1] text-white border border-[#4F46E5] rounded-lg px-3 py-1.5 font-semibold text-xs font-['Inter',sans-serif] hover:bg-[#4F46E5] transition-colors"
               >
                 OPEN IN GITHUB
               </button>
@@ -1611,31 +1398,31 @@ export default function ProjectManagementPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div className="border-2 border-[var(--theme-border)] p-2.5">
-              <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-4px">DEFAULT BRANCH</div>
+            <div className="border-2 border-[#2E2E35] p-2.5">
+              <div className="font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280] mb-4px">DEFAULT BRANCH</div>
               <div className="font-bold">{repository.defaultBranch}</div>
             </div>
-            <div className="border-2 border-[var(--theme-border)] p-2.5">
-              <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-4px">OPEN PRS</div>
-              <div className="font-bold text-brutal-info">{pullRequests.filter(pr => pr.status === 'open').length}</div>
+            <div className="border-2 border-[#2E2E35] p-2.5">
+              <div className="font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280] mb-4px">OPEN PRS</div>
+              <div className="font-bold text-[#06B6D4]">{pullRequests.filter(pr => pr.status === 'open').length}</div>
             </div>
-            <div className="border-2 border-[var(--theme-border)] p-2.5">
-              <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-4px">ACTIVE BRANCHES</div>
+            <div className="border-2 border-[#2E2E35] p-2.5">
+              <div className="font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280] mb-4px">ACTIVE BRANCHES</div>
               <div className="font-bold">{branches.length}</div>
             </div>
-            <div className="border-2 border-[var(--theme-border)] p-2.5">
-              <div className="font-mono text-brutal-xs text-primary-brutalist/60 mb-4px">CI STATUS</div>
-              <div className="font-bold text-brutal-success">PASSING</div>
+            <div className="border-2 border-[#2E2E35] p-2.5">
+              <div className="font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280] mb-4px">CI STATUS</div>
+              <div className="font-bold text-[#22C55E]">PASSING</div>
             </div>
           </div>
         </div>
 
         {/* Pull Request Queue */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+        <div className="bg-[#050505] border-2 border-[#2E2E35] p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs font-semibold font-bold uppercase">PULL REQUEST QUEUE</h3>
             <div className="flex items-center gap-[6px]">
-              <button className="font-mono text-brutal-xs uppercase text-primary-brutalist/60 hover:text-primary-brutalist">
+              <button className="font-['IBM_Plex_Mono',monospace] text-xs uppercase text-[#6B7280] hover:text-[#6366F1]">
                 FILTER ▼
               </button>
               <button
@@ -1643,7 +1430,7 @@ export default function ProjectManagementPage() {
                   const createPrUrl = `${repository.url}/compare`
                   window.open(createPrUrl, '_blank')
                 }}
-                className="brutal-btn-sm"
+                className="bg-[#6366F1] text-white border border-[#4F46E5] rounded-lg px-3 py-1.5 font-semibold text-xs font-['Inter',sans-serif] hover:bg-[#4F46E5] transition-colors"
               >
                 CREATE PR
               </button>
@@ -1652,28 +1439,28 @@ export default function ProjectManagementPage() {
 
           <div className="space-y-12px">
             {pullRequests.length > 0 ? pullRequests.map((pr) => (
-              <div key={pr.id} className="border-2 border-[var(--theme-border)] p-3 hover:border-primary-brutalist transition-all">
+              <div key={pr.id} className="border-2 border-[#2E2E35] p-3 hover:border-[#6366F1] transition-all">
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <div className="flex items-center gap-1.5 mb-1">
-                      <span className="font-mono text-brutal-sm font-bold">#{pr.number}</span>
+                      <span className="font-['IBM_Plex_Mono',monospace] text-sm font-bold">#{pr.number}</span>
                       <h4 className="font-bold">{pr.title}</h4>
                       {pr.draft && (
-                        <span className="px-8px py-2px bg-basalt-border text-brutal-xs font-mono uppercase">DRAFT</span>
+                        <span className="px-8px py-2px bg-[#2E2E35] text-xs font-['IBM_Plex_Mono',monospace] uppercase">DRAFT</span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 font-mono text-brutal-xs text-primary-brutalist/60">
+                    <div className="flex items-center gap-2 font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280]">
                       <span>by {pr.author}</span>
                       <span>•</span>
                       <span>{pr.createdAt}</span>
                       <span>•</span>
-                      <span className="text-brutal-success">+{pr.additions}</span>
-                      <span className="text-brutal-error">-{pr.deletions}</span>
+                      <span className="text-[#22C55E]">+{pr.additions}</span>
+                      <span className="text-[#EF4444]">-{pr.deletions}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-8px">
                     {pr.labels.map((label) => (
-                      <span key={label} className="px-8px py-2px bg-primary-brutalist/20 text-brutal-xs font-mono uppercase">
+                      <span key={label} className="px-8px py-2px bg-[#6366F1]/20 text-xs font-['IBM_Plex_Mono',monospace] uppercase">
                         {label}
                       </span>
                     ))}
@@ -1686,48 +1473,48 @@ export default function ProjectManagementPage() {
                     <div className="flex items-center gap-1.5">
                       {pr.reviewStatus === 'approved' && (
                         <>
-                          <HiOutlineCheckCircle className="w-16px h-16px text-brutal-success" />
-                          <span className="font-mono text-brutal-xs text-brutal-success">APPROVED</span>
+                          <HiOutlineCheckCircle className="w-16px h-16px text-[#22C55E]" />
+                          <span className="font-['IBM_Plex_Mono',monospace] text-xs text-[#22C55E]">APPROVED</span>
                         </>
                       )}
                       {pr.reviewStatus === 'changes_requested' && (
                         <>
-                          <HiOutlineXCircle className="w-16px h-16px text-brutal-warning" />
-                          <span className="font-mono text-brutal-xs text-brutal-warning">CHANGES REQUESTED</span>
+                          <HiOutlineXCircle className="w-16px h-16px text-[#F59E0B]" />
+                          <span className="font-['IBM_Plex_Mono',monospace] text-xs text-[#F59E0B]">CHANGES REQUESTED</span>
                         </>
                       )}
                       {pr.reviewStatus === 'pending' && (
                         <>
-                          <HiOutlineClock className="w-16px h-16px text-primary-brutalist/60" />
-                          <span className="font-mono text-brutal-xs text-primary-brutalist/60">PENDING REVIEW</span>
+                          <HiOutlineClock className="w-16px h-16px text-[#6B7280]" />
+                          <span className="font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280]">PENDING REVIEW</span>
                         </>
                       )}
                     </div>
 
                     {/* Checks Status */}
-                    <div className="flex items-center gap-8px font-mono text-brutal-xs">
-                      <span className="text-brutal-success">{pr.checks.passed} ✓</span>
-                      {pr.checks.failed > 0 && <span className="text-brutal-error">{pr.checks.failed} ✗</span>}
-                      {pr.checks.pending > 0 && <span className="text-primary-brutalist/60">{pr.checks.pending} ⋯</span>}
+                    <div className="flex items-center gap-8px font-['IBM_Plex_Mono',monospace] text-xs">
+                      <span className="text-[#22C55E]">{pr.checks.passed} ✓</span>
+                      {pr.checks.failed > 0 && <span className="text-[#EF4444]">{pr.checks.failed} ✗</span>}
+                      {pr.checks.pending > 0 && <span className="text-[#6B7280]">{pr.checks.pending} ⋯</span>}
                     </div>
 
                     {/* Comments */}
-                    <div className="flex items-center gap-4px font-mono text-brutal-xs text-primary-brutalist/60">
+                    <div className="flex items-center gap-4px font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280]">
                       <HiOutlineChat className="w-14px h-14px" />
                       {pr.comments}
                     </div>
                   </div>
 
-                  <button className="brutal-btn-sm">VIEW PR</button>
+                  <button className="bg-[#6366F1] text-white border border-[#4F46E5] rounded-lg px-3 py-1.5 font-semibold text-xs font-['Inter',sans-serif] hover:bg-[#4F46E5] transition-colors">VIEW PR</button>
                 </div>
               </div>
             )) : (
               <div className="text-center py-6">
-                <HiOutlineCode className="w-5 h-5 text-primary-brutalist/30 mx-auto mb-2" />
-                <p className="font-mono text-brutal-xs text-primary-brutalist/60">
+                <HiOutlineCode className="w-5 h-5 text-[#6B7280]/40 mx-auto mb-2" />
+                <p className="font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280]">
                   No pull requests found
                 </p>
-                <p className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
+                <p className="font-['IBM_Plex_Mono',monospace] text-xs text-[#F9FAFB]/60">
                   GitHub API integration required to fetch real data
                 </p>
               </div>
@@ -1736,45 +1523,45 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Branch Management */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+        <div className="bg-[#050505] border-2 border-[#2E2E35] p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs font-semibold font-bold uppercase">BRANCH MANAGEMENT</h3>
-            <button className="brutal-btn-sm">CREATE BRANCH</button>
+            <button className="bg-[#6366F1] text-white border border-[#4F46E5] rounded-lg px-3 py-1.5 font-semibold text-xs font-['Inter',sans-serif] hover:bg-[#4F46E5] transition-colors">CREATE BRANCH</button>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full font-mono text-brutal-sm">
+            <table className="w-full font-['IBM_Plex_Mono',monospace] text-sm">
               <thead>
-                <tr className="border-b-2 border-[var(--theme-border)]">
-                  <th className="text-left py-8px text-brutal-xs text-primary-brutalist/60 uppercase">BRANCH</th>
-                  <th className="text-left py-8px text-brutal-xs text-primary-brutalist/60 uppercase">STATUS</th>
-                  <th className="text-left py-8px text-brutal-xs text-primary-brutalist/60 uppercase">LAST COMMIT</th>
-                  <th className="text-right py-8px text-brutal-xs text-primary-brutalist/60 uppercase">ACTIONS</th>
+                <tr className="border-b-2 border-[#2E2E35]">
+                  <th className="text-left py-8px text-xs text-[#6B7280] uppercase">BRANCH</th>
+                  <th className="text-left py-8px text-xs text-[#6B7280] uppercase">STATUS</th>
+                  <th className="text-left py-8px text-xs text-[#6B7280] uppercase">LAST COMMIT</th>
+                  <th className="text-right py-8px text-xs text-[#6B7280] uppercase">ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
                 {branches.length > 0 ? branches.map((branch) => (
-                  <tr key={branch.name} className="border-b border-[var(--theme-border)] hover:bg-basalt-border/10">
+                  <tr key={branch.name} className="border-b border-[#2E2E35] hover:bg-[#2E2E35]/10">
                     <td className="py-2">
                       <div className="flex items-center gap-2">
-                        {branch.isDefault && <HiOutlineHome className="w-16px h-16px text-primary-brutalist" />}
+                        {branch.isDefault && <HiOutlineHome className="w-16px h-16px text-[#6366F1]" />}
                         <span className={clsx(branch.isDefault && "font-bold")}>{branch.name}</span>
                       </div>
                     </td>
                     <td className="py-2">
                       <div className="flex items-center gap-1.5">
-                        {branch.ahead > 0 && <span className="text-brutal-success">↑{branch.ahead}</span>}
-                        {branch.behind > 0 && <span className="text-brutal-error">↓{branch.behind}</span>}
-                        {branch.ahead === 0 && branch.behind === 0 && <span className="text-primary-brutalist/60">UP TO DATE</span>}
+                        {branch.ahead > 0 && <span className="text-[#22C55E]">↑{branch.ahead}</span>}
+                        {branch.behind > 0 && <span className="text-[#EF4444]">↓{branch.behind}</span>}
+                        {branch.ahead === 0 && branch.behind === 0 && <span className="text-[#6B7280]">UP TO DATE</span>}
                       </div>
                     </td>
-                    <td className="py-2 text-primary-brutalist/60">{branch.lastCommit}</td>
+                    <td className="py-2 text-[#6B7280]">{branch.lastCommit}</td>
                     <td className="py-2 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {!branch.isDefault && (
                           <>
-                            <button className="text-brutal-xs uppercase hover:text-primary-brutalist">MERGE</button>
-                            <button className="text-brutal-xs uppercase text-brutal-error hover:text-brutal-error/80">DELETE</button>
+                            <button className="text-xs uppercase hover:text-[#6366F1]">MERGE</button>
+                            <button className="text-xs uppercase text-[#EF4444] hover:text-[#EF4444]/80">DELETE</button>
                           </>
                         )}
                       </div>
@@ -1783,11 +1570,11 @@ export default function ProjectManagementPage() {
                 )) : (
                   <tr>
                     <td colSpan={4} className="py-6 text-center">
-                      <HiOutlineCode className="w-5 h-5 text-primary-brutalist/30 mx-auto mb-2" />
-                      <p className="font-mono text-brutal-xs text-primary-brutalist/60">
+                      <HiOutlineCode className="w-5 h-5 text-[#6B7280]/40 mx-auto mb-2" />
+                      <p className="font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280]">
                         No branches found
                       </p>
-                      <p className="font-mono text-brutal-xs text-[var(--theme-foreground)]/60">
+                      <p className="font-['IBM_Plex_Mono',monospace] text-xs text-[#F9FAFB]/60">
                         GitHub API integration required to fetch real data
                       </p>
                     </td>
@@ -1800,29 +1587,29 @@ export default function ProjectManagementPage() {
 
         {/* Code Review Analytics */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+          <div className="bg-[#050505] border-2 border-[#2E2E35] p-4">
             <h3 className="text-xs font-semibold font-bold uppercase mb-2">CODE REVIEW METRICS</h3>
             <div className="space-y-2">
-              <div className="flex justify-between font-mono text-brutal-sm">
-                <span className="text-primary-brutalist/60">AVG REVIEW TIME:</span>
+              <div className="flex justify-between font-['IBM_Plex_Mono',monospace] text-sm">
+                <span className="text-[#6B7280]">AVG REVIEW TIME:</span>
                 <span className="font-bold">{codeReviewStats.averageTime}</span>
               </div>
-              <div className="flex justify-between font-mono text-brutal-sm">
-                <span className="text-primary-brutalist/60">PENDING REVIEWS:</span>
-                <span className="font-bold text-brutal-warning">{codeReviewStats.pendingReviews}</span>
+              <div className="flex justify-between font-['IBM_Plex_Mono',monospace] text-sm">
+                <span className="text-[#6B7280]">PENDING REVIEWS:</span>
+                <span className="font-bold text-[#F59E0B]">{codeReviewStats.pendingReviews}</span>
               </div>
-              <div className="flex justify-between font-mono text-brutal-sm">
-                <span className="text-primary-brutalist/60">COMPLETED THIS WEEK:</span>
-                <span className="font-bold text-brutal-success">{codeReviewStats.completedThisWeek}</span>
+              <div className="flex justify-between font-['IBM_Plex_Mono',monospace] text-sm">
+                <span className="text-[#6B7280]">COMPLETED THIS WEEK:</span>
+                <span className="font-bold text-[#22C55E]">{codeReviewStats.completedThisWeek}</span>
               </div>
             </div>
 
-            <div className="mt-2 pt-3 border-t-2 border-[var(--theme-border)]">
-              <h4 className="font-mono text-brutal-xs text-primary-brutalist/60 uppercase mb-1.5">TOP REVIEWERS</h4>
+            <div className="mt-2 pt-3 border-t-2 border-[#2E2E35]">
+              <h4 className="font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280] uppercase mb-1.5">TOP REVIEWERS</h4>
               {codeReviewStats.topReviewers.map((reviewer, index) => (
                 <div key={reviewer.name} className="flex items-center justify-between py-4px">
-                  <span className="font-mono text-brutal-sm">{index + 1}. {reviewer.name}</span>
-                  <span className="font-mono text-brutal-xs text-primary-brutalist/60">
+                  <span className="font-['IBM_Plex_Mono',monospace] text-sm">{index + 1}. {reviewer.name}</span>
+                  <span className="font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280]">
                     {reviewer.reviews} reviews • {reviewer.avgTime} avg
                   </span>
                 </div>
@@ -1831,18 +1618,18 @@ export default function ProjectManagementPage() {
           </div>
 
           {/* CI/CD Pipeline Status */}
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+          <div className="bg-[#050505] border-2 border-[#2E2E35] p-4">
             <h3 className="text-xs font-semibold font-bold uppercase mb-2">CI/CD PIPELINE</h3>
             <div className="space-y-2">
               {ciPipeline.map((stage) => (
-                <div key={stage.name} className="flex items-center justify-between p-2.5 bg-[var(--theme-background-secondary)]/10 border border-[var(--theme-border)]">
+                <div key={stage.name} className="flex items-center justify-between p-2.5 bg-[#0A0A0A]/10 border border-[#2E2E35]">
                   <div className="flex items-center gap-1.5">
-                    {stage.status === 'success' && <HiOutlineCheckCircle className="w-16px h-16px text-brutal-success" />}
-                    {stage.status === 'running' && <HiOutlinePlay className="w-16px h-16px text-brutal-info animate-pulse" />}
-                    {stage.status === 'failed' && <HiOutlineXCircle className="w-16px h-16px text-brutal-error" />}
-                    <span className="font-mono text-brutal-sm">{stage.name}</span>
+                    {stage.status === 'success' && <HiOutlineCheckCircle className="w-16px h-16px text-[#22C55E]" />}
+                    {stage.status === 'running' && <HiOutlinePlay className="w-16px h-16px text-[#06B6D4] animate-pulse" />}
+                    {stage.status === 'failed' && <HiOutlineXCircle className="w-16px h-16px text-[#EF4444]" />}
+                    <span className="font-['IBM_Plex_Mono',monospace] text-sm">{stage.name}</span>
                   </div>
-                  <div className="flex items-center gap-2 font-mono text-brutal-xs text-primary-brutalist/60">
+                  <div className="flex items-center gap-2 font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280]">
                     <span>{stage.duration}</span>
                     <span>{stage.timestamp}</span>
                   </div>
@@ -1851,39 +1638,39 @@ export default function ProjectManagementPage() {
             </div>
 
             <div className="mt-2 flex items-center gap-1.5">
-              <button className="brutal-btn-sm flex-1">VIEW LOGS</button>
-              <button className="brutal-btn-sm bg-brutal-error border-brutal-error">CANCEL PIPELINE</button>
+              <button className="bg-[#6366F1] text-white border border-[#4F46E5] rounded-lg px-3 py-1.5 font-semibold text-xs font-['Inter',sans-serif] hover:bg-[#4F46E5] transition-colors flex-1">VIEW LOGS</button>
+              <button className="bg-[#6366F1] text-white border border-[#4F46E5] rounded-lg px-3 py-1.5 font-semibold text-xs font-['Inter',sans-serif] hover:bg-[#4F46E5] transition-colors bg-[#EF4444] border-[#EF4444]">CANCEL PIPELINE</button>
             </div>
           </div>
         </div>
 
         {/* Recent Commits */}
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+        <div className="bg-[#050505] border-2 border-[#2E2E35] p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs font-semibold font-bold uppercase">RECENT COMMITS</h3>
-            <button className="font-mono text-brutal-xs uppercase text-primary-brutalist/60 hover:text-primary-brutalist">
+            <button className="font-['IBM_Plex_Mono',monospace] text-xs uppercase text-[#6B7280] hover:text-[#6366F1]">
               VIEW ALL →
             </button>
           </div>
 
-          <div className="space-y-1 font-mono text-brutal-xs">
-            <div className="flex items-center gap-2 p-1.5 hover:bg-basalt-border/20 transition-colors">
-              <span className="text-brutal-xs text-primary-brutalist/60">7a8f9d2</span>
-              <span className="text-primary-brutalist">fix: Resolve memory leak in worker process</span>
-              <span className="text-primary-brutalist/60">by john.doe</span>
-              <span className="text-brutal-xs text-primary-brutalist/60 ml-auto">10 minutes ago</span>
+          <div className="space-y-1 font-['IBM_Plex_Mono',monospace] text-xs">
+            <div className="flex items-center gap-2 p-1.5 hover:bg-[#2E2E35]/20 transition-colors">
+              <span className="text-xs text-[#6B7280]">7a8f9d2</span>
+              <span className="text-[#6366F1]">fix: Resolve memory leak in worker process</span>
+              <span className="text-[#6B7280]">by john.doe</span>
+              <span className="text-xs text-[#6B7280] ml-auto">10 minutes ago</span>
             </div>
-            <div className="flex items-center gap-2 p-1.5 hover:bg-basalt-border/20 transition-colors">
-              <span className="text-brutal-xs text-primary-brutalist/60">b5c3e1a</span>
-              <span className="text-primary-brutalist">feat: Add user authentication middleware</span>
-              <span className="text-primary-brutalist/60">by jane.smith</span>
-              <span className="text-brutal-xs text-primary-brutalist/60 ml-auto">2 hours ago</span>
+            <div className="flex items-center gap-2 p-1.5 hover:bg-[#2E2E35]/20 transition-colors">
+              <span className="text-xs text-[#6B7280]">b5c3e1a</span>
+              <span className="text-[#6366F1]">feat: Add user authentication middleware</span>
+              <span className="text-[#6B7280]">by jane.smith</span>
+              <span className="text-xs text-[#6B7280] ml-auto">2 hours ago</span>
             </div>
-            <div className="flex items-center gap-2 p-1.5 hover:bg-basalt-border/20 transition-colors">
-              <span className="text-brutal-xs text-primary-brutalist/60">c9d4f2b</span>
-              <span className="text-primary-brutalist">chore: Update dependencies to latest versions</span>
-              <span className="text-primary-brutalist/60">by alice.jones</span>
-              <span className="text-brutal-xs text-primary-brutalist/60 ml-auto">5 hours ago</span>
+            <div className="flex items-center gap-2 p-1.5 hover:bg-[#2E2E35]/20 transition-colors">
+              <span className="text-xs text-[#6B7280]">c9d4f2b</span>
+              <span className="text-[#6366F1]">chore: Update dependencies to latest versions</span>
+              <span className="text-[#6B7280]">by alice.jones</span>
+              <span className="text-xs text-[#6B7280] ml-auto">5 hours ago</span>
             </div>
           </div>
         </div>
@@ -1905,12 +1692,12 @@ export default function ProjectManagementPage() {
         return (
           <div className="space-y-3">
             {/* Header */}
-            <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+            <div className="bg-[#050505] border-2 border-[#2E2E35] p-4">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-xs font-semibold font-bold uppercase">PROJECT MEETINGS</h2>
                 <button
                   onClick={() => setShowScheduleMeetingModal(true)}
-                  className="brutal-btn"
+                  className="bg-[#6366F1] text-white border-2 border-[#4F46E5] rounded-lg px-5 py-2.5 font-semibold text-sm font-['Inter',sans-serif] hover:bg-[#4F46E5] transition-colors"
                 >
                   SCHEDULE MEETING
                 </button>
@@ -1923,7 +1710,7 @@ export default function ProjectManagementPage() {
                     setShowScheduleMeetingModal(true)
                     // Auto-select standup type
                   }}
-                  className="brutal-btn-secondary text-xs"
+                  className="bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors text-xs"
                 >
                   🏃 DAILY STANDUP
                 </button>
@@ -1932,7 +1719,7 @@ export default function ProjectManagementPage() {
                     setShowScheduleMeetingModal(true)
                     // Auto-select retrospective type
                   }}
-                  className="brutal-btn-secondary text-xs"
+                  className="bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors text-xs"
                 >
                   🔄 RETROSPECTIVE
                 </button>
@@ -1941,7 +1728,7 @@ export default function ProjectManagementPage() {
                     setShowScheduleMeetingModal(true)
                     // Auto-select planning type
                   }}
-                  className="brutal-btn-secondary text-xs"
+                  className="bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors text-xs"
                 >
                   📋 SPRINT PLANNING
                 </button>
@@ -1950,7 +1737,7 @@ export default function ProjectManagementPage() {
                     setShowScheduleMeetingModal(true)
                     // Auto-select review type
                   }}
-                  className="brutal-btn-secondary text-xs"
+                  className="bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors text-xs"
                 >
                   👥 SPRINT REVIEW
                 </button>
@@ -1964,7 +1751,7 @@ export default function ProjectManagementPage() {
                   {/* Upcoming Meetings */}
                   {projectMeetings.filter((m: any) => m.startTime > Date.now()).length > 0 && (
                     <div>
-                      <h3 className="text-brutal-xs font-bold uppercase mb-2 text-primary-brutalist">
+                      <h3 className="text-xs font-bold uppercase mb-2 text-[#6366F1]">
                         UPCOMING MEETINGS
                       </h3>
                       <div className="space-y-2">
@@ -1993,7 +1780,7 @@ export default function ProjectManagementPage() {
                   {/* Past Meetings */}
                   {projectMeetings.filter((m: any) => m.endTime < Date.now()).length > 0 && (
                     <div>
-                      <h3 className="text-brutal-xs font-bold uppercase mb-2 text-[var(--theme-foreground)]/60">
+                      <h3 className="text-xs font-bold uppercase mb-2 text-[#F9FAFB]/60">
                         RECENT MEETINGS
                       </h3>
                       <div className="space-y-2">
@@ -2016,15 +1803,15 @@ export default function ProjectManagementPage() {
                   )}
                 </>
               ) : (
-                <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-5 text-center">
-                  <HiOutlineVideoCamera className="w-5 h-5 text-primary-brutalist/30 mx-auto mb-2" />
-                  <h3 className="font-mono text-brutal-xs uppercase mb-2">NO MEETINGS SCHEDULED</h3>
-                  <p className="text-[var(--theme-foreground)]/60 text-brutal-xs mb-3">
+                <div className="bg-[#050505] border-2 border-[#2E2E35] p-5 text-center">
+                  <HiOutlineVideoCamera className="w-5 h-5 text-[#6B7280]/40 mx-auto mb-2" />
+                  <h3 className="font-['IBM_Plex_Mono',monospace] text-xs uppercase mb-2">NO MEETINGS SCHEDULED</h3>
+                  <p className="text-[#F9FAFB]/60 text-xs mb-3">
                     Schedule standup meetings, sprint reviews, and planning sessions for your team
                   </p>
                   <button
                     onClick={() => setShowScheduleMeetingModal(true)}
-                    className="brutal-btn"
+                    className="bg-[#6366F1] text-white border-2 border-[#4F46E5] rounded-lg px-5 py-2.5 font-semibold text-sm font-['Inter',sans-serif] hover:bg-[#4F46E5] transition-colors"
                   >
                     SCHEDULE FIRST MEETING
                   </button>
@@ -2051,53 +1838,53 @@ export default function ProjectManagementPage() {
         )
       case 'settings':
         return (
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
+          <div className="bg-[#050505] border-2 border-[#2E2E35] p-4">
             <h2 className="text-xs font-semibold font-bold uppercase mb-3">PROJECT SETTINGS</h2>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* General Settings */}
               <div className="space-y-3">
                 <div>
-                  <h3 className="text-brutal-xs font-bold uppercase mb-2">GENERAL</h3>
+                  <h3 className="text-xs font-bold uppercase mb-2">GENERAL</h3>
                   <div className="space-y-2">
                     <div>
-                      <label className="block text-brutal-xs uppercase mb-1">PROJECT NAME</label>
+                      <label className="block text-xs uppercase mb-1">PROJECT NAME</label>
                       <input
                         type="text"
                         defaultValue={project.name}
-                        className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-xs"
+                        className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] font-['IBM_Plex_Mono',monospace] text-xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-brutal-xs uppercase mb-1">DESCRIPTION</label>
+                      <label className="block text-xs uppercase mb-1">DESCRIPTION</label>
                       <textarea
                         defaultValue={project.description}
                         rows={3}
-                        className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-xs resize-none"
+                        className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] font-['IBM_Plex_Mono',monospace] text-xs resize-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-brutal-xs uppercase mb-1">PROJECT KEY</label>
+                      <label className="block text-xs uppercase mb-1">PROJECT KEY</label>
                       <input
                         type="text"
                         defaultValue={project.key}
                         disabled
-                        className="w-full px-2.5 py-2 bg-basalt-border border-2 border-[var(--theme-border)] font-mono text-brutal-xs text-[var(--theme-foreground)]/60"
+                        className="w-full px-2.5 py-2 bg-[#2E2E35] border-2 border-[#2E2E35] font-['IBM_Plex_Mono',monospace] text-xs text-[#F9FAFB]/60"
                       />
-                      <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-4px">Project key cannot be changed</p>
+                      <p className="text-xs text-[#F9FAFB]/60 mt-4px">Project key cannot be changed</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Workflow Settings */}
                 <div>
-                  <h3 className="text-brutal-xs font-bold uppercase mb-2">WORKFLOW</h3>
+                  <h3 className="text-xs font-bold uppercase mb-2">WORKFLOW</h3>
                   <div className="space-y-2">
                     <div>
-                      <label className="block text-brutal-xs uppercase mb-1">WORKFLOW TYPE</label>
+                      <label className="block text-xs uppercase mb-1">WORKFLOW TYPE</label>
                       <select
                         defaultValue={project.settings?.workflowType || 'kanban'}
-                        className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-xs"
+                        className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] font-['IBM_Plex_Mono',monospace] text-xs"
                       >
                         <option value="kanban">KANBAN</option>
                         <option value="scrum">SCRUM</option>
@@ -2112,29 +1899,29 @@ export default function ProjectManagementPage() {
 
               {/* Team Assignment */}
               <div>
-                <h3 className="text-brutal-xs font-bold uppercase mb-2">TEAM ASSIGNMENT</h3>
+                <h3 className="text-xs font-bold uppercase mb-2">TEAM ASSIGNMENT</h3>
                 <div className="space-y-2">
                   <div>
-                    <label className="block text-brutal-xs uppercase mb-1">ASSIGNED TEAMS</label>
+                    <label className="block text-xs uppercase mb-1">ASSIGNED TEAMS</label>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {project.teamIds && project.teamIds.length > 0 ? (
                         project.teamIds.map((teamId: string) => {
                           const team = availableTeams?.find(t => t._id === teamId)
                           return (
-                            <span key={teamId} className="px-2.5 py-1 bg-primary-brutalist/10 border border-primary-brutalist text-brutal-xs font-mono uppercase flex items-center gap-2">
+                            <span key={teamId} className="px-2.5 py-1 bg-[#6366F1]/10 border border-[#6366F1] text-xs font-['IBM_Plex_Mono',monospace] uppercase flex items-center gap-2">
                               {team?.name || 'Unknown Team'}
-                              {/* <button className="hover:text-brutal-error">×</button> */}
+                              {/* <button className="hover:text-[#EF4444]">×</button> */}
                             </span>
                           )
                         })
                       ) : (
-                        <span className="text-brutal-xs font-mono text-[var(--theme-foreground)]/60">No teams assigned</span>
+                        <span className="text-xs font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]/60">No teams assigned</span>
                       )}
                     </div>
 
                     <div className="flex gap-2">
                       <select
-                        className="flex-1 px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-xs"
+                        className="flex-1 px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] font-['IBM_Plex_Mono',monospace] text-xs"
                         onChange={async (e) => {
                           if (e.target.value) {
                             try {
@@ -2164,13 +1951,13 @@ export default function ProjectManagementPage() {
               {/* Danger Zone */}
               <div className="space-y-3">
                 <div>
-                  <h3 className="text-brutal-xs font-bold uppercase mb-2 text-brutal-error">DANGER ZONE</h3>
-                  <div className="border-2 border-brutal-error p-2.5">
-                    <h4 className="text-brutal-xs font-bold uppercase mb-1.5">ARCHIVE PROJECT</h4>
-                    <p className="text-brutal-xs text-[var(--theme-foreground)]/80 mb-2">
+                  <h3 className="text-xs font-bold uppercase mb-2 text-[#EF4444]">DANGER ZONE</h3>
+                  <div className="border-2 border-[#EF4444] p-2.5">
+                    <h4 className="text-xs font-bold uppercase mb-1.5">ARCHIVE PROJECT</h4>
+                    <p className="text-xs text-[#F9FAFB]/80 mb-2">
                       Archive this project. It will be hidden from the workspace but data will be preserved.
                     </p>
-                    <button className="brutal-btn bg-brutal-error border-brutal-error">
+                    <button className="bg-[#6366F1] text-white border-2 border-[#4F46E5] rounded-lg px-5 py-2.5 font-semibold text-sm font-['Inter',sans-serif] hover:bg-[#4F46E5] transition-colors bg-[#EF4444] border-[#EF4444]">
                       ARCHIVE PROJECT
                     </button>
                   </div>
@@ -2178,9 +1965,9 @@ export default function ProjectManagementPage() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-4 pt-4 border-t-2 border-[var(--theme-border)]">
-              <button className="brutal-btn-secondary">CANCEL</button>
-              <button className="brutal-btn">SAVE CHANGES</button>
+            <div className="flex justify-end gap-3 mt-4 pt-4 border-t-2 border-[#2E2E35]">
+              <button className="bg-transparent text-[#9CA3AF] border border-[#2E2E35] rounded-lg px-4 py-2 font-semibold text-sm font-['Inter',sans-serif] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors">CANCEL</button>
+              <button className="bg-[#6366F1] text-white border-2 border-[#4F46E5] rounded-lg px-5 py-2.5 font-semibold text-sm font-['Inter',sans-serif] hover:bg-[#4F46E5] transition-colors">SAVE CHANGES</button>
             </div>
           </div >
         )
@@ -2190,20 +1977,20 @@ export default function ProjectManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--theme-background)] flex flex-col">
+    <div className="min-h-screen bg-[#050505] flex flex-col">
       {/* Project Header */}
-      <div className="border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)] sticky top-0 z-40">
+      <div className="border-b-2 border-[#2E2E35] bg-[#050505] sticky top-0 z-40">
         <div className="px-5 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate(`/workspace/${workspaceId}`)}
-              className="group flex items-center gap-2 font-mono text-xs text-[var(--theme-foreground)]/60 hover:text-[var(--theme-primary)] transition-colors"
+              className="group flex items-center gap-2 font-['IBM_Plex_Mono',monospace] text-xs text-[#F9FAFB]/60 hover:text-[#6366F1] transition-colors"
             >
               <HiOutlineArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" />
               BACK TO WORKSPACE
             </button>
 
-            <div className="h-8 w-[2px] bg-[var(--theme-border)]" />
+            <div className="h-8 w-[2px] bg-[#2E2E35]" />
 
             <div>
               <div className="flex items-center gap-3">
@@ -2218,7 +2005,7 @@ export default function ProjectManagementPage() {
                   {project.status}
                 </BrutalBadge>
               </div>
-              <div className="font-mono text-xs text-[var(--theme-foreground)]/60 flex items-center gap-2">
+              <div className="font-['IBM_Plex_Mono',monospace] text-xs text-[#F9FAFB]/60 flex items-center gap-2">
                 <span>ID: {project.key}</span>
               </div>
             </div>
@@ -2237,17 +2024,20 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Project Navigation Tabs */}
-        <div className="px-5 flex items-end gap-0.5 overflow-x-auto no-scrollbar border-t border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/30">
+        <div className="px-5 flex items-end gap-0.5 overflow-x-auto no-scrollbar border-t border-[#2E2E35] bg-[#0A0A0A]/30" role="tablist" aria-label="Project sections">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
+              role="tab"
+              aria-selected={activeTab === tab.id}
               className={clsx(
-                "relative px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-wider transition-all",
-                "border-r border-[var(--theme-border)]",
+                "relative px-4 py-2.5 font-['IBM_Plex_Mono',monospace] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer",
+                "border-r border-[#2E2E35]",
+                "focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:ring-offset-1 focus:ring-offset-[#050505]",
                 activeTab === tab.id
-                  ? "bg-[var(--theme-background)] text-[var(--theme-primary)] border-t-2 border-t-[var(--theme-primary)]"
-                  : "text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
+                  ? "bg-[#050505] text-[#6366F1] border-t-2 border-t-[#6366F1]"
+                  : "text-[#F9FAFB]/60 hover:text-[#F9FAFB] hover:bg-[#0A0A0A]"
               )}
             >
               <div className="flex items-center gap-2">
@@ -2256,7 +2046,7 @@ export default function ProjectManagementPage() {
                 {tab.id === 'tasks' && (
                   <span className={clsx(
                     "ml-1 px-1.5 py-0.5 text-[10px]",
-                    activeTab === tab.id ? "bg-[var(--theme-primary)] text-[var(--theme-background)]" : "bg-[var(--theme-border)]"
+                    activeTab === tab.id ? "bg-[#6366F1] text-[#050505]" : "bg-[#2E2E35]"
                   )}>
                     {tasks?.length || 0}
                   </span>
@@ -2269,7 +2059,7 @@ export default function ProjectManagementPage() {
 
       {/* Main Viewport */}
       <main className={clsx(
-        "flex-1 p-4",
+        "flex-1 p-5",
         (activeTab === 'tasks' && taskView === 'kanban') ? "overflow-hidden flex flex-col" : "overflow-y-auto"
       )}>
         <motion.div

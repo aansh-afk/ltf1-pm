@@ -156,8 +156,6 @@ export default function ShortcutSettings() {
     { value: 'all', label: 'ALL' },
     { value: 'navigation', label: 'NAV' },
     { value: 'quick-actions', label: 'ACTIONS' },
-    { value: 'task-operations', label: 'TASKS' },
-    { value: 'meeting-operations', label: 'MEETINGS' },
     { value: 'general', label: 'GENERAL' }
   ]
 

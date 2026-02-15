@@ -268,6 +268,99 @@ export const getTaskCommits = query({
   },
 });
 
+// Get commits for a project
+export const getProjectCommits = query({
+  args: {
+    projectId: v.id("projects"),
+  },
+  returns: v.array(v.any()),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const project = await ctx.db.get(args.projectId);
+    if (!project) throw new Error("Project not found");
+
+    if (!project.repository?.url) {
+      return [];
+    }
+
+    const repoFullName = project.repository.url
+      .replace("https://github.com/", "")
+      .replace(".git", "");
+
+    const commits = await ctx.db
+      .query("githubCommits")
+      .withIndex("by_repository", (q) => q.eq("repositoryFullName", repoFullName))
+      .order("desc")
+      .take(200);
+
+    return commits;
+  },
+});
+
+// Get pull requests for a project
+export const getProjectPullRequests = query({
+  args: {
+    projectId: v.id("projects"),
+  },
+  returns: v.array(v.any()),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const project = await ctx.db.get(args.projectId);
+    if (!project) throw new Error("Project not found");
+
+    if (!project.repository?.url) {
+      return [];
+    }
+
+    const repoFullName = project.repository.url
+      .replace("https://github.com/", "")
+      .replace(".git", "");
+
+    const pullRequests = await ctx.db
+      .query("githubPullRequests")
+      .withIndex("by_repository", (q) => q.eq("repositoryFullName", repoFullName))
+      .order("desc")
+      .take(200);
+
+    return pullRequests;
+  },
+});
+
+// Get issues for a project
+export const getProjectIssues = query({
+  args: {
+    projectId: v.id("projects"),
+  },
+  returns: v.array(v.any()),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const project = await ctx.db.get(args.projectId);
+    if (!project) throw new Error("Project not found");
+
+    if (!project.repository?.url) {
+      return [];
+    }
+
+    const repoFullName = project.repository.url
+      .replace("https://github.com/", "")
+      .replace(".git", "");
+
+    const issues = await ctx.db
+      .query("githubIssues")
+      .withIndex("by_repository", (q) => q.eq("repositoryFullName", repoFullName))
+      .order("desc")
+      .take(200);
+
+    return issues;
+  },
+});
+
 // Note: getRepositoryDetails is now in queryActions.ts
 
 // Search repositories in an installation
