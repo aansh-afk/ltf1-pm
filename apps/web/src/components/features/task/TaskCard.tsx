@@ -42,17 +42,17 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
     }
   }, [showMenu])
   const priorityColors = {
-    urgent: 'border-brutal-error',
-    high: 'border-brutal-warning',
-    medium: 'border-brutal-info',
-    low: 'border-[var(--theme-border)]',
+    urgent: 'border-[#EF4444]',
+    high: 'border-[#F59E0B]',
+    medium: 'border-[#06B6D4]',
+    low: 'border-[#2E2E35]',
   }
 
   const statusIndicators = {
-    todo: { color: 'bg-basalt-border', label: 'TODO' },
-    in_progress: { color: 'bg-brutal-info', label: 'IN_PROGRESS' },
-    blocked: { color: 'bg-brutal-error', label: 'BLOCKED' },
-    done: { color: 'bg-brutal-success', label: 'DONE' },
+    todo: { color: 'bg-[#6B7280]', label: 'TODO' },
+    in_progress: { color: 'bg-[#06B6D4]', label: 'IN_PROGRESS' },
+    blocked: { color: 'bg-[#EF4444]', label: 'BLOCKED' },
+    done: { color: 'bg-[#22C55E]', label: 'DONE' },
   }
 
   const typeIcons = {
@@ -110,22 +110,22 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
           <div className="flex items-center gap-[4px]">
             <span className={clsx(
               "text-xs font-bold px-6px py-2px",
-              task.type === 'bug' && "text-brutal-error bg-brutal-error/10",
-              task.type === 'feature' && "text-brutal-success bg-brutal-success/10",
-              task.type === 'improvement' && "text-brutal-info bg-brutal-info/10",
-              task.type === 'task' && "text-[var(--theme-foreground)] bg-basalt-border/20",
-              task.type === 'epic' && "text-brutal-warning bg-brutal-warning/10"
+              task.type === 'bug' && "text-[#EF4444] bg-[#EF4444]/10",
+              task.type === 'feature' && "text-[#22C55E] bg-[#22C55E]/10",
+              task.type === 'improvement' && "text-[#06B6D4] bg-[#06B6D4]/10",
+              task.type === 'task' && "text-[#F9FAFB] bg-[#2E2E35]/20",
+              task.type === 'epic' && "text-[#F59E0B] bg-[#F59E0B]/10"
             )}>
               {typeIcons[task.type as keyof typeof typeIcons]}
             </span>
-            <span className="text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/60">
+            <span className="text-xs font-['IBM_Plex_Mono',monospace] uppercase tracking-wider text-[#6B7280]">
               {task.project?.key}-{task.number}
             </span>
             {(task.priority === 'urgent' || task.priority === 'high') && (
               <span className={clsx(
                 "text-xs font-bold px-4px py-1px",
-                task.priority === 'urgent' && "text-brutal-error bg-brutal-error/20 animate-brutal-pulse",
-                task.priority === 'high' && "text-brutal-warning bg-brutal-warning/20"
+                task.priority === 'urgent' && "text-[#EF4444] bg-[#EF4444]/20 animate-pulse",
+                task.priority === 'high' && "text-[#F59E0B] bg-[#F59E0B]/20"
               )}>
                 {task.priority === 'urgent' ? '🔥' : '⚡'}
               </span>
@@ -140,7 +140,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
                 e.stopPropagation()
                 setShowMenu(!showMenu)
               }}
-              className="p-4px hover:bg-[var(--theme-background-secondary)] transition-colors"
+              className="p-4px hover:bg-[#0A0A0A] transition-colors"
             >
               <HiOutlineDotsVertical className="w-16px h-16px" />
             </button>
@@ -148,7 +148,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
             {showMenu && (
               <div
                 ref={menuRef}
-                className="absolute right-0 top-full mt-4px z-50 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal min-w-[160px]"
+                className="absolute right-0 top-full mt-4px z-50 bg-[#050505] border-2 border-[#2E2E35] shadow-[4px_4px_0px_rgba(0,0,0,0.5)] min-w-[160px]"
               >
                 <button
                   onClick={(e) => {
@@ -156,7 +156,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
                     setShowMenu(false)
                     onEdit?.()
                   }}
-                  className="w-full px-[10px] py-[4px] text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-[4px]"
+                  className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#0A0A0A] transition-colors flex items-center gap-[4px]"
                 >
                   <HiOutlinePencil className="w-16px h-16px" />
                   EDIT
@@ -167,7 +167,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
                     setShowMenu(false)
                     onDuplicate?.()
                   }}
-                  className="w-full px-[10px] py-[4px] text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-[4px]"
+                  className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#0A0A0A] transition-colors flex items-center gap-[4px]"
                 >
                   <HiOutlineDuplicate className="w-16px h-16px" />
                   DUPLICATE
@@ -179,7 +179,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
                     toast.success('Link copied!')
                     setShowMenu(false)
                   }}
-                  className="w-full px-[10px] py-[4px] text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-[4px]"
+                  className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#0A0A0A] transition-colors flex items-center gap-[4px]"
                 >
                   <HiOutlineLink className="w-16px h-16px" />
                   COPY LINK
@@ -190,19 +190,19 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
                     setShowMenu(false)
                     onViewDetails?.()
                   }}
-                  className="w-full px-[10px] py-[4px] text-xs font-mono uppercase text-left hover:bg-[var(--theme-background-secondary)] transition-colors flex items-center gap-[4px]"
+                  className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#0A0A0A] transition-colors flex items-center gap-[4px]"
                 >
                   <HiOutlineInformationCircle className="w-16px h-16px" />
                   MORE INFO
                 </button>
-                <div className="border-t-2 border-[var(--theme-border)]" />
+                <div className="border-t-2 border-[#2E2E35]" />
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
                     setShowMenu(false)
                     onDelete?.()
                   }}
-                  className="w-full px-[10px] py-[4px] text-xs font-mono uppercase text-left hover:bg-brutal-error hover:text-event-horizon transition-colors flex items-center gap-[4px]"
+                  className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#EF4444] hover:text-[#050505] transition-colors flex items-center gap-[4px]"
                 >
                   <HiOutlineTrash className="w-16px h-16px" />
                   DELETE
@@ -216,7 +216,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
         {isCompact ? (
           // Compact mode: title and tags in vertical layout
           <>
-            <h4 className="font-bold text-sm uppercase tracking-wider text-[var(--theme-foreground)] break-words line-clamp-1">
+            <h4 className="font-bold text-sm uppercase tracking-wider text-[#F9FAFB] break-words line-clamp-1">
               {task.title}
             </h4>
 
@@ -241,12 +241,12 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-4px text-xs font-mono">
-                <span className="text-[var(--theme-foreground)]/60">
+              <div className="flex items-center gap-4px text-xs font-['IBM_Plex_Mono',monospace]">
+                <span className="text-[#6B7280]">
                   {task.points || 0}pts
                 </span>
-                <span className="text-[var(--theme-foreground)]/40">•</span>
-                <span className="uppercase tracking-wider text-[var(--theme-foreground)]/60">
+                <span className="text-[#6B7280]">•</span>
+                <span className="uppercase tracking-wider text-[#6B7280]">
                   {statusIndicators[task.status as keyof typeof statusIndicators]?.label}
                 </span>
               </div>
@@ -255,11 +255,11 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
         ) : (
           // Normal mode: vertical layout
           <div>
-            <h4 className="font-bold text-sm uppercase tracking-wider text-[var(--theme-foreground)] break-words line-clamp-2 mb-[2px]">
+            <h4 className="font-bold text-sm uppercase tracking-wider text-[#F9FAFB] break-words line-clamp-2 mb-[2px]">
               {task.title}
             </h4>
             {task.description && (
-              <p className="text-xs font-mono text-[var(--theme-foreground)]/60 line-clamp-2 break-words">
+              <p className="text-xs font-['IBM_Plex_Mono',monospace] text-[#6B7280] line-clamp-2 break-words">
                 {task.description}
               </p>
             )}
@@ -288,7 +288,7 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
               />
 
               {task.commentCount > 0 && (
-                <div className="flex items-center gap-4px text-xs font-mono uppercase text-[var(--theme-foreground)]/60">
+                <div className="flex items-center gap-4px text-xs font-['IBM_Plex_Mono',monospace] uppercase text-[#6B7280]">
                   <HiOutlineChat className="w-12px h-12px" />
                   <span>{task.commentCount}</span>
                 </div>
@@ -296,11 +296,11 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
             </div>
 
             <div className="flex items-center gap-[4px]">
-              <div className="text-xs font-mono uppercase tracking-wider text-[var(--theme-foreground)]/60">
+              <div className="text-xs font-['IBM_Plex_Mono',monospace] uppercase tracking-wider text-[#6B7280]">
                 {statusIndicators[task.status as keyof typeof statusIndicators]?.label}
               </div>
               {task.points && (
-                <div className="text-xs font-mono text-primary-brutalist">
+                <div className="text-xs font-['IBM_Plex_Mono',monospace] text-[#6366F1]">
                   {task.points}pts
                 </div>
               )}
@@ -309,10 +309,10 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
         )}
 
         {!isCompact && task.dueDate && (
-          <div className="flex items-center gap-[4px] text-xs font-mono uppercase text-[var(--theme-foreground)]/60 border-t border-[var(--theme-border)] pt-8px">
+          <div className="flex items-center gap-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-[#6B7280] border-t border-[#2E2E35] pt-8px">
             <HiOutlineClock className="w-12px h-12px" />
             <span className={clsx(
-              new Date(task.dueDate) < new Date() && 'text-brutal-error'
+              new Date(task.dueDate) < new Date() && 'text-[#EF4444]'
             )}>
               DUE {formatDistanceToNow(new Date(task.dueDate), { addSuffix: true }).toUpperCase()}
             </span>
