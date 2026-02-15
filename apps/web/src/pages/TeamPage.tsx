@@ -81,12 +81,12 @@ export default function TeamPage() {
   if (!currentWorkspace) {
     return (
       <div className="p-4 flex items-center justify-center min-h-[60vh]">
-        <div className="border-2 border-dashed border-[#2E2E35] p-8 text-center max-w-md">
-          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[#2E2E35] text-[#6B7280]">
+        <div className="border-2 border-dashed border-[var(--theme-border)] p-8 text-center max-w-md">
+          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[var(--theme-border)] text-[var(--theme-foreground-tertiary)]">
             <HiOutlineUserGroup className="w-5 h-5" />
           </div>
-          <h2 className="text-sm font-bold text-[#F9FAFB] mb-1">NO WORKSPACE SELECTED</h2>
-          <p className="text-xs text-[#6B7280] font-mono">Create or select a workspace to view team members</p>
+          <h2 className="text-sm font-bold text-[var(--theme-foreground)] mb-1">NO WORKSPACE SELECTED</h2>
+          <p className="text-xs text-[var(--theme-foreground-tertiary)] font-mono">Create or select a workspace to view team members</p>
         </div>
       </div>
     )
@@ -123,24 +123,24 @@ export default function TeamPage() {
       {/* Status Summary */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
-          { label: 'AVAILABLE', count: statusCounts.AVAILABLE || 0, color: 'bg-[#22C55E]' },
-          { label: 'LOCKED IN', count: statusCounts.LOCKED_IN || 0, color: 'bg-[#EF4444]' },
-          { label: 'IN REVIEW', count: statusCounts.IN_REVIEW || 0, color: 'bg-[#6366F1]' },
-          { label: 'IN MEETING', count: statusCounts.IN_MEETING || 0, color: 'bg-[#F59E0B]' },
-          { label: 'AFK', count: statusCounts.AFK || 0, color: 'bg-[#6B7280]' },
+          { label: 'AVAILABLE', count: statusCounts.AVAILABLE || 0, color: 'bg-[var(--theme-success)]' },
+          { label: 'LOCKED IN', count: statusCounts.LOCKED_IN || 0, color: 'bg-[var(--theme-error)]' },
+          { label: 'IN REVIEW', count: statusCounts.IN_REVIEW || 0, color: 'bg-[var(--theme-primary)]' },
+          { label: 'IN MEETING', count: statusCounts.IN_MEETING || 0, color: 'bg-[var(--theme-warning)]' },
+          { label: 'AFK', count: statusCounts.AFK || 0, color: 'bg-[var(--theme-foreground-tertiary)]' },
         ].map((status, i) => (
           <motion.div
             key={status.label}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: i * 0.06 }}
-            className="bg-[#111111] border-2 border-[#2E2E35] p-3 hover:border-[#F9FAFB]/20 transition-colors"
+            className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] p-3 hover:border-[var(--theme-foreground)]/20 transition-colors"
           >
             <div className="flex items-center justify-between mb-1.5">
               <div className={`w-2.5 h-2.5 ${status.color}`} />
-              <span className="font-mono text-xl font-bold text-[#F9FAFB]">{status.count}</span>
+              <span className="font-mono text-xl font-bold text-[var(--theme-foreground)]">{status.count}</span>
             </div>
-            <div className="font-mono text-[10px] uppercase tracking-wider text-[#6B7280]">{status.label}</div>
+            <div className="font-mono text-[10px] uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">{status.label}</div>
           </motion.div>
         ))}
       </div>
@@ -148,20 +148,20 @@ export default function TeamPage() {
       {/* Filters and Search */}
       <div className="flex flex-col md:flex-row gap-3">
         <div className="flex-1 relative">
-          <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+          <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--theme-foreground-tertiary)]" />
           <input
             type="text"
             placeholder="SEARCH TEAM MEMBERS..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 bg-[#111111] border-2 border-[#2E2E35] text-[#F9FAFB] placeholder-[#6B7280] font-mono text-xs uppercase tracking-wider focus:border-[#6366F1] focus:outline-none"
+            className="w-full pl-10 pr-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground)] placeholder-[var(--theme-foreground-tertiary)] font-mono text-xs uppercase tracking-wider focus:border-[var(--theme-primary)] focus:outline-none"
           />
         </div>
 
         <select
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value)}
-          className="px-3 py-2 bg-[#111111] border-2 border-[#2E2E35] text-[#9CA3AF] font-mono text-xs uppercase tracking-wider focus:border-[#6366F1] focus:outline-none cursor-pointer"
+          className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] font-mono text-xs uppercase tracking-wider focus:border-[var(--theme-primary)] focus:outline-none cursor-pointer"
         >
           <option value="all">ALL STATUSES</option>
           <option value="AVAILABLE">AVAILABLE</option>
@@ -173,7 +173,7 @@ export default function TeamPage() {
 
         <button
           onClick={() => setShowExpertiseSearch(true)}
-          className="px-3 py-2 bg-[#111111] border-2 border-[#2E2E35] text-[#9CA3AF] font-mono text-xs uppercase tracking-wider hover:border-[#6366F1] hover:text-[#F9FAFB] flex items-center gap-2"
+          className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] font-mono text-xs uppercase tracking-wider hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] flex items-center gap-2"
         >
           <HiOutlineSearch className="w-4 h-4" />
           FIND EXPERT
@@ -181,7 +181,7 @@ export default function TeamPage() {
 
         <button
           onClick={() => setShowExpertiseMatrix(true)}
-          className="px-3 py-2 bg-[#111111] border-2 border-[#2E2E35] text-[#9CA3AF] font-mono text-xs uppercase tracking-wider hover:border-[#6366F1] hover:text-[#F9FAFB] flex items-center gap-2"
+          className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] font-mono text-xs uppercase tracking-wider hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] flex items-center gap-2"
         >
           <HiOutlineChartBar className="w-4 h-4" />
           MATRIX
@@ -190,12 +190,12 @@ export default function TeamPage() {
 
       {/* Team Grid */}
       {filteredMembers.length === 0 ? (
-        <div className="border-2 border-[#2E2E35] border-dashed p-8 text-center">
-          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[#2E2E35] text-[#6B7280]">
+        <div className="border-2 border-[var(--theme-border)] border-dashed p-8 text-center">
+          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[var(--theme-border)] text-[var(--theme-foreground-tertiary)]">
             <HiOutlineUser className="w-5 h-5" />
           </div>
-          <h3 className="text-sm font-bold text-[#F9FAFB] mb-1">NO MEMBERS FOUND</h3>
-          <p className="text-xs text-[#6B7280] font-mono">Try adjusting your search or filters</p>
+          <h3 className="text-sm font-bold text-[var(--theme-foreground)] mb-1">NO MEMBERS FOUND</h3>
+          <p className="text-xs text-[var(--theme-foreground-tertiary)] font-mono">Try adjusting your search or filters</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -229,9 +229,9 @@ export default function TeamPage() {
       {/* Project Selector & Actions */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <span className="font-mono text-xs text-[#6B7280] uppercase tracking-wider hidden md:inline">Project:</span>
+          <span className="font-mono text-xs text-[var(--theme-foreground-tertiary)] uppercase tracking-wider hidden md:inline">Project:</span>
           <select
-            className="flex-1 md:w-56 px-3 py-2 bg-[#111111] border-2 border-[#2E2E35] font-mono text-xs uppercase font-bold text-[#F9FAFB] focus:border-[#6366F1] focus:outline-none cursor-pointer"
+            className="flex-1 md:w-56 px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] font-mono text-xs uppercase font-bold text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] focus:outline-none cursor-pointer"
             value={selectedProjectId}
             onChange={(e) => setSelectedProjectId(e.target.value)}
           >
@@ -244,13 +244,13 @@ export default function TeamPage() {
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="flex border-2 border-[#2E2E35]">
+          <div className="flex border-2 border-[var(--theme-border)]">
             <button
               className={clsx(
-                "px-3 py-2 flex items-center gap-2 font-mono text-xs font-bold uppercase border-r-2 border-[#2E2E35]",
+                "px-3 py-2 flex items-center gap-2 font-mono text-xs font-bold uppercase border-r-2 border-[var(--theme-border)]",
                 sprintViewMode === 'board'
-                  ? "bg-[#6366F1] text-white"
-                  : "bg-[#111111] text-[#6B7280] hover:text-[#F9FAFB]"
+                  ? "bg-[var(--theme-primary)] text-white"
+                  : "bg-[var(--theme-background-tertiary)] text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-foreground)]"
               )}
               onClick={() => setSprintViewMode('board')}
             >
@@ -261,8 +261,8 @@ export default function TeamPage() {
               className={clsx(
                 "px-3 py-2 flex items-center gap-2 font-mono text-xs font-bold uppercase",
                 sprintViewMode === 'planning'
-                  ? "bg-[#6366F1] text-white"
-                  : "bg-[#111111] text-[#6B7280] hover:text-[#F9FAFB]"
+                  ? "bg-[var(--theme-primary)] text-white"
+                  : "bg-[var(--theme-background-tertiary)] text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-foreground)]"
               )}
               onClick={() => setSprintViewMode('planning')}
             >
@@ -273,7 +273,7 @@ export default function TeamPage() {
 
           <button
             onClick={() => setShowCreateSprintModal(true)}
-            className="px-4 py-2 bg-[#6366F1] text-white font-mono text-xs font-bold uppercase border-2 border-[#4F46E5] flex items-center gap-2 whitespace-nowrap hover:bg-[#4F46E5]"
+            className="px-4 py-2 bg-[var(--theme-primary)] text-white font-mono text-xs font-bold uppercase border-2 border-[var(--theme-primary-active)] flex items-center gap-2 whitespace-nowrap hover:bg-[var(--theme-primary-active)]"
           >
             <HiOutlinePlus className="w-4 h-4" />
             New Sprint
@@ -287,35 +287,35 @@ export default function TeamPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-[#111111] border-2 border-[#6366F1]/40 p-4"
+          className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-primary)]/40 p-4"
         >
           <div className="flex flex-col md:flex-row items-start justify-between gap-3">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <HiOutlinePlay className="w-4 h-4 text-[#6366F1]" />
-                <h2 className="text-base font-bold uppercase tracking-tight text-[#F9FAFB]">
+                <HiOutlinePlay className="w-4 h-4 text-[var(--theme-primary)]" />
+                <h2 className="text-base font-bold uppercase tracking-tight text-[var(--theme-foreground)]">
                   {currentSprint.name}
                 </h2>
-                <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider bg-[#6366F1]/20 text-[#6366F1] border border-[#6366F1]/40">
+                <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider bg-[var(--theme-primary)]/20 text-[var(--theme-primary)] border border-[var(--theme-primary)]/40">
                   ACTIVE
                 </span>
               </div>
               {currentSprint.goal && (
-                <p className="text-xs font-mono text-[#9CA3AF] mb-3 border-l-2 border-[#6366F1] pl-3">
+                <p className="text-xs font-mono text-[var(--theme-foreground-secondary)] mb-3 border-l-2 border-[var(--theme-primary)] pl-3">
                   {currentSprint.goal}
                 </p>
               )}
-              <div className="flex flex-wrap gap-4 text-xs font-mono text-[#9CA3AF]">
+              <div className="flex flex-wrap gap-4 text-xs font-mono text-[var(--theme-foreground-secondary)]">
                 <div className="flex items-center gap-1.5">
-                  <HiOutlineCalendar className="w-3.5 h-3.5 text-[#6366F1]" />
+                  <HiOutlineCalendar className="w-3.5 h-3.5 text-[var(--theme-primary)]" />
                   <span>{currentSprint.daysRemaining} DAYS LEFT</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <HiOutlineChartBar className="w-3.5 h-3.5 text-[#6366F1]" />
+                  <HiOutlineChartBar className="w-3.5 h-3.5 text-[var(--theme-primary)]" />
                   <span>{currentSprint.progress}% COMPLETE</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <HiOutlineClock className="w-3.5 h-3.5 text-[#6366F1]" />
+                  <HiOutlineClock className="w-3.5 h-3.5 text-[var(--theme-primary)]" />
                   <span>{currentSprint.completedPoints}/{currentSprint.totalPoints} POINTS</span>
                 </div>
               </div>
@@ -323,16 +323,16 @@ export default function TeamPage() {
 
             <div className="flex gap-1">
               {[
-                { count: currentSprint.taskStats.done, color: 'bg-[#0A0A0A]', label: 'DONE' },
-                { count: currentSprint.taskStats.inReview, color: 'bg-[#22C55E]', label: 'REVIEW' },
-                { count: currentSprint.taskStats.inProgress, color: 'bg-[#06B6D4]', label: 'WIP' },
-                { count: currentSprint.taskStats.todo, color: 'bg-[#6366F1]', label: 'TODO' },
+                { count: currentSprint.taskStats.done, color: 'bg-[var(--theme-background-secondary)]', label: 'DONE' },
+                { count: currentSprint.taskStats.inReview, color: 'bg-[var(--theme-success)]', label: 'REVIEW' },
+                { count: currentSprint.taskStats.inProgress, color: 'bg-[var(--theme-info)]', label: 'WIP' },
+                { count: currentSprint.taskStats.todo, color: 'bg-[var(--theme-primary)]', label: 'TODO' },
               ].map((stat) => (
                 <div key={stat.label} className="flex flex-col items-center">
-                  <div className={`w-11 h-9 ${stat.color} flex items-center justify-center border border-[#2E2E35]`}>
-                    <span className="font-mono text-xs font-bold text-[#F9FAFB]">{stat.count}</span>
+                  <div className={`w-11 h-9 ${stat.color} flex items-center justify-center border border-[var(--theme-border)]`}>
+                    <span className="font-mono text-xs font-bold text-[var(--theme-foreground)]">{stat.count}</span>
                   </div>
-                  <span className="text-[10px] font-mono mt-1 text-[#6B7280]">{stat.label}</span>
+                  <span className="text-[10px] font-mono mt-1 text-[var(--theme-foreground-tertiary)]">{stat.label}</span>
                 </div>
               ))}
             </div>
@@ -378,21 +378,21 @@ export default function TeamPage() {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
         <div>
-          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6B7280] inline-block mb-1.5">
+          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] inline-block mb-1.5">
             WORKSPACE
           </span>
-          <h1 className="text-xl font-bold tracking-tight text-[#F9FAFB] flex items-center gap-2">
-            <HiOutlineUserGroup className="w-5 h-5 text-[#6366F1]" />
+          <h1 className="text-xl font-bold tracking-tight text-[var(--theme-foreground)] flex items-center gap-2">
+            <HiOutlineUserGroup className="w-5 h-5 text-[var(--theme-primary)]" />
             Team & Sprints
           </h1>
-          <p className="font-mono text-xs text-[#6B7280] mt-1 uppercase tracking-wider">
+          <p className="font-mono text-xs text-[var(--theme-foreground-tertiary)] mt-1 uppercase tracking-wider">
             {currentWorkspace.name} &bull; {teamStatuses.length} members
           </p>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex items-center gap-0 border-b-2 border-[#2E2E35] mb-4">
+      <div className="flex items-center gap-0 border-b-2 border-[var(--theme-border)] mb-4">
         {[
           { id: 'members' as TabType, label: 'MEMBERS' },
           { id: 'sprints' as TabType, label: 'SPRINTS' },
@@ -403,8 +403,8 @@ export default function TeamPage() {
             className={clsx(
               "px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider border-b-2 -mb-[2px] transition-colors",
               activeTab === tab.id
-                ? "text-[#F9FAFB] border-[#6366F1]"
-                : "text-[#6B7280] border-transparent hover:text-[#9CA3AF]"
+                ? "text-[var(--theme-foreground)] border-[var(--theme-primary)]"
+                : "text-[var(--theme-foreground-tertiary)] border-transparent hover:text-[var(--theme-foreground-secondary)]"
             )}
           >
             {tab.label}

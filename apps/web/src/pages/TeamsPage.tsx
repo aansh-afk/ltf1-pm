@@ -55,18 +55,18 @@ export default function TeamsPage() {
                 className="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 gap-4"
             >
                 <div>
-                    <p className="font-mono text-[10px] uppercase tracking-wider text-[#6366F1] mb-1">WORKSPACE</p>
-                    <h1 className="font-mono text-xl font-bold uppercase tracking-tight text-[#F9FAFB] flex items-center gap-2">
-                        <HiOutlineUsers className="w-5 h-5 text-[#6366F1]" />
+                    <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--theme-primary)] mb-1">WORKSPACE</p>
+                    <h1 className="font-mono text-xl font-bold uppercase tracking-tight text-[var(--theme-foreground)] flex items-center gap-2">
+                        <HiOutlineUsers className="w-5 h-5 text-[var(--theme-primary)]" />
                         TEAMS
                     </h1>
-                    <p className="font-mono text-xs text-[#6B7280] uppercase tracking-wider mt-1">
+                    <p className="font-mono text-xs text-[var(--theme-foreground-tertiary)] uppercase tracking-wider mt-1">
                         MANAGE WORKSPACE SQUADS
                     </p>
                 </div>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="px-3 py-2 bg-[#6366F1] text-white font-mono text-xs uppercase tracking-wider font-bold border-2 border-[#4F46E5] flex items-center gap-1.5 hover:bg-[#4F46E5]"
+                    className="px-3 py-2 bg-[var(--theme-primary)] text-white font-mono text-xs uppercase tracking-wider font-bold border-2 border-[var(--theme-primary-active)] flex items-center gap-1.5 hover:bg-[var(--theme-primary-active)]"
                 >
                     <HiOutlinePlus className="w-4 h-4" />
                     CREATE TEAM
@@ -81,36 +81,36 @@ export default function TeamsPage() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: index * 0.05 }}
-                        className="group bg-[#111111] border-2 border-[#2E2E35] p-4 hover:border-[#6366F1] transition-colors relative overflow-hidden"
+                        className="group bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] p-4 hover:border-[var(--theme-primary)] transition-colors relative overflow-hidden"
                     >
                         {/* Settings Button */}
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                            <button className="p-1.5 text-[#6B7280] hover:text-[#F9FAFB] hover:bg-[#0A0A0A]">
+                            <button className="p-1.5 text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]">
                                 <HiOutlineCog className="w-4 h-4" />
                             </button>
                         </div>
 
                         {/* Team Header */}
                         <div className="flex items-center gap-2 mb-3">
-                            <div className="w-7 h-7 bg-[#6366F1]/10 flex items-center justify-center border border-[#6366F1]/20">
-                                <HiOutlineUsers className="w-4 h-4 text-[#6366F1]" />
+                            <div className="w-7 h-7 bg-[var(--theme-primary)]/10 flex items-center justify-center border border-[var(--theme-primary)]/20">
+                                <HiOutlineUsers className="w-4 h-4 text-[var(--theme-primary)]" />
                             </div>
-                            <h3 className="font-mono text-sm font-bold uppercase text-[#F9FAFB] truncate">{team.name}</h3>
+                            <h3 className="font-mono text-sm font-bold uppercase text-[var(--theme-foreground)] truncate">{team.name}</h3>
                         </div>
 
                         {/* Description */}
-                        <p className="text-xs text-[#6B7280] font-mono mb-3 line-clamp-2 h-10 border-l-2 border-[#2E2E35] pl-3">
+                        <p className="text-xs text-[var(--theme-foreground-tertiary)] font-mono mb-3 line-clamp-2 h-10 border-l-2 border-[var(--theme-border)] pl-3">
                             {team.description || "NO DESCRIPTION PROVIDED."}
                         </p>
 
                         {/* Footer */}
-                        <div className="flex justify-between items-center pt-3 border-t border-[#1F1F23]">
-                            <span className="font-mono text-[10px] text-[#6B7280] uppercase tracking-wider">
+                        <div className="flex justify-between items-center pt-3 border-t border-[var(--theme-border)]">
+                            <span className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)] uppercase tracking-wider">
                                 ESTd. {new Date(team.createdAt).toLocaleDateString()}
                             </span>
                             <button
                                 onClick={() => setAddMemberTeam({ id: team._id, name: team.name })}
-                                className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] hover:text-[#6366F1] flex items-center gap-1 transition-colors"
+                                className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-primary)] flex items-center gap-1 transition-colors"
                             >
                                 <HiOutlineUserAdd className="w-3 h-3" />
                                 ADD MEMBER
@@ -126,14 +126,14 @@ export default function TeamsPage() {
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5 }}
-                            className="flex flex-col items-center justify-center py-12 bg-[#0A0A0A] border-2 border-dashed border-[#2E2E35]"
+                            className="flex flex-col items-center justify-center py-12 bg-[var(--theme-background-secondary)] border-2 border-dashed border-[var(--theme-border)]"
                         >
-                            <HiOutlineUsers className="w-10 h-10 text-[#2E2E35] mb-3" />
-                            <h3 className="font-mono text-sm font-bold uppercase text-[#F9FAFB] mb-1">NO TEAMS FOUND</h3>
-                            <p className="font-mono text-xs text-[#6B7280] mb-4">Create your first team to get started.</p>
+                            <HiOutlineUsers className="w-10 h-10 text-[var(--theme-border)] mb-3" />
+                            <h3 className="font-mono text-sm font-bold uppercase text-[var(--theme-foreground)] mb-1">NO TEAMS FOUND</h3>
+                            <p className="font-mono text-xs text-[var(--theme-foreground-tertiary)] mb-4">Create your first team to get started.</p>
                             <button
                                 onClick={() => setIsCreateModalOpen(true)}
-                                className="px-3 py-2 bg-[#111111] border-2 border-[#2E2E35] text-[#9CA3AF] font-mono text-xs uppercase tracking-wider hover:border-[#6366F1] hover:text-[#F9FAFB]"
+                                className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] font-mono text-xs uppercase tracking-wider hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)]"
                             >
                                 CREATE TEAM
                             </button>
@@ -150,37 +150,37 @@ export default function TeamsPage() {
             >
                 <form onSubmit={handleCreateTeam} className="space-y-3">
                     <div>
-                        <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">TEAM NAME</label>
+                        <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] mb-1.5">TEAM NAME</label>
                         <input
                             type="text"
                             value={newTeamName}
                             onChange={(e) => setNewTeamName(e.target.value)}
-                            className="w-full bg-[#0A0A0A] border-2 border-[#2E2E35] p-2.5 focus:outline-none focus:border-[#6366F1] font-mono text-xs text-[#F9FAFB] uppercase placeholder:text-[#6B7280]"
+                            className="w-full bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-2.5 focus:outline-none focus:border-[var(--theme-primary)] font-mono text-xs text-[var(--theme-foreground)] uppercase placeholder:text-[var(--theme-foreground-tertiary)]"
                             placeholder="E.G. FRONTEND SQUAD"
                             required
                             autoFocus
                         />
                     </div>
                     <div>
-                        <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">DESCRIPTION</label>
+                        <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] mb-1.5">DESCRIPTION</label>
                         <textarea
                             value={newTeamDescription}
                             onChange={(e) => setNewTeamDescription(e.target.value)}
-                            className="w-full bg-[#0A0A0A] border-2 border-[#2E2E35] p-2.5 focus:outline-none focus:border-[#6366F1] font-mono text-xs text-[#F9FAFB] resize-none h-24 placeholder:text-[#6B7280]"
+                            className="w-full bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-2.5 focus:outline-none focus:border-[var(--theme-primary)] font-mono text-xs text-[var(--theme-foreground)] resize-none h-24 placeholder:text-[var(--theme-foreground-tertiary)]"
                             placeholder="WHAT DOES THIS TEAM DO?"
                         />
                     </div>
-                    <div className="flex justify-end gap-2 pt-3 border-t border-[#1F1F23]">
+                    <div className="flex justify-end gap-2 pt-3 border-t border-[var(--theme-border)]">
                         <button
                             type="button"
                             onClick={() => setIsCreateModalOpen(false)}
-                            className="px-3 py-2 bg-[#111111] border-2 border-[#2E2E35] text-[#9CA3AF] font-mono text-xs uppercase tracking-wider hover:border-[#6366F1] hover:text-[#F9FAFB]"
+                            className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] font-mono text-xs uppercase tracking-wider hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)]"
                         >
                             CANCEL
                         </button>
                         <button
                             type="submit"
-                            className="px-3 py-2 bg-[#6366F1] text-white font-mono text-xs uppercase tracking-wider font-bold border-2 border-[#4F46E5] hover:bg-[#4F46E5]"
+                            className="px-3 py-2 bg-[var(--theme-primary)] text-white font-mono text-xs uppercase tracking-wider font-bold border-2 border-[var(--theme-primary-active)] hover:bg-[var(--theme-primary-active)]"
                         >
                             CREATE TEAM
                         </button>

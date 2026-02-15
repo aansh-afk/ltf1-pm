@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, Link, useLocation, useParams } from 'react-router-dom'
 import { UserButton } from '@clerk/clerk-react'
 import { motion } from 'framer-motion'
@@ -45,11 +45,9 @@ export default function DashboardLayout() {
     const saved = localStorage.getItem('sidebar-collapsed')
     return saved ? JSON.parse(saved) : false
   })
-  const [isHovered, setIsHovered] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const location = useLocation()
   const params = useParams()
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const { stats, formatMemory } = useResourceMonitor()
 
@@ -72,30 +70,7 @@ export default function DashboardLayout() {
     return () => window.removeEventListener('toggle-sidebar' as any, handleToggleSidebar)
   }, [])
 
-  useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  const handleMouseEnter = useCallback(() => {
-    if (isCollapsed) {
-      hoverTimeoutRef.current = setTimeout(() => {
-        setIsHovered(true)
-      }, 200)
-    }
-  }, [isCollapsed])
-
-  const handleMouseLeave = useCallback(() => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current)
-    }
-    setIsHovered(false)
-  }, [])
-
-  const isExpanded = !isCollapsed || isHovered
+  const isExpanded = !isCollapsed
 
   const navItems = NAV_ITEMS
 
@@ -118,17 +93,15 @@ export default function DashboardLayout() {
           'fixed inset-y-0 left-0 z-[50] bg-[var(--theme-background-secondary)] border-r border-[var(--theme-border)] transform lg:relative lg:translate-x-0 flex flex-col',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
           isExpanded ? 'w-[220px]' : 'w-[48px]',
-          isHovered ? 'transition-all duration-150 ease-out' : 'transition-all duration-200 ease-in-out'
+          'transition-all duration-200 ease-in-out'
         )}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
       >
         {/* SIDEBAR HEADER */}
         <div className="h-[40px] px-[12px] border-b border-[var(--theme-border)] flex items-center justify-between shrink-0">
           <h1 className={clsx(
             "text-[13px] font-bold tracking-wide",
             !isExpanded && "opacity-0",
-            isHovered ? "transition-opacity duration-150 ease-out" : "transition-opacity duration-200 ease-in-out"
+            "transition-opacity duration-200 ease-in-out"
           )}>
             <span className="text-[var(--theme-foreground)]">LTF1</span>
           </h1>
@@ -158,7 +131,7 @@ export default function DashboardLayout() {
                   isActive
                     ? 'bg-[var(--theme-background)] text-[var(--theme-info)] border-l-2 border-[var(--theme-info)]'
                     : 'text-[var(--theme-foreground)]/70 hover:bg-[var(--theme-hover)] hover:text-[var(--theme-foreground)]',
-                  isHovered ? 'transition-all duration-150 ease-out' : 'transition-all duration-200 ease-in-out'
+                  'transition-all duration-200 ease-in-out'
                 )}
                 title={!isExpanded ? item.label : undefined}
               >
@@ -170,12 +143,12 @@ export default function DashboardLayout() {
                     <Icon className={clsx(
                       "w-4 h-4 flex-shrink-0",
                       isExpanded && "mr-[8px]",
-                      isHovered ? "transition-all duration-150 ease-out" : "transition-all duration-200 ease-in-out"
+                      "transition-all duration-200 ease-in-out"
                     )} />
                     <span className={clsx(
                       "whitespace-nowrap tracking-wide",
                       !isExpanded && "hidden",
-                      isHovered ? "transition-all duration-150 ease-out" : "transition-all duration-200 ease-in-out"
+                      "transition-all duration-200 ease-in-out"
                     )}>
                       {item.label}
                     </span>
@@ -200,19 +173,19 @@ export default function DashboardLayout() {
         <div className={clsx(
           "border-t border-[var(--theme-border)] shrink-0",
           isExpanded ? "p-[10px]" : "p-[8px]",
-          isHovered ? "transition-all duration-150 ease-out" : "transition-all duration-200 ease-in-out"
+          "transition-all duration-200 ease-in-out"
         )}>
           <div className={clsx(
             "flex items-center",
             isExpanded ? "gap-[8px]" : "justify-center",
-            isHovered ? "transition-all duration-150 ease-out" : "transition-all duration-200 ease-in-out"
+            "transition-all duration-200 ease-in-out"
           )}>
             <div className="border border-[var(--theme-border)] p-[1px]">
               <UserButton afterSignOutUrl="/" />
             </div>
             {isExpanded && (
               <div className={clsx(
-                isHovered ? "transition-opacity duration-150 ease-out" : "transition-opacity duration-200 ease-in-out"
+                "transition-opacity duration-200 ease-in-out"
               )}>
                 <p className="text-[11px] text-[var(--theme-foreground)]/60">ACCOUNT</p>
                 <p className="text-[11px] text-[var(--theme-info)]">ACTIVE</p>

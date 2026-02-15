@@ -3,17 +3,23 @@
  * Supports browser OAuth flow and API token authentication
  */
 
-import crypto from 'node:crypto';
-import http from 'node:http';
-import { URL } from 'node:url';
-import open from 'open';
-import { setAuth, clearAuth, getAuth, type AuthConfig } from './config.js';
-import output from './output.js';
-import { resetClient } from './convex.js';
+import crypto from "node:crypto";
+import http from "node:http";
+import { URL } from "node:url";
+import open from "open";
+import {
+  setAuth,
+  clearAuth,
+  getAuth,
+  getWebUrl,
+  type AuthConfig,
+} from "./config.js";
+import output from "./output.js";
+import { resetClient } from "./convex.js";
 
 // Auth configuration
 const AUTH_PORT = 9876;
-const AUTH_CALLBACK_PATH = '/callback';
+const AUTH_CALLBACK_PATH = "/callback";
 const MAX_CALLBACK_REQUESTS = 10;
 
 /**
@@ -22,12 +28,15 @@ const MAX_CALLBACK_REQUESTS = 10;
 function validateUrl(urlStr: string): string {
   try {
     const parsed = new URL(urlStr);
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
       throw new Error(`Invalid URL protocol: ${parsed.protocol}`);
     }
-    return parsed.toString().replace(/\/+$/, '');
+    return parsed.toString().replace(/\/+$/, "");
   } catch (err) {
-    if (err instanceof Error && err.message.startsWith('Invalid URL protocol')) {
+    if (
+      err instanceof Error &&
+      err.message.startsWith("Invalid URL protocol")
+    ) {
       throw err;
     }
     throw new Error(`Invalid URL: ${urlStr}`);
@@ -39,11 +48,11 @@ function validateUrl(urlStr: string): string {
  */
 function escapeHtml(str: string): string {
   return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
 }
 
 /**
@@ -59,14 +68,71 @@ export function isValidTokenFormat(token: string): boolean {
   return opaquePattern.test(token);
 }
 
-// Web app URL - defaults to localhost for development, can be overridden for production
+// Web app URL configuration
+// Priority order:
+// 1. User's saved config (ltf config set-web-url <url>)
+// 2. LTF_WEB_URL or WEB_APP_URL environment variable (explicit override)
+// 3. NODE_ENV=development → localhost (for CLI/app development)
+// 4. Check if running in monorepo (has workspace root) → localhost
+// 5. Default → ltf1.dev (for published npm package/end users)
 const WEB_APP_URL = (() => {
-  const raw = process.env.LTF_WEB_URL || process.env.WEB_APP_URL || 'http://localhost:3000';
-  try {
-    return validateUrl(raw);
-  } catch {
-    return 'http://localhost:3000';
+  // 1. Check user's saved config first
+  const savedUrl = getWebUrl();
+  if (savedUrl) {
+    try {
+      return validateUrl(savedUrl);
+    } catch {
+      console.warn(`Invalid saved web URL: ${savedUrl}, falling back`);
+    }
   }
+
+  // 2. Check environment variables (explicit override)
+  const raw = process.env.LTF_WEB_URL || process.env.WEB_APP_URL;
+  if (raw) {
+    try {
+      return validateUrl(raw);
+    } catch {
+      console.warn(`Invalid LTF_WEB_URL: ${raw}, falling back to default`);
+    }
+  }
+
+  // 3. If in development mode, use localhost
+  if (process.env.NODE_ENV === "development") {
+    return "http://localhost:3000";
+  }
+
+  // 4. Check if running from monorepo (development setup)
+  // If the CLI is being run from source (has pnpm-workspace.yaml or similar)
+  // assume we're in development mode
+  try {
+    const fs = require("fs");
+    const path = require("path");
+    const cwd = process.cwd();
+
+    // Check for monorepo markers
+    const workspaceMarkers = [
+      "pnpm-workspace.yaml",
+      "lerna.json",
+      "turbo.json",
+    ];
+
+    // Check current directory and up to 3 levels up
+    for (let i = 0; i < 4; i++) {
+      const checkDir = i === 0 ? cwd : path.resolve(cwd, "../".repeat(i));
+      for (const marker of workspaceMarkers) {
+        if (fs.existsSync(path.join(checkDir, marker))) {
+          // Found monorepo marker - assume local development
+          return "http://localhost:3000";
+        }
+      }
+    }
+  } catch {
+    // If fs operations fail, continue to next check
+  }
+
+  // 5. Default to production for end users
+  // This ensures the published npm package works out of the box
+  return "https://ltf1.dev";
 })();
 
 /**
@@ -75,7 +141,7 @@ const WEB_APP_URL = (() => {
  */
 export async function loginWithBrowser(): Promise<AuthConfig> {
   // Generate CSRF state parameter
-  const csrfState = crypto.randomBytes(32).toString('hex');
+  const csrfState = crypto.randomBytes(32).toString("hex");
   let requestCount = 0;
 
   return new Promise((resolve, reject) => {
@@ -84,27 +150,27 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
       // Rate limit: cap requests to prevent abuse
       requestCount++;
       if (requestCount > MAX_CALLBACK_REQUESTS) {
-        res.writeHead(429, { 'Content-Type': 'text/plain' });
-        res.end('Too many requests');
+        res.writeHead(429, { "Content-Type": "text/plain" });
+        res.end("Too many requests");
         return;
       }
 
-      const url = new URL(req.url || '/', `http://localhost:${AUTH_PORT}`);
+      const url = new URL(req.url || "/", `http://localhost:${AUTH_PORT}`);
 
       if (url.pathname === AUTH_CALLBACK_PATH) {
         // Verify CSRF state parameter
-        const returnedState = url.searchParams.get('state');
+        const returnedState = url.searchParams.get("state");
         if (returnedState !== csrfState) {
-          res.writeHead(403, { 'Content-Type': 'text/plain' });
-          res.end('Invalid state parameter');
+          res.writeHead(403, { "Content-Type": "text/plain" });
+          res.end("Invalid state parameter");
           return;
         }
 
-        const token = url.searchParams.get('token');
-        const userId = url.searchParams.get('userId');
-        const email = url.searchParams.get('email');
-        const sessionId = url.searchParams.get('sessionId');
-        const error = url.searchParams.get('error');
+        const token = url.searchParams.get("token");
+        const userId = url.searchParams.get("userId");
+        const email = url.searchParams.get("email");
+        const sessionId = url.searchParams.get("sessionId");
+        const error = url.searchParams.get("error");
 
         // Error page template
         const errorPage = (title: string, message: string) => `
@@ -149,23 +215,25 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
         `;
 
         if (error) {
-          res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
-          res.end(errorPage('Authentication Failed', error));
+          res.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
+          res.end(errorPage("Authentication Failed", error));
           server.close();
           reject(new Error(error));
           return;
         }
 
         if (!token) {
-          res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
-          res.end(errorPage('Missing Token', 'No authentication token received.'));
+          res.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
+          res.end(
+            errorPage("Missing Token", "No authentication token received."),
+          );
           server.close();
-          reject(new Error('No token received'));
+          reject(new Error("No token received"));
           return;
         }
 
         // Success response
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
         res.end(`
           <!DOCTYPE html>
           <html lang="en">
@@ -201,7 +269,7 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
                   </div>
                   <p class="brand">LTF1 CLI</p>
                   <h1>Authenticated</h1>
-                  ${email ? `<div class="email">${escapeHtml(email)}</div>` : ''}
+                  ${email ? `<div class="email">${escapeHtml(email)}</div>` : ""}
                   <p class="message">
                     Return to your terminal to continue.<br>
                     This window will close automatically.
@@ -223,9 +291,11 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
         // Parse JWT exp claim for real expiry (fallback to 1 hour)
         let expiresAt = Date.now() + 60 * 60 * 1000;
         try {
-          const parts = token.split('.');
+          const parts = token.split(".");
           if (parts.length === 3) {
-            const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+            const payload = JSON.parse(
+              Buffer.from(parts[1], "base64url").toString(),
+            );
             if (payload.exp) {
               expiresAt = payload.exp * 1000;
             }
@@ -236,7 +306,7 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
 
         const authConfig: AuthConfig = {
           token,
-          tokenType: 'clerk',
+          tokenType: "clerk",
           userId: userId || undefined,
           email: email || undefined,
           expiresAt,
@@ -246,7 +316,7 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
         resolve(authConfig);
       } else {
         res.writeHead(404);
-        res.end('Not found');
+        res.end("Not found");
       }
     });
 
@@ -256,22 +326,27 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
       const authUrl = `${WEB_APP_URL}/cli-auth?callback=${encodeURIComponent(callbackUrl)}&state=${csrfState}`;
 
       output.info(`Opening browser for authentication...`);
-      output.log(output.colors.muted(`If browser doesn't open, visit: ${authUrl}`));
+      output.log(
+        output.colors.muted(`If browser doesn't open, visit: ${authUrl}`),
+      );
 
       // Open browser
       open(authUrl).catch(() => {
-        output.warning('Could not open browser automatically');
+        output.warning("Could not open browser automatically");
         output.log(`Please visit: ${output.colors.link(authUrl)}`);
       });
     });
 
     // Timeout after 5 minutes
-    setTimeout(() => {
-      server.close();
-      reject(new Error('Authentication timed out'));
-    }, 5 * 60 * 1000);
+    setTimeout(
+      () => {
+        server.close();
+        reject(new Error("Authentication timed out"));
+      },
+      5 * 60 * 1000,
+    );
 
-    server.on('error', (err) => {
+    server.on("error", (err) => {
       reject(new Error(`Failed to start auth server: ${err.message}`));
     });
   });
@@ -283,7 +358,7 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
 export async function loginWithToken(token: string): Promise<AuthConfig> {
   // Validate token format
   if (!token || !isValidTokenFormat(token)) {
-    throw new Error('Invalid token format');
+    throw new Error("Invalid token format");
   }
 
   // TODO: Validate token by making a test API call
@@ -291,7 +366,7 @@ export async function loginWithToken(token: string): Promise<AuthConfig> {
 
   const authConfig: AuthConfig = {
     token,
-    tokenType: 'api',
+    tokenType: "api",
     // API tokens don't expire (unless revoked)
     expiresAt: undefined,
   };
@@ -331,13 +406,14 @@ export async function refreshToken(): Promise<boolean> {
   }
 
   // Derive the Convex site URL from the cloud URL
-  const convexUrl = process.env.CONVEX_URL || 'https://tangible-butterfly-366.convex.cloud';
-  const siteUrl = convexUrl.replace('.convex.cloud', '.convex.site');
+  const convexUrl =
+    process.env.CONVEX_URL || "https://tangible-butterfly-366.convex.cloud";
+  const siteUrl = convexUrl.replace(".convex.cloud", ".convex.site");
 
   try {
     const response = await fetch(`${siteUrl}/api/cli-refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId: auth.sessionId }),
     });
 
@@ -345,7 +421,7 @@ export async function refreshToken(): Promise<boolean> {
       return false;
     }
 
-    const data = await response.json() as { token?: string; error?: string };
+    const data = (await response.json()) as { token?: string; error?: string };
     if (!data.token) {
       return false;
     }
@@ -353,9 +429,11 @@ export async function refreshToken(): Promise<boolean> {
     // Parse JWT exp claim for real expiry
     let expiresAt = Date.now() + 60 * 60 * 1000;
     try {
-      const parts = data.token.split('.');
+      const parts = data.token.split(".");
       if (parts.length === 3) {
-        const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+        const payload = JSON.parse(
+          Buffer.from(parts[1], "base64url").toString(),
+        );
         if (payload.exp) {
           expiresAt = payload.exp * 1000;
         }
@@ -393,7 +471,7 @@ export function logout(): void {
  */
 export function getAuthStatus(): {
   authenticated: boolean;
-  type?: 'clerk' | 'api';
+  type?: "clerk" | "api";
   email?: string;
   userId?: string;
   expiresAt?: Date;
@@ -425,7 +503,7 @@ export function getAuthStatus(): {
 export function requireAuth(): void {
   const status = getAuthStatus();
   if (!status.authenticated) {
-    output.error('Not authenticated', 'Run `ltf auth login` to authenticate');
+    output.error("Not authenticated", "Run `ltf auth login` to authenticate");
     process.exit(1);
   }
 }

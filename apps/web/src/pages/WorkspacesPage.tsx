@@ -25,14 +25,14 @@ export default function WorkspacesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6B7280] inline-block mb-1.5">
+          <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] inline-block mb-1.5">
             Workspaces
           </span>
-          <h1 className="text-xl font-bold tracking-tight text-[#F9FAFB] flex items-center gap-2">
-            <HiOutlineGlobeAlt className="w-5 h-5 text-[#6366F1]" />
+          <h1 className="text-xl font-bold tracking-tight text-[var(--theme-foreground)] flex items-center gap-2">
+            <HiOutlineGlobeAlt className="w-5 h-5 text-[var(--theme-primary)]" />
             Mission Select
           </h1>
-          <p className="text-xs text-[#6B7280] mt-1 font-mono">
+          <p className="text-xs text-[var(--theme-foreground-tertiary)] mt-1 font-mono">
             Select active theater of operations
           </p>
         </div>
@@ -49,17 +49,17 @@ export default function WorkspacesPage() {
 
       {/* Workspaces Grid */}
       {workspaces.length === 0 ? (
-        <div className="border-2 border-[#2E2E35] border-dashed p-8 text-center">
-          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[#2E2E35] text-[#6B7280]">
+        <div className="border-2 border-[var(--theme-border)] border-dashed p-8 text-center">
+          <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[var(--theme-border)] text-[var(--theme-foreground-tertiary)]">
             <HiOutlineBriefcase className="w-5 h-5" />
           </div>
-          <h3 className="text-sm font-bold text-[#F9FAFB] mb-1">No Active Workspaces</h3>
-          <p className="text-xs text-[#6B7280] mb-4 max-w-sm mx-auto">
+          <h3 className="text-sm font-bold text-[var(--theme-foreground)] mb-1">No Active Workspaces</h3>
+          <p className="text-xs text-[var(--theme-foreground-tertiary)] mb-4 max-w-sm mx-auto">
             No workspaces detected. Initialize a new workspace to begin operations.
           </p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-[#6366F1] text-white text-xs font-semibold font-mono uppercase tracking-wider border-2 border-[#4F46E5]"
+            className="px-4 py-2 bg-[var(--theme-primary)] text-white text-xs font-semibold font-mono uppercase tracking-wider border-2 border-[var(--theme-primary-active)]"
           >
             Initialize Workspace
           </button>
@@ -88,11 +88,11 @@ export default function WorkspacesPage() {
             onClick={() => setShowCreateModal(true)}
             className="group cursor-pointer"
           >
-            <div className="h-full min-h-[140px] border-2 border-dashed border-[#2E2E35] bg-[#0A0A0A]/50 hover:bg-[#0A0A0A] hover:border-[#6366F1] transition-all flex flex-col items-center justify-center p-4 gap-3">
-              <div className="w-10 h-10 border-2 border-[#2E2E35] group-hover:border-[#6366F1] flex items-center justify-center transition-colors">
-                <HiOutlinePlus className="w-5 h-5 text-[#6B7280] group-hover:text-[#6366F1] transition-colors" />
+            <div className="h-full min-h-[140px] border-2 border-dashed border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/50 hover:bg-[var(--theme-background-secondary)] hover:border-[var(--theme-border-hover)] transition-all flex flex-col items-center justify-center p-4 gap-3">
+              <div className="w-10 h-10 border-2 border-[var(--theme-border)] group-hover:border-[var(--theme-border-hover)] flex items-center justify-center transition-colors">
+                <HiOutlinePlus className="w-5 h-5 text-[var(--theme-foreground-tertiary)] group-hover:text-[var(--theme-primary)] transition-colors" />
               </div>
-              <span className="font-mono text-xs font-semibold text-[#6B7280] group-hover:text-[#6366F1] uppercase tracking-wider transition-colors">
+              <span className="font-mono text-xs font-semibold text-[var(--theme-foreground-tertiary)] group-hover:text-[var(--theme-primary)] uppercase tracking-wider transition-colors">
                 Deploy New Workspace
               </span>
             </div>

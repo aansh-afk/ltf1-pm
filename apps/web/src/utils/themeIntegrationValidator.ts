@@ -499,7 +499,7 @@ export class ThemeIntegrationValidator {
       }
 
       // Step 2 & 3: Test theme switching (simulated)
-      const testThemes = ['cyberpunk', 'neon', 'matrix']
+      const testThemes = ['monokai', 'tokyonight', 'vscode']
       for (const themeName of testThemes) {
         document.documentElement.setAttribute('data-theme', themeName)
         await new Promise(resolve => setTimeout(resolve, 50))
@@ -518,9 +518,9 @@ export class ThemeIntegrationValidator {
       }
 
       // Step 4 & 5: Test persistence (simulated)
-      localStorage.setItem('ltf1-global-theme', 'brutalist')
+      localStorage.setItem('ltf1-global-theme', 'obsidian')
       const persistedTheme = localStorage.getItem('ltf1-global-theme')
-      if (persistedTheme !== 'brutalist') {
+      if (persistedTheme !== 'obsidian') {
         return {
           workflowName: 'Theme Switching Workflow',
           steps,
@@ -616,13 +616,13 @@ export class ThemeIntegrationValidator {
       const originalTheme = localStorage.getItem('ltf1-global-theme')
       const originalContrast = localStorage.getItem('ltf1-high-contrast')
 
-      localStorage.setItem('ltf1-global-theme', 'cyberpunk')
+      localStorage.setItem('ltf1-global-theme', 'monokai')
       localStorage.setItem('ltf1-high-contrast', 'true')
 
       const savedTheme = localStorage.getItem('ltf1-global-theme')
       const savedContrast = localStorage.getItem('ltf1-high-contrast')
 
-      if (savedTheme !== 'cyberpunk' || savedContrast !== 'true') {
+      if (savedTheme !== 'monokai' || savedContrast !== 'true') {
         return {
           workflowName: 'Persistence Workflow',
           steps,
@@ -681,7 +681,7 @@ export class ThemeIntegrationValidator {
       const switchStart = performance.now()
       
       // Simulate theme switch
-      document.documentElement.setAttribute('data-theme', 'neon')
+      document.documentElement.setAttribute('data-theme', 'tokyonight')
       document.documentElement.offsetHeight // Force layout
       
       const switchTime = performance.now() - switchStart

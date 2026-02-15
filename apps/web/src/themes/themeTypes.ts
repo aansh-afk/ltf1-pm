@@ -5,15 +5,16 @@
 
 // Define the available theme names as a const assertion
 export const ThemeNames = {
-  BRUTALIST: 'brutalist',
-  MATRIX: 'matrix',
-  DRACULA: 'dracula',
-  GITHUB: 'github',
-  CYBERPUNK: 'cyberpunk',
-  RETRO: 'retro',
-  HACKER: 'hacker',
-  MINIMAL: 'minimal',
-  NEON: 'neon'
+  OBSIDIAN: 'obsidian',
+  VSCODE: 'vscode',
+  MONOKAI: 'monokai',
+  SOLARIZED: 'solarized',
+  NORD: 'nord',
+  ONEDARK: 'onedark',
+  TOKYONIGHT: 'tokyonight',
+  CATPPUCCIN: 'catppuccin',
+  GRUVBOX: 'gruvbox',
+  VERCEL: 'vercel'
 } as const
 
 // Create the ThemeName type from the values
@@ -26,75 +27,75 @@ export const AVAILABLE_THEMES: ThemeName[] = Object.values(ThemeNames)
 export interface GlobalTheme {
   name: string
   description: string
-  
+
   // Core Colors
   colors: {
     // Background System
-    background: string          // Primary background (event-horizon equivalent)
-    backgroundSecondary: string // Secondary background (carbon-plate equivalent)
-    backgroundTertiary: string  // Tertiary background (lighter panels)
-    
+    background: string
+    backgroundSecondary: string
+    backgroundTertiary: string
+
     // Foreground System
-    foreground: string          // Primary text (cathode-white equivalent)
-    foregroundSecondary: string // Secondary text (muted)
-    foregroundTertiary: string  // Tertiary text (subtle)
-    
+    foreground: string
+    foregroundSecondary: string
+    foregroundTertiary: string
+
     // Border System
-    border: string              // Primary borders (basalt-border equivalent)
-    borderHover: string         // Border hover states
-    borderFocus: string         // Focus indicator borders
-    
+    border: string
+    borderHover: string
+    borderFocus: string
+
     // Primary System
-    primary: string             // Primary brand color (primary-brutalist equivalent)
-    primaryHover: string        // Primary hover state
-    primaryFocus: string        // Primary focus state
-    primaryActive: string       // Primary active state
-    
+    primary: string
+    primaryHover: string
+    primaryFocus: string
+    primaryActive: string
+
     // Status System
-    success: string             // Success states
-    successHover: string        // Success hover
-    error: string               // Error states
-    errorHover: string          // Error hover  
-    warning: string             // Warning states
-    warningHover: string        // Warning hover
-    info: string                // Info states
-    infoHover: string           // Info hover
-    
+    success: string
+    successHover: string
+    error: string
+    errorHover: string
+    warning: string
+    warningHover: string
+    info: string
+    infoHover: string
+
     // Interactive Elements
-    hover: string               // General hover background
-    active: string              // General active background
-    selected: string            // Selected item background
-    disabled: string            // Disabled element background
-    disabledText: string        // Disabled text color
-    
+    hover: string
+    active: string
+    selected: string
+    disabled: string
+    disabledText: string
+
     // Shadow System
-    shadow: string              // Shadow color for brutal shadows
-    shadowHover: string         // Hover shadow color
-    
+    shadow: string
+    shadowHover: string
+
     // Special Effects
-    glow: string                // Glow effects
-    glowSecondary: string       // Secondary glow
-    gradient: string            // Gradient backgrounds
+    glow: string
+    glowSecondary: string
+    gradient: string
   }
-  
+
   // Typography
   typography: {
     fontFamily: string
     letterSpacing: string
     textTransform: 'uppercase' | 'lowercase' | 'none'
   }
-  
+
   // Effects & Animations - BRUTALIST PROTOCOL COMPLIANCE
   effects: {
-    borderRadius: '0'           // 1.1 LAW OF ZERO RADIUS - ABSOLUTE
-    boxShadow: string          // 1.5 SHADOW DECREE - Hard shadows only
-    boxShadowHover: string     // Hover shadow pattern
-    transitionDuration: 'none' // 6.1 LAW OF INSTANT CHANGE - No easing
-    glowIntensity: number      // Glow effect strength (0-1)
-    scanlines: boolean         // Terminal scanline effects
-    textShadow: boolean        // Text shadow effects
+    borderRadius: '0'
+    boxShadow: string
+    boxShadowHover: string
+    transitionDuration: 'none'
+    glowIntensity: number
+    scanlines: boolean
+    textShadow: boolean
   }
-  
+
   // Component-Specific Overrides
   components: {
     button: {
