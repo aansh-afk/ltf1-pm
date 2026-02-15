@@ -469,7 +469,7 @@ export default function SettingsPage() {
                 <div className="space-y-3">
                   <div className="p-4 border-2 border-[var(--theme-border)]">
                     <label className="block text-xs font-bold uppercase mb-4">Theme</label>
-                    <ThemeSwitcher size="lg" variant="dropdown" showLabel={true} />
+                    <ThemeSwitcher variant="grid" showLabel={true} />
                   </div>
 
                   <div className="p-4 border-2 border-[var(--theme-border)] space-y-6">
