@@ -36,4 +36,28 @@ crons.interval(
   {}
 );
 
+// Due date reminders - check every 6 hours
+crons.interval(
+  "process-due-date-reminders",
+  { hours: 6 },
+  internal.email.cronHelpers.processDueDateReminders,
+  {}
+);
+
+// Overdue task alerts - check every 12 hours
+crons.interval(
+  "process-overdue-alerts",
+  { hours: 12 },
+  internal.email.cronHelpers.processOverdueAlerts,
+  {}
+);
+
+// Meeting reminders - check every 15 minutes
+crons.interval(
+  "process-meeting-reminders",
+  { minutes: 15 },
+  internal.email.cronHelpers.processMeetingReminders,
+  {}
+);
+
 export default crons;
