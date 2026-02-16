@@ -2,6 +2,7 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { canAccessTask, getTaskProject, requirePermission } from "../auth/permissions";
 import { internal } from "../_generated/api";
+import { taskAssigned, taskUnassigned, taskCompleted, taskStatusChanged } from "../email/templates";
 
 export const createTask = mutation({
   args: {
@@ -98,6 +99,26 @@ export const createTask = mutation({
             read: false,
             createdAt: now,
           });
+
+          // Send email to assignee
+          const assigneeUser = await ctx.db.get(assigneeId);
+          if (assigneeUser && (assigneeUser as any).preferences?.notifications?.email !== false) {
+            const taskKey = `${(project as any).settings?.taskPrefix || project.key}-${maxNumber + 1}`;
+            const emailContent = taskAssigned({
+              assignerName: user.name || user.email,
+              taskTitle: args.title,
+              projectName: project.name,
+              taskKey,
+              priority: args.priority || "medium",
+              workspaceSlug: "",
+              projectKey: (project as any).key || "",
+            });
+            await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+              to: assigneeUser.email,
+              subject: emailContent.subject,
+              html: emailContent.html,
+            });
+          }
         }
       }
     }
@@ -234,6 +255,51 @@ export const updateTask = mutation({
           description: `completed task "${task.title}"`,
           metadata: undefined
         });
+
+        // Email all assignees about completion
+        const completionAssignees = args.assigneeIds || task.assigneeIds || [];
+        for (const aid of completionAssignees) {
+          if (aid !== user._id) {
+            const au = await ctx.db.get(aid);
+            if (au && (au as any).preferences?.notifications?.email !== false) {
+              const emailContent = taskCompleted({
+                completedByName: user.name || user.email,
+                taskTitle: task.title,
+                taskKey: `${(project as any).settings?.taskPrefix || (project as any).key}-${task.number}`,
+                projectName: project.name,
+              });
+              await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+                to: au.email,
+                subject: emailContent.subject,
+                html: emailContent.html,
+              });
+            }
+          }
+        }
+      }
+
+      // Email assignees about status change (skip if going to "done" — handled above)
+      if (args.status !== "done") {
+        const statusAssignees = task.assigneeIds || [];
+        for (const aid of statusAssignees) {
+          if (aid !== user._id) {
+            const au = await ctx.db.get(aid);
+            if (au && (au as any).preferences?.notifications?.email !== false) {
+              const emailContent = taskStatusChanged({
+                changedByName: user.name || user.email,
+                taskTitle: task.title,
+                taskKey: `${(project as any).settings?.taskPrefix || (project as any).key}-${task.number}`,
+                oldStatus: task.status,
+                newStatus: args.status!,
+              });
+              await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+                to: au.email,
+                subject: emailContent.subject,
+                html: emailContent.html,
+              });
+            }
+          }
+        }
       }
     }
     
@@ -283,6 +349,26 @@ export const updateTask = mutation({
             read: false,
             createdAt: Date.now(),
           });
+
+          // Send email to newly assigned user
+          const assigneeUser = await ctx.db.get(assigneeId);
+          if (assigneeUser && (assigneeUser as any).preferences?.notifications?.email !== false) {
+            const taskKey = `${(project as any).settings?.taskPrefix || (project as any).key}-${task.number}`;
+            const emailContent = taskAssigned({
+              assignerName: user.name || user.email,
+              taskTitle: task.title,
+              projectName: project.name,
+              taskKey,
+              priority: task.priority,
+              workspaceSlug: "",
+              projectKey: (project as any).key || "",
+            });
+            await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+              to: assigneeUser.email,
+              subject: emailContent.subject,
+              html: emailContent.html,
+            });
+          }
         }
       }
       
@@ -298,6 +384,22 @@ export const updateTask = mutation({
             read: false,
             createdAt: Date.now(),
           });
+
+          // Send email to unassigned user
+          const removedUser = await ctx.db.get(assigneeId);
+          if (removedUser && (removedUser as any).preferences?.notifications?.email !== false) {
+            const taskKey = `${(project as any).settings?.taskPrefix || (project as any).key}-${task.number}`;
+            const emailContent = taskUnassigned({
+              taskTitle: task.title,
+              taskKey,
+              removedByName: user.name || user.email,
+            });
+            await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+              to: removedUser.email,
+              subject: emailContent.subject,
+              html: emailContent.html,
+            });
+          }
         }
       }
     }

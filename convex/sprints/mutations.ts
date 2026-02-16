@@ -2,6 +2,7 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../auth/permissions";
 import { internal } from "../_generated/api";
+import { sprintStarted, sprintCompleted } from "../email/templates";
 
 export const createSprint = mutation({
   args: {
@@ -156,6 +157,63 @@ export const updateSprint = mutation({
         extra: { sprintId: args.sprintId, updates }
       }
     });
+
+    // Send sprint started emails to project members
+    if (args.status === "active" && sprint.status !== "active") {
+      const projectMembers = await ctx.db
+        .query("projectMembers")
+        .withIndex("by_project", (q) => q.eq("projectId", sprint.projectId))
+        .collect();
+
+      const formatDate = (ts: number) => new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      for (const pm of projectMembers) {
+        if (pm.userId !== user._id && pm.status === "active") {
+          const memberUser = await ctx.db.get(pm.userId);
+          if (memberUser && memberUser.preferences?.notifications?.email !== false) {
+            const emailContent = sprintStarted({
+              sprintName: args.name || sprint.name,
+              projectName: project.name,
+              startDate: formatDate(updates.startDate || sprint.startDate),
+              endDate: formatDate(updates.endDate || sprint.endDate),
+              goal: args.goal || sprint.goal,
+              startedByName: user.name || user.email,
+            });
+            await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+              to: memberUser.email,
+              subject: emailContent.subject,
+              html: emailContent.html,
+            });
+          }
+        }
+      }
+    }
+
+    // Send sprint completed emails to project members
+    if (args.status === "completed" && sprint.status !== "completed") {
+      const projectMembers = await ctx.db
+        .query("projectMembers")
+        .withIndex("by_project", (q) => q.eq("projectId", sprint.projectId))
+        .collect();
+
+      for (const pm of projectMembers) {
+        if (pm.userId !== user._id && pm.status === "active") {
+          const memberUser = await ctx.db.get(pm.userId);
+          if (memberUser && memberUser.preferences?.notifications?.email !== false) {
+            const emailContent = sprintCompleted({
+              sprintName: sprint.name,
+              projectName: project.name,
+              completedByName: user.name || user.email,
+            });
+            await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+              to: memberUser.email,
+              subject: emailContent.subject,
+              html: emailContent.html,
+            });
+          }
+        }
+      }
+    }
 
     return args.sprintId;
   },

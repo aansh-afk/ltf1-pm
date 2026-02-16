@@ -2,6 +2,7 @@ import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../auth/permissions";
 import { internal } from "../_generated/api";
+import { workspaceInvitation, memberRoleChanged, memberRemoved } from "../email/templates";
 
 export const createWorkspace = mutation({
   args: {
@@ -293,6 +294,22 @@ export const inviteToWorkspace = mutation({
         createdAt: now,
       });
 
+      // Send email notification
+      if (invitedUser.preferences?.notifications?.email !== false) {
+        const workspace = await ctx.db.get(args.workspaceId);
+        const emailContent = workspaceInvitation({
+          inviterName: user.name || user.email,
+          workspaceName: workspace?.name || "workspace",
+          role: args.role,
+          inviteeEmail: args.email,
+        });
+        await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+          to: invitedUser.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
+        });
+      }
+
       return { status: "added" as const, email: args.email };
     } else {
       // User doesn't exist yet - create a pending invitation
@@ -315,6 +332,20 @@ export const inviteToWorkspace = mutation({
         status: "pending",
         createdAt: now,
         expiresAt: now + 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+
+      // Send invitation email to non-registered user
+      const workspace = await ctx.db.get(args.workspaceId);
+      const emailContent = workspaceInvitation({
+        inviterName: user.name || user.email,
+        workspaceName: workspace?.name || "workspace",
+        role: args.role,
+        inviteeEmail: args.email,
+      });
+      await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+        to: args.email,
+        subject: emailContent.subject,
+        html: emailContent.html,
       });
 
       await ctx.runMutation(internal.activities.mutations.logActivity, {
@@ -377,6 +408,22 @@ export const updateMemberRole = mutation({
     await ctx.db.patch(member._id, {
       role: args.role,
     });
+
+    // Send email notification about role change
+    const targetUser = await ctx.db.get(args.userId);
+    if (targetUser && targetUser.preferences?.notifications?.email !== false) {
+      const workspace = await ctx.db.get(args.workspaceId);
+      const emailContent = memberRoleChanged({
+        workspaceName: workspace?.name || "workspace",
+        changedByName: currentUser.name || currentUser.email,
+        newRole: args.role,
+      });
+      await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+        to: targetUser.email,
+        subject: emailContent.subject,
+        html: emailContent.html,
+      });
+    }
 
     // Log member role update activity
     await ctx.runMutation(internal.activities.mutations.logActivity, {
@@ -557,6 +604,21 @@ export const removeMember = mutation({
     }
 
     await ctx.db.delete(member._id);
+
+    // Send email notification about removal
+    const removedUser = await ctx.db.get(args.userId);
+    if (removedUser && removedUser.preferences?.notifications?.email !== false) {
+      const workspace = await ctx.db.get(args.workspaceId);
+      const emailContent = memberRemoved({
+        workspaceName: workspace?.name || "workspace",
+        removedByName: currentUser.name || currentUser.email,
+      });
+      await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+        to: removedUser.email,
+        subject: emailContent.subject,
+        html: emailContent.html,
+      });
+    }
 
     // Log member removal activity
     await ctx.runMutation(internal.activities.mutations.logActivity, {
