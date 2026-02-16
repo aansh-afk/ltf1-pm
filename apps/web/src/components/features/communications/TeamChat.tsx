@@ -72,12 +72,12 @@ export default function TeamChat({ channelId, channelName }: TeamChatProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Channel header */}
-      <div className="px-4 py-3 border-b border-[#1F1F23] flex items-center gap-2">
-        <HiOutlineChatAlt2 className="w-4 h-4 text-[#6366F1]" />
-        <h3 className="font-mono text-sm font-bold text-[#F9FAFB] uppercase">
+      <div className="px-4 py-3 border-b border-[var(--theme-border)] flex items-center gap-2">
+        <HiOutlineChatAlt2 className="w-4 h-4 text-[var(--theme-primary)]" />
+        <h3 className="font-mono text-sm font-bold text-[var(--theme-foreground)] uppercase">
           # {channelName}
         </h3>
-        <span className="font-mono text-[10px] text-[#6B7280] ml-2">
+        <span className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)] ml-2">
           {messages.length} messages
         </span>
       </div>
@@ -86,8 +86,8 @@ export default function TeamChat({ channelId, channelName }: TeamChatProps) {
       <div className="flex-1 overflow-y-auto py-2 space-y-2 px-4">
         {sorted.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-2">
-            <HiOutlineChatAlt2 className="w-8 h-8 text-[#2E2E35]" />
-            <p className="font-mono text-xs text-[#6B7280]">
+            <HiOutlineChatAlt2 className="w-8 h-8 text-[var(--theme-border)]" />
+            <p className="font-mono text-xs text-[var(--theme-foreground-tertiary)]">
               No messages yet. Start the conversation!
             </p>
           </div>
@@ -100,7 +100,7 @@ export default function TeamChat({ channelId, channelName }: TeamChatProps) {
       </div>
 
       {/* Message input */}
-      <div className="px-4 py-3 border-t border-[#1F1F23] bg-[#050505]">
+      <div className="px-4 py-3 border-t border-[var(--theme-border)] bg-[var(--theme-background)]">
         <div className="flex items-center gap-2">
           <input
             ref={inputRef}
@@ -109,12 +109,12 @@ export default function TeamChat({ channelId, channelName }: TeamChatProps) {
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={`Message #${channelName}`}
-            className="flex-1 bg-[#111111] border-2 border-[#2E2E35] px-3 py-2 font-mono text-xs text-[#F9FAFB] placeholder-[#6B7280] focus:border-[#6366F1] focus:outline-none transition-colors"
+            className="flex-1 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] px-3 py-2 font-mono text-xs text-[var(--theme-foreground)] placeholder-[var(--theme-foreground-tertiary)] focus:border-[var(--theme-primary)] focus:outline-none transition-colors"
           />
           <button
             onClick={handleSend}
             disabled={!message.trim() || sending}
-            className="px-3 py-2 border-2 border-[#6366F1] bg-[#6366F1] text-white font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#4F46E5] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-2 border-2 border-[var(--theme-primary)] bg-[var(--theme-primary)] text-white font-mono text-xs font-bold uppercase tracking-wider hover:bg-[var(--theme-primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <HiOutlinePaperAirplane className="w-4 h-4 rotate-90" />
           </button>
