@@ -2,6 +2,7 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { canAccessTask } from "../auth/permissions";
 import { internal } from "../_generated/api";
+import { commentAdded } from "../email/templates";
 
 export const createComment = mutation({
   args: {
@@ -75,6 +76,46 @@ export const createComment = mutation({
           data: { taskId: args.taskId, commentId },
           read: false,
           createdAt: now,
+        });
+      }
+    }
+
+    // Send email notifications for new comment to assignees
+    for (const assigneeId of assigneeIds) {
+      if (assigneeId !== user._id) {
+        const assigneeUser = await ctx.db.get(assigneeId);
+        if (assigneeUser && assigneeUser.preferences?.notifications?.email !== false) {
+          const taskKey = `${project.settings?.taskPrefix || project.key}-${task.number}`;
+          const emailContent = commentAdded({
+            commenterName: user.name || user.email,
+            taskTitle: task.title,
+            taskKey,
+            commentPreview: args.content,
+          });
+          await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+            to: assigneeUser.email,
+            subject: emailContent.subject,
+            html: emailContent.html,
+          });
+        }
+      }
+    }
+
+    // Also email the reporter if not the commenter and not an assignee
+    if (task.reporterId !== user._id && !assigneeIds.includes(task.reporterId)) {
+      const reporter = await ctx.db.get(task.reporterId);
+      if (reporter && reporter.preferences?.notifications?.email !== false) {
+        const taskKey = `${project.settings?.taskPrefix || project.key}-${task.number}`;
+        const emailContent = commentAdded({
+          commenterName: user.name || user.email,
+          taskTitle: task.title,
+          taskKey,
+          commentPreview: args.content,
+        });
+        await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+          to: reporter.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
         });
       }
     }

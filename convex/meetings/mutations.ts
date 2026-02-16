@@ -2,6 +2,7 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../auth/permissions";
 import { internal } from "../_generated/api";
+import { meetingScheduled, meetingUpdated, meetingCancelled } from "../email/templates";
 
 export const createMeeting = mutation({
   args: {
@@ -100,6 +101,30 @@ export const createMeeting = mutation({
       }
     });
 
+    // Send email notifications to attendees
+    for (const attendeeObj of attendees) {
+      if (attendeeObj.userId !== user._id) {
+        const attendeeUser = await ctx.db.get(attendeeObj.userId);
+        if (attendeeUser && attendeeUser.preferences?.notifications?.email !== false) {
+          const formatDate = (ts: number) => new Date(ts).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          const emailContent = meetingScheduled({
+            organizerName: user.name || user.email,
+            meetingTitle: args.title,
+            meetingType: args.type,
+            startTime: formatDate(args.startTime),
+            endTime: formatDate(args.endTime),
+            location: args.location,
+            meetingUrl: args.meetingUrl,
+          });
+          await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+            to: attendeeUser.email,
+            subject: emailContent.subject,
+            html: emailContent.html,
+          });
+        }
+      }
+    }
+
     return meetingId;
   },
 });
@@ -164,6 +189,35 @@ export const updateMeeting = mutation({
         extra: { updates }
       }
     });
+
+    // Send update emails to attendees
+    const changesList: string[] = [];
+    if (args.title) changesList.push("title");
+    if (args.startTime) changesList.push("start time");
+    if (args.endTime) changesList.push("end time");
+    if (args.location) changesList.push("location");
+    if (args.meetingUrl) changesList.push("meeting link");
+    if (args.description) changesList.push("description");
+
+    if (changesList.length > 0) {
+      for (const attendeeObj of meeting.attendees) {
+        if (attendeeObj.userId !== user._id) {
+          const attendeeUser = await ctx.db.get(attendeeObj.userId);
+          if (attendeeUser && attendeeUser.preferences?.notifications?.email !== false) {
+            const emailContent = meetingUpdated({
+              organizerName: user.name || user.email,
+              meetingTitle: args.title || meeting.title,
+              changes: changesList.join(", "),
+            });
+            await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+              to: attendeeUser.email,
+              subject: emailContent.subject,
+              html: emailContent.html,
+            });
+          }
+        }
+      }
+    }
 
     return args.meetingId;
   },
@@ -381,6 +435,26 @@ export const deleteMeeting = mutation({
     }
 
     await requirePermission(ctx.db, user._id, meeting.workspaceId, "meeting.delete");
+
+    // Send cancellation emails before deleting
+    const formatDate = (ts: number) => new Date(ts).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    for (const attendeeObj of meeting.attendees) {
+      if (attendeeObj.userId !== user._id) {
+        const attendeeUser = await ctx.db.get(attendeeObj.userId);
+        if (attendeeUser && attendeeUser.preferences?.notifications?.email !== false) {
+          const emailContent = meetingCancelled({
+            organizerName: user.name || user.email,
+            meetingTitle: meeting.title,
+            startTime: formatDate(meeting.startTime),
+          });
+          await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+            to: attendeeUser.email,
+            subject: emailContent.subject,
+            html: emailContent.html,
+          });
+        }
+      }
+    }
 
     await ctx.db.delete(args.meetingId);
 
