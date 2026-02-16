@@ -48,7 +48,7 @@ export default function MessageCard({ message, showChannel = false, onReply }: M
   const Icon = badge.icon
 
   return (
-    <div className="group bg-[#111111] border-2 border-[#2E2E35] p-3 hover:border-[#6366F1]/30 transition-colors">
+    <div className="group bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] p-3 hover:border-[var(--theme-primary)]/30 transition-colors">
       <div className="flex items-start gap-2.5">
         {/* Source badge */}
         <div
@@ -62,18 +62,18 @@ export default function MessageCard({ message, showChannel = false, onReply }: M
         <div className="flex-1 min-w-0">
           {/* Header */}
           <div className="flex items-center gap-2 mb-1">
-            <span className="font-mono text-xs font-bold text-[#F9FAFB] truncate">
+            <span className="font-mono text-xs font-bold text-[var(--theme-foreground)] truncate">
               {message.senderName}
             </span>
             {showChannel && message.channelName && (
               <>
-                <span className="text-[#2E2E35]">&rarr;</span>
-                <span className="font-mono text-[10px] text-[#6366F1] truncate">
+                <span className="text-[var(--theme-border)]">&rarr;</span>
+                <span className="font-mono text-[10px] text-[var(--theme-primary)] truncate">
                   {message.channelName}
                 </span>
               </>
             )}
-            <span className="font-mono text-[10px] text-[#6B7280] ml-auto flex-shrink-0">
+            <span className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)] ml-auto flex-shrink-0">
               {formatTime(message.createdAt)}
             </span>
           </div>
@@ -83,10 +83,10 @@ export default function MessageCard({ message, showChannel = false, onReply }: M
             className={clsx(
               'text-xs leading-relaxed',
               message.contentType === 'system'
-                ? 'font-mono text-[#6B7280] italic'
+                ? 'font-mono text-[var(--theme-foreground-tertiary)] italic'
                 : message.contentType === 'code'
-                  ? 'font-mono text-[#22C55E] bg-[#0A0A0A] border border-[#2E2E35] px-2 py-1.5'
-                  : 'text-[#9CA3AF]'
+                  ? 'font-mono text-[var(--theme-success)] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] px-2 py-1.5'
+                  : 'text-[var(--theme-foreground-secondary)]'
             )}
           >
             {message.content}
@@ -98,7 +98,7 @@ export default function MessageCard({ message, showChannel = false, onReply }: M
               href={message.metadata.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 mt-1.5 font-mono text-[10px] text-[#6366F1] hover:text-[#4F46E5] transition-colors"
+              className="inline-flex items-center gap-1 mt-1.5 font-mono text-[10px] text-[var(--theme-primary)] hover:text-[var(--theme-primary-hover)] transition-colors"
             >
               {message.metadata.url}
             </a>
@@ -109,7 +109,7 @@ export default function MessageCard({ message, showChannel = false, onReply }: M
         {onReply && (
           <button
             onClick={onReply}
-            className="opacity-0 group-hover:opacity-100 p-1.5 border border-[#2E2E35] text-[#6B7280] hover:text-[#6366F1] hover:border-[#6366F1] transition-all"
+            className="opacity-0 group-hover:opacity-100 p-1.5 border border-[var(--theme-border)] text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-primary)] hover:border-[var(--theme-primary)] transition-all"
           >
             <HiOutlineReply className="w-3.5 h-3.5" />
           </button>

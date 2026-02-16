@@ -53,17 +53,17 @@ function StatCard({ icon: Icon, label, value, sub, color }: {
   color: string
 }) {
   return (
-    <div className="border-2 border-[#2E2E35] bg-[#0A0A0A] p-4">
+    <div className="border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] p-4">
       <div className="flex items-center gap-2 mb-2">
-        <div className="w-7 h-7 flex items-center justify-center border-2 border-[#2E2E35]" style={{ color }}>
+        <div className="w-7 h-7 flex items-center justify-center border-2 border-[var(--theme-border)]" style={{ color }}>
           <Icon className="w-4 h-4" />
         </div>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#6B7280]">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">
           {label}
         </span>
       </div>
-      <div className="text-2xl font-bold text-[#F9FAFB] font-mono">{value}</div>
-      {sub && <div className="font-mono text-[10px] text-[#6B7280] mt-1">{sub}</div>}
+      <div className="text-2xl font-bold text-[var(--theme-foreground)] font-mono">{value}</div>
+      {sub && <div className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)] mt-1">{sub}</div>}
     </div>
   )
 }
@@ -77,16 +77,16 @@ function HorizontalBar({ label, value, max, color }: {
   const pct = max > 0 ? (value / max) * 100 : 0
   return (
     <div className="flex items-center gap-3">
-      <span className="font-mono text-[10px] text-[#9CA3AF] w-20 text-right shrink-0">
+      <span className="font-mono text-[10px] text-[var(--theme-foreground-secondary)] w-20 text-right shrink-0">
         {label}
       </span>
-      <div className="flex-1 h-5 bg-[#111111] border border-[#2E2E35] relative">
+      <div className="flex-1 h-5 bg-[var(--theme-background-tertiary)] border border-[var(--theme-border)] relative">
         <div
           className="h-full transition-all duration-500"
           style={{ width: `${pct}%`, backgroundColor: color }}
         />
       </div>
-      <span className="font-mono text-xs text-[#F9FAFB] w-8 text-right shrink-0">{value}</span>
+      <span className="font-mono text-xs text-[var(--theme-foreground)] w-8 text-right shrink-0">{value}</span>
     </div>
   )
 }
@@ -113,10 +113,10 @@ export default function WorkspaceAnalytics({ workspaceId }: WorkspaceAnalyticsPr
     <div className="p-4 space-y-6 overflow-y-auto">
       {/* Header */}
       <div>
-        <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6B7280] inline-block mb-1">
+        <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] inline-block mb-1">
           Workspace
         </span>
-        <h2 className="text-lg font-bold text-[#F9FAFB]">Analytics</h2>
+        <h2 className="text-lg font-bold text-[var(--theme-foreground)]">Analytics</h2>
       </div>
 
       {/* Summary Cards */}
@@ -154,8 +154,8 @@ export default function WorkspaceAnalytics({ workspaceId }: WorkspaceAnalyticsPr
       {/* Task Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* By Status */}
-        <div className="border-2 border-[#2E2E35] bg-[#0A0A0A] p-4">
-          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-[#F9FAFB] mb-3">
+        <div className="border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] p-4">
+          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)] mb-3">
             Tasks by Status
           </h3>
           <div className="space-y-2">
@@ -172,8 +172,8 @@ export default function WorkspaceAnalytics({ workspaceId }: WorkspaceAnalyticsPr
         </div>
 
         {/* By Priority */}
-        <div className="border-2 border-[#2E2E35] bg-[#0A0A0A] p-4">
-          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-[#F9FAFB] mb-3">
+        <div className="border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] p-4">
+          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)] mb-3">
             Tasks by Priority
           </h3>
           <div className="space-y-2">
@@ -191,8 +191,8 @@ export default function WorkspaceAnalytics({ workspaceId }: WorkspaceAnalyticsPr
       </div>
 
       {/* Velocity */}
-      <div className="border-2 border-[#2E2E35] bg-[#0A0A0A] p-4">
-        <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-[#F9FAFB] mb-3">
+      <div className="border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] p-4">
+        <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)] mb-3">
           Velocity (Last 4 Weeks)
         </h3>
         <div className="flex items-end gap-3 h-32">
@@ -200,16 +200,16 @@ export default function WorkspaceAnalytics({ workspaceId }: WorkspaceAnalyticsPr
             const pct = maxVelocity > 0 ? (week.completedCount / maxVelocity) * 100 : 0
             return (
               <div key={week.weekLabel} className="flex-1 flex flex-col items-center gap-1">
-                <span className="font-mono text-xs font-bold text-[#F9FAFB]">
+                <span className="font-mono text-xs font-bold text-[var(--theme-foreground)]">
                   {week.completedCount}
                 </span>
-                <div className="w-full bg-[#111111] border border-[#2E2E35] relative" style={{ height: '80px' }}>
+                <div className="w-full bg-[var(--theme-background-tertiary)] border border-[var(--theme-border)] relative" style={{ height: '80px' }}>
                   <div
-                    className="absolute bottom-0 left-0 right-0 bg-[#6366F1] transition-all duration-500"
+                    className="absolute bottom-0 left-0 right-0 bg-[var(--theme-primary)] transition-all duration-500"
                     style={{ height: `${pct}%` }}
                   />
                 </div>
-                <span className="font-mono text-[10px] text-[#6B7280]">{week.weekLabel}</span>
+                <span className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)]">{week.weekLabel}</span>
               </div>
             )
           })}
@@ -219,20 +219,20 @@ export default function WorkspaceAnalytics({ workspaceId }: WorkspaceAnalyticsPr
       {/* Team & Projects */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Top Contributors */}
-        <div className="border-2 border-[#2E2E35] bg-[#0A0A0A] p-4">
-          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-[#F9FAFB] mb-3">
+        <div className="border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] p-4">
+          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)] mb-3">
             Top Contributors
           </h3>
           {data.team.length === 0 ? (
-            <p className="font-mono text-xs text-[#6B7280]">No assigned tasks yet</p>
+            <p className="font-mono text-xs text-[var(--theme-foreground-tertiary)]">No assigned tasks yet</p>
           ) : (
             <div className="space-y-2">
               {data.team.map((member) => (
-                <div key={member.userId} className="flex items-center justify-between py-1.5 border-b border-[#1F1F23] last:border-0">
-                  <span className="font-mono text-xs text-[#9CA3AF] truncate">{member.name}</span>
+                <div key={member.userId} className="flex items-center justify-between py-1.5 border-b border-[var(--theme-border)] last:border-0">
+                  <span className="font-mono text-xs text-[var(--theme-foreground-secondary)] truncate">{member.name}</span>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-mono text-[10px] text-[#22C55E]">{member.completedCount} done</span>
-                    <span className="font-mono text-[10px] text-[#6B7280]">{member.taskCount} total</span>
+                    <span className="font-mono text-[10px] text-[var(--theme-success)]">{member.completedCount} done</span>
+                    <span className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)]">{member.taskCount} total</span>
                   </div>
                 </div>
               ))}
@@ -241,12 +241,12 @@ export default function WorkspaceAnalytics({ workspaceId }: WorkspaceAnalyticsPr
         </div>
 
         {/* Projects */}
-        <div className="border-2 border-[#2E2E35] bg-[#0A0A0A] p-4">
-          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-[#F9FAFB] mb-3">
+        <div className="border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] p-4">
+          <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)] mb-3">
             Tasks by Project
           </h3>
           {data.projects.length === 0 ? (
-            <p className="font-mono text-xs text-[#6B7280]">No projects yet</p>
+            <p className="font-mono text-xs text-[var(--theme-foreground-tertiary)]">No projects yet</p>
           ) : (
             <div className="space-y-2">
               {data.projects.map((project) => {
@@ -254,14 +254,14 @@ export default function WorkspaceAnalytics({ workspaceId }: WorkspaceAnalyticsPr
                   ? Math.round((project.completedCount / project.taskCount) * 100)
                   : 0
                 return (
-                  <div key={project.projectId} className="py-1.5 border-b border-[#1F1F23] last:border-0">
+                  <div key={project.projectId} className="py-1.5 border-b border-[var(--theme-border)] last:border-0">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-mono text-xs text-[#9CA3AF] truncate">{project.name}</span>
-                      <span className="font-mono text-[10px] text-[#6B7280] shrink-0">{project.taskCount} tasks</span>
+                      <span className="font-mono text-xs text-[var(--theme-foreground-secondary)] truncate">{project.name}</span>
+                      <span className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)] shrink-0">{project.taskCount} tasks</span>
                     </div>
-                    <div className="h-1.5 bg-[#111111] border border-[#2E2E35]">
+                    <div className="h-1.5 bg-[var(--theme-background-tertiary)] border border-[var(--theme-border)]">
                       <div
-                        className="h-full bg-[#6366F1] transition-all duration-500"
+                        className="h-full bg-[var(--theme-primary)] transition-all duration-500"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
