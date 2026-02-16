@@ -47,6 +47,7 @@ export default function ConnectRepositoryModal({
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [repositories, setRepositories] = useState<Repository[]>([])
+  const [hasOAuth, setHasOAuth] = useState(true)
 
   const connectRepository = useMutation(api.projects.mutations.connectRepository)
   const fetchAvailableRepositories = useAction(api.integrations.github.actions.fetchAvailableRepositories)
@@ -65,8 +66,7 @@ export default function ConnectRepositoryModal({
         workspaceId: workspaceId as Id<'workspaces'> | undefined,
       })
       setRepositories(result.repositories)
-
-      // If no repositories available, switch to manual mode might be aggressive, let's just show empty state
+      setHasOAuth(result.sources.hasOAuth)
     } catch (error) {
       console.error('Failed to fetch repositories:', error)
     } finally {
@@ -219,6 +219,13 @@ export default function ConnectRepositoryModal({
                   )}
                 </div>
               </div>
+
+              {/* OAuth hint */}
+              {!isLoading && !hasOAuth && (
+                <div className="mx-[16px] mb-[8px] px-[10px] py-[6px] bg-[#F59E0B]/10 border border-[#F59E0B]/20 text-brutal-xs font-mono text-[#F59E0B]">
+                  Your personal repos aren't shown — connect GitHub in your profile settings to see them.
+                </div>
+              )}
 
               {/* List */}
               <div className="flex-1 overflow-y-auto px-[12px] pb-[12px] scrollbar-thin scrollbar-thumb-[var(--theme-border)]">

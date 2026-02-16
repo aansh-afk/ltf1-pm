@@ -32,6 +32,7 @@ import type * as ai_usageLog from "../ai/usageLog.js";
 import type * as aiCredits_actions from "../aiCredits/actions.js";
 import type * as aiCredits_mutations from "../aiCredits/mutations.js";
 import type * as aiCredits_queries from "../aiCredits/queries.js";
+import type * as analytics_queries from "../analytics/queries.js";
 import type * as audit from "../audit.js";
 import type * as auth_permissions from "../auth/permissions.js";
 import type * as auth_users from "../auth/users.js";
@@ -140,6 +141,7 @@ declare const fullApi: ApiFromModules<{
   "aiCredits/actions": typeof aiCredits_actions;
   "aiCredits/mutations": typeof aiCredits_mutations;
   "aiCredits/queries": typeof aiCredits_queries;
+  "analytics/queries": typeof analytics_queries;
   audit: typeof audit;
   "auth/permissions": typeof auth_permissions;
   "auth/users": typeof auth_users;

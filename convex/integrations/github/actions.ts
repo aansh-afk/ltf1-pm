@@ -283,7 +283,7 @@ export const fetchAvailableRepositories = action({
       if (connection?.accessToken) {
         hasOAuth = true;
 
-        // Fetch user's repos from GitHub
+        // Fetch user's repos from GitHub API
         const response = await fetch("https://api.github.com/user/repos?sort=updated&per_page=100&affiliation=owner,collaborator,organization_member", {
           headers: {
             Authorization: `Bearer ${connection.accessToken}`,
@@ -314,74 +314,82 @@ export const fetchAvailableRepositories = action({
               });
             }
           }
+        } else {
+          console.error(`[fetchAvailableRepositories] GitHub OAuth API returned ${response.status} for user ${connection.githubUsername}`);
+          // Token may be expired or revoked — mark OAuth as unavailable
+          hasOAuth = false;
         }
+      } else {
+        console.log("[fetchAvailableRepositories] No OAuth connection found for current user — only installation repos will be shown");
       }
     } catch (error) {
-      console.error("Failed to fetch OAuth repos:", error);
+      console.error("[fetchAvailableRepositories] Failed to fetch OAuth repos:", error);
     }
 
-    // 2. Try to fetch from workspace's GitHub App installation
+    // 2. Try to fetch from ALL workspace GitHub App installations (not just the first)
     if (args.workspaceId) {
       try {
-        // Get workspace installation
         const installations: any = await ctx.runQuery(api.integrations.github.queries.getWorkspaceInstallations, {
           workspaceId: args.workspaceId,
         });
 
         if (installations && installations.length > 0) {
-          const installation = installations[0];
           hasInstallation = true;
-          installationName = installation.accountLogin;
+          // Use first installation name for display, but fetch repos from ALL
+          installationName = installations.map((i: any) => i.accountLogin).join(", ");
 
-          // Generate installation access token
           const appId = process.env.GITHUB_APP_ID;
           const privateKey = process.env.GITHUB_APP_PRIVATE_KEY;
 
           if (appId && privateKey) {
-            // Generate JWT for app authentication
-            const now = Math.floor(Date.now() / 1000);
+            // Fetch repos from EACH installation
+            for (const installation of installations) {
+              try {
+                const tokenResult: any = await ctx.runAction(internal.integrations.github.nodeActions.generateInstallationToken, {
+                  appId,
+                  privateKey,
+                  installationId: installation.installationId,
+                });
 
-            // Use the internal action for proper JWT generation (Node.js runtime required for crypto)
-            const tokenResult: any = await ctx.runAction(internal.integrations.github.nodeActions.generateInstallationToken, {
-              appId,
-              privateKey,
-              installationId: installation.installationId,
-            });
+                if (tokenResult?.token) {
+                  const response = await fetch("https://api.github.com/installation/repositories?per_page=100", {
+                    headers: {
+                      Authorization: `Bearer ${tokenResult.token}`,
+                      Accept: "application/vnd.github.v3+json",
+                    },
+                  });
 
-            if (tokenResult?.token) {
-              // Fetch installation repos from GitHub
-              const response = await fetch("https://api.github.com/installation/repositories?per_page=100", {
-                headers: {
-                  Authorization: `Bearer ${tokenResult.token}`,
-                  Accept: "application/vnd.github.v3+json",
-                },
-              });
+                  if (response.ok) {
+                    const data = await response.json();
+                    const repos = data.repositories || [];
 
-              if (response.ok) {
-                const data = await response.json();
-                const repos = data.repositories || [];
-
-                for (const repo of repos) {
-                  if (!seenRepos.has(repo.full_name)) {
-                    seenRepos.add(repo.full_name);
-                    repositories.push({
-                      id: repo.id,
-                      name: repo.name,
-                      fullName: repo.full_name,
-                      description: repo.description,
-                      private: repo.private,
-                      htmlUrl: repo.html_url,
-                      language: repo.language,
-                      stargazersCount: repo.stargazers_count,
-                      forksCount: repo.forks_count,
-                      openIssuesCount: repo.open_issues_count,
-                      updatedAt: repo.updated_at,
-                      defaultBranch: repo.default_branch,
-                      source: "installation" as const,
-                      installationId: installation.installationId,
-                    });
+                    for (const repo of repos) {
+                      if (!seenRepos.has(repo.full_name)) {
+                        seenRepos.add(repo.full_name);
+                        repositories.push({
+                          id: repo.id,
+                          name: repo.name,
+                          fullName: repo.full_name,
+                          description: repo.description,
+                          private: repo.private,
+                          htmlUrl: repo.html_url,
+                          language: repo.language,
+                          stargazersCount: repo.stargazers_count,
+                          forksCount: repo.forks_count,
+                          openIssuesCount: repo.open_issues_count,
+                          updatedAt: repo.updated_at,
+                          defaultBranch: repo.default_branch,
+                          source: "installation" as const,
+                          installationId: installation.installationId,
+                        });
+                      }
+                    }
+                  } else {
+                    console.error(`Failed to fetch repos for installation ${installation.accountLogin}: ${response.status}`);
                   }
                 }
+              } catch (installError) {
+                console.error(`Failed to fetch repos for installation ${installation.accountLogin}:`, installError);
               }
             }
           }
