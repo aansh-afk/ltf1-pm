@@ -27,6 +27,7 @@
     "pnpm": ">=8.0.0"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
     "@clerk/backend": "^2.5.0",
     "@google/generative-ai": "^0.24.1",
     "@octokit/app": "^16.0.1",
@@ -36,6 +37,8 @@
     "exceljs": "^4.4.0",
     "jose": "^6.1.2",
     "jsonwebtoken": "^9.0.2",
+    "openai": "^6.22.0",
+    "resend": "^6.9.2",
     "svix": "^1.15.0"
   }
 }

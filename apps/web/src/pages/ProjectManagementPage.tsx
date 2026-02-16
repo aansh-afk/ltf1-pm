@@ -59,7 +59,7 @@ import NaturalLanguageTaskCreator from '@/components/features/ai/NaturalLanguage
 import TeamActivityFeed from '@/components/features/activity/TeamActivityFeed'
 import { ExpertiseSearchModal } from '@/components/features/profile/ExpertiseSearchModal'
 import { TeamExpertiseMatrix } from '@/components/features/profile/TeamExpertiseMatrix'
-import AIDocumentationHub from '@/components/features/documentation/AIDocumentationHub'
+import ProjectDocsHub from '@/components/features/documentation/ProjectDocsHub'
 import type { TaskFilters as TaskFiltersType } from '@/components/features/task/TaskFilters'
 import { useTemporaryShortcut } from '@/contexts/ShortcutContext'
 import clsx from 'clsx'
@@ -1822,9 +1822,12 @@ export default function ProjectManagementPage() {
         )
       case 'docs':
         return (
-          <AIDocumentationHub
+          <ProjectDocsHub
             projectId={projectId}
             workspaceId={workspaceId}
+            tasks={tasks ?? []}
+            sprints={allSprints ?? []}
+            projectDetails={project}
           />
         )
       case 'logs':

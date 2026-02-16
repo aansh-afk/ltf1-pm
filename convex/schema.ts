@@ -632,6 +632,18 @@ export default defineSchema({
     .index("by_repo_id", ["repoId"])
     .index("by_full_name", ["fullName"]),
 
+  repoDocs: defineTable({
+    projectId: v.id("projects"),
+    path: v.string(),
+    name: v.string(),
+    content: v.string(),
+    sha: v.string(),
+    size: v.number(),
+    lastFetchedAt: v.number(),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_project_and_path", ["projectId", "path"]),
+
   githubWebhookEvents: defineTable({
     eventType: v.string(), // push, pull_request, etc.
     deliveryId: v.string(), // GitHub's delivery ID
@@ -843,6 +855,38 @@ export default defineSchema({
     .index("by_type", ["type"])
     .index("by_repository", ["repository"])
     .index("by_created", ["createdAt"]),
+
+  // Multi-provider AI keys (user-level or project-level)
+  aiProviderKeys: defineTable({
+    scope: v.union(v.literal("user"), v.literal("project")),
+    scopeId: v.string(), // clerkId for user, projectId string for project
+    provider: v.union(v.literal("gemini"), v.literal("openai"), v.literal("anthropic")),
+    encryptedApiKey: v.string(),
+    displayName: v.optional(v.string()),
+    defaultModel: v.optional(v.string()),
+    modelOverrides: v.optional(v.record(v.string(), v.string())), // functionCategory → model
+    isActive: v.boolean(),
+    lastValidatedAt: v.optional(v.number()),
+    lastUsedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_scope_and_id", ["scope", "scopeId"])
+    .index("by_scope_id_and_provider", ["scopeId", "provider"]),
+
+  // Per-project AI configuration
+  projectAISettings: defineTable({
+    projectId: v.id("projects"),
+    activeKeyId: v.optional(v.id("aiProviderKeys")),
+    functionModelMap: v.optional(v.record(v.string(), v.object({
+      provider: v.union(v.literal("gemini"), v.literal("openai"), v.literal("anthropic")),
+      model: v.string(),
+    }))),
+    aiEnabled: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_project", ["projectId"]),
 
   // AI Credits and BYOK System
   userAICredits: defineTable({

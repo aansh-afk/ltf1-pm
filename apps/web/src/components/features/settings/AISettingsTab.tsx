@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useAction } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
+import { useUser } from '@clerk/clerk-react'
 import {
   HiOutlineSparkles,
   HiOutlineKey,
@@ -19,58 +20,110 @@ import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalBadge from '@/components/ui/BrutalBadge'
 import BrutalModal from '../../ui/BrutalModal'
 
+type AIProvider = 'gemini' | 'openai' | 'anthropic'
+
+const PROVIDER_INFO: Record<AIProvider, { label: string; color: string; placeholder: string; helpUrl: string; helpLabel: string }> = {
+  gemini: {
+    label: 'Google Gemini',
+    color: '#4285F4',
+    placeholder: 'AIza...',
+    helpUrl: 'https://aistudio.google.com/apikey',
+    helpLabel: 'Google AI Studio',
+  },
+  openai: {
+    label: 'OpenAI',
+    color: '#10A37F',
+    placeholder: 'sk-...',
+    helpUrl: 'https://platform.openai.com/api-keys',
+    helpLabel: 'OpenAI Dashboard',
+  },
+  anthropic: {
+    label: 'Anthropic',
+    color: '#D4A27F',
+    placeholder: 'sk-ant-...',
+    helpUrl: 'https://console.anthropic.com/settings/keys',
+    helpLabel: 'Anthropic Console',
+  },
+}
+
 export default function AISettingsTab() {
+  const { user } = useUser()
+  const [selectedProvider, setSelectedProvider] = useState<AIProvider>('gemini')
   const [apiKey, setApiKey] = useState('')
   const [showApiKey, setShowApiKey] = useState(false)
   const [isValidating, setIsValidating] = useState(false)
-  const [showRemoveModal, setShowRemoveModal] = useState(false)
+  const [removeKeyId, setRemoveKeyId] = useState<string | null>(null)
 
-  // Queries
+  // Legacy queries (keep for backward compat display)
   const userCredits = useQuery(api.aiCredits.queries.getUserAICredits)
   const monthlyStats = useQuery(api.aiCredits.queries.getMonthlyUsageStats)
-  const pricingTiers = useQuery(api.aiCredits.queries.getPricingTiers)
+
+  // New multi-provider queries
+  const providerKeys = useQuery(
+    api.ai.keyManagement.getMyProviderKeys
+  )
 
   // Actions & Mutations
-  const validateApiKey = useAction(api.aiCredits.actions.validateApiKey)
-  const saveApiKey = useMutation(api.aiCredits.mutations.saveApiKey)
-  const removeApiKey = useMutation(api.aiCredits.mutations.removeApiKey)
+  const saveProviderKey = useAction(api.ai.keyManagement.saveProviderKey)
+  const removeProviderKey = useMutation(api.ai.keyManagement.removeProviderKey)
+  const updateProviderKey = useMutation(api.ai.keyManagement.updateProviderKey)
+
+  // Legacy mutations (keep for backward compat)
   const setupAICredits = useMutation(api.aiCredits.mutations.setupUserAI)
 
   const handleValidateAndSave = async () => {
     if (!apiKey) {
-      toast.error('ENTER_API_KEY')
+      toast.error('Please enter an API key')
+      return
+    }
+    if (!user) {
+      toast.error('Not authenticated')
       return
     }
 
     setIsValidating(true)
     try {
-      // First validate the API key
-      const validationResult = await validateApiKey({ apiKey })
-      if (!validationResult.isValid) {
-        toast.error(validationResult.error || 'INVALID_KEY')
-        setIsValidating(false)
+      const result = await saveProviderKey({
+        scope: 'user',
+        scopeId: user.id,
+        provider: selectedProvider,
+        apiKey,
+        displayName: `My ${PROVIDER_INFO[selectedProvider].label} Key`,
+      })
+
+      if (!result.success) {
+        toast.error(result.error || 'Invalid API key')
         return
       }
 
-      // Then save it if valid
-      await saveApiKey({ apiKey })
-      toast.success('KEY_SAVED')
+      toast.success(`${PROVIDER_INFO[selectedProvider].label} key saved`)
       setApiKey('')
-    } catch (error) {
-      toast.error('SAVE_FAILED')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save key')
       console.error(error)
     } finally {
       setIsValidating(false)
     }
   }
 
-  const handleRemoveApiKey = async () => {
+  const handleRemoveKey = async () => {
+    if (!removeKeyId) return
     try {
-      await removeApiKey()
-      toast.success('KEY_REMOVED')
-      setShowRemoveModal(false)
+      await removeProviderKey({ keyId: removeKeyId as any })
+      toast.success('API key removed')
+      setRemoveKeyId(null)
     } catch (error) {
-      toast.error('REMOVE_FAILED')
+      toast.error('Failed to remove key')
+      console.error(error)
+    }
+  }
+
+  const handleToggleActive = async (keyId: string, currentActive: boolean) => {
+    try {
+      await updateProviderKey({ keyId: keyId as any, isActive: !currentActive })
+      toast.success(currentActive ? 'Key deactivated' : 'Key activated')
+    } catch (error) {
+      toast.error('Failed to update key')
       console.error(error)
     }
   }
@@ -81,9 +134,9 @@ export default function AISettingsTab() {
         tier: 'free',
         setupType: 'free_credits'
       })
-      toast.success('FREE_CREDITS_ACTIVE')
+      toast.success('Free credits activated')
     } catch (error) {
-      toast.error('ACTIVATION_FAILED')
+      toast.error('Activation failed')
       console.error(error)
     }
   }
@@ -92,12 +145,14 @@ export default function AISettingsTab() {
     return new Intl.NumberFormat().format(Math.round(num))
   }
 
+  const activeKeys = providerKeys?.filter(k => k.isActive) || []
+
   return (
     <div className="space-y-8">
       {/* AI Configuration Status */}
       <SettingsSection
         title="AI Configuration"
-        description="Manage your AI features and API key settings."
+        description="Manage your AI providers and API keys. Add keys for Gemini, OpenAI, or Anthropic."
       >
         <div className="space-y-6">
           {/* Current Status */}
@@ -109,14 +164,18 @@ export default function AISettingsTab() {
                 </div>
                 <div>
                   <h4 className="text-lg font-bold uppercase">
-                    STATUS: {userCredits?.hasOwnKey ? 'BYOK_ACTIVE' :
+                    STATUS: {activeKeys.length > 0 ? 'BYOK_ACTIVE' :
                       userCredits?.hasSetup ? `${userCredits.subscriptionTier}_TIER` :
                         'NOT_CONFIGURED'}
                   </h4>
-                  {userCredits?.hasOwnKey && (
-                    <BrutalBadge variant="success" className="mt-1">
-                      USING_YOUR_KEY
-                    </BrutalBadge>
+                  {activeKeys.length > 0 && (
+                    <div className="flex gap-2 mt-1">
+                      {activeKeys.map(k => (
+                        <BrutalBadge key={k._id} variant="success">
+                          {k.provider.toUpperCase()}
+                        </BrutalBadge>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
@@ -125,21 +184,21 @@ export default function AISettingsTab() {
             {userCredits && (
               <div className="grid grid-cols-3 gap-4">
                 <div className="p-4 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] text-center">
-                  <div className="text-xs uppercase font-bold text-[var(--theme-foreground)]/60 mb-1">CREDITS_REMAINING</div>
+                  <div className="text-xs uppercase font-bold text-[var(--theme-foreground)]/60 mb-1">CREDITS</div>
                   <div className="text-2xl font-bold">
-                    {userCredits.hasOwnKey ? '∞' : formatNumber(userCredits.creditsRemaining)}
+                    {activeKeys.length > 0 ? '∞' : formatNumber(userCredits.creditsRemaining)}
                   </div>
                 </div>
                 <div className="p-4 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] text-center">
-                  <div className="text-xs uppercase font-bold text-[var(--theme-foreground)]/60 mb-1">MONTHLY_USAGE</div>
+                  <div className="text-xs uppercase font-bold text-[var(--theme-foreground)]/60 mb-1">MONTHLY USAGE</div>
                   <div className="text-2xl font-bold">
                     {formatNumber(userCredits.monthlyCreditsUsed)}
                   </div>
                 </div>
                 <div className="p-4 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] text-center">
-                  <div className="text-xs uppercase font-bold text-[var(--theme-foreground)]/60 mb-1">TOTAL_REQUESTS</div>
+                  <div className="text-xs uppercase font-bold text-[var(--theme-foreground)]/60 mb-1">PROVIDERS</div>
                   <div className="text-2xl font-bold">
-                    {formatNumber(userCredits.totalRequests)}
+                    {activeKeys.length}
                   </div>
                 </div>
               </div>
@@ -147,13 +206,13 @@ export default function AISettingsTab() {
           </BrutalCard>
 
           {/* Setup Options for New Users */}
-          {!userCredits?.hasSetup && (
+          {!userCredits?.hasSetup && activeKeys.length === 0 && (
             <BrutalCard className="p-6 border-brutal-warning bg-brutal-warning/5">
               <div className="flex items-start gap-4 mb-6">
                 <HiOutlineLightningBolt className="w-6 h-6 text-brutal-warning flex-shrink-0" />
                 <div>
-                  <h3 className="text-lg font-bold uppercase mb-2">AI_NOT_CONFIGURED</h3>
-                  <p className="text-sm font-mono">Activate free credits to start using AI features.</p>
+                  <h3 className="text-lg font-bold uppercase mb-2">AI NOT CONFIGURED</h3>
+                  <p className="text-sm font-mono">Add an API key below or activate free credits to start using AI features.</p>
                 </div>
               </div>
 
@@ -162,83 +221,130 @@ export default function AISettingsTab() {
                 className="w-full flex items-center justify-center gap-2 py-4"
               >
                 <HiOutlineCreditCard className="w-5 h-5" />
-                ACTIVATE_FREE_CREDITS
+                ACTIVATE FREE CREDITS
               </BrutalButton>
 
               <div className="mt-4 text-xs font-mono text-[var(--theme-foreground)]/60 space-y-1 pl-4 border-l-2 border-[var(--theme-foreground)]/20">
-                <p>• 100 CREDITS/MONTH (RENEWS MONTHLY)</p>
-                <p>• ~50 GENERATIONS OR REVIEWS</p>
-                <p>• RATE LIMIT: 10 REQ/HOUR</p>
+                <p>100 CREDITS/MONTH (RENEWS MONTHLY)</p>
+                <p>~50 GENERATIONS OR REVIEWS</p>
+                <p>RATE LIMIT: 10 REQ/HOUR</p>
               </div>
             </BrutalCard>
           )}
 
-          {/* API Key Management */}
-          {userCredits?.hasOwnKey ? (
-            <BrutalCard className="p-6 border-brutal-success/50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-bold uppercase mb-1">GEMINI_API_KEY_ACTIVE</div>
-                  <div className="text-xs text-[var(--theme-foreground)]/60 font-mono">
-                    ADDED: {userCredits.keyAddedAt ? new Date(userCredits.keyAddedAt).toLocaleDateString() : 'UNKNOWN'}
-                  </div>
-                </div>
-                <BrutalButton
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setShowRemoveModal(true)}
-                  className="flex items-center gap-2"
-                >
-                  <HiOutlineTrash className="w-4 h-4" />
-                  REMOVE_KEY
-                </BrutalButton>
-              </div>
-            </BrutalCard>
-          ) : (
-            <BrutalCard className="p-6">
-              <h3 className="text-sm font-bold uppercase mb-4">ADD_GEMINI_API_KEY (BYOK)</h3>
-              <div className="flex flex-col md:flex-row gap-3">
-                <div className="flex-1 relative">
-                  <input
-                    type={showApiKey ? "text" : "password"}
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="AIza..."
-                    className="w-full p-3 pr-12 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
-                  />
-                  <button
-                    onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)]"
-                  >
-                    {showApiKey ? (
-                      <HiOutlineEyeOff className="w-5 h-5" />
-                    ) : (
-                      <HiOutlineEye className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-                <BrutalButton
-                  onClick={handleValidateAndSave}
-                  disabled={!apiKey || isValidating}
-                  className="flex items-center justify-center gap-2 min-w-[160px]"
-                >
-                  {isValidating ? 'VALIDATING...' : 'VALIDATE_&_SAVE'}
-                </BrutalButton>
-              </div>
-              <div className="mt-3 text-xs font-mono text-[var(--theme-foreground)]/60">
-                GET_KEY_FROM{' '}
-                <a
-                  href="https://aistudio.google.com/apikey"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[var(--theme-primary)] hover:underline inline-flex items-center gap-1 font-bold"
-                >
-                  GOOGLE_AI_STUDIO
-                  <HiOutlineExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </BrutalCard>
+          {/* Saved Provider Keys */}
+          {providerKeys && providerKeys.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold uppercase">SAVED API KEYS</h3>
+              {providerKeys.map(key => {
+                const info = PROVIDER_INFO[key.provider]
+                return (
+                  <BrutalCard key={key._id} className={`p-4 ${key.isActive ? 'border-l-4' : 'opacity-60'}`} style={key.isActive ? { borderLeftColor: info.color } : undefined}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: info.color }} />
+                        <div>
+                          <div className="text-sm font-bold uppercase">{info.label}</div>
+                          <div className="text-xs font-mono text-[var(--theme-foreground)]/60">
+                            {key.maskedKey} {key.displayName ? `(${key.displayName})` : ''}
+                          </div>
+                        </div>
+                        {key.isActive && (
+                          <BrutalBadge variant="success">ACTIVE</BrutalBadge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <BrutalButton
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleToggleActive(key._id, key.isActive)}
+                        >
+                          {key.isActive ? 'DEACTIVATE' : 'ACTIVATE'}
+                        </BrutalButton>
+                        <BrutalButton
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setRemoveKeyId(key._id)}
+                          className="flex items-center gap-1"
+                        >
+                          <HiOutlineTrash className="w-4 h-4" />
+                        </BrutalButton>
+                      </div>
+                    </div>
+                  </BrutalCard>
+                )
+              })}
+            </div>
           )}
+
+          {/* Add New API Key */}
+          <BrutalCard className="p-6">
+            <h3 className="text-sm font-bold uppercase mb-4">ADD API KEY (BYOK)</h3>
+
+            {/* Provider Selector */}
+            <div className="flex gap-2 mb-4">
+              {(Object.keys(PROVIDER_INFO) as AIProvider[]).map(provider => {
+                const info = PROVIDER_INFO[provider]
+                const isSelected = selectedProvider === provider
+                return (
+                  <button
+                    key={provider}
+                    onClick={() => setSelectedProvider(provider)}
+                    className={`flex items-center gap-2 px-4 py-2 border-2 font-bold text-xs uppercase transition-all ${
+                      isSelected
+                        ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)]/10 text-[var(--theme-foreground)]'
+                        : 'border-[var(--theme-border)] text-[var(--theme-foreground)]/60 hover:border-[var(--theme-foreground)]/40'
+                    }`}
+                  >
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: info.color }} />
+                    {info.label}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Key Input */}
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="flex-1 relative">
+                <input
+                  type={showApiKey ? "text" : "password"}
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder={PROVIDER_INFO[selectedProvider].placeholder}
+                  className="w-full p-3 pr-12 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
+                />
+                <button
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)]"
+                >
+                  {showApiKey ? (
+                    <HiOutlineEyeOff className="w-5 h-5" />
+                  ) : (
+                    <HiOutlineEye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+              <BrutalButton
+                onClick={handleValidateAndSave}
+                disabled={!apiKey || isValidating}
+                className="flex items-center justify-center gap-2 min-w-[160px]"
+              >
+                {isValidating ? 'VALIDATING...' : 'VALIDATE & SAVE'}
+              </BrutalButton>
+            </div>
+            <div className="mt-3 text-xs font-mono text-[var(--theme-foreground)]/60">
+              Get key from{' '}
+              <a
+                href={PROVIDER_INFO[selectedProvider].helpUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--theme-primary)] hover:underline inline-flex items-center gap-1 font-bold"
+              >
+                {PROVIDER_INFO[selectedProvider].helpLabel}
+                <HiOutlineExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </BrutalCard>
         </div>
       </SettingsSection>
 
@@ -250,10 +356,10 @@ export default function AISettingsTab() {
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: 'TOTAL_REQUESTS', value: monthlyStats.totalRequests, color: 'text-[var(--theme-primary)]' },
+              { label: 'TOTAL REQUESTS', value: monthlyStats.totalRequests, color: 'text-[var(--theme-primary)]' },
               { label: 'SUCCESSFUL', value: monthlyStats.successfulRequests, color: 'text-brutal-success' },
-              { label: 'TOKENS_USED', value: formatNumber(monthlyStats.totalTokensUsed), color: 'text-brutal-info' },
-              { label: 'AVG_RESPONSE', value: `${Math.round(monthlyStats.averageResponseTime)}ms`, color: 'text-brutal-warning' }
+              { label: 'TOKENS USED', value: formatNumber(monthlyStats.totalTokensUsed), color: 'text-brutal-info' },
+              { label: 'AVG RESPONSE', value: `${Math.round(monthlyStats.averageResponseTime)}ms`, color: 'text-brutal-warning' }
             ].map((stat, i) => (
               <BrutalCard key={i} className="p-4 text-center">
                 <div className={`text-2xl font-bold ${stat.color}`}>
@@ -267,7 +373,7 @@ export default function AISettingsTab() {
           {/* Usage by Type */}
           {Object.keys(monthlyStats.requestsByType).length > 0 && (
             <BrutalCard className="mt-6 p-6">
-              <h4 className="text-sm font-bold uppercase mb-4">USAGE_BY_FEATURE</h4>
+              <h4 className="text-sm font-bold uppercase mb-4">USAGE BY FEATURE</h4>
               <div className="space-y-2">
                 {Object.entries(monthlyStats.requestsByType).map(([type, count]) => (
                   <div key={type} className="flex items-center justify-between p-3 bg-[var(--theme-background)] border border-[var(--theme-border)]">
@@ -281,79 +387,31 @@ export default function AISettingsTab() {
         </SettingsSection>
       )}
 
-      {/* Pricing Tiers */}
-      <SettingsSection
-        title="Pricing & Plans"
-        description="Available plans and their features."
-      >
-        <div className="grid gap-4">
-          {pricingTiers?.map((tier) => (
-            <BrutalCard
-              key={tier.tier}
-              className={`p-6 transition-all ${userCredits?.subscriptionTier === tier.tier
-                  ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)]/5'
-                  : ''
-                }`}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-bold uppercase flex items-center gap-2">
-                    {tier.tier}_PLAN
-                    {userCredits?.subscriptionTier === tier.tier && (
-                      <BrutalBadge variant="primary">CURRENT</BrutalBadge>
-                    )}
-                  </h3>
-                  <div className="text-sm font-mono text-[var(--theme-foreground)]/80 mt-1">
-                    {formatNumber(tier.monthlyFreeCredits)} CREDITS/MONTH
-                    {tier.creditPrice > 0 && ` • $${tier.creditPrice}/CREDIT AFTER`}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs uppercase font-bold text-[var(--theme-foreground)]/60">RATE_LIMITS</div>
-                  <div className="text-sm font-mono font-bold">
-                    {tier.requestsPerMinute}/MIN • {tier.requestsPerDay === -1 ? '∞' : tier.requestsPerDay}/DAY
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4 pt-4 border-t border-[var(--theme-border)]">
-                {tier.features.map((feature, idx) => (
-                  <div key={idx} className="text-xs font-mono uppercase flex items-center gap-2">
-                    <span className="text-brutal-success font-bold">✓</span>
-                    {feature}
-                  </div>
-                ))}
-              </div>
-            </BrutalCard>
-          ))}
-        </div>
-      </SettingsSection>
-
       {/* Remove API Key Confirmation Modal */}
-      {showRemoveModal && (
+      {removeKeyId && (
         <BrutalModal
-          isOpen={showRemoveModal}
-          onClose={() => setShowRemoveModal(false)}
-          title="REMOVE_API_KEY?"
+          isOpen={!!removeKeyId}
+          onClose={() => setRemoveKeyId(null)}
+          title="REMOVE API KEY?"
         >
           <div className="space-y-6">
             <p className="font-mono text-sm">
-              Are you sure you want to remove your API key? You'll switch back to using credits.
+              Are you sure you want to remove this API key? This action cannot be undone.
             </p>
             <div className="flex gap-4">
               <BrutalButton
                 variant="secondary"
-                onClick={() => setShowRemoveModal(false)}
+                onClick={() => setRemoveKeyId(null)}
                 className="flex-1"
               >
                 CANCEL
               </BrutalButton>
               <BrutalButton
                 variant="destructive"
-                onClick={handleRemoveApiKey}
+                onClick={handleRemoveKey}
                 className="flex-1"
               >
-                CONFIRM_REMOVE
+                CONFIRM REMOVE
               </BrutalButton>
             </div>
           </div>
