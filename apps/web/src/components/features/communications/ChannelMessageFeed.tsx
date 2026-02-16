@@ -65,11 +65,11 @@ export default function ChannelMessageFeed({ channelId, channels }: ChannelMessa
       lastDate = dateKey
       elements.push(
         <div key={`date-${dateKey}`} className="flex items-center gap-3 py-2 px-4">
-          <div className="flex-1 h-px bg-[#2E2E35]" />
-          <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#6B7280]">
+          <div className="flex-1 h-px bg-[var(--theme-border)]" />
+          <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">
             {formatDateSeparator(msg.createdAt)}
           </span>
-          <div className="flex-1 h-px bg-[#2E2E35]" />
+          <div className="flex-1 h-px bg-[var(--theme-border)]" />
         </div>
       )
     }
@@ -84,13 +84,13 @@ export default function ChannelMessageFeed({ channelId, channels }: ChannelMessa
   return (
     <div className="flex flex-col h-full">
       {/* Channel header */}
-      <div className="px-4 py-3 border-b border-[#1F1F23] flex items-center gap-2">
-        {Icon && <Icon className="w-4 h-4 text-[#6B7280]" />}
-        <h3 className="font-mono text-sm font-bold text-[#F9FAFB] uppercase">
+      <div className="px-4 py-3 border-b border-[var(--theme-border)] flex items-center gap-2">
+        {Icon && <Icon className="w-4 h-4 text-[var(--theme-foreground-tertiary)]" />}
+        <h3 className="font-mono text-sm font-bold text-[var(--theme-foreground)] uppercase">
           {channel?.channelType === 'channel' && '# '}
           {channel?.name ?? 'Channel'}
         </h3>
-        <span className="font-mono text-[10px] text-[#6B7280] ml-2">
+        <span className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)] ml-2">
           {messages.length} messages
         </span>
       </div>
@@ -98,7 +98,7 @@ export default function ChannelMessageFeed({ channelId, channels }: ChannelMessa
       {/* Messages */}
       <div className="flex-1 overflow-y-auto py-2 space-y-2">
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-32 font-mono text-xs text-[#6B7280]">
+          <div className="flex items-center justify-center h-32 font-mono text-xs text-[var(--theme-foreground-tertiary)]">
             No messages in this channel
           </div>
         ) : (

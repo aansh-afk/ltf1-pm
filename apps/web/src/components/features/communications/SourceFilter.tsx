@@ -39,8 +39,8 @@ export default function SourceFilter({ selectedSources, onSourcesChange, stats }
         className={clsx(
           'flex items-center gap-1.5 px-2.5 py-1.5 border-2 font-mono text-[10px] font-bold uppercase tracking-wider transition-colors',
           isAllSelected
-            ? 'border-[#6366F1] bg-[#6366F1]/10 text-[#6366F1]'
-            : 'border-[#2E2E35] bg-[#0A0A0A] text-[#6B7280] hover:border-[#6366F1]/50'
+            ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)]/10 text-[var(--theme-primary)]'
+            : 'border-[var(--theme-border)] bg-[var(--theme-background-secondary)] text-[var(--theme-foreground-tertiary)] hover:border-[var(--theme-primary)]/50'
         )}
       >
         <HiOutlineViewGrid className="w-3 h-3" />
@@ -61,14 +61,14 @@ export default function SourceFilter({ selectedSources, onSourcesChange, stats }
             className={clsx(
               'flex items-center gap-1.5 px-2.5 py-1.5 border-2 font-mono text-[10px] font-bold uppercase tracking-wider transition-colors',
               isSelected
-                ? 'border-[#6366F1] bg-[#6366F1]/10 text-[#F9FAFB]'
-                : 'border-[#2E2E35] bg-[#0A0A0A] text-[#6B7280] hover:border-[#6366F1]/50 hover:text-[#9CA3AF]'
+                ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)]/10 text-[var(--theme-foreground)]'
+                : 'border-[var(--theme-border)] bg-[var(--theme-background-secondary)] text-[var(--theme-foreground-tertiary)] hover:border-[var(--theme-primary)]/50 hover:text-[var(--theme-foreground-secondary)]'
             )}
           >
             <Icon className="w-3 h-3" style={{ color: isSelected ? source.color : undefined }} />
             {source.label}
             {count > 0 && (
-              <span className="text-[#6B7280] font-normal">{count}</span>
+              <span className="text-[var(--theme-foreground-tertiary)] font-normal">{count}</span>
             )}
           </button>
         )
