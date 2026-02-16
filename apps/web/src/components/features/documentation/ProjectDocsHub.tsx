@@ -14,6 +14,7 @@ import {
   HiOutlineBookOpen,
   HiOutlineClipboardCopy,
   HiOutlineDownload,
+  HiOutlinePlus,
 } from 'react-icons/hi'
 import { motion, AnimatePresence } from 'framer-motion'
 import clsx from 'clsx'
@@ -22,6 +23,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import LoadingSpinner from '../../common/LoadingSpinner'
 import AIDocumentationHub from './AIDocumentationHub'
+import RepoBrowserModal from './RepoBrowserModal'
 
 interface ProjectDocsHubProps {
   projectId: string
@@ -179,6 +181,7 @@ export default function ProjectDocsHub({
   const [activeTab, setActiveTab] = useState<DocTab>('repo')
   const [selectedDoc, setSelectedDoc] = useState<TreeNode | null>(null)
   const [syncing, setSyncing] = useState(false)
+  const [showBrowser, setShowBrowser] = useState(false)
 
   const repoDocs = useQuery(
     api.integrations.github.docs.getRepoDocs,
@@ -364,14 +367,23 @@ export default function ProjectDocsHub({
                     <span className="text-brutal-xs font-mono font-bold uppercase text-[var(--theme-foreground)]/60">
                       FILES ({repoDocs.length})
                     </span>
-                    <button
-                      onClick={handleSync}
-                      disabled={syncing}
-                      className="p-[4px] hover:bg-[var(--theme-background-secondary)] transition-colors"
-                      title="Sync from repository"
-                    >
-                      <HiOutlineRefresh className={clsx('w-3.5 h-3.5', syncing && 'animate-spin')} />
-                    </button>
+                    <div className="flex items-center gap-[2px]">
+                      <button
+                        onClick={() => setShowBrowser(true)}
+                        className="p-[4px] hover:bg-[var(--theme-background-secondary)] transition-colors"
+                        title="Add files from repository"
+                      >
+                        <HiOutlinePlus className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={handleSync}
+                        disabled={syncing}
+                        className="p-[4px] hover:bg-[var(--theme-background-secondary)] transition-colors"
+                        title="Sync from repository"
+                      >
+                        <HiOutlineRefresh className={clsx('w-3.5 h-3.5', syncing && 'animate-spin')} />
+                      </button>
+                    </div>
                   </div>
                   <div className="max-h-[600px] overflow-y-auto">
                     {fileTree.map((node) => (
@@ -484,6 +496,12 @@ export default function ProjectDocsHub({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <RepoBrowserModal
+        isOpen={showBrowser}
+        onClose={() => setShowBrowser(false)}
+        projectId={projectId}
+      />
     </div>
   )
 }

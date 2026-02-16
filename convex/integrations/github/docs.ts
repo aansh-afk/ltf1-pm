@@ -116,6 +116,236 @@ export const removeStaleRepoDocs = internalMutation({
   },
 });
 
+// Browse repo contents at a given path (lightweight - no file content)
+export const browseRepoContents = action({
+  args: {
+    projectId: v.id("projects"),
+    path: v.optional(v.string()),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+    items: v.array(
+      v.object({
+        name: v.string(),
+        path: v.string(),
+        type: v.union(v.literal("file"), v.literal("dir")),
+        size: v.number(),
+      })
+    ),
+  }),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return { success: false, message: "Not authenticated", items: [] };
+    }
+
+    const project: any = await ctx.runQuery(api.projects.queries.getProject, {
+      projectId: args.projectId,
+    });
+
+    if (!project?.repository) {
+      return {
+        success: false,
+        message: "No repository connected to this project",
+        items: [],
+      };
+    }
+
+    const { owner, name: repoName, defaultBranch } = project.repository;
+
+    const connection: any = await ctx.runQuery(
+      api.integrations.github.oauth.getGitHubConnection
+    );
+
+    if (!connection?.accessToken) {
+      return {
+        success: false,
+        message: "No GitHub connection found. Please connect GitHub first.",
+        items: [],
+      };
+    }
+
+    const headers = {
+      Authorization: `Bearer ${connection.accessToken}`,
+      Accept: "application/vnd.github.v3+json",
+    };
+
+    const dirPath = args.path || "";
+    const url = `https://api.github.com/repos/${owner}/${repoName}/contents/${dirPath}?ref=${defaultBranch}`;
+
+    try {
+      const response = await fetch(url, { headers });
+
+      if (!response.ok) {
+        return {
+          success: false,
+          message: `GitHub API error: ${response.status}`,
+          items: [],
+        };
+      }
+
+      const data = await response.json();
+      if (!Array.isArray(data)) {
+        return {
+          success: false,
+          message: "Unexpected response from GitHub API",
+          items: [],
+        };
+      }
+
+      // Filter to only dirs and .md/.mdx files
+      const items = data
+        .filter(
+          (item: any) =>
+            item.type === "dir" ||
+            (item.type === "file" &&
+              (item.name.endsWith(".md") || item.name.endsWith(".mdx")))
+        )
+        .map((item: any) => ({
+          name: item.name as string,
+          path: item.path as string,
+          type: (item.type === "dir" ? "dir" : "file") as "file" | "dir",
+          size: (item.size || 0) as number,
+        }))
+        // Sort: dirs first, then files alphabetically
+        .sort((a: { type: string; name: string }, b: { type: string; name: string }) => {
+          if (a.type !== b.type) return a.type === "dir" ? -1 : 1;
+          return a.name.localeCompare(b.name);
+        });
+
+      return { success: true, message: "OK", items };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unknown error";
+      return {
+        success: false,
+        message: `Failed to browse repo: ${message}`,
+        items: [],
+      };
+    }
+  },
+});
+
+// Fetch selected doc files by path and store them
+export const fetchSelectedDocs = action({
+  args: {
+    projectId: v.id("projects"),
+    paths: v.array(v.string()),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    message: v.string(),
+    docsCount: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return { success: false, message: "Not authenticated", docsCount: 0 };
+    }
+
+    if (args.paths.length === 0) {
+      return { success: false, message: "No files selected", docsCount: 0 };
+    }
+
+    const project: any = await ctx.runQuery(api.projects.queries.getProject, {
+      projectId: args.projectId,
+    });
+
+    if (!project?.repository) {
+      return {
+        success: false,
+        message: "No repository connected to this project",
+        docsCount: 0,
+      };
+    }
+
+    const { owner, name: repoName, defaultBranch } = project.repository;
+
+    const connection: any = await ctx.runQuery(
+      api.integrations.github.oauth.getGitHubConnection
+    );
+
+    if (!connection?.accessToken) {
+      return {
+        success: false,
+        message: "No GitHub connection found. Please connect GitHub first.",
+        docsCount: 0,
+      };
+    }
+
+    const headers = {
+      Authorization: `Bearer ${connection.accessToken}`,
+      Accept: "application/vnd.github.v3+json",
+    };
+
+    const fetchedDocs: Array<{
+      path: string;
+      name: string;
+      content: string;
+      sha: string;
+      size: number;
+    }> = [];
+
+    try {
+      for (const filePath of args.paths) {
+        const url = `https://api.github.com/repos/${owner}/${repoName}/contents/${filePath}?ref=${defaultBranch}`;
+        const response = await fetch(url, { headers });
+
+        if (response.ok) {
+          const fileData = await response.json();
+          if (fileData.content && fileData.encoding === "base64") {
+            const content = atob(fileData.content.replace(/\n/g, ""));
+            const name = filePath.split("/").pop() || filePath;
+            fetchedDocs.push({
+              path: filePath,
+              name,
+              content,
+              sha: fileData.sha,
+              size: fileData.size,
+            });
+          }
+        }
+      }
+
+      if (fetchedDocs.length === 0) {
+        return {
+          success: false,
+          message: "Failed to fetch any of the selected files",
+          docsCount: 0,
+        };
+      }
+
+      // Store in batches
+      const BATCH_SIZE = 20;
+      for (let i = 0; i < fetchedDocs.length; i += BATCH_SIZE) {
+        const batch = fetchedDocs.slice(i, i + BATCH_SIZE);
+        await ctx.runMutation(
+          internal.integrations.github.docs.upsertRepoDocs,
+          {
+            projectId: args.projectId,
+            docs: batch,
+          }
+        );
+      }
+
+      return {
+        success: true,
+        message: `Imported ${fetchedDocs.length} file(s) from repository`,
+        docsCount: fetchedDocs.length,
+      };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unknown error";
+      return {
+        success: false,
+        message: `Failed to fetch docs: ${message}`,
+        docsCount: 0,
+      };
+    }
+  },
+});
+
 // Fetch markdown files from a GitHub repo and store them
 export const fetchRepoDocs = action({
   args: {
