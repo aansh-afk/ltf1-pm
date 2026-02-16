@@ -141,9 +141,15 @@ export const fetchGitHubRepositories = action({
     defaultBranch: v.string(),
   })),
   handler: async (ctx) => {
-    // Get the current user's GitHub connection
-    const connection: any = await ctx.runQuery(api.integrations.github.oauth.getGitHubConnection);
-    
+    // Get identity directly and use internal query to avoid auth propagation issues
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const connection: any = await ctx.runQuery(
+      internal.integrations.github.oauth.getGitHubConnectionByClerkId,
+      { clerkId: identity.subject }
+    );
+
     if (!connection || !connection.accessToken) {
       throw new Error("No GitHub connection found");
     }
@@ -191,8 +197,15 @@ export const fetchGitHubActivity = action({
     payload: v.any(),
   })),
   handler: async (ctx, args) => {
-    // Get the current user's GitHub connection
-    const connection: any = await ctx.runQuery(api.integrations.github.oauth.getGitHubConnection);
+    // Get identity directly and use internal query to avoid auth propagation issues
+    const identity = await ctx.auth.getUserIdentity();
+    let connection: any = null;
+    if (identity) {
+      connection = await ctx.runQuery(
+        internal.integrations.github.oauth.getGitHubConnectionByClerkId,
+        { clerkId: identity.subject }
+      );
+    }
 
     const headers: any = {
       Accept: "application/vnd.github.v3+json",
