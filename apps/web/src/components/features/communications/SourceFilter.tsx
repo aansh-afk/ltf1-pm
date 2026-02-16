@@ -1,5 +1,5 @@
 import { FaGithub, FaSlack, FaDiscord, FaJira } from 'react-icons/fa'
-import { HiOutlineViewGrid } from 'react-icons/hi'
+import { HiOutlineViewGrid, HiOutlineChatAlt2 } from 'react-icons/hi'
 import clsx from 'clsx'
 
 type Source = 'slack' | 'github' | 'discord' | 'jira' | 'internal'
@@ -13,6 +13,7 @@ interface SourceFilterProps {
 }
 
 const SOURCES: Array<{ key: Source; label: string; icon: any; color: string }> = [
+  { key: 'internal', label: 'Team Chat', icon: HiOutlineChatAlt2, color: '#6366F1' },
   { key: 'slack', label: 'Slack', icon: FaSlack, color: '#4A154B' },
   { key: 'github', label: 'GitHub', icon: FaGithub, color: '#F9FAFB' },
   { key: 'discord', label: 'Discord', icon: FaDiscord, color: '#5865F2' },
