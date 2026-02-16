@@ -154,14 +154,16 @@ export const browseRepoContents = action({
 
     const { owner, name: repoName, defaultBranch } = project.repository;
 
+    // Use internal query with clerkId to avoid auth propagation issues in actions
     const connection: any = await ctx.runQuery(
-      api.integrations.github.oauth.getGitHubConnection
+      internal.integrations.github.oauth.getGitHubConnectionByClerkId,
+      { clerkId: identity.subject }
     );
 
     if (!connection?.accessToken) {
       return {
         success: false,
-        message: "No GitHub connection found. Please connect GitHub first.",
+        message: "No GitHub connection found. Please connect GitHub in your profile settings.",
         items: [],
       };
     }
@@ -262,14 +264,16 @@ export const fetchSelectedDocs = action({
 
     const { owner, name: repoName, defaultBranch } = project.repository;
 
+    // Use internal query with clerkId to avoid auth propagation issues in actions
     const connection: any = await ctx.runQuery(
-      api.integrations.github.oauth.getGitHubConnection
+      internal.integrations.github.oauth.getGitHubConnectionByClerkId,
+      { clerkId: identity.subject }
     );
 
     if (!connection?.accessToken) {
       return {
         success: false,
-        message: "No GitHub connection found. Please connect GitHub first.",
+        message: "No GitHub connection found. Please connect GitHub in your profile settings.",
         docsCount: 0,
       };
     }
@@ -377,15 +381,16 @@ export const fetchRepoDocs = action({
 
     const { owner, name: repoName, defaultBranch } = project.repository;
 
-    // Get user's GitHub connection for auth
+    // Use internal query with clerkId to avoid auth propagation issues in actions
     const connection: any = await ctx.runQuery(
-      api.integrations.github.oauth.getGitHubConnection
+      internal.integrations.github.oauth.getGitHubConnectionByClerkId,
+      { clerkId: identity.subject }
     );
 
     if (!connection?.accessToken) {
       return {
         success: false,
-        message: "No GitHub connection found. Please connect GitHub first.",
+        message: "No GitHub connection found. Please connect GitHub in your profile settings.",
         docsCount: 0,
       };
     }
