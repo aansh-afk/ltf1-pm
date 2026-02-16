@@ -43,31 +43,31 @@ export default function CommunicationsTab({ workspace, workspaceId }: Communicat
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-[#1F1F23]">
+      <div className="p-4 border-b border-[var(--theme-border)]">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#6B7280] inline-block mb-1">
+            <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] inline-block mb-1">
               Communications
             </span>
-            <h2 className="text-lg font-bold text-[#F9FAFB]">Comms Hub</h2>
+            <h2 className="text-lg font-bold text-[var(--theme-foreground)]">Comms Hub</h2>
           </div>
           <div className="flex items-center gap-3">
             {stats && (
-              <div className="flex items-center gap-4 font-mono text-[10px] text-[#6B7280]">
+              <div className="flex items-center gap-4 font-mono text-[10px] text-[var(--theme-foreground-tertiary)]">
                 <span>{stats.totalChannels} channels</span>
-                <span className="text-[#2E2E35]">|</span>
+                <span className="text-[var(--theme-border)]">|</span>
                 <span>{stats.messagesLast24h} msgs/24h</span>
                 {stats.totalUnread > 0 && (
                   <>
-                    <span className="text-[#2E2E35]">|</span>
-                    <span className="text-[#EF4444] font-bold">{stats.totalUnread} unread</span>
+                    <span className="text-[var(--theme-border)]">|</span>
+                    <span className="text-[var(--theme-error)] font-bold">{stats.totalUnread} unread</span>
                   </>
                 )}
               </div>
             )}
             <button
               onClick={() => setShowCreateChannel(true)}
-              className="flex items-center gap-1 px-2.5 py-1.5 border-2 border-[#6366F1] bg-[#6366F1]/10 font-mono text-[10px] font-bold uppercase tracking-wider text-[#6366F1] hover:bg-[#6366F1]/20 transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 border-2 border-[var(--theme-primary)] bg-[var(--theme-primary)]/10 font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-primary)] hover:bg-[var(--theme-primary)]/20 transition-colors"
             >
               <HiOutlinePlus className="w-3 h-3" />
               Channel

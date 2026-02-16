@@ -10,13 +10,13 @@ export default function CommsEmptyState({ onCreateChannel }: CommsEmptyStateProp
     <div className="flex-1 flex items-center justify-center p-8">
       <div className="max-w-lg text-center">
         {/* Icon */}
-        <div className="w-14 h-14 mx-auto mb-4 border-2 border-[#2E2E35] flex items-center justify-center bg-[#111111]">
-          <HiOutlineChatAlt2 className="w-7 h-7 text-[#6366F1]" />
+        <div className="w-14 h-14 mx-auto mb-4 border-2 border-[var(--theme-border)] flex items-center justify-center bg-[var(--theme-background-tertiary)]">
+          <HiOutlineChatAlt2 className="w-7 h-7 text-[var(--theme-primary)]" />
         </div>
 
         {/* Title */}
-        <h3 className="text-base font-bold text-[#F9FAFB] mb-2">No Communications Yet</h3>
-        <p className="font-mono text-xs text-[#6B7280] mb-6 max-w-sm mx-auto">
+        <h3 className="text-base font-bold text-[var(--theme-foreground)] mb-2">No Communications Yet</h3>
+        <p className="font-mono text-xs text-[var(--theme-foreground-tertiary)] mb-6 max-w-sm mx-auto">
           Start a team chat or connect your integrations to receive messages from GitHub, Slack, Discord, and Jira.
         </p>
 
@@ -24,7 +24,7 @@ export default function CommsEmptyState({ onCreateChannel }: CommsEmptyStateProp
         {onCreateChannel && (
           <button
             onClick={onCreateChannel}
-            className="inline-flex items-center gap-2 px-4 py-2.5 border-2 border-[#6366F1] bg-[#6366F1] text-white font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#4F46E5] transition-colors mb-6"
+            className="inline-flex items-center gap-2 px-4 py-2.5 border-2 border-[var(--theme-primary)] bg-[var(--theme-primary)] text-white font-mono text-xs font-bold uppercase tracking-wider hover:bg-[var(--theme-primary-hover)] transition-colors mb-6"
           >
             <HiOutlinePlus className="w-4 h-4" />
             Create Team Chat Channel
@@ -35,15 +35,15 @@ export default function CommsEmptyState({ onCreateChannel }: CommsEmptyStateProp
         <div className="grid grid-cols-2 gap-2 max-w-sm mx-auto mb-6">
           {/* Team Chat card */}
           <div
-            className="border-2 border-[#6366F1]/30 bg-[#6366F1]/5 p-3 flex items-center gap-2.5 cursor-pointer hover:border-[#6366F1] transition-colors"
+            className="border-2 border-[var(--theme-primary)]/30 bg-[var(--theme-primary)]/5 p-3 flex items-center gap-2.5 cursor-pointer hover:border-[var(--theme-primary)] transition-colors"
             onClick={onCreateChannel}
           >
-            <HiOutlineChatAlt2 className="w-4 h-4 text-[#6366F1]" />
+            <HiOutlineChatAlt2 className="w-4 h-4 text-[var(--theme-primary)]" />
             <div className="text-left">
-              <span className="block font-mono text-xs font-bold text-[#F9FAFB]">
+              <span className="block font-mono text-xs font-bold text-[var(--theme-foreground)]">
                 Team Chat
               </span>
-              <span className="block font-mono text-[10px] text-[#22C55E]">
+              <span className="block font-mono text-[10px] text-[var(--theme-success)]">
                 Ready
               </span>
             </div>
@@ -59,14 +59,14 @@ export default function CommsEmptyState({ onCreateChannel }: CommsEmptyStateProp
             return (
               <div
                 key={integration.name}
-                className="border-2 border-[#2E2E35] bg-[#0A0A0A] p-3 flex items-center gap-2.5"
+                className="border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] p-3 flex items-center gap-2.5"
               >
                 <Icon className="w-4 h-4" style={{ color: integration.color }} />
                 <div className="text-left">
-                  <span className="block font-mono text-xs font-bold text-[#F9FAFB]">
+                  <span className="block font-mono text-xs font-bold text-[var(--theme-foreground)]">
                     {integration.name}
                   </span>
-                  <span className="block font-mono text-[10px] text-[#6B7280]">
+                  <span className="block font-mono text-[10px] text-[var(--theme-foreground-tertiary)]">
                     {integration.status}
                   </span>
                 </div>
@@ -76,10 +76,10 @@ export default function CommsEmptyState({ onCreateChannel }: CommsEmptyStateProp
         </div>
 
         {/* Hint */}
-        <div className="bg-[#111111] border-2 border-[#6366F1]/30 p-3 inline-flex items-center gap-2">
-          <HiOutlineLink className="w-4 h-4 text-[#6366F1]" />
-          <span className="font-mono text-[10px] text-[#9CA3AF]">
-            Visit the <span className="text-[#6366F1] font-bold">Integrations</span> tab to connect services
+        <div className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-primary)]/30 p-3 inline-flex items-center gap-2">
+          <HiOutlineLink className="w-4 h-4 text-[var(--theme-primary)]" />
+          <span className="font-mono text-[10px] text-[var(--theme-foreground-secondary)]">
+            Visit the <span className="text-[var(--theme-primary)] font-bold">Integrations</span> tab to connect services
           </span>
         </div>
       </div>
