@@ -1,5 +1,6 @@
 import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
+import { Id } from "../_generated/dataModel";
 
 const sourceValidator = v.union(
   v.literal("slack"),
@@ -152,6 +153,93 @@ export const markChannelRead = mutation({
       updatedAt: Date.now(),
     });
     return null;
+  },
+});
+
+/**
+ * Create an internal team-chat channel within the Comms Hub.
+ */
+export const createInternalChannel = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    name: v.string(),
+  },
+  returns: v.id("commsChannels"),
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const externalId = `internal-${now}`;
+
+    return await ctx.db.insert("commsChannels", {
+      workspaceId: args.workspaceId,
+      source: "internal" as const,
+      externalId,
+      name: args.name,
+      channelType: "channel" as const,
+      active: true,
+      muted: false,
+      unreadCount: 0,
+      replyEnabled: true,
+      createdAt: now,
+      updatedAt: now,
+    });
+  },
+});
+
+/**
+ * Send a message to an internal team-chat channel.
+ */
+export const sendInternalMessage = mutation({
+  args: {
+    channelId: v.id("commsChannels"),
+    content: v.string(),
+  },
+  returns: v.id("commsMessages"),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const channel = await ctx.db.get(args.channelId);
+    if (!channel) {
+      throw new Error("Channel not found");
+    }
+    if (channel.source !== "internal") {
+      throw new Error("Can only send messages to internal channels");
+    }
+
+    // Look up user from identity
+    const users = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .collect();
+    const user = users[0];
+    const senderName = user?.name ?? identity.name ?? "Unknown";
+    const senderUserId: Id<"users"> | undefined = user?._id;
+    const senderAvatarUrl = user?.avatarUrl ?? (identity.pictureUrl as string | undefined);
+
+    const now = Date.now();
+
+    const messageId = await ctx.db.insert("commsMessages", {
+      workspaceId: channel.workspaceId,
+      source: "internal" as const,
+      sourceChannelId: args.channelId,
+      senderName,
+      senderAvatarUrl,
+      senderUserId,
+      content: args.content,
+      contentType: "text" as const,
+      createdAt: now,
+    });
+
+    // Update channel's lastMessageAt and increment unreadCount
+    await ctx.db.patch(args.channelId, {
+      lastMessageAt: now,
+      unreadCount: channel.unreadCount + 1,
+      updatedAt: now,
+    });
+
+    return messageId;
   },
 });
 

@@ -8,10 +8,10 @@ import {
   HiOutlineChevronRight,
   HiOutlineChevronDown,
   HiOutlineDownload,
+  HiOutlinePlus,
 } from 'react-icons/hi'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
-import BrutalModal from '../../ui/BrutalModal'
 import BrutalCheckbox from '../../ui/BrutalCheckbox'
 import LoadingSpinner from '../../common/LoadingSpinner'
 
@@ -28,22 +28,22 @@ interface DirNode {
   loading: boolean
 }
 
-interface RepoBrowserModalProps {
-  isOpen: boolean
-  onClose: () => void
+interface RepoBrowserPanelProps {
   projectId: string
+  onImported?: () => void
 }
 
-export default function RepoBrowserModal({
-  isOpen,
-  onClose,
+export default function RepoBrowserPanel({
   projectId,
-}: RepoBrowserModalProps) {
+  onImported,
+}: RepoBrowserPanelProps) {
   const [dirs, setDirs] = useState<Record<string, DirNode>>({})
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [importing, setImporting] = useState(false)
-  const [rootLoading, setRootLoading] = useState(false)
+  const [rootLoaded, setRootLoaded] = useState(false)
+  const [manualPath, setManualPath] = useState('')
+  const [manualAdding, setManualAdding] = useState(false)
 
   const browseRepoContents = useAction(api.integrations.github.docs.browseRepoContents)
   const fetchSelectedDocs = useAction(api.integrations.github.docs.fetchSelectedDocs)
@@ -52,13 +52,9 @@ export default function RepoBrowserModal({
   const loadDir = useCallback(async (path: string) => {
     const key = path || '__root__'
 
-    // Already loaded
-    if (dirs[key]?.loaded) return
+    // Already loaded or loading
+    if (dirs[key]?.loaded || dirs[key]?.loading) return
 
-    // Mark loading
-    if (key === '__root__') {
-      setRootLoading(true)
-    }
     setDirs(prev => ({
       ...prev,
       [key]: { items: [], loaded: false, loading: true },
@@ -88,19 +84,14 @@ export default function RepoBrowserModal({
         ...prev,
         [key]: { items: [], loaded: true, loading: false },
       }))
-    } finally {
-      if (key === '__root__') {
-        setRootLoading(false)
-      }
     }
   }, [browseRepoContents, projectId, dirs])
 
-  // Load root on first open
-  const handleOpen = useCallback(() => {
-    if (!dirs['__root__']?.loaded) {
-      loadDir('')
-    }
-  }, [dirs, loadDir])
+  // Load root on first render
+  if (!rootLoaded && !dirs['__root__']?.loading) {
+    setRootLoaded(true)
+    loadDir('')
+  }
 
   // Toggle folder expansion
   const toggleFolder = useCallback(async (path: string) => {
@@ -109,9 +100,7 @@ export default function RepoBrowserModal({
       newExpanded.delete(path)
     } else {
       newExpanded.add(path)
-      // Load if not yet loaded
-      const key = path || '__root__'
-      if (!dirs[key]?.loaded) {
+      if (!dirs[path]?.loaded && !dirs[path]?.loading) {
         await loadDir(path)
       }
     }
@@ -131,29 +120,33 @@ export default function RepoBrowserModal({
     })
   }, [])
 
-  // Select all files in a directory (recursively loads and selects .md files)
+  // Select all files in a loaded directory
   const selectAllInDir = useCallback(async (dirPath: string) => {
     const key = dirPath || '__root__'
-
-    // Ensure loaded
     if (!dirs[key]?.loaded) {
       await loadDir(dirPath)
     }
 
-    const node = dirs[key]
-    if (!node?.items) return
+    // Re-read after possible load
+    setDirs(prev => {
+      const node = prev[key]
+      if (!node?.items) return prev
 
-    const newSelected = new Set(selected)
-    for (const item of node.items) {
-      if (item.type === 'file') {
-        newSelected.add(item.path)
-      }
-    }
-    setSelected(newSelected)
-  }, [dirs, selected, loadDir])
+      setSelected(sel => {
+        const next = new Set(sel)
+        for (const item of node.items) {
+          if (item.type === 'file') {
+            next.add(item.path)
+          }
+        }
+        return next
+      })
+      return prev
+    })
+  }, [dirs, loadDir])
 
-  // Import selected files
-  const handleImport = async () => {
+  // Import selected files from the browser
+  const handleImportSelected = async () => {
     if (selected.size === 0) return
 
     setImporting(true)
@@ -165,11 +158,8 @@ export default function RepoBrowserModal({
 
       if (result.success) {
         toast.success(result.message)
-        onClose()
-        // Reset state
         setSelected(new Set())
-        setDirs({})
-        setExpanded(new Set())
+        onImported?.()
       } else {
         toast.error(result.message)
       }
@@ -180,39 +170,131 @@ export default function RepoBrowserModal({
     }
   }
 
-  // When modal opens, load root
-  if (isOpen && !dirs['__root__']?.loaded && !rootLoading) {
-    handleOpen()
+  // Manual path add
+  const handleManualAdd = async () => {
+    const trimmed = manualPath.trim()
+    if (!trimmed) return
+
+    // Split by commas or newlines to support multiple paths
+    const paths = trimmed
+      .split(/[,\n]+/)
+      .map(p => p.trim())
+      .filter(Boolean)
+
+    if (paths.length === 0) return
+
+    setManualAdding(true)
+    try {
+      const result = await fetchSelectedDocs({
+        projectId: projectId as any,
+        paths,
+      })
+
+      if (result.success) {
+        toast.success(result.message)
+        setManualPath('')
+        onImported?.()
+      } else {
+        toast.error(result.message)
+      }
+    } catch {
+      toast.error('Failed to fetch files')
+    } finally {
+      setManualAdding(false)
+    }
   }
 
   const rootNode = dirs['__root__']
 
   return (
-    <BrutalModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="ADD FROM REPO"
-      size="lg"
-    >
-      <div className="space-y-[12px]">
-        <p className="text-brutal-sm text-[var(--theme-foreground)]/60 font-mono">
-          Browse your repository and select markdown files to import.
+    <div className="space-y-[16px]">
+      {/* Manual path input */}
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[12px]">
+        <label className="block text-brutal-xs font-mono font-bold uppercase text-[var(--theme-foreground)]/60 mb-[6px]">
+          ADD BY PATH
+        </label>
+        <p className="text-brutal-xs text-[var(--theme-foreground)]/40 mb-[8px]">
+          Enter file or folder paths from your repo. Separate multiple paths with commas.
         </p>
+        <div className="flex gap-[8px]">
+          <input
+            type="text"
+            value={manualPath}
+            onChange={(e) => setManualPath(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && manualPath.trim()) {
+                handleManualAdd()
+              }
+            }}
+            placeholder="docs/guide.md, README.md, src/docs/api.md"
+            className="flex-1 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] px-[10px] py-[6px] text-brutal-sm font-mono placeholder:text-[var(--theme-foreground)]/20 focus:outline-none focus:border-primary-brutalist"
+          />
+          <button
+            onClick={handleManualAdd}
+            disabled={!manualPath.trim() || manualAdding}
+            className={clsx(
+              'px-[12px] py-[6px] text-brutal-xs font-mono font-bold uppercase border-2 transition-colors flex items-center gap-[6px] flex-shrink-0',
+              manualPath.trim() && !manualAdding
+                ? 'bg-primary-brutalist text-white border-primary-brutalist hover:bg-primary-brutalist/90'
+                : 'opacity-50 cursor-not-allowed border-[var(--theme-border)]'
+            )}
+          >
+            {manualAdding ? (
+              <LoadingSpinner size="sm" />
+            ) : (
+              <HiOutlinePlus className="w-3.5 h-3.5" />
+            )}
+            ADD
+          </button>
+        </div>
+      </div>
 
-        {/* File browser */}
-        <div className="border-2 border-[var(--theme-border)] max-h-[400px] overflow-y-auto bg-[var(--theme-background)]">
-          {!rootNode?.loaded ? (
+      {/* Repo file browser */}
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
+        <div className="flex items-center justify-between p-[10px] border-b-2 border-[var(--theme-border)]">
+          <span className="text-brutal-xs font-mono font-bold uppercase text-[var(--theme-foreground)]/60">
+            BROWSE REPOSITORY
+          </span>
+          {selected.size > 0 && (
+            <button
+              onClick={handleImportSelected}
+              disabled={importing}
+              className={clsx(
+                'px-[10px] py-[4px] text-brutal-xs font-mono font-bold uppercase border-2 transition-colors flex items-center gap-[6px]',
+                !importing
+                  ? 'bg-primary-brutalist text-white border-primary-brutalist hover:bg-primary-brutalist/90'
+                  : 'opacity-50 cursor-not-allowed border-[var(--theme-border)]'
+              )}
+            >
+              {importing ? (
+                <>
+                  <LoadingSpinner size="sm" />
+                  IMPORTING...
+                </>
+              ) : (
+                <>
+                  <HiOutlineDownload className="w-3 h-3" />
+                  ADD SELECTED ({selected.size})
+                </>
+              )}
+            </button>
+          )}
+        </div>
+
+        <div className="max-h-[350px] overflow-y-auto">
+          {rootNode?.loading ? (
             <div className="p-[24px] flex items-center justify-center">
               <LoadingSpinner size="md" />
             </div>
-          ) : rootNode.items.length === 0 ? (
+          ) : rootNode?.loaded && rootNode.items.length === 0 ? (
             <div className="p-[24px] text-center text-[var(--theme-foreground)]/40">
               <HiOutlineDocumentText className="w-8 h-8 mx-auto mb-[8px]" />
-              <p className="text-brutal-sm font-mono">NO MARKDOWN FILES FOUND</p>
+              <p className="text-brutal-sm font-mono">NO FILES FOUND AT ROOT</p>
+              <p className="text-brutal-xs mt-[4px]">Use the manual path input above to add files directly.</p>
             </div>
           ) : (
             <div className="py-[4px]">
-              {rootNode.items.map((item) => (
+              {rootNode?.items?.map((item) => (
                 <BrowseItem
                   key={item.path}
                   item={item}
@@ -228,46 +310,8 @@ export default function RepoBrowserModal({
             </div>
           )}
         </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-[4px]">
-          <span className="text-brutal-xs font-mono text-[var(--theme-foreground)]/40">
-            {selected.size} file{selected.size !== 1 ? 's' : ''} selected
-          </span>
-
-          <div className="flex items-center gap-[8px]">
-            <button
-              onClick={onClose}
-              className="px-[12px] py-[6px] text-brutal-xs font-mono font-bold uppercase border-2 border-[var(--theme-border)] hover:bg-[var(--theme-background-secondary)] transition-colors"
-            >
-              CANCEL
-            </button>
-            <button
-              onClick={handleImport}
-              disabled={selected.size === 0 || importing}
-              className={clsx(
-                'px-[12px] py-[6px] text-brutal-xs font-mono font-bold uppercase border-2 transition-colors flex items-center gap-[6px]',
-                selected.size > 0 && !importing
-                  ? 'bg-primary-brutalist text-white border-primary-brutalist hover:bg-primary-brutalist/90'
-                  : 'opacity-50 cursor-not-allowed border-[var(--theme-border)]'
-              )}
-            >
-              {importing ? (
-                <>
-                  <LoadingSpinner size="sm" />
-                  IMPORTING...
-                </>
-              ) : (
-                <>
-                  <HiOutlineDownload className="w-3.5 h-3.5" />
-                  ADD SELECTED ({selected.size})
-                </>
-              )}
-            </button>
-          </div>
-        </div>
       </div>
-    </BrutalModal>
+    </div>
   )
 }
 
@@ -335,7 +379,7 @@ function BrowseItem({
               <div className="py-[8px] flex justify-center" style={{ paddingLeft: `${(depth + 1) * 16 + 8}px` }}>
                 <LoadingSpinner size="sm" />
               </div>
-            ) : dirNode?.items?.length === 0 ? (
+            ) : dirNode?.loaded && dirNode.items.length === 0 ? (
               <div
                 className="py-[6px] text-brutal-xs font-mono text-[var(--theme-foreground)]/30"
                 style={{ paddingLeft: `${(depth + 1) * 16 + 8}px` }}

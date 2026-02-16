@@ -23,6 +23,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner'
 import CreateProjectModal from '@/components/features/project/CreateProjectModal'
 import { WorkspaceIntegrationsTab } from '@/components/features/github/WorkspaceIntegrationsTab'
 import CommunicationsTab from '@/components/features/communications/CommunicationsTab'
+import WorkspaceAnalytics from '@/components/features/analytics/WorkspaceAnalytics'
 import clsx from 'clsx'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalModal from '@/components/ui/BrutalModal'
@@ -99,7 +100,7 @@ export default function WorkspaceManagementPage() {
       case 'settings':
         return <SettingsTab workspace={workspace} />
       case 'analytics':
-        return <AnalyticsTab workspaceId={workspaceId!} />
+        return <WorkspaceAnalytics workspaceId={workspaceId!} />
       case 'communications':
         return <CommunicationsTab workspace={workspace} workspaceId={workspaceId!} />
       case 'integrations':
@@ -696,22 +697,6 @@ function SettingsTab({ workspace }: any) {
   )
 }
 
-// Placeholder tab components
-function AnalyticsTab({ workspaceId }: any) {
-  return (
-    <div className="p-4 flex flex-col items-center justify-center min-h-[50vh]">
-      <div className="border-2 border-[var(--theme-border)] border-dashed p-8 text-center max-w-md">
-        <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[var(--theme-border)] text-[var(--theme-foreground-tertiary)]">
-          <HiOutlineChartBar className="w-5 h-5" />
-        </div>
-        <h3 className="text-sm font-bold text-[var(--theme-foreground)] mb-1">Analytics Unavailable</h3>
-        <p className="text-xs text-[var(--theme-foreground-tertiary)] max-w-sm mx-auto">
-          Analytics features are coming soon. Check back later for system updates.
-        </p>
-      </div>
-    </div>
-  )
-}
 
 function BillingTab({ workspace }: any) {
   return (
