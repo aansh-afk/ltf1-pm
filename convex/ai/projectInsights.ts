@@ -149,7 +149,7 @@ Response must be valid JSON only, no markdown or explanation.`;
     try {
       const aiResponse = await ctx.runAction(internal.internalQueries.generateWithGemini, {
         prompt,
-        model: "gemini-2.0-flash-exp",
+        model: "gemini-2.5-flash",
         temperature: 0.3,
         apiKey: userApiKey,
       });
@@ -223,7 +223,7 @@ Response must be a valid JSON object with a "tasks" array containing the task ob
     try {
       const aiResponse = await ctx.runAction(internal.internalQueries.generateWithGemini, {
         prompt,
-        model: "gemini-2.0-flash-exp",
+        model: "gemini-2.5-flash",
         temperature: 0.7,
         apiKey: userApiKey,
       });
@@ -364,7 +364,7 @@ Response must be valid JSON only.`;
     try {
       const aiResponse = await ctx.runAction(internal.internalQueries.generateWithGemini, {
         prompt,
-        model: "gemini-2.0-flash-exp",
+        model: "gemini-2.5-flash",
         temperature: 0.5,
         apiKey: userApiKey,
       });

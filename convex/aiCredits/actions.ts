@@ -16,7 +16,7 @@ export const validateApiKey = action({
   handler: async (ctx, args) => {
     try {
       const genAI = new GoogleGenerativeAI(args.apiKey)
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
       
       // Simple test to validate the key
       const result = await model.generateContent("Say 'test'")
