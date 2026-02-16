@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, internalMutation, query } from "../../_generated/server";
+import { mutation, internalMutation, internalQuery, query } from "../../_generated/server";
 import { api, internal } from "../../_generated/api";
 
 // Store GitHub OAuth state for CSRF protection
@@ -326,6 +326,27 @@ export const getGitHubConnectionInfo = query({
       scope: connection.scope,
       connectedAt: connection.createdAt,
     };
+  },
+});
+
+// Internal query to get GitHub connection by clerkId (for use from actions where auth propagation may fail)
+export const getGitHubConnectionByClerkId = internalQuery({
+  args: { clerkId: v.string() },
+  returns: v.union(v.any(), v.null()),
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .first();
+
+    if (!user) return null;
+
+    const connection = await ctx.db
+      .query("githubConnections")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .first();
+
+    return connection;
   },
 });
 

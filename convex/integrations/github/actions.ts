@@ -278,7 +278,17 @@ export const fetchAvailableRepositories = action({
 
     // 1. Try to fetch from user's OAuth connection (personal repos)
     try {
-      const connection: any = await ctx.runQuery(api.integrations.github.oauth.getGitHubConnection);
+      // Get the current user's identity directly in the action, then use internal query
+      // to bypass any auth propagation issues between action → public query
+      const identity = await ctx.auth.getUserIdentity();
+      let connection: any = null;
+      if (identity) {
+        connection = await ctx.runQuery(internal.integrations.github.oauth.getGitHubConnectionByClerkId, {
+          clerkId: identity.subject,
+        });
+      } else {
+        console.error("[fetchAvailableRepositories] No auth identity in action");
+      }
 
       if (connection?.accessToken) {
         hasOAuth = true;
