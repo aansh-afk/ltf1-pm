@@ -1,7 +1,11 @@
-import { HiOutlineLink, HiOutlineChatAlt2 } from 'react-icons/hi'
+import { HiOutlineLink, HiOutlineChatAlt2, HiOutlinePlus } from 'react-icons/hi'
 import { FaGithub, FaSlack, FaDiscord, FaJira } from 'react-icons/fa'
 
-export default function CommsEmptyState() {
+interface CommsEmptyStateProps {
+  onCreateChannel?: () => void
+}
+
+export default function CommsEmptyState({ onCreateChannel }: CommsEmptyStateProps) {
   return (
     <div className="flex-1 flex items-center justify-center p-8">
       <div className="max-w-lg text-center">
@@ -13,12 +17,38 @@ export default function CommsEmptyState() {
         {/* Title */}
         <h3 className="text-base font-bold text-[#F9FAFB] mb-2">No Communications Yet</h3>
         <p className="font-mono text-xs text-[#6B7280] mb-6 max-w-sm mx-auto">
-          Connect your integrations to start receiving messages from GitHub, Slack, Discord, and Jira
-          in one unified feed.
+          Start a team chat or connect your integrations to receive messages from GitHub, Slack, Discord, and Jira.
         </p>
+
+        {/* Team Chat CTA */}
+        {onCreateChannel && (
+          <button
+            onClick={onCreateChannel}
+            className="inline-flex items-center gap-2 px-4 py-2.5 border-2 border-[#6366F1] bg-[#6366F1] text-white font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#4F46E5] transition-colors mb-6"
+          >
+            <HiOutlinePlus className="w-4 h-4" />
+            Create Team Chat Channel
+          </button>
+        )}
 
         {/* Integration cards */}
         <div className="grid grid-cols-2 gap-2 max-w-sm mx-auto mb-6">
+          {/* Team Chat card */}
+          <div
+            className="border-2 border-[#6366F1]/30 bg-[#6366F1]/5 p-3 flex items-center gap-2.5 cursor-pointer hover:border-[#6366F1] transition-colors"
+            onClick={onCreateChannel}
+          >
+            <HiOutlineChatAlt2 className="w-4 h-4 text-[#6366F1]" />
+            <div className="text-left">
+              <span className="block font-mono text-xs font-bold text-[#F9FAFB]">
+                Team Chat
+              </span>
+              <span className="block font-mono text-[10px] text-[#22C55E]">
+                Ready
+              </span>
+            </div>
+          </div>
+
           {[
             { icon: FaGithub, name: 'GitHub', color: '#F9FAFB', status: 'Available' },
             { icon: FaSlack, name: 'Slack', color: '#4A154B', status: 'Available' },
