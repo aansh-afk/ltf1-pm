@@ -35,11 +35,11 @@ export default function ColoredPre({
 
   return (
     <pre className={className}>
-      {parts.map((part, i) => {
+      {parts.map((part, partIdx) => {
         const m = part.match(PARSE_RE)
         if (m) {
           return (
-            <span key={i} style={{ color: colorMap[m[1]] }}>
+            <span key={`${partIdx}-${m[1]}-${m[2].slice(0, 10)}`} style={{ color: colorMap[m[1]] }}>
               {m[2]}
             </span>
           )

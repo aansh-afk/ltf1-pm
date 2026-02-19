@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 
 const steps = [
   {
@@ -158,7 +158,7 @@ export default function HowItWorksSection() {
             {/* Left: content */}
             <div className="p-8 md:p-10 flex flex-col justify-center">
               <AnimatePresence mode="wait">
-                <motion.div
+                <m.div
                   key={activeIndex}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -192,14 +192,14 @@ export default function HowItWorksSection() {
                   <span className="inline-block text-xs font-mono text-[#6B7280] border border-[#2E2E35] rounded px-2 py-1">
                     automated &middot; real-time
                   </span>
-                </motion.div>
+                </m.div>
               </AnimatePresence>
             </div>
 
             {/* Right: ASCII */}
             <div className="border-t md:border-t-0 md:border-l border-[#2E2E35] bg-[#0A0A0A] p-8 md:p-10 flex items-center justify-center">
               <AnimatePresence mode="wait">
-                <motion.pre
+                <m.pre
                   key={activeIndex}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -208,7 +208,7 @@ export default function HowItWorksSection() {
                   className="font-['IBM_Plex_Mono',monospace] text-xs md:text-sm text-[#9CA3AF] leading-relaxed whitespace-pre select-none"
                 >
                   {current.ascii}
-                </motion.pre>
+                </m.pre>
               </AnimatePresence>
             </div>
           </div>

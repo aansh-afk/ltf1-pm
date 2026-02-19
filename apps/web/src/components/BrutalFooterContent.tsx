@@ -1,4 +1,4 @@
-import { motion, useTransform, MotionValue } from 'framer-motion'
+import { m, useTransform, useMotionValue, MotionValue } from 'framer-motion'
 import { HiOutlineTerminal, HiOutlineCode, HiOutlineLightningBolt } from 'react-icons/hi'
 import { Link } from 'react-router-dom'
 
@@ -7,10 +7,14 @@ interface BrutalFooterContentProps {
 }
 
 export function BrutalFooterContent({ revealProgress }: BrutalFooterContentProps) {
+  // Fallback motion value for when revealProgress is not provided (always 1 = fully visible)
+  const staticProgress = useMotionValue(1)
+  const progress = revealProgress ?? staticProgress
+
   // Create staggered reveal animations
-  const contentOpacity = revealProgress ? useTransform(revealProgress, [0.3, 0.6], [0, 1]) : 1
-  const glitchOpacity = revealProgress ? useTransform(revealProgress, [0.6, 0.8], [0, 1]) : 1
-  const finalOpacity = revealProgress ? useTransform(revealProgress, [0.8, 1], [0, 1]) : 1
+  const contentOpacity = useTransform(progress, [0.3, 0.6], [0, 1])
+  const glitchOpacity = useTransform(progress, [0.6, 0.8], [0, 1])
+  const finalOpacity = useTransform(progress, [0.8, 1], [0, 1])
 
   return (
     <footer className="relative h-full flex flex-col justify-between bg-event-horizon overflow-hidden">
@@ -35,12 +39,12 @@ export function BrutalFooterContent({ revealProgress }: BrutalFooterContentProps
 
       {/* Main Content */}
       <div className="relative z-10 flex-1 flex items-center justify-center p-[24px]">
-        <motion.div 
+        <m.div 
           className="max-w-6xl w-full"
           style={{ opacity: contentOpacity }}
         >
           {/* Glitch Title */}
-          <motion.div 
+          <m.div 
             className="text-center mb-[32px]"
             style={{ opacity: glitchOpacity }}
           >
@@ -48,10 +52,10 @@ export function BrutalFooterContent({ revealProgress }: BrutalFooterContentProps
               <span className="inline-block animate-glitch glitch-text">END OF LINE</span>
             </h2>
             <div className="brutal-divider max-w-xs mx-auto bg-glitch-flare h-4px"></div>
-          </motion.div>
+          </m.div>
 
           {/* Terminal Interface */}
-          <motion.div 
+          <m.div 
             className="brutal-card p-[20px] mb-[24px] max-w-4xl mx-auto"
             style={{ 
               opacity: finalOpacity,
@@ -70,14 +74,14 @@ export function BrutalFooterContent({ revealProgress }: BrutalFooterContentProps
               <span className="text-[#FFFF00]">&gt;</span> PRODUCTIVITY LEVEL: <span className="text-[#00FF00]">MAXIMUM</span><br />
               <span className="text-[#FF00FF]">_</span> <span className="animate-pulse">READY FOR TRANSFORMATION...</span>
             </pre>
-          </motion.div>
+          </m.div>
 
           {/* CTA Grid */}
-          <motion.div 
+          <m.div 
             className="grid md:grid-cols-3 gap-[16px] mb-[32px]"
             style={{ opacity: finalOpacity }}
           >
-            <motion.div 
+            <m.div 
               className="brutal-card p-[20px] text-center brutal-hover group"
               whileHover={{ scale: 1.02 }}
             >
@@ -86,9 +90,9 @@ export function BrutalFooterContent({ revealProgress }: BrutalFooterContentProps
               <Link to="/sign-up" className="brutal-btn w-full bg-glitch-flare text-event-horizon">
                 INITIALIZE PROJECT
               </Link>
-            </motion.div>
+            </m.div>
 
-            <motion.div 
+            <m.div 
               className="brutal-card p-[20px] text-center brutal-hover group"
               whileHover={{ scale: 1.02 }}
             >
@@ -97,9 +101,9 @@ export function BrutalFooterContent({ revealProgress }: BrutalFooterContentProps
               <Link to="/demo" className="brutal-btn w-full">
                 EXECUTE DEMO
               </Link>
-            </motion.div>
+            </m.div>
 
-            <motion.div 
+            <m.div 
               className="brutal-card p-[20px] text-center brutal-hover group"
               whileHover={{ scale: 1.02 }}
             >
@@ -108,11 +112,11 @@ export function BrutalFooterContent({ revealProgress }: BrutalFooterContentProps
               <a href="/docs" className="brutal-btn w-full">
                 ACCESS DOCUMENTATION
               </a>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
 
           {/* Final Message */}
-          <motion.div 
+          <m.div 
             className="text-center"
             style={{ opacity: finalOpacity }}
           >
@@ -122,12 +126,12 @@ export function BrutalFooterContent({ revealProgress }: BrutalFooterContentProps
             <p className="text-brutal-sm text-cathode-white/60">
               DEVELOPED WITH BRUTALIST PRINCIPLES. NO COMPROMISES.
             </p>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </div>
 
       {/* Bottom Bar */}
-      <motion.div 
+      <m.div 
         className="bg-carbon-plate border-t-4 border-basalt-border p-[20px]"
         style={{ opacity: finalOpacity }}
       >
@@ -143,52 +147,52 @@ export function BrutalFooterContent({ revealProgress }: BrutalFooterContentProps
             <div>
               <h4 className="text-[14px] font-semibold mb-[8px] text-[#00FFFF]">PRODUCT</h4>
               <div className="space-y-8px">
-                <a className="block text-brutal-sm hover:text-[#00FFFF] transition-colors cursor-pointer">FEATURES</a>
-                <a className="block text-brutal-sm hover:text-[#00FFFF] transition-colors cursor-pointer">PRICING</a>
-                <a className="block text-brutal-sm hover:text-[#00FFFF] transition-colors cursor-pointer">INTEGRATIONS</a>
-                <a className="block text-brutal-sm hover:text-[#00FFFF] transition-colors cursor-pointer">CHANGELOG</a>
+                <Link to="/features" className="block text-brutal-sm hover:text-[#00FFFF] transition-colors">FEATURES</Link>
+                <Link to="/pricing" className="block text-brutal-sm hover:text-[#00FFFF] transition-colors">PRICING</Link>
+                <Link to="/integrations" className="block text-brutal-sm hover:text-[#00FFFF] transition-colors">INTEGRATIONS</Link>
+                <Link to="/changelog" className="block text-brutal-sm hover:text-[#00FFFF] transition-colors">CHANGELOG</Link>
               </div>
             </div>
-            
+
             <div>
               <h4 className="text-[14px] font-semibold mb-[8px] text-[#FF00FF]">RESOURCES</h4>
               <div className="space-y-8px">
-                <a className="block text-brutal-sm hover:text-[#FF00FF] transition-colors cursor-pointer">DOCUMENTATION</a>
-                <a className="block text-brutal-sm hover:text-[#FF00FF] transition-colors cursor-pointer">API REFERENCE</a>
-                <a className="block text-brutal-sm hover:text-[#FF00FF] transition-colors cursor-pointer">COMMUNITY</a>
-                <a className="block text-brutal-sm hover:text-[#FF00FF] transition-colors cursor-pointer">STATUS</a>
+                <Link to="/docs" className="block text-brutal-sm hover:text-[#FF00FF] transition-colors">DOCUMENTATION</Link>
+                <Link to="/docs/api" className="block text-brutal-sm hover:text-[#FF00FF] transition-colors">API REFERENCE</Link>
+                <Link to="/community" className="block text-brutal-sm hover:text-[#FF00FF] transition-colors">COMMUNITY</Link>
+                <Link to="/status" className="block text-brutal-sm hover:text-[#FF00FF] transition-colors">STATUS</Link>
               </div>
             </div>
-            
+
             <div>
               <h4 className="text-[14px] font-semibold mb-[8px] text-[#FFFF00]">COMPANY</h4>
               <div className="space-y-8px">
-                <a className="block text-brutal-sm hover:text-[#FFFF00] transition-colors cursor-pointer">ABOUT</a>
-                <a className="block text-brutal-sm hover:text-[#FFFF00] transition-colors cursor-pointer">BLOG</a>
-                <a className="block text-brutal-sm hover:text-[#FFFF00] transition-colors cursor-pointer">CAREERS</a>
-                <a className="block text-brutal-sm hover:text-[#FFFF00] transition-colors cursor-pointer">CONTACT</a>
+                <Link to="/about" className="block text-brutal-sm hover:text-[#FFFF00] transition-colors">ABOUT</Link>
+                <Link to="/blog" className="block text-brutal-sm hover:text-[#FFFF00] transition-colors">BLOG</Link>
+                <Link to="/careers" className="block text-brutal-sm hover:text-[#FFFF00] transition-colors">CAREERS</Link>
+                <Link to="/contact" className="block text-brutal-sm hover:text-[#FFFF00] transition-colors">CONTACT</Link>
               </div>
             </div>
           </div>
-          
+
           <div className="brutal-divider bg-glitch-flare h-2px"></div>
-          
+
           <div className="flex flex-col md:flex-row justify-between items-center mt-[12px]">
             <p className="text-brutal-xs mb-[8px] md:mb-0">
               &copy; 2024 LTF1. ALL RIGHTS RESERVED. BUILT WITH PURE BRUTALISM.
             </p>
             <div className="flex gap-[12px]">
-              <a className="text-brutal-xs hover:text-[#00FFFF] transition-colors cursor-pointer">TERMS</a>
-              <a className="text-brutal-xs hover:text-[#FF00FF] transition-colors cursor-pointer">PRIVACY</a>
-              <a className="text-brutal-xs hover:text-[#FFFF00] transition-colors cursor-pointer">SECURITY</a>
+              <Link to="/terms" className="text-brutal-xs hover:text-[#00FFFF] transition-colors">TERMS</Link>
+              <Link to="/privacy" className="text-brutal-xs hover:text-[#FF00FF] transition-colors">PRIVACY</Link>
+              <Link to="/security" className="text-brutal-xs hover:text-[#FFFF00] transition-colors">SECURITY</Link>
             </div>
           </div>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Glitch Effects Overlay */}
       <div className="absolute inset-0 pointer-events-none">
-        <motion.div 
+        <m.div 
           className="absolute inset-0"
           style={{ 
             opacity: glitchOpacity,

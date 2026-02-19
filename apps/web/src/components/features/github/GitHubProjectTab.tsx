@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '../../../../../../convex/_generated/api';
 import type { Id } from '../../../../../../convex/_generated/dataModel';
 import { FaGithub, FaArrowRight, FaCodeBranch, FaChevronDown, FaChevronRight } from 'react-icons/fa';
 import { HiOutlineExternalLink, HiOutlineTerminal } from 'react-icons/hi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import BrutalButton from '@/components/ui/BrutalButton';
 import { toast } from 'react-hot-toast';
 import ConnectRepositoryModal from './ConnectRepositoryModal';
@@ -49,9 +49,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
   });
 
   // Compute open PRs count for stats
-  const openPRsCount = useMemo(() => {
-    return cc.filteredItems.filter(i => i.type === 'pr' && i.state === 'open').length;
-  }, [cc.filteredItems]);
+  const openPRsCount = cc.filteredItems.filter(i => i.type === 'pr' && i.state === 'open').length;
 
   // --- No repo connected state ---
   if (!project?.repository) {
@@ -115,19 +113,21 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
         <div className="flex items-center gap-[6px] min-w-0">
           <FaGithub className="text-[var(--theme-foreground)] shrink-0" />
           <div className="flex items-center gap-[2px] text-brutal-sm font-bold truncate">
-            <span
+            <button
+              type="button"
               className="text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] transition-colors cursor-pointer"
               onClick={() => window.open(`https://github.com/${repository.owner}`, '_blank')}
             >
               {repository.owner}
-            </span>
+            </button>
             <span className="text-[var(--theme-foreground)]/40">/</span>
-            <span
+            <button
+              type="button"
               className="text-[var(--theme-foreground)] hover:underline cursor-pointer"
               onClick={() => window.open(repository.url, '_blank')}
             >
               {repository.name}
-            </span>
+            </button>
           </div>
           <span className="px-[6px] py-[1px] text-[10px] font-bold bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 rounded-full uppercase shrink-0">
             Connected
@@ -168,7 +168,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
       {/* Collapsible About section */}
       <AnimatePresence>
         {showAbout && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -192,7 +192,7 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
                 )}
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -222,8 +222,8 @@ export function GitHubProjectTab({ project, workspaceId }: GitHubProjectTabProps
       {/* Unified feed */}
       {cc.isLoading ? (
         <div className="space-y-[6px]">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-[48px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] animate-pulse" />
+          {[1, 2, 3].map(n => (
+            <div key={`skeleton-${n}`} className="h-[48px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] animate-pulse" />
           ))}
         </div>
       ) : cc.filteredItems.length === 0 ? (

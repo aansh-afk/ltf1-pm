@@ -48,39 +48,279 @@ interface InsightsData {
   aiGenerated: boolean
 }
 
+// ── Sub-components ──
+
+interface SprintHealthCardProps {
+  insights: InsightsData
+  getHealthIcon: (prediction: string) => React.ReactNode
+  getHealthColor: (prediction: string) => string
+}
+
+function SprintHealthCard({ insights, getHealthIcon, getHealthColor }: SprintHealthCardProps) {
+  return (
+    <div className="border-2 p-[10px]" style={{ borderColor: getHealthColor(insights.sprintHealth.prediction) }}>
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-[6px] mb-[4px]">
+            {getHealthIcon(insights.sprintHealth.prediction)}
+            <h3 className="text-base font-bold font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]">Sprint Health Score</h3>
+          </div>
+          <div className="text-[20px] font-bold mb-[2px]" style={{ color: getHealthColor(insights.sprintHealth.prediction) }}>
+            {insights.sprintHealth.score}%
+          </div>
+          <div className="text-sm text-[#9CA3AF]">
+            Status: {insights.sprintHealth.prediction.toUpperCase().replace('-', ' ')}
+          </div>
+          {insights.sprintHealth.confidence && (
+            <div className="text-xs text-[#6B7280] mt-4px">
+              Confidence: {(insights.sprintHealth.confidence * 100).toFixed(0)}%
+            </div>
+          )}
+        </div>
+
+        {/* Metrics Summary */}
+        <div className="grid grid-cols-2 gap-[8px]">
+          <div>
+            <div className="text-xs text-[#9CA3AF] font-['IBM_Plex_Mono',monospace]">Completed</div>
+            <div className="text-[14px] font-semibold font-bold text-[#F9FAFB]">{insights.metrics.completedTasks}</div>
+          </div>
+          <div>
+            <div className="text-xs text-[#9CA3AF] font-['IBM_Plex_Mono',monospace]">In Progress</div>
+            <div className="text-[14px] font-semibold font-bold text-[#F9FAFB]">{insights.metrics.inProgressTasks}</div>
+          </div>
+          <div>
+            <div className="text-xs text-[#9CA3AF] font-['IBM_Plex_Mono',monospace]">Blocked</div>
+            <div className="text-[14px] font-semibold font-bold text-[#EF4444]">{insights.metrics.blockedTasks}</div>
+          </div>
+          <div>
+            <div className="text-xs text-[#9CA3AF] font-['IBM_Plex_Mono',monospace]">Velocity</div>
+            <div className="text-[14px] font-semibold font-bold text-[#F9FAFB]">{insights.metrics.currentVelocity}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface RisksSectionProps {
+  risks: InsightsData['risks']
+  getSeverityColor: (severity: string) => string
+}
+
+interface CompactInsightsViewProps {
+  insights: InsightsData
+  loading: boolean
+  fetchInsights: () => void
+  getHealthIcon: (prediction: string) => React.ReactNode
+  getHealthColor: (prediction: string) => string
+}
+
+function CompactInsightsView({ insights, loading, fetchInsights, getHealthIcon, getHealthColor }: CompactInsightsViewProps) {
+  return (
+    <div className="bg-[#111111] border-2 border-[#2E2E35] p-3">
+      <div className="flex items-center justify-between mb-[6px]">
+        <div className="flex items-center gap-[4px]">
+          <HiOutlineSparkles className="w-16px h-16px text-[#6366F1]" />
+          <h3 className="text-sm font-bold uppercase font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]">AI Insights</h3>
+          {insights.aiGenerated && (
+            <span className="text-xs text-[#6B7280]">
+              (AI-Powered)
+            </span>
+          )}
+        </div>
+        <button
+          onClick={fetchInsights}
+          className="p-4px hover:bg-[#0A0A0A] transition-colors"
+          title="Refresh insights"
+          disabled={loading}
+        >
+          <HiOutlineRefresh className={`w-14px h-14px text-[#9CA3AF] ${loading ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-[6px]">
+        <div className="flex items-center gap-[4px]">
+          {getHealthIcon(insights.sprintHealth.prediction)}
+          <div>
+            <div className="text-sm font-bold" style={{ color: getHealthColor(insights.sprintHealth.prediction) }}>
+              Sprint Health: {insights.sprintHealth.score}%
+            </div>
+            <div className="text-xs text-[#9CA3AF]">
+              {insights.sprintHealth.prediction.replace('-', ' ')}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-[4px]">
+          {insights.metrics.currentVelocity > insights.metrics.avgVelocity ? (
+            <HiOutlineTrendingUp className="w-20px h-20px text-[#22C55E]" />
+          ) : (
+            <HiOutlineTrendingDown className="w-20px h-20px text-[#F59E0B]" />
+          )}
+          <div>
+            <div className="text-sm font-bold text-[#F9FAFB]">
+              {insights.metrics.completionRate.toFixed(0)}% Complete
+            </div>
+            <div className="text-xs text-[#9CA3AF]">
+              {insights.metrics.completedTasks}/{insights.metrics.totalTasks} tasks
+            </div>
+          </div>
+        </div>
+
+        {(insights.risks.length > 0 || insights.sprintHealth.suggestions.length > 0) && (
+          <div className="flex items-center gap-[4px]">
+            <HiOutlineLightBulb className="w-20px h-20px text-[#06B6D4]" />
+            <div className="text-xs text-[#9CA3AF]">
+              {insights.risks.length > 0
+                ? insights.risks[0].message
+                : insights.sprintHealth.suggestions[0]
+              }
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+interface SuggestionsSectionProps {
+  suggestions: string[]
+}
+
+function SuggestionsSection({ suggestions }: SuggestionsSectionProps) {
+  if (suggestions.length === 0) return null
+  return (
+    <div>
+      <h3 className="text-sm font-bold uppercase mb-[6px] flex items-center gap-[4px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]">
+        <HiOutlineLightBulb className="w-16px h-16px text-[#06B6D4]" />
+        AI Suggestions
+      </h3>
+      <div className="space-y-[4px]">
+        {suggestions.map((suggestion) => (
+          <div key={suggestion} className="flex items-start gap-[4px] p-[4px] bg-[#06B6D4]/10 border border-[#06B6D4]">
+            <span className="text-xs">💡</span>
+            <span className="text-sm text-[#F9FAFB]">{suggestion}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+interface TeamInsightsSectionProps {
+  teamInsights: NonNullable<InsightsData['teamInsights']>
+}
+
+function TeamInsightsSection({ teamInsights }: TeamInsightsSectionProps) {
+  return (
+    <div>
+      <h3 className="text-sm font-bold uppercase mb-[6px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]">Team Insights</h3>
+      <div className="space-y-[4px]">
+        <div className="flex items-center gap-[4px]">
+          <span className="text-sm text-[#9CA3AF]">Team Sentiment:</span>
+          <span
+            className="text-sm font-bold px-[4px] py-4px border font-['IBM_Plex_Mono',monospace]"
+            style={{
+              borderColor: teamInsights.sentiment === 'positive' ? '#22C55E' :
+                           teamInsights.sentiment === 'concerned' ? '#F59E0B' :
+                           '#06B6D4',
+              backgroundColor: (teamInsights.sentiment === 'positive' ? '#22C55E' :
+                               teamInsights.sentiment === 'concerned' ? '#F59E0B' :
+                               '#06B6D4') + '20'
+            }}
+          >
+            {teamInsights.sentiment.toUpperCase()}
+          </span>
+        </div>
+        {teamInsights.observations.map((observation) => (
+          <div key={observation} className="text-sm text-[#9CA3AF]">
+            • {observation}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function RisksSection({ risks, getSeverityColor }: RisksSectionProps) {
+  if (risks.length === 0) return null
+  return (
+    <div>
+      <h3 className="text-sm font-bold uppercase mb-[6px] flex items-center gap-[4px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]">
+        <HiOutlineExclamation className="w-16px h-16px text-[#F59E0B]" />
+        Identified Risks
+      </h3>
+      <div className="space-y-[4px]">
+        {risks.map((risk) => (
+          <div
+            key={risk.message}
+            className="flex items-start gap-[4px] p-[4px] border"
+            style={{
+              borderColor: getSeverityColor(risk.severity),
+              backgroundColor: getSeverityColor(risk.severity) + '10'
+            }}
+          >
+            <span className="text-xs font-bold font-['IBM_Plex_Mono',monospace]" style={{ color: getSeverityColor(risk.severity) }}>
+              {risk.severity.toUpperCase()}
+            </span>
+            <span className="text-sm text-[#F9FAFB]">{risk.message}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function AIInsightsPanel({ projectId, sprintId, compact = false }: AIInsightsPanelProps) {
-  const [insights, setInsights] = useState<InsightsData | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
-  
+  const [fetchState, setFetchState] = useState<{
+    insights: InsightsData | null
+    loading: boolean
+    error: string | null
+    lastRefresh: Date
+  }>({ insights: null, loading: false, error: null, lastRefresh: new Date() })
+
+  const { insights, loading, error, lastRefresh } = fetchState
+
   const generateInsights = useAction(api.ai.projectInsights.generateProjectInsights)
-  
+
   const fetchInsights = async () => {
-    setLoading(true)
-    setError(null)
+    setFetchState(prev => ({ ...prev, loading: true, error: null }))
     try {
       const data = await generateInsights({ projectId, sprintId })
-      setInsights(data as InsightsData)
-      setLastRefresh(new Date())
+      setFetchState(prev => ({ ...prev, insights: data as InsightsData, lastRefresh: new Date(), loading: false }))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate insights')
+      setFetchState(prev => ({ ...prev, error: err instanceof Error ? err.message : 'Failed to generate insights', loading: false }))
       console.error('Failed to generate insights:', err)
-    } finally {
-      setLoading(false)
     }
   }
-  
+
+  // Already uses combined state object pattern; setFetchState calls are in different async contexts
   useEffect(() => {
-    fetchInsights()
-  }, [projectId, sprintId])
-  
+    let cancelled = false
+    const load = async () => {
+      setFetchState(prev => ({ ...prev, loading: true, error: null }))
+      try {
+        const data = await generateInsights({ projectId, sprintId })
+        if (!cancelled) {
+          setFetchState(prev => ({ ...prev, insights: data as InsightsData, lastRefresh: new Date(), loading: false }))
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setFetchState(prev => ({ ...prev, error: err instanceof Error ? err.message : 'Failed to generate insights', loading: false }))
+          console.error('Failed to generate insights:', err)
+        }
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [projectId, sprintId, generateInsights])
+
   // Auto-refresh every 5 minutes
   useEffect(() => {
     const interval = setInterval(() => {
       fetchInsights()
     }, 5 * 60 * 1000)
-    
+
     return () => clearInterval(interval)
   }, [projectId, sprintId])
   
@@ -157,74 +397,14 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
   if (!insights) return null
   
   if (compact) {
-    // Compact view for overview tab
     return (
-      <div className="bg-[#111111] border-2 border-[#2E2E35] p-3">
-        <div className="flex items-center justify-between mb-[6px]">
-          <div className="flex items-center gap-[4px]">
-            <HiOutlineSparkles className="w-16px h-16px text-[#6366F1]" />
-            <h3 className="text-sm font-bold uppercase font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]">AI Insights</h3>
-            {insights.aiGenerated && (
-              <span className="text-xs text-[#6B7280]">
-                (AI-Powered)
-              </span>
-            )}
-          </div>
-          <button
-            onClick={fetchInsights}
-            className="p-4px hover:bg-[#0A0A0A] transition-colors"
-            title="Refresh insights"
-            disabled={loading}
-          >
-            <HiOutlineRefresh className={`w-14px h-14px text-[#9CA3AF] ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-[6px]">
-          {/* Sprint Health */}
-          <div className="flex items-center gap-[4px]">
-            {getHealthIcon(insights.sprintHealth.prediction)}
-            <div>
-              <div className="text-sm font-bold" style={{ color: getHealthColor(insights.sprintHealth.prediction) }}>
-                Sprint Health: {insights.sprintHealth.score}%
-              </div>
-              <div className="text-xs text-[#9CA3AF]">
-                {insights.sprintHealth.prediction.replace('-', ' ')}
-              </div>
-            </div>
-          </div>
-          
-          {/* Key Metric */}
-          <div className="flex items-center gap-[4px]">
-            {insights.metrics.currentVelocity > insights.metrics.avgVelocity ? (
-              <HiOutlineTrendingUp className="w-20px h-20px text-[#22C55E]" />
-            ) : (
-              <HiOutlineTrendingDown className="w-20px h-20px text-[#F59E0B]" />
-            )}
-            <div>
-              <div className="text-sm font-bold text-[#F9FAFB]">
-                {insights.metrics.completionRate.toFixed(0)}% Complete
-              </div>
-              <div className="text-xs text-[#9CA3AF]">
-                {insights.metrics.completedTasks}/{insights.metrics.totalTasks} tasks
-              </div>
-            </div>
-          </div>
-          
-          {/* Top Risk or Suggestion */}
-          {(insights.risks.length > 0 || insights.sprintHealth.suggestions.length > 0) && (
-            <div className="flex items-center gap-[4px]">
-              <HiOutlineLightBulb className="w-20px h-20px text-[#06B6D4]" />
-              <div className="text-xs text-[#9CA3AF]">
-                {insights.risks.length > 0 
-                  ? insights.risks[0].message
-                  : insights.sprintHealth.suggestions[0]
-                }
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      <CompactInsightsView
+        insights={insights}
+        loading={loading}
+        fetchInsights={fetchInsights}
+        getHealthIcon={getHealthIcon}
+        getHealthColor={getHealthColor}
+      />
     )
   }
   
@@ -253,121 +433,17 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
       </div>
       
       {/* Sprint Health Score */}
-      <div className="border-2 p-[10px]" style={{ borderColor: getHealthColor(insights.sprintHealth.prediction) }}>
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-[6px] mb-[4px]">
-              {getHealthIcon(insights.sprintHealth.prediction)}
-              <h3 className="text-base font-bold font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]">Sprint Health Score</h3>
-            </div>
-            <div className="text-[20px] font-bold mb-[2px]" style={{ color: getHealthColor(insights.sprintHealth.prediction) }}>
-              {insights.sprintHealth.score}%
-            </div>
-            <div className="text-sm text-[#9CA3AF]">
-              Status: {insights.sprintHealth.prediction.toUpperCase().replace('-', ' ')}
-            </div>
-            {insights.sprintHealth.confidence && (
-              <div className="text-xs text-[#6B7280] mt-4px">
-                Confidence: {(insights.sprintHealth.confidence * 100).toFixed(0)}%
-              </div>
-            )}
-          </div>
-          
-          {/* Metrics Summary */}
-          <div className="grid grid-cols-2 gap-[8px]">
-            <div>
-              <div className="text-xs text-[#9CA3AF] font-['IBM_Plex_Mono',monospace]">Completed</div>
-              <div className="text-[14px] font-semibold font-bold text-[#F9FAFB]">{insights.metrics.completedTasks}</div>
-            </div>
-            <div>
-              <div className="text-xs text-[#9CA3AF] font-['IBM_Plex_Mono',monospace]">In Progress</div>
-              <div className="text-[14px] font-semibold font-bold text-[#F9FAFB]">{insights.metrics.inProgressTasks}</div>
-            </div>
-            <div>
-              <div className="text-xs text-[#9CA3AF] font-['IBM_Plex_Mono',monospace]">Blocked</div>
-              <div className="text-[14px] font-semibold font-bold text-[#EF4444]">{insights.metrics.blockedTasks}</div>
-            </div>
-            <div>
-              <div className="text-xs text-[#9CA3AF] font-['IBM_Plex_Mono',monospace]">Velocity</div>
-              <div className="text-[14px] font-semibold font-bold text-[#F9FAFB]">{insights.metrics.currentVelocity}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <SprintHealthCard insights={insights} getHealthIcon={getHealthIcon} getHealthColor={getHealthColor} />
       
       {/* Suggestions */}
-      {insights.sprintHealth.suggestions.length > 0 && (
-        <div>
-          <h3 className="text-sm font-bold uppercase mb-[6px] flex items-center gap-[4px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]">
-            <HiOutlineLightBulb className="w-16px h-16px text-[#06B6D4]" />
-            AI Suggestions
-          </h3>
-          <div className="space-y-[4px]">
-            {insights.sprintHealth.suggestions.map((suggestion, index) => (
-              <div key={index} className="flex items-start gap-[4px] p-[4px] bg-[#06B6D4]/10 border border-[#06B6D4]">
-                <span className="text-xs">💡</span>
-                <span className="text-sm text-[#F9FAFB]">{suggestion}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <SuggestionsSection suggestions={insights.sprintHealth.suggestions} />
       
       {/* Risks */}
-      {insights.risks.length > 0 && (
-        <div>
-          <h3 className="text-sm font-bold uppercase mb-[6px] flex items-center gap-[4px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]">
-            <HiOutlineExclamation className="w-16px h-16px text-[#F59E0B]" />
-            Identified Risks
-          </h3>
-          <div className="space-y-[4px]">
-            {insights.risks.map((risk, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-[4px] p-[4px] border"
-                style={{
-                  borderColor: getSeverityColor(risk.severity),
-                  backgroundColor: getSeverityColor(risk.severity) + '10'
-                }}
-              >
-                <span className="text-xs font-bold font-['IBM_Plex_Mono',monospace]" style={{ color: getSeverityColor(risk.severity) }}>
-                  {risk.severity.toUpperCase()}
-                </span>
-                <span className="text-sm text-[#F9FAFB]">{risk.message}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <RisksSection risks={insights.risks} getSeverityColor={getSeverityColor} />
       
       {/* Team Insights */}
       {insights.teamInsights && (
-        <div>
-          <h3 className="text-sm font-bold uppercase mb-[6px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]">Team Insights</h3>
-          <div className="space-y-[4px]">
-            <div className="flex items-center gap-[4px]">
-              <span className="text-sm text-[#9CA3AF]">Team Sentiment:</span>
-              <span
-                className="text-sm font-bold px-[4px] py-4px border font-['IBM_Plex_Mono',monospace]"
-                style={{
-                  borderColor: insights.teamInsights.sentiment === 'positive' ? '#22C55E' :
-                               insights.teamInsights.sentiment === 'concerned' ? '#F59E0B' :
-                               '#06B6D4',
-                  backgroundColor: (insights.teamInsights.sentiment === 'positive' ? '#22C55E' :
-                                   insights.teamInsights.sentiment === 'concerned' ? '#F59E0B' :
-                                   '#06B6D4') + '20'
-                }}
-              >
-                {insights.teamInsights.sentiment.toUpperCase()}
-              </span>
-            </div>
-            {insights.teamInsights.observations.map((observation, index) => (
-              <div key={index} className="text-sm text-[#9CA3AF]">
-                • {observation}
-              </div>
-            ))}
-          </div>
-        </div>
+        <TeamInsightsSection teamInsights={insights.teamInsights} />
       )}
       
       {/* Recommendations */}
@@ -375,9 +451,9 @@ export default function AIInsightsPanel({ projectId, sprintId, compact = false }
         <div>
           <h3 className="text-sm font-bold uppercase mb-[6px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]">Recommendations</h3>
           <div className="space-y-[4px]">
-            {insights.recommendations.map((rec, index) => (
-              <div key={index} className="flex items-start gap-[4px]">
-                <span className="text-sm text-[#6366F1]">{index + 1}.</span>
+            {insights.recommendations.map((rec, recIndex) => (
+              <div key={rec} className="flex items-start gap-[4px]">
+                <span className="text-sm text-[#6366F1]">{recIndex + 1}.</span>
                 <span className="text-sm text-[#F9FAFB]">{rec}</span>
               </div>
             ))}

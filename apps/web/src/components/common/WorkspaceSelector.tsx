@@ -84,9 +84,9 @@ export default function WorkspaceSelector({
   return (
     <div className={clsx('relative', className)} ref={dropdownRef}>
       {showLabel && (
-        <label className="block text-brutal-xs mb-[4px] text-cathode-white/60">
+        <span className="block text-brutal-xs mb-[4px] text-cathode-white/60">
           ACTIVE WORKSPACE
-        </label>
+        </span>
       )}
       
       <div className="relative">

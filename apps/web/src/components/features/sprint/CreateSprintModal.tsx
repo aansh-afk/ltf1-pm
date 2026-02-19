@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useReducer } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
@@ -12,17 +12,45 @@ interface CreateSprintModalProps {
   onSuccess?: () => void
 }
 
+type CreateSprintState = {
+  name: string
+  goal: string
+  startDate: string
+  endDate: string
+  isCreating: boolean
+}
+
+const createSprintInitialState: CreateSprintState = {
+  name: '',
+  goal: '',
+  startDate: '',
+  endDate: '',
+  isCreating: false,
+}
+
+type CreateSprintAction =
+  | { type: 'UPDATE'; field: keyof CreateSprintState; value: CreateSprintState[keyof CreateSprintState] }
+  | { type: 'RESET' }
+
+function createSprintReducer(state: CreateSprintState, action: CreateSprintAction): CreateSprintState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    case 'RESET':
+      return createSprintInitialState
+    default:
+      return state
+  }
+}
+
 export default function CreateSprintModal({
   isOpen,
   onClose,
   projectId,
   onSuccess
 }: CreateSprintModalProps) {
-  const [name, setName] = useState('')
-  const [goal, setGoal] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [isCreating, setIsCreating] = useState(false)
+  const [state, dispatch] = useReducer(createSprintReducer, createSprintInitialState)
+  const { name, goal, startDate, endDate, isCreating } = state
 
   const createSprint = useMutation(api.sprints.mutations.createSprint)
 
@@ -47,7 +75,7 @@ export default function CreateSprintModal({
       return
     }
 
-    setIsCreating(true)
+    dispatch({ type: 'UPDATE', field: 'isCreating', value: true })
 
     try {
       await createSprint({
@@ -67,15 +95,12 @@ export default function CreateSprintModal({
       onClose()
 
       // Reset form
-      setName('')
-      setGoal('')
-      setStartDate('')
-      setEndDate('')
+      dispatch({ type: 'RESET' })
     } catch (error: any) {
       posthog.capture('sprint_creation_failed', { error: error.message })
       toast.error(error.message || 'Failed to create sprint')
     } finally {
-      setIsCreating(false)
+      dispatch({ type: 'UPDATE', field: 'isCreating', value: false })
     }
   }
 
@@ -88,13 +113,14 @@ export default function CreateSprintModal({
       <form onSubmit={handleSubmit} className="space-y-3">
         {/* Sprint Name */}
         <div>
-          <label className="block font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
+          <label htmlFor="create-sprint-name" className="block font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
             SPRINT NAME
           </label>
           <input
+            id="create-sprint-name"
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => dispatch({ type: 'UPDATE', field: 'name', value: e.target.value })}
             placeholder="SPRINT 1"
             className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] rounded-lg font-['IBM_Plex_Mono',monospace] text-xs text-[#F9FAFB] uppercase placeholder:text-[#6B7280] focus:border-[#6366F1] focus:outline-none transition-colors"
             required
@@ -103,12 +129,13 @@ export default function CreateSprintModal({
 
         {/* Sprint Goal */}
         <div>
-          <label className="block font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
+          <label htmlFor="create-sprint-goal" className="block font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
             SPRINT GOAL
           </label>
           <textarea
+            id="create-sprint-goal"
             value={goal}
-            onChange={(e) => setGoal(e.target.value)}
+            onChange={(e) => dispatch({ type: 'UPDATE', field: 'goal', value: e.target.value })}
             placeholder="DELIVER USER AUTHENTICATION AND DASHBOARD..."
             rows={3}
             className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] rounded-lg font-['IBM_Plex_Mono',monospace] text-xs text-[#F9FAFB] uppercase placeholder:text-[#6B7280] focus:border-[#6366F1] focus:outline-none transition-colors resize-none"
@@ -118,25 +145,27 @@ export default function CreateSprintModal({
         {/* Date Range */}
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
+            <label htmlFor="create-sprint-start-date" className="block font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
               START DATE
             </label>
             <input
+              id="create-sprint-start-date"
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => dispatch({ type: 'UPDATE', field: 'startDate', value: e.target.value })}
               className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] rounded-lg font-['IBM_Plex_Mono',monospace] text-xs text-[#F9FAFB] focus:border-[#6366F1] focus:outline-none transition-colors"
               required
             />
           </div>
           <div>
-            <label className="block font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
+            <label htmlFor="create-sprint-end-date" className="block font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
               END DATE
             </label>
             <input
+              id="create-sprint-end-date"
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => dispatch({ type: 'UPDATE', field: 'endDate', value: e.target.value })}
               className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] rounded-lg font-['IBM_Plex_Mono',monospace] text-xs text-[#F9FAFB] focus:border-[#6366F1] focus:outline-none transition-colors"
               required
             />

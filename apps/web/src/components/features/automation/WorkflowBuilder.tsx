@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useReducer } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
@@ -86,19 +86,192 @@ const ACTION_TYPES = [
   { value: 'webhook', label: 'Call Webhook' },
 ]
 
+type WorkflowBuilderState = {
+  viewMode: 'list' | 'flow'
+  showCreateModal: boolean
+  editingWorkflow: any
+  selectedWorkflowForFlow: any
+  selectedTriggerType: string
+  workflowName: string
+  workflowDescription: string
+  selectedEvent: string
+  scheduleConfig: string
+  webhookUrl: string
+  actions: any[]
+  conditions: any[]
+}
+
+const workflowBuilderInitialState: WorkflowBuilderState = {
+  viewMode: 'list',
+  showCreateModal: false,
+  editingWorkflow: null,
+  selectedWorkflowForFlow: null,
+  selectedTriggerType: 'event',
+  workflowName: '',
+  workflowDescription: '',
+  selectedEvent: '',
+  scheduleConfig: '',
+  webhookUrl: '',
+  actions: [],
+  conditions: [],
+}
+
+type WorkflowBuilderAction =
+  | { type: 'UPDATE'; field: keyof WorkflowBuilderState; value: unknown }
+  | { type: 'RESET_FORM' }
+
+function workflowBuilderReducer(state: WorkflowBuilderState, action: WorkflowBuilderAction): WorkflowBuilderState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    case 'RESET_FORM':
+      return {
+        ...state,
+        workflowName: '',
+        workflowDescription: '',
+        selectedTriggerType: 'event',
+        selectedEvent: '',
+        scheduleConfig: '',
+        webhookUrl: '',
+        actions: [],
+        conditions: [],
+        editingWorkflow: null,
+      }
+    default:
+      return state
+  }
+}
+
+// --- Sub-components ---
+
+interface WorkflowListItemCardProps {
+  workflow: {
+    _id: Id<"workflows">
+    name: string
+    description?: string
+    enabled: boolean
+    trigger: { type: string; event?: string }
+    actions: any[]
+    conditions: any[]
+    runCount?: number
+    lastRunAt?: number
+  }
+  onRun: (workflowId: Id<"workflows">) => void
+  onToggle: (workflowId: Id<"workflows">, enabled: boolean) => void
+  onViewFlow: (workflow: any) => void
+  onEdit: (workflow: any) => void
+  onDelete: (workflowId: Id<"workflows">) => void
+}
+
+function WorkflowListItemCard({ workflow, onRun, onToggle, onViewFlow, onEdit, onDelete }: WorkflowListItemCardProps) {
+  const TriggerIcon = TRIGGER_TYPES[workflow.trigger.type.toUpperCase() as keyof typeof TRIGGER_TYPES]?.icon || HiOutlineLightningBolt
+
+  return (
+    <BrutalCard key={workflow._id} className="p-[16px]">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-[6px] mb-[8px]">
+            <TriggerIcon className="w-5 h-5 text-[var(--theme-primary)]" />
+            <h3 className="text-[14px] font-semibold font-bold">{workflow.name}</h3>
+            <span className={clsx(
+              "px-8px py-2px text-xs font-bold uppercase",
+              workflow.enabled
+                ? "bg-brutal-success text-event-horizon"
+                : "bg-[var(--theme-muted)] text-[var(--theme-background)]"
+            )}>
+              {workflow.enabled ? 'ACTIVE' : 'PAUSED'}
+            </span>
+          </div>
+
+          {workflow.description && (
+            <p className="text-sm text-[var(--theme-muted)] mb-[6px]">
+              {workflow.description}
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-[8px] mb-[6px]">
+            <span className="px-8px py-4px bg-[var(--theme-background-secondary)] text-xs font-mono">
+              TRIGGER: {workflow.trigger.type.toUpperCase()}
+            </span>
+            {workflow.trigger.event && (
+              <span className="px-8px py-4px bg-[var(--theme-background-secondary)] text-xs font-mono">
+                EVENT: {workflow.trigger.event}
+              </span>
+            )}
+            <span className="px-8px py-4px bg-[var(--theme-background-secondary)] text-xs font-mono">
+              {workflow.actions.length} ACTIONS
+            </span>
+            {workflow.conditions.length > 0 && (
+              <span className="px-8px py-4px bg-[var(--theme-background-secondary)] text-xs font-mono">
+                {workflow.conditions.length} CONDITIONS
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-[8px] text-xs text-[var(--theme-muted)]">
+            <span>RUNS: {workflow.runCount || 0}</span>
+            <span>•</span>
+            <span>LAST RUN: {workflow.lastRunAt ? new Date(workflow.lastRunAt).toLocaleString() : 'Never'}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-[8px]">
+          {workflow.trigger.type === 'manual' && (
+            <BrutalButton
+              onClick={() => onRun(workflow._id)}
+              variant="secondary"
+              size="sm"
+              icon={<HiOutlinePlay className="w-4 h-4" />}
+            >
+              RUN
+            </BrutalButton>
+          )}
+
+          <BrutalButton
+            onClick={() => onToggle(workflow._id, !workflow.enabled)}
+            variant="secondary"
+            size="sm"
+            icon={workflow.enabled ?
+              <HiOutlinePause className="w-4 h-4" /> :
+              <HiOutlinePlay className="w-4 h-4" />
+            }
+          >
+            {workflow.enabled ? 'PAUSE' : 'ENABLE'}
+          </BrutalButton>
+
+          <BrutalButton
+            onClick={() => onViewFlow(workflow)}
+            variant="secondary"
+            size="sm"
+            title="View in flow canvas"
+          >
+            FLOW
+          </BrutalButton>
+
+          <BrutalButton
+            onClick={() => onEdit(workflow)}
+            variant="secondary"
+            size="sm"
+            icon={<HiOutlinePencil className="w-4 h-4" />}
+          />
+
+          <BrutalButton
+            onClick={() => onDelete(workflow._id)}
+            variant="secondary"
+            size="sm"
+            icon={<HiOutlineTrash className="w-4 h-4" />}
+          />
+        </div>
+      </div>
+    </BrutalCard>
+  )
+}
+
+// --- Main component ---
+
 export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuilderProps) {
-  const [viewMode, setViewMode] = useState<'list' | 'flow'>('list')
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [editingWorkflow, setEditingWorkflow] = useState<any>(null)
-  const [selectedWorkflowForFlow, setSelectedWorkflowForFlow] = useState<any>(null)
-  const [selectedTriggerType, setSelectedTriggerType] = useState('event')
-  const [workflowName, setWorkflowName] = useState('')
-  const [workflowDescription, setWorkflowDescription] = useState('')
-  const [selectedEvent, setSelectedEvent] = useState('')
-  const [scheduleConfig, setScheduleConfig] = useState('')
-  const [webhookUrl, setWebhookUrl] = useState('')
-  const [actions, setActions] = useState<any[]>([])
-  const [conditions, setConditions] = useState<any[]>([])
+  const [state, dispatch] = useReducer(workflowBuilderReducer, workflowBuilderInitialState)
+  const { viewMode, showCreateModal, editingWorkflow, selectedWorkflowForFlow, selectedTriggerType, workflowName, workflowDescription, selectedEvent, scheduleConfig, webhookUrl, actions, conditions } = state
 
   // Fetch workflows
   const workflows = useQuery(api.automation.getWorkflows, { 
@@ -143,7 +316,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
 
       toast.success('Workflow created successfully')
       resetForm()
-      setShowCreateModal(false)
+      dispatch({ type: 'UPDATE', field: 'showCreateModal', value: false })
     } catch (error) {
       toast.error('Failed to create workflow')
     }
@@ -179,44 +352,29 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
   }
 
   const addAction = () => {
-    setActions([...actions, { 
-      type: 'create_task', 
-      config: {} 
-    }])
+    dispatch({ type: 'UPDATE', field: 'actions', value: [...actions, { type: 'create_task', config: {} }] })
   }
 
   const removeAction = (index: number) => {
-    setActions(actions.filter((_, i) => i !== index))
+    dispatch({ type: 'UPDATE', field: 'actions', value: actions.filter((_: any, i: number) => i !== index) })
   }
 
   const updateAction = (index: number, action: any) => {
     const updatedActions = [...actions]
     updatedActions[index] = action
-    setActions(updatedActions)
+    dispatch({ type: 'UPDATE', field: 'actions', value: updatedActions })
   }
 
   const addCondition = () => {
-    setConditions([...conditions, { 
-      field: '', 
-      operator: 'equals', 
-      value: '' 
-    }])
+    dispatch({ type: 'UPDATE', field: 'conditions', value: [...conditions, { field: '', operator: 'equals', value: '' }] })
   }
 
   const removeCondition = (index: number) => {
-    setConditions(conditions.filter((_, i) => i !== index))
+    dispatch({ type: 'UPDATE', field: 'conditions', value: conditions.filter((_: any, i: number) => i !== index) })
   }
 
   const resetForm = () => {
-    setWorkflowName('')
-    setWorkflowDescription('')
-    setSelectedTriggerType('event')
-    setSelectedEvent('')
-    setScheduleConfig('')
-    setWebhookUrl('')
-    setActions([])
-    setConditions([])
-    setEditingWorkflow(null)
+    dispatch({ type: 'RESET_FORM' })
   }
 
   return (
@@ -228,7 +386,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
           {/* View Toggle */}
           <div className="flex border-2 border-[var(--theme-border)]">
             <button
-              onClick={() => setViewMode('list')}
+              onClick={() => dispatch({ type: 'UPDATE', field: 'viewMode', value: 'list' })}
               className={clsx(
                 "px-[10px] py-[8px] text-xs font-bold uppercase transition-all",
                 viewMode === 'list'
@@ -239,7 +397,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
               LIST VIEW
             </button>
             <button
-              onClick={() => setViewMode('flow')}
+              onClick={() => dispatch({ type: 'UPDATE', field: 'viewMode', value: 'flow' })}
               className={clsx(
                 "px-[10px] py-[8px] text-xs font-bold uppercase border-l-2 border-[var(--theme-border)] transition-all",
                 viewMode === 'flow'
@@ -252,7 +410,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
           </div>
 
           <BrutalButton
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => dispatch({ type: 'UPDATE', field: 'showCreateModal', value: true })}
             variant="primary"
             icon={<HiOutlinePlus className="w-5 h-5" />}
           >
@@ -272,122 +430,30 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
               Create automated workflows to streamline your processes
             </p>
             <BrutalButton
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => dispatch({ type: 'UPDATE', field: 'showCreateModal', value: true })}
               variant="primary"
             >
               CREATE FIRST WORKFLOW
             </BrutalButton>
           </BrutalCard>
         ) : (
-          workflows.map((workflow: any) => {
-            const TriggerIcon = TRIGGER_TYPES[workflow.trigger.type.toUpperCase() as keyof typeof TRIGGER_TYPES]?.icon || HiOutlineLightningBolt
-            
-            return (
-              <BrutalCard key={workflow._id} className="p-[16px]">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-[6px] mb-[8px]">
-                      <TriggerIcon className="w-5 h-5 text-[var(--theme-primary)]" />
-                      <h3 className="text-[14px] font-semibold font-bold">{workflow.name}</h3>
-                      <span className={clsx(
-                        "px-8px py-2px text-xs font-bold uppercase",
-                        workflow.enabled 
-                          ? "bg-brutal-success text-event-horizon" 
-                          : "bg-[var(--theme-muted)] text-[var(--theme-background)]"
-                      )}>
-                        {workflow.enabled ? 'ACTIVE' : 'PAUSED'}
-                      </span>
-                    </div>
-                    
-                    {workflow.description && (
-                      <p className="text-sm text-[var(--theme-muted)] mb-[6px]">
-                        {workflow.description}
-                      </p>
-                    )}
-
-                    <div className="flex flex-wrap gap-[8px] mb-[6px]">
-                      <span className="px-8px py-4px bg-[var(--theme-background-secondary)] text-xs font-mono">
-                        TRIGGER: {workflow.trigger.type.toUpperCase()}
-                      </span>
-                      {workflow.trigger.event && (
-                        <span className="px-8px py-4px bg-[var(--theme-background-secondary)] text-xs font-mono">
-                          EVENT: {workflow.trigger.event}
-                        </span>
-                      )}
-                      <span className="px-8px py-4px bg-[var(--theme-background-secondary)] text-xs font-mono">
-                        {workflow.actions.length} ACTIONS
-                      </span>
-                      {workflow.conditions.length > 0 && (
-                        <span className="px-8px py-4px bg-[var(--theme-background-secondary)] text-xs font-mono">
-                          {workflow.conditions.length} CONDITIONS
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-[8px] text-xs text-[var(--theme-muted)]">
-                      <span>RUNS: {workflow.runCount || 0}</span>
-                      <span>•</span>
-                      <span>LAST RUN: {workflow.lastRunAt ? new Date(workflow.lastRunAt).toLocaleString() : 'Never'}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-[8px]">
-                    {workflow.trigger.type === 'manual' && (
-                      <BrutalButton
-                        onClick={() => handleRunWorkflow(workflow._id)}
-                        variant="secondary"
-                        size="sm"
-                        icon={<HiOutlinePlay className="w-4 h-4" />}
-                      >
-                        RUN
-                      </BrutalButton>
-                    )}
-                    
-                    <BrutalButton
-                      onClick={() => handleToggleWorkflow(workflow._id, !workflow.enabled)}
-                      variant="secondary"
-                      size="sm"
-                      icon={workflow.enabled ? 
-                        <HiOutlinePause className="w-4 h-4" /> : 
-                        <HiOutlinePlay className="w-4 h-4" />
-                      }
-                    >
-                      {workflow.enabled ? 'PAUSE' : 'ENABLE'}
-                    </BrutalButton>
-
-                    <BrutalButton
-                      onClick={() => {
-                        setSelectedWorkflowForFlow(workflow)
-                        setViewMode('flow')
-                      }}
-                      variant="secondary"
-                      size="sm"
-                      title="View in flow canvas"
-                    >
-                      FLOW
-                    </BrutalButton>
-
-                    <BrutalButton
-                      onClick={() => {
-                        setEditingWorkflow(workflow)
-                        setShowCreateModal(true)
-                      }}
-                      variant="secondary"
-                      size="sm"
-                      icon={<HiOutlinePencil className="w-4 h-4" />}
-                    />
-
-                    <BrutalButton
-                      onClick={() => handleDeleteWorkflow(workflow._id)}
-                      variant="secondary"
-                      size="sm"
-                      icon={<HiOutlineTrash className="w-4 h-4" />}
-                    />
-                  </div>
-                </div>
-              </BrutalCard>
-            )
-          })
+          workflows.map((workflow: any) => (
+              <WorkflowListItemCard
+                key={workflow._id}
+                workflow={workflow}
+                onRun={handleRunWorkflow}
+                onToggle={handleToggleWorkflow}
+                onViewFlow={(wf) => {
+                  dispatch({ type: 'UPDATE', field: 'selectedWorkflowForFlow', value: wf })
+                  dispatch({ type: 'UPDATE', field: 'viewMode', value: 'flow' })
+                }}
+                onEdit={(wf) => {
+                  dispatch({ type: 'UPDATE', field: 'editingWorkflow', value: wf })
+                  dispatch({ type: 'UPDATE', field: 'showCreateModal', value: true })
+                }}
+                onDelete={handleDeleteWorkflow}
+              />
+          )))
         )}
         </div>
       )}
@@ -403,7 +469,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
                 Create a workflow first to see it visualized in the flow canvas
               </p>
               <BrutalButton
-                onClick={() => setShowCreateModal(true)}
+                onClick={() => dispatch({ type: 'UPDATE', field: 'showCreateModal', value: true })}
                 variant="primary"
               >
                 CREATE FIRST WORKFLOW
@@ -413,12 +479,13 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
             <>
               {/* Workflow Selector */}
               <div className="flex items-center gap-[6px]">
-                <label className="text-xs font-bold uppercase">SELECT WORKFLOW:</label>
+                <label htmlFor="workflow-select" className="text-xs font-bold uppercase">SELECT WORKFLOW:</label>
                 <select
+                  id="workflow-select"
                   value={selectedWorkflowForFlow?._id || ''}
                   onChange={(e) => {
                     const workflow = workflows.find((w: any) => w._id === e.target.value)
-                    setSelectedWorkflowForFlow(workflow)
+                    dispatch({ type: 'UPDATE', field: 'selectedWorkflowForFlow', value: workflow })
                   }}
                   className="px-12px py-[8px] border-2 border-[var(--theme-border)] bg-[var(--theme-background)] text-brutal-sm font-bold"
                 >
@@ -450,7 +517,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
       <BrutalModal
         isOpen={showCreateModal}
         onClose={() => {
-          setShowCreateModal(false)
+          dispatch({ type: 'UPDATE', field: 'showCreateModal', value: false })
           resetForm()
         }}
         title={editingWorkflow ? 'EDIT WORKFLOW' : 'CREATE WORKFLOW'}
@@ -462,26 +529,26 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
             <BrutalInput
               label="Workflow Name"
               value={workflowName}
-              onChange={(e) => setWorkflowName(e.target.value)}
+              onChange={(e) => dispatch({ type: 'UPDATE', field: 'workflowName', value: e.target.value })}
               placeholder="e.g., Auto-assign new tasks"
               required
             />
             <BrutalInput
               label="Description"
               value={workflowDescription}
-              onChange={(e) => setWorkflowDescription(e.target.value)}
+              onChange={(e) => dispatch({ type: 'UPDATE', field: 'workflowDescription', value: e.target.value })}
               placeholder="What does this workflow do?"
             />
           </div>
 
           {/* Trigger Configuration */}
           <div className="space-y-[8px]">
-            <label className="text-xs font-bold uppercase">TRIGGER TYPE</label>
+            <span className="text-xs font-bold uppercase">TRIGGER TYPE</span>
             <div className="grid grid-cols-2 gap-[6px]">
               {Object.values(TRIGGER_TYPES).map((trigger) => (
                 <button
                   key={trigger.value}
-                  onClick={() => setSelectedTriggerType(trigger.value)}
+                  onClick={() => dispatch({ type: 'UPDATE', field: 'selectedTriggerType', value: trigger.value })}
                   className={clsx(
                     "p-[10px] border-2 text-left transition-all",
                     selectedTriggerType === trigger.value
@@ -503,10 +570,11 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
             {/* Trigger-specific configuration */}
             {selectedTriggerType === 'event' && (
               <div>
-                <label className="text-xs font-bold uppercase mb-[8px] block">SELECT EVENT</label>
+                <label htmlFor="workflow-event" className="text-xs font-bold uppercase mb-[8px] block">SELECT EVENT</label>
                 <select
+                  id="workflow-event"
                   value={selectedEvent}
-                  onChange={(e) => setSelectedEvent(e.target.value)}
+                  onChange={(e) => dispatch({ type: 'UPDATE', field: 'selectedEvent', value: e.target.value })}
                   className="w-full px-12px py-[8px] border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
                 >
                   <option value="">Select an event...</option>
@@ -523,7 +591,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
               <BrutalInput
                 label="Schedule (Cron Expression)"
                 value={scheduleConfig}
-                onChange={(e) => setScheduleConfig(e.target.value)}
+                onChange={(e) => dispatch({ type: 'UPDATE', field: 'scheduleConfig', value: e.target.value })}
                 placeholder="0 9 * * MON-FRI"
                 helperText="Run at 9 AM every weekday"
               />
@@ -534,7 +602,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
                 <BrutalInput
                   label="Webhook URL"
                   value={webhookUrl}
-                  onChange={(e) => setWebhookUrl(e.target.value)}
+                  onChange={(e) => dispatch({ type: 'UPDATE', field: 'webhookUrl', value: e.target.value })}
                   placeholder="https://your-app.com/webhook"
                   disabled
                 />
@@ -548,7 +616,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
           {/* Conditions */}
           <div className="space-y-[8px]">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold uppercase">CONDITIONS (OPTIONAL)</label>
+              <span className="text-xs font-bold uppercase">CONDITIONS (OPTIONAL)</span>
               <BrutalButton
                 onClick={addCondition}
                 variant="secondary"
@@ -560,16 +628,17 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
             </div>
             
             {conditions.map((condition, index) => (
-              <div key={index} className="flex items-center gap-[8px] p-[10px] border-2 border-[var(--theme-border)]">
+              <div key={`condition-${condition.field || 'empty'}-${condition.operator}-${condition.value || 'empty'}`} className="flex items-center gap-[8px] p-[10px] border-2 border-[var(--theme-border)]">
                 <input
                   type="text"
                   value={condition.field}
                   onChange={(e) => {
                     const updated = [...conditions]
                     updated[index].field = e.target.value
-                    setConditions(updated)
+                    dispatch({ type: 'UPDATE', field: 'conditions', value: updated })
                   }}
                   placeholder="Field"
+                  aria-label={`Condition ${index + 1} field`}
                   className="flex-1 px-8px py-4px border-2 border-[var(--theme-border)]"
                 />
                 <select
@@ -577,8 +646,9 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
                   onChange={(e) => {
                     const updated = [...conditions]
                     updated[index].operator = e.target.value
-                    setConditions(updated)
+                    dispatch({ type: 'UPDATE', field: 'conditions', value: updated })
                   }}
+                  aria-label={`Condition ${index + 1} operator`}
                   className="px-8px py-4px border-2 border-[var(--theme-border)]"
                 >
                   <option value="equals">Equals</option>
@@ -593,9 +663,10 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
                   onChange={(e) => {
                     const updated = [...conditions]
                     updated[index].value = e.target.value
-                    setConditions(updated)
+                    dispatch({ type: 'UPDATE', field: 'conditions', value: updated })
                   }}
                   placeholder="Value"
+                  aria-label={`Condition ${index + 1} value`}
                   className="flex-1 px-8px py-4px border-2 border-[var(--theme-border)]"
                 />
                 <button
@@ -611,7 +682,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
           {/* Actions */}
           <div className="space-y-[8px]">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold uppercase">ACTIONS</label>
+              <span className="text-xs font-bold uppercase">ACTIONS</span>
               <BrutalButton
                 onClick={addAction}
                 variant="secondary"
@@ -623,11 +694,12 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
             </div>
             
             {actions.map((action, index) => (
-              <div key={index} className="p-[10px] border-2 border-[var(--theme-border)] space-y-[8px]">
+              <div key={`action-${action.type}-${JSON.stringify(action.config)}`} className="p-[10px] border-2 border-[var(--theme-border)] space-y-[8px]">
                 <div className="flex items-center justify-between">
                   <select
                     value={action.type}
                     onChange={(e) => updateAction(index, { ...action, type: e.target.value })}
+                    aria-label={`Action ${index + 1} type`}
                     className="flex-1 px-8px py-4px border-2 border-[var(--theme-border)]"
                   >
                     {ACTION_TYPES.map((actionType) => (
@@ -695,7 +767,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
           <div className="flex justify-end gap-[6px]">
             <BrutalButton
               onClick={() => {
-                setShowCreateModal(false)
+                dispatch({ type: 'UPDATE', field: 'showCreateModal', value: false })
                 resetForm()
               }}
               variant="secondary"

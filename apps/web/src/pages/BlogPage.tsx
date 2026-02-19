@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useState } from 'react'
 import {
   HiSearch,
@@ -170,26 +170,26 @@ export default function BlogPage() {
       {/* HERO SECTION */}
       <section className="py-80px px-[12px] border-b-2 border-basalt-border">
         <div className="max-w-7xl mx-auto">
-          <motion.h1
+          <m.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-6xl md:text-8xl font-bold mb-[12px] text-center"
           >
             <span className="text-cathode-white">ENGINEERING</span>{' '}
             <span className="text-brutal-info">INSIGHTS</span>
-          </motion.h1>
+          </m.h1>
 
-          <motion.p
+          <m.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="text-xl md:text-2xl text-cathode-white/80 uppercase tracking-wider text-center mb-[24px]"
           >
             DEEP DIVES. TECHNICAL BREAKDOWNS. NO FLUFF.
-          </motion.p>
+          </m.p>
 
           {/* SEARCH BAR */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -205,7 +205,7 @@ export default function BlogPage() {
               />
               <HiSearch className="absolute left-[10px] md:left-[10px] top-1/2 -translate-y-1/2 text-cathode-white/50 text-lg md:text-xl" />
             </div>
-          </motion.div>
+          </m.div>
         </div>
       </section>
 
@@ -214,7 +214,7 @@ export default function BlogPage() {
         <div className="max-w-full md:max-w-7xl mx-auto">
           <div className="flex flex-wrap gap-[8px] md:gap-[10px] justify-center">
             {categories.map((category, index) => (
-              <motion.button
+              <m.button
                 key={category.name}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -226,7 +226,7 @@ export default function BlogPage() {
                 `}
               >
                 {category.name} ({category.count})
-              </motion.button>
+              </m.button>
             ))}
           </div>
         </div>
@@ -244,7 +244,7 @@ export default function BlogPage() {
               <div className="flex lg:grid lg:grid-cols-3 gap-[16px] overflow-x-auto lg:overflow-x-visible pb-[8px] lg:pb-0 snap-x snap-mandatory lg:snap-none"
                    style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
               {blogPosts.filter(post => post.featured).map((post, index) => (
-                <motion.article
+                <m.article
                   key={post.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -278,7 +278,7 @@ export default function BlogPage() {
                       READ &rarr;
                     </Link>
                   </div>
-                </motion.article>
+                </m.article>
               ))}
               </div>
               <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-carbon-plate to-transparent lg:hidden flex items-center justify-end pr-[8px] pointer-events-none">
@@ -298,7 +298,7 @@ export default function BlogPage() {
 
           <div className="grid gap-[16px]">
             {filteredPosts.map((post, index) => (
-              <motion.article
+              <m.article
                 key={post.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -349,7 +349,7 @@ export default function BlogPage() {
                     </div>
                   </div>
                 </div>
-              </motion.article>
+              </m.article>
             ))}
           </div>
 

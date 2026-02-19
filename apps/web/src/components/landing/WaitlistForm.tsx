@@ -57,6 +57,7 @@ export default function WaitlistForm({ source = 'landing', compact = false }: Wa
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            aria-label="Email address"
             className="flex-1 px-4 py-3 bg-[#111111] border-2 border-[#2E2E35] border-r-0 rounded-l-lg text-[#F9FAFB] placeholder-[#6B7280] text-sm font-['Inter',sans-serif] focus:border-[#6366F1] focus:outline-none transition-colors duration-200"
           />
           <button
@@ -85,6 +86,7 @@ export default function WaitlistForm({ source = 'landing', compact = false }: Wa
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          aria-label="Email address"
           className="flex-1 px-4 py-3 bg-[#111111] border-2 border-[#2E2E35] sm:border-r-0 rounded-lg sm:rounded-r-none text-[#F9FAFB] placeholder-[#6B7280] text-sm font-['Inter',sans-serif] focus:border-[#6366F1] focus:outline-none transition-colors duration-200"
         />
         <button

@@ -1,37 +1,60 @@
-import { useState, useEffect } from 'react'
+import { useReducer } from 'react'
 import { useMobileDetection } from '../../hooks/useMobileDetection'
+
+interface MobileBlockerState {
+  choice: 'desktop' | 'urgent' | null
+  showWarning: boolean
+}
+
+type MobileBlockerAction =
+  | { type: 'SET_URGENT' }
+  | { type: 'SET_DESKTOP' }
+  | { type: 'DISMISS_DESKTOP' }
+  | { type: 'HIDE_WARNING' }
+
+function mobileBlockerReducer(state: MobileBlockerState, action: MobileBlockerAction): MobileBlockerState {
+  switch (action.type) {
+    case 'SET_URGENT':
+      return { choice: 'urgent', showWarning: true }
+    case 'SET_DESKTOP':
+      return { choice: 'desktop', showWarning: false }
+    case 'DISMISS_DESKTOP':
+      return { choice: null, showWarning: false }
+    case 'HIDE_WARNING':
+      return { ...state, showWarning: false }
+    default:
+      return state
+  }
+}
+
+function getInitialState(): MobileBlockerState {
+  const savedChoice = sessionStorage.getItem('ltf1_mobile_choice')
+  if (savedChoice === 'urgent') {
+    return { choice: 'urgent', showWarning: true }
+  } else if (savedChoice === 'desktop') {
+    return { choice: 'desktop', showWarning: false }
+  }
+  return { choice: null, showWarning: false }
+}
 
 export default function WorkspaceMobileBlocker({ children }: { children: React.ReactNode }) {
   const { isSmallScreen } = useMobileDetection()
-  const [choice, setChoice] = useState<'desktop' | 'urgent' | null>(null)
-  const [showWarning, setShowWarning] = useState(false)
-
-  useEffect(() => {
-    // Check if user already made a choice this session
-    const savedChoice = sessionStorage.getItem('ltf1_mobile_choice')
-    if (savedChoice === 'urgent') {
-      setChoice('urgent')
-      setShowWarning(true) // Always show warning for mobile users
-    } else if (savedChoice === 'desktop') {
-      setChoice('desktop')
-    }
-  }, [])
+  const [state, dispatch] = useReducer(mobileBlockerReducer, null, getInitialState)
+  const { choice, showWarning } = state
 
   const handleUrgentAccess = () => {
     sessionStorage.setItem('ltf1_mobile_choice', 'urgent')
-    setChoice('urgent')
-    setShowWarning(true)
-    // Keep warning persistent - no auto-hide
+    dispatch({ type: 'SET_URGENT' })
   }
 
   const handleDesktopChoice = () => {
     sessionStorage.setItem('ltf1_mobile_choice', 'desktop')
-    setChoice('desktop')
+    dispatch({ type: 'SET_DESKTOP' })
   }
 
   const handleDismissDesktop = () => {
     sessionStorage.removeItem('ltf1_mobile_choice')
-    setChoice(null)
+    dispatch({ type: 'DISMISS_DESKTOP' })
   }
 
   // Don't block if not on mobile
@@ -56,7 +79,7 @@ export default function WorkspaceMobileBlocker({ children }: { children: React.R
                   </p>
                 </div>
                 <button
-                  onClick={() => setShowWarning(false)}
+                  onClick={() => dispatch({ type: 'HIDE_WARNING' })}
                   className="text-event-horizon hover:text-event-horizon/60 font-bold text-sm px-[5px]"
                   aria-label="Dismiss warning"
                 >

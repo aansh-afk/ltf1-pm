@@ -28,6 +28,338 @@ const tabs = [
   { id: 'billing', label: 'BILLING', icon: HiOutlineCreditCard }
 ]
 
+// ── Sub-components ──
+
+interface DangerZoneProps {
+  workspace: any
+  showDeleteConfirm: boolean
+  deleteConfirmText: string
+  onShowDelete: () => void
+  onHideDelete: () => void
+  onDeleteConfirmTextChange: (text: string) => void
+  onDelete: () => void
+}
+
+function DangerZone({ workspace, showDeleteConfirm, deleteConfirmText, onShowDelete, onHideDelete, onDeleteConfirmTextChange, onDelete }: DangerZoneProps) {
+  return (
+    <BrutalCard
+      variant="default"
+      className="border-[var(--theme-error)] mt-6 bg-[var(--theme-error)]/5"
+    >
+      <div className="p-4">
+        <div className="flex items-center gap-3 mb-3 text-[var(--theme-error)]">
+          <HiOutlineExclamation className="w-5 h-5" />
+          <h3 className="text-lg font-bold uppercase">DANGER ZONE</h3>
+        </div>
+        <p className="text-sm font-mono text-[var(--theme-foreground)]/80 mb-3">
+          Irreversible and destructive actions. Deleting a workspace will permanently remove all projects, tasks, and data.
+        </p>
+
+        {!showDeleteConfirm ? (
+          <BrutalButton
+            onClick={onShowDelete}
+            className="bg-[var(--theme-error)] border-[var(--theme-error)] text-white hover:bg-[var(--theme-error)]/90"
+          >
+            DELETE WORKSPACE
+          </BrutalButton>
+        ) : (
+          <div className="space-y-2 p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-error)]">
+            <p className="text-sm font-mono">
+              Type <span className="font-bold">{workspace.name}</span> to confirm deletion:
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => onDeleteConfirmTextChange(e.target.value)}
+              aria-label="Type workspace name to confirm deletion"
+              className="w-full px-4 py-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
+                       font-mono text-sm placeholder:text-neutral-600
+                       focus:border-[var(--theme-error)] focus:outline-none transition-colors"
+            />
+            <div className="flex gap-4">
+              <BrutalButton
+                onClick={onDelete}
+                disabled={deleteConfirmText !== workspace.name}
+                className="bg-[var(--theme-error)] border-[var(--theme-error)] text-white hover:bg-[var(--theme-error)]/90"
+              >
+                CONFIRM DELETE
+              </BrutalButton>
+              <BrutalButton
+                onClick={onHideDelete}
+                variant="ghost"
+              >
+                CANCEL
+              </BrutalButton>
+            </div>
+          </div>
+        )}
+      </div>
+    </BrutalCard>
+  )
+}
+
+interface FeaturesTabProps {
+  featureSettings: Record<string, boolean>
+  canEdit: boolean
+  onToggleFeature: (key: string, checked: boolean) => void
+}
+
+function FeaturesTab({ featureSettings, canEdit, onToggleFeature }: FeaturesTabProps) {
+  const features = [
+    { key: 'enableProjects', label: 'PROJECTS', desc: 'Organize work into projects' },
+    { key: 'enableTasks', label: 'TASKS', desc: 'Track work items and issues' },
+    { key: 'enableMeetings', label: 'MEETINGS', desc: 'Schedule and manage meetings' },
+    { key: 'enableSprints', label: 'SPRINTS', desc: 'Agile sprint planning and tracking' },
+    { key: 'enableTimeTracking', label: 'TIME TRACKING', desc: 'Track time spent on tasks' },
+  ]
+
+  return (
+    <SettingsSection
+      title="WORKSPACE FEATURES"
+      description="Enable or disable features for this workspace"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {features.map(({ key, label, desc }) => (
+          <label key={key} htmlFor={`workspace-feature-${key}`} aria-label={label} className="flex items-start gap-4 p-4 border-2 border-[var(--theme-border)] bg-[var(--theme-background)] hover:border-[var(--theme-primary)] transition-colors cursor-pointer group">
+            <input
+              id={`workspace-feature-${key}`}
+              type="checkbox"
+              checked={featureSettings[key as keyof typeof featureSettings]}
+              onChange={(e) => onToggleFeature(key, e.target.checked)}
+              disabled={!canEdit}
+              className="w-5 h-5 mt-1 border-2 border-[var(--theme-border)] bg-[var(--theme-background)] checked:bg-[var(--theme-primary)] cursor-pointer"
+            />
+            <div>
+              <div className="font-mono font-bold text-sm uppercase group-hover:text-[var(--theme-primary)] transition-colors">{label}</div>
+              <div className="text-xs font-mono text-[var(--theme-foreground)]/60">{desc}</div>
+            </div>
+          </label>
+        ))}
+      </div>
+    </SettingsSection>
+  )
+}
+
+interface GeneralTabProps {
+  generalSettings: { name: string; slug: string; description: string; logoUrl: string }
+  canEdit: boolean
+  canDelete: boolean
+  workspace: any
+  showDeleteConfirm: boolean
+  deleteConfirmText: string
+  onGeneralChange: (settings: any) => void
+  onShowDelete: () => void
+  onHideDelete: () => void
+  onDeleteConfirmTextChange: (text: string) => void
+  onDelete: () => void
+}
+
+function GeneralTab({ generalSettings, canEdit, canDelete, workspace, showDeleteConfirm, deleteConfirmText, onGeneralChange, onShowDelete, onHideDelete, onDeleteConfirmTextChange, onDelete }: GeneralTabProps) {
+  return (
+    <>
+      <SettingsSection
+        title="WORKSPACE INFORMATION"
+        description="Basic information about your workspace"
+      >
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="ws-settings-name" className="block text-xs font-bold uppercase font-mono mb-2">WORKSPACE NAME</label>
+            <input
+              id="ws-settings-name"
+              type="text"
+              value={generalSettings.name}
+              onChange={(e) => onGeneralChange({ ...generalSettings, name: e.target.value })}
+              disabled={!canEdit}
+              className="w-full px-4 py-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
+                       font-mono text-sm placeholder:text-neutral-600
+                       focus:border-[var(--theme-primary)] focus:outline-none transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed uppercase"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="ws-settings-slug" className="block text-xs font-bold uppercase font-mono mb-2">WORKSPACE SLUG</label>
+            <input
+              id="ws-settings-slug"
+              type="text"
+              value={generalSettings.slug}
+              onChange={(e) => onGeneralChange({ ...generalSettings, slug: e.target.value })}
+              disabled={!canEdit}
+              pattern="[a-z0-9-]+"
+              className="w-full px-4 py-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
+                       font-mono text-sm placeholder:text-neutral-600
+                       focus:border-[var(--theme-primary)] focus:outline-none transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed lowercase"
+            />
+            <p className="text-xs font-mono text-[var(--theme-foreground)]/40 mt-1">
+              Used in URLs. Only lowercase letters, numbers, and hyphens.
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="ws-settings-description" className="block text-xs font-bold uppercase font-mono mb-2">DESCRIPTION</label>
+            <textarea
+              id="ws-settings-description"
+              value={generalSettings.description}
+              onChange={(e) => onGeneralChange({ ...generalSettings, description: e.target.value })}
+              disabled={!canEdit}
+              rows={4}
+              className="w-full px-4 py-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
+                       font-mono text-sm placeholder:text-neutral-600
+                       focus:border-[var(--theme-primary)] focus:outline-none transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed resize-none uppercase"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="ws-settings-logo" className="block text-xs font-bold uppercase font-mono mb-2">LOGO URL</label>
+            <input
+              id="ws-settings-logo"
+              type="url"
+              value={generalSettings.logoUrl}
+              onChange={(e) => onGeneralChange({ ...generalSettings, logoUrl: e.target.value })}
+              disabled={!canEdit}
+              placeholder="HTTPS://EXAMPLE.COM/LOGO.PNG"
+              className="w-full px-4 py-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
+                       font-mono text-sm placeholder:text-neutral-600
+                       focus:border-[var(--theme-primary)] focus:outline-none transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+          </div>
+        </div>
+      </SettingsSection>
+
+      {canDelete && (
+        <DangerZone
+          workspace={workspace}
+          showDeleteConfirm={showDeleteConfirm}
+          deleteConfirmText={deleteConfirmText}
+          onShowDelete={onShowDelete}
+          onHideDelete={onHideDelete}
+          onDeleteConfirmTextChange={onDeleteConfirmTextChange}
+          onDelete={onDelete}
+        />
+      )}
+    </>
+  )
+}
+
+interface IntegrationsTabProps {
+  canEdit: boolean
+}
+
+function IntegrationsTab({ canEdit }: IntegrationsTabProps) {
+  return (
+    <SettingsSection
+      title="EXTERNAL INTEGRATIONS"
+      description="Connect your workspace with external services"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <BrutalCard className="p-4">
+          <h3 className="font-mono font-bold text-sm uppercase mb-2">GITHUB INTEGRATION</h3>
+          <p className="text-xs font-mono text-[var(--theme-foreground)]/60 mb-3 min-h-[40px]">
+            Connect GitHub repositories to sync issues and pull requests
+          </p>
+          <BrutalButton
+            disabled={!canEdit}
+            size="sm"
+            variant="secondary"
+            className="w-full"
+          >
+            CONFIGURE GITHUB
+          </BrutalButton>
+        </BrutalCard>
+
+        <BrutalCard className="p-4">
+          <h3 className="font-mono font-bold text-sm uppercase mb-2">GOOGLE CALENDAR</h3>
+          <p className="text-xs font-mono text-[var(--theme-foreground)]/60 mb-3 min-h-[40px]">
+            Sync meetings with Google Calendar
+          </p>
+          <BrutalButton
+            disabled={!canEdit}
+            size="sm"
+            variant="secondary"
+            className="w-full"
+          >
+            CONNECT CALENDAR
+          </BrutalButton>
+        </BrutalCard>
+
+        <BrutalCard className="p-4">
+          <h3 className="font-mono font-bold text-sm uppercase mb-2">SLACK</h3>
+          <p className="text-xs font-mono text-[var(--theme-foreground)]/60 mb-3 min-h-[40px]">
+            Send notifications to Slack channels
+          </p>
+          <BrutalButton
+            disabled={!canEdit}
+            size="sm"
+            variant="secondary"
+            className="w-full"
+          >
+            ADD TO SLACK
+          </BrutalButton>
+        </BrutalCard>
+      </div>
+    </SettingsSection>
+  )
+}
+
+interface BillingTabProps {}
+
+function BillingTab(_props: BillingTabProps) {
+  return (
+    <SettingsSection
+      title="SUBSCRIPTION & BILLING"
+      description="Manage your workspace subscription"
+    >
+      <BrutalCard variant="neon" className="p-5 text-center">
+        <p className="text-xl font-bold uppercase mb-2">FREE PLAN</p>
+        <p className="text-sm font-mono text-[var(--theme-foreground)]/60 mb-4">
+          You're currently on the free plan with up to 5 members.
+        </p>
+        <BrutalButton variant="primary">
+          UPGRADE TO PRO
+        </BrutalButton>
+      </BrutalCard>
+    </SettingsSection>
+  )
+}
+
+interface SaveIndicatorProps {
+  hasUnsavedGeneral: boolean
+  hasUnsavedFeatures: boolean
+  isSavingGeneral: boolean
+  isSavingFeatures: boolean
+  onSave: () => void
+}
+
+function SaveIndicator({ hasUnsavedGeneral, hasUnsavedFeatures, isSavingGeneral, isSavingFeatures, onSave }: SaveIndicatorProps) {
+  if (!hasUnsavedGeneral && !hasUnsavedFeatures) return null
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50 animate-bounce">
+      <BrutalCard variant="elevated" className="p-3 border-[var(--theme-primary)] flex items-center gap-3 bg-[var(--theme-background)]">
+        <div>
+          <p className="text-xs font-bold uppercase text-[var(--theme-primary)] mb-1">UNSAVED CHANGES</p>
+          <p className="text-[10px] font-mono text-[var(--theme-foreground)]/60">
+            {isSavingGeneral || isSavingFeatures ? 'SAVING...' : 'CHANGES PENDING'}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <BrutalButton
+            size="sm"
+            variant="primary"
+            onClick={onSave}
+            disabled={isSavingGeneral || isSavingFeatures}
+          >
+            SAVE NOW
+          </BrutalButton>
+        </div>
+      </BrutalCard>
+    </div>
+  )
+}
+
 export default function WorkspaceSettingsPage() {
   const { workspaceId } = useParams()
   const navigate = useNavigate()
@@ -100,7 +432,7 @@ export default function WorkspaceSettingsPage() {
     }
   })
 
-  // Load workspace data
+  // Legitimate useEffect: syncs server-loaded workspace data into form state
   useEffect(() => {
     if (workspace) {
       setGeneralSettingsWithoutSave({
@@ -186,138 +518,22 @@ export default function WorkspaceSettingsPage() {
 
         {/* Tab Content */}
         <div className="space-y-4">
-          {/* General Tab */}
           {activeTab === 'general' && (
-            <>
-              <SettingsSection
-                title="WORKSPACE INFORMATION"
-                description="Basic information about your workspace"
-              >
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-bold uppercase font-mono mb-2">WORKSPACE NAME</label>
-                    <input
-                      type="text"
-                      value={generalSettings.name}
-                      onChange={(e) => setGeneralSettings({ ...generalSettings, name: e.target.value })}
-                      disabled={!canEdit}
-                      className="w-full px-4 py-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                               font-mono text-sm placeholder:text-neutral-600
-                               focus:border-[var(--theme-primary)] focus:outline-none transition-colors
-                               disabled:opacity-50 disabled:cursor-not-allowed uppercase"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase font-mono mb-2">WORKSPACE SLUG</label>
-                    <input
-                      type="text"
-                      value={generalSettings.slug}
-                      onChange={(e) => setGeneralSettings({ ...generalSettings, slug: e.target.value })}
-                      disabled={!canEdit}
-                      pattern="[a-z0-9-]+"
-                      className="w-full px-4 py-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                               font-mono text-sm placeholder:text-neutral-600
-                               focus:border-[var(--theme-primary)] focus:outline-none transition-colors
-                               disabled:opacity-50 disabled:cursor-not-allowed lowercase"
-                    />
-                    <p className="text-xs font-mono text-[var(--theme-foreground)]/40 mt-1">
-                      Used in URLs. Only lowercase letters, numbers, and hyphens.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase font-mono mb-2">DESCRIPTION</label>
-                    <textarea
-                      value={generalSettings.description}
-                      onChange={(e) => setGeneralSettings({ ...generalSettings, description: e.target.value })}
-                      disabled={!canEdit}
-                      rows={4}
-                      className="w-full px-4 py-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                               font-mono text-sm placeholder:text-neutral-600
-                               focus:border-[var(--theme-primary)] focus:outline-none transition-colors
-                               disabled:opacity-50 disabled:cursor-not-allowed resize-none uppercase"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase font-mono mb-2">LOGO URL</label>
-                    <input
-                      type="url"
-                      value={generalSettings.logoUrl}
-                      onChange={(e) => setGeneralSettings({ ...generalSettings, logoUrl: e.target.value })}
-                      disabled={!canEdit}
-                      placeholder="HTTPS://EXAMPLE.COM/LOGO.PNG"
-                      className="w-full px-4 py-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                               font-mono text-sm placeholder:text-neutral-600
-                               focus:border-[var(--theme-primary)] focus:outline-none transition-colors
-                               disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                  </div>
-                </div>
-              </SettingsSection>
-
-              {canDelete && (
-                <BrutalCard
-                  variant="default"
-                  className="border-[var(--theme-error)] mt-6 bg-[var(--theme-error)]/5"
-                >
-                  <div className="p-4">
-                    <div className="flex items-center gap-3 mb-3 text-[var(--theme-error)]">
-                      <HiOutlineExclamation className="w-5 h-5" />
-                      <h3 className="text-lg font-bold uppercase">DANGER ZONE</h3>
-                    </div>
-                    <p className="text-sm font-mono text-[var(--theme-foreground)]/80 mb-3">
-                      Irreversible and destructive actions. Deleting a workspace will permanently remove all projects, tasks, and data.
-                    </p>
-
-                    {!showDeleteConfirm ? (
-                      <BrutalButton
-                        onClick={() => setShowDeleteConfirm(true)}
-                        className="bg-[var(--theme-error)] border-[var(--theme-error)] text-white hover:bg-[var(--theme-error)]/90"
-                      >
-                        DELETE WORKSPACE
-                      </BrutalButton>
-                    ) : (
-                      <div className="space-y-2 p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-error)]">
-                        <p className="text-sm font-mono">
-                          Type <span className="font-bold">{workspace.name}</span> to confirm deletion:
-                        </p>
-                        <input
-                          type="text"
-                          value={deleteConfirmText}
-                          onChange={(e) => setDeleteConfirmText(e.target.value)}
-                          className="w-full px-4 py-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                                   font-mono text-sm placeholder:text-neutral-600
-                                   focus:border-[var(--theme-error)] focus:outline-none transition-colors"
-                        />
-                        <div className="flex gap-4">
-                          <BrutalButton
-                            onClick={handleDeleteWorkspace}
-                            disabled={deleteConfirmText !== workspace.name}
-                            className="bg-[var(--theme-error)] border-[var(--theme-error)] text-white hover:bg-[var(--theme-error)]/90"
-                          >
-                            CONFIRM DELETE
-                          </BrutalButton>
-                          <BrutalButton
-                            onClick={() => {
-                              setShowDeleteConfirm(false)
-                              setDeleteConfirmText('')
-                            }}
-                            variant="ghost"
-                          >
-                            CANCEL
-                          </BrutalButton>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </BrutalCard>
-              )}
-            </>
+            <GeneralTab
+              generalSettings={generalSettings}
+              canEdit={canEdit}
+              canDelete={canDelete}
+              workspace={workspace}
+              showDeleteConfirm={showDeleteConfirm}
+              deleteConfirmText={deleteConfirmText}
+              onGeneralChange={setGeneralSettings}
+              onShowDelete={() => setShowDeleteConfirm(true)}
+              onHideDelete={() => { setShowDeleteConfirm(false); setDeleteConfirmText('') }}
+              onDeleteConfirmTextChange={setDeleteConfirmText}
+              onDelete={handleDeleteWorkspace}
+            />
           )}
 
-          {/* Members Tab */}
           {activeTab === 'members' && (
             <MemberManagement
               workspace={workspace}
@@ -326,138 +542,33 @@ export default function WorkspaceSettingsPage() {
             />
           )}
 
-          {/* Features Tab */}
           {activeTab === 'features' && (
-            <SettingsSection
-              title="WORKSPACE FEATURES"
-              description="Enable or disable features for this workspace"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { key: 'enableProjects', label: 'PROJECTS', desc: 'Organize work into projects' },
-                  { key: 'enableTasks', label: 'TASKS', desc: 'Track work items and issues' },
-                  { key: 'enableMeetings', label: 'MEETINGS', desc: 'Schedule and manage meetings' },
-                  { key: 'enableSprints', label: 'SPRINTS', desc: 'Agile sprint planning and tracking' },
-                  { key: 'enableTimeTracking', label: 'TIME TRACKING', desc: 'Track time spent on tasks' },
-                ].map(({ key, label, desc }) => (
-                  <label key={key} className="flex items-start gap-4 p-4 border-2 border-[var(--theme-border)] bg-[var(--theme-background)] hover:border-[var(--theme-primary)] transition-colors cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={featureSettings[key as keyof typeof featureSettings]}
-                      onChange={(e) => setFeatureSettings({ ...featureSettings, [key]: e.target.checked })}
-                      disabled={!canEdit}
-                      className="w-5 h-5 mt-1 border-2 border-[var(--theme-border)] bg-[var(--theme-background)] checked:bg-[var(--theme-primary)] cursor-pointer"
-                    />
-                    <div>
-                      <div className="font-mono font-bold text-sm uppercase group-hover:text-[var(--theme-primary)] transition-colors">{label}</div>
-                      <div className="text-xs font-mono text-[var(--theme-foreground)]/60">{desc}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </SettingsSection>
+            <FeaturesTab
+              featureSettings={featureSettings}
+              canEdit={canEdit}
+              onToggleFeature={(key, checked) => setFeatureSettings({ ...featureSettings, [key]: checked })}
+            />
           )}
 
-          {/* Integrations Tab */}
           {activeTab === 'integrations' && (
-            <SettingsSection
-              title="EXTERNAL INTEGRATIONS"
-              description="Connect your workspace with external services"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <BrutalCard className="p-4">
-                  <h3 className="font-mono font-bold text-sm uppercase mb-2">GITHUB INTEGRATION</h3>
-                  <p className="text-xs font-mono text-[var(--theme-foreground)]/60 mb-3 min-h-[40px]">
-                    Connect GitHub repositories to sync issues and pull requests
-                  </p>
-                  <BrutalButton
-                    disabled={!canEdit}
-                    size="sm"
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    CONFIGURE GITHUB
-                  </BrutalButton>
-                </BrutalCard>
-
-                <BrutalCard className="p-4">
-                  <h3 className="font-mono font-bold text-sm uppercase mb-2">GOOGLE CALENDAR</h3>
-                  <p className="text-xs font-mono text-[var(--theme-foreground)]/60 mb-3 min-h-[40px]">
-                    Sync meetings with Google Calendar
-                  </p>
-                  <BrutalButton
-                    disabled={!canEdit}
-                    size="sm"
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    CONNECT CALENDAR
-                  </BrutalButton>
-                </BrutalCard>
-
-                <BrutalCard className="p-4">
-                  <h3 className="font-mono font-bold text-sm uppercase mb-2">SLACK</h3>
-                  <p className="text-xs font-mono text-[var(--theme-foreground)]/60 mb-3 min-h-[40px]">
-                    Send notifications to Slack channels
-                  </p>
-                  <BrutalButton
-                    disabled={!canEdit}
-                    size="sm"
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    ADD TO SLACK
-                  </BrutalButton>
-                </BrutalCard>
-              </div>
-            </SettingsSection>
+            <IntegrationsTab canEdit={canEdit} />
           )}
 
-          {/* Billing Tab */}
           {activeTab === 'billing' && (
-            <SettingsSection
-              title="SUBSCRIPTION & BILLING"
-              description="Manage your workspace subscription"
-            >
-              <BrutalCard variant="neon" className="p-5 text-center">
-                <p className="text-xl font-bold uppercase mb-2">FREE PLAN</p>
-                <p className="text-sm font-mono text-[var(--theme-foreground)]/60 mb-4">
-                  You're currently on the free plan with up to 5 members.
-                </p>
-                <BrutalButton variant="primary">
-                  UPGRADE TO PRO
-                </BrutalButton>
-              </BrutalCard>
-            </SettingsSection>
+            <BillingTab />
           )}
         </div>
 
-        {/* Save Indicator */}
-        {(hasUnsavedGeneral || hasUnsavedFeatures) && (
-          <div className="fixed bottom-4 right-4 z-50 animate-bounce">
-            <BrutalCard variant="elevated" className="p-3 border-[var(--theme-primary)] flex items-center gap-3 bg-[var(--theme-background)]">
-              <div>
-                <p className="text-xs font-bold uppercase text-[var(--theme-primary)] mb-1">UNSAVED CHANGES</p>
-                <p className="text-[10px] font-mono text-[var(--theme-foreground)]/60">
-                  {isSavingGeneral || isSavingFeatures ? 'SAVING...' : 'CHANGES PENDING'}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <BrutalButton
-                  size="sm"
-                  variant="primary"
-                  onClick={() => {
-                    if (hasUnsavedGeneral) forceSaveGeneral()
-                    if (hasUnsavedFeatures) forceSaveFeatures()
-                  }}
-                  disabled={isSavingGeneral || isSavingFeatures}
-                >
-                  SAVE NOW
-                </BrutalButton>
-              </div>
-            </BrutalCard>
-          </div>
-        )}
+        <SaveIndicator
+          hasUnsavedGeneral={hasUnsavedGeneral}
+          hasUnsavedFeatures={hasUnsavedFeatures}
+          isSavingGeneral={isSavingGeneral}
+          isSavingFeatures={isSavingFeatures}
+          onSave={() => {
+            if (hasUnsavedGeneral) forceSaveGeneral()
+            if (hasUnsavedFeatures) forceSaveFeatures()
+          }}
+        />
       </div>
     </div>
   )

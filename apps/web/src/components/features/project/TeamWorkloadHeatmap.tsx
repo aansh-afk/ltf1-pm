@@ -26,11 +26,13 @@ interface TeamWorkloadHeatmapProps {
   dateRange?: number // Number of days to show (default 14)
 }
 
-export default function TeamWorkloadHeatmap({ 
-  team, 
-  tasks, 
-  meetings = [], 
-  dateRange = 14 
+const EMPTY_MEETINGS: NonNullable<TeamWorkloadHeatmapProps['meetings']> = []
+
+export default function TeamWorkloadHeatmap({
+  team,
+  tasks,
+  meetings = EMPTY_MEETINGS,
+  dateRange = 14
 }: TeamWorkloadHeatmapProps) {
   
   // Generate date range
@@ -200,9 +202,9 @@ export default function TeamWorkloadHeatmap({
           {/* Date headers */}
           <div className="flex mb-[4px]">
             <div className="w-120px" /> {/* Space for names */}
-            {dates.map((date, index) => (
-              <div 
-                key={index} 
+            {dates.map((date) => (
+              <div
+                key={format(date, 'yyyy-MM-dd')}
                 className="flex-1 min-w-[40px] text-center"
               >
                 <div className={`text-brutal-xs ${isWeekend(date) ? 'text-[var(--theme-foreground-tertiary)]' : 'text-[var(--theme-foreground-secondary)]'}`}>
@@ -239,9 +241,9 @@ export default function TeamWorkloadHeatmap({
               </div>
               
               {/* Workload cells */}
-              {memberData.dailyWorkload.map((day, dayIndex) => (
-                <div 
-                  key={dayIndex} 
+              {memberData.dailyWorkload.map((day) => (
+                <div
+                  key={format(day.date, 'yyyy-MM-dd')}
                   className="flex-1 min-w-[40px] p-1px"
                   title={`${memberData.member.name} - ${format(day.date, 'MMM d')}
 Tasks: ${day.taskCount}

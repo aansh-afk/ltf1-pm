@@ -156,30 +156,30 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
         <div className="grid grid-cols-12 gap-2 px-3 py-2.5 font-mono text-[10px] uppercase tracking-wider text-[#6B7280] border-b-2 border-[#2E2E35]">
           <div className="col-span-1"></div>
           <div className="col-span-4">TASK</div>
-          <div
-            className="col-span-2 cursor-pointer hover:text-[#6366F1] transition-colors"
+          <button
+            className="col-span-2 cursor-pointer hover:text-[#6366F1] transition-colors text-left text-[inherit] font-[inherit] tracking-[inherit] uppercase"
             onClick={() => handleSort('status')}
           >
             STATUS {sortBy === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
-          </div>
-          <div
-            className="col-span-1 cursor-pointer hover:text-[#6366F1] transition-colors"
+          </button>
+          <button
+            className="col-span-1 cursor-pointer hover:text-[#6366F1] transition-colors text-left text-[inherit] font-[inherit] tracking-[inherit] uppercase"
             onClick={() => handleSort('priority')}
           >
             PRIORITY {sortBy === 'priority' && (sortOrder === 'asc' ? '↑' : '↓')}
-          </div>
-          <div
-            className="col-span-2 cursor-pointer hover:text-[#6366F1] transition-colors"
+          </button>
+          <button
+            className="col-span-2 cursor-pointer hover:text-[#6366F1] transition-colors text-left text-[inherit] font-[inherit] tracking-[inherit] uppercase"
             onClick={() => handleSort('assignee')}
           >
             ASSIGNEE {sortBy === 'assignee' && (sortOrder === 'asc' ? '↑' : '↓')}
-          </div>
-          <div
-            className="col-span-2 cursor-pointer hover:text-[#6366F1] transition-colors"
+          </button>
+          <button
+            className="col-span-2 cursor-pointer hover:text-[#6366F1] transition-colors text-left text-[inherit] font-[inherit] tracking-[inherit] uppercase"
             onClick={() => handleSort('dueDate')}
           >
             DUE DATE {sortBy === 'dueDate' && (sortOrder === 'asc' ? '↑' : '↓')}
-          </div>
+          </button>
         </div>
 
         {/* Task Rows */}

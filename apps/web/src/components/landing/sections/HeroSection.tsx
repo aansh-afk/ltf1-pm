@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import HeroTerminal from '../ascii/HeroTerminal'
 
@@ -27,7 +27,7 @@ export default function HeroSection() {
       />
 
       <div className="relative z-10 w-full max-w-5xl mx-auto px-6 text-center pt-32 pb-16">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: 'easeOut' }}
@@ -76,19 +76,19 @@ export default function HeroSection() {
               See Features
             </Link>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Terminal demo */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
         >
           <HeroTerminal />
-        </motion.div>
+        </m.div>
 
         {/* Social proof line */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1, duration: 0.8 }}
@@ -107,25 +107,25 @@ export default function HeroSection() {
               </span>
             ))}
           </div>
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Scroll indicator */}
-      <motion.div
+      <m.div
         className="absolute bottom-8 left-1/2 -translate-x-1/2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5, duration: 0.6 }}
       >
-        <motion.div
+        <m.div
           animate={{ y: [0, 6, 0] }}
           transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
           className="flex flex-col items-center gap-1"
         >
           <span className="w-px h-6 bg-gradient-to-b from-transparent to-[#6B7280]/40" />
           <span className="w-1 h-1 rounded-full bg-[#6B7280]/40" />
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </section>
   )
 }

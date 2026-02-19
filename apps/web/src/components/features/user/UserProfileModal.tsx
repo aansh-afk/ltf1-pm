@@ -10,6 +10,209 @@ import LoadingSpinner from '../../common/LoadingSpinner'
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
 
+// --- Sub-components ---
+
+function InfoItem({ icon: Icon, label, value, link }: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: string
+  link?: string
+}) {
+  const content = (
+    <div className="flex items-center gap-[8px]">
+      <Icon className="w-4 h-4 text-[var(--theme-foreground)]/60" />
+      <span className="text-brutal-xs text-[var(--theme-foreground)]/60">{label}:</span>
+      <span className="text-brutal-sm font-mono">{value}</span>
+    </div>
+  )
+
+  if (link) {
+    return (
+      <a
+        href={link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="hover:text-primary-brutalist transition-colors"
+      >
+        {content}
+      </a>
+    )
+  }
+
+  return content
+}
+
+function StatCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-[10px] text-center">
+      <div className="text-[14px] font-semibold font-bold text-primary-brutalist">{value}</div>
+      <div className="text-brutal-xs text-[var(--theme-foreground)]/60">{label}</div>
+    </div>
+  )
+}
+
+interface ProfileTabContentProps {
+  user: { createdAt: number; email: string };
+  profile: {
+    timezone?: string;
+    githubUsername?: string;
+    linkedinUrl?: string;
+    workPreferences?: {
+      communicationStyle: string;
+      workingHours: string;
+      focusTime: string;
+      availability: string;
+    };
+  };
+}
+
+function ProfileTabContent({ user, profile }: ProfileTabContentProps) {
+  return (
+    <div className="space-y-[12px]">
+      {/* Basic Info */}
+      <div>
+        <h4 className="text-brutal-md font-bold mb-[8px]">BASIC INFO</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[8px]">
+          <div className="space-y-[6px]">
+            <InfoItem
+              icon={HiOutlineCalendar}
+              label="JOINED"
+              value={formatDistanceToNow(new Date(user.createdAt), { addSuffix: true }).toUpperCase()}
+            />
+            {profile.timezone && (
+              <InfoItem
+                icon={HiOutlineGlobeAlt}
+                label="TIMEZONE"
+                value={profile.timezone}
+              />
+            )}
+          </div>
+          <div className="space-y-[6px]">
+            {profile.githubUsername && (
+              <InfoItem
+                icon={HiOutlineLink}
+                label="GITHUB"
+                value={`@${profile.githubUsername}`}
+                link={`https://github.com/${profile.githubUsername}`}
+              />
+            )}
+            {profile.linkedinUrl && (
+              <InfoItem
+                icon={HiOutlineLink}
+                label="LINKEDIN"
+                value="VIEW PROFILE"
+                link={profile.linkedinUrl}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Work Preferences */}
+      {profile.workPreferences && (
+        <div>
+          <h4 className="text-brutal-md font-bold mb-[8px]">WORK PREFERENCES</h4>
+          <div className="bg-[var(--theme-background-secondary)] p-[10px] border-2 border-[var(--theme-border)]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-[6px] text-brutal-sm">
+              <div>
+                <span className="text-[var(--theme-foreground)]/60">COMMUNICATION:</span>{' '}
+                <span className="uppercase">{profile.workPreferences.communicationStyle}</span>
+              </div>
+              <div>
+                <span className="text-[var(--theme-foreground)]/60">WORK HOURS:</span>{' '}
+                <span className="uppercase">{profile.workPreferences.workingHours}</span>
+              </div>
+              <div>
+                <span className="text-[var(--theme-foreground)]/60">FOCUS TIME:</span>{' '}
+                <span className="uppercase">{profile.workPreferences.focusTime}</span>
+              </div>
+              <div>
+                <span className="text-[var(--theme-foreground)]/60">AVAILABILITY:</span>{' '}
+                <span className="uppercase">{profile.workPreferences.availability}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface SkillsTabContentProps {
+  profile: {
+    techStack?: Array<{ name: string; level: number }>;
+    expertiseAreas?: string[];
+    githubStats?: {
+      publicRepos: number;
+      followers: number;
+      following: number;
+      publicGists: number;
+    };
+  };
+}
+
+function SkillsTabContent({ profile }: SkillsTabContentProps) {
+  return (
+    <div className="space-y-[12px]">
+      {/* Tech Stack */}
+      {profile.techStack && profile.techStack.length > 0 && (
+        <div>
+          <h4 className="text-brutal-md font-bold mb-[8px]">TECH STACK</h4>
+          <div className="flex flex-wrap gap-[8px]">
+            {profile.techStack.map((tech) => (
+              <div key={tech.name} className="flex items-center gap-[8px]">
+                <BrutalBadge variant="info" size="sm">
+                  {tech.name}
+                </BrutalBadge>
+                <div className="flex gap-1px">
+                  {[1, 2, 3, 4, 5].map(level => (
+                    <div
+                      key={level}
+                      className={clsx(
+                        'w-[8px] h-[8px]',
+                        level <= tech.level ? 'bg-primary-brutalist' : 'bg-basalt-border'
+                      )}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Expertise Areas */}
+      {profile.expertiseAreas && profile.expertiseAreas.length > 0 && (
+        <div>
+          <h4 className="text-brutal-md font-bold mb-[8px]">EXPERTISE AREAS</h4>
+          <div className="flex flex-wrap gap-[8px]">
+            {profile.expertiseAreas.map((area: string) => (
+              <BrutalBadge key={area} variant="success" size="sm">
+                {area}
+              </BrutalBadge>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* GitHub Stats */}
+      {profile.githubStats && (
+        <div>
+          <h4 className="text-brutal-md font-bold mb-[8px]">GITHUB STATS</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-[8px]">
+            <StatCard label="REPOS" value={profile.githubStats.publicRepos} />
+            <StatCard label="FOLLOWERS" value={profile.githubStats.followers} />
+            <StatCard label="FOLLOWING" value={profile.githubStats.following} />
+            <StatCard label="GISTS" value={profile.githubStats.publicGists} />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// --- Main Component ---
+
 interface UserProfileModalProps {
   isOpen: boolean
   onClose: () => void
@@ -50,10 +253,12 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
   const modalContent = (
     <div style={{ pointerEvents: 'auto' }}>
       {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-[var(--theme-background-secondary)]/90" 
+      <button
+        type="button"
+        className="fixed inset-0 bg-[var(--theme-background-secondary)]/90"
         style={{ zIndex: 9998 }}
-        onClick={onClose} 
+        onClick={onClose}
+        aria-label="Close modal"
       />
       
       {/* Modal - Higher z-index to prevent conflicts */}
@@ -156,73 +361,7 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                 {/* Tab Content */}
                 <div className="p-[16px]">
                   {activeTab === 'profile' && (
-                    <div className="space-y-[12px]">
-                      {/* Basic Info */}
-                      <div>
-                        <h4 className="text-brutal-md font-bold mb-[8px]">BASIC INFO</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-[8px]">
-                          <div className="space-y-[6px]">
-                            <InfoItem
-                              icon={HiOutlineCalendar}
-                              label="JOINED"
-                              value={formatDistanceToNow(new Date(user.createdAt), { addSuffix: true }).toUpperCase()}
-                            />
-                            {profile.timezone && (
-                              <InfoItem
-                                icon={HiOutlineGlobeAlt}
-                                label="TIMEZONE"
-                                value={profile.timezone}
-                              />
-                            )}
-                          </div>
-                          <div className="space-y-[6px]">
-                            {profile.githubUsername && (
-                              <InfoItem
-                                icon={HiOutlineLink}
-                                label="GITHUB"
-                                value={`@${profile.githubUsername}`}
-                                link={`https://github.com/${profile.githubUsername}`}
-                              />
-                            )}
-                            {profile.linkedinUrl && (
-                              <InfoItem
-                                icon={HiOutlineLink}
-                                label="LINKEDIN"
-                                value="VIEW PROFILE"
-                                link={profile.linkedinUrl}
-                              />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Work Preferences */}
-                      {profile.workPreferences && (
-                        <div>
-                          <h4 className="text-brutal-md font-bold mb-[8px]">WORK PREFERENCES</h4>
-                          <div className="bg-[var(--theme-background-secondary)] p-[10px] border-2 border-[var(--theme-border)]">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-[6px] text-brutal-sm">
-                              <div>
-                                <span className="text-[var(--theme-foreground)]/60">COMMUNICATION:</span>{' '}
-                                <span className="uppercase">{profile.workPreferences.communicationStyle}</span>
-                              </div>
-                              <div>
-                                <span className="text-[var(--theme-foreground)]/60">WORK HOURS:</span>{' '}
-                                <span className="uppercase">{profile.workPreferences.workingHours}</span>
-                              </div>
-                              <div>
-                                <span className="text-[var(--theme-foreground)]/60">FOCUS TIME:</span>{' '}
-                                <span className="uppercase">{profile.workPreferences.focusTime}</span>
-                              </div>
-                              <div>
-                                <span className="text-[var(--theme-foreground)]/60">AVAILABILITY:</span>{' '}
-                                <span className="uppercase">{profile.workPreferences.availability}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <ProfileTabContent user={user} profile={profile} />
                   )}
 
                   {activeTab === 'activity' && (
@@ -236,73 +375,7 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                   )}
 
                   {activeTab === 'skills' && (
-                    <div className="space-y-[12px]">
-                      {/* Tech Stack */}
-                      {profile.techStack && profile.techStack.length > 0 && (
-                        <div>
-                          <h4 className="text-brutal-md font-bold mb-[8px]">TECH STACK</h4>
-                          <div className="flex flex-wrap gap-[8px]">
-                            {profile.techStack.map((tech: any) => (
-                              <div key={tech.name} className="flex items-center gap-[8px]">
-                                <BrutalBadge variant="info" size="sm">
-                                  {tech.name}
-                                </BrutalBadge>
-                                <div className="flex gap-1px">
-                                  {[1, 2, 3, 4, 5].map(level => (
-                                    <div
-                                      key={level}
-                                      className={clsx(
-                                        'w-[8px] h-[8px]',
-                                        level <= tech.level ? 'bg-primary-brutalist' : 'bg-basalt-border'
-                                      )}
-                                    />
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Expertise Areas */}
-                      {profile.expertiseAreas && profile.expertiseAreas.length > 0 && (
-                        <div>
-                          <h4 className="text-brutal-md font-bold mb-[8px]">EXPERTISE AREAS</h4>
-                          <div className="flex flex-wrap gap-[8px]">
-                            {profile.expertiseAreas.map((area: string) => (
-                              <BrutalBadge key={area} variant="success" size="sm">
-                                {area}
-                              </BrutalBadge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* GitHub Stats */}
-                      {profile.githubStats && (
-                        <div>
-                          <h4 className="text-brutal-md font-bold mb-[8px]">GITHUB STATS</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-[8px]">
-                            <StatCard
-                              label="REPOS"
-                              value={profile.githubStats.publicRepos}
-                            />
-                            <StatCard
-                              label="FOLLOWERS"
-                              value={profile.githubStats.followers}
-                            />
-                            <StatCard
-                              label="FOLLOWING"
-                              value={profile.githubStats.following}
-                            />
-                            <StatCard
-                              label="GISTS"
-                              value={profile.githubStats.publicGists}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <SkillsTabContent profile={profile} />
                   )}
                 </div>
               </>
@@ -314,43 +387,4 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
   )
 
   return createPortal(modalContent, portalElement)
-}
-
-function InfoItem({ icon: Icon, label, value, link }: {
-  icon: any
-  label: string
-  value: string
-  link?: string
-}) {
-  const content = (
-    <div className="flex items-center gap-[8px]">
-      <Icon className="w-4 h-4 text-[var(--theme-foreground)]/60" />
-      <span className="text-brutal-xs text-[var(--theme-foreground)]/60">{label}:</span>
-      <span className="text-brutal-sm font-mono">{value}</span>
-    </div>
-  )
-
-  if (link) {
-    return (
-      <a
-        href={link}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="hover:text-primary-brutalist transition-colors"
-      >
-        {content}
-      </a>
-    )
-  }
-
-  return content
-}
-
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-[10px] text-center">
-      <div className="text-[14px] font-semibold font-bold text-primary-brutalist">{value}</div>
-      <div className="text-brutal-xs text-[var(--theme-foreground)]/60">{label}</div>
-    </div>
-  )
 }

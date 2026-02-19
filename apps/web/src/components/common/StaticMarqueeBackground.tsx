@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
+const MARQUEE_SLOTS = ['a','b','c','d','e','f','g','h','i','j'] as const
+
 interface StaticMarqueeBackgroundProps {
   text?: string;
   className?: string;
@@ -49,9 +51,9 @@ export default function StaticMarqueeBackground({
         className="flex whitespace-nowrap"
         style={{ transform: `translateY(${scrollY * 0.1}px)` }}
       >
-        {Array.from({ length: 10 }, (_, i) => (
+        {MARQUEE_SLOTS.map((slot) => (
           <span
-            key={i}
+            key={`r1-${slot}`}
             className="text-[#3A3A3A] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-[16px] select-none"
             style={{ opacity: 0.25 }}
           >
@@ -67,9 +69,9 @@ export default function StaticMarqueeBackground({
           transform: `translateX(-200px) translateY(${scrollY * 0.2}px)`
         }}
       >
-        {Array.from({ length: 10 }, (_, i) => (
+        {MARQUEE_SLOTS.map((slot) => (
           <span
-            key={i}
+            key={`r2-${slot}`}
             className="text-[#333333] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-[16px] select-none"
             style={{ opacity: 0.20 }}
           >
@@ -85,9 +87,9 @@ export default function StaticMarqueeBackground({
           transform: `translateX(-100px) translateY(${scrollY * 0.3}px)`
         }}
       >
-        {Array.from({ length: 10 }, (_, i) => (
+        {MARQUEE_SLOTS.map((slot) => (
           <span
-            key={i}
+            key={`r3-${slot}`}
             className="text-[#2F2F2F] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-[16px] select-none"
             style={{ opacity: 0.15 }}
           >
@@ -103,9 +105,9 @@ export default function StaticMarqueeBackground({
           transform: `translateX(-300px) translateY(${scrollY * 0.15}px)`
         }}
       >
-        {Array.from({ length: 10 }, (_, i) => (
+        {MARQUEE_SLOTS.map((slot) => (
           <span
-            key={i}
+            key={`r4-${slot}`}
             className="text-[#2A2A2A] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-[16px] select-none"
             style={{ opacity: 0.10 }}
           >
@@ -121,9 +123,9 @@ export default function StaticMarqueeBackground({
           transform: `translateX(-50px) translateY(${scrollY * 0.25}px)`
         }}
       >
-        {Array.from({ length: 10 }, (_, i) => (
+        {MARQUEE_SLOTS.map((slot) => (
           <span
-            key={i}
+            key={`r5-${slot}`}
             className="text-[#252525] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-[16px] select-none"
             style={{ opacity: 0.08 }}
           >

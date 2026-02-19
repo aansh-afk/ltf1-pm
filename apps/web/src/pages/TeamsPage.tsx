@@ -5,7 +5,7 @@ import type { Id } from '../../../../convex/_generated/dataModel'
 import { useEnsureUser } from '../hooks/useEnsureUser'
 import { HiOutlinePlus, HiOutlineUsers, HiOutlineCog, HiOutlineUserAdd } from 'react-icons/hi'
 import { toast } from 'react-hot-toast'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import BrutalistLoader from '../components/common/BrutalistLoader'
 import BrutalModal from '@/components/ui/BrutalModal'
 import AddTeamMemberModal from '@/components/features/team/AddTeamMemberModal'
@@ -48,7 +48,7 @@ export default function TeamsPage() {
     return (
         <div className="p-4 max-w-7xl mx-auto min-h-screen">
             {/* Page Header */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -71,12 +71,12 @@ export default function TeamsPage() {
                     <HiOutlinePlus className="w-4 h-4" />
                     CREATE TEAM
                 </button>
-            </motion.div>
+            </m.div>
 
             {/* Teams Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {teams?.map((team, index) => (
-                    <motion.div
+                    <m.div
                         key={team._id}
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -116,13 +116,13 @@ export default function TeamsPage() {
                                 ADD MEMBER
                             </button>
                         </div>
-                    </motion.div>
+                    </m.div>
                 ))}
 
                 {/* Empty State */}
                 {teams?.length === 0 && (
                     <div className="col-span-full">
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5 }}
@@ -137,7 +137,7 @@ export default function TeamsPage() {
                             >
                                 CREATE TEAM
                             </button>
-                        </motion.div>
+                        </m.div>
                     </div>
                 )}
             </div>
@@ -150,20 +150,21 @@ export default function TeamsPage() {
             >
                 <form onSubmit={handleCreateTeam} className="space-y-3">
                     <div>
-                        <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] mb-1.5">TEAM NAME</label>
+                        <label htmlFor="create-team-name" className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] mb-1.5">TEAM NAME</label>
                         <input
+                            id="create-team-name"
                             type="text"
                             value={newTeamName}
                             onChange={(e) => setNewTeamName(e.target.value)}
                             className="w-full bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-2.5 focus:outline-none focus:border-[var(--theme-primary)] font-mono text-xs text-[var(--theme-foreground)] uppercase placeholder:text-[var(--theme-foreground-tertiary)]"
                             placeholder="E.G. FRONTEND SQUAD"
                             required
-                            autoFocus
                         />
                     </div>
                     <div>
-                        <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] mb-1.5">DESCRIPTION</label>
+                        <label htmlFor="create-team-description" className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] mb-1.5">DESCRIPTION</label>
                         <textarea
+                            id="create-team-description"
                             value={newTeamDescription}
                             onChange={(e) => setNewTeamDescription(e.target.value)}
                             className="w-full bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-2.5 focus:outline-none focus:border-[var(--theme-primary)] font-mono text-xs text-[var(--theme-foreground)] resize-none h-24 placeholder:text-[var(--theme-foreground-tertiary)]"

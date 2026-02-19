@@ -36,10 +36,10 @@ export default function MeetingNotesModal({
   const updateMeeting = useMutation(api.meetings.mutations.updateMeeting)
 
   useEffect(() => {
-    if (meeting?.notes) {
-      setNotes(meeting.notes)
+    if (meeting?.notes !== undefined) {
+      setNotes(meeting.notes || '')
     }
-  }, [meeting])
+  }, [meeting?.notes])
 
   const isOrganizer = currentUserId === meeting?.organizerId
   const canEdit = isOrganizer || meeting?.attendees?.some((a: any) => 
@@ -232,7 +232,6 @@ USE MARKDOWN FOR FORMATTING:
 - BULLET POINT
 [ ] TODO ITEM
 **BOLD TEXT**"
-              autoFocus
             />
           ) : (
             <div className="min-h-400px p-[10px]">

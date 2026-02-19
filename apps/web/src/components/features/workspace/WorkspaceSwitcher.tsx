@@ -92,9 +92,13 @@ export default function WorkspaceSwitcher() {
       {isOpen && (
         <>
           {/* Backdrop */}
-          <div 
+          <div
             className="fixed inset-0 z-40"
+            role="button"
+            tabIndex={0}
+            aria-label="Close workspace switcher"
             onClick={() => setIsOpen(false)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsOpen(false) }}
           />
           
           {/* Menu */}

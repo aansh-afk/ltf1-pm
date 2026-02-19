@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useReducer, useEffect } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
@@ -16,61 +16,272 @@ interface EditTaskModalProps {
   onDelete?: () => void
 }
 
-export default function EditTaskModal({ 
-  isOpen, 
-  onClose, 
+type EditTaskState = {
+  title: string
+  description: string
+  type: 'feature' | 'bug' | 'improvement' | 'task' | 'epic'
+  priority: 'urgent' | 'high' | 'medium' | 'low'
+  status: 'todo' | 'in_progress' | 'in_review' | 'done' | 'blocked'
+  assigneeIds: string[]
+  labels: string
+  estimateHours: string
+  startDate: string
+  dueDate: string
+  isUpdating: boolean
+  useSmartAssignment: boolean
+}
+
+const initialEditState: EditTaskState = {
+  title: '',
+  description: '',
+  type: 'task',
+  priority: 'medium',
+  status: 'todo',
+  assigneeIds: [],
+  labels: '',
+  estimateHours: '',
+  startDate: '',
+  dueDate: '',
+  isUpdating: false,
+  useSmartAssignment: true,
+}
+
+type EditTaskAction =
+  | { type: 'UPDATE'; field: keyof EditTaskState; value: EditTaskState[keyof EditTaskState] }
+  | { type: 'SET_ASSIGNEE_IDS'; value: string[] }
+  | { type: 'TOGGLE_SMART_ASSIGNMENT' }
+  | { type: 'SET_IS_UPDATING'; value: boolean }
+  | { type: 'LOAD_TASK'; payload: EditTaskState }
+
+function editTaskReducer(state: EditTaskState, action: EditTaskAction): EditTaskState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    case 'SET_ASSIGNEE_IDS':
+      return { ...state, assigneeIds: action.value }
+    case 'TOGGLE_SMART_ASSIGNMENT':
+      return { ...state, useSmartAssignment: !state.useSmartAssignment }
+    case 'SET_IS_UPDATING':
+      return { ...state, isUpdating: action.value }
+    case 'LOAD_TASK':
+      return { ...state, ...action.payload }
+    default:
+      return state
+  }
+}
+
+// ── Sub-components ──
+
+interface TaskFormFieldsProps {
+  title: string
+  description: string
+  type: string
+  priority: string
+  status: string
+  dispatch: React.Dispatch<EditTaskAction>
+  typeOptions: Array<{ value: string; label: string }>
+  priorityOptions: Array<{ value: string; label: string; className: string }>
+  statusOptions: Array<{ value: string; label: string }>
+}
+
+function TaskFormFields({ title, description, type, priority, status, dispatch, typeOptions, priorityOptions, statusOptions }: TaskFormFieldsProps) {
+  return (
+    <>
+      {/* Title */}
+      <div className="space-y-[4px]">
+        <label htmlFor="title" className="text-xs font-mono uppercase tracking-wider">
+          TITLE*
+        </label>
+        <input
+          id="title"
+          type="text"
+          value={title}
+          onChange={(e) => dispatch({ type: 'UPDATE', field: 'title', value: e.target.value })}
+          className="brutal-input"
+          placeholder="ENTER TASK TITLE"
+          required
+        />
+      </div>
+
+      {/* Description */}
+      <div className="space-y-[4px]">
+        <label htmlFor="description" className="text-xs font-mono uppercase tracking-wider">
+          DESCRIPTION
+        </label>
+        <textarea
+          id="description"
+          value={description}
+          onChange={(e) => dispatch({ type: 'UPDATE', field: 'description', value: e.target.value })}
+          className="brutal-input min-h-[100px]"
+          placeholder="DESCRIBE THE TASK..."
+          rows={4}
+        />
+      </div>
+
+      {/* Type and Priority */}
+      <div className="grid grid-cols-2 gap-[8px]">
+        <div className="space-y-[4px]">
+          <label htmlFor="type" className="text-xs font-mono uppercase tracking-wider">
+            TYPE
+          </label>
+          <select
+            id="type"
+            value={type}
+            onChange={(e) => dispatch({ type: 'UPDATE', field: 'type', value: e.target.value as any })}
+            className="brutal-input"
+          >
+            {typeOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-[4px]">
+          <label htmlFor="priority" className="text-xs font-mono uppercase tracking-wider">
+            PRIORITY
+          </label>
+          <select
+            id="priority"
+            value={priority}
+            onChange={(e) => dispatch({ type: 'UPDATE', field: 'priority', value: e.target.value as any })}
+            className="brutal-input"
+          >
+            {priorityOptions.map(opt => (
+              <option key={opt.value} value={opt.value} className={opt.className}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Status */}
+      <div className="space-y-[4px]">
+        <label htmlFor="status" className="text-xs font-mono uppercase tracking-wider">
+          STATUS
+        </label>
+        <select
+          id="status"
+          value={status}
+          onChange={(e) => dispatch({ type: 'UPDATE', field: 'status', value: e.target.value as any })}
+          className="brutal-input"
+        >
+          {statusOptions.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </div>
+    </>
+  )
+}
+
+interface TaskDatesEstimateProps {
+  startDate: string
+  dueDate: string
+  estimateHours: string
+  dispatch: React.Dispatch<EditTaskAction>
+}
+
+function TaskDatesEstimate({ startDate, dueDate, estimateHours, dispatch }: TaskDatesEstimateProps) {
+  return (
+    <div className="grid grid-cols-3 gap-[8px]">
+      <div className="space-y-[4px]">
+        <label htmlFor="startDate" className="text-xs font-mono uppercase tracking-wider">
+          START DATE
+        </label>
+        <input
+          id="startDate"
+          type="date"
+          value={startDate}
+          onChange={(e) => dispatch({ type: 'UPDATE', field: 'startDate', value: e.target.value })}
+          className="brutal-input"
+        />
+      </div>
+
+      <div className="space-y-[4px]">
+        <label htmlFor="dueDate" className="text-xs font-mono uppercase tracking-wider">
+          DUE DATE
+        </label>
+        <input
+          id="dueDate"
+          type="date"
+          value={dueDate}
+          onChange={(e) => dispatch({ type: 'UPDATE', field: 'dueDate', value: e.target.value })}
+          className="brutal-input"
+        />
+      </div>
+
+      <div className="space-y-[4px]">
+        <label htmlFor="estimate" className="text-xs font-mono uppercase tracking-wider">
+          ESTIMATE (HOURS)
+        </label>
+        <input
+          id="estimate"
+          type="number"
+          step="0.5"
+          min="0"
+          value={estimateHours}
+          onChange={(e) => dispatch({ type: 'UPDATE', field: 'estimateHours', value: e.target.value })}
+          className="brutal-input"
+          placeholder="0.0"
+        />
+      </div>
+    </div>
+  )
+}
+
+export default function EditTaskModal({
+  isOpen,
+  onClose,
   task,
   onDelete
 }: EditTaskModalProps) {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [type, setType] = useState<'feature' | 'bug' | 'improvement' | 'task' | 'epic'>('task')
-  const [priority, setPriority] = useState<'urgent' | 'high' | 'medium' | 'low'>('medium')
-  const [status, setStatus] = useState<'todo' | 'in_progress' | 'in_review' | 'done' | 'blocked'>('todo')
-  const [assigneeIds, setAssigneeIds] = useState<string[]>([])
-  const [labels, setLabels] = useState<string>('')
-  const [estimateHours, setEstimateHours] = useState<string>('')
-  const [startDate, setStartDate] = useState<string>('')
-  const [dueDate, setDueDate] = useState<string>('')
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [useSmartAssignment, setUseSmartAssignment] = useState(true)
+  const [state, dispatch] = useReducer(editTaskReducer, initialEditState)
+  const { title, description, type, priority, status, assigneeIds, labels, estimateHours, startDate, dueDate, isUpdating, useSmartAssignment } = state
 
   const updateTask = useMutation(api.tasks.mutations.updateTask)
   const project = useQuery(api.projects.queries.getProject, { projectId: task?.projectId })
 
-  // Initialize form with task data
+  // react-doctor: legitimate - syncs external task prop into local form reducer state
   useEffect(() => {
     if (task) {
-      setTitle(task.title || '')
-      setDescription(task.description || '')
-      setType(task.type || 'task')
-      setPriority(task.priority || 'medium')
-      setStatus(task.status || 'todo')
-      // Handle both old assigneeId and new assigneeIds
+      let taskAssigneeIds: string[] = []
       if (task.assigneeIds && task.assigneeIds.length > 0) {
-        setAssigneeIds(task.assigneeIds)
+        taskAssigneeIds = task.assigneeIds
       } else if (task.assigneeId) {
-        setAssigneeIds([task.assigneeId])
-      } else {
-        setAssigneeIds([])
+        taskAssigneeIds = [task.assigneeId]
       }
-      setLabels(task.labels?.join(', ') || '')
-      setEstimateHours(task.estimate?.hours?.toString() || '')
-      setStartDate(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '')
-      setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '')
+
+      dispatch({
+        type: 'LOAD_TASK',
+        payload: {
+          title: task.title || '',
+          description: task.description || '',
+          type: task.type || 'task',
+          priority: task.priority || 'medium',
+          status: task.status || 'todo',
+          assigneeIds: taskAssigneeIds,
+          labels: task.labels?.join(', ') || '',
+          estimateHours: task.estimate?.hours?.toString() || '',
+          startDate: task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '',
+          dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+          isUpdating: false,
+          useSmartAssignment: true,
+        }
+      })
     }
   }, [task])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!title.trim()) {
       toast.error('Task title is required')
       return
     }
 
-    setIsUpdating(true)
-    
+    dispatch({ type: 'SET_IS_UPDATING', value: true })
+
     try {
       await updateTask({
         taskId: task._id,
@@ -85,13 +296,13 @@ export default function EditTaskModal({
         startDate: startDate ? new Date(startDate).getTime() : undefined,
         dueDate: dueDate ? new Date(dueDate).getTime() : undefined,
       })
-      
+
       toast.success('Task updated successfully!')
       onClose()
     } catch (error: any) {
       toast.error(error.message || 'Failed to update task')
     } finally {
-      setIsUpdating(false)
+      dispatch({ type: 'SET_IS_UPDATING', value: false })
     }
   }
 
@@ -126,100 +337,27 @@ export default function EditTaskModal({
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-[12px]">
-        {/* Title */}
-        <div className="space-y-[4px]">
-          <label htmlFor="title" className="text-xs font-mono uppercase tracking-wider">
-            TITLE*
-          </label>
-          <input
-            id="title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="brutal-input"
-            placeholder="ENTER TASK TITLE"
-            required
-          />
-        </div>
-
-        {/* Description */}
-        <div className="space-y-[4px]">
-          <label htmlFor="description" className="text-xs font-mono uppercase tracking-wider">
-            DESCRIPTION
-          </label>
-          <textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="brutal-input min-h-[100px]"
-            placeholder="DESCRIBE THE TASK..."
-            rows={4}
-          />
-        </div>
-
-        {/* Type and Priority */}
-        <div className="grid grid-cols-2 gap-[8px]">
-          <div className="space-y-[4px]">
-            <label htmlFor="type" className="text-xs font-mono uppercase tracking-wider">
-              TYPE
-            </label>
-            <select
-              id="type"
-              value={type}
-              onChange={(e) => setType(e.target.value as any)}
-              className="brutal-input"
-            >
-              {typeOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-[4px]">
-            <label htmlFor="priority" className="text-xs font-mono uppercase tracking-wider">
-              PRIORITY
-            </label>
-            <select
-              id="priority"
-              value={priority}
-              onChange={(e) => setPriority(e.target.value as any)}
-              className="brutal-input"
-            >
-              {priorityOptions.map(opt => (
-                <option key={opt.value} value={opt.value} className={opt.className}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Status */}
-        <div className="space-y-[4px]">
-          <label htmlFor="status" className="text-xs font-mono uppercase tracking-wider">
-            STATUS
-          </label>
-          <select
-            id="status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value as any)}
-            className="brutal-input"
-          >
-            {statusOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
+        <TaskFormFields
+          title={title}
+          description={description}
+          type={type}
+          priority={priority}
+          status={status}
+          dispatch={dispatch}
+          typeOptions={typeOptions}
+          priorityOptions={priorityOptions}
+          statusOptions={statusOptions}
+        />
 
         {/* Assignees */}
         <div className="space-y-[4px]">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-mono uppercase tracking-wider">
+            <span className="text-xs font-mono uppercase tracking-wider">
               ASSIGNEES
-            </label>
+            </span>
             <button
               type="button"
-              onClick={() => setUseSmartAssignment(!useSmartAssignment)}
+              onClick={() => dispatch({ type: 'TOGGLE_SMART_ASSIGNMENT' })}
               className="flex items-center gap-[4px] font-mono text-brutal-xs text-primary-brutalist hover:text-brutal-info transition-colors"
             >
               {useSmartAssignment ? (
@@ -240,7 +378,7 @@ export default function EditTaskModal({
             <TaskAssignmentHelper
               workspaceId={project?.workspaceId as Id<"workspaces">}
               currentAssignees={assigneeIds as Id<"users">[]}
-              onAssigneeChange={(ids) => setAssigneeIds(ids)}
+              onAssigneeChange={(ids) => dispatch({ type: 'SET_ASSIGNEE_IDS', value: ids })}
               taskTitle={title}
               taskDescription={description}
               taskLabels={labels.split(',').map(l => l.trim()).filter(Boolean)}
@@ -254,7 +392,7 @@ export default function EditTaskModal({
                 avatarUrl: member.user.avatarUrl
               })) || []}
               value={assigneeIds}
-              onChange={setAssigneeIds}
+              onChange={(ids) => dispatch({ type: 'SET_ASSIGNEE_IDS', value: ids })}
               placeholder="SELECT ASSIGNEES"
               disabled={isUpdating}
             />
@@ -270,56 +408,14 @@ export default function EditTaskModal({
             id="labels"
             type="text"
             value={labels}
-            onChange={(e) => setLabels(e.target.value)}
+            onChange={(e) => dispatch({ type: 'UPDATE', field: 'labels', value: e.target.value })}
             className="brutal-input"
             placeholder="FRONTEND, BUG-FIX, URGENT"
           />
         </div>
 
         {/* Dates and Estimate */}
-        <div className="grid grid-cols-3 gap-[8px]">
-          <div className="space-y-[4px]">
-            <label htmlFor="startDate" className="text-xs font-mono uppercase tracking-wider">
-              START DATE
-            </label>
-            <input
-              id="startDate"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="brutal-input"
-            />
-          </div>
-
-          <div className="space-y-[4px]">
-            <label htmlFor="dueDate" className="text-xs font-mono uppercase tracking-wider">
-              DUE DATE
-            </label>
-            <input
-              id="dueDate"
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="brutal-input"
-            />
-          </div>
-
-          <div className="space-y-[4px]">
-            <label htmlFor="estimate" className="text-xs font-mono uppercase tracking-wider">
-              ESTIMATE (HOURS)
-            </label>
-            <input
-              id="estimate"
-              type="number"
-              step="0.5"
-              min="0"
-              value={estimateHours}
-              onChange={(e) => setEstimateHours(e.target.value)}
-              className="brutal-input"
-              placeholder="0.0"
-            />
-          </div>
-        </div>
+        <TaskDatesEstimate startDate={startDate} dueDate={dueDate} estimateHours={estimateHours} dispatch={dispatch} />
 
         {/* Actions */}
         <div className="flex items-center justify-between border-t-2 border-[var(--theme-border)] pt-[12px]">
