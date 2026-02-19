@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   FaCode,
   FaCodeBranch,
@@ -116,9 +116,10 @@ export default memo(function GitHubFeedItem({ item, isFocused, isExpanded, onTog
   };
 
   return (
-    <div
+    <button
+      type="button"
       onClick={onFocus}
-      className={`group relative pl-[14px] pr-[10px] py-[8px] border bg-[var(--theme-background)] transition-all duration-150 cursor-pointer ${
+      className={`group relative pl-[14px] pr-[10px] py-[8px] border bg-[var(--theme-background)] transition-all duration-150 cursor-pointer w-full text-left ${
         isFocused
           ? 'border-primary-brutalist bg-primary-brutalist/5'
           : 'border-[var(--theme-border)] hover:border-primary-brutalist/50'
@@ -128,7 +129,7 @@ export default memo(function GitHubFeedItem({ item, isFocused, isExpanded, onTog
       <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${getAccentColor(item)}`} />
 
       {/* Compact row */}
-      <div className="flex items-center gap-[8px] min-w-0" onClick={onToggleExpand}>
+      <div className="flex items-center gap-[8px] min-w-0" onClick={(e) => { e.stopPropagation(); onToggleExpand(); }} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); onToggleExpand(); } }}>
         {/* Type icon */}
         <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center border border-[var(--theme-border)] bg-[var(--theme-background-secondary)] shrink-0 ${getIconColor(item)}`}>
           <TypeIcon item={item} />
@@ -197,7 +198,7 @@ export default memo(function GitHubFeedItem({ item, isFocused, isExpanded, onTog
       {/* Expanded view */}
       <AnimatePresence>
         {isExpanded && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -298,9 +299,9 @@ export default memo(function GitHubFeedItem({ item, isFocused, isExpanded, onTog
                 </a>
               )}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
-    </div>
+    </button>
   );
 });

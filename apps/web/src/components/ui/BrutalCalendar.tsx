@@ -37,8 +37,10 @@ interface BrutalCalendarProps {
   className?: string
 }
 
+const EMPTY_EVENTS: CalendarEvent[] = []
+
 export default function BrutalCalendar({
-  events = [],
+  events = EMPTY_EVENTS,
   selectedDate,
   onDateSelect,
   onEventClick,
@@ -148,23 +150,24 @@ export default function BrutalCalendar({
 
       {/* Calendar Grid */}
       <div className="grid grid-cols-7">
-        {days.map((day, idx) => {
+        {days.map((day) => {
           const dateKey = format(day, 'yyyy-MM-dd')
           const dayEvents = eventsByDate.get(dateKey) || []
           const isCurrentMonth = isSameMonth(day, currentDate)
           const isSelected = selectedDate && isSameDay(day, selectedDate)
           const isHovered = hoveredDate && isSameDay(day, hoveredDate)
           const isTodayDate = isToday(day)
-          
+
           return (
-            <div
-              key={idx}
+            <button
+              type="button"
+              key={dateKey}
               onClick={() => onDateSelect && onDateSelect(day)}
               onMouseEnter={() => setHoveredDate(day)}
               onMouseLeave={() => setHoveredDate(null)}
               className={clsx(
                 "min-h-100px p-[8px] border-r-2 border-b-2 border-[var(--theme-border)] last:border-r-0 bg-[var(--theme-background)]",
-                "cursor-pointer transition-all duration-200",
+                "cursor-pointer transition-all duration-200 text-left",
                 !isCurrentMonth && "opacity-40",
                 isSelected && "bg-[var(--theme-primary)]",
                 isHovered && !isSelected && "bg-[var(--theme-background-secondary)]/50",
@@ -183,20 +186,21 @@ export default function BrutalCalendar({
               {/* Events */}
               <div className="space-y-2px">
                 {dayEvents.slice(0, 3).map((event, eventIdx) => (
-                  <div
+                  <button
+                    type="button"
                     key={event.id}
                     onClick={(e) => {
                       e.stopPropagation()
                       onEventClick && onEventClick(event)
                     }}
                     className={clsx(
-                      "px-4px py-2px text-brutal-xs truncate cursor-pointer",
+                      "px-4px py-2px text-brutal-xs truncate cursor-pointer w-full text-left",
                       "border border-[var(--theme-border)] hover:scale-105 transition-transform",
                       event.color || "bg-[var(--theme-primary)] text-[var(--theme-background)]"
                     )}
                   >
                     {event.title}
-                  </div>
+                  </button>
                 ))}
                 {dayEvents.length > 3 && (
                   <div className="text-brutal-xs text-[var(--theme-foreground)]/60">
@@ -204,7 +208,7 @@ export default function BrutalCalendar({
                   </div>
                 )}
               </div>
-            </div>
+            </button>
           )
         })}
       </div>

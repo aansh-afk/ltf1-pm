@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useReducer } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
@@ -18,12 +18,40 @@ import { TaskAssignmentHelper } from '@/components/features/task/TaskAssignmentH
 import DeveloperProfileCard from '@/components/features/developer/DeveloperProfileCard'
 import { EditDeveloperProfileModal } from '@/components/features/profile/EditDeveloperProfileModal'
 
+type ProfileDemoState = {
+  showExpertiseSearch: boolean
+  showExpertiseMatrix: boolean
+  showEditProfile: boolean
+  selectedTechnologies: string[]
+  assignedUsers: Id<"users">[]
+}
+
+const profileDemoInitialState: ProfileDemoState = {
+  showExpertiseSearch: false,
+  showExpertiseMatrix: false,
+  showEditProfile: false,
+  selectedTechnologies: ['React', 'TypeScript', 'Node.js'],
+  assignedUsers: [],
+}
+
+type ProfileDemoAction =
+  | { type: 'UPDATE'; field: keyof ProfileDemoState; value: ProfileDemoState[keyof ProfileDemoState] }
+  | { type: 'RESET' }
+
+function profileDemoReducer(state: ProfileDemoState, action: ProfileDemoAction): ProfileDemoState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    case 'RESET':
+      return profileDemoInitialState
+    default:
+      return state
+  }
+}
+
 export default function ProfileDemoPage() {
-  const [showExpertiseSearch, setShowExpertiseSearch] = useState(false)
-  const [showExpertiseMatrix, setShowExpertiseMatrix] = useState(false)
-  const [showEditProfile, setShowEditProfile] = useState(false)
-  const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>(['React', 'TypeScript', 'Node.js'])
-  const [assignedUsers, setAssignedUsers] = useState<Id<"users">[]>([])
+  const [state, dispatch] = useReducer(profileDemoReducer, profileDemoInitialState)
+  const { showExpertiseSearch, showExpertiseMatrix, showEditProfile, selectedTechnologies, assignedUsers } = state
 
   // Get current user and workspace
   const currentUser = useQuery(api.auth.users.getCurrentUser)
@@ -64,7 +92,7 @@ export default function ProfileDemoPage() {
             onClick={() => console.log('Profile clicked')}
           />
           <button
-            onClick={() => setShowEditProfile(true)}
+            onClick={() => dispatch({ type: 'UPDATE', field: 'showEditProfile', value: true })}
             className="brutal-btn w-full mt-[8px]"
           >
             EDIT YOUR PROFILE
@@ -81,7 +109,7 @@ export default function ProfileDemoPage() {
             Search for team members by technology, skill, or expertise
           </p>
           <button
-            onClick={() => setShowExpertiseSearch(true)}
+            onClick={() => dispatch({ type: 'UPDATE', field: 'showExpertiseSearch', value: true })}
             className="brutal-btn w-full"
           >
             OPEN EXPERTISE SEARCH
@@ -103,7 +131,7 @@ export default function ProfileDemoPage() {
             Visualize your team's skills and expertise levels
           </p>
           <button
-            onClick={() => setShowExpertiseMatrix(true)}
+            onClick={() => dispatch({ type: 'UPDATE', field: 'showExpertiseMatrix', value: true })}
             className="brutal-btn w-full"
           >
             VIEW TEAM MATRIX
@@ -127,18 +155,18 @@ export default function ProfileDemoPage() {
         </p>
         
         <div className="mb-[8px]">
-          <label className="block font-mono text-brutal-sm font-bold mb-8px">
+          <span className="block font-mono text-brutal-sm font-bold mb-8px">
             SELECT TECHNOLOGIES FOR REVIEW:
-          </label>
+          </span>
           <div className="flex flex-wrap gap-8px">
             {['React', 'TypeScript', 'Node.js', 'Python', 'DevOps', 'PostgreSQL'].map((tech) => (
               <button
                 key={tech}
                 onClick={() => {
                   if (selectedTechnologies.includes(tech)) {
-                    setSelectedTechnologies(prev => prev.filter(t => t !== tech))
+                    dispatch({ type: 'UPDATE', field: 'selectedTechnologies', value: selectedTechnologies.filter(t => t !== tech) })
                   } else {
-                    setSelectedTechnologies(prev => [...prev, tech])
+                    dispatch({ type: 'UPDATE', field: 'selectedTechnologies', value: [...selectedTechnologies, tech] })
                   }
                 }}
                 className={clsx(
@@ -177,7 +205,7 @@ export default function ProfileDemoPage() {
         <TaskAssignmentHelper
           workspaceId={currentWorkspace._id}
           currentAssignees={assignedUsers}
-          onAssigneeChange={setAssignedUsers}
+          onAssigneeChange={(users: Id<"users">[]) => dispatch({ type: 'UPDATE', field: 'assignedUsers', value: users })}
           taskTitle="Implement React component with TypeScript and integrate Node.js API"
           taskDescription="Need to create a new dashboard component using React hooks and TypeScript. The component should fetch data from our Node.js backend API and handle real-time updates."
           taskLabels={['frontend', 'api-integration', 'urgent']}
@@ -240,7 +268,7 @@ export default function ProfileDemoPage() {
       {/* Modals */}
       {showExpertiseSearch && (
         <ExpertiseSearchModal
-          onClose={() => setShowExpertiseSearch(false)}
+          onClose={() => dispatch({ type: 'UPDATE', field: 'showExpertiseSearch', value: false })}
           workspaceId={currentWorkspace._id}
         />
       )}
@@ -248,7 +276,7 @@ export default function ProfileDemoPage() {
       {showExpertiseMatrix && (
         <TeamExpertiseMatrix
           workspaceId={currentWorkspace._id}
-          onClose={() => setShowExpertiseMatrix(false)}
+          onClose={() => dispatch({ type: 'UPDATE', field: 'showExpertiseMatrix', value: false })}
           isModal={true}
         />
       )}
@@ -256,7 +284,7 @@ export default function ProfileDemoPage() {
       {showEditProfile && (
         <EditDeveloperProfileModal
           userId={currentUser._id}
-          onClose={() => setShowEditProfile(false)}
+          onClose={() => dispatch({ type: 'UPDATE', field: 'showEditProfile', value: false })}
         />
       )}
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useReducer } from 'react'
 import { useMutation, useAction } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
@@ -31,17 +31,155 @@ interface GeneratedTask {
   acceptanceCriteria?: string[]
 }
 
+type NLTaskState = {
+  input: string
+  isGenerating: boolean
+  generatedTasks: GeneratedTask[]
+  editingIndex: number | null
+  showAdvanced: boolean
+  epicTitle: string
+}
+
+const nlTaskInitialState: NLTaskState = {
+  input: '',
+  isGenerating: false,
+  generatedTasks: [],
+  editingIndex: null,
+  showAdvanced: false,
+  epicTitle: '',
+}
+
+type NLTaskAction =
+  | { type: 'UPDATE'; field: keyof NLTaskState; value: unknown }
+  | { type: 'RESET_FORM' }
+
+function nlTaskReducer(state: NLTaskState, action: NLTaskAction): NLTaskState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    case 'RESET_FORM':
+      return { ...state, generatedTasks: [], input: '', epicTitle: '' }
+    default:
+      return state
+  }
+}
+
+// --- Sub-components ---
+
+interface NLGeneratedTaskItemProps {
+  task: GeneratedTask
+  index: number
+  isEditing: boolean
+  onToggleEdit: (index: number) => void
+  onEditField: (index: number, field: keyof GeneratedTask, value: any) => void
+  onRemove: (index: number) => void
+}
+
+function NLGeneratedTaskItem({ task, index, isEditing, onToggleEdit, onEditField, onRemove }: NLGeneratedTaskItemProps) {
+  return (
+    <div
+      className="p-[10px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]"
+    >
+      <div className="flex items-start justify-between mb-12px">
+        <div className="flex-1">
+          {isEditing ? (
+            <input
+              type="text"
+              value={task.title}
+              onChange={(e) => onEditField(index, 'title', e.target.value)}
+              aria-label="Edit task title"
+              className="w-full p-4px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]
+                       text-brutal-sm font-bold"
+            />
+          ) : (
+            <h5 className="text-brutal-sm font-bold">{task.title}</h5>
+          )}
+        </div>
+        <div className="flex items-center gap-8px ml-16px">
+          <button
+            onClick={() => onToggleEdit(index)}
+            className="p-4px hover:bg-[var(--theme-background-secondary)]"
+          >
+            <HiOutlinePencil className="text-brutal-sm" />
+          </button>
+          <button
+            onClick={() => onRemove(index)}
+            className="p-4px hover:bg-[var(--theme-error)] hover:text-[var(--theme-background)]"
+          >
+            <HiOutlineX className="text-brutal-sm" />
+          </button>
+        </div>
+      </div>
+
+      {isEditing ? (
+        <textarea
+          value={task.description}
+          onChange={(e) => onEditField(index, 'description', e.target.value)}
+          aria-label="Edit task description"
+          className="w-full h-80px p-8px mb-12px bg-[var(--theme-background-secondary)]
+                   border border-[var(--theme-border)] text-brutal-xs resize-none"
+        />
+      ) : (
+        <p className="text-brutal-xs text-[var(--theme-foreground-secondary)] mb-12px">
+          {task.description}
+        </p>
+      )}
+
+      <div className="flex flex-wrap gap-8px text-brutal-xs">
+        <span className={`px-8px py-2px border ${
+          task.type === 'feature' ? 'border-[var(--theme-success)] text-[var(--theme-success)]' :
+          task.type === 'bug' ? 'border-[var(--theme-error)] text-[var(--theme-error)]' :
+          task.type === 'improvement' ? 'border-[var(--theme-info)] text-[var(--theme-info)]' :
+          'border-[var(--theme-border)]'
+        }`}>
+          {task.type}
+        </span>
+
+        <span className={`px-8px py-2px border ${
+          task.priority === 'urgent' ? 'border-[var(--theme-error)] text-[var(--theme-error)]' :
+          task.priority === 'high' ? 'border-[var(--theme-warning)] text-[var(--theme-warning)]' :
+          task.priority === 'medium' ? 'border-[var(--theme-info)] text-[var(--theme-info)]' :
+          'border-[var(--theme-border)]'
+        }`}>
+          {task.priority}
+        </span>
+
+        {task.estimatedPoints && (
+          <span className="px-8px py-2px border border-[var(--theme-border)]">
+            {task.estimatedPoints} points
+          </span>
+        )}
+
+        {task.suggestedAssigneeRole && (
+          <span className="px-8px py-2px bg-[var(--theme-primary)] text-[var(--theme-background)]">
+            {task.suggestedAssigneeRole}
+          </span>
+        )}
+      </div>
+
+      {task.acceptanceCriteria && task.acceptanceCriteria.length > 0 && (
+        <div className="mt-12px pt-12px border-t border-[var(--theme-border)]">
+          <p className="text-brutal-xs font-bold uppercase mb-4px">Acceptance Criteria:</p>
+          <ul className="list-disc list-inside text-brutal-xs text-[var(--theme-foreground-secondary)]">
+            {task.acceptanceCriteria.map((criteria) => (
+              <li key={criteria}>{criteria}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// --- Main component ---
+
 export default function NaturalLanguageTaskCreator({
   projectId,
   sprintId,
   onTasksCreated
 }: NaturalLanguageTaskCreatorProps) {
-  const [input, setInput] = useState('')
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [generatedTasks, setGeneratedTasks] = useState<GeneratedTask[]>([])
-  const [editingIndex, setEditingIndex] = useState<number | null>(null)
-  const [showAdvanced, setShowAdvanced] = useState(false)
-  const [epicTitle, setEpicTitle] = useState('')
+  const [state, dispatch] = useReducer(nlTaskReducer, nlTaskInitialState)
+  const { input, isGenerating, generatedTasks, editingIndex, showAdvanced, epicTitle } = state
   
   const generateTasks = useAction(api.ai.projectInsights.generateTasksFromDescription)
   const createTask = useMutation(api.tasks.create)
@@ -52,7 +190,7 @@ export default function NaturalLanguageTaskCreator({
       return
     }
     
-    setIsGenerating(true)
+    dispatch({ type: 'UPDATE', field: 'isGenerating', value: true })
     try {
       const result = await generateTasks({
         projectId,
@@ -61,7 +199,7 @@ export default function NaturalLanguageTaskCreator({
       })
       
       if (result.tasks && result.tasks.length > 0) {
-        setGeneratedTasks(result.tasks)
+        dispatch({ type: 'UPDATE', field: 'generatedTasks', value: result.tasks })
         toast.success(`Generated ${result.tasks.length} tasks from your description`)
       } else {
         toast.error('Could not generate tasks. Please try a different description.')
@@ -70,7 +208,7 @@ export default function NaturalLanguageTaskCreator({
       console.error('Error generating tasks:', error)
       toast.error('Failed to generate tasks. Please check your API key setup.')
     } finally {
-      setIsGenerating(false)
+      dispatch({ type: 'UPDATE', field: 'isGenerating', value: false })
     }
   }
   
@@ -95,9 +233,7 @@ export default function NaturalLanguageTaskCreator({
       }
       
       toast.success(`Created ${createdTasks.length} tasks successfully`)
-      setGeneratedTasks([])
-      setInput('')
-      setEpicTitle('')
+      dispatch({ type: 'RESET_FORM' })
       onTasksCreated?.()
     } catch (error) {
       console.error('Error creating tasks:', error)
@@ -111,11 +247,11 @@ export default function NaturalLanguageTaskCreator({
       ...updated[index],
       [field]: value
     }
-    setGeneratedTasks(updated)
+    dispatch({ type: 'UPDATE', field: 'generatedTasks', value: updated })
   }
   
   const handleRemoveTask = (index: number) => {
-    setGeneratedTasks(generatedTasks.filter((_, i) => i !== index))
+    dispatch({ type: 'UPDATE', field: 'generatedTasks', value: generatedTasks.filter((_, i) => i !== index) })
   }
   
   const examplePrompts = [
@@ -141,14 +277,15 @@ export default function NaturalLanguageTaskCreator({
       {/* Input Section */}
       <div className="space-y-[8px]">
         <div>
-          <label className="block text-brutal-xs font-bold uppercase mb-8px">
+          <label htmlFor="nl-task-description" className="block text-brutal-xs font-bold uppercase mb-8px">
             Describe Your Feature or Epic
           </label>
           <textarea
+            id="nl-task-description"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => dispatch({ type: 'UPDATE', field: 'input', value: e.target.value })}
             placeholder="E.g., Build a user profile page with avatar upload, bio editing, and social links..."
-            className="w-full h-100px p-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+            className="w-full h-100px p-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
                      text-brutal-sm font-mono resize-none
                      focus:border-[var(--theme-primary)] focus:outline-none"
             disabled={isGenerating}
@@ -158,7 +295,7 @@ export default function NaturalLanguageTaskCreator({
         {/* Advanced Options */}
         <div>
           <button
-            onClick={() => setShowAdvanced(!showAdvanced)}
+            onClick={() => dispatch({ type: 'UPDATE', field: 'showAdvanced', value: !showAdvanced })}
             className="flex items-center gap-8px text-brutal-xs font-bold uppercase
                      text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-primary)]"
           >
@@ -168,13 +305,14 @@ export default function NaturalLanguageTaskCreator({
           
           {showAdvanced && (
             <div className="mt-12px p-12px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
-              <label className="block text-brutal-xs font-bold uppercase mb-8px">
+              <label htmlFor="nl-task-epic-title" className="block text-brutal-xs font-bold uppercase mb-8px">
                 Epic Title (Optional)
               </label>
               <input
+                id="nl-task-epic-title"
                 type="text"
                 value={epicTitle}
-                onChange={(e) => setEpicTitle(e.target.value)}
+                onChange={(e) => dispatch({ type: 'UPDATE', field: 'epicTitle', value: e.target.value })}
                 placeholder="E.g., User Profile Management"
                 className="w-full p-8px bg-[var(--theme-background)] border border-[var(--theme-border)]
                          text-brutal-sm font-mono
@@ -190,10 +328,10 @@ export default function NaturalLanguageTaskCreator({
             Example Prompts:
           </p>
           <div className="flex flex-wrap gap-8px">
-            {examplePrompts.map((prompt, index) => (
+            {examplePrompts.map((prompt) => (
               <button
-                key={index}
-                onClick={() => setInput(prompt)}
+                key={prompt}
+                onClick={() => dispatch({ type: 'UPDATE', field: 'input', value: prompt })}
                 className="px-8px py-4px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]
                          text-brutal-xs hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)]
                          transition-colors"
@@ -236,7 +374,7 @@ export default function NaturalLanguageTaskCreator({
             </h4>
             <div className="flex gap-8px">
               <button
-                onClick={() => setGeneratedTasks([])}
+                onClick={() => dispatch({ type: 'UPDATE', field: 'generatedTasks', value: [] })}
                 className="px-12px py-8px border-2 border-[var(--theme-border)]
                          text-brutal-xs font-bold uppercase
                          hover:bg-[var(--theme-error)] hover:text-[var(--theme-background)]"
@@ -258,96 +396,15 @@ export default function NaturalLanguageTaskCreator({
           
           <div className="space-y-[6px]">
             {generatedTasks.map((task, index) => (
-              <div
-                key={index}
-                className="p-[10px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]"
-              >
-                <div className="flex items-start justify-between mb-12px">
-                  <div className="flex-1">
-                    {editingIndex === index ? (
-                      <input
-                        type="text"
-                        value={task.title}
-                        onChange={(e) => handleEditTask(index, 'title', e.target.value)}
-                        className="w-full p-4px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]
-                                 text-brutal-sm font-bold"
-                      />
-                    ) : (
-                      <h5 className="text-brutal-sm font-bold">{task.title}</h5>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-8px ml-16px">
-                    <button
-                      onClick={() => setEditingIndex(editingIndex === index ? null : index)}
-                      className="p-4px hover:bg-[var(--theme-background-secondary)]"
-                    >
-                      <HiOutlinePencil className="text-brutal-sm" />
-                    </button>
-                    <button
-                      onClick={() => handleRemoveTask(index)}
-                      className="p-4px hover:bg-[var(--theme-error)] hover:text-[var(--theme-background)]"
-                    >
-                      <HiOutlineX className="text-brutal-sm" />
-                    </button>
-                  </div>
-                </div>
-                
-                {editingIndex === index ? (
-                  <textarea
-                    value={task.description}
-                    onChange={(e) => handleEditTask(index, 'description', e.target.value)}
-                    className="w-full h-80px p-8px mb-12px bg-[var(--theme-background-secondary)] 
-                             border border-[var(--theme-border)] text-brutal-xs resize-none"
-                  />
-                ) : (
-                  <p className="text-brutal-xs text-[var(--theme-foreground-secondary)] mb-12px">
-                    {task.description}
-                  </p>
-                )}
-                
-                <div className="flex flex-wrap gap-8px text-brutal-xs">
-                  <span className={`px-8px py-2px border ${
-                    task.type === 'feature' ? 'border-[var(--theme-success)] text-[var(--theme-success)]' :
-                    task.type === 'bug' ? 'border-[var(--theme-error)] text-[var(--theme-error)]' :
-                    task.type === 'improvement' ? 'border-[var(--theme-info)] text-[var(--theme-info)]' :
-                    'border-[var(--theme-border)]'
-                  }`}>
-                    {task.type}
-                  </span>
-                  
-                  <span className={`px-8px py-2px border ${
-                    task.priority === 'urgent' ? 'border-[var(--theme-error)] text-[var(--theme-error)]' :
-                    task.priority === 'high' ? 'border-[var(--theme-warning)] text-[var(--theme-warning)]' :
-                    task.priority === 'medium' ? 'border-[var(--theme-info)] text-[var(--theme-info)]' :
-                    'border-[var(--theme-border)]'
-                  }`}>
-                    {task.priority}
-                  </span>
-                  
-                  {task.estimatedPoints && (
-                    <span className="px-8px py-2px border border-[var(--theme-border)]">
-                      {task.estimatedPoints} points
-                    </span>
-                  )}
-                  
-                  {task.suggestedAssigneeRole && (
-                    <span className="px-8px py-2px bg-[var(--theme-primary)] text-[var(--theme-background)]">
-                      {task.suggestedAssigneeRole}
-                    </span>
-                  )}
-                </div>
-                
-                {task.acceptanceCriteria && task.acceptanceCriteria.length > 0 && (
-                  <div className="mt-12px pt-12px border-t border-[var(--theme-border)]">
-                    <p className="text-brutal-xs font-bold uppercase mb-4px">Acceptance Criteria:</p>
-                    <ul className="list-disc list-inside text-brutal-xs text-[var(--theme-foreground-secondary)]">
-                      {task.acceptanceCriteria.map((criteria, i) => (
-                        <li key={i}>{criteria}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
+              <NLGeneratedTaskItem
+                key={`${task.title}-${task.type}`}
+                task={task}
+                index={index}
+                isEditing={editingIndex === index}
+                onToggleEdit={(i) => dispatch({ type: 'UPDATE', field: 'editingIndex', value: editingIndex === i ? null : i })}
+                onEditField={handleEditTask}
+                onRemove={handleRemoveTask}
+              />
             ))}
           </div>
         </div>

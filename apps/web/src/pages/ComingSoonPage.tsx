@@ -53,9 +53,9 @@ function RadarPing() {
         { x: 55, y: 75, delay: 2.0 },
         { x: 20, y: 60, delay: 0.8 },
         { x: 80, y: 70, delay: 1.8 },
-      ].map((blip, i) => (
+      ].map((blip) => (
         <div
-          key={i}
+          key={`${blip.x}-${blip.y}`}
           className="absolute w-1.5 h-1.5 rounded-full bg-[var(--theme-success)]"
           style={{
             left: `${blip.x}%`,
@@ -80,8 +80,8 @@ function BuildProgress() {
 
   return (
     <div className="space-y-2.5 w-full">
-      {stages.map((stage, i) => (
-        <div key={i}>
+      {stages.map((stage) => (
+        <div key={stage.label}>
           <div className="flex items-center justify-between mb-1">
             <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-secondary)] uppercase tracking-wider">
               {stage.label}
@@ -161,7 +161,7 @@ function LiveLog() {
     >
       {lines.map((line, i) => (
         <div
-          key={i}
+          key={`${line.time}-${line.text}`}
           className="flex gap-2"
           style={{
             animation: 'logFadeIn 0.3s ease-out',
@@ -176,6 +176,192 @@ function LiveLog() {
         <span className="inline-block w-1.5 h-3 bg-[var(--theme-primary)] animate-pulse" />
       </div>
     </div>
+  )
+}
+
+// ── Sub-components ──
+
+interface HeroSectionProps {
+  stats: { totalCount: number } | undefined
+  handleBoost: () => void
+}
+
+function HeroSection({ stats, handleBoost }: HeroSectionProps) {
+  return (
+    <section className="px-6 pt-20 pb-16 sm:pt-28 sm:pb-20">
+      <div className="max-w-5xl mx-auto">
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+          {/* Left: Text */}
+          <div className="flex-1 text-center lg:text-left">
+            {/* Status badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] mb-6">
+              <div className="w-1.5 h-1.5 bg-[var(--theme-warning)] animate-pulse" />
+              <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-warning)] uppercase tracking-widest font-semibold">
+                Building in progress
+              </span>
+            </div>
+
+            <h1 className="font-['Inter',sans-serif] font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-[var(--theme-foreground)] leading-[1.1] mb-5">
+              Something big is
+              <br />
+              <span className="text-[var(--theme-primary)]">loading</span>
+            </h1>
+
+            <p className="font-['Inter',sans-serif] text-base sm:text-lg text-[var(--theme-foreground-secondary)] max-w-md mx-auto lg:mx-0 mb-8 leading-relaxed">
+              We&apos;re engineering the next evolution of project management.
+              Built by devs, for devs. No fluff, no noise.
+            </p>
+
+            {/* Waitlist count */}
+            <div className="flex items-center gap-4 justify-center lg:justify-start mb-8">
+              <div className="flex items-center gap-2">
+                <span className="font-['IBM_Plex_Mono',monospace] text-[28px] sm:text-[36px] font-bold text-[var(--theme-primary)]">
+                  {stats ? stats.totalCount.toLocaleString() : '—'}
+                </span>
+                <div className="text-left">
+                  <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-tertiary)] uppercase tracking-wider">
+                    developers
+                  </div>
+                  <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-tertiary)] uppercase tracking-wider">
+                    waiting
+                  </div>
+                </div>
+              </div>
+              <div className="w-px h-10 bg-[var(--theme-border)]" />
+              <button
+                onClick={handleBoost}
+                className="flex items-center gap-2 px-4 py-2.5 border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:border-[var(--theme-border-hover)] hover:bg-[var(--theme-background-tertiary)] transition-all duration-150 group"
+              >
+                <span className="font-['IBM_Plex_Mono',monospace] text-[18px] group-hover:scale-110 transition-transform duration-150">
+                  +1
+                </span>
+                <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-secondary)] uppercase tracking-wider group-hover:text-[var(--theme-primary)] transition-colors duration-150">
+                  Boost
+                </span>
+              </button>
+            </div>
+
+            {/* Email form */}
+            <div className="max-w-md mx-auto lg:mx-0">
+              <WaitlistForm source="coming_soon" />
+            </div>
+          </div>
+
+          {/* Right: Radar */}
+          <div className="shrink-0 flex items-center justify-center">
+            <RadarPing />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+interface ModuleItem {
+  tag: string
+  title: string
+  desc: string
+  status: string
+  color: string
+}
+
+interface ModulesSectionProps {
+  modules: ModuleItem[]
+}
+
+function ModulesSection({ modules }: ModulesSectionProps) {
+  return (
+    <section className="px-6 pb-16 sm:pb-24">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-10">
+          <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-primary)] uppercase tracking-widest font-semibold">
+            Modules
+          </span>
+          <h2 className="font-['Inter',sans-serif] font-bold text-2xl sm:text-3xl text-[var(--theme-foreground)] mt-2">
+            What&apos;s in the pipeline
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {modules.map((item) => (
+            <div
+              key={item.title}
+              className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-4 hover:border-[var(--theme-border-hover)]/50 transition-colors duration-200 group"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-['IBM_Plex_Mono',monospace] text-[9px] text-[var(--theme-foreground-tertiary)] uppercase tracking-widest">
+                  {item.tag}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span
+                    className="font-['IBM_Plex_Mono',monospace] text-[9px] uppercase tracking-wider font-semibold"
+                    style={{ color: item.color }}
+                  >
+                    {item.status}
+                  </span>
+                </div>
+              </div>
+              <h3 className="font-['Inter',sans-serif] font-semibold text-[15px] text-[var(--theme-foreground)] mb-1.5 group-hover:text-[var(--theme-primary)] transition-colors duration-200">
+                {item.title}
+              </h3>
+              <p className="font-['Inter',sans-serif] text-[13px] text-[var(--theme-foreground-tertiary)] leading-relaxed">
+                {item.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function BottomCTASection() {
+  return (
+    <section className="px-6 pb-20 sm:pb-28">
+      <div className="max-w-xl mx-auto text-center">
+        <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-6 sm:p-8">
+          <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-primary)] uppercase tracking-widest font-semibold mb-3">
+            Don&apos;t miss launch
+          </div>
+          <h3 className="font-['Inter',sans-serif] font-bold text-xl sm:text-2xl text-[var(--theme-foreground)] mb-2">
+            Get early access
+          </h3>
+          <p className="font-['Inter',sans-serif] text-sm text-[var(--theme-foreground-tertiary)] mb-6">
+            First 100 users get Pro free for 3 months.
+          </p>
+
+          <div className="max-w-sm mx-auto mb-4">
+            <WaitlistForm source="coming_soon" compact />
+          </div>
+
+          <div className="flex items-center justify-center gap-4 text-[11px] font-['IBM_Plex_Mono',monospace]">
+            <Link
+              to="/pricing"
+              className="text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-primary)] transition-colors uppercase tracking-wider"
+            >
+              Pricing
+            </Link>
+            <span className="text-[var(--theme-border)]">|</span>
+            <Link
+              to="/features"
+              className="text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-primary)] transition-colors uppercase tracking-wider"
+            >
+              Features
+            </Link>
+            <span className="text-[var(--theme-border)]">|</span>
+            <a
+              href="https://discord.gg/jWMS6Pcr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-primary)] transition-colors uppercase tracking-wider"
+            >
+              Discord
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -231,73 +417,7 @@ export default function ComingSoonPage() {
       />
 
       <div className="flex-1 relative z-10">
-        {/* ── HERO SECTION ── */}
-        <section className="px-6 pt-20 pb-16 sm:pt-28 sm:pb-20">
-          <div className="max-w-5xl mx-auto">
-            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-              {/* Left: Text */}
-              <div className="flex-1 text-center lg:text-left">
-                {/* Status badge */}
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] mb-6">
-                  <div className="w-1.5 h-1.5 bg-[var(--theme-warning)] animate-pulse" />
-                  <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-warning)] uppercase tracking-widest font-semibold">
-                    Building in progress
-                  </span>
-                </div>
-
-                <h1 className="font-['Inter',sans-serif] font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight text-[var(--theme-foreground)] leading-[1.1] mb-5">
-                  Something big is
-                  <br />
-                  <span className="text-[var(--theme-primary)]">loading</span>
-                </h1>
-
-                <p className="font-['Inter',sans-serif] text-base sm:text-lg text-[var(--theme-foreground-secondary)] max-w-md mx-auto lg:mx-0 mb-8 leading-relaxed">
-                  We&apos;re engineering the next evolution of project management.
-                  Built by devs, for devs. No fluff, no noise.
-                </p>
-
-                {/* Waitlist count */}
-                <div className="flex items-center gap-4 justify-center lg:justify-start mb-8">
-                  <div className="flex items-center gap-2">
-                    <span className="font-['IBM_Plex_Mono',monospace] text-[28px] sm:text-[36px] font-bold text-[var(--theme-primary)]">
-                      {stats ? stats.totalCount.toLocaleString() : '—'}
-                    </span>
-                    <div className="text-left">
-                      <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-tertiary)] uppercase tracking-wider">
-                        developers
-                      </div>
-                      <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-tertiary)] uppercase tracking-wider">
-                        waiting
-                      </div>
-                    </div>
-                  </div>
-                  <div className="w-px h-10 bg-[var(--theme-border)]" />
-                  <button
-                    onClick={handleBoost}
-                    className="flex items-center gap-2 px-4 py-2.5 border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:border-[var(--theme-border-hover)] hover:bg-[var(--theme-background-tertiary)] transition-all duration-150 group"
-                  >
-                    <span className="font-['IBM_Plex_Mono',monospace] text-[18px] group-hover:scale-110 transition-transform duration-150">
-                      +1
-                    </span>
-                    <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-foreground-secondary)] uppercase tracking-wider group-hover:text-[var(--theme-primary)] transition-colors duration-150">
-                      Boost
-                    </span>
-                  </button>
-                </div>
-
-                {/* Email form */}
-                <div className="max-w-md mx-auto lg:mx-0">
-                  <WaitlistForm source="coming_soon" />
-                </div>
-              </div>
-
-              {/* Right: Radar */}
-              <div className="shrink-0 flex items-center justify-center">
-                <RadarPing />
-              </div>
-            </div>
-          </div>
-        </section>
+        <HeroSection stats={stats} handleBoost={handleBoost} />
 
         {/* ── DASHBOARD: Build status + Live log ── */}
         <section className="px-6 pb-16 sm:pb-24">
@@ -342,138 +462,16 @@ export default function ComingSoonPage() {
           </div>
         </section>
 
-        {/* ── WHAT WE'RE BUILDING ── */}
-        <section className="px-6 pb-16 sm:pb-24">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-10">
-              <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-primary)] uppercase tracking-widest font-semibold">
-                Modules
-              </span>
-              <h2 className="font-['Inter',sans-serif] font-bold text-2xl sm:text-3xl text-[var(--theme-foreground)] mt-2">
-                What&apos;s in the pipeline
-              </h2>
-            </div>
+        <ModulesSection modules={[
+          { tag: 'CORE', title: 'Sprint Engine', desc: 'Velocity tracking, burndown charts, and automated sprint planning.', status: 'live', color: 'var(--theme-success)' },
+          { tag: 'CORE', title: 'Real-time Boards', desc: 'Kanban and whiteboard views with live multiplayer cursors.', status: 'live', color: 'var(--theme-success)' },
+          { tag: 'AI', title: 'AI Task Routing', desc: 'Intelligent assignment based on skills, capacity, and context.', status: 'beta', color: 'var(--theme-primary)' },
+          { tag: 'INTEGRATION', title: 'GitHub Sync', desc: 'Bi-directional issue sync, PR tracking, and commit mapping.', status: 'live', color: 'var(--theme-success)' },
+          { tag: 'TEAM', title: 'Team Analytics', desc: 'Workload distribution, bottleneck detection, and health scores.', status: 'building', color: 'var(--theme-warning)' },
+          { tag: 'PLATFORM', title: 'CLI & API', desc: 'Full API access and a terminal-native CLI for power users.', status: 'planned', color: 'var(--theme-error)' },
+        ]} />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {[
-                {
-                  tag: 'CORE',
-                  title: 'Sprint Engine',
-                  desc: 'Velocity tracking, burndown charts, and automated sprint planning.',
-                  status: 'live',
-                  color: 'var(--theme-success)',
-                },
-                {
-                  tag: 'CORE',
-                  title: 'Real-time Boards',
-                  desc: 'Kanban and whiteboard views with live multiplayer cursors.',
-                  status: 'live',
-                  color: 'var(--theme-success)',
-                },
-                {
-                  tag: 'AI',
-                  title: 'AI Task Routing',
-                  desc: 'Intelligent assignment based on skills, capacity, and context.',
-                  status: 'beta',
-                  color: 'var(--theme-primary)',
-                },
-                {
-                  tag: 'INTEGRATION',
-                  title: 'GitHub Sync',
-                  desc: 'Bi-directional issue sync, PR tracking, and commit mapping.',
-                  status: 'live',
-                  color: 'var(--theme-success)',
-                },
-                {
-                  tag: 'TEAM',
-                  title: 'Team Analytics',
-                  desc: 'Workload distribution, bottleneck detection, and health scores.',
-                  status: 'building',
-                  color: 'var(--theme-warning)',
-                },
-                {
-                  tag: 'PLATFORM',
-                  title: 'CLI & API',
-                  desc: 'Full API access and a terminal-native CLI for power users.',
-                  status: 'planned',
-                  color: 'var(--theme-error)',
-                },
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-4 hover:border-[var(--theme-border-hover)]/50 transition-colors duration-200 group"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-['IBM_Plex_Mono',monospace] text-[9px] text-[var(--theme-foreground-tertiary)] uppercase tracking-widest">
-                      {item.tag}
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
-                      <span
-                        className="font-['IBM_Plex_Mono',monospace] text-[9px] uppercase tracking-wider font-semibold"
-                        style={{ color: item.color }}
-                      >
-                        {item.status}
-                      </span>
-                    </div>
-                  </div>
-                  <h3 className="font-['Inter',sans-serif] font-semibold text-[15px] text-[var(--theme-foreground)] mb-1.5 group-hover:text-[var(--theme-primary)] transition-colors duration-200">
-                    {item.title}
-                  </h3>
-                  <p className="font-['Inter',sans-serif] text-[13px] text-[var(--theme-foreground-tertiary)] leading-relaxed">
-                    {item.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── BOTTOM CTA ── */}
-        <section className="px-6 pb-20 sm:pb-28">
-          <div className="max-w-xl mx-auto text-center">
-            <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] shadow-[4px_4px_0px_rgba(0,0,0,0.5)] p-6 sm:p-8">
-              <div className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-primary)] uppercase tracking-widest font-semibold mb-3">
-                Don&apos;t miss launch
-              </div>
-              <h3 className="font-['Inter',sans-serif] font-bold text-xl sm:text-2xl text-[var(--theme-foreground)] mb-2">
-                Get early access
-              </h3>
-              <p className="font-['Inter',sans-serif] text-sm text-[var(--theme-foreground-tertiary)] mb-6">
-                First 100 users get Pro free for 3 months.
-              </p>
-
-              <div className="max-w-sm mx-auto mb-4">
-                <WaitlistForm source="coming_soon" compact />
-              </div>
-
-              <div className="flex items-center justify-center gap-4 text-[11px] font-['IBM_Plex_Mono',monospace]">
-                <Link
-                  to="/pricing"
-                  className="text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-primary)] transition-colors uppercase tracking-wider"
-                >
-                  Pricing
-                </Link>
-                <span className="text-[var(--theme-border)]">|</span>
-                <Link
-                  to="/features"
-                  className="text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-primary)] transition-colors uppercase tracking-wider"
-                >
-                  Features
-                </Link>
-                <span className="text-[var(--theme-border)]">|</span>
-                <a
-                  href="https://discord.gg/jWMS6Pcr"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-primary)] transition-colors uppercase tracking-wider"
-                >
-                  Discord
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
+        <BottomCTASection />
       </div>
 
       <Footer />

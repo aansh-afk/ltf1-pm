@@ -50,8 +50,8 @@ export function QuickLinks({ section }: QuickLinksProps) {
         SEC
       </Text>
       <Text color={theme.colors.dim}>───</Text>
-      {SECONDARY_LINKS.map((row, i) => (
-        <Box key={i}>
+      {SECONDARY_LINKS.map((row) => (
+        <Box key={row[0]}>
           {row.map((link) => (
             <Box key={link} width={12}>
               <Text color={theme.colors.dim}>{link}</Text>

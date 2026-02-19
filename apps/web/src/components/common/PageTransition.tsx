@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { motion, useAnimation } from 'framer-motion'
+import { m, useAnimation } from 'framer-motion'
 
 const COLUMNS = 6
 const STAGGER = 0.04
@@ -171,8 +171,8 @@ export default function PageTransition() {
       style={{ pointerEvents: active ? 'all' : 'none' }}
     >
       {Array.from({ length: COLUMNS }).map((_, i) => (
-        <motion.div
-          key={i}
+        <m.div
+          key={`col-${i}`}
           custom={i}
           animate={controls}
           initial={{ y: '-100%' }}

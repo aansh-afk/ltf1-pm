@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useProfileCompletion } from '../hooks/useProfileCompletion'
 import { Link } from 'react-router-dom'
 import { usePageTitle } from '../hooks/usePageTitle'
@@ -55,7 +55,7 @@ export default function Dashboard() {
     <div className="p-4 min-h-screen bg-[var(--theme-background)]">
       {/* HEADER SECTION */}
       <div className="mb-4 flex items-start justify-between">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
@@ -66,8 +66,8 @@ export default function Dashboard() {
           <h1 className="text-xl font-bold tracking-tight text-[var(--theme-foreground)]">
             Dashboard
           </h1>
-        </motion.div>
-        <motion.div
+        </m.div>
+        <m.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
@@ -75,12 +75,12 @@ export default function Dashboard() {
           <BrutalButton variant="primary" size="sm">
             <HiOutlineLightningBolt className="w-4 h-4" /> Quick Action
           </BrutalButton>
-        </motion.div>
+        </m.div>
       </div>
 
       {/* PROFILE COMPLETION BANNER */}
       {!profileComplete && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           className="mb-3"
@@ -103,18 +103,18 @@ export default function Dashboard() {
               </BrutalButton>
             </Link>
           </div>
-        </motion.div>
+        </m.div>
       )}
 
       {/* STATS ROW */}
-      <motion.div
+      <m.div
         className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3"
         variants={staggerContainer}
         initial="hidden"
         animate="show"
       >
         {stats.map((stat) => (
-          <motion.div key={stat.label} variants={fadeUp}>
+          <m.div key={stat.label} variants={fadeUp}>
             <BrutalCard variant="default" padding="sm" className="h-full hover:border-[var(--theme-primary)] group">
               <div className="flex items-center gap-2 mb-2">
                 <stat.icon className="w-4 h-4 opacity-40 group-hover:opacity-80" style={{ color: stat.color }} />
@@ -126,16 +126,16 @@ export default function Dashboard() {
                 {stat.value}
               </div>
             </BrutalCard>
-          </motion.div>
+          </m.div>
         ))}
-      </motion.div>
+      </m.div>
 
       {/* MAIN CONTENT GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
 
         {/* ACTIVITY FEED - 8 COLUMNS */}
         <div className="lg:col-span-8">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
@@ -157,7 +157,7 @@ export default function Dashboard() {
               <div className="space-y-1 max-h-[480px] overflow-y-auto pr-1 custom-scrollbar">
                 {recentActivities.length > 0 ? (
                   recentActivities.map((activity: any, i: number) => (
-                    <motion.div
+                    <m.div
                       key={activity._id || i}
                       initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -180,7 +180,7 @@ export default function Dashboard() {
                         {activity.formattedTarget}
                       </span>
                       <HiOutlineCode className="w-3.5 h-3.5 opacity-0 group-hover:opacity-40 shrink-0 ml-auto" />
-                    </motion.div>
+                    </m.div>
                   ))
                 ) : (
                   <div className="border-2 border-[var(--theme-border)] border-dashed p-8 text-center">
@@ -193,14 +193,14 @@ export default function Dashboard() {
                 )}
               </div>
             </BrutalCard>
-          </motion.div>
+          </m.div>
         </div>
 
         {/* SIDEBAR WIDGETS - 4 COLUMNS */}
         <div className="lg:col-span-4 space-y-3">
 
           {/* WORKSPACES WIDGET */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
@@ -246,10 +246,10 @@ export default function Dashboard() {
                 )}
               </div>
             </BrutalCard>
-          </motion.div>
+          </m.div>
 
           {/* SYSTEM METRICS WIDGET */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.35 }}
@@ -293,7 +293,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </BrutalCard>
-          </motion.div>
+          </m.div>
 
         </div>
       </div>

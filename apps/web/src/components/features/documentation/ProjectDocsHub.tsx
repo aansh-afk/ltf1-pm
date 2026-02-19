@@ -16,7 +16,7 @@ import {
   HiOutlineDownload,
   HiOutlinePlus,
 } from 'react-icons/hi'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 import ReactMarkdown from 'react-markdown'
@@ -172,11 +172,161 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+interface DocsHeaderProps {
+  hasRepo: boolean
+  project: any
+  effectiveTab: DocTab
+  onSetTab: (tab: DocTab) => void
+}
+
+function DocsHeader({ hasRepo, project, effectiveTab, onSetTab }: DocsHeaderProps) {
+  return (
+    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
+      <div className="flex items-center justify-between mb-[8px]">
+        <div>
+          <h2 className="text-brutal-lg font-bold uppercase flex items-center gap-[8px]">
+            <HiOutlineBookOpen className="w-4 h-4 text-primary-brutalist" />
+            PROJECT DOCS
+          </h2>
+          <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mt-[4px]">
+            {hasRepo
+              ? `Synced from ${project?.repository?.owner}/${project?.repository?.name}`
+              : 'Connect a repository to auto-fetch docs, or generate with AI'}
+          </p>
+        </div>
+
+        {/* Tab Toggle */}
+        <div className="flex items-center gap-0 border-2 border-[var(--theme-border)]">
+          <button
+            onClick={() => onSetTab('repo')}
+            className={clsx(
+              'px-[12px] py-[6px] text-brutal-xs font-mono font-bold uppercase transition-all flex items-center gap-[6px]',
+              effectiveTab === 'repo'
+                ? 'bg-primary-brutalist text-white'
+                : 'hover:bg-[var(--theme-background-secondary)]',
+              !hasRepo && 'opacity-50'
+            )}
+            disabled={!hasRepo}
+            title={!hasRepo ? 'Connect a GitHub repository first' : 'Repository docs'}
+          >
+            <HiOutlineCode className="w-3.5 h-3.5" />
+            REPO DOCS
+          </button>
+          <button
+            onClick={() => onSetTab('ai')}
+            className={clsx(
+              'px-[12px] py-[6px] text-brutal-xs font-mono font-bold uppercase transition-all flex items-center gap-[6px] border-l-2 border-[var(--theme-border)]',
+              effectiveTab === 'ai'
+                ? 'bg-primary-brutalist text-white'
+                : 'hover:bg-[var(--theme-background-secondary)]'
+            )}
+          >
+            <HiOutlineSparkles className="w-3.5 h-3.5" />
+            AI DOCS
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface DocContentViewerProps {
+  selectedDoc: TreeNode | null
+  project: any
+  onCopyContent: () => void
+  onDownload: () => void
+}
+
+function DocContentViewer({ selectedDoc, project, onCopyContent, onDownload }: DocContentViewerProps) {
+  if (!selectedDoc?.content) {
+    return (
+      <div className="p-[32px] text-center text-[var(--theme-foreground)]/40">
+        <HiOutlineDocumentText className="w-10 h-10 mx-auto mb-[8px]" />
+        <p className="text-brutal-sm font-mono">SELECT A FILE TO VIEW</p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {/* Doc Header */}
+      <div className="flex items-center justify-between p-[10px] border-b-2 border-[var(--theme-border)]">
+        <div className="flex items-center gap-[8px] min-w-0">
+          <HiOutlineDocumentText className="w-4 h-4 flex-shrink-0 text-primary-brutalist" />
+          <span className="font-mono text-brutal-sm font-bold truncate">
+            {selectedDoc.path}
+          </span>
+          <span className="text-brutal-xs text-[var(--theme-foreground)]/40 flex-shrink-0">
+            {formatFileSize(selectedDoc.size || 0)}
+          </span>
+        </div>
+        <div className="flex items-center gap-[4px] flex-shrink-0">
+          <button
+            onClick={onCopyContent}
+            className="p-[6px] hover:bg-[var(--theme-background-secondary)] transition-colors"
+            title="Copy raw markdown"
+          >
+            <HiOutlineClipboardCopy className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={onDownload}
+            className="p-[6px] hover:bg-[var(--theme-background-secondary)] transition-colors"
+            title="Download file"
+          >
+            <HiOutlineDownload className="w-3.5 h-3.5" />
+          </button>
+          {project?.repository && (
+            <a
+              href={`${project.repository.url}/blob/${project.repository.defaultBranch}/${selectedDoc.path}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-[6px] hover:bg-[var(--theme-background-secondary)] transition-colors"
+              title="View on GitHub"
+            >
+              <HiOutlineExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Markdown Content */}
+      <div className="p-[16px] max-h-[600px] overflow-y-auto">
+        <div className="prose prose-invert max-w-none
+          prose-headings:font-mono prose-headings:uppercase prose-headings:tracking-wide
+          prose-h1:text-brutal-lg prose-h1:border-b-2 prose-h1:border-[var(--theme-border)] prose-h1:pb-[8px] prose-h1:mb-[12px]
+          prose-h2:text-brutal-md prose-h2:mt-[16px] prose-h2:mb-[8px]
+          prose-h3:text-brutal-sm prose-h3:mt-[12px] prose-h3:mb-[6px]
+          prose-p:text-brutal-sm prose-p:text-[var(--theme-foreground)]/80 prose-p:leading-relaxed
+          prose-a:text-primary-brutalist prose-a:no-underline hover:prose-a:underline
+          prose-code:text-primary-brutalist prose-code:bg-[var(--theme-background-secondary)] prose-code:px-[4px] prose-code:py-[2px] prose-code:text-brutal-xs prose-code:font-mono
+          prose-pre:bg-[var(--theme-background-secondary)] prose-pre:border-2 prose-pre:border-[var(--theme-border)] prose-pre:p-[12px]
+          prose-ul:text-brutal-sm prose-ol:text-brutal-sm
+          prose-li:text-[var(--theme-foreground)]/80
+          prose-strong:text-[var(--theme-foreground)]
+          prose-blockquote:border-l-2 prose-blockquote:border-primary-brutalist prose-blockquote:text-[var(--theme-foreground)]/60
+          prose-table:text-brutal-sm
+          prose-th:bg-[var(--theme-background-secondary)] prose-th:p-[8px] prose-th:border-2 prose-th:border-[var(--theme-border)] prose-th:font-mono prose-th:uppercase
+          prose-td:p-[8px] prose-td:border-2 prose-td:border-[var(--theme-border)]
+          prose-img:border-2 prose-img:border-[var(--theme-border)]
+          prose-hr:border-[var(--theme-border)]
+        ">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {selectedDoc.content}
+          </ReactMarkdown>
+        </div>
+      </div>
+    </>
+  )
+}
+
+const EMPTY_TASKS: NonNullable<ProjectDocsHubProps['tasks']> = []
+const EMPTY_SPRINTS: NonNullable<ProjectDocsHubProps['sprints']> = []
+
 export default function ProjectDocsHub({
   projectId,
   workspaceId,
-  tasks = [],
-  sprints = [],
+  tasks = EMPTY_TASKS,
+  sprints = EMPTY_SPRINTS,
   projectDetails,
 }: ProjectDocsHubProps) {
   const [activeTab, setActiveTab] = useState<DocTab>('repo')
@@ -228,13 +378,6 @@ export default function ProjectDocsHub({
     }
   }, [repoDocs, selectedDoc])
 
-  // When docs appear for the first time, switch to docs view
-  useEffect(() => {
-    if (hasDocs && repoView === 'add') {
-      // Don't auto-switch — let user stay on add view if they want
-    }
-  }, [hasDocs, repoView])
-
   const handleSync = async () => {
     setSyncing(true)
     try {
@@ -276,57 +419,17 @@ export default function ProjectDocsHub({
   return (
     <div className="space-y-[12px]">
       {/* Header with Tab Toggle */}
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
-        <div className="flex items-center justify-between mb-[8px]">
-          <div>
-            <h2 className="text-brutal-lg font-bold uppercase flex items-center gap-[8px]">
-              <HiOutlineBookOpen className="w-4 h-4 text-primary-brutalist" />
-              PROJECT DOCS
-            </h2>
-            <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mt-[4px]">
-              {hasRepo
-                ? `Synced from ${project?.repository?.owner}/${project?.repository?.name}`
-                : 'Connect a repository to auto-fetch docs, or generate with AI'}
-            </p>
-          </div>
-
-          {/* Tab Toggle */}
-          <div className="flex items-center gap-0 border-2 border-[var(--theme-border)]">
-            <button
-              onClick={() => setActiveTab('repo')}
-              className={clsx(
-                'px-[12px] py-[6px] text-brutal-xs font-mono font-bold uppercase transition-all flex items-center gap-[6px]',
-                effectiveTab === 'repo'
-                  ? 'bg-primary-brutalist text-white'
-                  : 'hover:bg-[var(--theme-background-secondary)]',
-                !hasRepo && 'opacity-50'
-              )}
-              disabled={!hasRepo}
-              title={!hasRepo ? 'Connect a GitHub repository first' : 'Repository docs'}
-            >
-              <HiOutlineCode className="w-3.5 h-3.5" />
-              REPO DOCS
-            </button>
-            <button
-              onClick={() => setActiveTab('ai')}
-              className={clsx(
-                'px-[12px] py-[6px] text-brutal-xs font-mono font-bold uppercase transition-all flex items-center gap-[6px] border-l-2 border-[var(--theme-border)]',
-                effectiveTab === 'ai'
-                  ? 'bg-primary-brutalist text-white'
-                  : 'hover:bg-[var(--theme-background-secondary)]'
-              )}
-            >
-              <HiOutlineSparkles className="w-3.5 h-3.5" />
-              AI DOCS
-            </button>
-          </div>
-        </div>
-      </div>
+      <DocsHeader
+        hasRepo={hasRepo}
+        project={project}
+        effectiveTab={effectiveTab}
+        onSetTab={setActiveTab}
+      />
 
       {/* Content */}
       <AnimatePresence mode="wait">
         {effectiveTab === 'repo' ? (
-          <motion.div
+          <m.div
             key="repo"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -369,7 +472,7 @@ export default function ProjectDocsHub({
 
                 <AnimatePresence mode="wait">
                   {repoView === 'add' ? (
-                    <motion.div
+                    <m.div
                       key="add"
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -380,9 +483,9 @@ export default function ProjectDocsHub({
                         projectId={projectId}
                         onImported={() => setRepoView('docs')}
                       />
-                    </motion.div>
+                    </m.div>
                   ) : !hasDocs ? (
-                    <motion.div
+                    <m.div
                       key="empty"
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -427,9 +530,9 @@ export default function ProjectDocsHub({
                           </div>
                         </div>
                       </div>
-                    </motion.div>
+                    </m.div>
                   ) : (
-                    <motion.div
+                    <m.div
                       key="browser"
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -467,91 +570,22 @@ export default function ProjectDocsHub({
 
                         {/* Content Viewer */}
                         <div className="lg:col-span-3 bg-[var(--theme-background)]">
-                          {selectedDoc?.content ? (
-                            <>
-                              {/* Doc Header */}
-                              <div className="flex items-center justify-between p-[10px] border-b-2 border-[var(--theme-border)]">
-                                <div className="flex items-center gap-[8px] min-w-0">
-                                  <HiOutlineDocumentText className="w-4 h-4 flex-shrink-0 text-primary-brutalist" />
-                                  <span className="font-mono text-brutal-sm font-bold truncate">
-                                    {selectedDoc.path}
-                                  </span>
-                                  <span className="text-brutal-xs text-[var(--theme-foreground)]/40 flex-shrink-0">
-                                    {formatFileSize(selectedDoc.size || 0)}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-[4px] flex-shrink-0">
-                                  <button
-                                    onClick={handleCopyContent}
-                                    className="p-[6px] hover:bg-[var(--theme-background-secondary)] transition-colors"
-                                    title="Copy raw markdown"
-                                  >
-                                    <HiOutlineClipboardCopy className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    onClick={handleDownload}
-                                    className="p-[6px] hover:bg-[var(--theme-background-secondary)] transition-colors"
-                                    title="Download file"
-                                  >
-                                    <HiOutlineDownload className="w-3.5 h-3.5" />
-                                  </button>
-                                  {project?.repository && (
-                                    <a
-                                      href={`${project.repository.url}/blob/${project.repository.defaultBranch}/${selectedDoc.path}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="p-[6px] hover:bg-[var(--theme-background-secondary)] transition-colors"
-                                      title="View on GitHub"
-                                    >
-                                      <HiOutlineExternalLink className="w-3.5 h-3.5" />
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Markdown Content */}
-                              <div className="p-[16px] max-h-[600px] overflow-y-auto">
-                                <div className="prose prose-invert max-w-none
-                                  prose-headings:font-mono prose-headings:uppercase prose-headings:tracking-wide
-                                  prose-h1:text-brutal-lg prose-h1:border-b-2 prose-h1:border-[var(--theme-border)] prose-h1:pb-[8px] prose-h1:mb-[12px]
-                                  prose-h2:text-brutal-md prose-h2:mt-[16px] prose-h2:mb-[8px]
-                                  prose-h3:text-brutal-sm prose-h3:mt-[12px] prose-h3:mb-[6px]
-                                  prose-p:text-brutal-sm prose-p:text-[var(--theme-foreground)]/80 prose-p:leading-relaxed
-                                  prose-a:text-primary-brutalist prose-a:no-underline hover:prose-a:underline
-                                  prose-code:text-primary-brutalist prose-code:bg-[var(--theme-background-secondary)] prose-code:px-[4px] prose-code:py-[2px] prose-code:text-brutal-xs prose-code:font-mono
-                                  prose-pre:bg-[var(--theme-background-secondary)] prose-pre:border-2 prose-pre:border-[var(--theme-border)] prose-pre:p-[12px]
-                                  prose-ul:text-brutal-sm prose-ol:text-brutal-sm
-                                  prose-li:text-[var(--theme-foreground)]/80
-                                  prose-strong:text-[var(--theme-foreground)]
-                                  prose-blockquote:border-l-2 prose-blockquote:border-primary-brutalist prose-blockquote:text-[var(--theme-foreground)]/60
-                                  prose-table:text-brutal-sm
-                                  prose-th:bg-[var(--theme-background-secondary)] prose-th:p-[8px] prose-th:border-2 prose-th:border-[var(--theme-border)] prose-th:font-mono prose-th:uppercase
-                                  prose-td:p-[8px] prose-td:border-2 prose-td:border-[var(--theme-border)]
-                                  prose-img:border-2 prose-img:border-[var(--theme-border)]
-                                  prose-hr:border-[var(--theme-border)]
-                                ">
-                                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                    {selectedDoc.content}
-                                  </ReactMarkdown>
-                                </div>
-                              </div>
-                            </>
-                          ) : (
-                            <div className="p-[32px] text-center text-[var(--theme-foreground)]/40">
-                              <HiOutlineDocumentText className="w-10 h-10 mx-auto mb-[8px]" />
-                              <p className="text-brutal-sm font-mono">SELECT A FILE TO VIEW</p>
-                            </div>
-                          )}
+                          <DocContentViewer
+                            selectedDoc={selectedDoc}
+                            project={project}
+                            onCopyContent={handleCopyContent}
+                            onDownload={handleDownload}
+                          />
                         </div>
                       </div>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </>
             )}
-          </motion.div>
+          </m.div>
         ) : (
-          <motion.div
+          <m.div
             key="ai"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -565,7 +599,7 @@ export default function ProjectDocsHub({
               sprints={sprints}
               projectDetails={projectDetails}
             />
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

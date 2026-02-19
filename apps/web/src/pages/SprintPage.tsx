@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import {
   HiOutlinePlay,
   HiOutlinePlus,
@@ -18,6 +18,102 @@ import SprintBoard from '@/components/features/sprint/SprintBoard'
 import SprintPlanning from '@/components/features/sprint/SprintPlanning'
 import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
 import clsx from 'clsx'
+
+// --- Sub-components ---
+
+interface CurrentSprintInfoCardProps {
+  sprint: {
+    name: string
+    goal?: string
+    daysRemaining: number
+    progress: number
+    completedPoints: number
+    totalPoints: number
+    taskStats: {
+      todo: number
+      inProgress: number
+      inReview: number
+      done: number
+    }
+  }
+}
+
+function CurrentSprintInfoCard({ sprint }: CurrentSprintInfoCardProps) {
+  return (
+    <m.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.06 }}
+      className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] p-4 mb-4"
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <HiOutlinePlay className="w-4 h-4 text-[var(--theme-primary)]" />
+            <h2 className="text-sm font-bold text-[var(--theme-foreground)]">
+              {sprint.name}
+            </h2>
+            <span className="px-2 py-0.5 bg-[var(--theme-success)]/10 text-[var(--theme-success)] font-mono text-[10px] uppercase tracking-wider border border-[var(--theme-success)]/30">
+              ACTIVE
+            </span>
+          </div>
+          {sprint.goal && (
+            <p className="text-xs text-[var(--theme-foreground-tertiary)] mb-2">{sprint.goal}</p>
+          )}
+          <div className="flex gap-5">
+            <div className="flex items-center gap-1.5">
+              <HiOutlineCalendar className="w-3.5 h-3.5 text-[var(--theme-foreground-tertiary)]" />
+              <span className="font-mono text-xs text-[var(--theme-foreground-secondary)]">
+                {sprint.daysRemaining} days left
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <HiOutlineChartBar className="w-3.5 h-3.5 text-[var(--theme-foreground-tertiary)]" />
+              <span className="font-mono text-xs text-[var(--theme-foreground-secondary)]">
+                {sprint.progress}% complete
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <HiOutlineClock className="w-3.5 h-3.5 text-[var(--theme-foreground-tertiary)]" />
+              <span className="font-mono text-xs text-[var(--theme-foreground-secondary)]">
+                {sprint.completedPoints}/{sprint.totalPoints} points
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="text-right">
+          <span className="text-[10px] font-mono text-[var(--theme-foreground-tertiary)] uppercase tracking-wider block mb-1.5">
+            Task Progress
+          </span>
+          <div className="flex gap-1">
+            <div className="w-8 h-6 bg-[var(--theme-foreground-tertiary)]/10 flex items-center justify-center border border-[var(--theme-border)]" title="Todo">
+              <span className="font-mono text-[10px] text-[var(--theme-foreground-secondary)]">
+                {sprint.taskStats.todo}
+              </span>
+            </div>
+            <div className="w-8 h-6 bg-[var(--theme-info)]/10 flex items-center justify-center border border-[var(--theme-info)]/30" title="In Progress">
+              <span className="font-mono text-[10px] text-[var(--theme-info)]">
+                {sprint.taskStats.inProgress}
+              </span>
+            </div>
+            <div className="w-8 h-6 bg-[var(--theme-glow-secondary)]/10 flex items-center justify-center border border-[var(--theme-glow-secondary)]/30" title="In Review">
+              <span className="font-mono text-[10px] text-[var(--theme-glow-secondary)]">
+                {sprint.taskStats.inReview}
+              </span>
+            </div>
+            <div className="w-8 h-6 bg-[var(--theme-success)]/10 flex items-center justify-center border border-[var(--theme-success)]/30" title="Done">
+              <span className="font-mono text-[10px] text-[var(--theme-success)]">
+                {sprint.taskStats.done}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </m.div>
+  )
+}
+
+// --- Main component ---
 
 export default function SprintPage() {
   const { currentWorkspaceId, isLoading: workspaceLoading, hasWorkspaceContext, workspaces } = useCurrentWorkspace()
@@ -89,7 +185,7 @@ export default function SprintPage() {
   if (projects.length === 0) {
     return (
       <div className="p-4">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -109,7 +205,7 @@ export default function SprintPage() {
               Create a project first to start sprint planning.
             </p>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     )
   }
@@ -124,7 +220,7 @@ export default function SprintPage() {
   return (
     <div className="p-4">
       {/* Header */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -148,6 +244,7 @@ export default function SprintPage() {
             <WorkspaceSelector size="sm" showLabel={false} />
           )}
           <select
+            aria-label="Select project"
             className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] font-mono text-xs text-[var(--theme-foreground-secondary)] uppercase focus:border-[var(--theme-primary)] focus:outline-none"
             value={selectedProjectId}
             onChange={(e) => setSelectedProjectId(e.target.value)}
@@ -166,84 +263,15 @@ export default function SprintPage() {
             New Sprint
           </button>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Current Sprint Info */}
       {currentSprint && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.06 }}
-          className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] p-4 mb-4"
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <HiOutlinePlay className="w-4 h-4 text-[var(--theme-primary)]" />
-                <h2 className="text-sm font-bold text-[var(--theme-foreground)]">
-                  {currentSprint.name}
-                </h2>
-                <span className="px-2 py-0.5 bg-[var(--theme-success)]/10 text-[var(--theme-success)] font-mono text-[10px] uppercase tracking-wider border border-[var(--theme-success)]/30">
-                  ACTIVE
-                </span>
-              </div>
-              {currentSprint.goal && (
-                <p className="text-xs text-[var(--theme-foreground-tertiary)] mb-2">{currentSprint.goal}</p>
-              )}
-              <div className="flex gap-5">
-                <div className="flex items-center gap-1.5">
-                  <HiOutlineCalendar className="w-3.5 h-3.5 text-[var(--theme-foreground-tertiary)]" />
-                  <span className="font-mono text-xs text-[var(--theme-foreground-secondary)]">
-                    {currentSprint.daysRemaining} days left
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <HiOutlineChartBar className="w-3.5 h-3.5 text-[var(--theme-foreground-tertiary)]" />
-                  <span className="font-mono text-xs text-[var(--theme-foreground-secondary)]">
-                    {currentSprint.progress}% complete
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <HiOutlineClock className="w-3.5 h-3.5 text-[var(--theme-foreground-tertiary)]" />
-                  <span className="font-mono text-xs text-[var(--theme-foreground-secondary)]">
-                    {currentSprint.completedPoints}/{currentSprint.totalPoints} points
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-[10px] font-mono text-[var(--theme-foreground-tertiary)] uppercase tracking-wider block mb-1.5">
-                Task Progress
-              </span>
-              <div className="flex gap-1">
-                <div className="w-8 h-6 bg-[var(--theme-foreground-tertiary)]/10 flex items-center justify-center border border-[var(--theme-border)]" title="Todo">
-                  <span className="font-mono text-[10px] text-[var(--theme-foreground-secondary)]">
-                    {currentSprint.taskStats.todo}
-                  </span>
-                </div>
-                <div className="w-8 h-6 bg-[var(--theme-info)]/10 flex items-center justify-center border border-[var(--theme-info)]/30" title="In Progress">
-                  <span className="font-mono text-[10px] text-[var(--theme-info)]">
-                    {currentSprint.taskStats.inProgress}
-                  </span>
-                </div>
-                <div className="w-8 h-6 bg-[var(--theme-glow-secondary)]/10 flex items-center justify-center border border-[var(--theme-glow-secondary)]/30" title="In Review">
-                  <span className="font-mono text-[10px] text-[var(--theme-glow-secondary)]">
-                    {currentSprint.taskStats.inReview}
-                  </span>
-                </div>
-                <div className="w-8 h-6 bg-[var(--theme-success)]/10 flex items-center justify-center border border-[var(--theme-success)]/30" title="Done">
-                  <span className="font-mono text-[10px] text-[var(--theme-success)]">
-                    {currentSprint.taskStats.done}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+        <CurrentSprintInfoCard sprint={currentSprint} />
       )}
 
       {/* View Toggle */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.12 }}
@@ -273,10 +301,10 @@ export default function SprintPage() {
           <HiOutlineCalendar className="w-4 h-4" />
           Planning
         </button>
-      </motion.div>
+      </m.div>
 
       {/* Content */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.18 }}
@@ -310,7 +338,7 @@ export default function SprintPage() {
             </button>
           </div>
         )}
-      </motion.div>
+      </m.div>
 
       {/* Create Sprint Modal */}
       <CreateSprintModal

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useReducer, useEffect, useRef, useMemo } from 'react'
 import { Stage, Layer, Rect, Circle, Line, Text, Arrow, Image as KonvaImage, Transformer, Group } from 'react-konva'
 import type Konva from 'konva'
 import useImage from 'use-image'
@@ -78,6 +78,155 @@ const URLImage = ({ image, ...props }: any) => {
     return <KonvaImage image={img} {...props} />
 }
 
+// --- Reducer ---
+
+type WhiteboardState = {
+    whiteboardId: Id<'whiteboards'> | undefined
+    activeTool: Tool
+    selectedIds: string[]
+    stageScale: number
+    stagePos: { x: number; y: number }
+    isDragging: boolean
+    eraserPath: { x: number; y: number }[]
+    editingTextId: string | null
+    editingTextValue: string
+    editingTextPos: { x: number; y: number; width: number; height: number }
+    elements: Element[]
+    currentElement: Partial<Element> | null
+}
+
+type WhiteboardAction =
+    | { type: 'UPDATE'; field: keyof WhiteboardState; value: WhiteboardState[keyof WhiteboardState] }
+    | { type: 'RESET' }
+
+function whiteboardReducer(state: WhiteboardState, action: WhiteboardAction): WhiteboardState {
+    switch (action.type) {
+        case 'UPDATE':
+            return { ...state, [action.field]: action.value }
+        case 'RESET':
+            return state
+        default:
+            return state
+    }
+}
+
+// --- Sub-components ---
+
+interface WhiteboardToolbarProps {
+    activeTool: Tool
+    selectedIds: string[]
+    fileInputRef: React.RefObject<HTMLInputElement | null>
+    onToolChange: (tool: Tool) => void
+    onDelete: () => void
+}
+
+function WhiteboardToolbar({ activeTool, selectedIds, fileInputRef, onToolChange, onDelete }: WhiteboardToolbarProps) {
+    return (
+        <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 bg-[#222] p-2 border border-[#333]">
+            <ToolButton icon={<HiOutlineCursorClick />} active={activeTool === 'SELECT'} onClick={() => onToolChange('SELECT')} tooltip="Select (V)" />
+            <ToolButton icon={<HiOutlineArrowsExpand />} active={activeTool === 'PAN'} onClick={() => onToolChange('PAN')} tooltip="Pan (H)" />
+            <div className="h-px bg-[#333] my-1" />
+            <ToolButton label="⬜" active={activeTool === 'RECTANGLE'} onClick={() => onToolChange('RECTANGLE')} tooltip="Rectangle (R)" />
+            <ToolButton label="⭕" active={activeTool === 'CIRCLE'} onClick={() => onToolChange('CIRCLE')} tooltip="Circle (C)" />
+            <ToolButton icon={<HiOutlineArrowRight />} active={activeTool === 'ARROW'} onClick={() => onToolChange('ARROW')} tooltip="Arrow (A)" />
+            <ToolButton icon={<HiOutlinePencil />} active={activeTool === 'DRAWING'} onClick={() => onToolChange('DRAWING')} tooltip="Draw (P)" />
+            <ToolButton label="T" active={activeTool === 'TEXT'} onClick={() => onToolChange('TEXT')} tooltip="Text (T)" />
+            <ToolButton icon={<HiOutlineAnnotation />} active={activeTool === 'STICKY'} onClick={() => onToolChange('STICKY')} tooltip="Sticky Note (S)" />
+            <ToolButton icon={<HiOutlinePhotograph />} active={activeTool === 'IMAGE'} onClick={() => fileInputRef.current?.click()} tooltip="Image (I)" />
+            <div className="h-px bg-[#333] my-1" />
+            <ToolButton icon={<HiOutlineX />} active={activeTool === 'ERASER'} onClick={() => onToolChange('ERASER')} tooltip="Eraser (E)" />
+            <ToolButton icon={<HiOutlineTrash />} onClick={onDelete} disabled={selectedIds.length === 0} tooltip="Delete Selected (Del)" />
+            <div className="h-px bg-[#333] my-1" />
+            <button
+                onClick={() => window.history.back()}
+                className="p-2 flex items-center justify-center text-white hover:bg-[#333] transition-colors"
+                title="Back"
+            >
+                <span className="font-bold text-sm">←</span>
+            </button>
+        </div>
+    )
+}
+
+interface WhiteboardPropertiesPanelProps {
+    onStyleUpdate: (styleUpdate: any) => void
+}
+
+function WhiteboardPropertiesPanel({ onStyleUpdate }: WhiteboardPropertiesPanelProps) {
+    return (
+        <div className="absolute top-4 left-20 z-10 flex gap-4 bg-[#222] p-2 border border-[#333] items-center">
+            <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400">Stroke</span>
+                <input type="color" className="w-6 h-6 bg-transparent border-none" onChange={(e) => onStyleUpdate({ stroke: e.target.value })} />
+            </div>
+            <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400">Fill</span>
+                <input type="color" className="w-6 h-6 bg-transparent border-none" onChange={(e) => onStyleUpdate({ fill: e.target.value })} />
+            </div>
+            <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400">Width</span>
+                <input type="range" min="1" max="20" className="w-20" onChange={(e) => onStyleUpdate({ strokeWidth: parseInt(e.target.value) })} />
+            </div>
+            <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400">Size</span>
+                <input type="range" min="12" max="72" className="w-20" onChange={(e) => onStyleUpdate({ fontSize: parseInt(e.target.value) })} />
+            </div>
+        </div>
+    )
+}
+
+interface WhiteboardZoomControlsProps {
+    stageScale: number
+    onZoomIn: () => void
+    onZoomOut: () => void
+}
+
+function WhiteboardZoomControls({ stageScale, onZoomIn, onZoomOut }: WhiteboardZoomControlsProps) {
+    return (
+        <div className="absolute bottom-4 right-4 z-10 flex gap-2 bg-[#222] p-2 border border-[#333]">
+            <button className="p-2 hover:bg-[#333] text-white" onClick={onZoomIn}><HiOutlineZoomIn /></button>
+            <span className="p-2 text-white font-mono text-sm flex items-center">{Math.round(stageScale * 100)}%</span>
+            <button className="p-2 hover:bg-[#333] text-white" onClick={onZoomOut}><HiOutlineZoomOut /></button>
+        </div>
+    )
+}
+
+interface WhiteboardTextOverlayProps {
+    editingTextValue: string
+    editingTextPos: { x: number; y: number; width: number; height: number }
+    fontSize: number
+    color: string
+    stageScale: number
+    onValueChange: (value: string) => void
+    onSubmit: () => void
+}
+
+function WhiteboardTextOverlay({ editingTextValue, editingTextPos, fontSize, color, stageScale, onValueChange, onSubmit }: WhiteboardTextOverlayProps) {
+    return (
+        <textarea
+            value={editingTextValue}
+            onChange={(e) => onValueChange(e.target.value)}
+            onBlur={onSubmit}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) onSubmit() }}
+            style={{
+                position: 'absolute',
+                top: editingTextPos.y,
+                left: editingTextPos.x,
+                width: Math.max(100, editingTextPos.width),
+                height: Math.max(50, editingTextPos.height),
+                fontSize: `${fontSize * stageScale}px`,
+                color: color,
+                background: 'transparent',
+                border: '1px dashed cyan',
+                outline: 'none',
+                resize: 'none',
+                fontFamily: 'monospace',
+                zIndex: 100,
+            }}
+        />
+    )
+}
+
 // --- Main Component ---
 
 export default function WhiteboardCanvasKonva({
@@ -87,24 +236,29 @@ export default function WhiteboardCanvasKonva({
     meetingId,
 }: WhiteboardCanvasProps) {
     // --- State ---
-    const [whiteboardId, setWhiteboardId] = useState(initialWhiteboardId)
-    const [activeTool, setActiveTool] = useState<Tool>('SELECT')
-    const [selectedIds, setSelectedIds] = useState<string[]>([])
-    const [stageScale, setStageScale] = useState(1)
-    const [stagePos, setStagePos] = useState({ x: 0, y: 0 })
-    const [isDragging, setIsDragging] = useState(false)
+    const [state, dispatch] = useReducer(whiteboardReducer, {
+        whiteboardId: initialWhiteboardId,
+        activeTool: 'SELECT' as Tool,
+        selectedIds: [] as string[],
+        stageScale: 1,
+        stagePos: { x: 0, y: 0 },
+        isDragging: false,
+        eraserPath: [] as { x: number; y: number }[],
+        editingTextId: null,
+        editingTextValue: '',
+        editingTextPos: { x: 0, y: 0, width: 0, height: 0 },
+        elements: [] as Element[],
+        currentElement: null as Partial<Element> | null,
+    })
 
-    // Eraser State
-    const [eraserPath, setEraserPath] = useState<{ x: number, y: number }[]>([])
+    const {
+        whiteboardId, activeTool, selectedIds, stageScale, stagePos,
+        isDragging, eraserPath, editingTextId, editingTextValue,
+        editingTextPos, elements, currentElement,
+    } = state
 
-    // Text Editing State
-    const [editingTextId, setEditingTextId] = useState<string | null>(null)
-    const [editingTextValue, setEditingTextValue] = useState('')
-    const [editingTextPos, setEditingTextPos] = useState({ x: 0, y: 0, width: 0, height: 0 })
-
-    // Optimistic UI state
-    const [elements, setElements] = useState<Element[]>([])
-    const [currentElement, setCurrentElement] = useState<Partial<Element> | null>(null)
+    const set = <K extends keyof WhiteboardState>(field: K, value: WhiteboardState[K]) =>
+        dispatch({ type: 'UPDATE', field, value: value as WhiteboardState[keyof WhiteboardState] })
 
     // Refs
     const stageRef = useRef<Konva.Stage | null>(null)
@@ -126,7 +280,7 @@ export default function WhiteboardCanvasKonva({
     // Sync elements from backend
     useEffect(() => {
         if (whiteboard?.elements) {
-            setElements(whiteboard.elements as Element[])
+            set('elements', whiteboard.elements as Element[])
         }
     }, [whiteboard?.elements])
 
@@ -140,7 +294,7 @@ export default function WhiteboardCanvasKonva({
                 projectId,
                 meetingId,
                 public: false,
-            }).then(setWhiteboardId)
+            }).then(id => set('whiteboardId', id))
         }
     }, [whiteboardId, workspaceId, projectId, meetingId, createWhiteboard])
 
@@ -184,8 +338,8 @@ export default function WhiteboardCanvasKonva({
         }
 
         const newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy
-        setStageScale(newScale)
-        setStagePos({
+        set('stageScale', newScale)
+        set('stagePos', {
             x: -(mousePointTo.x - pointerPosition.x / newScale) * newScale,
             y: -(mousePointTo.y - pointerPosition.y / newScale) * newScale,
         })
@@ -209,7 +363,7 @@ export default function WhiteboardCanvasKonva({
         // Eraser Tool Logic
         if (activeTool === 'ERASER') {
             isErasing.current = true
-            setEraserPath([{ x: pos.x, y: pos.y }])
+            set('eraserPath', [{ x: pos.x, y: pos.y }])
             return
         }
 
@@ -217,17 +371,17 @@ export default function WhiteboardCanvasKonva({
         if (activeTool === 'SELECT') {
             const clickedOnEmpty = e.target === stage
             if (clickedOnEmpty) {
-                setSelectedIds([])
+                set('selectedIds', [])
                 return
             }
 
             const id = e.target.id()
             if (id) {
                 if (e.evt.shiftKey) {
-                    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+                    set('selectedIds', selectedIds.includes(id) ? selectedIds.filter(i => i !== id) : [...selectedIds, id])
                 } else {
                     if (!selectedIds.includes(id)) {
-                        setSelectedIds([id])
+                        set('selectedIds', [id])
                     }
                 }
             }
@@ -236,7 +390,7 @@ export default function WhiteboardCanvasKonva({
 
         // Pan Tool Logic
         if (activeTool === 'PAN') {
-            setIsDragging(true)
+            set('isDragging', true)
             return
         }
 
@@ -251,7 +405,7 @@ export default function WhiteboardCanvasKonva({
                 rotation: 0,
                 style: { stroke: '#FFFFFF', strokeWidth: 2 },
             }
-            setCurrentElement(newElement)
+            set('currentElement', newElement)
             return
         }
 
@@ -266,7 +420,7 @@ export default function WhiteboardCanvasKonva({
                 rotation: 0,
                 style: { stroke: '#FFFFFF', strokeWidth: 2, pointerLength: 10, pointerWidth: 10 },
             }
-            setCurrentElement(newElement)
+            set('currentElement', newElement)
             return
         }
 
@@ -289,8 +443,8 @@ export default function WhiteboardCanvasKonva({
                 fontSize: 16
             },
         }
-        setCurrentElement(newElement)
-        setIsDragging(true)
+        set('currentElement', newElement)
+        set('isDragging', true)
     }
 
     const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -304,7 +458,7 @@ export default function WhiteboardCanvasKonva({
 
         // Eraser Logic
         if (activeTool === 'ERASER' && isErasing.current) {
-            setEraserPath(prev => [...prev, { x: pos.x, y: pos.y }])
+            set('eraserPath', [...eraserPath, { x: pos.x, y: pos.y }])
 
             // Check intersection with elements
             // Simple bounding box check for now
@@ -321,9 +475,8 @@ export default function WhiteboardCanvasKonva({
 
             if (hitElements.length > 0) {
                 // Delete hit elements
+                set('elements', elements.filter(e => !hitElements.some(h => h.id === e.id)))
                 hitElements.forEach(async (el) => {
-                    // Optimistic update: remove from local state immediately
-                    setElements(prev => prev.filter(e => e.id !== el.id))
                     await deleteElement({ whiteboardId, elementId: el.id })
                 })
             }
@@ -335,7 +488,7 @@ export default function WhiteboardCanvasKonva({
 
         if (activeTool === 'DRAWING' && isDrawing.current && currentElement) {
             const newPoints = (currentElement.data?.points || []).concat([pos.x, pos.y])
-            setCurrentElement({
+            set('currentElement', {
                 ...currentElement,
                 data: { ...currentElement.data, points: newPoints }
             })
@@ -345,7 +498,7 @@ export default function WhiteboardCanvasKonva({
         if (activeTool === 'ARROW' && isDrawing.current && currentElement) {
             const startX = currentElement.data.points[0]
             const startY = currentElement.data.points[1]
-            setCurrentElement({
+            set('currentElement', {
                 ...currentElement,
                 data: { ...currentElement.data, points: [startX, startY, pos.x, pos.y] }
             })
@@ -358,7 +511,7 @@ export default function WhiteboardCanvasKonva({
             const width = pos.x - startX
             const height = pos.y - startY
 
-            setCurrentElement({
+            set('currentElement', {
                 ...currentElement,
                 size: { width: Math.abs(width), height: Math.abs(height) },
                 position: {
@@ -370,12 +523,12 @@ export default function WhiteboardCanvasKonva({
     }
 
     const handleMouseUp = async () => {
-        setIsDragging(false)
+        set('isDragging', false)
         isDrawing.current = false
 
         if (activeTool === 'ERASER') {
             isErasing.current = false
-            setEraserPath([])
+            set('eraserPath', [])
             return
         }
 
@@ -385,7 +538,7 @@ export default function WhiteboardCanvasKonva({
                 if (activeTool === 'TEXT') {
                     // Keep it, it has default text
                 } else {
-                    setCurrentElement(null)
+                    set('currentElement', null)
                     return
                 }
             }
@@ -401,10 +554,10 @@ export default function WhiteboardCanvasKonva({
                     style: currentElement.style
                 } as Omit<Element, 'id' | 'locked' | 'createdBy'>
             })
-            setCurrentElement(null)
+            set('currentElement', null)
 
             if (activeTool !== 'DRAWING' && activeTool !== 'ARROW') {
-                setActiveTool('SELECT')
+                set('activeTool', 'SELECT')
             }
         }
     }
@@ -454,7 +607,7 @@ export default function WhiteboardCanvasKonva({
         for (const id of selectedIds) {
             await deleteElement({ whiteboardId, elementId: id })
         }
-        setSelectedIds([])
+        set('selectedIds', [])
     }
 
     // Text Editing Handlers
@@ -462,8 +615,8 @@ export default function WhiteboardCanvasKonva({
         const id = e.target.id()
         const element = elements.find(el => el.id === id)
         if (element && (element.type === ELEMENT_TYPES.TEXT || element.type === ELEMENT_TYPES.STICKY)) {
-            setEditingTextId(id)
-            setEditingTextValue(element.data.text)
+            set('editingTextId', id)
+            set('editingTextValue', element.data.text)
 
             // Calculate absolute position for textarea
             const stage = e.target.getStage()
@@ -473,7 +626,7 @@ export default function WhiteboardCanvasKonva({
                 const pos = tr.getTranslation()
                 const scale = stage.scaleX()
 
-                setEditingTextPos({
+                set('editingTextPos', {
                     x: pos.x,
                     y: pos.y,
                     width: textNode.width() * scale,
@@ -492,7 +645,7 @@ export default function WhiteboardCanvasKonva({
                     data: { text: editingTextValue }
                 }
             })
-            setEditingTextId(null)
+            set('editingTextId', null)
         }
     }
 
@@ -670,29 +823,13 @@ export default function WhiteboardCanvasKonva({
             style={{ cursor: getCursorStyle() }}
         >
             {/* Toolbar */}
-            <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 bg-[#222] p-2 border border-[#333]">
-                <ToolButton icon={<HiOutlineCursorClick />} active={activeTool === 'SELECT'} onClick={() => setActiveTool('SELECT')} tooltip="Select (V)" />
-                <ToolButton icon={<HiOutlineArrowsExpand />} active={activeTool === 'PAN'} onClick={() => setActiveTool('PAN')} tooltip="Pan (H)" />
-                <div className="h-px bg-[#333] my-1" />
-                <ToolButton label="⬜" active={activeTool === 'RECTANGLE'} onClick={() => setActiveTool('RECTANGLE')} tooltip="Rectangle (R)" />
-                <ToolButton label="⭕" active={activeTool === 'CIRCLE'} onClick={() => setActiveTool('CIRCLE')} tooltip="Circle (C)" />
-                <ToolButton icon={<HiOutlineArrowRight />} active={activeTool === 'ARROW'} onClick={() => setActiveTool('ARROW')} tooltip="Arrow (A)" />
-                <ToolButton icon={<HiOutlinePencil />} active={activeTool === 'DRAWING'} onClick={() => setActiveTool('DRAWING')} tooltip="Draw (P)" />
-                <ToolButton label="T" active={activeTool === 'TEXT'} onClick={() => setActiveTool('TEXT')} tooltip="Text (T)" />
-                <ToolButton icon={<HiOutlineAnnotation />} active={activeTool === 'STICKY'} onClick={() => setActiveTool('STICKY')} tooltip="Sticky Note (S)" />
-                <ToolButton icon={<HiOutlinePhotograph />} active={activeTool === 'IMAGE'} onClick={() => fileInputRef.current?.click()} tooltip="Image (I)" />
-                <div className="h-px bg-[#333] my-1" />
-                <ToolButton icon={<HiOutlineX />} active={activeTool === 'ERASER'} onClick={() => setActiveTool('ERASER')} tooltip="Eraser (E)" />
-                <ToolButton icon={<HiOutlineTrash />} onClick={handleDelete} disabled={selectedIds.length === 0} tooltip="Delete Selected (Del)" />
-                <div className="h-px bg-[#333] my-1" />
-                <button
-                    onClick={() => window.history.back()}
-                    className="p-2 flex items-center justify-center text-white hover:bg-[#333] transition-colors"
-                    title="Back"
-                >
-                    <span className="font-bold text-sm">←</span>
-                </button>
-            </div>
+            <WhiteboardToolbar
+                activeTool={activeTool}
+                selectedIds={selectedIds}
+                fileInputRef={fileInputRef}
+                onToolChange={(tool) => set('activeTool', tool)}
+                onDelete={handleDelete}
+            />
 
             <input
                 type="file"
@@ -704,24 +841,7 @@ export default function WhiteboardCanvasKonva({
 
             {/* Properties Panel */}
             {selectedIds.length > 0 && (
-                <div className="absolute top-4 left-20 z-10 flex gap-4 bg-[#222] p-2 border border-[#333] items-center">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400">Stroke</span>
-                        <input type="color" className="w-6 h-6 bg-transparent border-none" onChange={(e) => updateSelectedStyle({ stroke: e.target.value })} />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400">Fill</span>
-                        <input type="color" className="w-6 h-6 bg-transparent border-none" onChange={(e) => updateSelectedStyle({ fill: e.target.value })} />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400">Width</span>
-                        <input type="range" min="1" max="20" className="w-20" onChange={(e) => updateSelectedStyle({ strokeWidth: parseInt(e.target.value) })} />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400">Size</span>
-                        <input type="range" min="12" max="72" className="w-20" onChange={(e) => updateSelectedStyle({ fontSize: parseInt(e.target.value) })} />
-                    </div>
-                </div>
+                <WhiteboardPropertiesPanel onStyleUpdate={updateSelectedStyle} />
             )}
 
             {/* Canvas */}
@@ -762,36 +882,23 @@ export default function WhiteboardCanvasKonva({
 
             {/* Text Editing Overlay */}
             {editingTextId && (
-                <textarea
-                    value={editingTextValue}
-                    onChange={(e) => setEditingTextValue(e.target.value)}
-                    onBlur={handleTextSubmit}
-                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) handleTextSubmit() }}
-                    style={{
-                        position: 'absolute',
-                        top: editingTextPos.y,
-                        left: editingTextPos.x,
-                        width: Math.max(100, editingTextPos.width),
-                        height: Math.max(50, editingTextPos.height),
-                        fontSize: `${(elements.find(e => e.id === editingTextId)?.style.fontSize || 16) * stageScale}px`,
-                        color: elements.find(e => e.id === editingTextId)?.style.stroke || 'white',
-                        background: 'transparent',
-                        border: '1px dashed cyan',
-                        outline: 'none',
-                        resize: 'none',
-                        fontFamily: 'monospace',
-                        zIndex: 100,
-                    }}
-                    autoFocus
+                <WhiteboardTextOverlay
+                    editingTextValue={editingTextValue}
+                    editingTextPos={editingTextPos}
+                    fontSize={elements.find(e => e.id === editingTextId)?.style.fontSize || 16}
+                    color={elements.find(e => e.id === editingTextId)?.style.stroke || 'white'}
+                    stageScale={stageScale}
+                    onValueChange={(value) => set('editingTextValue', value)}
+                    onSubmit={handleTextSubmit}
                 />
             )}
 
             {/* Zoom Controls */}
-            <div className="absolute bottom-4 right-4 z-10 flex gap-2 bg-[#222] p-2 border border-[#333]">
-                <button className="p-2 hover:bg-[#333] text-white" onClick={() => setStageScale(s => s * 1.2)}><HiOutlineZoomIn /></button>
-                <span className="p-2 text-white font-mono text-sm flex items-center">{Math.round(stageScale * 100)}%</span>
-                <button className="p-2 hover:bg-[#333] text-white" onClick={() => setStageScale(s => s / 1.2)}><HiOutlineZoomOut /></button>
-            </div>
+            <WhiteboardZoomControls
+                stageScale={stageScale}
+                onZoomIn={() => set('stageScale', stageScale * 1.2)}
+                onZoomOut={() => set('stageScale', stageScale / 1.2)}
+            />
         </div>
     )
 }

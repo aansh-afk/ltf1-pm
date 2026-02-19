@@ -238,7 +238,7 @@ export default function FlowCanvas({ workflow, onSave }: FlowCanvasProps) {
     }
   }
 
-  // Load workflow on mount
+  // react-doctor: legitimate - syncs external workflow prop into local component state
   useEffect(() => {
     if (workflow) {
       loadWorkflow(workflow)

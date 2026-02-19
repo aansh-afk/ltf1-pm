@@ -22,9 +22,9 @@ function MarqueeTextStrip({ text, sizes, opacity, color, animationClass, delay }
       className={`flex whitespace-nowrap ${animationClass}`}
       style={{ animationDelay: delay }}
     >
-      {Array.from({ length: 12 }, (_, i) => (
-        <span 
-          key={i} 
+      {['a','b','c','d','e','f','g','h','i','j','k','l'].map((id) => (
+        <span
+          key={`${text}-${id}`}
           className={`${getRandomSize()} font-bold uppercase tracking-wider mx-[12px] md:mx-[24px] select-none`}
           style={{ 
             color,

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useReducer, useRef, useEffect } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import KanbanColumn from './KanbanColumn'
@@ -25,6 +25,75 @@ const columns = [
     { id: 'done', title: 'DONE', borderColor: 'border-brutal-success', bgColor: 'bg-brutal-success', textColor: 'text-brutal-success' },
 ]
 
+interface DragState {
+    draggedTask: any
+    hoveredColumn: string | null
+    dropPosition: { column: string; index: number } | null
+    draggedOverTask: string | null
+}
+
+type DragAction =
+    | { type: 'DRAG_START'; task: any }
+    | { type: 'SET_HOVERED_COLUMN'; column: string | null }
+    | { type: 'SET_DROP_POSITION'; position: { column: string; index: number } | null }
+    | { type: 'SET_DRAGGED_OVER_TASK'; taskId: string | null }
+    | { type: 'DRAG_END' }
+
+const dragInitialState: DragState = {
+    draggedTask: null,
+    hoveredColumn: null,
+    dropPosition: null,
+    draggedOverTask: null,
+}
+
+function dragReducer(state: DragState, action: DragAction): DragState {
+    switch (action.type) {
+        case 'DRAG_START':
+            return { ...state, draggedTask: action.task }
+        case 'SET_HOVERED_COLUMN':
+            return { ...state, hoveredColumn: action.column }
+        case 'SET_DROP_POSITION':
+            return { ...state, dropPosition: action.position }
+        case 'SET_DRAGGED_OVER_TASK':
+            return { ...state, draggedOverTask: action.taskId }
+        case 'DRAG_END':
+            return dragInitialState
+        default:
+            return state
+    }
+}
+
+type KanbanBoardState = {
+    showCreateModal: boolean
+    createStatus: string
+    hasOverflow: { [key: string]: boolean }
+    showTaskDetail: boolean
+    selectedTaskId: string | null
+}
+
+const kanbanBoardInitialState: KanbanBoardState = {
+    showCreateModal: false,
+    createStatus: 'backlog',
+    hasOverflow: {},
+    showTaskDetail: false,
+    selectedTaskId: null,
+}
+
+type KanbanBoardAction =
+    | { type: 'UPDATE'; field: keyof KanbanBoardState; value: KanbanBoardState[keyof KanbanBoardState] }
+    | { type: 'RESET' }
+
+function kanbanBoardReducer(state: KanbanBoardState, action: KanbanBoardAction): KanbanBoardState {
+    switch (action.type) {
+        case 'UPDATE':
+            return { ...state, [action.field]: action.value }
+        case 'RESET':
+            return kanbanBoardInitialState
+        default:
+            return state
+    }
+}
+
 export default function KanbanBoard({
     tasks,
     projectId,
@@ -35,22 +104,17 @@ export default function KanbanBoard({
     isCompact = false,
     onCompactToggle
 }: KanbanBoardProps) {
-    const [showCreateModal, setShowCreateModal] = useState(false)
-    const [createStatus, setCreateStatus] = useState<string>('backlog')
-    const [draggedTask, setDraggedTask] = useState<any>(null)
-    const [hoveredColumn, setHoveredColumn] = useState<string | null>(null)
-    const [dropPosition, setDropPosition] = useState<{ column: string; index: number } | null>(null)
-    const [draggedOverTask, setDraggedOverTask] = useState<string | null>(null)
+    const [drag, dispatchDrag] = useReducer(dragReducer, dragInitialState)
     const columnRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
-    const [hasOverflow, setHasOverflow] = useState<{ [key: string]: boolean }>({})
-    const [showTaskDetail, setShowTaskDetail] = useState(false)
-    const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
+
+    const [boardState, dispatchBoard] = useReducer(kanbanBoardReducer, kanbanBoardInitialState)
+    const { showCreateModal, createStatus, hasOverflow, showTaskDetail, selectedTaskId } = boardState
 
     const moveTask = useMutation(api.tasks.mutations.moveTask)
     const deleteTask = useMutation(api.tasks.mutations.deleteTask)
 
     const handleDragStart = (e: React.DragEvent, task: any) => {
-        setDraggedTask(task)
+        dispatchDrag({ type: 'DRAG_START', task })
         e.dataTransfer.effectAllowed = 'move'
     }
 
@@ -61,20 +125,11 @@ export default function KanbanBoard({
 
     const handleDragOverTask = (e: React.DragEvent, taskId: string, index: number) => {
         e.preventDefault()
-        if (!draggedTask || draggedTask._id === taskId) return
+        if (!drag.draggedTask || drag.draggedTask._id === taskId) return
 
         const rect = e.currentTarget.getBoundingClientRect()
         const midpoint = rect.top + rect.height / 2
         const insertIndex = e.clientY < midpoint ? index : index + 1
-
-        // Only update if position actually changed to reduce re-renders
-        // Also check if we are over a different column than the one currently stored in dropPosition
-        // We need to find which column this task belongs to, but for now we can infer it from the parent context if passed, 
-        // or we can rely on the column drag over handler setting the column part.
-        // Actually, the column drag over handler sets the column. Here we set the index.
-
-        // Wait, the column drag over handler sets hoveredColumn. 
-        // We need to set dropPosition here.
 
         // Find the column of the task we are dragging over
         const task = tasks.find(t => t._id === taskId)
@@ -82,8 +137,8 @@ export default function KanbanBoard({
 
         const columnId = task.status
 
-        if (!dropPosition || dropPosition.column !== columnId || dropPosition.index !== insertIndex) {
-            setDropPosition({ column: columnId, index: insertIndex })
+        if (!drag.dropPosition || drag.dropPosition.column !== columnId || drag.dropPosition.index !== insertIndex) {
+            dispatchDrag({ type: 'SET_DROP_POSITION', position: { column: columnId, index: insertIndex } })
         }
     }
 
@@ -97,19 +152,18 @@ export default function KanbanBoard({
     const handleDrop = async (e: React.DragEvent, newStatus: string) => {
         e.preventDefault()
 
-        if (!draggedTask) {
-            setDraggedTask(null)
-            setDropPosition(null)
+        if (!drag.draggedTask) {
+            dispatchDrag({ type: 'DRAG_END' })
             return
         }
 
-        const targetPosition = dropPosition?.column === newStatus && dropPosition?.index !== undefined
-            ? dropPosition.index
+        const targetPosition = drag.dropPosition?.column === newStatus && drag.dropPosition?.index !== undefined
+            ? drag.dropPosition.index
             : tasks.filter(t => t.status === newStatus).length
 
         try {
             await moveTask({
-                taskId: draggedTask._id,
+                taskId: drag.draggedTask._id,
                 status: newStatus as any,
                 position: targetPosition,
             })
@@ -119,9 +173,7 @@ export default function KanbanBoard({
             toast.error('Failed to move task')
         }
 
-        setDraggedTask(null)
-        setDropPosition(null)
-        setHoveredColumn(null)
+        dispatchDrag({ type: 'DRAG_END' })
     }
 
     const getTasksByStatus = (status: string) => {
@@ -131,8 +183,8 @@ export default function KanbanBoard({
     }
 
     const openCreateModal = (status: string) => {
-        setCreateStatus(status)
-        setShowCreateModal(true)
+        dispatchBoard({ type: 'UPDATE', field: 'createStatus', value: status })
+        dispatchBoard({ type: 'UPDATE', field: 'showCreateModal', value: true })
     }
 
     const handleDeleteTask = async (taskId: string) => {
@@ -155,7 +207,7 @@ export default function KanbanBoard({
                     newOverflowState[column.id] = element.scrollHeight > element.clientHeight
                 }
             })
-            setHasOverflow(newOverflowState)
+            dispatchBoard({ type: 'UPDATE', field: 'hasOverflow', value: newOverflowState })
         }
 
         checkOverflow()
@@ -185,18 +237,18 @@ export default function KanbanBoard({
                         onTaskDelete={handleDeleteTask}
                         onTaskDuplicate={onTaskDuplicate}
                         onViewDetails={(taskId) => {
-                            setSelectedTaskId(taskId)
-                            setShowTaskDetail(true)
+                            dispatchBoard({ type: 'UPDATE', field: 'selectedTaskId', value: taskId })
+                            dispatchBoard({ type: 'UPDATE', field: 'showTaskDetail', value: true })
                         }}
                         onAddTask={openCreateModal}
-                        draggedTask={draggedTask}
-                        hoveredColumn={hoveredColumn}
-                        dropPosition={dropPosition}
+                        draggedTask={drag.draggedTask}
+                        hoveredColumn={drag.hoveredColumn}
+                        dropPosition={drag.dropPosition}
                         onDragOver={(e) => {
                             handleDragOver(e)
-                            setHoveredColumn(column.id)
+                            dispatchDrag({ type: 'SET_HOVERED_COLUMN', column: column.id })
                         }}
-                        onDragLeave={() => setHoveredColumn(null)}
+                        onDragLeave={() => dispatchDrag({ type: 'SET_HOVERED_COLUMN', column: null })}
                         onDrop={(e) => handleDrop(e, column.id)}
                         onDragStart={handleDragStart}
                         onDragOverTask={handleDragOverTask}
@@ -208,7 +260,7 @@ export default function KanbanBoard({
 
             <CreateTaskModal
                 isOpen={showCreateModal}
-                onClose={() => setShowCreateModal(false)}
+                onClose={() => dispatchBoard({ type: 'UPDATE', field: 'showCreateModal', value: false })}
                 projectId={projectId}
                 defaultStatus={createStatus}
                 onSuccess={onTaskUpdate}
@@ -218,8 +270,8 @@ export default function KanbanBoard({
                 <TaskDetailModal
                     isOpen={showTaskDetail}
                     onClose={() => {
-                        setShowTaskDetail(false)
-                        setSelectedTaskId(null)
+                        dispatchBoard({ type: 'UPDATE', field: 'showTaskDetail', value: false })
+                        dispatchBoard({ type: 'UPDATE', field: 'selectedTaskId', value: null })
                     }}
                     taskId={selectedTaskId}
                 />

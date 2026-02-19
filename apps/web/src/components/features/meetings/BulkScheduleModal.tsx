@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useReducer } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
@@ -14,6 +14,102 @@ import {
   HiOutlineExclamationCircle
 } from 'react-icons/hi'
 import clsx from 'clsx'
+
+// --- Sub-components ---
+
+interface MeetingScheduleItemRowProps {
+  meeting: {
+    id: number
+    type: string
+    title: string
+    dayOfWeek: number | string
+    time: string
+    duration: number
+  }
+  onUpdateField: (id: number, field: string, value: any) => void
+  onRemove: (id: number) => void
+}
+
+function MeetingScheduleItemRow({ meeting, onUpdateField, onRemove }: MeetingScheduleItemRowProps) {
+  return (
+    <div
+      className="p-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-[4px] items-center">
+        <input
+          type="text"
+          value={meeting.title}
+          onChange={(e) => onUpdateField(meeting.id, 'title', e.target.value)}
+          placeholder="MEETING TITLE"
+          aria-label="Meeting title"
+          className="px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs placeholder:text-neutral-600 focus:border-primary-brutalist focus:outline-none"
+        />
+        <select
+          value={meeting.type}
+          onChange={(e) => onUpdateField(meeting.id, 'type', e.target.value)}
+          aria-label="Meeting type"
+          className="px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
+        >
+          <option value="standup">STANDUP</option>
+          <option value="retrospective">RETROSPECTIVE</option>
+          <option value="planning">PLANNING</option>
+          <option value="review">REVIEW</option>
+          <option value="custom">CUSTOM</option>
+        </select>
+        <select
+          value={meeting.dayOfWeek}
+          onChange={(e) => onUpdateField(
+            meeting.id,
+            'dayOfWeek',
+            e.target.value === 'daily' || e.target.value === 'weekdays'
+              ? e.target.value
+              : parseInt(e.target.value)
+          )}
+          aria-label="Day of week"
+          className="px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
+        >
+          <option value="daily">DAILY</option>
+          <option value="weekdays">WEEKDAYS</option>
+          <option value="0">SUNDAY</option>
+          <option value="1">MONDAY</option>
+          <option value="2">TUESDAY</option>
+          <option value="3">WEDNESDAY</option>
+          <option value="4">THURSDAY</option>
+          <option value="5">FRIDAY</option>
+          <option value="6">SATURDAY</option>
+        </select>
+        <input
+          type="time"
+          value={meeting.time}
+          onChange={(e) => onUpdateField(meeting.id, 'time', e.target.value)}
+          aria-label="Meeting time"
+          className="px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
+        />
+        <div className="flex items-center gap-4px">
+          <input
+            type="number"
+            value={meeting.duration}
+            onChange={(e) => onUpdateField(meeting.id, 'duration', parseInt(e.target.value))}
+            min="5"
+            max="480"
+            aria-label="Duration in minutes"
+            className="w-60px px-[4px] py-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
+          />
+          <span className="text-brutal-xs">MIN</span>
+          <button
+            type="button"
+            onClick={() => onRemove(meeting.id)}
+            className="ml-auto p-4px hover:bg-brutal-error/20 transition-colors"
+          >
+            <HiOutlineTrash className="w-16px h-16px text-brutal-error" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// --- Main component ---
 
 interface BulkScheduleModalProps {
   isOpen: boolean
@@ -56,6 +152,74 @@ const meetingTemplates = [
   }
 ]
 
+type BulkScheduleState = {
+  selectedTemplate: string | null
+  customMeetings: any[]
+  startDate: string
+  endDate: string
+  selectedAttendees: string[]
+  isCreating: boolean
+}
+
+type BulkScheduleAction =
+  | { type: 'SET_TEMPLATE'; value: string | null }
+  | { type: 'SET_CUSTOM_MEETINGS'; value: any[] }
+  | { type: 'ADD_CUSTOM_MEETING' }
+  | { type: 'UPDATE_CUSTOM_MEETING'; id: number; field: string; value: any }
+  | { type: 'REMOVE_CUSTOM_MEETING'; id: number }
+  | { type: 'SET_START_DATE'; value: string }
+  | { type: 'SET_END_DATE'; value: string }
+  | { type: 'SET_SELECTED_ATTENDEES'; value: string[] }
+  | { type: 'SET_IS_CREATING'; value: boolean }
+
+const initialBulkScheduleState: BulkScheduleState = {
+  selectedTemplate: null,
+  customMeetings: [],
+  startDate: '',
+  endDate: '',
+  selectedAttendees: [],
+  isCreating: false,
+}
+
+function bulkScheduleReducer(state: BulkScheduleState, action: BulkScheduleAction): BulkScheduleState {
+  switch (action.type) {
+    case 'SET_TEMPLATE':
+      return { ...state, selectedTemplate: action.value }
+    case 'SET_CUSTOM_MEETINGS':
+      return { ...state, customMeetings: action.value }
+    case 'ADD_CUSTOM_MEETING':
+      return {
+        ...state,
+        customMeetings: [
+          ...state.customMeetings,
+          { id: Math.random(), type: 'custom', title: '', dayOfWeek: 1, time: '14:00', duration: 30 }
+        ]
+      }
+    case 'UPDATE_CUSTOM_MEETING':
+      return {
+        ...state,
+        customMeetings: state.customMeetings.map(m =>
+          m.id === action.id ? { ...m, [action.field]: action.value } : m
+        )
+      }
+    case 'REMOVE_CUSTOM_MEETING':
+      return {
+        ...state,
+        customMeetings: state.customMeetings.filter(m => m.id !== action.id)
+      }
+    case 'SET_START_DATE':
+      return { ...state, startDate: action.value }
+    case 'SET_END_DATE':
+      return { ...state, endDate: action.value }
+    case 'SET_SELECTED_ATTENDEES':
+      return { ...state, selectedAttendees: action.value }
+    case 'SET_IS_CREATING':
+      return { ...state, isCreating: action.value }
+    default:
+      return state
+  }
+}
+
 export default function BulkScheduleModal({
   isOpen,
   onClose,
@@ -64,15 +228,11 @@ export default function BulkScheduleModal({
   sprintId,
   onSuccess
 }: BulkScheduleModalProps) {
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
-  const [customMeetings, setCustomMeetings] = useState<any[]>([])
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [selectedAttendees, setSelectedAttendees] = useState<string[]>([])
-  const [isCreating, setIsCreating] = useState(false)
+  const [state, dispatch] = useReducer(bulkScheduleReducer, initialBulkScheduleState)
+  const { selectedTemplate, customMeetings, startDate, endDate, selectedAttendees, isCreating } = state
 
   const createMeeting = useMutation(api.meetings.mutations.createMeeting)
-  
+
   // Get workspace members for attendee selection
   const workspaceMembers = useQuery(
     api.workspaces.queries.getWorkspaceMembers,
@@ -86,35 +246,11 @@ export default function BulkScheduleModal({
   })).filter(option => option.value) || []
 
   const handleTemplateSelect = (templateId: string) => {
-    setSelectedTemplate(templateId)
+    dispatch({ type: 'SET_TEMPLATE', value: templateId })
     const template = meetingTemplates.find(t => t.id === templateId)
     if (template) {
-      setCustomMeetings(template.meetings.map(m => ({ ...m, id: Math.random() })))
+      dispatch({ type: 'SET_CUSTOM_MEETINGS', value: template.meetings.map(m => ({ ...m, id: Math.random() })) })
     }
-  }
-
-  const addCustomMeeting = () => {
-    setCustomMeetings([
-      ...customMeetings,
-      {
-        id: Math.random(),
-        type: 'custom',
-        title: '',
-        dayOfWeek: 1,
-        time: '14:00',
-        duration: 30
-      }
-    ])
-  }
-
-  const updateCustomMeeting = (id: number, field: string, value: any) => {
-    setCustomMeetings(customMeetings.map(m => 
-      m.id === id ? { ...m, [field]: value } : m
-    ))
-  }
-
-  const removeCustomMeeting = (id: number) => {
-    setCustomMeetings(customMeetings.filter(m => m.id !== id))
   }
 
   const calculateMeetingDates = () => {
@@ -143,7 +279,7 @@ export default function BulkScheduleModal({
           const [hours, minutes] = meeting.time.split(':').map(Number)
           const meetingStart = new Date(current)
           meetingStart.setHours(hours, minutes, 0, 0)
-          
+
           meetings.push({
             ...meeting,
             startTime: meetingStart.getTime(),
@@ -182,11 +318,11 @@ export default function BulkScheduleModal({
       return
     }
 
-    setIsCreating(true)
+    dispatch({ type: 'SET_IS_CREATING', value: true })
 
     try {
       const meetings = calculateMeetingDates()
-      
+
       for (const meeting of meetings) {
         await createMeeting({
           workspaceId: workspaceId as any,
@@ -211,7 +347,7 @@ export default function BulkScheduleModal({
     } catch (error: any) {
       toast.error(error.message || 'Failed to schedule meetings')
     } finally {
-      setIsCreating(false)
+      dispatch({ type: 'SET_IS_CREATING', value: false })
     }
   }
 
@@ -227,10 +363,10 @@ export default function BulkScheduleModal({
       <form onSubmit={handleSubmit} className="space-y-[12px]">
         {/* Template Selection */}
         <div>
-          <label className="block text-brutal-sm uppercase mb-[6px]">
+          <span className="block text-brutal-sm uppercase mb-[6px]">
             <HiOutlineTemplate className="inline w-16px h-16px mr-[4px]" />
             SELECT TEMPLATE
-          </label>
+          </span>
           <div className="grid grid-cols-1 gap-[4px]">
             {meetingTemplates.map(template => (
               <button
@@ -254,8 +390,8 @@ export default function BulkScheduleModal({
             <button
               type="button"
               onClick={() => {
-                setSelectedTemplate('custom')
-                setCustomMeetings([])
+                dispatch({ type: 'SET_TEMPLATE', value: 'custom' })
+                dispatch({ type: 'SET_CUSTOM_MEETINGS', value: [] })
               }}
               className={clsx(
                 "p-[10px] border-2 text-left transition-colors",
@@ -273,27 +409,29 @@ export default function BulkScheduleModal({
         {/* Date Range */}
         <div className="grid grid-cols-2 gap-[10px]">
           <div>
-            <label className="block text-brutal-sm uppercase mb-[4px]">
+            <label htmlFor="bulk-schedule-start-date" className="block text-brutal-sm uppercase mb-[4px]">
               <HiOutlineCalendar className="inline w-16px h-16px mr-[4px]" />
               START DATE
             </label>
             <input
+              id="bulk-schedule-start-date"
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => dispatch({ type: 'SET_START_DATE', value: e.target.value })}
               className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none"
               required
             />
           </div>
           <div>
-            <label className="block text-brutal-sm uppercase mb-[4px]">
+            <label htmlFor="bulk-schedule-end-date" className="block text-brutal-sm uppercase mb-[4px]">
               <HiOutlineCalendar className="inline w-16px h-16px mr-[4px]" />
               END DATE
             </label>
             <input
+              id="bulk-schedule-end-date"
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => dispatch({ type: 'SET_END_DATE', value: e.target.value })}
               min={startDate}
               className="w-full px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm focus:border-primary-brutalist focus:outline-none"
               required
@@ -304,84 +442,22 @@ export default function BulkScheduleModal({
         {/* Meeting Configuration */}
         {(selectedTemplate || customMeetings.length > 0) && (
           <div>
-            <label className="block text-brutal-sm uppercase mb-[6px]">
+            <span className="block text-brutal-sm uppercase mb-[6px]">
               <HiOutlineRefresh className="inline w-16px h-16px mr-[4px]" />
               MEETING SCHEDULE
-            </label>
+            </span>
             <div className="space-y-[4px] max-h-300px overflow-y-auto">
               {customMeetings.map(meeting => (
-                <div
+                <MeetingScheduleItemRow
                   key={meeting.id}
-                  className="p-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-[4px] items-center">
-                    <input
-                      type="text"
-                      value={meeting.title}
-                      onChange={(e) => updateCustomMeeting(meeting.id, 'title', e.target.value)}
-                      placeholder="MEETING TITLE"
-                      className="px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs placeholder:text-neutral-600 focus:border-primary-brutalist focus:outline-none"
-                    />
-                    <select
-                      value={meeting.type}
-                      onChange={(e) => updateCustomMeeting(meeting.id, 'type', e.target.value)}
-                      className="px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
-                    >
-                      <option value="standup">STANDUP</option>
-                      <option value="retrospective">RETROSPECTIVE</option>
-                      <option value="planning">PLANNING</option>
-                      <option value="review">REVIEW</option>
-                      <option value="custom">CUSTOM</option>
-                    </select>
-                    <select
-                      value={meeting.dayOfWeek}
-                      onChange={(e) => updateCustomMeeting(meeting.id, 'dayOfWeek', 
-                        e.target.value === 'daily' || e.target.value === 'weekdays' 
-                          ? e.target.value 
-                          : parseInt(e.target.value)
-                      )}
-                      className="px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
-                    >
-                      <option value="daily">DAILY</option>
-                      <option value="weekdays">WEEKDAYS</option>
-                      <option value="0">SUNDAY</option>
-                      <option value="1">MONDAY</option>
-                      <option value="2">TUESDAY</option>
-                      <option value="3">WEDNESDAY</option>
-                      <option value="4">THURSDAY</option>
-                      <option value="5">FRIDAY</option>
-                      <option value="6">SATURDAY</option>
-                    </select>
-                    <input
-                      type="time"
-                      value={meeting.time}
-                      onChange={(e) => updateCustomMeeting(meeting.id, 'time', e.target.value)}
-                      className="px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
-                    />
-                    <div className="flex items-center gap-4px">
-                      <input
-                        type="number"
-                        value={meeting.duration}
-                        onChange={(e) => updateCustomMeeting(meeting.id, 'duration', parseInt(e.target.value))}
-                        min="5"
-                        max="480"
-                        className="w-60px px-[4px] py-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
-                      />
-                      <span className="text-brutal-xs">MIN</span>
-                      <button
-                        type="button"
-                        onClick={() => removeCustomMeeting(meeting.id)}
-                        className="ml-auto p-4px hover:bg-brutal-error/20 transition-colors"
-                      >
-                        <HiOutlineTrash className="w-16px h-16px text-brutal-error" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                  meeting={meeting}
+                  onUpdateField={(id, field, value) => dispatch({ type: 'UPDATE_CUSTOM_MEETING', id, field, value })}
+                  onRemove={(id) => dispatch({ type: 'REMOVE_CUSTOM_MEETING', id })}
+                />
               ))}
               <button
                 type="button"
-                onClick={addCustomMeeting}
+                onClick={() => dispatch({ type: 'ADD_CUSTOM_MEETING' })}
                 className="w-full p-[8px] border-2 border-dashed border-[var(--theme-border)] text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] hover:border-primary-brutalist transition-colors font-mono text-brutal-sm"
               >
                 <HiOutlinePlus className="inline w-16px h-16px mr-[4px]" />
@@ -393,14 +469,14 @@ export default function BulkScheduleModal({
 
         {/* Attendees */}
         <div>
-          <label className="block text-brutal-sm uppercase mb-[4px]">
+          <span className="block text-brutal-sm uppercase mb-[4px]">
             <HiOutlineUsers className="inline w-16px h-16px mr-[4px]" />
             ATTENDEES
-          </label>
+          </span>
           <MultiSelect
             options={attendeeOptions}
             value={selectedAttendees}
-            onChange={setSelectedAttendees}
+            onChange={(ids) => dispatch({ type: 'SET_SELECTED_ATTENDEES', value: ids })}
             placeholder="SELECT TEAM MEMBERS"
           />
         </div>

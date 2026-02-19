@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 
 const WITHOUT_STEPS = [
   { cmd: 'git commit -m "fix auth bug"', type: 'dev' as const },
@@ -32,6 +32,7 @@ export default function ProblemSection() {
   const [visibleLog, setVisibleLog] = useState<string[]>([])
   const logTimers = useRef<ReturnType<typeof setTimeout>[]>([])
 
+  // react-doctor false positive: setVisibleLog reset is synchronous, subsequent calls are in async timers
   useEffect(() => {
     logTimers.current.forEach(clearTimeout)
     logTimers.current = []
@@ -64,7 +65,7 @@ export default function ProblemSection() {
       />
 
       <div className="max-w-5xl mx-auto px-6 relative z-10">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -80,9 +81,9 @@ export default function ProblemSection() {
           <p className="text-lg text-[#6B7280] max-w-xl mx-auto font-['Inter',sans-serif]">
             Your git workflow is your project management workflow
           </p>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -128,7 +129,7 @@ export default function ProblemSection() {
               </div>
 
               <AnimatePresence mode="wait">
-                <motion.div
+                <m.div
                   key={withLtf1 ? 'with' : 'without'}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -138,7 +139,7 @@ export default function ProblemSection() {
                 >
                   {steps.map((step, i) => (
                     <div
-                      key={i}
+                      key={step.cmd}
                       className="flex items-start gap-3 py-1.5 font-['IBM_Plex_Mono',monospace] text-sm"
                     >
                       <span className="text-[#6B7280]/50 w-5 text-right text-xs shrink-0 pt-0.5">
@@ -152,12 +153,12 @@ export default function ProblemSection() {
                       )}
                     </div>
                   ))}
-                </motion.div>
+                </m.div>
               </AnimatePresence>
 
               <div className="mt-auto pt-4 border-t border-[#2E2E35]/50">
                 <AnimatePresence mode="wait">
-                  <motion.span
+                  <m.span
                     key={withLtf1 ? 'w' : 'wo'}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -167,7 +168,7 @@ export default function ProblemSection() {
                     {withLtf1
                       ? '> done. ltf1 handles the rest.'
                       : '> ~10 minutes of context switching. every time.'}
-                  </motion.span>
+                  </m.span>
                 </AnimatePresence>
               </div>
             </div>
@@ -183,7 +184,7 @@ export default function ProblemSection() {
 
               <AnimatePresence mode="wait">
                 {withLtf1 ? (
-                  <motion.div
+                  <m.div
                     key="engine-on"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -191,18 +192,18 @@ export default function ProblemSection() {
                     className="flex-1"
                   >
                     {visibleLog.map((line, i) => (
-                      <motion.div
-                        key={i}
+                      <m.div
+                        key={`log-${line}`}
                         initial={{ opacity: 0, x: -4 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.15 }}
                         className="font-['IBM_Plex_Mono',monospace] text-xs text-[#9CA3AF] leading-6"
                       >
                         {line}
-                      </motion.div>
+                      </m.div>
                     ))}
                     {visibleLog.length === AUTO_LOG.length && (
-                      <motion.div
+                      <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.3 }}
@@ -211,11 +212,11 @@ export default function ProblemSection() {
                         <span className="font-['IBM_Plex_Mono',monospace] text-xs text-[#6B7280]">
                           {'>'} 7 operations &middot; 0 manual effort
                         </span>
-                      </motion.div>
+                      </m.div>
                     )}
-                  </motion.div>
+                  </m.div>
                 ) : (
-                  <motion.div
+                  <m.div
                     key="engine-off"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -233,12 +234,12 @@ export default function ProblemSection() {
   └───────────────────┘`}
                       </pre>
                     </div>
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </section>
   )

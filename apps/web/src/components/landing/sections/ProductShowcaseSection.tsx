@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { motion, type Variants } from 'framer-motion'
+import { m, type Variants } from 'framer-motion'
 import ColoredPre from '../ascii/ColoredPre'
 
 interface FeatureCard {
@@ -212,7 +212,7 @@ export default function ProductShowcaseSection({ hideHeader = false }: { hideHea
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         {/* Section header */}
         {!hideHeader && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -227,13 +227,13 @@ export default function ProductShowcaseSection({ hideHeader = false }: { hideHea
               <br />
               actually work
             </h2>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Bento grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {cards.map((card, index) => (
-            <motion.div
+            <m.div
               key={card.title}
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -242,7 +242,7 @@ export default function ProductShowcaseSection({ hideHeader = false }: { hideHea
               className={card.fullWidth ? 'md:col-span-2' : ''}
             >
               <Link to={`/features/${card.slug}`} className="block">
-                <motion.div
+                <m.div
                   variants={cardVariants}
                   initial="rest"
                   whileHover="hover"
@@ -282,16 +282,16 @@ export default function ProductShowcaseSection({ hideHeader = false }: { hideHea
                     </div>
 
                     {/* Arrow */}
-                    <motion.span
+                    <m.span
                       variants={arrowVariants}
                       className="text-[#F9FAFB] text-xl flex-shrink-0"
                     >
                       →
-                    </motion.span>
+                    </m.span>
                   </div>
-                </motion.div>
+                </m.div>
               </Link>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </div>

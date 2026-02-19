@@ -135,10 +135,11 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
             <p className="text-xs text-[#6B7280] font-mono uppercase">No tasks in backlog</p>
           ) : (
             backlogTasks.map((task) => (
-              <div
+              <button
+                type="button"
                 key={task._id}
                 className={clsx(
-                  "p-2.5 border-2 cursor-pointer",
+                  "w-full text-left p-2.5 border-2 cursor-pointer",
                   selectedTasks.has(task._id)
                     ? "border-[#6366F1] bg-[#6366F1]/10"
                     : "border-[#2E2E35] hover:border-[#6366F1]/50"
@@ -173,7 +174,7 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
                     {task.assigneeName}
                   </p>
                 )}
-              </div>
+              </button>
             ))
           )}
         </div>

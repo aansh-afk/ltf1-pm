@@ -60,7 +60,6 @@ export default function AddTeamMemberModal({ isOpen, onClose, teamId, teamName }
             onChange={(e) => setSearch(e.target.value)}
             placeholder="SEARCH WORKSPACE MEMBERS..."
             className="w-full pl-10 pr-3 py-2.5 bg-[#0A0A0A] border-2 border-[#2E2E35] text-[#F9FAFB] placeholder-[#6B7280] font-mono text-xs uppercase tracking-wider focus:border-[#6366F1] focus:outline-none"
-            autoFocus
           />
         </div>
 

@@ -76,6 +76,7 @@ export default function GitHubFilterBar({
           placeholder="Search commits, PRs, issues...  type:pr state:open"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
+          aria-label="Search commits, PRs, issues"
           className="w-full pl-[32px] pr-[40px] py-[8px] font-mono text-brutal-sm bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)] border border-[var(--theme-border)] focus:border-primary-brutalist focus:outline-none transition-colors placeholder:text-[var(--theme-foreground)]/30"
         />
         <kbd className="absolute right-[10px] top-1/2 -translate-y-1/2 px-[6px] py-[2px] font-mono text-[10px] text-[var(--theme-foreground)]/30 border border-[var(--theme-border)] rounded bg-[var(--theme-background)]">

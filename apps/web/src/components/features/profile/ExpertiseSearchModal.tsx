@@ -38,6 +38,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
     }
   }, [])
 
+  // react-doctor false positive: setIsSearching calls are in different branches
   useEffect(() => {
     if (searchQuery.trim().length >= 2) {
       setIsSearching(true)
@@ -75,17 +76,23 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
     if (!query.trim()) return text
     const regex = new RegExp(`(${query.trim()})`, 'gi')
     const parts = text.split(regex)
-    return parts.map((part, index) =>
-      regex.test(part) ? (
-        <span key={index} className="bg-[#6366F1]/30 font-bold">{part}</span>
+    let accumulated = ''
+    return parts.map((part) => {
+      accumulated += part
+      return regex.test(part) ? (
+        <span key={`hl-${accumulated}`} className="bg-[#6366F1]/30 font-bold">{part}</span>
       ) : part
-    )
+    })
   }
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] bg-[#050505]/80 backdrop-blur-sm"
+      role="button"
+      tabIndex={0}
+      aria-label="Close expertise search"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClose() } }}
     >
       <div className="bg-[#0A0A0A] border-2 border-[#2E2E35] shadow-[8px_8px_0px_#000000] w-full max-w-2xl max-h-[75vh] flex flex-col overflow-hidden">
         {/* Search bar — the focal point */}
@@ -99,6 +106,7 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
             onKeyDown={handleKeyDown}
             className="flex-1 bg-transparent text-sm text-[#F9FAFB] placeholder:text-[#6B7280] focus:outline-none font-mono"
             placeholder="Search expertise... (React, Python, DevOps)"
+            aria-label="Search expertise"
           />
           {searchQuery && (
             <button
@@ -235,11 +243,11 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
                                   searchQuery.toLowerCase().includes(tech.name.toLowerCase())
                                 )
                                 .slice(0, 5)
-                                .map((tech: any, index: number) => {
+                                .map((tech: any) => {
                                   const expertise = getExpertiseLevel(tech.level)
                                   return (
                                     <span
-                                      key={index}
+                                      key={tech.name}
                                       className={clsx(
                                         "inline-flex items-center gap-1 px-1.5 py-px font-mono text-[10px] font-bold border",
                                         expertise.color,
@@ -263,9 +271,9 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
                                   searchQuery.toLowerCase().includes(skill.toLowerCase())
                                 )
                                 .slice(0, 4)
-                                .map((skill: string, index: number) => (
+                                .map((skill: string) => (
                                   <span
-                                    key={index}
+                                    key={skill}
                                     className="px-1 py-px font-mono text-[9px] uppercase text-[#9CA3AF] bg-[#111111] border border-[#2E2E35]"
                                   >
                                     {highlightMatch(skill, searchQuery)}

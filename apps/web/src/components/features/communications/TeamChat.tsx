@@ -109,6 +109,7 @@ export default function TeamChat({ channelId, channelName }: TeamChatProps) {
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={`Message #${channelName}`}
+            aria-label={`Message #${channelName}`}
             className="flex-1 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] px-3 py-2 font-mono text-xs text-[var(--theme-foreground)] placeholder-[var(--theme-foreground-tertiary)] focus:border-[var(--theme-primary)] focus:outline-none transition-colors"
           />
           <button

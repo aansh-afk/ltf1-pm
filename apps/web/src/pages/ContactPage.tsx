@@ -1,4 +1,4 @@
-import { motion, type Variants } from 'framer-motion'
+import { m, type Variants } from 'framer-motion'
 import PublicNavigation from '../components/common/PublicNavigation'
 import Footer from '../components/common/Footer'
 import { usePageTitle } from '../hooks/usePageTitle'
@@ -91,7 +91,7 @@ export default function ContactPage() {
       {/* Hero */}
       <section className="pt-32 pb-16 md:pt-40 md:pb-24">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -103,7 +103,7 @@ export default function ContactPage() {
               Get in touch with our sales and support teams for demos,
               onboarding support, or product questions.
             </p>
-          </motion.div>
+          </m.div>
         </div>
       </section>
 
@@ -112,13 +112,13 @@ export default function ContactPage() {
         <div className="max-w-4xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {primaryCards.map((card, i) => (
-              <motion.div
+              <m.div
                 key={card.title}
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
               >
-                <motion.div
+                <m.div
                   variants={cardVariants}
                   initial="rest"
                   whileHover="hover"
@@ -145,12 +145,12 @@ export default function ContactPage() {
                     className="inline-flex items-center gap-2 text-sm font-bold text-[#050505] bg-[#F9FAFB] px-5 py-2.5 w-fit"
                   >
                     {card.linkLabel}
-                    <motion.span variants={arrowVariants}>
+                    <m.span variants={arrowVariants}>
                       {card.external ? '↗' : '→'}
-                    </motion.span>
+                    </m.span>
                   </a>
-                </motion.div>
-              </motion.div>
+                </m.div>
+              </m.div>
             ))}
           </div>
         </div>
@@ -161,7 +161,7 @@ export default function ContactPage() {
         <div className="max-w-4xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
             {secondaryCards.map((card, i) => (
-              <motion.div
+              <m.div
                 key={card.title}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -183,7 +183,7 @@ export default function ContactPage() {
                   {card.linkLabel}
                   <span className="text-xs">{card.external ? '↗' : '→'}</span>
                 </a>
-              </motion.div>
+              </m.div>
             ))}
           </div>
         </div>

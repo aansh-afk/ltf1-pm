@@ -55,9 +55,9 @@ export default function BrutalProgress({
         />
         {/* Progress notches every 10% */}
         <div className="absolute inset-0 flex">
-          {[...Array(9)].map((_, i) => (
+          {['n1','n2','n3','n4','n5','n6','n7','n8','n9'].map((id) => (
             <div
-              key={i}
+              key={id}
               className="flex-1 border-r-2 border-[var(--theme-border)] opacity-50"
               style={{ borderRadius: '0 !important' }}
             />

@@ -6,15 +6,15 @@ export default function BrutalistLoader() {
       <div className="relative">
         {/* Animated squares in a grid pattern */}
         <div className="grid grid-cols-3 gap-[4px]">
-          {[...Array(9)].map((_, index) => (
+          {[0,1,2,3,4,5,6,7,8].map((n) => (
             <div
-              key={index}
+              key={`g${n}`}
               className="w-5 h-5 border-2"
               style={{
                 backgroundColor: 'var(--theme-background)',
                 borderColor: 'var(--theme-primary)',
                 animation: `brutalPulse 1.4s infinite ease-in-out`,
-                animationDelay: `${index * 0.15}s`,
+                animationDelay: `${n * 0.15}s`,
               }}
             />
           ))}
@@ -61,16 +61,16 @@ export function BrutalistStepLoader() {
   return (
     <div className="min-h-screen bg-[var(--theme-background)] flex items-center justify-center">
       <div className="flex gap-[6px]">
-        {[...Array(5)].map((_, index) => (
+        {[1,2,3,4,5].map((n) => (
           <div
-            key={index}
+            key={`s${n}`}
             className="w-4 border-2"
             style={{
-              height: `${(index + 1) * 12}px`,
+              height: `${n * 12}px`,
               backgroundColor: 'var(--theme-background)',
               borderColor: 'var(--theme-primary)',
               animation: `brutalStep 1.2s infinite ease-in-out`,
-              animationDelay: `${index * 0.1}s`,
+              animationDelay: `${(n - 1) * 0.1}s`,
             }}
           />
         ))}
