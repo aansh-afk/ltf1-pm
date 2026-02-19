@@ -236,7 +236,8 @@
 @layer components {
   /* BRUTAL GLASS EFFECT */
   .brutal-glass {
-    @apply bg-[var(--theme-background-secondary)]/90 backdrop-blur-sm border-2 border-[var(--theme-border)];
+    @apply backdrop-blur-sm border-2 border-[var(--theme-border)];
+    background-color: color-mix(in srgb, var(--theme-background-secondary) 90%, transparent);
   }
 
   /* BRUTAL CARD */
