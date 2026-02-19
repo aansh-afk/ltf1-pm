@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useReducer } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
@@ -13,7 +13,7 @@ import {
   HiOutlineCog
 } from 'react-icons/hi'
 import clsx from 'clsx'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import BrutalButton from '@/components/ui/BrutalButton'
 
 interface EditDeveloperProfileModalProps {
@@ -100,17 +100,486 @@ function SegmentedSkillBar({ level, onChange }: { level: number; onChange: (v: n
   )
 }
 
-export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProfileModalProps) {
-  const [activeTab, setActiveTab] = useState<'basic' | 'expertise' | 'preferences'>('basic')
-  const [isSaving, setIsSaving] = useState(false)
-  const [tabDirection, setTabDirection] = useState(0)
-  const prevTabRef = useRef(activeTab)
+// --- Tab Panel Sub-components ---
 
-  // Get current profile
-  const profile = useQuery(api.developers.queries.getDeveloperProfile, { userId })
+interface BasicInfoTabPanelProps {
+  formData: EditProfileState['formData']
+  dispatch: React.Dispatch<EditProfileAction>
+}
 
-  // Form state
-  const [formData, setFormData] = useState({
+function BasicInfoTabPanel({ formData, dispatch }: BasicInfoTabPanelProps) {
+  return (
+    <m.div className="space-y-6" variants={staggerContainer} initial="enter" animate="center">
+      {/* Personal Information */}
+      <SectionHeader label="BASIC_INFO.config" />
+      <m.div variants={staggerItem} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="edit-profile-name" className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
+            FULL NAME
+          </label>
+          <input
+            id="edit-profile-name"
+            type="text"
+            value={formData.name}
+            onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'name', value: e.target.value })}
+            className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+            placeholder="ENTER_NAME"
+          />
+        </div>
+        <div>
+          <label htmlFor="edit-profile-role" className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
+            ROLE/TITLE
+          </label>
+          <input
+            id="edit-profile-role"
+            type="text"
+            value={formData.role}
+            onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'role', value: e.target.value })}
+            className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+            placeholder="ENTER_ROLE"
+          />
+        </div>
+      </m.div>
+
+      {/* Bio */}
+      <m.div variants={staggerItem}>
+        <label htmlFor="edit-profile-bio" className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
+          BIO
+        </label>
+        <textarea
+          id="edit-profile-bio"
+          value={formData.bio}
+          onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'bio', value: e.target.value })}
+          className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none min-h-[80px] resize-none transition-colors"
+          placeholder="ENTER_BIO..."
+          rows={3}
+        />
+      </m.div>
+
+      <SectionDivider />
+
+      {/* Location & Contact */}
+      <SectionHeader label="LOCATION.env" />
+      <m.div variants={staggerItem} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="edit-profile-location" className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
+            LOCATION
+          </label>
+          <input
+            id="edit-profile-location"
+            type="text"
+            value={formData.location}
+            onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'location', value: e.target.value })}
+            className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+            placeholder="CITY_COUNTRY"
+          />
+        </div>
+        <div>
+          <label htmlFor="edit-profile-timezone" className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
+            TIMEZONE
+          </label>
+          <select
+            id="edit-profile-timezone"
+            value={formData.timezone}
+            onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'timezone', value: e.target.value })}
+            className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+          >
+            <option value="">SELECT_TIMEZONE</option>
+            <option value="UTC">UTC</option>
+            <option value="America/New_York">Eastern Time</option>
+            <option value="America/Chicago">Central Time</option>
+            <option value="America/Denver">Mountain Time</option>
+            <option value="America/Los_Angeles">Pacific Time</option>
+            <option value="Europe/London">London</option>
+            <option value="Europe/Paris">Paris</option>
+            <option value="Asia/Tokyo">Tokyo</option>
+            <option value="Asia/Shanghai">Shanghai</option>
+            <option value="Asia/Kolkata">Mumbai</option>
+          </select>
+        </div>
+      </m.div>
+
+      <SectionDivider />
+
+      {/* Contact Information */}
+      <SectionHeader label="CONTACT.config" />
+      <m.div variants={staggerItem} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="edit-profile-phone" className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
+            PHONE (OPTIONAL)
+          </label>
+          <input
+            id="edit-profile-phone"
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'phone', value: e.target.value })}
+            className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+            placeholder="+1 (555) 123-4567"
+          />
+        </div>
+        <div>
+          <label htmlFor="edit-profile-github" className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
+            GITHUB USERNAME
+          </label>
+          <input
+            id="edit-profile-github"
+            type="text"
+            value={formData.githubUsername}
+            onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'githubUsername', value: e.target.value })}
+            className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+            placeholder="USERNAME"
+          />
+        </div>
+      </m.div>
+
+      <SectionDivider />
+
+      {/* Experience */}
+      <SectionHeader label="EXPERIENCE.yaml" />
+      <m.div variants={staggerItem} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="edit-profile-years" className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
+            YEARS OF EXPERIENCE
+          </label>
+          <input
+            id="edit-profile-years"
+            type="number"
+            min="0"
+            max="50"
+            value={formData.yearsExperience}
+            onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'yearsExperience', value: parseInt(e.target.value) || 0 })}
+            className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+          />
+        </div>
+        <div>
+          <span className="block font-mono text-xs font-bold uppercase mb-3 text-[var(--theme-foreground-secondary)]">
+            CAREER LEVEL
+          </span>
+          {/* Horizontal step indicator */}
+          <div className="flex items-center gap-0 w-full">
+            {CAREER_LEVELS.map((level, i) => (
+              <div key={level.value} className="flex items-center">
+                <m.button
+                  type="button"
+                  onClick={() => dispatch({ type: 'UPDATE_FORM', field: 'careerLevel', value: level.value })}
+                  className={clsx(
+                    'px-2.5 py-2 font-mono text-[10px] font-bold uppercase border-2 transition-colors',
+                    formData.careerLevel === level.value
+                      ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]'
+                      : 'bg-[var(--theme-background)] text-[var(--theme-foreground-secondary)] border-[var(--theme-border)] hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)]',
+                    i === 0 && 'rounded-l-lg',
+                    i === CAREER_LEVELS.length - 1 && 'rounded-r-lg',
+                    i > 0 && '-ml-[2px]'
+                  )}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  {level.label}
+                </m.button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </m.div>
+    </m.div>
+  )
+}
+
+interface ExpertiseTabPanelProps {
+  formData: EditProfileState['formData']
+  onAddTechStack: () => void
+  onRemoveTechStack: (index: number) => void
+  onUpdateTechStack: (index: number, field: 'name' | 'level', value: string | number) => void
+  onAddSkill: (skill: string) => void
+  onRemoveSkill: (skill: string) => void
+  onAddInterest: (interest: string) => void
+  onRemoveInterest: (interest: string) => void
+}
+
+function ExpertiseTabPanel({ formData, onAddTechStack, onRemoveTechStack, onUpdateTechStack, onAddSkill, onRemoveSkill, onAddInterest, onRemoveInterest }: ExpertiseTabPanelProps) {
+  return (
+    <m.div className="space-y-6" variants={staggerContainer} initial="enter" animate="center">
+      {/* Tech Stack */}
+      <SectionHeader label="TECH_STACK.json" />
+      <m.div variants={staggerItem}>
+        <div className="flex items-center justify-between mb-4">
+          <span className="font-mono text-xs font-bold uppercase text-[var(--theme-foreground-secondary)]">
+            TECHNOLOGY STACK
+          </span>
+          <m.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+            <BrutalButton
+              size="sm"
+              variant="secondary"
+              onClick={onAddTechStack}
+              className="flex items-center gap-2"
+            >
+              <HiOutlinePlus className="w-4 h-4" />
+              ADD_TECH
+            </BrutalButton>
+          </m.div>
+        </div>
+        <div className="space-y-3">
+          <AnimatePresence mode="popLayout">
+            {formData.techStack.map((tech, index) => (
+              <m.div
+                key={`tech-${tech.name || 'empty'}-${tech.level}`}
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -20, transition: { duration: 0.15 } }}
+                className="flex items-center gap-3 p-3 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]"
+              >
+                <input
+                  type="text"
+                  value={tech.name}
+                  onChange={(e) => onUpdateTechStack(index, 'name', e.target.value)}
+                  className="flex-1 p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+                  placeholder="TECH_NAME"
+                />
+                <SegmentedSkillBar
+                  level={tech.level}
+                  onChange={(v) => onUpdateTechStack(index, 'level', v)}
+                />
+                <m.button
+                  onClick={() => onRemoveTechStack(index)}
+                  className="p-1.5 text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-error)] transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <HiOutlineTrash className="w-4 h-4" />
+                </m.button>
+              </m.div>
+            ))}
+          </AnimatePresence>
+          {formData.techStack.length === 0 && (
+            <m.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-6 border-2 border-dashed border-[var(--theme-border)]"
+            >
+              <p className="text-sm font-mono text-[var(--theme-foreground-secondary)] uppercase">NO_TECH_ADDED</p>
+              <p className="text-xs font-mono text-[var(--theme-foreground-secondary)] mt-1 opacity-60">$ click ADD_TECH to get started</p>
+            </m.div>
+          )}
+        </div>
+      </m.div>
+
+      <SectionDivider />
+
+      {/* Skills */}
+      <SectionHeader label="SKILLS.list" />
+      <m.div variants={staggerItem}>
+        <div className="flex flex-wrap gap-2 mb-4">
+          <AnimatePresence mode="popLayout">
+            {formData.skills.map((skill) => (
+              <m.span
+                key={skill}
+                layout
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.12 } }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--theme-background-tertiary)] border border-[var(--theme-border)] font-mono text-xs uppercase text-[var(--theme-foreground)]"
+              >
+                {skill}
+                <button
+                  onClick={() => onRemoveSkill(skill)}
+                  className="text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-error)] transition-colors ml-1"
+                >
+                  <HiOutlineX className="w-3 h-3" />
+                </button>
+              </m.span>
+            ))}
+          </AnimatePresence>
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="ADD_SKILL_ENTER"
+            aria-label="Add skill"
+            className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                onAddSkill(e.currentTarget.value)
+                e.currentTarget.value = ''
+              }
+            }}
+          />
+        </div>
+      </m.div>
+
+      <SectionDivider />
+
+      {/* Interests */}
+      <SectionHeader label="INTERESTS.list" />
+      <m.div variants={staggerItem}>
+        <div className="flex flex-wrap gap-2 mb-4">
+          <AnimatePresence mode="popLayout">
+            {formData.interests.map((interest) => (
+              <m.span
+                key={interest}
+                layout
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.12 } }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--theme-background-tertiary)] border border-[var(--theme-border)] font-mono text-xs uppercase text-[var(--theme-foreground)]"
+              >
+                {interest}
+                <button
+                  onClick={() => onRemoveInterest(interest)}
+                  className="text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-error)] transition-colors ml-1"
+                >
+                  <HiOutlineX className="w-3 h-3" />
+                </button>
+              </m.span>
+            ))}
+          </AnimatePresence>
+        </div>
+        <input
+          type="text"
+          placeholder="ADD_INTEREST_ENTER"
+          aria-label="Add interest"
+          className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              onAddInterest(e.currentTarget.value)
+              e.currentTarget.value = ''
+            }
+          }}
+        />
+      </m.div>
+    </m.div>
+  )
+}
+
+interface PreferencesTabPanelProps {
+  formData: EditProfileState['formData']
+  dispatch: React.Dispatch<EditProfileAction>
+}
+
+function PreferencesTabPanel({ formData, dispatch }: PreferencesTabPanelProps) {
+  return (
+    <m.div className="space-y-6" variants={staggerContainer} initial="enter" animate="center">
+      {/* Working Hours */}
+      <SectionHeader label="SCHEDULE.config" />
+      <m.div variants={staggerItem}>
+        <span className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
+          WORKING HOURS
+        </span>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="edit-profile-start-time" className="block font-mono text-[10px] mb-2 uppercase text-[var(--theme-foreground-secondary)]">START TIME</label>
+            <input
+              id="edit-profile-start-time"
+              type="time"
+              value={formData.workingHours.start}
+              onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'workingHours', value: { ...formData.workingHours, start: e.target.value } })}
+              className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+            />
+          </div>
+          <div>
+            <label htmlFor="edit-profile-end-time" className="block font-mono text-[10px] mb-2 uppercase text-[var(--theme-foreground-secondary)]">END TIME</label>
+            <input
+              id="edit-profile-end-time"
+              type="time"
+              value={formData.workingHours.end}
+              onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'workingHours', value: { ...formData.workingHours, end: e.target.value } })}
+              className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+            />
+          </div>
+        </div>
+      </m.div>
+
+      <SectionDivider />
+
+      {/* Communication Preferences */}
+      <SectionHeader label="COMMS.config" />
+      <m.div variants={staggerItem}>
+        <label htmlFor="edit-profile-comms" className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
+          PREFERRED COMMUNICATION METHOD
+        </label>
+        <select
+          id="edit-profile-comms"
+          value={formData.communicationPrefs}
+          onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'communicationPrefs', value: e.target.value })}
+          className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
+        >
+          <option value="email">EMAIL</option>
+          <option value="slack">SLACK</option>
+          <option value="teams">TEAMS</option>
+          <option value="discord">DISCORD</option>
+        </select>
+      </m.div>
+
+      <SectionDivider />
+
+      {/* Work Style */}
+      <SectionHeader label="WORKSTYLE.md" />
+      <m.div variants={staggerItem}>
+        <label htmlFor="edit-profile-workstyle" className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
+          WORK STYLE DESCRIPTION
+        </label>
+        <textarea
+          id="edit-profile-workstyle"
+          value={formData.workStyle}
+          onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'workStyle', value: e.target.value })}
+          className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none min-h-[60px] resize-none transition-colors"
+          placeholder="DESCRIBE_WORK_STYLE..."
+        />
+      </m.div>
+
+      <SectionDivider />
+
+      {/* Career Goals */}
+      <SectionHeader label="GOALS.yaml" />
+      <m.div variants={staggerItem}>
+        <label htmlFor="edit-profile-goals" className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
+          CAREER GOALS
+        </label>
+        <textarea
+          id="edit-profile-goals"
+          value={formData.careerGoals}
+          onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'careerGoals', value: e.target.value })}
+          className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none min-h-[60px] resize-none transition-colors"
+          placeholder="CAREER_ASPIRATIONS..."
+        />
+      </m.div>
+    </m.div>
+  )
+}
+
+// --- Main component types ---
+
+type EditProfileState = {
+  activeTab: 'basic' | 'expertise' | 'preferences'
+  isSaving: boolean
+  tabDirection: number
+  formData: {
+    name: string
+    role: string
+    bio: string
+    location: string
+    timezone: string
+    phone: string
+    githubUsername: string
+    yearsExperience: number
+    careerLevel: 'junior' | 'mid' | 'senior' | 'lead' | 'principal'
+    techStack: Array<{ name: string; level: number }>
+    skills: string[]
+    interests: string[]
+    workingHours: { start: string; end: string }
+    communicationPrefs: 'email' | 'slack' | 'teams' | 'discord'
+    workStyle: string
+    careerGoals: string
+    mentoringInterests: string[]
+  }
+  hasLoadedProfile: boolean
+}
+
+const editProfileInitialState: EditProfileState = {
+  activeTab: 'basic',
+  isSaving: false,
+  tabDirection: 0,
+  formData: {
     name: '',
     role: '',
     bio: '',
@@ -119,16 +588,41 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
     phone: '',
     githubUsername: '',
     yearsExperience: 0,
-    careerLevel: 'junior' as 'junior' | 'mid' | 'senior' | 'lead' | 'principal',
-    techStack: [] as Array<{ name: string; level: number }>,
-    skills: [] as string[],
-    interests: [] as string[],
+    careerLevel: 'junior',
+    techStack: [],
+    skills: [],
+    interests: [],
     workingHours: { start: '09:00', end: '17:00' },
-    communicationPrefs: 'email' as 'email' | 'slack' | 'teams' | 'discord',
+    communicationPrefs: 'email',
     workStyle: '',
     careerGoals: '',
-    mentoringInterests: [] as string[]
-  })
+    mentoringInterests: [],
+  },
+  hasLoadedProfile: false,
+}
+
+type EditProfileAction =
+  | { type: 'UPDATE'; field: keyof EditProfileState; value: unknown }
+  | { type: 'UPDATE_FORM'; field: keyof EditProfileState['formData']; value: unknown }
+
+function editProfileReducer(state: EditProfileState, action: EditProfileAction): EditProfileState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    case 'UPDATE_FORM':
+      return { ...state, formData: { ...state.formData, [action.field]: action.value } }
+    default:
+      return state
+  }
+}
+
+export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProfileModalProps) {
+  const [state, dispatch] = useReducer(editProfileReducer, editProfileInitialState)
+  const { activeTab, isSaving, tabDirection, formData, hasLoadedProfile } = state
+  const prevTabRef = useRef(activeTab)
+
+  // Get current profile
+  const profile = useQuery(api.developers.queries.getDeveloperProfile, { userId })
 
   // Mutations
   const updateProfile = useMutation(api.developers.mutations.updateDeveloperProfile)
@@ -145,11 +639,9 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
   }
 
   // Load profile data when available (only once)
-  const [hasLoadedProfile, setHasLoadedProfile] = useState(false)
-
   useEffect(() => {
     if (profile && !hasLoadedProfile) {
-      setFormData({
+      dispatch({ type: 'UPDATE', field: 'formData', value: {
         name: profile.name || '',
         role: profile.profile?.role || '',
         bio: profile.profile?.bio || '',
@@ -167,8 +659,8 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
         workStyle: profile.profile?.workStyle || '',
         careerGoals: profile.profile?.careerGoals || '',
         mentoringInterests: profile.profile?.mentoringInterests || []
-      })
-      setHasLoadedProfile(true)
+      }})
+      dispatch({ type: 'UPDATE', field: 'hasLoadedProfile', value: true })
     }
   }, [profile, hasLoadedProfile])
 
@@ -183,7 +675,7 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
   }
 
   const handleSave = async () => {
-    setIsSaving(true)
+    dispatch({ type: 'UPDATE', field: 'isSaving', value: true })
     try {
       // Convert tech stack levels before saving
       const dataToSave = {
@@ -197,63 +689,42 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
     } catch (error) {
       console.error('Failed to update profile:', error)
     } finally {
-      setIsSaving(false)
+      dispatch({ type: 'UPDATE', field: 'isSaving', value: false })
     }
   }
 
   const addTechStack = () => {
-    setFormData(prev => ({
-      ...prev,
-      techStack: [...prev.techStack, { name: '', level: 1 }]
-    }))
+    dispatch({ type: 'UPDATE_FORM', field: 'techStack', value: [...formData.techStack, { name: '', level: 1 }] })
   }
 
   const removeTechStack = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      techStack: prev.techStack.filter((_, i) => i !== index)
-    }))
+    dispatch({ type: 'UPDATE_FORM', field: 'techStack', value: formData.techStack.filter((_, i) => i !== index) })
   }
 
   const updateTechStack = (index: number, field: 'name' | 'level', value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      techStack: prev.techStack.map((tech, i) =>
-        i === index ? { ...tech, [field]: value } : tech
-      )
-    }))
+    dispatch({ type: 'UPDATE_FORM', field: 'techStack', value: formData.techStack.map((tech, i) =>
+      i === index ? { ...tech, [field]: value } : tech
+    ) })
   }
 
   const addSkill = (skill: string) => {
     if (skill.trim() && !formData.skills.includes(skill.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        skills: [...prev.skills, skill.trim()]
-      }))
+      dispatch({ type: 'UPDATE_FORM', field: 'skills', value: [...formData.skills, skill.trim()] })
     }
   }
 
   const removeSkill = (skill: string) => {
-    setFormData(prev => ({
-      ...prev,
-      skills: prev.skills.filter(s => s !== skill)
-    }))
+    dispatch({ type: 'UPDATE_FORM', field: 'skills', value: formData.skills.filter(s => s !== skill) })
   }
 
   const addInterest = (interest: string) => {
     if (interest.trim() && !formData.interests.includes(interest.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        interests: [...prev.interests, interest.trim()]
-      }))
+      dispatch({ type: 'UPDATE_FORM', field: 'interests', value: [...formData.interests, interest.trim()] })
     }
   }
 
   const removeInterest = (interest: string) => {
-    setFormData(prev => ({
-      ...prev,
-      interests: prev.interests.filter(i => i !== interest)
-    }))
+    dispatch({ type: 'UPDATE_FORM', field: 'interests', value: formData.interests.filter(i => i !== interest) })
   }
 
   const tabs = [
@@ -266,20 +737,20 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
 
   const handleTabChange = (newTab: typeof activeTab) => {
     const dir = tabOrder[newTab] - tabOrder[activeTab]
-    setTabDirection(dir)
+    dispatch({ type: 'UPDATE', field: 'tabDirection', value: dir })
     prevTabRef.current = activeTab
-    setActiveTab(newTab)
+    dispatch({ type: 'UPDATE', field: 'activeTab', value: newTab })
   }
 
   return (
-    <motion.div
+    <m.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background-secondary)]/80 backdrop-blur-sm"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
     >
-      <motion.div
+      <m.div
         className="w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
         initial={{ opacity: 0, y: 24, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -297,14 +768,14 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
               $ PROFILE_EDITOR v2.0 -- MODIFY YOUR CONFIG
             </p>
           </div>
-          <motion.button
+          <m.button
             onClick={onClose}
             className="p-2 border-2 border-[var(--theme-border)] bg-[var(--theme-background)] text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-error)] hover:border-[var(--theme-error)] transition-colors rounded-lg"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
             <HiOutlineX className="w-5 h-5" />
-          </motion.button>
+          </m.button>
         </div>
 
         {/* Tab Navigation */}
@@ -312,7 +783,7 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
           {tabs.map((tab) => {
             const Icon = tab.icon
             return (
-              <motion.button
+              <m.button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
                 className={clsx(
@@ -327,13 +798,13 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
                 <Icon className="w-4 h-4" />
                 {tab.label}
                 {activeTab === tab.id && (
-                  <motion.div
+                  <m.div
                     className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--theme-background)]"
                     layoutId="activeTabUnderline"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
-              </motion.button>
+              </m.button>
             )
           })}
         </div>
@@ -342,7 +813,7 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
         <div className="p-6 overflow-y-auto flex-1">
           <AnimatePresence mode="wait" custom={tabDirection}>
             {activeTab === 'basic' && (
-              <motion.div
+              <m.div
                 key="basic"
                 custom={tabDirection}
                 variants={tabVariants}
@@ -351,176 +822,12 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
                 exit="exit"
                 transition={{ duration: 0.25, ease: 'easeInOut' }}
               >
-                <motion.div className="space-y-6" variants={staggerContainer} initial="enter" animate="center">
-                  {/* Personal Information */}
-                  <SectionHeader label="BASIC_INFO.config" />
-                  <motion.div variants={staggerItem} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
-                        FULL NAME
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                        className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-                        placeholder="ENTER_NAME"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
-                        ROLE/TITLE
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.role}
-                        onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
-                        className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-                        placeholder="ENTER_ROLE"
-                      />
-                    </div>
-                  </motion.div>
-
-                  {/* Bio */}
-                  <motion.div variants={staggerItem}>
-                    <label className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
-                      BIO
-                    </label>
-                    <textarea
-                      value={formData.bio}
-                      onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                      className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none min-h-[80px] resize-none transition-colors"
-                      placeholder="ENTER_BIO..."
-                      rows={3}
-                    />
-                  </motion.div>
-
-                  <SectionDivider />
-
-                  {/* Location & Contact */}
-                  <SectionHeader label="LOCATION.env" />
-                  <motion.div variants={staggerItem} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
-                        LOCATION
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.location}
-                        onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                        className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-                        placeholder="CITY_COUNTRY"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
-                        TIMEZONE
-                      </label>
-                      <select
-                        value={formData.timezone}
-                        onChange={(e) => setFormData(prev => ({ ...prev, timezone: e.target.value }))}
-                        className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-                      >
-                        <option value="">SELECT_TIMEZONE</option>
-                        <option value="UTC">UTC</option>
-                        <option value="America/New_York">Eastern Time</option>
-                        <option value="America/Chicago">Central Time</option>
-                        <option value="America/Denver">Mountain Time</option>
-                        <option value="America/Los_Angeles">Pacific Time</option>
-                        <option value="Europe/London">London</option>
-                        <option value="Europe/Paris">Paris</option>
-                        <option value="Asia/Tokyo">Tokyo</option>
-                        <option value="Asia/Shanghai">Shanghai</option>
-                        <option value="Asia/Kolkata">Mumbai</option>
-                      </select>
-                    </div>
-                  </motion.div>
-
-                  <SectionDivider />
-
-                  {/* Contact Information */}
-                  <SectionHeader label="CONTACT.config" />
-                  <motion.div variants={staggerItem} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
-                        PHONE (OPTIONAL)
-                      </label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                        className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-                        placeholder="+1 (555) 123-4567"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
-                        GITHUB USERNAME
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.githubUsername}
-                        onChange={(e) => setFormData(prev => ({ ...prev, githubUsername: e.target.value }))}
-                        className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-                        placeholder="USERNAME"
-                      />
-                    </div>
-                  </motion.div>
-
-                  <SectionDivider />
-
-                  {/* Experience */}
-                  <SectionHeader label="EXPERIENCE.yaml" />
-                  <motion.div variants={staggerItem} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
-                        YEARS OF EXPERIENCE
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="50"
-                        value={formData.yearsExperience}
-                        onChange={(e) => setFormData(prev => ({ ...prev, yearsExperience: parseInt(e.target.value) || 0 }))}
-                        className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-mono text-xs font-bold uppercase mb-3 text-[var(--theme-foreground-secondary)]">
-                        CAREER LEVEL
-                      </label>
-                      {/* Horizontal step indicator */}
-                      <div className="flex items-center gap-0 w-full">
-                        {CAREER_LEVELS.map((level, i) => (
-                          <div key={level.value} className="flex items-center">
-                            <motion.button
-                              type="button"
-                              onClick={() => setFormData(prev => ({ ...prev, careerLevel: level.value as any }))}
-                              className={clsx(
-                                'px-2.5 py-2 font-mono text-[10px] font-bold uppercase border-2 transition-colors',
-                                formData.careerLevel === level.value
-                                  ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]'
-                                  : 'bg-[var(--theme-background)] text-[var(--theme-foreground-secondary)] border-[var(--theme-border)] hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)]',
-                                i === 0 && 'rounded-l-lg',
-                                i === CAREER_LEVELS.length - 1 && 'rounded-r-lg',
-                                i > 0 && '-ml-[2px]'
-                              )}
-                              whileHover={{ y: -1 }}
-                              whileTap={{ scale: 0.97 }}
-                            >
-                              {level.label}
-                            </motion.button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              </motion.div>
+                <BasicInfoTabPanel formData={formData} dispatch={dispatch} />
+              </m.div>
             )}
 
             {activeTab === 'expertise' && (
-              <motion.div
+              <m.div
                 key="expertise"
                 custom={tabDirection}
                 variants={tabVariants}
@@ -529,159 +836,21 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
                 exit="exit"
                 transition={{ duration: 0.25, ease: 'easeInOut' }}
               >
-                <motion.div className="space-y-6" variants={staggerContainer} initial="enter" animate="center">
-                  {/* Tech Stack */}
-                  <SectionHeader label="TECH_STACK.json" />
-                  <motion.div variants={staggerItem}>
-                    <div className="flex items-center justify-between mb-4">
-                      <label className="font-mono text-xs font-bold uppercase text-[var(--theme-foreground-secondary)]">
-                        TECHNOLOGY STACK
-                      </label>
-                      <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                        <BrutalButton
-                          size="sm"
-                          variant="secondary"
-                          onClick={addTechStack}
-                          className="flex items-center gap-2"
-                        >
-                          <HiOutlinePlus className="w-4 h-4" />
-                          ADD_TECH
-                        </BrutalButton>
-                      </motion.div>
-                    </div>
-                    <div className="space-y-3">
-                      <AnimatePresence mode="popLayout">
-                        {formData.techStack.map((tech, index) => (
-                          <motion.div
-                            key={index}
-                            layout
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, x: -20, transition: { duration: 0.15 } }}
-                            className="flex items-center gap-3 p-3 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]"
-                          >
-                            <input
-                              type="text"
-                              value={tech.name}
-                              onChange={(e) => updateTechStack(index, 'name', e.target.value)}
-                              className="flex-1 p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-                              placeholder="TECH_NAME"
-                            />
-                            <SegmentedSkillBar
-                              level={tech.level}
-                              onChange={(v) => updateTechStack(index, 'level', v)}
-                            />
-                            <motion.button
-                              onClick={() => removeTechStack(index)}
-                              className="p-1.5 text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-error)] transition-colors"
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <HiOutlineTrash className="w-4 h-4" />
-                            </motion.button>
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
-                      {formData.techStack.length === 0 && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="text-center py-6 border-2 border-dashed border-[var(--theme-border)]"
-                        >
-                          <p className="text-sm font-mono text-[var(--theme-foreground-secondary)] uppercase">NO_TECH_ADDED</p>
-                          <p className="text-xs font-mono text-[var(--theme-foreground-secondary)] mt-1 opacity-60">$ click ADD_TECH to get started</p>
-                        </motion.div>
-                      )}
-                    </div>
-                  </motion.div>
-
-                  <SectionDivider />
-
-                  {/* Skills */}
-                  <SectionHeader label="SKILLS.list" />
-                  <motion.div variants={staggerItem}>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <AnimatePresence mode="popLayout">
-                        {formData.skills.map((skill) => (
-                          <motion.span
-                            key={skill}
-                            layout
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.12 } }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--theme-background-tertiary)] border border-[var(--theme-border)] font-mono text-xs uppercase text-[var(--theme-foreground)]"
-                          >
-                            {skill}
-                            <button
-                              onClick={() => removeSkill(skill)}
-                              className="text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-error)] transition-colors ml-1"
-                            >
-                              <HiOutlineX className="w-3 h-3" />
-                            </button>
-                          </motion.span>
-                        ))}
-                      </AnimatePresence>
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="ADD_SKILL_ENTER"
-                        className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            addSkill(e.currentTarget.value)
-                            e.currentTarget.value = ''
-                          }
-                        }}
-                      />
-                    </div>
-                  </motion.div>
-
-                  <SectionDivider />
-
-                  {/* Interests */}
-                  <SectionHeader label="INTERESTS.list" />
-                  <motion.div variants={staggerItem}>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <AnimatePresence mode="popLayout">
-                        {formData.interests.map((interest) => (
-                          <motion.span
-                            key={interest}
-                            layout
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.12 } }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--theme-background-tertiary)] border border-[var(--theme-border)] font-mono text-xs uppercase text-[var(--theme-foreground)]"
-                          >
-                            {interest}
-                            <button
-                              onClick={() => removeInterest(interest)}
-                              className="text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-error)] transition-colors ml-1"
-                            >
-                              <HiOutlineX className="w-3 h-3" />
-                            </button>
-                          </motion.span>
-                        ))}
-                      </AnimatePresence>
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="ADD_INTEREST_ENTER"
-                      className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          addInterest(e.currentTarget.value)
-                          e.currentTarget.value = ''
-                        }
-                      }}
-                    />
-                  </motion.div>
-                </motion.div>
-              </motion.div>
+                <ExpertiseTabPanel
+                  formData={formData}
+                  onAddTechStack={addTechStack}
+                  onRemoveTechStack={removeTechStack}
+                  onUpdateTechStack={updateTechStack}
+                  onAddSkill={addSkill}
+                  onRemoveSkill={removeSkill}
+                  onAddInterest={addInterest}
+                  onRemoveInterest={removeInterest}
+                />
+              </m.div>
             )}
 
             {activeTab === 'preferences' && (
-              <motion.div
+              <m.div
                 key="preferences"
                 custom={tabDirection}
                 variants={tabVariants}
@@ -690,94 +859,8 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
                 exit="exit"
                 transition={{ duration: 0.25, ease: 'easeInOut' }}
               >
-                <motion.div className="space-y-6" variants={staggerContainer} initial="enter" animate="center">
-                  {/* Working Hours */}
-                  <SectionHeader label="SCHEDULE.config" />
-                  <motion.div variants={staggerItem}>
-                    <label className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
-                      WORKING HOURS
-                    </label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block font-mono text-[10px] mb-2 uppercase text-[var(--theme-foreground-secondary)]">START TIME</label>
-                        <input
-                          type="time"
-                          value={formData.workingHours.start}
-                          onChange={(e) => setFormData(prev => ({
-                            ...prev,
-                            workingHours: { ...prev.workingHours, start: e.target.value }
-                          }))}
-                          className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-mono text-[10px] mb-2 uppercase text-[var(--theme-foreground-secondary)]">END TIME</label>
-                        <input
-                          type="time"
-                          value={formData.workingHours.end}
-                          onChange={(e) => setFormData(prev => ({
-                            ...prev,
-                            workingHours: { ...prev.workingHours, end: e.target.value }
-                          }))}
-                          className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  <SectionDivider />
-
-                  {/* Communication Preferences */}
-                  <SectionHeader label="COMMS.config" />
-                  <motion.div variants={staggerItem}>
-                    <label className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
-                      PREFERRED COMMUNICATION METHOD
-                    </label>
-                    <select
-                      value={formData.communicationPrefs}
-                      onChange={(e) => setFormData(prev => ({ ...prev, communicationPrefs: e.target.value as any }))}
-                      className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-                    >
-                      <option value="email">EMAIL</option>
-                      <option value="slack">SLACK</option>
-                      <option value="teams">TEAMS</option>
-                      <option value="discord">DISCORD</option>
-                    </select>
-                  </motion.div>
-
-                  <SectionDivider />
-
-                  {/* Work Style */}
-                  <SectionHeader label="WORKSTYLE.md" />
-                  <motion.div variants={staggerItem}>
-                    <label className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
-                      WORK STYLE DESCRIPTION
-                    </label>
-                    <textarea
-                      value={formData.workStyle}
-                      onChange={(e) => setFormData(prev => ({ ...prev, workStyle: e.target.value }))}
-                      className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none min-h-[60px] resize-none transition-colors"
-                      placeholder="DESCRIBE_WORK_STYLE..."
-                    />
-                  </motion.div>
-
-                  <SectionDivider />
-
-                  {/* Career Goals */}
-                  <SectionHeader label="GOALS.yaml" />
-                  <motion.div variants={staggerItem}>
-                    <label className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
-                      CAREER GOALS
-                    </label>
-                    <textarea
-                      value={formData.careerGoals}
-                      onChange={(e) => setFormData(prev => ({ ...prev, careerGoals: e.target.value }))}
-                      className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none min-h-[60px] resize-none transition-colors"
-                      placeholder="CAREER_ASPIRATIONS..."
-                    />
-                  </motion.div>
-                </motion.div>
-              </motion.div>
+                <PreferencesTabPanel formData={formData} dispatch={dispatch} />
+              </m.div>
             )}
           </AnimatePresence>
         </div>
@@ -788,7 +871,7 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
             $ PROFILE_EDITOR v2.0
           </div>
           <div className="flex items-center gap-4">
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <m.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <BrutalButton
                 variant="ghost"
                 onClick={onClose}
@@ -796,8 +879,8 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
               >
                 CANCEL
               </BrutalButton>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            </m.div>
+            <m.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <BrutalButton
                 onClick={handleSave}
                 disabled={isSaving}
@@ -811,10 +894,10 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
                 )}
                 {isSaving ? 'SAVING...' : 'SAVE_PROFILE'}
               </BrutalButton>
-            </motion.div>
+            </m.div>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   )
 }

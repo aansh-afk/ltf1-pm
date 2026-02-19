@@ -13,7 +13,7 @@ import {
   HiOutlinePencil,
 } from 'react-icons/hi'
 import toast from 'react-hot-toast'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 
 export default function WhiteboardPage() {
   const { workspaceId, projectId } = useParams<{ workspaceId: string; projectId?: string }>()
@@ -142,7 +142,7 @@ export default function WhiteboardPage() {
   return (
     <div className="p-4">
       {/* Page Header */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -186,7 +186,7 @@ export default function WhiteboardPage() {
             {isCreating ? 'Creating...' : 'New Whiteboard'}
           </BrutalButton>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Whiteboard Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -196,7 +196,7 @@ export default function WhiteboardPage() {
             : null
 
           return (
-            <motion.div
+            <m.div
               key={whiteboard._id}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -227,14 +227,14 @@ export default function WhiteboardPage() {
                 <span>{whiteboard.elements.length} elements</span>
                 <span>{whiteboard.collaborators.length} users</span>
               </div>
-            </motion.div>
+            </m.div>
           )
         })}
 
         {/* Empty State */}
         {(!whiteboards || whiteboards.length === 0) && (
           <div className="col-span-full">
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -259,7 +259,7 @@ export default function WhiteboardPage() {
                 <HiOutlinePlus className="w-4 h-4" />
                 {isCreating ? 'Creating...' : 'Create First Whiteboard'}
               </BrutalButton>
-            </motion.div>
+            </m.div>
           </div>
         )}
       </div>

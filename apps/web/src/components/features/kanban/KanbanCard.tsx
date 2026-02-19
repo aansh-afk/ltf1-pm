@@ -157,7 +157,9 @@ export default function KanbanCard({
                             <div
                                 ref={menuRef}
                                 className="absolute right-0 top-full mt-1 z-50 bg-[#0A0A0A] border-2 border-[#2E2E35] shadow-[4px_4px_0px_#000000] min-w-[130px]"
+                                role="menu"
                                 onClick={(e) => e.stopPropagation()}
+                                onKeyDown={(e) => { if (e.key === 'Escape') setShowMenu(false) }}
                             >
                                 <button
                                     onClick={() => { setShowMenu(false); onEdit?.(task) }}

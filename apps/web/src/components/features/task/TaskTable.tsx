@@ -1,4 +1,4 @@
-import { useState, useMemo, memo, useCallback } from 'react'
+import React, { useState, useMemo, memo, useCallback } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import {
@@ -255,9 +255,8 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
             {/* Body */}
             <tbody>
               {sortedTasks.map((task) => (
-                <>
+                <React.Fragment key={task._id}>
                   <tr
-                    key={task._id}
                     className={clsx(
                       "border-b border-[#1F1F23] hover:bg-[#111111] transition-colors",
                       expandedRow === task._id && "bg-[#111111]"
@@ -300,6 +299,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                     {/* Status */}
                     <td className="px-3 py-2">
                       <select
+                        aria-label="Task status"
                         value={task.status}
                         onChange={(e) => handleStatusChange(task._id, e.target.value)}
                         className={clsx(
@@ -447,7 +447,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               ))}
             </tbody>
           </table>

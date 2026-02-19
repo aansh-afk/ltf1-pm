@@ -7,6 +7,7 @@ import {
 import { useAuth } from "@clerk/clerk-react";
 import { Toaster } from "react-hot-toast";
 import React, { lazy, Suspense, useState, useEffect } from "react";
+import { LazyMotion, domAnimation } from "framer-motion";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
@@ -53,6 +54,7 @@ const GitHubCallbackPage = lazy(() => import("./pages/GitHubCallbackPage"));
 const CLIAuthPage = lazy(() => import("./pages/CLIAuthPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
+const DesignReferencePage = lazy(() => import("./pages/DesignReferencePage"));
 import { useEnsureUser } from "./hooks/useEnsureUser";
 import { DataMigrationBanner } from "./components/admin/DataMigrationBanner";
 import CommandPalette from "./components/shortcuts/CommandPalette";
@@ -193,6 +195,7 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
           <Route path="/sign-in/*" element={<SignInPage />} />
           <Route path="/sign-up/*" element={<SignUpPage />} />
           <Route path="/coming-soon" element={<ComingSoonPage />} />
+          <Route path="/design/ref" element={<DesignReferencePage />} />
 
           {/* Join Project Routes - accessible by anyone */}
           <Route path="/join-project" element={<JoinProjectPage />} />
@@ -286,13 +289,15 @@ function App() {
       <OptionalConvexProvider>
         <Router>
           <PageTransition />
-          <ThemeProvider>
-            <PostHogProvider>
-              <ShortcutProvider>
-                <AppContent />
-              </ShortcutProvider>
-            </PostHogProvider>
-          </ThemeProvider>
+          <LazyMotion features={domAnimation}>
+            <ThemeProvider>
+              <PostHogProvider>
+                <ShortcutProvider>
+                  <AppContent />
+                </ShortcutProvider>
+              </PostHogProvider>
+            </ThemeProvider>
+          </LazyMotion>
         </Router>
       </OptionalConvexProvider>
     </ErrorBoundary>

@@ -34,7 +34,8 @@ export default function CommsEmptyState({ onCreateChannel }: CommsEmptyStateProp
         {/* Integration cards */}
         <div className="grid grid-cols-2 gap-2 max-w-sm mx-auto mb-6">
           {/* Team Chat card */}
-          <div
+          <button
+            type="button"
             className="border-2 border-[var(--theme-primary)]/30 bg-[var(--theme-primary)]/5 p-3 flex items-center gap-2.5 cursor-pointer hover:border-[var(--theme-primary)] transition-colors"
             onClick={onCreateChannel}
           >
@@ -47,7 +48,7 @@ export default function CommsEmptyState({ onCreateChannel }: CommsEmptyStateProp
                 Ready
               </span>
             </div>
-          </div>
+          </button>
 
           {[
             { icon: FaGithub, name: 'GitHub', color: '#F9FAFB', status: 'Available' },

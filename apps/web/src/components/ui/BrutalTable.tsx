@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import React, { ReactNode } from 'react'
 import clsx from 'clsx'
 
 interface Column<T> {
@@ -84,6 +84,16 @@ export default function BrutalTable<T extends { id?: string; _id?: string }>({
                   onRowClick && 'cursor-pointer hover:translate-x-2px'
                 )}
                 onClick={() => onRowClick?.(item)}
+                {...(onRowClick ? {
+                  role: 'button' as const,
+                  tabIndex: 0,
+                  onKeyDown: (e: React.KeyboardEvent) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onRowClick(item)
+                    }
+                  },
+                } : {})}
               >
                 {columns.map(column => (
                   <td

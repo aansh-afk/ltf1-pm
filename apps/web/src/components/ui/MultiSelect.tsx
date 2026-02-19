@@ -108,7 +108,8 @@ export default function MultiSelect({
               placeholder="SEARCH..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-[10px] py-8px bg-event-horizon/10 border-2 border-basalt-border 
+              aria-label="Search options"
+              className="w-full px-[10px] py-8px bg-event-horizon/10 border-2 border-basalt-border
                        font-mono text-brutal-sm uppercase placeholder:text-neutral-600
                        focus:border-primary-brutalist focus:outline-none"
             />

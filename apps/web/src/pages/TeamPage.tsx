@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useReducer } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import {
@@ -26,25 +26,211 @@ import CreateSprintModal from '@/components/features/sprint/CreateSprintModal'
 import SprintBoard from '@/components/features/sprint/SprintBoard'
 import SprintPlanning from '@/components/features/sprint/SprintPlanning'
 import EmptyState from '@/components/common/EmptyState'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 
 type TabType = 'members' | 'sprints'
+
+type TeamPageState = {
+  activeTab: TabType
+  searchQuery: string
+  selectedStatus: string
+  showExpertiseSearch: boolean
+  showExpertiseMatrix: boolean
+  selectedProjectId: string
+  showCreateSprintModal: boolean
+  sprintViewMode: 'board' | 'planning'
+}
+
+const teamPageInitialState: TeamPageState = {
+  activeTab: 'members',
+  searchQuery: '',
+  selectedStatus: 'all',
+  showExpertiseSearch: false,
+  showExpertiseMatrix: false,
+  selectedProjectId: '',
+  showCreateSprintModal: false,
+  sprintViewMode: 'board',
+}
+
+type TeamPageAction =
+  | { type: 'UPDATE'; field: keyof TeamPageState; value: TeamPageState[keyof TeamPageState] }
+  | { type: 'RESET' }
+
+function teamPageReducer(state: TeamPageState, action: TeamPageAction): TeamPageState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    case 'RESET':
+      return teamPageInitialState
+    default:
+      return state
+  }
+}
+
+// --- Sub-components ---
+
+interface StatusSummaryGridProps {
+  statusCounts: Record<string, number>
+}
+
+function StatusSummaryGrid({ statusCounts }: StatusSummaryGridProps) {
+  const statuses = [
+    { label: 'AVAILABLE', count: statusCounts.AVAILABLE || 0, color: 'bg-[var(--theme-success)]' },
+    { label: 'LOCKED IN', count: statusCounts.LOCKED_IN || 0, color: 'bg-[var(--theme-error)]' },
+    { label: 'IN REVIEW', count: statusCounts.IN_REVIEW || 0, color: 'bg-[var(--theme-primary)]' },
+    { label: 'IN MEETING', count: statusCounts.IN_MEETING || 0, color: 'bg-[var(--theme-warning)]' },
+    { label: 'AFK', count: statusCounts.AFK || 0, color: 'bg-[var(--theme-foreground-tertiary)]' },
+  ]
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      {statuses.map((status, i) => (
+        <m.div
+          key={status.label}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: i * 0.06 }}
+          className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] p-3 hover:border-[var(--theme-foreground)]/20 transition-colors"
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <div className={`w-2.5 h-2.5 ${status.color}`} />
+            <span className="font-mono text-xl font-bold text-[var(--theme-foreground)]">{status.count}</span>
+          </div>
+          <div className="font-mono text-[10px] uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">{status.label}</div>
+        </m.div>
+      ))}
+    </div>
+  )
+}
+
+interface MembersFiltersBarProps {
+  searchQuery: string
+  selectedStatus: string
+  onSearchChange: (value: string) => void
+  onStatusChange: (value: string) => void
+  onFindExpert: () => void
+  onShowMatrix: () => void
+}
+
+function MembersFiltersBar({ searchQuery, selectedStatus, onSearchChange, onStatusChange, onFindExpert, onShowMatrix }: MembersFiltersBarProps) {
+  return (
+    <div className="flex flex-col md:flex-row gap-3">
+      <div className="flex-1 relative">
+        <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--theme-foreground-tertiary)]" />
+        <input
+          type="text"
+          placeholder="SEARCH TEAM MEMBERS..."
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          aria-label="Search team members"
+          className="w-full pl-10 pr-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground)] placeholder-[var(--theme-foreground-tertiary)] font-mono text-xs uppercase tracking-wider focus:border-[var(--theme-primary)] focus:outline-none"
+        />
+      </div>
+
+      <select
+        value={selectedStatus}
+        onChange={(e) => onStatusChange(e.target.value)}
+        aria-label="Filter by status"
+        className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] font-mono text-xs uppercase tracking-wider focus:border-[var(--theme-primary)] focus:outline-none cursor-pointer"
+      >
+        <option value="all">ALL STATUSES</option>
+        <option value="AVAILABLE">AVAILABLE</option>
+        <option value="LOCKED_IN">LOCKED IN</option>
+        <option value="IN_REVIEW">IN REVIEW</option>
+        <option value="IN_MEETING">IN MEETING</option>
+        <option value="AFK">AFK</option>
+      </select>
+
+      <button
+        onClick={onFindExpert}
+        className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] font-mono text-xs uppercase tracking-wider hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] flex items-center gap-2"
+      >
+        <HiOutlineSearch className="w-4 h-4" />
+        FIND EXPERT
+      </button>
+
+      <button
+        onClick={onShowMatrix}
+        className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] font-mono text-xs uppercase tracking-wider hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] flex items-center gap-2"
+      >
+        <HiOutlineChartBar className="w-4 h-4" />
+        MATRIX
+      </button>
+    </div>
+  )
+}
+
+interface CurrentSprintInfoCardProps {
+  currentSprint: any
+}
+
+function CurrentSprintInfoCard({ currentSprint }: CurrentSprintInfoCardProps) {
+  return (
+    <m.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-primary)]/40 p-4"
+    >
+      <div className="flex flex-col md:flex-row items-start justify-between gap-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <HiOutlinePlay className="w-4 h-4 text-[var(--theme-primary)]" />
+            <h2 className="text-base font-bold uppercase tracking-tight text-[var(--theme-foreground)]">
+              {currentSprint.name}
+            </h2>
+            <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider bg-[var(--theme-primary)]/20 text-[var(--theme-primary)] border border-[var(--theme-primary)]/40">
+              ACTIVE
+            </span>
+          </div>
+          {currentSprint.goal && (
+            <p className="text-xs font-mono text-[var(--theme-foreground-secondary)] mb-3 border-l-2 border-[var(--theme-primary)] pl-3">
+              {currentSprint.goal}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-4 text-xs font-mono text-[var(--theme-foreground-secondary)]">
+            <div className="flex items-center gap-1.5">
+              <HiOutlineCalendar className="w-3.5 h-3.5 text-[var(--theme-primary)]" />
+              <span>{currentSprint.daysRemaining} DAYS LEFT</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <HiOutlineChartBar className="w-3.5 h-3.5 text-[var(--theme-primary)]" />
+              <span>{currentSprint.progress}% COMPLETE</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <HiOutlineClock className="w-3.5 h-3.5 text-[var(--theme-primary)]" />
+              <span>{currentSprint.completedPoints}/{currentSprint.totalPoints} POINTS</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-1">
+          {[
+            { count: currentSprint.taskStats.done, color: 'bg-[var(--theme-background-secondary)]', label: 'DONE' },
+            { count: currentSprint.taskStats.inReview, color: 'bg-[var(--theme-success)]', label: 'REVIEW' },
+            { count: currentSprint.taskStats.inProgress, color: 'bg-[var(--theme-info)]', label: 'WIP' },
+            { count: currentSprint.taskStats.todo, color: 'bg-[var(--theme-primary)]', label: 'TODO' },
+          ].map((stat) => (
+            <div key={stat.label} className="flex flex-col items-center">
+              <div className={`w-11 h-9 ${stat.color} flex items-center justify-center border border-[var(--theme-border)]`}>
+                <span className="font-mono text-xs font-bold text-[var(--theme-foreground)]">{stat.count}</span>
+              </div>
+              <span className="text-[10px] font-mono mt-1 text-[var(--theme-foreground-tertiary)]">{stat.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </m.div>
+  )
+}
+
+// --- Main component ---
 
 export default function TeamPage() {
   // Enforce profile completion for team features
   useProfileCompletion({ enforceCompletion: true })
-  const [activeTab, setActiveTab] = useState<TabType>('members')
-
-  // Members State
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedStatus, setSelectedStatus] = useState<string>('all')
-  const [showExpertiseSearch, setShowExpertiseSearch] = useState(false)
-  const [showExpertiseMatrix, setShowExpertiseMatrix] = useState(false)
-
-  // Sprints State
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('')
-  const [showCreateSprintModal, setShowCreateSprintModal] = useState(false)
-  const [sprintViewMode, setSprintViewMode] = useState<'board' | 'planning'>('board')
+  const [state, dispatch] = useReducer(teamPageReducer, teamPageInitialState)
+  const { activeTab, searchQuery, selectedStatus, showExpertiseSearch, showExpertiseMatrix, selectedProjectId, showCreateSprintModal, sprintViewMode } = state
 
   // Get current user's workspaces
   const workspaces = useQuery(api.workspaces.queries.getUserWorkspaces)
@@ -65,7 +251,7 @@ export default function TeamPage() {
 
   // Auto-select first project for sprints
   if (!selectedProjectId && projects && projects.length > 0) {
-    setSelectedProjectId(projects[0]._id)
+    dispatch({ type: 'UPDATE', field: 'selectedProjectId', value: projects[0]._id })
   }
 
   const sprints = useQuery(
@@ -114,79 +300,22 @@ export default function TeamPage() {
   }, {} as Record<string, number>)
 
   const renderMembersTab = () => (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      {/* Status Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {[
-          { label: 'AVAILABLE', count: statusCounts.AVAILABLE || 0, color: 'bg-[var(--theme-success)]' },
-          { label: 'LOCKED IN', count: statusCounts.LOCKED_IN || 0, color: 'bg-[var(--theme-error)]' },
-          { label: 'IN REVIEW', count: statusCounts.IN_REVIEW || 0, color: 'bg-[var(--theme-primary)]' },
-          { label: 'IN MEETING', count: statusCounts.IN_MEETING || 0, color: 'bg-[var(--theme-warning)]' },
-          { label: 'AFK', count: statusCounts.AFK || 0, color: 'bg-[var(--theme-foreground-tertiary)]' },
-        ].map((status, i) => (
-          <motion.div
-            key={status.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: i * 0.06 }}
-            className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] p-3 hover:border-[var(--theme-foreground)]/20 transition-colors"
-          >
-            <div className="flex items-center justify-between mb-1.5">
-              <div className={`w-2.5 h-2.5 ${status.color}`} />
-              <span className="font-mono text-xl font-bold text-[var(--theme-foreground)]">{status.count}</span>
-            </div>
-            <div className="font-mono text-[10px] uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">{status.label}</div>
-          </motion.div>
-        ))}
-      </div>
+      <StatusSummaryGrid statusCounts={statusCounts} />
 
-      {/* Filters and Search */}
-      <div className="flex flex-col md:flex-row gap-3">
-        <div className="flex-1 relative">
-          <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--theme-foreground-tertiary)]" />
-          <input
-            type="text"
-            placeholder="SEARCH TEAM MEMBERS..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground)] placeholder-[var(--theme-foreground-tertiary)] font-mono text-xs uppercase tracking-wider focus:border-[var(--theme-primary)] focus:outline-none"
-          />
-        </div>
-
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] font-mono text-xs uppercase tracking-wider focus:border-[var(--theme-primary)] focus:outline-none cursor-pointer"
-        >
-          <option value="all">ALL STATUSES</option>
-          <option value="AVAILABLE">AVAILABLE</option>
-          <option value="LOCKED_IN">LOCKED IN</option>
-          <option value="IN_REVIEW">IN REVIEW</option>
-          <option value="IN_MEETING">IN MEETING</option>
-          <option value="AFK">AFK</option>
-        </select>
-
-        <button
-          onClick={() => setShowExpertiseSearch(true)}
-          className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] font-mono text-xs uppercase tracking-wider hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] flex items-center gap-2"
-        >
-          <HiOutlineSearch className="w-4 h-4" />
-          FIND EXPERT
-        </button>
-
-        <button
-          onClick={() => setShowExpertiseMatrix(true)}
-          className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] font-mono text-xs uppercase tracking-wider hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] flex items-center gap-2"
-        >
-          <HiOutlineChartBar className="w-4 h-4" />
-          MATRIX
-        </button>
-      </div>
+      <MembersFiltersBar
+        searchQuery={searchQuery}
+        selectedStatus={selectedStatus}
+        onSearchChange={(value) => dispatch({ type: 'UPDATE', field: 'searchQuery', value })}
+        onStatusChange={(value) => dispatch({ type: 'UPDATE', field: 'selectedStatus', value })}
+        onFindExpert={() => dispatch({ type: 'UPDATE', field: 'showExpertiseSearch', value: true })}
+        onShowMatrix={() => dispatch({ type: 'UPDATE', field: 'showExpertiseMatrix', value: true })}
+      />
 
       {/* Team Grid */}
       {filteredMembers.length === 0 ? (
@@ -200,7 +329,7 @@ export default function TeamPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredMembers.map((member, i) => (
-            <motion.div
+            <m.div
               key={member.userId}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -212,15 +341,15 @@ export default function TeamPage() {
                   console.log('Navigate to profile:', member.userId)
                 }}
               />
-            </motion.div>
+            </m.div>
           ))}
         </div>
       )}
-    </motion.div>
+    </m.div>
   )
 
   const renderSprintsTab = () => (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -233,7 +362,8 @@ export default function TeamPage() {
           <select
             className="flex-1 md:w-56 px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] font-mono text-xs uppercase font-bold text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] focus:outline-none cursor-pointer"
             value={selectedProjectId}
-            onChange={(e) => setSelectedProjectId(e.target.value)}
+            onChange={(e) => dispatch({ type: 'UPDATE', field: 'selectedProjectId', value: e.target.value })}
+            aria-label="Select project"
           >
             {projects?.map((project: any) => (
               <option key={project._id} value={project._id}>
@@ -252,7 +382,7 @@ export default function TeamPage() {
                   ? "bg-[var(--theme-primary)] text-white"
                   : "bg-[var(--theme-background-tertiary)] text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-foreground)]"
               )}
-              onClick={() => setSprintViewMode('board')}
+              onClick={() => dispatch({ type: 'UPDATE', field: 'sprintViewMode', value: 'board' })}
             >
               <HiOutlineViewBoards className="w-4 h-4" />
               Board
@@ -264,7 +394,7 @@ export default function TeamPage() {
                   ? "bg-[var(--theme-primary)] text-white"
                   : "bg-[var(--theme-background-tertiary)] text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-foreground)]"
               )}
-              onClick={() => setSprintViewMode('planning')}
+              onClick={() => dispatch({ type: 'UPDATE', field: 'sprintViewMode', value: 'planning' })}
             >
               <HiOutlineCalendar className="w-4 h-4" />
               Planning
@@ -272,7 +402,7 @@ export default function TeamPage() {
           </div>
 
           <button
-            onClick={() => setShowCreateSprintModal(true)}
+            onClick={() => dispatch({ type: 'UPDATE', field: 'showCreateSprintModal', value: true })}
             className="px-4 py-2 bg-[var(--theme-primary)] text-white font-mono text-xs font-bold uppercase border-2 border-[var(--theme-primary-active)] flex items-center gap-2 whitespace-nowrap hover:bg-[var(--theme-primary-active)]"
           >
             <HiOutlinePlus className="w-4 h-4" />
@@ -283,61 +413,7 @@ export default function TeamPage() {
 
       {/* Current Sprint Info (Only in Board View) */}
       {sprintViewMode === 'board' && currentSprint && (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-primary)]/40 p-4"
-        >
-          <div className="flex flex-col md:flex-row items-start justify-between gap-3">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <HiOutlinePlay className="w-4 h-4 text-[var(--theme-primary)]" />
-                <h2 className="text-base font-bold uppercase tracking-tight text-[var(--theme-foreground)]">
-                  {currentSprint.name}
-                </h2>
-                <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider bg-[var(--theme-primary)]/20 text-[var(--theme-primary)] border border-[var(--theme-primary)]/40">
-                  ACTIVE
-                </span>
-              </div>
-              {currentSprint.goal && (
-                <p className="text-xs font-mono text-[var(--theme-foreground-secondary)] mb-3 border-l-2 border-[var(--theme-primary)] pl-3">
-                  {currentSprint.goal}
-                </p>
-              )}
-              <div className="flex flex-wrap gap-4 text-xs font-mono text-[var(--theme-foreground-secondary)]">
-                <div className="flex items-center gap-1.5">
-                  <HiOutlineCalendar className="w-3.5 h-3.5 text-[var(--theme-primary)]" />
-                  <span>{currentSprint.daysRemaining} DAYS LEFT</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <HiOutlineChartBar className="w-3.5 h-3.5 text-[var(--theme-primary)]" />
-                  <span>{currentSprint.progress}% COMPLETE</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <HiOutlineClock className="w-3.5 h-3.5 text-[var(--theme-primary)]" />
-                  <span>{currentSprint.completedPoints}/{currentSprint.totalPoints} POINTS</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-1">
-              {[
-                { count: currentSprint.taskStats.done, color: 'bg-[var(--theme-background-secondary)]', label: 'DONE' },
-                { count: currentSprint.taskStats.inReview, color: 'bg-[var(--theme-success)]', label: 'REVIEW' },
-                { count: currentSprint.taskStats.inProgress, color: 'bg-[var(--theme-info)]', label: 'WIP' },
-                { count: currentSprint.taskStats.todo, color: 'bg-[var(--theme-primary)]', label: 'TODO' },
-              ].map((stat) => (
-                <div key={stat.label} className="flex flex-col items-center">
-                  <div className={`w-11 h-9 ${stat.color} flex items-center justify-center border border-[var(--theme-border)]`}>
-                    <span className="font-mono text-xs font-bold text-[var(--theme-foreground)]">{stat.count}</span>
-                  </div>
-                  <span className="text-[10px] font-mono mt-1 text-[var(--theme-foreground-tertiary)]">{stat.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
+        <CurrentSprintInfoCard currentSprint={currentSprint} />
       )}
 
       {/* Content */}
@@ -359,7 +435,7 @@ export default function TeamPage() {
             description="Start a sprint in the Planning view to see the board."
             action={{
               label: "GO TO PLANNING",
-              onClick: () => setSprintViewMode('planning')
+              onClick: () => dispatch({ type: 'UPDATE', field: 'sprintViewMode', value: 'planning' })
             }}
           />
         )
@@ -370,7 +446,7 @@ export default function TeamPage() {
           currentSprint={currentSprint}
         />
       )}
-    </motion.div>
+    </m.div>
   )
 
   return (
@@ -399,7 +475,7 @@ export default function TeamPage() {
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => dispatch({ type: 'UPDATE', field: 'activeTab', value: tab.id })}
             className={clsx(
               "px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider border-b-2 -mb-[2px] transition-colors",
               activeTab === tab.id
@@ -418,7 +494,7 @@ export default function TeamPage() {
       {/* Modals */}
       {showExpertiseSearch && (
         <ExpertiseSearchModal
-          onClose={() => setShowExpertiseSearch(false)}
+          onClose={() => dispatch({ type: 'UPDATE', field: 'showExpertiseSearch', value: false })}
           workspaceId={currentWorkspace._id}
         />
       )}
@@ -426,14 +502,14 @@ export default function TeamPage() {
       {showExpertiseMatrix && (
         <TeamExpertiseMatrix
           workspaceId={currentWorkspace._id}
-          onClose={() => setShowExpertiseMatrix(false)}
+          onClose={() => dispatch({ type: 'UPDATE', field: 'showExpertiseMatrix', value: false })}
           isModal={true}
         />
       )}
 
       <CreateSprintModal
         isOpen={showCreateSprintModal}
-        onClose={() => setShowCreateSprintModal(false)}
+        onClose={() => dispatch({ type: 'UPDATE', field: 'showCreateSprintModal', value: false })}
         projectId={selectedProjectId}
       />
     </div>

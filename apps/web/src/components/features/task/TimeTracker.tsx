@@ -34,9 +34,11 @@ export default function TimeTracker({
   onPause,
   onStop
 }: TimeTrackerProps) {
-  const [localIsRunning, setLocalIsRunning] = useState(isRunning)
-  const [elapsedTime, setElapsedTime] = useState(currentDuration)
+  const [localElapsed, setLocalElapsed] = useState(0)
   const [startTime, setStartTime] = useState<number | null>(null)
+
+  // Derive the displayed elapsed time from the prop + local counter
+  const elapsedTime = isRunning ? currentDuration + localElapsed : currentDuration
 
   // Mutations
   const startTimeTracking = useMutation(api.tasks.mutations.startTimeTracking)
@@ -47,11 +49,9 @@ export default function TimeTracker({
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null
 
-    if (localIsRunning && startTime) {
+    if (isRunning && startTime) {
       intervalId = setInterval(() => {
-        const now = Date.now()
-        const sessionDuration = now - startTime
-        setElapsedTime(currentDuration + sessionDuration)
+        setLocalElapsed(prev => prev + 1000)
       }, 1000)
     }
 
@@ -60,7 +60,7 @@ export default function TimeTracker({
         clearInterval(intervalId)
       }
     }
-  }, [localIsRunning, startTime, currentDuration])
+  }, [isRunning, startTime])
 
   const formatTime = (milliseconds: number): string => {
     const totalSeconds = Math.floor(milliseconds / 1000)
@@ -77,7 +77,7 @@ export default function TimeTracker({
   const handleStart = async () => {
     try {
       await startTimeTracking({ taskId: taskId as any })
-      setLocalIsRunning(true)
+      setLocalElapsed(0)
       setStartTime(Date.now())
       onStart?.()
       toast.success('Timer started')
@@ -92,7 +92,6 @@ export default function TimeTracker({
         taskId: taskId as any,
         duration: elapsedTime
       })
-      setLocalIsRunning(false)
       setStartTime(null)
       onPause?.()
       toast.success('Timer paused')
@@ -107,9 +106,8 @@ export default function TimeTracker({
         taskId: taskId as any,
         duration: elapsedTime
       })
-      setLocalIsRunning(false)
       setStartTime(null)
-      setElapsedTime(0)
+      setLocalElapsed(0)
       onStop?.()
       toast.success('Timer stopped and time logged')
     } catch (error: any) {
@@ -129,7 +127,7 @@ export default function TimeTracker({
 
       {/* Control Buttons */}
       <div className="flex items-center gap-[4px]">
-        {!localIsRunning ? (
+        {!isRunning ? (
           <button
             onClick={handleStart}
             className={clsx(
@@ -156,7 +154,7 @@ export default function TimeTracker({
           </button>
         )}
 
-        {(localIsRunning || elapsedTime > 0) && (
+        {(isRunning || elapsedTime > 0) && (
           <button
             onClick={handleStop}
             className={clsx(
@@ -172,7 +170,7 @@ export default function TimeTracker({
       </div>
 
       {/* Status Indicator */}
-      {localIsRunning && (
+      {isRunning && (
         <div className="flex items-center gap-4px text-brutal-xs text-primary-brutalist">
           <div className="w-6px h-6px bg-primary-brutalist rounded-full animate-pulse" />
           TRACKING

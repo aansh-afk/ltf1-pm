@@ -1,7 +1,16 @@
-import React from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart } from 'recharts'
+import React, { useState, useEffect } from 'react'
 import { format, eachDayOfInterval, parseISO, differenceInDays } from 'date-fns'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
+
+type RechartsModuleType = typeof import('recharts')
+
+function useRecharts() {
+  const [mod, setMod] = useState<RechartsModuleType | null>(null)
+  useEffect(() => {
+    import('recharts').then(setMod)
+  }, [])
+  return mod
+}
 
 interface SprintBurndownChartProps {
   sprint: {
@@ -21,7 +30,25 @@ interface SprintBurndownChartProps {
   showPrediction?: boolean
 }
 
+function CustomTooltip({ active, payload, label }: any) {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#111111] border-2 border-[#2E2E35] p-2">
+        <p className="text-xs font-bold text-[#F9FAFB]">{label}</p>
+        {payload.map((entry: any) => (
+          <p key={entry.name} className="text-xs" style={{ color: entry.color }}>
+            {entry.name}: {entry.value !== null ? `${entry.value} pts` : 'N/A'}
+          </p>
+        ))}
+      </div>
+    )
+  }
+  return null
+}
+
 export default function SprintBurndownChart({ sprint, tasks, showPrediction = true }: SprintBurndownChartProps) {
+  const recharts = useRecharts()
+
   // Filter tasks for this sprint
   const sprintTasks = tasks.filter(t => t.sprintId === sprint._id)
 
@@ -95,23 +122,6 @@ export default function SprintBurndownChart({ sprint, tasks, showPrediction = tr
     }
   }
 
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-[#111111] border-2 border-[#2E2E35] p-2">
-          <p className="text-xs font-bold text-[#F9FAFB]">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-xs" style={{ color: entry.color }}>
-              {entry.name}: {entry.value !== null ? `${entry.value} pts` : 'N/A'}
-            </p>
-          ))}
-        </div>
-      )
-    }
-    return null
-  }
-
   // Calculate sprint health
   const today = new Date()
   const todayIndex = days.findIndex(d => format(d, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'))
@@ -141,83 +151,89 @@ export default function SprintBurndownChart({ sprint, tasks, showPrediction = tr
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={300}>
-        <ComposedChart data={burndownData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid
-            strokeDasharray="0"
-            stroke="#2E2E35"
-            strokeOpacity={0.3}
-          />
-          <XAxis
-            dataKey="day"
-            stroke="#9CA3AF"
-            tick={{ fontSize: 10 }}
-            angle={-45}
-            textAnchor="end"
-            height={60}
-          />
-          <YAxis
-            stroke="#9CA3AF"
-            tick={{ fontSize: 10 }}
-            label={{
-              value: 'Story Points',
-              angle: -90,
-              position: 'insideLeft',
-              style: { fontSize: 10, fill: '#9CA3AF' }
-            }}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend
-            wrapperStyle={{ fontSize: '12px' }}
-            iconType="line"
-          />
+      {recharts ? (
+        <recharts.ResponsiveContainer width="100%" height={300}>
+          <recharts.ComposedChart data={burndownData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <recharts.CartesianGrid
+              strokeDasharray="0"
+              stroke="#2E2E35"
+              strokeOpacity={0.3}
+            />
+            <recharts.XAxis
+              dataKey="day"
+              stroke="#9CA3AF"
+              tick={{ fontSize: 10 }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
+            <recharts.YAxis
+              stroke="#9CA3AF"
+              tick={{ fontSize: 10 }}
+              label={{
+                value: 'Story Points',
+                angle: -90,
+                position: 'insideLeft',
+                style: { fontSize: 10, fill: '#9CA3AF' }
+              }}
+            />
+            <recharts.Tooltip content={<CustomTooltip />} />
+            <recharts.Legend
+              wrapperStyle={{ fontSize: '12px' }}
+              iconType="line"
+            />
 
-          {/* Ideal burndown line */}
-          <Line
-            type="monotone"
-            dataKey="ideal"
-            stroke="#2E2E35"
-            strokeWidth={2}
-            strokeDasharray="5 5"
-            dot={false}
-            name="Ideal"
-          />
-
-          {/* Actual burndown line */}
-          <Line
-            type="monotone"
-            dataKey="actual"
-            stroke="#6366F1"
-            strokeWidth={3}
-            dot={{ fill: '#6366F1', r: 4 }}
-            name="Actual"
-            connectNulls={false}
-          />
-
-          {/* Predicted line */}
-          {showPrediction && (
-            <Line
+            {/* Ideal burndown line */}
+            <recharts.Line
               type="monotone"
-              dataKey="predicted"
-              stroke="#06B6D4"
+              dataKey="ideal"
+              stroke="#2E2E35"
               strokeWidth={2}
-              strokeDasharray="2 2"
+              strokeDasharray="5 5"
               dot={false}
-              name="Predicted"
+              name="Ideal"
+            />
+
+            {/* Actual burndown line */}
+            <recharts.Line
+              type="monotone"
+              dataKey="actual"
+              stroke="#6366F1"
+              strokeWidth={3}
+              dot={{ fill: '#6366F1', r: 4 }}
+              name="Actual"
               connectNulls={false}
             />
-          )}
 
-          {/* Fill area between actual and ideal to show deviation */}
-          <Area
-            type="monotone"
-            dataKey="actual"
-            fill={healthStatus === 'on-track' ? '#22C55E' : '#F59E0B'}
-            fillOpacity={0.1}
-            stroke="none"
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
+            {/* Predicted line */}
+            {showPrediction && (
+              <recharts.Line
+                type="monotone"
+                dataKey="predicted"
+                stroke="#06B6D4"
+                strokeWidth={2}
+                strokeDasharray="2 2"
+                dot={false}
+                name="Predicted"
+                connectNulls={false}
+              />
+            )}
+
+            {/* Fill area between actual and ideal to show deviation */}
+            <recharts.Area
+              type="monotone"
+              dataKey="actual"
+              fill={healthStatus === 'on-track' ? '#22C55E' : '#F59E0B'}
+              fillOpacity={0.1}
+              stroke="none"
+            />
+          </recharts.ComposedChart>
+        </recharts.ResponsiveContainer>
+      ) : (
+        <div className="w-full h-[300px] flex items-center justify-center text-xs font-mono text-[#9CA3AF]">
+          Loading chart...
+        </div>
+      )}
 
       {/* Legend and insights */}
       <div className="mt-[8px] flex items-center gap-[12px] text-xs text-[#9CA3AF]">

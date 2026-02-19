@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import PublicNavigation from '../components/common/PublicNavigation'
 import Footer from '../components/common/Footer'
 import ProductShowcaseSection from '../components/landing/sections/ProductShowcaseSection'
@@ -13,7 +13,7 @@ export default function FeaturesPage() {
       {/* Hero */}
       <section className="pt-32 pb-4 md:pt-40 md:pb-6">
         <div className="max-w-6xl mx-auto px-6 text-center">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -30,7 +30,7 @@ export default function FeaturesPage() {
               Git-native project management that tracks what you actually ship,
               not what you say you will.
             </p>
-          </motion.div>
+          </m.div>
         </div>
       </section>
 

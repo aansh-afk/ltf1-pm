@@ -8,7 +8,7 @@ import CreateProjectModal from '@/components/features/project/CreateProjectModal
 import ProjectCard from '@/components/features/project/ProjectCard'
 import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
 import BrutalButton from '@/components/ui/BrutalButton'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 
 export default function ProjectsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -129,7 +129,7 @@ export default function ProjectsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {projects.map((project: any, index: number) => (
-            <motion.div
+            <m.div
               key={project._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -140,11 +140,11 @@ export default function ProjectsPage() {
                 workspaceId={currentWorkspaceId}
                 index={index}
               />
-            </motion.div>
+            </m.div>
           ))}
 
           {/* Add New Card Placeholder */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: projects.length * 0.06, duration: 0.5 }}
@@ -159,7 +159,7 @@ export default function ProjectsPage() {
                 Deploy New Project
               </span>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       )}
 

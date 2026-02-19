@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import clsx from 'clsx'
 import { HiOutlineX } from 'react-icons/hi'
 
@@ -86,7 +86,7 @@ export default function BrutalModal({
       {isOpen && (
         <>
           {/* BACKDROP */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -111,7 +111,7 @@ export default function BrutalModal({
             }}
           >
             {/* MODAL CONTENT - handles animation */}
-            <motion.div
+            <m.div
               ref={modalRef}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -159,7 +159,7 @@ export default function BrutalModal({
                 {children}
               </div>
             </div>
-            </motion.div>
+            </m.div>
           </div>
         </>
       )}

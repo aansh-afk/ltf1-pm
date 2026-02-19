@@ -36,9 +36,10 @@ export default function DeveloperProfileCard({
   // If user has no profile, show prompt to create one
   if (!hasProfile) {
     return (
-      <div
+      <button
+        type="button"
         className={clsx(
-          'bg-[#111111] border-2 border-[#2E2E35] p-4',
+          'bg-[#111111] border-2 border-[#2E2E35] p-4 w-full text-left',
           'hover:border-[#6366F1] cursor-pointer',
           className
         )}
@@ -56,14 +57,17 @@ export default function DeveloperProfileCard({
         <div className="text-xs uppercase text-[#6366F1] font-mono tracking-wider">
           Click to set up profile &rarr;
         </div>
-      </div>
+      </button>
     )
   }
 
+  const Wrapper = onClick ? 'button' : 'div'
+
   return (
-    <div
+    <Wrapper
+      {...(onClick ? { type: 'button' as const } : {})}
       className={clsx(
-        'bg-[#111111] border-2 border-[#2E2E35] p-4',
+        'bg-[#111111] border-2 border-[#2E2E35] p-4 w-full text-left',
         'hover:border-[#6366F1]',
         onClick && 'cursor-pointer',
         className
@@ -156,6 +160,6 @@ export default function DeveloperProfileCard({
           />
         </div>
       </div>
-    </div>
+    </Wrapper>
   )
 }

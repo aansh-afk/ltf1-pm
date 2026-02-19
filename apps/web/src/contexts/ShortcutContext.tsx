@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef, useReducer } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import type { 
   Shortcut, 
@@ -60,25 +60,45 @@ interface ShortcutProviderProps {
   children: React.ReactNode
 }
 
+type ShortcutProviderState = {
+  shortcuts: Shortcut[]
+  recordingState: RecordingState
+  isCommandPaletteOpen: boolean
+  isHelpOpen: boolean
+  currentContext: string
+}
+
+const shortcutProviderInitialState: ShortcutProviderState = {
+  shortcuts: [],
+  recordingState: { isRecording: false, keys: null, conflicts: [] },
+  isCommandPaletteOpen: false,
+  isHelpOpen: false,
+  currentContext: 'global',
+}
+
+type ShortcutProviderAction = { type: 'UPDATE'; field: keyof ShortcutProviderState; value: unknown }
+
+function shortcutProviderReducer(state: ShortcutProviderState, action: ShortcutProviderAction): ShortcutProviderState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    default:
+      return state
+  }
+}
+
 export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({ children }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const managerRef = useRef<ShortcutManager>()
-  
-  const [shortcuts, setShortcuts] = useState<Shortcut[]>([])
-  const [recordingState, setRecordingState] = useState<RecordingState>({
-    isRecording: false,
-    keys: null,
-    conflicts: []
-  })
-  const [isCommandPaletteOpen, setCommandPaletteOpen] = useState(false)
-  const [isHelpOpen, setHelpOpen] = useState(false)
-  const [currentContext, setCurrentContext] = useState('global')
+
+  const [providerState, dispatch] = useReducer(shortcutProviderReducer, shortcutProviderInitialState)
+  const { shortcuts, recordingState, isCommandPaletteOpen, isHelpOpen, currentContext } = providerState
   
   // Initialize shortcut manager
   useEffect(() => {
     managerRef.current = getShortcutManager()
-    setShortcuts(managerRef.current.getAllShortcuts())
+    dispatch({ type: 'UPDATE', field: 'shortcuts', value: managerRef.current.getAllShortcuts() })
     
     // Listen for shortcut commands
     const handleCommand = (event: CustomEvent) => {
@@ -95,7 +115,7 @@ export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({ children }) 
   
   // Update context based on current route
   useEffect(() => {
-    setCurrentContext('global')
+    dispatch({ type: 'UPDATE', field: 'currentContext', value: 'global' })
 
     if (managerRef.current) {
       managerRef.current.setContext('global')
@@ -118,16 +138,16 @@ export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({ children }) 
 
       // Quick actions
       case 'commandPalette':
-        setCommandPaletteOpen(true)
+        dispatch({ type: 'UPDATE', field: 'isCommandPaletteOpen', value: true })
         break
 
       // General
       case 'showHelp':
-        setHelpOpen(true)
+        dispatch({ type: 'UPDATE', field: 'isHelpOpen', value: true })
         break
       case 'escape':
-        setCommandPaletteOpen(false)
-        setHelpOpen(false)
+        dispatch({ type: 'UPDATE', field: 'isCommandPaletteOpen', value: false })
+        dispatch({ type: 'UPDATE', field: 'isHelpOpen', value: false })
         break
       case 'toggleSidebar':
         window.dispatchEvent(new CustomEvent('toggle-sidebar'))
@@ -157,65 +177,53 @@ export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({ children }) 
   const updateShortcut = (id: string, keys: KeyCombo): ShortcutConflict[] => {
     if (!managerRef.current) return []
     const conflicts = managerRef.current.updateShortcut(id, keys)
-    setShortcuts(managerRef.current.getAllShortcuts())
+    dispatch({ type: 'UPDATE', field: 'shortcuts', value: managerRef.current.getAllShortcuts() })
     return conflicts
   }
   
   const resetShortcut = (id: string) => {
     if (!managerRef.current) return
     managerRef.current.resetShortcut(id)
-    setShortcuts(managerRef.current.getAllShortcuts())
+    dispatch({ type: 'UPDATE', field: 'shortcuts', value: managerRef.current.getAllShortcuts() })
   }
   
   const resetAllShortcuts = () => {
     if (!managerRef.current) return
     managerRef.current.resetAllShortcuts()
-    setShortcuts(managerRef.current.getAllShortcuts())
+    dispatch({ type: 'UPDATE', field: 'shortcuts', value: managerRef.current.getAllShortcuts() })
   }
   
   const enableShortcut = (id: string) => {
     if (!managerRef.current) return
     managerRef.current.enableShortcut(id)
-    setShortcuts(managerRef.current.getAllShortcuts())
+    dispatch({ type: 'UPDATE', field: 'shortcuts', value: managerRef.current.getAllShortcuts() })
   }
   
   const disableShortcut = (id: string) => {
     if (!managerRef.current) return
     managerRef.current.disableShortcut(id)
-    setShortcuts(managerRef.current.getAllShortcuts())
+    dispatch({ type: 'UPDATE', field: 'shortcuts', value: managerRef.current.getAllShortcuts() })
   }
   
   // Recording methods
   const startRecording = () => {
     if (!managerRef.current) return
     managerRef.current.startRecording()
-    setRecordingState({
-      isRecording: true,
-      keys: null,
-      conflicts: []
-    })
+    dispatch({ type: 'UPDATE', field: 'recordingState', value: { isRecording: true, keys: null, conflicts: [] } })
   }
-  
+
   const stopRecording = () => {
     if (!managerRef.current) return
     managerRef.current.stopRecording()
-    setRecordingState({
-      isRecording: false,
-      keys: null,
-      conflicts: []
-    })
+    dispatch({ type: 'UPDATE', field: 'recordingState', value: { isRecording: false, keys: null, conflicts: [] } })
   }
-  
+
   const recordKeyCombo = (event: KeyboardEvent): KeyCombo => {
     if (!managerRef.current) throw new Error('ShortcutManager not initialized')
     const keys = managerRef.current.recordKeyCombo(event)
     const conflicts = managerRef.current.checkConflicts(keys)
-    
-    setRecordingState({
-      isRecording: true,
-      keys,
-      conflicts
-    })
+
+    dispatch({ type: 'UPDATE', field: 'recordingState', value: { isRecording: true, keys, conflicts } })
     
     return keys
   }
@@ -240,18 +248,18 @@ export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({ children }) 
     if (!managerRef.current) return false
     const success = managerRef.current.importSettings(json)
     if (success) {
-      setShortcuts(managerRef.current.getAllShortcuts())
+      dispatch({ type: 'UPDATE', field: 'shortcuts', value: managerRef.current.getAllShortcuts() })
     }
     return success
   }
   
   const executeCommand = (command: Command) => {
     command.action()
-    setCommandPaletteOpen(false)
+    dispatch({ type: 'UPDATE', field: 'isCommandPaletteOpen', value: false })
   }
-  
+
   const setContext = (context: string) => {
-    setCurrentContext(context)
+    dispatch({ type: 'UPDATE', field: 'currentContext', value: context })
     if (managerRef.current) {
       managerRef.current.setContext(context)
     }
@@ -274,13 +282,13 @@ export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({ children }) 
     exportSettings,
     importSettings,
     isCommandPaletteOpen,
-    setCommandPaletteOpen,
+    setCommandPaletteOpen: (open: boolean) => dispatch({ type: 'UPDATE', field: 'isCommandPaletteOpen', value: open }),
     commands,
     executeCommand,
     currentContext,
     setContext,
     isHelpOpen,
-    setHelpOpen
+    setHelpOpen: (open: boolean) => dispatch({ type: 'UPDATE', field: 'isHelpOpen', value: open })
   }
   
   return (

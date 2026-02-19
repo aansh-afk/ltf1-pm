@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useReducer } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
@@ -12,12 +12,40 @@ interface CreateProjectModalProps {
   onSuccess?: () => void
 }
 
+type CreateProjectState = {
+  name: string
+  key: string
+  description: string
+  workflowType: 'kanban' | 'scrum' | 'hybrid'
+  isCreating: boolean
+}
+
+const createProjectInitialState: CreateProjectState = {
+  name: '',
+  key: '',
+  description: '',
+  workflowType: 'kanban',
+  isCreating: false,
+}
+
+type CreateProjectAction =
+  | { type: 'UPDATE'; field: keyof CreateProjectState; value: CreateProjectState[keyof CreateProjectState] }
+  | { type: 'RESET' }
+
+function createProjectReducer(state: CreateProjectState, action: CreateProjectAction): CreateProjectState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    case 'RESET':
+      return createProjectInitialState
+    default:
+      return state
+  }
+}
+
 export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuccess }: CreateProjectModalProps) {
-  const [name, setName] = useState('')
-  const [key, setKey] = useState('')
-  const [description, setDescription] = useState('')
-  const [workflowType, setWorkflowType] = useState<'kanban' | 'scrum' | 'hybrid'>('kanban')
-  const [isCreating, setIsCreating] = useState(false)
+  const [state, dispatch] = useReducer(createProjectReducer, createProjectInitialState)
+  const { name, key, description, workflowType, isCreating } = state
 
   const createProject = useMutation(api.projects.mutations.createProject)
   const members = useQuery(api.workspaces.queries.getWorkspaceMembers, { workspaceId })
@@ -35,8 +63,8 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
       return
     }
 
-    setIsCreating(true)
-    
+    dispatch({ type: 'UPDATE', field: 'isCreating', value: true })
+
     try {
       await createProject({
         workspaceId,
@@ -45,25 +73,22 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
         description: description.trim() || undefined,
         workflowType,
       })
-      
+
       posthog.capture('project_created', { workflow_type: workflowType, has_description: !!description.trim() })
       toast.success('Project created successfully!')
-      setName('')
-      setKey('')
-      setDescription('')
-      setWorkflowType('kanban')
+      dispatch({ type: 'RESET' })
       onSuccess?.()
       onClose()
     } catch (error: any) {
       posthog.capture('project_creation_failed', { error: error.message })
       toast.error(error.message || 'Failed to create project')
     } finally {
-      setIsCreating(false)
+      dispatch({ type: 'UPDATE', field: 'isCreating', value: false })
     }
   }
 
   const handleNameChange = (value: string) => {
-    setName(value)
+    dispatch({ type: 'UPDATE', field: 'name', value })
     if (!key && value) {
       const generatedKey = value
         .split(' ')
@@ -71,7 +96,7 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
         .join('')
         .toUpperCase()
         .slice(0, 5)
-      setKey(generatedKey)
+      dispatch({ type: 'UPDATE', field: 'key', value: generatedKey })
     }
   }
 
@@ -86,10 +111,11 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
         {/* PROJECT NAME & KEY */}
         <div className="grid grid-cols-3 gap-2">
           <div className="col-span-2">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-1.5">
+            <label htmlFor="create-project-name" className="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-1.5">
               Project Name
             </label>
             <input
+              id="create-project-name"
               type="text"
               placeholder="My Awesome Project"
               className="w-full px-3 py-2 bg-[#111111] border-2 border-[#2E2E35]
@@ -98,16 +124,16 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
                        disabled:opacity-50 disabled:cursor-not-allowed"
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
-              autoFocus
               disabled={isCreating}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-1.5">
+            <label htmlFor="create-project-key" className="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-1.5">
               Key
             </label>
             <input
+              id="create-project-key"
               type="text"
               placeholder="MAP"
               className="w-full px-3 py-2 bg-[#111111] border-2 border-[#2E2E35]
@@ -115,7 +141,7 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
                        focus:border-[#6366F1] focus:outline-none
                        disabled:opacity-50 disabled:cursor-not-allowed"
               value={key}
-              onChange={(e) => setKey(e.target.value.toUpperCase())}
+              onChange={(e) => dispatch({ type: 'UPDATE', field: 'key', value: e.target.value.toUpperCase() })}
               maxLength={5}
               disabled={isCreating}
             />
@@ -124,17 +150,18 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
 
         {/* DESCRIPTION */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-1.5">
+          <label htmlFor="create-project-description" className="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-1.5">
             Description (optional)
           </label>
           <textarea
+            id="create-project-description"
             placeholder="What's this project about?"
             className="w-full px-3 py-2 bg-[#111111] border-2 border-[#2E2E35]
                      font-mono text-sm text-[#F9FAFB] placeholder:text-[#6B7280]
                      focus:border-[#6366F1] focus:outline-none
                      disabled:opacity-50 disabled:cursor-not-allowed resize-none"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => dispatch({ type: 'UPDATE', field: 'description', value: e.target.value })}
             rows={3}
             disabled={isCreating}
           />
@@ -142,16 +169,17 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
 
         {/* WORKFLOW TYPE */}
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-1.5">
+          <label htmlFor="create-project-workflow" className="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-1.5">
             Workflow Type
           </label>
           <select
+            id="create-project-workflow"
             className="w-full px-3 py-2 bg-[#111111] border-2 border-[#2E2E35]
                      font-mono text-sm text-[#F9FAFB] uppercase
                      focus:border-[#6366F1] focus:outline-none
                      disabled:opacity-50 disabled:cursor-not-allowed"
             value={workflowType}
-            onChange={(e) => setWorkflowType(e.target.value as any)}
+            onChange={(e) => dispatch({ type: 'UPDATE', field: 'workflowType', value: e.target.value as 'kanban' | 'scrum' | 'hybrid' })}
             disabled={isCreating}
           >
             <option value="kanban">KANBAN (CONTINUOUS FLOW)</option>

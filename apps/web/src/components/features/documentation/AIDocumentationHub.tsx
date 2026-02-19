@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useReducer } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import { 
@@ -17,7 +17,7 @@ import {
   HiOutlineRefresh,
   HiOutlineTrash
 } from 'react-icons/hi'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 import LoadingSpinner from '../../common/LoadingSpinner'
@@ -94,26 +94,354 @@ const DOCUMENT_TEMPLATES = [
   }
 ]
 
-export default function AIDocumentationHub({ 
-  projectId, 
-  workspaceId,
-  tasks = [],
-  sprints = [],
-  projectDetails
-}: AIDocumentationHubProps) {
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
-  const [generatingDoc, setGeneratingDoc] = useState(false)
-  const [documentContent, setDocumentContent] = useState('')
-  const [documentTitle, setDocumentTitle] = useState('')
-  const [contextData, setContextData] = useState({
+const EMPTY_TASKS: NonNullable<AIDocumentationHubProps['tasks']> = []
+const EMPTY_SPRINTS: NonNullable<AIDocumentationHubProps['sprints']> = []
+
+type AIDocumentationHubState = {
+  selectedTemplate: string | null
+  generatingDoc: boolean
+  documentContent: string
+  documentTitle: string
+  contextData: {
+    includeTaskData: boolean
+    includeSprintData: boolean
+    includeProjectInfo: boolean
+    customContext: string
+  }
+  savedDocuments: any[]
+  editingDoc: string | null
+  showPreview: boolean
+}
+
+const aiDocumentationHubInitialState: AIDocumentationHubState = {
+  selectedTemplate: null,
+  generatingDoc: false,
+  documentContent: '',
+  documentTitle: '',
+  contextData: {
     includeTaskData: true,
     includeSprintData: true,
     includeProjectInfo: true,
-    customContext: ''
-  })
-  const [savedDocuments, setSavedDocuments] = useState<any[]>([])
-  const [editingDoc, setEditingDoc] = useState<string | null>(null)
-  const [showPreview, setShowPreview] = useState(true)
+    customContext: '',
+  },
+  savedDocuments: [],
+  editingDoc: null,
+  showPreview: true,
+}
+
+type AIDocumentationHubAction =
+  | { type: 'UPDATE'; field: keyof AIDocumentationHubState; value: AIDocumentationHubState[keyof AIDocumentationHubState] }
+  | { type: 'RESET' }
+
+function aiDocumentationHubReducer(state: AIDocumentationHubState, action: AIDocumentationHubAction): AIDocumentationHubState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    case 'RESET':
+      return aiDocumentationHubInitialState
+    default:
+      return state
+  }
+}
+
+// --- Sub-components ---
+
+interface TemplateSelectionPanelProps {
+  selectedTemplate: string | null
+  onSelectTemplate: (templateId: string) => void
+}
+
+function TemplateSelectionPanel({ selectedTemplate, onSelectTemplate }: TemplateSelectionPanelProps) {
+  return (
+    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
+      <h3 className="text-brutal-md font-bold uppercase mb-[8px]">DOCUMENT TYPE</h3>
+      <div className="space-y-[6px]">
+        {DOCUMENT_TEMPLATES.map((template) => {
+          const Icon = template.icon
+          return (
+            <button
+              key={template.id}
+              onClick={() => onSelectTemplate(template.id)}
+              className={clsx(
+                'w-full p-[10px] border-2 text-left transition-all',
+                'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal',
+                selectedTemplate === template.id
+                  ? `${template.color} ${template.bgColor} shadow-brutal`
+                  : 'border-[var(--theme-border)] hover:border-primary-brutalist'
+              )}
+            >
+              <div className="flex items-start gap-[6px]">
+                <Icon className="w-5 h-5 flex-shrink-0 mt-2px" />
+                <div className="flex-1">
+                  <h4 className="font-mono text-brutal-sm font-bold uppercase">
+                    {template.title}
+                  </h4>
+                  <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-4px">
+                    {template.description}
+                  </p>
+                </div>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+interface ContextConfigPanelProps {
+  contextData: AIDocumentationHubState['contextData']
+  onContextDataChange: (data: AIDocumentationHubState['contextData']) => void
+  selectedTemplate: string | null
+  generatingDoc: boolean
+  onGenerate: () => void
+}
+
+function ContextConfigPanel({ contextData, onContextDataChange, selectedTemplate, generatingDoc, onGenerate }: ContextConfigPanelProps) {
+  return (
+    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
+      <h3 className="text-brutal-md font-bold uppercase mb-[8px]">AI CONTEXT</h3>
+      <div className="space-y-[6px]">
+        <label htmlFor="ai-doc-include-tasks" className="flex items-center gap-[8px] cursor-pointer">
+          <input
+            id="ai-doc-include-tasks"
+            type="checkbox"
+            checked={contextData.includeTaskData}
+            onChange={(e) => onContextDataChange({...contextData, includeTaskData: e.target.checked})}
+            className="w-4 h-4"
+          />
+          <span className="text-brutal-sm">Include recent tasks</span>
+        </label>
+        <label htmlFor="ai-doc-include-sprints" className="flex items-center gap-[8px] cursor-pointer">
+          <input
+            id="ai-doc-include-sprints"
+            type="checkbox"
+            checked={contextData.includeSprintData}
+            onChange={(e) => onContextDataChange({...contextData, includeSprintData: e.target.checked})}
+            className="w-4 h-4"
+          />
+          <span className="text-brutal-sm">Include sprint data</span>
+        </label>
+        <label htmlFor="ai-doc-include-project" className="flex items-center gap-[8px] cursor-pointer">
+          <input
+            id="ai-doc-include-project"
+            type="checkbox"
+            checked={contextData.includeProjectInfo}
+            onChange={(e) => onContextDataChange({...contextData, includeProjectInfo: e.target.checked})}
+            className="w-4 h-4"
+          />
+          <span className="text-brutal-sm">Include project info</span>
+        </label>
+
+        <div className="mt-[8px]">
+          <label htmlFor="ai-doc-custom-context" className="block text-brutal-xs uppercase mb-[8px]">
+            ADDITIONAL CONTEXT
+          </label>
+          <textarea
+            id="ai-doc-custom-context"
+            value={contextData.customContext}
+            onChange={(e) => onContextDataChange({...contextData, customContext: e.target.value})}
+            placeholder="Add specific details, requirements, or context for the AI..."
+            className="w-full h-80px px-[12px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm resize-none"
+          />
+        </div>
+      </div>
+
+      <button
+        onClick={onGenerate}
+        disabled={!selectedTemplate || generatingDoc}
+        className={clsx(
+          'w-full mt-[8px] brutal-btn flex items-center justify-center gap-[8px]',
+          (!selectedTemplate || generatingDoc) && 'opacity-50 cursor-not-allowed'
+        )}
+      >
+        {generatingDoc ? (
+          <>
+            <LoadingSpinner size="sm" />
+            GENERATING...
+          </>
+        ) : (
+          <>
+            <HiOutlineSparkles className="w-4 h-4" />
+            GENERATE WITH AI
+          </>
+        )}
+      </button>
+    </div>
+  )
+}
+
+interface DocumentEditorPanelProps {
+  documentTitle: string
+  documentContent: string
+  generatingDoc: boolean
+  showPreview: boolean
+  onTitleChange: (title: string) => void
+  onContentChange: (content: string) => void
+  onCopy: () => void
+  onExport: () => void
+  onSave: () => void
+  onRegenerate: () => void
+}
+
+function DocumentEditorPanel({ documentTitle, documentContent, generatingDoc, showPreview, onTitleChange, onContentChange, onCopy, onExport, onSave, onRegenerate }: DocumentEditorPanelProps) {
+  return (
+    <div className="lg:col-span-2 space-y-[12px]">
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
+        <div className="flex items-center justify-between p-[10px] border-b-2 border-[var(--theme-border)]">
+          <input
+            type="text"
+            value={documentTitle}
+            onChange={(e) => onTitleChange(e.target.value)}
+            placeholder="Document Title..."
+            aria-label="Document title"
+            className="flex-1 px-[12px] py-[8px] bg-transparent font-mono text-brutal-md font-bold uppercase focus:outline-none"
+          />
+          <div className="flex items-center gap-[8px]">
+            <button
+              onClick={onCopy}
+              disabled={!documentContent}
+              className="p-[8px] hover:bg-[var(--theme-background-secondary)] transition-colors disabled:opacity-50"
+              title="Copy to clipboard"
+            >
+              <HiOutlineClipboardCopy className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onExport}
+              disabled={!documentContent}
+              className="p-[8px] hover:bg-[var(--theme-background-secondary)] transition-colors disabled:opacity-50"
+              title="Export as Markdown"
+            >
+              <HiOutlineDownload className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onSave}
+              disabled={!documentContent}
+              className="p-[8px] hover:bg-[var(--theme-background-secondary)] transition-colors disabled:opacity-50"
+              title="Save document"
+            >
+              <HiOutlineCheck className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-[16px]">
+          <textarea
+            value={documentContent}
+            onChange={(e) => onContentChange(e.target.value)}
+            placeholder={generatingDoc ? "AI is generating your document..." : "Start typing or generate with AI..."}
+            aria-label="Document content"
+            className="w-full h-400px px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm resize-none"
+            disabled={generatingDoc}
+          />
+
+          {documentContent && (
+            <div className="mt-[8px] flex items-center justify-between">
+              <div className="text-brutal-xs text-[var(--theme-foreground)]/60">
+                {documentContent.split(' ').length} words • {documentContent.length} characters
+              </div>
+              <button
+                onClick={onRegenerate}
+                className="brutal-btn-secondary flex items-center gap-[8px]"
+              >
+                <HiOutlineRefresh className="w-14px h-14px" />
+                REGENERATE
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showPreview && documentContent && (
+        <m.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]"
+        >
+          <h3 className="text-brutal-md font-bold uppercase mb-[8px]">PREVIEW</h3>
+          <div className="prose prose-invert max-w-none">
+            <pre className="font-mono text-brutal-sm whitespace-pre-wrap bg-transparent border-0 p-0 m-0">
+              {documentContent}
+            </pre>
+          </div>
+        </m.div>
+      )}
+    </div>
+  )
+}
+
+interface SavedDocument {
+  id: string
+  title: string
+  content: string
+  type: string
+  createdAt: string
+  projectId: string
+}
+
+interface SavedDocumentsGridProps {
+  savedDocuments: SavedDocument[]
+  onSelectDocument: (doc: SavedDocument) => void
+  onDeleteDocument: (docId: string) => void
+}
+
+function SavedDocumentsGrid({ savedDocuments, onSelectDocument, onDeleteDocument }: SavedDocumentsGridProps) {
+  return (
+    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
+      <h3 className="text-brutal-md font-bold uppercase mb-[8px]">SAVED DOCUMENTS</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[10px]">
+        {savedDocuments.map((doc) => {
+          const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.type)
+          const Icon = template?.icon || HiOutlineDocumentText
+
+          return (
+            <button
+              type="button"
+              key={doc.id}
+              className={clsx(
+                'p-[10px] border-2 cursor-pointer transition-all text-left w-full',
+                'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal',
+                template?.color || 'border-[var(--theme-border)]'
+              )}
+              onClick={() => onSelectDocument(doc)}
+            >
+              <div className="flex items-start justify-between mb-[8px]">
+                <Icon className="w-5 h-5" />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDeleteDocument(doc.id)
+                  }}
+                  className="p-4px hover:bg-[var(--theme-background-secondary)] transition-colors"
+                >
+                  <HiOutlineTrash className="w-14px h-14px text-brutal-error" />
+                </button>
+              </div>
+              <h4 className="font-mono text-brutal-sm font-bold uppercase truncate">
+                {doc.title}
+              </h4>
+              <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-4px">
+                {new Date(doc.createdAt).toLocaleDateString()}
+              </p>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// --- Main Component ---
+
+export default function AIDocumentationHub({
+  projectId,
+  workspaceId,
+  tasks = EMPTY_TASKS,
+  sprints = EMPTY_SPRINTS,
+  projectDetails
+}: AIDocumentationHubProps) {
+  const [state, dispatch] = useReducer(aiDocumentationHubReducer, aiDocumentationHubInitialState)
+  const { selectedTemplate, generatingDoc, documentContent, documentTitle, contextData, savedDocuments, editingDoc, showPreview } = state
 
   const generateAIDocument = useMutation(api.ai.mutations.generateDocumentation)
 
@@ -123,9 +451,9 @@ export default function AIDocumentationHub({
       return
     }
 
-    setGeneratingDoc(true)
+    dispatch({ type: 'UPDATE', field: 'generatingDoc', value: true })
     const template = DOCUMENT_TEMPLATES.find(t => t.id === selectedTemplate)
-    
+
     try {
       // Prepare context for AI
       const context = {
@@ -143,14 +471,14 @@ export default function AIDocumentationHub({
         context: JSON.stringify(context)
       })
 
-      setDocumentContent(result.content)
-      setDocumentTitle(result.title || `${template?.title} - ${new Date().toLocaleDateString()}`)
+      dispatch({ type: 'UPDATE', field: 'documentContent', value: result.content })
+      dispatch({ type: 'UPDATE', field: 'documentTitle', value: result.title || `${template?.title} - ${new Date().toLocaleDateString()}` })
       toast.success('Document generated successfully!')
     } catch (error) {
       toast.error('Failed to generate document')
       console.error(error)
     } finally {
-      setGeneratingDoc(false)
+      dispatch({ type: 'UPDATE', field: 'generatingDoc', value: false })
     }
   }
 
@@ -179,7 +507,7 @@ export default function AIDocumentationHub({
       createdAt: new Date().toISOString(),
       projectId
     }
-    setSavedDocuments([newDoc, ...savedDocuments])
+    dispatch({ type: 'UPDATE', field: 'savedDocuments', value: [newDoc, ...savedDocuments] })
     toast.success('Document saved!')
   }
 
@@ -199,7 +527,7 @@ export default function AIDocumentationHub({
           </div>
           <div className="flex items-center gap-[6px]">
             <button 
-              onClick={() => setShowPreview(!showPreview)}
+              onClick={() => dispatch({ type: 'UPDATE', field: 'showPreview', value: !showPreview })}
               className="brutal-btn-secondary flex items-center gap-[8px]"
             >
               <HiOutlineDocumentText className="w-4 h-4" />
@@ -212,254 +540,53 @@ export default function AIDocumentationHub({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-[16px]">
         {/* Template Selection & Configuration */}
         <div className="lg:col-span-1 space-y-[12px]">
-          {/* Document Templates */}
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
-            <h3 className="text-brutal-md font-bold uppercase mb-[8px]">DOCUMENT TYPE</h3>
-            <div className="space-y-[6px]">
-              {DOCUMENT_TEMPLATES.map((template) => {
-                const Icon = template.icon
-                return (
-                  <button
-                    key={template.id}
-                    onClick={() => {
-                      setSelectedTemplate(template.id)
-                      setDocumentTitle('')
-                      setDocumentContent('')
-                    }}
-                    className={clsx(
-                      'w-full p-[10px] border-2 text-left transition-all',
-                      'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal',
-                      selectedTemplate === template.id 
-                        ? `${template.color} ${template.bgColor} shadow-brutal`
-                        : 'border-[var(--theme-border)] hover:border-primary-brutalist'
-                    )}
-                  >
-                    <div className="flex items-start gap-[6px]">
-                      <Icon className="w-5 h-5 flex-shrink-0 mt-2px" />
-                      <div className="flex-1">
-                        <h4 className="font-mono text-brutal-sm font-bold uppercase">
-                          {template.title}
-                        </h4>
-                        <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-4px">
-                          {template.description}
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+          <TemplateSelectionPanel
+            selectedTemplate={selectedTemplate}
+            onSelectTemplate={(templateId) => {
+              dispatch({ type: 'UPDATE', field: 'selectedTemplate', value: templateId })
+              dispatch({ type: 'UPDATE', field: 'documentTitle', value: '' })
+              dispatch({ type: 'UPDATE', field: 'documentContent', value: '' })
+            }}
+          />
 
-          {/* Context Configuration */}
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
-            <h3 className="text-brutal-md font-bold uppercase mb-[8px]">AI CONTEXT</h3>
-            <div className="space-y-[6px]">
-              <label className="flex items-center gap-[8px] cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={contextData.includeTaskData}
-                  onChange={(e) => setContextData({...contextData, includeTaskData: e.target.checked})}
-                  className="w-4 h-4"
-                />
-                <span className="text-brutal-sm">Include recent tasks</span>
-              </label>
-              <label className="flex items-center gap-[8px] cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={contextData.includeSprintData}
-                  onChange={(e) => setContextData({...contextData, includeSprintData: e.target.checked})}
-                  className="w-4 h-4"
-                />
-                <span className="text-brutal-sm">Include sprint data</span>
-              </label>
-              <label className="flex items-center gap-[8px] cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={contextData.includeProjectInfo}
-                  onChange={(e) => setContextData({...contextData, includeProjectInfo: e.target.checked})}
-                  className="w-4 h-4"
-                />
-                <span className="text-brutal-sm">Include project info</span>
-              </label>
-              
-              <div className="mt-[8px]">
-                <label className="block text-brutal-xs uppercase mb-[8px]">
-                  ADDITIONAL CONTEXT
-                </label>
-                <textarea
-                  value={contextData.customContext}
-                  onChange={(e) => setContextData({...contextData, customContext: e.target.value})}
-                  placeholder="Add specific details, requirements, or context for the AI..."
-                  className="w-full h-80px px-[12px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm resize-none"
-                />
-              </div>
-            </div>
-
-            <button
-              onClick={handleGenerateDocument}
-              disabled={!selectedTemplate || generatingDoc}
-              className={clsx(
-                'w-full mt-[8px] brutal-btn flex items-center justify-center gap-[8px]',
-                (!selectedTemplate || generatingDoc) && 'opacity-50 cursor-not-allowed'
-              )}
-            >
-              {generatingDoc ? (
-                <>
-                  <LoadingSpinner size="sm" />
-                  GENERATING...
-                </>
-              ) : (
-                <>
-                  <HiOutlineSparkles className="w-4 h-4" />
-                  GENERATE WITH AI
-                </>
-              )}
-            </button>
-          </div>
+          <ContextConfigPanel
+            contextData={contextData}
+            onContextDataChange={(data) => dispatch({ type: 'UPDATE', field: 'contextData', value: data })}
+            selectedTemplate={selectedTemplate}
+            generatingDoc={generatingDoc}
+            onGenerate={handleGenerateDocument}
+          />
         </div>
 
         {/* Document Editor & Preview */}
-        <div className="lg:col-span-2 space-y-[12px]">
-          {/* Editor */}
-          <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
-            <div className="flex items-center justify-between p-[10px] border-b-2 border-[var(--theme-border)]">
-              <input
-                type="text"
-                value={documentTitle}
-                onChange={(e) => setDocumentTitle(e.target.value)}
-                placeholder="Document Title..."
-                className="flex-1 px-[12px] py-[8px] bg-transparent font-mono text-brutal-md font-bold uppercase focus:outline-none"
-              />
-              <div className="flex items-center gap-[8px]">
-                <button
-                  onClick={handleCopyToClipboard}
-                  disabled={!documentContent}
-                  className="p-[8px] hover:bg-[var(--theme-background-secondary)] transition-colors disabled:opacity-50"
-                  title="Copy to clipboard"
-                >
-                  <HiOutlineClipboardCopy className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={handleExportMarkdown}
-                  disabled={!documentContent}
-                  className="p-[8px] hover:bg-[var(--theme-background-secondary)] transition-colors disabled:opacity-50"
-                  title="Export as Markdown"
-                >
-                  <HiOutlineDownload className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={handleSaveDocument}
-                  disabled={!documentContent}
-                  className="p-[8px] hover:bg-[var(--theme-background-secondary)] transition-colors disabled:opacity-50"
-                  title="Save document"
-                >
-                  <HiOutlineCheck className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-[16px]">
-              <textarea
-                value={documentContent}
-                onChange={(e) => setDocumentContent(e.target.value)}
-                placeholder={generatingDoc ? "AI is generating your document..." : "Start typing or generate with AI..."}
-                className="w-full h-400px px-[10px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm resize-none"
-                disabled={generatingDoc}
-              />
-              
-              {documentContent && (
-                <div className="mt-[8px] flex items-center justify-between">
-                  <div className="text-brutal-xs text-[var(--theme-foreground)]/60">
-                    {documentContent.split(' ').length} words • {documentContent.length} characters
-                  </div>
-                  <button
-                    onClick={() => handleGenerateDocument()}
-                    className="brutal-btn-secondary flex items-center gap-[8px]"
-                  >
-                    <HiOutlineRefresh className="w-14px h-14px" />
-                    REGENERATE
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Preview */}
-          {showPreview && documentContent && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]"
-            >
-              <h3 className="text-brutal-md font-bold uppercase mb-[8px]">PREVIEW</h3>
-              <div className="prose prose-invert max-w-none">
-                <div 
-                  className="font-mono text-brutal-sm whitespace-pre-wrap"
-                  dangerouslySetInnerHTML={{ 
-                    __html: documentContent
-                      .replace(/^# (.+)$/gm, '<h1 class="text-brutal-lg font-bold uppercase mb-[8px]">$1</h1>')
-                      .replace(/^## (.+)$/gm, '<h2 class="text-brutal-md font-bold uppercase mb-[6px] mt-[12px]">$1</h2>')
-                      .replace(/^### (.+)$/gm, '<h3 class="text-brutal-sm font-bold uppercase mb-[8px] mt-[8px]">$1</h3>')
-                      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                      .replace(/`(.+?)`/g, '<code class="px-4px py-2px bg-[var(--theme-background-secondary)] text-primary-brutalist">$1</code>')
-                      .replace(/\n/g, '<br/>')
-                  }}
-                />
-              </div>
-            </motion.div>
-          )}
-        </div>
+        <DocumentEditorPanel
+          documentTitle={documentTitle}
+          documentContent={documentContent}
+          generatingDoc={generatingDoc}
+          showPreview={showPreview}
+          onTitleChange={(title) => dispatch({ type: 'UPDATE', field: 'documentTitle', value: title })}
+          onContentChange={(content) => dispatch({ type: 'UPDATE', field: 'documentContent', value: content })}
+          onCopy={handleCopyToClipboard}
+          onExport={handleExportMarkdown}
+          onSave={handleSaveDocument}
+          onRegenerate={handleGenerateDocument}
+        />
       </div>
 
       {/* Saved Documents */}
       {savedDocuments.length > 0 && (
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
-          <h3 className="text-brutal-md font-bold uppercase mb-[8px]">SAVED DOCUMENTS</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[10px]">
-            {savedDocuments.map((doc) => {
-              const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.type)
-              const Icon = template?.icon || HiOutlineDocumentText
-              
-              return (
-                <div
-                  key={doc.id}
-                  className={clsx(
-                    'p-[10px] border-2 cursor-pointer transition-all',
-                    'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal',
-                    template?.color || 'border-[var(--theme-border)]'
-                  )}
-                  onClick={() => {
-                    setDocumentTitle(doc.title)
-                    setDocumentContent(doc.content)
-                    setSelectedTemplate(doc.type)
-                  }}
-                >
-                  <div className="flex items-start justify-between mb-[8px]">
-                    <Icon className="w-5 h-5" />
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setSavedDocuments(savedDocuments.filter(d => d.id !== doc.id))
-                        toast.success('Document deleted')
-                      }}
-                      className="p-4px hover:bg-[var(--theme-background-secondary)] transition-colors"
-                    >
-                      <HiOutlineTrash className="w-14px h-14px text-brutal-error" />
-                    </button>
-                  </div>
-                  <h4 className="font-mono text-brutal-sm font-bold uppercase truncate">
-                    {doc.title}
-                  </h4>
-                  <p className="text-brutal-xs text-[var(--theme-foreground)]/60 mt-4px">
-                    {new Date(doc.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-              )
-            })}
-          </div>
-        </div>
+        <SavedDocumentsGrid
+          savedDocuments={savedDocuments}
+          onSelectDocument={(doc) => {
+            dispatch({ type: 'UPDATE', field: 'documentTitle', value: doc.title })
+            dispatch({ type: 'UPDATE', field: 'documentContent', value: doc.content })
+            dispatch({ type: 'UPDATE', field: 'selectedTemplate', value: doc.type })
+          }}
+          onDeleteDocument={(docId) => {
+            dispatch({ type: 'UPDATE', field: 'savedDocuments', value: savedDocuments.filter((d: any) => d.id !== docId) })
+            toast.success('Document deleted')
+          }}
+        />
       )}
     </div>
   )

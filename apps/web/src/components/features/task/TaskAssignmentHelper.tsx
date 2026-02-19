@@ -23,13 +23,16 @@ interface TaskAssignmentHelperProps {
   mode?: 'compact' | 'full'
 }
 
+const EMPTY_ASSIGNEES: Id<"users">[] = []
+const EMPTY_LABELS: string[] = []
+
 export function TaskAssignmentHelper({
   workspaceId,
-  currentAssignees = [],
+  currentAssignees = EMPTY_ASSIGNEES,
   onAssigneeChange,
   taskTitle = '',
   taskDescription = '',
-  taskLabels = [],
+  taskLabels = EMPTY_LABELS,
   mode = 'full'
 }: TaskAssignmentHelperProps) {
   const [showExpertiseSearch, setShowExpertiseSearch] = useState(false)
@@ -89,7 +92,7 @@ export function TaskAssignmentHelper({
     return (
       <div className="space-y-[6px]">
         <div className="flex items-center justify-between">
-          <label className="font-mono text-brutal-xs font-bold">ASSIGNEES</label>
+          <span className="font-mono text-brutal-xs font-bold">ASSIGNEES</span>
           <button
             onClick={() => setShowExpertiseSearch(true)}
             className="text-brutal-xs font-mono text-brutal-info hover:underline"
@@ -123,9 +126,9 @@ export function TaskAssignmentHelper({
     <div className="space-y-[8px]">
       {/* Current Assignees */}
       <div>
-        <label className="block font-mono text-brutal-sm font-bold mb-[4px]">
+        <span className="block font-mono text-brutal-sm font-bold mb-[4px]">
           TASK ASSIGNEES
-        </label>
+        </span>
         <div className="flex flex-wrap gap-[4px] mb-[6px]">
           {currentAssignees.length === 0 ? (
             <span className="font-mono text-brutal-xs text-primary-brutalist/60">
@@ -201,7 +204,7 @@ export function TaskAssignmentHelper({
             type="text"
             value={newTech}
             onChange={(e) => setNewTech(e.target.value)}
-            onKeyPress={(e) => {
+            onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
                 handleAddTechnology()
@@ -209,6 +212,7 @@ export function TaskAssignmentHelper({
             }}
             className="brutal-input flex-1 text-sm"
             placeholder="Add technology (e.g., React, Python, DevOps)"
+            aria-label="Add technology"
           />
           <button
             onClick={handleAddTechnology}

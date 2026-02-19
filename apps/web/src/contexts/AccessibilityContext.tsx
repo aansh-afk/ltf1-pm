@@ -57,20 +57,16 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
     return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings
   })
 
-  const [isAccessibilityMode, setIsAccessibilityMode] = useState(false)
+  const isAccessibilityMode = settings.highContrastMode ||
+                              settings.enhancedFocus ||
+                              settings.fontSize !== 'normal'
 
   // Save settings to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('accessibility-settings', JSON.stringify(settings))
-    
-    // Update accessibility mode flag
-    const hasAccessibilityFeatures = settings.highContrastMode || 
-                                   settings.enhancedFocus || 
-                                   settings.fontSize !== 'normal'
-    setIsAccessibilityMode(hasAccessibilityFeatures)
   }, [settings])
 
-  // Initialize accessibility features
+  // Legitimate useEffect: one-time initialization with system preference detection and media query subscriptions
   useEffect(() => {
     initializeAccessibilityMode()
     initializeMotionPreferences()
@@ -79,7 +75,7 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
     // Detect system preferences
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const prefersHighContrast = window.matchMedia('(prefers-contrast: high)').matches
-    
+
     if (prefersReducedMotion || prefersHighContrast) {
       setSettings(prev => ({
         ...prev,

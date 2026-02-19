@@ -7,6 +7,147 @@ import BrutalCard from '../../ui/BrutalCard'
 import UserDisplay from '../user/UserDisplay'
 import toast from 'react-hot-toast'
 
+// --- Sub-components ---
+
+interface TaskContextMenuProps {
+  taskId: string
+  onEdit?: () => void
+  onDuplicate?: () => void
+  onViewDetails?: () => void
+  onDelete?: () => void
+  onClose: () => void
+}
+
+function TaskContextMenu({ taskId, onEdit, onDuplicate, onViewDetails, onDelete, onClose }: TaskContextMenuProps) {
+  return (
+    <div
+      className="absolute right-0 top-full mt-4px z-50 bg-[#050505] border-2 border-[#2E2E35] shadow-[4px_4px_0px_rgba(0,0,0,0.5)] min-w-[160px]"
+    >
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          onClose()
+          onEdit?.()
+        }}
+        className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#0A0A0A] transition-colors flex items-center gap-[4px]"
+      >
+        <HiOutlinePencil className="w-16px h-16px" />
+        EDIT
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          onClose()
+          onDuplicate?.()
+        }}
+        className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#0A0A0A] transition-colors flex items-center gap-[4px]"
+      >
+        <HiOutlineDuplicate className="w-16px h-16px" />
+        DUPLICATE
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          navigator.clipboard.writeText(`${window.location.origin}/task/${taskId}`)
+          toast.success('Link copied!')
+          onClose()
+        }}
+        className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#0A0A0A] transition-colors flex items-center gap-[4px]"
+      >
+        <HiOutlineLink className="w-16px h-16px" />
+        COPY LINK
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          onClose()
+          onViewDetails?.()
+        }}
+        className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#0A0A0A] transition-colors flex items-center gap-[4px]"
+      >
+        <HiOutlineInformationCircle className="w-16px h-16px" />
+        MORE INFO
+      </button>
+      <div className="border-t-2 border-[#2E2E35]" />
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          onClose()
+          onDelete?.()
+        }}
+        className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#EF4444] hover:text-[#050505] transition-colors flex items-center gap-[4px]"
+      >
+        <HiOutlineTrash className="w-16px h-16px" />
+        DELETE
+      </button>
+    </div>
+  )
+}
+
+interface TaskNormalModeContentProps {
+  task: any
+  statusIndicators: Record<string, { color: string; label: string }>
+}
+
+function TaskNormalModeContent({ task, statusIndicators }: TaskNormalModeContentProps) {
+  return (
+    <>
+      {task.labels && task.labels.length > 0 && (
+        <div className="flex flex-wrap gap-[4px]">
+          {task.labels.slice(0, 3).map((label: string) => (
+            <BrutalBadge key={label} size="sm">{label}</BrutalBadge>
+          ))}
+          {task.labels.length > 3 && (
+            <BrutalBadge size="sm" variant="info">+{task.labels.length - 3}</BrutalBadge>
+          )}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-[6px]">
+          <UserDisplay
+            userId={task.assigneeId}
+            size="sm"
+            showStatus={true}
+            compact={true}
+          />
+
+          {task.commentCount > 0 && (
+            <div className="flex items-center gap-4px text-xs font-['IBM_Plex_Mono',monospace] uppercase text-[#6B7280]">
+              <HiOutlineChat className="w-12px h-12px" />
+              <span>{task.commentCount}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-[4px]">
+          <div className="text-xs font-['IBM_Plex_Mono',monospace] uppercase tracking-wider text-[#6B7280]">
+            {statusIndicators[task.status as keyof typeof statusIndicators]?.label}
+          </div>
+          {task.points && (
+            <div className="text-xs font-['IBM_Plex_Mono',monospace] text-[#6366F1]">
+              {task.points}pts
+            </div>
+          )}
+        </div>
+      </div>
+
+      {task.dueDate && (
+        <div className="flex items-center gap-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-[#6B7280] border-t border-[#2E2E35] pt-8px">
+          <HiOutlineClock className="w-12px h-12px" />
+          <span className={clsx(
+            new Date(task.dueDate) < new Date() && 'text-[#EF4444]'
+          )}>
+            DUE {formatDistanceToNow(new Date(task.dueDate), { addSuffix: true }).toUpperCase()}
+          </span>
+        </div>
+      )}
+    </>
+  )
+}
+
+// --- Main component ---
+
 interface TaskCardProps {
   task: any
   onEdit?: () => void
@@ -146,67 +287,15 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
             </button>
 
             {showMenu && (
-              <div
-                ref={menuRef}
-                className="absolute right-0 top-full mt-4px z-50 bg-[#050505] border-2 border-[#2E2E35] shadow-[4px_4px_0px_rgba(0,0,0,0.5)] min-w-[160px]"
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowMenu(false)
-                    onEdit?.()
-                  }}
-                  className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#0A0A0A] transition-colors flex items-center gap-[4px]"
-                >
-                  <HiOutlinePencil className="w-16px h-16px" />
-                  EDIT
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowMenu(false)
-                    onDuplicate?.()
-                  }}
-                  className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#0A0A0A] transition-colors flex items-center gap-[4px]"
-                >
-                  <HiOutlineDuplicate className="w-16px h-16px" />
-                  DUPLICATE
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    navigator.clipboard.writeText(`${window.location.origin}/task/${task._id}`)
-                    toast.success('Link copied!')
-                    setShowMenu(false)
-                  }}
-                  className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#0A0A0A] transition-colors flex items-center gap-[4px]"
-                >
-                  <HiOutlineLink className="w-16px h-16px" />
-                  COPY LINK
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowMenu(false)
-                    onViewDetails?.()
-                  }}
-                  className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#0A0A0A] transition-colors flex items-center gap-[4px]"
-                >
-                  <HiOutlineInformationCircle className="w-16px h-16px" />
-                  MORE INFO
-                </button>
-                <div className="border-t-2 border-[#2E2E35]" />
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowMenu(false)
-                    onDelete?.()
-                  }}
-                  className="w-full px-[10px] py-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-left hover:bg-[#EF4444] hover:text-[#050505] transition-colors flex items-center gap-[4px]"
-                >
-                  <HiOutlineTrash className="w-16px h-16px" />
-                  DELETE
-                </button>
+              <div ref={menuRef}>
+                <TaskContextMenu
+                  taskId={task._id}
+                  onEdit={onEdit}
+                  onDuplicate={onDuplicate}
+                  onViewDetails={onViewDetails}
+                  onDelete={onDelete}
+                  onClose={() => setShowMenu(false)}
+                />
               </div>
             )}
           </div>
@@ -266,57 +355,8 @@ export default function TaskCard({ task, onEdit, onDelete, onDuplicate, onViewDe
           </div>
         )}
 
-        {!isCompact && task.labels && task.labels.length > 0 && (
-          <div className="flex flex-wrap gap-[4px]">
-            {task.labels.slice(0, 3).map((label: string) => (
-              <BrutalBadge key={label} size="sm">{label}</BrutalBadge>
-            ))}
-            {task.labels.length > 3 && (
-              <BrutalBadge size="sm" variant="info">+{task.labels.length - 3}</BrutalBadge>
-            )}
-          </div>
-        )}
-
         {!isCompact && (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-[6px]">
-              <UserDisplay
-                userId={task.assigneeId}
-                size="sm"
-                showStatus={true}
-                compact={true}
-              />
-
-              {task.commentCount > 0 && (
-                <div className="flex items-center gap-4px text-xs font-['IBM_Plex_Mono',monospace] uppercase text-[#6B7280]">
-                  <HiOutlineChat className="w-12px h-12px" />
-                  <span>{task.commentCount}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-[4px]">
-              <div className="text-xs font-['IBM_Plex_Mono',monospace] uppercase tracking-wider text-[#6B7280]">
-                {statusIndicators[task.status as keyof typeof statusIndicators]?.label}
-              </div>
-              {task.points && (
-                <div className="text-xs font-['IBM_Plex_Mono',monospace] text-[#6366F1]">
-                  {task.points}pts
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {!isCompact && task.dueDate && (
-          <div className="flex items-center gap-[4px] text-xs font-['IBM_Plex_Mono',monospace] uppercase text-[#6B7280] border-t border-[#2E2E35] pt-8px">
-            <HiOutlineClock className="w-12px h-12px" />
-            <span className={clsx(
-              new Date(task.dueDate) < new Date() && 'text-[#EF4444]'
-            )}>
-              DUE {formatDistanceToNow(new Date(task.dueDate), { addSuffix: true }).toUpperCase()}
-            </span>
-          </div>
+          <TaskNormalModeContent task={task} statusIndicators={statusIndicators} />
         )}
       </div>
     </BrutalCard>

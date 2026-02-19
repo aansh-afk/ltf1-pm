@@ -46,17 +46,17 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
     <BrutalModal isOpen={isOpen} onClose={onClose} title="Create Channel" size="sm">
       <div className="space-y-4">
         <div>
-          <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] mb-1.5">
+          <label htmlFor="create-channel-name" className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] mb-1.5">
             Channel Name
           </label>
           <input
+            id="create-channel-name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="e.g. general, design, backend"
             className="w-full bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] px-3 py-2 font-mono text-xs text-[var(--theme-foreground)] placeholder-[var(--theme-foreground-tertiary)] focus:border-[var(--theme-primary)] focus:outline-none transition-colors"
-            autoFocus
           />
         </div>
 

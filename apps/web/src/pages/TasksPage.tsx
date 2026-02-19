@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useReducer, useEffect } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { HiOutlineViewBoards, HiOutlineViewList, HiOutlineFilter, HiOutlineCalendar, HiOutlineViewGrid, HiOutlineSearch, HiOutlineClipboardList } from 'react-icons/hi'
@@ -26,13 +26,208 @@ const defaultFilters: TaskFiltersType = {
   isOverdue: null
 }
 
+type TasksPageState = {
+  selectedProjectId: string
+  viewMode: 'board' | 'list' | 'calendar' | 'table'
+  isFiltersOpen: boolean
+  filters: TaskFiltersType
+  quickSearch: string
+}
+
+type TasksPageAction =
+  | { type: 'SET_SELECTED_PROJECT_ID'; value: string }
+  | { type: 'SET_VIEW_MODE'; value: 'board' | 'list' | 'calendar' | 'table' }
+  | { type: 'SET_IS_FILTERS_OPEN'; value: boolean }
+  | { type: 'TOGGLE_FILTERS' }
+  | { type: 'SET_FILTERS'; value: TaskFiltersType }
+  | { type: 'SET_QUICK_SEARCH'; value: string }
+  | { type: 'APPLY_PRESET'; filters: TaskFiltersType }
+
+const initialTasksPageState: TasksPageState = {
+  selectedProjectId: '',
+  viewMode: 'board',
+  isFiltersOpen: false,
+  filters: defaultFilters,
+  quickSearch: '',
+}
+
+// --- Sub-components ---
+
+interface TasksToolbarProps {
+  hasWorkspaceContext: boolean
+  currentWorkspaceName: string | undefined
+  selectedProjectId: string
+  viewMode: 'board' | 'list' | 'calendar' | 'table'
+  projects: Array<{ _id: string; name: string }>
+  onProjectChange: (id: string) => void
+  onViewModeChange: (mode: 'board' | 'list' | 'calendar' | 'table') => void
+}
+
+function TasksToolbar({ hasWorkspaceContext, currentWorkspaceName, selectedProjectId, viewMode, projects, onProjectChange, onViewModeChange }: TasksToolbarProps) {
+  return (
+    <div className="flex items-center justify-between px-3 py-1.5 gap-2">
+      <div className="flex items-center gap-2 min-w-0">
+        <HiOutlineClipboardList className="w-4 h-4 text-[var(--theme-primary)] shrink-0" />
+        <span className="font-mono text-xs font-bold uppercase text-[var(--theme-foreground)] shrink-0">TASKS</span>
+        {!hasWorkspaceContext && currentWorkspaceName && (
+          <>
+            <span className="text-[var(--theme-border)] shrink-0">/</span>
+            <span className="font-mono text-[10px] uppercase text-[var(--theme-foreground-tertiary)] truncate">{currentWorkspaceName}</span>
+          </>
+        )}
+        <span className="text-[var(--theme-border)] shrink-0">/</span>
+        <div className="relative shrink-0">
+          <select
+            aria-label="Select project"
+            className="appearance-none pl-2 pr-6 py-0.5 bg-transparent border border-[var(--theme-border)]
+                     font-mono text-[10px] uppercase font-bold text-[var(--theme-foreground)]
+                     focus:border-[var(--theme-primary)] focus:outline-none transition-colors cursor-pointer max-w-[160px]"
+            value={selectedProjectId}
+            onChange={(e) => onProjectChange(e.target.value)}
+          >
+            {projects.map((project) => (
+              <option key={project._id} value={project._id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+          <div className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[4px] border-t-[var(--theme-foreground-tertiary)]" />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 shrink-0">
+        {!hasWorkspaceContext && (
+          <div className="hidden md:block">
+            <WorkspaceSelector size="sm" showLabel={false} />
+          </div>
+        )}
+
+        <div className="flex border border-[var(--theme-border)]">
+          {[
+            { id: 'board', icon: HiOutlineViewBoards, label: 'BOARD' },
+            { id: 'list', icon: HiOutlineViewList, label: 'LIST' },
+            { id: 'calendar', icon: HiOutlineCalendar, label: 'CAL' },
+            { id: 'table', icon: HiOutlineViewGrid, label: 'GRID' }
+          ].map((mode) => (
+            <button
+              key={mode.id}
+              className={clsx(
+                "w-7 h-7 flex items-center justify-center transition-all",
+                "border-r border-[var(--theme-border)] last:border-r-0",
+                viewMode === mode.id
+                  ? "bg-[var(--theme-primary)] text-white"
+                  : "text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-foreground)] hover:bg-[var(--theme-background-tertiary)]"
+              )}
+              onClick={() => onViewModeChange(mode.id as any)}
+              title={`${mode.label} View`}
+            >
+              <mode.icon className="w-3.5 h-3.5" />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface TaskContentAreaProps {
+  tasks: any[] | undefined
+  hasActiveFilters: boolean
+  viewMode: 'board' | 'list' | 'calendar' | 'table'
+  selectedProjectId: string
+}
+
+function TaskContentArea({ tasks, hasActiveFilters, viewMode, selectedProjectId }: TaskContentAreaProps) {
+  if (tasks === undefined) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  if (tasks.length === 0) {
+    return (
+      <div className="border-2 border-dashed border-[var(--theme-border)] p-6 text-center h-full flex flex-col items-center justify-center">
+        <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center border-2 border-[var(--theme-border)] text-[var(--theme-foreground-tertiary)]">
+          <HiOutlineClipboardList className="w-4 h-4" />
+        </div>
+        <h2 className="text-sm font-bold text-[var(--theme-foreground)] mb-0.5">
+          {hasActiveFilters ? "No Matching Tasks" : "No Tasks Yet"}
+        </h2>
+        <p className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)] max-w-sm mx-auto">
+          {hasActiveFilters ? "Adjust your filters to expand the search." : "Create your first task to get started."}
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="h-full">
+      {viewMode === 'board' ? (
+        <KanbanBoard
+          tasks={tasks}
+          projectId={selectedProjectId}
+          onTaskUpdate={() => { }}
+        />
+      ) : viewMode === 'list' ? (
+        <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
+          <TaskList
+            tasks={tasks}
+            projectId={selectedProjectId}
+            onTaskUpdate={() => { }}
+          />
+        </div>
+      ) : viewMode === 'calendar' ? (
+        <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
+          <TaskCalendar
+            tasks={tasks}
+            projectId={selectedProjectId}
+            onTaskUpdate={() => { }}
+          />
+        </div>
+      ) : (
+        <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
+          <TaskTable
+            tasks={tasks}
+            projectId={selectedProjectId}
+            onTaskUpdate={() => { }}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// --- Main Component ---
+
+function tasksPageReducer(state: TasksPageState, action: TasksPageAction): TasksPageState {
+  switch (action.type) {
+    case 'SET_SELECTED_PROJECT_ID':
+      return { ...state, selectedProjectId: action.value }
+    case 'SET_VIEW_MODE':
+      return { ...state, viewMode: action.value }
+    case 'SET_IS_FILTERS_OPEN':
+      return { ...state, isFiltersOpen: action.value }
+    case 'TOGGLE_FILTERS':
+      return { ...state, isFiltersOpen: !state.isFiltersOpen }
+    case 'SET_FILTERS':
+      return { ...state, filters: action.value }
+    case 'SET_QUICK_SEARCH':
+      return { ...state, quickSearch: action.value }
+    case 'APPLY_PRESET':
+      return { ...state, filters: action.filters, quickSearch: '', isFiltersOpen: false }
+    default:
+      return state
+  }
+}
+
 export default function TasksPage() {
   const { currentWorkspaceId, isLoading: workspaceLoading, hasWorkspaceContext, workspaces } = useCurrentWorkspace()
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('')
-  const [viewMode, setViewMode] = useState<'board' | 'list' | 'calendar' | 'table'>('board')
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
-  const [filters, setFilters] = useState<TaskFiltersType>(defaultFilters)
-  const [quickSearch, setQuickSearch] = useState('')
+  const [state, dispatch] = useReducer(tasksPageReducer, initialTasksPageState)
+  const { selectedProjectId, viewMode, isFiltersOpen, filters, quickSearch } = state
 
   const projects = useQuery(
     api.projects.queries.getWorkspaceProjects,
@@ -84,13 +279,11 @@ export default function TasksPage() {
   )
 
   const handleFiltersChange = (newFilters: TaskFiltersType) => {
-    setFilters(newFilters)
+    dispatch({ type: 'SET_FILTERS', value: newFilters })
   }
 
   const handlePresetApply = (presetFilters: TaskFiltersType) => {
-    setFilters(presetFilters)
-    setQuickSearch('')
-    setIsFiltersOpen(false)
+    dispatch({ type: 'APPLY_PRESET', filters: presetFilters })
   }
 
   const getActiveFilterCount = () => {
@@ -118,19 +311,19 @@ export default function TasksPage() {
       if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
         switch (e.key.toLowerCase()) {
           case 'b':
-            setViewMode('board')
+            dispatch({ type: 'SET_VIEW_MODE', value: 'board' })
             break
           case 'l':
-            setViewMode('list')
+            dispatch({ type: 'SET_VIEW_MODE', value: 'list' })
             break
           case 'c':
-            setViewMode('calendar')
+            dispatch({ type: 'SET_VIEW_MODE', value: 'calendar' })
             break
           case 't':
-            setViewMode('table')
+            dispatch({ type: 'SET_VIEW_MODE', value: 'table' })
             break
           case 'f':
-            setIsFiltersOpen(!isFiltersOpen)
+            dispatch({ type: 'TOGGLE_FILTERS' })
             break
         }
       }
@@ -138,7 +331,7 @@ export default function TasksPage() {
 
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
-  }, [isFiltersOpen])
+  }, [])
 
   if (workspaceLoading) {
     return (
@@ -210,7 +403,7 @@ export default function TasksPage() {
   }
 
   if (!selectedProjectId && projects.length > 0) {
-    setSelectedProjectId(projects[0]._id)
+    dispatch({ type: 'SET_SELECTED_PROJECT_ID', value: projects[0]._id })
   }
 
   const currentWorkspace = workspaces?.find(w => w && w._id === currentWorkspaceId)
@@ -220,70 +413,15 @@ export default function TasksPage() {
       {/* Single compact toolbar */}
       <div className="flex-none z-10 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
         {/* Row 1: breadcrumb + project selector + view toggles */}
-        <div className="flex items-center justify-between px-3 py-1.5 gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <HiOutlineClipboardList className="w-4 h-4 text-[var(--theme-primary)] shrink-0" />
-            <span className="font-mono text-xs font-bold uppercase text-[var(--theme-foreground)] shrink-0">TASKS</span>
-            {!hasWorkspaceContext && currentWorkspace && (
-              <>
-                <span className="text-[var(--theme-border)] shrink-0">/</span>
-                <span className="font-mono text-[10px] uppercase text-[var(--theme-foreground-tertiary)] truncate">{currentWorkspace.name}</span>
-              </>
-            )}
-            <span className="text-[var(--theme-border)] shrink-0">/</span>
-            <div className="relative shrink-0">
-              <select
-                className="appearance-none pl-2 pr-6 py-0.5 bg-transparent border border-[var(--theme-border)]
-                         font-mono text-[10px] uppercase font-bold text-[var(--theme-foreground)]
-                         focus:border-[var(--theme-primary)] focus:outline-none transition-colors cursor-pointer max-w-[160px]"
-                value={selectedProjectId}
-                onChange={(e) => setSelectedProjectId(e.target.value)}
-              >
-                {projects.map((project: any) => (
-                  <option key={project._id} value={project._id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[4px] border-t-[var(--theme-foreground-tertiary)]" />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            {!hasWorkspaceContext && (
-              <div className="hidden md:block">
-                <WorkspaceSelector size="sm" showLabel={false} />
-              </div>
-            )}
-
-            {/* View Mode Toggles */}
-            <div className="flex border border-[var(--theme-border)]">
-              {[
-                { id: 'board', icon: HiOutlineViewBoards, label: 'BOARD' },
-                { id: 'list', icon: HiOutlineViewList, label: 'LIST' },
-                { id: 'calendar', icon: HiOutlineCalendar, label: 'CAL' },
-                { id: 'table', icon: HiOutlineViewGrid, label: 'GRID' }
-              ].map((mode) => (
-                <button
-                  key={mode.id}
-                  className={clsx(
-                    "w-7 h-7 flex items-center justify-center transition-all",
-                    "border-r border-[var(--theme-border)] last:border-r-0",
-                    viewMode === mode.id
-                      ? "bg-[var(--theme-primary)] text-white"
-                      : "text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-foreground)] hover:bg-[var(--theme-background-tertiary)]"
-                  )}
-                  onClick={() => setViewMode(mode.id as any)}
-                  title={`${mode.label} View`}
-                >
-                  <mode.icon className="w-3.5 h-3.5" />
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <TasksToolbar
+          hasWorkspaceContext={hasWorkspaceContext}
+          currentWorkspaceName={currentWorkspace?.name}
+          selectedProjectId={selectedProjectId}
+          viewMode={viewMode}
+          projects={projects}
+          onProjectChange={(id) => dispatch({ type: 'SET_SELECTED_PROJECT_ID', value: id })}
+          onViewModeChange={(mode) => dispatch({ type: 'SET_VIEW_MODE', value: mode })}
+        />
 
         {/* Row 2: search + filter presets + filter button */}
         <div className="flex items-center gap-2 px-3 py-1.5 border-t border-[var(--theme-border)]">
@@ -292,11 +430,12 @@ export default function TasksPage() {
             <input
               type="text"
               placeholder="SEARCH..."
+              aria-label="Quick search tasks"
               className="w-[160px] pl-7 pr-2 py-1 bg-[var(--theme-background)] border border-[var(--theme-border)]
                        font-mono text-[10px] uppercase text-[var(--theme-foreground)] placeholder:text-[var(--theme-foreground-tertiary)]
                        focus:border-[var(--theme-primary)] focus:outline-none transition-colors"
               value={quickSearch}
-              onChange={(e) => setQuickSearch(e.target.value)}
+              onChange={(e) => dispatch({ type: 'SET_QUICK_SEARCH', value: e.target.value })}
             />
           </div>
 
@@ -317,7 +456,7 @@ export default function TasksPage() {
 
           {/* Filter Button */}
           <button
-            onClick={() => setIsFiltersOpen(true)}
+            onClick={() => dispatch({ type: 'SET_IS_FILTERS_OPEN', value: true })}
             title="Filter Tasks"
             className={clsx(
               "flex items-center gap-1.5 px-2 py-1 border font-mono text-[10px] uppercase font-semibold transition-colors shrink-0",
@@ -339,64 +478,19 @@ export default function TasksPage() {
 
       {/* Task Content - Maximum area */}
       <div className="flex-1 min-h-0 p-2 overflow-hidden">
-        {tasks === undefined ? (
-          <div className="flex items-center justify-center h-full">
-            <LoadingSpinner size="lg" />
-          </div>
-        ) : tasks.length === 0 ? (
-          <div className="border-2 border-dashed border-[var(--theme-border)] p-6 text-center h-full flex flex-col items-center justify-center">
-            <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center border-2 border-[var(--theme-border)] text-[var(--theme-foreground-tertiary)]">
-              <HiOutlineClipboardList className="w-4 h-4" />
-            </div>
-            <h2 className="text-sm font-bold text-[var(--theme-foreground)] mb-0.5">
-              {hasActiveFilters ? "No Matching Tasks" : "No Tasks Yet"}
-            </h2>
-            <p className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)] max-w-sm mx-auto">
-              {hasActiveFilters ? "Adjust your filters to expand the search." : "Create your first task to get started."}
-            </p>
-          </div>
-        ) : (
-          <div className="h-full">
-            {viewMode === 'board' ? (
-              <KanbanBoard
-                tasks={tasks}
-                projectId={selectedProjectId}
-                onTaskUpdate={() => { }}
-              />
-            ) : viewMode === 'list' ? (
-              <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
-                <TaskList
-                  tasks={tasks}
-                  projectId={selectedProjectId}
-                  onTaskUpdate={() => { }}
-                />
-              </div>
-            ) : viewMode === 'calendar' ? (
-              <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
-                <TaskCalendar
-                  tasks={tasks}
-                  projectId={selectedProjectId}
-                  onTaskUpdate={() => { }}
-                />
-              </div>
-            ) : (
-              <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
-                <TaskTable
-                  tasks={tasks}
-                  projectId={selectedProjectId}
-                  onTaskUpdate={() => { }}
-                />
-              </div>
-            )}
-          </div>
-        )}
+        <TaskContentArea
+          tasks={tasks}
+          hasActiveFilters={!!hasActiveFilters}
+          viewMode={viewMode}
+          selectedProjectId={selectedProjectId}
+        />
       </div>
 
       {/* Filter Panel */}
       {currentWorkspaceId && (
         <TaskFilters
           isOpen={isFiltersOpen}
-          onClose={() => setIsFiltersOpen(false)}
+          onClose={() => dispatch({ type: 'SET_IS_FILTERS_OPEN', value: false })}
           filters={filters}
           onFiltersChange={handleFiltersChange}
           workspaceId={currentWorkspaceId}

@@ -1,6 +1,15 @@
-import React from 'react'
-import { BarChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart } from 'recharts'
+import React, { useState, useEffect } from 'react'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
+
+type RechartsModuleType = typeof import('recharts')
+
+function useRecharts() {
+  const [mod, setMod] = useState<RechartsModuleType | null>(null)
+  useEffect(() => {
+    import('recharts').then(setMod)
+  }, [])
+  return mod
+}
 
 interface VelocityTrendChartProps {
   sprints: {
@@ -20,7 +29,34 @@ interface VelocityTrendChartProps {
   }[]
 }
 
+function CustomTooltip({ active, payload, label }: any) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload
+    return (
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[4px]">
+        <p className="text-brutal-xs font-bold mb-[2px]">{label}</p>
+        <p className="text-brutal-xs" style={{ color: 'var(--theme-info)' }}>
+          Committed: {data.committed} pts
+        </p>
+        <p className="text-brutal-xs" style={{ color: 'var(--theme-success)' }}>
+          Completed: {data.completed} pts
+        </p>
+        <p className="text-brutal-xs" style={{ color: 'var(--theme-foreground-secondary)' }}>
+          Average: {data.average} pts
+        </p>
+        {data.status === 'active' && (
+          <p className="text-brutal-xs text-[var(--theme-warning)] mt-4px">
+            Sprint in progress
+          </p>
+        )}
+      </div>
+    )
+  }
+  return null
+}
+
 export default function VelocityTrendChart({ sprints, tasks }: VelocityTrendChartProps) {
+  const recharts = useRecharts()
   // Calculate velocity for each sprint
   const velocityData = sprints
     .filter(sprint => sprint.status === 'completed' || sprint.status === 'active')
@@ -65,33 +101,6 @@ export default function VelocityTrendChart({ sprints, tasks }: VelocityTrendChar
   const trend = recentAvg > olderAvg ? 'improving' : recentAvg < olderAvg ? 'declining' : 'stable'
   const trendPercentage = olderAvg > 0 ? ((recentAvg - olderAvg) / olderAvg * 100).toFixed(0) : '0'
   
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload
-      return (
-        <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[4px]">
-          <p className="text-brutal-xs font-bold mb-[2px]">{label}</p>
-          <p className="text-brutal-xs" style={{ color: 'var(--theme-info)' }}>
-            Committed: {data.committed} pts
-          </p>
-          <p className="text-brutal-xs" style={{ color: 'var(--theme-success)' }}>
-            Completed: {data.completed} pts
-          </p>
-          <p className="text-brutal-xs" style={{ color: 'var(--theme-foreground-secondary)' }}>
-            Average: {data.average} pts
-          </p>
-          {data.status === 'active' && (
-            <p className="text-brutal-xs text-[var(--theme-warning)] mt-4px">
-              Sprint in progress
-            </p>
-          )}
-        </div>
-      )
-    }
-    return null
-  }
-  
   const getTrendIcon = () => {
     if (trend === 'improving') return '↑'
     if (trend === 'declining') return '↓'
@@ -129,64 +138,70 @@ export default function VelocityTrendChart({ sprints, tasks }: VelocityTrendChar
         </div>
       </div>
       
-      <ResponsiveContainer width="100%" height={250}>
-        <ComposedChart data={dataWithAverage} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
-          <CartesianGrid 
-            strokeDasharray="0" 
-            stroke="var(--theme-border)"
-            strokeOpacity={0.3}
-          />
-          <XAxis 
-            dataKey="name" 
-            stroke="var(--theme-foreground-secondary)"
-            tick={{ fontSize: 10 }}
-            angle={-45}
-            textAnchor="end"
-            height={60}
-          />
-          <YAxis 
-            stroke="var(--theme-foreground-secondary)"
-            tick={{ fontSize: 10 }}
-            label={{ 
-              value: 'Story Points', 
-              angle: -90, 
-              position: 'insideLeft',
-              style: { fontSize: 10, fill: 'var(--theme-foreground-secondary)' }
-            }}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend 
-            wrapperStyle={{ fontSize: '12px' }}
-            iconType="rect"
-          />
-          
-          {/* Committed points bar */}
-          <Bar 
-            dataKey="committed" 
-            fill="var(--theme-info)"
-            fillOpacity={0.3}
-            name="Committed"
-          />
-          
-          {/* Completed points bar */}
-          <Bar 
-            dataKey="completed" 
-            fill="var(--theme-success)"
-            name="Completed"
-          />
-          
-          {/* Average velocity line */}
-          <Line 
-            type="monotone" 
-            dataKey="average" 
-            stroke="var(--theme-warning)"
-            strokeWidth={2}
-            strokeDasharray="5 5"
-            dot={false}
-            name="Average"
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
+      {recharts ? (
+        <recharts.ResponsiveContainer width="100%" height={250}>
+          <recharts.ComposedChart data={dataWithAverage} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+            <recharts.CartesianGrid
+              strokeDasharray="0"
+              stroke="var(--theme-border)"
+              strokeOpacity={0.3}
+            />
+            <recharts.XAxis
+              dataKey="name"
+              stroke="var(--theme-foreground-secondary)"
+              tick={{ fontSize: 10 }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
+            <recharts.YAxis
+              stroke="var(--theme-foreground-secondary)"
+              tick={{ fontSize: 10 }}
+              label={{
+                value: 'Story Points',
+                angle: -90,
+                position: 'insideLeft',
+                style: { fontSize: 10, fill: 'var(--theme-foreground-secondary)' }
+              }}
+            />
+            <recharts.Tooltip content={<CustomTooltip />} />
+            <recharts.Legend
+              wrapperStyle={{ fontSize: '12px' }}
+              iconType="rect"
+            />
+
+            {/* Committed points bar */}
+            <recharts.Bar
+              dataKey="committed"
+              fill="var(--theme-info)"
+              fillOpacity={0.3}
+              name="Committed"
+            />
+
+            {/* Completed points bar */}
+            <recharts.Bar
+              dataKey="completed"
+              fill="var(--theme-success)"
+              name="Completed"
+            />
+
+            {/* Average velocity line */}
+            <recharts.Line
+              type="monotone"
+              dataKey="average"
+              stroke="var(--theme-warning)"
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              dot={false}
+              name="Average"
+            />
+          </recharts.ComposedChart>
+        </recharts.ResponsiveContainer>
+      ) : (
+        <div className="w-full h-[250px] flex items-center justify-center text-brutal-xs font-mono text-[var(--theme-foreground-secondary)]">
+          Loading chart...
+        </div>
+      )}
       
       {/* Insights */}
       <div className="mt-[8px] p-[8px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">

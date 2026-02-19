@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useReducer } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import {
@@ -26,13 +26,42 @@ const roleConfig = {
   viewer: { label: 'VIEWER', color: 'bg-neutral-600', icon: HiOutlineEye }
 }
 
+type MemberManagementState = {
+  showInviteModal: boolean
+  inviteEmail: string
+  inviteRole: 'admin' | 'member' | 'viewer'
+  isInviting: boolean
+  selectedMember: any
+  showRemoveConfirm: boolean
+}
+
+const memberManagementInitialState: MemberManagementState = {
+  showInviteModal: false,
+  inviteEmail: '',
+  inviteRole: 'member',
+  isInviting: false,
+  selectedMember: null,
+  showRemoveConfirm: false,
+}
+
+type MemberManagementAction =
+  | { type: 'UPDATE'; field: keyof MemberManagementState; value: MemberManagementState[keyof MemberManagementState] }
+  | { type: 'RESET' }
+
+function memberManagementReducer(state: MemberManagementState, action: MemberManagementAction): MemberManagementState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    case 'RESET':
+      return memberManagementInitialState
+    default:
+      return state
+  }
+}
+
 export default function MemberManagement({ workspace, currentUserRole, canManageMembers }: MemberManagementProps) {
-  const [showInviteModal, setShowInviteModal] = useState(false)
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member')
-  const [isInviting, setIsInviting] = useState(false)
-  const [selectedMember, setSelectedMember] = useState<any>(null)
-  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
+  const [state, dispatch] = useReducer(memberManagementReducer, memberManagementInitialState)
+  const { showInviteModal, inviteEmail, inviteRole, isInviting, selectedMember, showRemoveConfirm } = state
 
   const inviteToWorkspace = useMutation(api.workspaces.mutations.inviteToWorkspace)
   const updateMemberRole = useMutation(api.workspaces.mutations.updateMemberRole)
@@ -44,7 +73,7 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
       return
     }
 
-    setIsInviting(true)
+    dispatch({ type: 'UPDATE', field: 'isInviting', value: true })
     try {
       await inviteToWorkspace({
         workspaceId: workspace._id,
@@ -52,13 +81,13 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
         role: inviteRole
       })
       toast.success('Invitation sent successfully')
-      setInviteEmail('')
-      setInviteRole('member')
-      setShowInviteModal(false)
+      dispatch({ type: 'UPDATE', field: 'inviteEmail', value: '' })
+      dispatch({ type: 'UPDATE', field: 'inviteRole', value: 'member' })
+      dispatch({ type: 'UPDATE', field: 'showInviteModal', value: false })
     } catch (error: any) {
       toast.error(error.message || 'Failed to invite member')
     } finally {
-      setIsInviting(false)
+      dispatch({ type: 'UPDATE', field: 'isInviting', value: false })
     }
   }
 
@@ -84,8 +113,8 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
         userId: selectedMember.userId
       })
       toast.success('Member removed successfully')
-      setSelectedMember(null)
-      setShowRemoveConfirm(false)
+      dispatch({ type: 'UPDATE', field: 'selectedMember', value: null })
+      dispatch({ type: 'UPDATE', field: 'showRemoveConfirm', value: false })
     } catch (error: any) {
       toast.error(error.message || 'Failed to remove member')
     }
@@ -104,7 +133,7 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
 
         {canManageMembers && (
           <button
-            onClick={() => setShowInviteModal(true)}
+            onClick={() => dispatch({ type: 'UPDATE', field: 'showInviteModal', value: true })}
             className="brutal-btn flex items-center gap-[4px]"
           >
             <HiOutlineUserAdd className="w-16px h-16px" />
@@ -162,7 +191,8 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
                   <select
                     value={member.role}
                     onChange={(e) => handleRoleChange(member.userId, e.target.value as any)}
-                    className="px-[8px] py-6px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
+                    aria-label={`Role for ${member.user?.name || 'member'}`}
+                    className="px-[8px] py-6px bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
                              font-mono text-brutal-xs uppercase
                              focus:border-primary-brutalist focus:outline-none transition-colors"
                   >
@@ -192,8 +222,8 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
                 {canManageMembers && member.role !== 'owner' && !isCurrentUser && (
                   <button
                     onClick={() => {
-                      setSelectedMember(member)
-                      setShowRemoveConfirm(true)
+                      dispatch({ type: 'UPDATE', field: 'selectedMember', value: member })
+                      dispatch({ type: 'UPDATE', field: 'showRemoveConfirm', value: true })
                     }}
                     className="p-[4px] border-2 border-[var(--theme-error)] text-[var(--theme-error)] hover:bg-[var(--theme-error)] hover:text-[var(--theme-foreground)] transition-colors"
                   >
@@ -209,17 +239,18 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
       {/* Invite Modal */}
       <BrutalModal
         isOpen={showInviteModal}
-        onClose={() => setShowInviteModal(false)}
+        onClose={() => dispatch({ type: 'UPDATE', field: 'showInviteModal', value: false })}
         title="INVITE MEMBER"
         size="md"
       >
         <div className="space-y-[12px]">
           <div>
-            <label className="block text-brutal-sm mb-[4px]">EMAIL ADDRESS</label>
+            <label htmlFor="invite-email" className="block text-brutal-sm mb-[4px]">EMAIL ADDRESS</label>
             <input
+              id="invite-email"
               type="email"
               value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
+              onChange={(e) => dispatch({ type: 'UPDATE', field: 'inviteEmail', value: e.target.value })}
               placeholder="user@example.com"
               className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-md placeholder:text-neutral-600
@@ -228,10 +259,11 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
           </div>
 
           <div>
-            <label className="block text-brutal-sm mb-[4px]">ROLE</label>
+            <label htmlFor="invite-role" className="block text-brutal-sm mb-[4px]">ROLE</label>
             <select
+              id="invite-role"
               value={inviteRole}
-              onChange={(e) => setInviteRole(e.target.value as any)}
+              onChange={(e) => dispatch({ type: 'UPDATE', field: 'inviteRole', value: e.target.value as 'admin' | 'member' | 'viewer' })}
               className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
                        font-mono text-brutal-md uppercase
                        focus:border-primary-brutalist focus:outline-none transition-colors"
@@ -244,7 +276,7 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
 
           <div className="flex justify-end gap-[8px]">
             <button
-              onClick={() => setShowInviteModal(false)}
+              onClick={() => dispatch({ type: 'UPDATE', field: 'showInviteModal', value: false })}
               className="brutal-btn-secondary"
               disabled={isInviting}
             >
@@ -265,8 +297,8 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
       <BrutalModal
         isOpen={showRemoveConfirm}
         onClose={() => {
-          setShowRemoveConfirm(false)
-          setSelectedMember(null)
+          dispatch({ type: 'UPDATE', field: 'showRemoveConfirm', value: false })
+          dispatch({ type: 'UPDATE', field: 'selectedMember', value: null })
         }}
         title="REMOVE MEMBER"
         size="sm"
@@ -282,8 +314,8 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
           <div className="flex justify-end gap-[8px]">
             <button
               onClick={() => {
-                setShowRemoveConfirm(false)
-                setSelectedMember(null)
+                dispatch({ type: 'UPDATE', field: 'showRemoveConfirm', value: false })
+                dispatch({ type: 'UPDATE', field: 'selectedMember', value: null })
               }}
               className="brutal-btn-secondary"
             >

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useReducer } from 'react'
 import { useAction, useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
@@ -23,70 +23,202 @@ interface GeneratedTask {
   selected?: boolean
 }
 
-export default function SmartTaskGenerator({ 
-  projectId, 
-  sprintId, 
+type SmartTaskGeneratorState = {
+  isOpen: boolean
+  description: string
+  epicTitle: string
+  generatedTasks: GeneratedTask[]
+  loading: boolean
+  error: string | null
+  showAdvanced: boolean
+}
+
+type SmartTaskGeneratorAction =
+  | { type: 'UPDATE'; field: keyof SmartTaskGeneratorState; value: SmartTaskGeneratorState[keyof SmartTaskGeneratorState] }
+  | { type: 'RESET' }
+
+function smartTaskGeneratorReducer(state: SmartTaskGeneratorState, action: SmartTaskGeneratorAction): SmartTaskGeneratorState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    case 'RESET':
+      return { ...state, isOpen: state.isOpen, description: '', epicTitle: '', generatedTasks: [], loading: false, error: null, showAdvanced: false }
+    default:
+      return state
+  }
+}
+
+// --- Sub-components ---
+
+const getPriorityColor = (priority: string) => {
+  switch (priority) {
+    case 'urgent':
+      return 'var(--theme-error)'
+    case 'high':
+      return 'var(--theme-warning)'
+    case 'medium':
+      return 'var(--theme-info)'
+    case 'low':
+      return 'var(--theme-foreground-tertiary)'
+    default:
+      return 'var(--theme-foreground-secondary)'
+  }
+}
+
+const getTypeIcon = (type: string) => {
+  switch (type) {
+    case 'feature':
+      return '✨'
+    case 'bug':
+      return '🐛'
+    case 'improvement':
+      return '🔧'
+    case 'task':
+    default:
+      return '📝'
+  }
+}
+
+interface GeneratedTaskItemProps {
+  task: GeneratedTask
+  index: number
+  onToggle: (index: number) => void
+}
+
+function GeneratedTaskItem({ task, index, onToggle }: GeneratedTaskItemProps) {
+  return (
+    <button
+      type="button"
+      className={`w-full text-left border-2 p-[8px] cursor-pointer transition-all ${
+        task.selected
+          ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)]/5'
+          : 'border-[var(--theme-border)] opacity-60'
+      }`}
+      onClick={() => onToggle(index)}
+    >
+      <div className="flex items-start gap-[6px]">
+        <div className="mt-4px">
+          {task.selected ? (
+            <HiOutlineCheck className="w-20px h-20px text-[var(--theme-primary)]" />
+          ) : (
+            <div className="w-20px h-20px border-2 border-[var(--theme-border)]" />
+          )}
+        </div>
+
+        <div className="flex-1">
+          <div className="flex items-center gap-[4px] mb-[2px]">
+            <span className="text-[14px] font-semibold">{getTypeIcon(task.type)}</span>
+            <h5 className="text-brutal-sm font-bold">{task.title}</h5>
+          </div>
+
+          <p className="text-brutal-xs text-[var(--theme-foreground-secondary)] mb-[4px]">
+            {task.description}
+          </p>
+
+          <div className="flex items-center gap-[8px] text-brutal-xs">
+            <span
+              className="px-6px py-2px border"
+              style={{
+                borderColor: getPriorityColor(task.priority),
+                color: getPriorityColor(task.priority),
+                backgroundColor: getPriorityColor(task.priority) + '20'
+              }}
+            >
+              {task.priority.toUpperCase()}
+            </span>
+            <span className="font-mono">{task.estimatedPoints} pts</span>
+            <span className="text-[var(--theme-foreground-tertiary)]">
+              {task.suggestedAssigneeRole}
+            </span>
+          </div>
+
+          {task.acceptanceCriteria && task.acceptanceCriteria.length > 0 && (
+            <div className="mt-[4px]">
+              <span className="text-brutal-xs font-bold">Acceptance Criteria:</span>
+              <ul className="mt-4px space-y-2px">
+                {task.acceptanceCriteria.map((criteria) => (
+                  <li key={criteria} className="text-brutal-xs text-[var(--theme-foreground-secondary)] ml-[8px]">
+                    • {criteria}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+    </button>
+  )
+}
+
+// --- Main component ---
+
+export default function SmartTaskGenerator({
+  projectId,
+  sprintId,
   onTasksCreated,
-  compact = false 
+  compact = false
 }: SmartTaskGeneratorProps) {
-  const [isOpen, setIsOpen] = useState(!compact)
-  const [description, setDescription] = useState('')
-  const [epicTitle, setEpicTitle] = useState('')
-  const [generatedTasks, setGeneratedTasks] = useState<GeneratedTask[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [state, dispatch] = useReducer(smartTaskGeneratorReducer, {
+    isOpen: !compact,
+    description: '',
+    epicTitle: '',
+    generatedTasks: [],
+    loading: false,
+    error: null,
+    showAdvanced: false,
+  })
+  const { isOpen, description, epicTitle, generatedTasks, loading, error, showAdvanced } = state
   
   const generateTasks = useAction(api.ai.projectInsights.generateTasksFromDescription)
   const createTask = useMutation(api.tasks.mutations.createTask)
   
   const handleGenerate = async () => {
     if (!description.trim()) {
-      setError('Please enter a feature description')
+      dispatch({ type: 'UPDATE', field: 'error', value: 'Please enter a feature description' })
       return
     }
-    
-    setLoading(true)
-    setError(null)
-    
+
+    dispatch({ type: 'UPDATE', field: 'loading', value: true })
+    dispatch({ type: 'UPDATE', field: 'error', value: null })
+
     try {
       const result = await generateTasks({
         projectId,
         description,
         epicTitle: epicTitle || undefined,
       })
-      
+
       // Add selected flag to all tasks (default true)
       const tasksWithSelection = result.tasks.map((task: GeneratedTask) => ({
         ...task,
         selected: true,
       }))
-      
-      setGeneratedTasks(tasksWithSelection)
+
+      dispatch({ type: 'UPDATE', field: 'generatedTasks', value: tasksWithSelection })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate tasks')
+      dispatch({ type: 'UPDATE', field: 'error', value: err instanceof Error ? err.message : 'Failed to generate tasks' })
       console.error('Task generation failed:', err)
     } finally {
-      setLoading(false)
+      dispatch({ type: 'UPDATE', field: 'loading', value: false })
     }
   }
   
   const toggleTaskSelection = (index: number) => {
-    setGeneratedTasks(prev => prev.map((task, i) => 
+    dispatch({ type: 'UPDATE', field: 'generatedTasks', value: generatedTasks.map((task, i) =>
       i === index ? { ...task, selected: !task.selected } : task
-    ))
+    ) })
   }
   
   const handleCreateTasks = async () => {
     const selectedTasks = generatedTasks.filter(task => task.selected)
     
     if (selectedTasks.length === 0) {
-      setError('Please select at least one task to create')
+      dispatch({ type: 'UPDATE', field: 'error', value: 'Please select at least one task to create' })
       return
     }
-    
-    setLoading(true)
-    setError(null)
+
+    dispatch({ type: 'UPDATE', field: 'loading', value: true })
+    dispatch({ type: 'UPDATE', field: 'error', value: null })
     
     try {
       // Create tasks sequentially to maintain order
@@ -105,57 +237,28 @@ export default function SmartTaskGenerator({
       }
       
       // Reset state
-      setDescription('')
-      setEpicTitle('')
-      setGeneratedTasks([])
-      setShowAdvanced(false)
-      
+      dispatch({ type: 'UPDATE', field: 'description', value: '' })
+      dispatch({ type: 'UPDATE', field: 'epicTitle', value: '' })
+      dispatch({ type: 'UPDATE', field: 'generatedTasks', value: [] })
+      dispatch({ type: 'UPDATE', field: 'showAdvanced', value: false })
+
       if (compact) {
-        setIsOpen(false)
+        dispatch({ type: 'UPDATE', field: 'isOpen', value: false })
       }
-      
+
       onTasksCreated?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create tasks')
+      dispatch({ type: 'UPDATE', field: 'error', value: err instanceof Error ? err.message : 'Failed to create tasks' })
       console.error('Task creation failed:', err)
     } finally {
-      setLoading(false)
-    }
-  }
-  
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent':
-        return 'var(--theme-error)'
-      case 'high':
-        return 'var(--theme-warning)'
-      case 'medium':
-        return 'var(--theme-info)'
-      case 'low':
-        return 'var(--theme-foreground-tertiary)'
-      default:
-        return 'var(--theme-foreground-secondary)'
-    }
-  }
-  
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'feature':
-        return '✨'
-      case 'bug':
-        return '🐛'
-      case 'improvement':
-        return '🔧'
-      case 'task':
-      default:
-        return '📝'
+      dispatch({ type: 'UPDATE', field: 'loading', value: false })
     }
   }
   
   if (compact && !isOpen) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => dispatch({ type: 'UPDATE', field: 'isOpen', value: true })}
         className="w-full p-[10px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] hover:border-[var(--theme-primary)] transition-colors"
       >
         <div className="flex items-center justify-center gap-[6px]">
@@ -175,7 +278,7 @@ export default function SmartTaskGenerator({
         </div>
         {compact && (
           <button
-            onClick={() => setIsOpen(false)}
+            onClick={() => dispatch({ type: 'UPDATE', field: 'isOpen', value: false })}
             className="p-[4px] hover:bg-[var(--theme-hover)] transition-colors"
           >
             <HiOutlineX className="w-20px h-20px" />
@@ -186,12 +289,13 @@ export default function SmartTaskGenerator({
       {/* Input Section */}
       <div className="space-y-[8px] mb-[12px]">
         <div>
-          <label className="text-brutal-sm font-bold uppercase block mb-[4px]">
+          <label htmlFor="smart-task-description" className="text-brutal-sm font-bold uppercase block mb-[4px]">
             Describe the Feature or Work
           </label>
           <textarea
+            id="smart-task-description"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => dispatch({ type: 'UPDATE', field: 'description', value: e.target.value })}
             placeholder="e.g., Add user authentication with social login support for Google and GitHub..."
             className="w-full p-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] text-brutal-sm placeholder-[var(--theme-foreground-tertiary)] focus:border-[var(--theme-primary)] transition-colors resize-none"
             rows={4}
@@ -202,7 +306,7 @@ export default function SmartTaskGenerator({
         {/* Advanced Options */}
         <div>
           <button
-            onClick={() => setShowAdvanced(!showAdvanced)}
+            onClick={() => dispatch({ type: 'UPDATE', field: 'showAdvanced', value: !showAdvanced })}
             className="flex items-center gap-[4px] text-brutal-sm hover:text-[var(--theme-primary)] transition-colors"
           >
             <HiOutlineAdjustments className="w-16px h-16px" />
@@ -211,13 +315,14 @@ export default function SmartTaskGenerator({
           
           {showAdvanced && (
             <div className="mt-[6px]">
-              <label className="text-brutal-xs font-bold uppercase block mb-[4px]">
+              <label htmlFor="smart-task-epic-title" className="text-brutal-xs font-bold uppercase block mb-[4px]">
                 Epic Title (Optional)
               </label>
               <input
+                id="smart-task-epic-title"
                 type="text"
                 value={epicTitle}
-                onChange={(e) => setEpicTitle(e.target.value)}
+                onChange={(e) => dispatch({ type: 'UPDATE', field: 'epicTitle', value: e.target.value })}
                 placeholder="e.g., User Authentication System"
                 className="w-full p-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-brutal-sm placeholder-[var(--theme-foreground-tertiary)] focus:border-[var(--theme-primary)] transition-colors"
                 disabled={loading}
@@ -255,66 +360,12 @@ export default function SmartTaskGenerator({
           
           <div className="space-y-[4px] max-h-400px overflow-y-auto">
             {generatedTasks.map((task, index) => (
-              <div 
-                key={index}
-                className={`border-2 p-[8px] cursor-pointer transition-all ${
-                  task.selected 
-                    ? 'border-[var(--theme-primary)] bg-[var(--theme-primary)]/5' 
-                    : 'border-[var(--theme-border)] opacity-60'
-                }`}
-                onClick={() => toggleTaskSelection(index)}
-              >
-                <div className="flex items-start gap-[6px]">
-                  <div className="mt-4px">
-                    {task.selected ? (
-                      <HiOutlineCheck className="w-20px h-20px text-[var(--theme-primary)]" />
-                    ) : (
-                      <div className="w-20px h-20px border-2 border-[var(--theme-border)]" />
-                    )}
-                  </div>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-[4px] mb-[2px]">
-                      <span className="text-[14px] font-semibold">{getTypeIcon(task.type)}</span>
-                      <h5 className="text-brutal-sm font-bold">{task.title}</h5>
-                    </div>
-                    
-                    <p className="text-brutal-xs text-[var(--theme-foreground-secondary)] mb-[4px]">
-                      {task.description}
-                    </p>
-                    
-                    <div className="flex items-center gap-[8px] text-brutal-xs">
-                      <span 
-                        className="px-6px py-2px border"
-                        style={{ 
-                          borderColor: getPriorityColor(task.priority),
-                          color: getPriorityColor(task.priority),
-                          backgroundColor: getPriorityColor(task.priority) + '20'
-                        }}
-                      >
-                        {task.priority.toUpperCase()}
-                      </span>
-                      <span className="font-mono">{task.estimatedPoints} pts</span>
-                      <span className="text-[var(--theme-foreground-tertiary)]">
-                        {task.suggestedAssigneeRole}
-                      </span>
-                    </div>
-                    
-                    {task.acceptanceCriteria && task.acceptanceCriteria.length > 0 && (
-                      <div className="mt-[4px]">
-                        <span className="text-brutal-xs font-bold">Acceptance Criteria:</span>
-                        <ul className="mt-4px space-y-2px">
-                          {task.acceptanceCriteria.map((criteria, i) => (
-                            <li key={i} className="text-brutal-xs text-[var(--theme-foreground-secondary)] ml-[8px]">
-                              • {criteria}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <GeneratedTaskItem
+                key={task.title}
+                task={task}
+                index={index}
+                onToggle={toggleTaskSelection}
+              />
             ))}
           </div>
           
@@ -330,9 +381,9 @@ export default function SmartTaskGenerator({
             
             <button
               onClick={() => {
-                setGeneratedTasks([])
-                setDescription('')
-                setEpicTitle('')
+                dispatch({ type: 'UPDATE', field: 'generatedTasks', value: [] })
+                dispatch({ type: 'UPDATE', field: 'description', value: '' })
+                dispatch({ type: 'UPDATE', field: 'epicTitle', value: '' })
               }}
               className="px-[10px] py-[4px] border-2 border-[var(--theme-border)] hover:border-[var(--theme-error)] hover:text-[var(--theme-error)] transition-colors font-bold uppercase"
             >
