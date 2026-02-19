@@ -6,7 +6,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner'
 import CreateWorkspaceModal from '@/components/features/workspace/CreateWorkspaceModal'
 import WorkspaceCard from '@/components/features/workspace/WorkspaceCard'
 import BrutalButton from '@/components/ui/BrutalButton'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 
 export default function WorkspacesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -67,7 +67,7 @@ export default function WorkspacesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {workspaces.map((workspace: any, index: number) => (
-            <motion.div
+            <m.div
               key={workspace._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -77,11 +77,11 @@ export default function WorkspacesPage() {
                 workspace={workspace}
                 index={index}
               />
-            </motion.div>
+            </m.div>
           ))}
 
           {/* Add New Card Placeholder */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: workspaces.length * 0.06, duration: 0.5 }}
@@ -96,7 +96,7 @@ export default function WorkspacesPage() {
                 Deploy New Workspace
               </span>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       )}
 

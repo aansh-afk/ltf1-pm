@@ -17,6 +17,223 @@ import SettingsSection from './SettingsSection';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 
+// --- Sub-components ---
+
+interface ConnectionStatusCardProps {
+  isConnected: boolean
+  githubStats: any
+  isSyncing: boolean
+  onSync: () => void
+  onDisconnect: () => void
+  onConnect: () => void
+}
+
+function ConnectionStatusCard({ isConnected, githubStats, isSyncing, onSync, onDisconnect, onConnect }: ConnectionStatusCardProps) {
+  return (
+    <BrutalCard className="p-6 border-l-4 border-l-[#24292e]">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-[#24292e] text-white border-2 border-[#24292e]">
+            <FaGithub className="w-8 h-8" />
+          </div>
+          <div>
+            <h4 className="text-lg font-bold uppercase">
+              {isConnected ? 'GITHUB_CONNECTED' : 'GITHUB_DISCONNECTED'}
+            </h4>
+            {githubStats?.username && (
+              <p className="text-sm text-[var(--theme-foreground)]/60 font-mono">
+                @{githubStats.username}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {isConnected ? (
+            <>
+              <BrutalButton
+                variant="secondary"
+                size="sm"
+                onClick={onSync}
+                disabled={isSyncing}
+                className="flex items-center gap-2"
+              >
+                <FaSync className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                {isSyncing ? 'SYNCING...' : 'SYNC_NOW'}
+              </BrutalButton>
+              <BrutalButton
+                variant="destructive"
+                size="sm"
+                onClick={onDisconnect}
+                className="flex items-center gap-2"
+              >
+                <HiOutlineTrash className="w-4 h-4" />
+                DISCONNECT
+              </BrutalButton>
+            </>
+          ) : (
+            <BrutalButton
+              onClick={onConnect}
+              className="flex items-center gap-2 bg-[#24292e] border-[#24292e] text-white hover:bg-[#24292e]/80"
+            >
+              <FaLink className="w-4 h-4" />
+              CONNECT_GITHUB
+            </BrutalButton>
+          )}
+        </div>
+      </div>
+
+      {isConnected && githubStats && (
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center p-4 bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
+            <div className="text-2xl font-bold text-brutal-info">{githubStats.totalPRs || 0}</div>
+            <div className="text-xs uppercase font-bold text-[var(--theme-foreground)]/60">PULL_REQUESTS</div>
+          </div>
+          <div className="text-center p-4 bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
+            <div className="text-2xl font-bold text-brutal-success">{githubStats.totalReviews || 0}</div>
+            <div className="text-xs uppercase font-bold text-[var(--theme-foreground)]/60">CODE_REVIEWS</div>
+          </div>
+          <div className="text-center p-4 bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
+            <div className="text-2xl font-bold text-brutal-warning">
+              {githubStats.languages?.length || 0}
+            </div>
+            <div className="text-xs uppercase font-bold text-[var(--theme-foreground)]/60">LANGUAGES</div>
+          </div>
+        </div>
+      )}
+
+      {isConnected && githubStats?.lastSynced && (
+        <div className="mt-4 pt-4 border-t-2 border-[var(--theme-border)] flex items-center justify-between">
+          <p className="text-xs text-[var(--theme-foreground)]/60 font-mono uppercase">
+            LAST_SYNC: {format(new Date(githubStats.lastSynced), 'MMM d, yyyy HH:mm')}
+          </p>
+          {githubStats.isStale && (
+            <BrutalBadge variant="warning" className="flex items-center gap-1">
+              <FaExclamationCircle className="w-3 h-3" />
+              DATA_STALE
+            </BrutalBadge>
+          )}
+        </div>
+      )}
+    </BrutalCard>
+  )
+}
+
+interface GitHubAppInstallSectionProps {
+  hasInstallations: boolean
+  installations: any[] | undefined
+  onInstallApp: () => void
+}
+
+function GitHubAppInstallSection({ hasInstallations, installations, onInstallApp }: GitHubAppInstallSectionProps) {
+  return (
+    <BrutalCard className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h4 className="text-lg font-bold uppercase mb-1">APP_INSTALLATION</h4>
+          <p className="text-sm text-[var(--theme-foreground)]/60 font-mono">
+            Install the LTF1 GitHub App for webhooks and auto-sync.
+          </p>
+        </div>
+
+        {hasInstallations ? (
+          <BrutalBadge variant="success" className="flex items-center gap-2">
+            <FaCheckCircle className="w-4 h-4" />
+            INSTALLED
+          </BrutalBadge>
+        ) : (
+          <BrutalBadge variant="outline" className="flex items-center gap-2 opacity-50">
+            <FaTimesCircle className="w-4 h-4" />
+            NOT_INSTALLED
+          </BrutalBadge>
+        )}
+      </div>
+
+      {!hasInstallations ? (
+        <BrutalButton
+          onClick={onInstallApp}
+          variant="secondary"
+          className="w-full flex items-center justify-center gap-2"
+        >
+          INSTALL_GITHUB_APP
+        </BrutalButton>
+      ) : (
+        <div className="space-y-3">
+          {installations?.map((installation: any) => (
+            <div key={installation._id} className="flex items-center justify-between p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
+              <div>
+                <p className="font-mono text-sm font-bold">{installation.accountName}</p>
+                <p className="text-xs text-[var(--theme-foreground)]/60 uppercase">
+                  {installation.accountType} • ID: {installation.installationId}
+                </p>
+              </div>
+              <a
+                href={`https://github.com/settings/installations`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--theme-primary)] hover:underline flex items-center gap-1 text-xs font-bold uppercase"
+              >
+                MANAGE
+                <HiOutlineExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          ))}
+        </div>
+      )}
+    </BrutalCard>
+  )
+}
+
+function FeaturesGrid() {
+  return (
+    <BrutalCard className="p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex items-start gap-3">
+          <FaCheckCircle className="w-5 h-5 text-brutal-success mt-1" />
+          <div>
+            <p className="font-bold uppercase text-sm">Task Linking</p>
+            <p className="text-xs text-[var(--theme-foreground)]/60 font-mono mt-1">
+              Commits referencing task IDs (WEB-123) are auto-linked.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-3">
+          <FaCheckCircle className="w-5 h-5 text-brutal-success mt-1" />
+          <div>
+            <p className="font-bold uppercase text-sm">PR Tracking</p>
+            <p className="text-xs text-[var(--theme-foreground)]/60 font-mono mt-1">
+              Monitor PR status and reviews directly in projects.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-3">
+          <FaCheckCircle className="w-5 h-5 text-brutal-success mt-1" />
+          <div>
+            <p className="font-bold uppercase text-sm">Activity Sync</p>
+            <p className="text-xs text-[var(--theme-foreground)]/60 font-mono mt-1">
+              Sync contribution stats to your developer profile.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-3">
+          <FaCheckCircle className="w-5 h-5 text-brutal-success mt-1" />
+          <div>
+            <p className="font-bold uppercase text-sm">Webhooks</p>
+            <p className="text-xs text-[var(--theme-foreground)]/60 font-mono mt-1">
+              Real-time updates for pushes and PR changes.
+            </p>
+          </div>
+        </div>
+      </div>
+    </BrutalCard>
+  )
+}
+
+// --- Main Component ---
+
 interface GitHubSettingsTabProps {
   currentUser: any;
 }
@@ -102,149 +319,19 @@ export function GitHubSettingsTab({ currentUser }: GitHubSettingsTabProps) {
         description="Connect your GitHub account to sync commits, PRs, and link code to tasks."
       >
         <div className="space-y-6">
-          {/* Connection Status */}
-          <BrutalCard className="p-6 border-l-4 border-l-[#24292e]">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-[#24292e] text-white border-2 border-[#24292e]">
-                  <FaGithub className="w-8 h-8" />
-                </div>
-                <div>
-                  <h4 className="text-lg font-bold uppercase">
-                    {isConnected ? 'GITHUB_CONNECTED' : 'GITHUB_DISCONNECTED'}
-                  </h4>
-                  {githubStats?.username && (
-                    <p className="text-sm text-[var(--theme-foreground)]/60 font-mono">
-                      @{githubStats.username}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {isConnected ? (
-                  <>
-                    <BrutalButton
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleSync}
-                      disabled={isSyncing}
-                      className="flex items-center gap-2"
-                    >
-                      <FaSync className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                      {isSyncing ? 'SYNCING...' : 'SYNC_NOW'}
-                    </BrutalButton>
-                    <BrutalButton
-                      variant="destructive"
-                      size="sm"
-                      onClick={handleDisconnect}
-                      className="flex items-center gap-2"
-                    >
-                      <HiOutlineTrash className="w-4 h-4" />
-                      DISCONNECT
-                    </BrutalButton>
-                  </>
-                ) : (
-                  <BrutalButton
-                    onClick={handleConnect}
-                    className="flex items-center gap-2 bg-[#24292e] border-[#24292e] text-white hover:bg-[#24292e]/80"
-                  >
-                    <FaLink className="w-4 h-4" />
-                    CONNECT_GITHUB
-                  </BrutalButton>
-                )}
-              </div>
-            </div>
-
-            {isConnected && githubStats && (
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
-                  <div className="text-2xl font-bold text-brutal-info">{githubStats.totalPRs || 0}</div>
-                  <div className="text-xs uppercase font-bold text-[var(--theme-foreground)]/60">PULL_REQUESTS</div>
-                </div>
-                <div className="text-center p-4 bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
-                  <div className="text-2xl font-bold text-brutal-success">{githubStats.totalReviews || 0}</div>
-                  <div className="text-xs uppercase font-bold text-[var(--theme-foreground)]/60">CODE_REVIEWS</div>
-                </div>
-                <div className="text-center p-4 bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
-                  <div className="text-2xl font-bold text-brutal-warning">
-                    {githubStats.languages?.length || 0}
-                  </div>
-                  <div className="text-xs uppercase font-bold text-[var(--theme-foreground)]/60">LANGUAGES</div>
-                </div>
-              </div>
-            )}
-
-            {isConnected && githubStats?.lastSynced && (
-              <div className="mt-4 pt-4 border-t-2 border-[var(--theme-border)] flex items-center justify-between">
-                <p className="text-xs text-[var(--theme-foreground)]/60 font-mono uppercase">
-                  LAST_SYNC: {format(new Date(githubStats.lastSynced), 'MMM d, yyyy HH:mm')}
-                </p>
-                {githubStats.isStale && (
-                  <BrutalBadge variant="warning" className="flex items-center gap-1">
-                    <FaExclamationCircle className="w-3 h-3" />
-                    DATA_STALE
-                  </BrutalBadge>
-                )}
-              </div>
-            )}
-          </BrutalCard>
-
-          {/* GitHub App Installation */}
-          <BrutalCard className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h4 className="text-lg font-bold uppercase mb-1">APP_INSTALLATION</h4>
-                <p className="text-sm text-[var(--theme-foreground)]/60 font-mono">
-                  Install the LTF1 GitHub App for webhooks and auto-sync.
-                </p>
-              </div>
-
-              {hasInstallations ? (
-                <BrutalBadge variant="success" className="flex items-center gap-2">
-                  <FaCheckCircle className="w-4 h-4" />
-                  INSTALLED
-                </BrutalBadge>
-              ) : (
-                <BrutalBadge variant="outline" className="flex items-center gap-2 opacity-50">
-                  <FaTimesCircle className="w-4 h-4" />
-                  NOT_INSTALLED
-                </BrutalBadge>
-              )}
-            </div>
-
-            {!hasInstallations ? (
-              <BrutalButton
-                onClick={handleInstallApp}
-                variant="secondary"
-                className="w-full flex items-center justify-center gap-2"
-              >
-                INSTALL_GITHUB_APP
-              </BrutalButton>
-            ) : (
-              <div className="space-y-3">
-                {installations.map((installation: any) => (
-                  <div key={installation._id} className="flex items-center justify-between p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
-                    <div>
-                      <p className="font-mono text-sm font-bold">{installation.accountName}</p>
-                      <p className="text-xs text-[var(--theme-foreground)]/60 uppercase">
-                        {installation.accountType} • ID: {installation.installationId}
-                      </p>
-                    </div>
-                    <a
-                      href={`https://github.com/settings/installations`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[var(--theme-primary)] hover:underline flex items-center gap-1 text-xs font-bold uppercase"
-                    >
-                      MANAGE
-                      <HiOutlineExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                ))}
-              </div>
-            )}
-          </BrutalCard>
+          <ConnectionStatusCard
+            isConnected={isConnected}
+            githubStats={githubStats}
+            isSyncing={isSyncing}
+            onSync={handleSync}
+            onDisconnect={handleDisconnect}
+            onConnect={handleConnect}
+          />
+          <GitHubAppInstallSection
+            hasInstallations={!!hasInstallations}
+            installations={installations}
+            onInstallApp={handleInstallApp}
+          />
         </div>
       </SettingsSection>
 
@@ -252,49 +339,7 @@ export function GitHubSettingsTab({ currentUser }: GitHubSettingsTabProps) {
         title="Features & Permissions"
         description="Capabilities enabled by GitHub integration."
       >
-        <BrutalCard className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-start gap-3">
-              <FaCheckCircle className="w-5 h-5 text-brutal-success mt-1" />
-              <div>
-                <p className="font-bold uppercase text-sm">Task Linking</p>
-                <p className="text-xs text-[var(--theme-foreground)]/60 font-mono mt-1">
-                  Commits referencing task IDs (WEB-123) are auto-linked.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <FaCheckCircle className="w-5 h-5 text-brutal-success mt-1" />
-              <div>
-                <p className="font-bold uppercase text-sm">PR Tracking</p>
-                <p className="text-xs text-[var(--theme-foreground)]/60 font-mono mt-1">
-                  Monitor PR status and reviews directly in projects.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <FaCheckCircle className="w-5 h-5 text-brutal-success mt-1" />
-              <div>
-                <p className="font-bold uppercase text-sm">Activity Sync</p>
-                <p className="text-xs text-[var(--theme-foreground)]/60 font-mono mt-1">
-                  Sync contribution stats to your developer profile.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <FaCheckCircle className="w-5 h-5 text-brutal-success mt-1" />
-              <div>
-                <p className="font-bold uppercase text-sm">Webhooks</p>
-                <p className="text-xs text-[var(--theme-foreground)]/60 font-mono mt-1">
-                  Real-time updates for pushes and PR changes.
-                </p>
-              </div>
-            </div>
-          </div>
-        </BrutalCard>
+        <FeaturesGrid />
       </SettingsSection>
 
       <SettingsSection

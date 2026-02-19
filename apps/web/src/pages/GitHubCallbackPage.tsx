@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useReducer } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAction } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
@@ -7,15 +7,38 @@ import BrutalCard from '@/components/ui/BrutalCard';
 import toast from 'react-hot-toast';
 import posthog from 'posthog-js';
 
+interface CallbackState {
+  status: 'processing' | 'success' | 'error';
+  error: string | null;
+}
+
+type CallbackAction =
+  | { type: 'SUCCESS' }
+  | { type: 'ERROR'; error: string };
+
+function callbackReducer(state: CallbackState, action: CallbackAction): CallbackState {
+  switch (action.type) {
+    case 'SUCCESS':
+      return { status: 'success', error: null };
+    case 'ERROR':
+      return { status: 'error', error: action.error };
+    default:
+      return state;
+  }
+}
+
 export default function GitHubCallbackPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
-  const [error, setError] = useState<string | null>(null);
+  const [{ status, error }, dispatch] = useReducer(callbackReducer, {
+    status: 'processing',
+    error: null,
+  });
 
   const handleCallback = useAction(api.integrations.github.actions.handleOAuthCallback);
   const processedRef = useRef(false);
 
+  // Already uses useReducer dispatch; multiple dispatches in different branches are fine
   useEffect(() => {
     const processCallback = async () => {
       // Prevent double-invocation (React Strict Mode / re-renders)
@@ -24,7 +47,7 @@ export default function GitHubCallbackPage() {
 
       const code = searchParams.get('code');
       const state = searchParams.get('state');
-      const error = searchParams.get('error');
+      const paramError = searchParams.get('error');
       const errorDescription = searchParams.get('error_description');
       const setupAction = searchParams.get('setup_action');
       const installationId = searchParams.get('installation_id');
@@ -41,25 +64,23 @@ export default function GitHubCallbackPage() {
           return;
         }
         // Not a popup — show success and redirect
-        setStatus('success');
+        dispatch({ type: 'SUCCESS' });
         posthog.capture('github_app_installed', { installationId });
         toast.success('GitHub App installed successfully! You can now link it to your workspace.');
         setTimeout(() => navigate('/settings'), 2000);
         return;
       }
 
-      if (error) {
-        setStatus('error');
-        setError(errorDescription || error);
-        posthog.capture('github_connection_failed', { error: errorDescription || error });
-        toast.error(`GitHub OAuth error: ${errorDescription || error}`);
+      if (paramError) {
+        dispatch({ type: 'ERROR', error: errorDescription || paramError });
+        posthog.capture('github_connection_failed', { error: errorDescription || paramError });
+        toast.error(`GitHub OAuth error: ${errorDescription || paramError}`);
         setTimeout(() => navigate('/profile'), 3000);
         return;
       }
 
       if (!code || !state) {
-        setStatus('error');
-        setError('Missing authorization code or state');
+        dispatch({ type: 'ERROR', error: 'Missing authorization code or state' });
         toast.error('Invalid OAuth callback parameters');
         setTimeout(() => navigate('/profile'), 3000);
         return;
@@ -69,7 +90,7 @@ export default function GitHubCallbackPage() {
         const result = await handleCallback({ code, state });
 
         if (result.success) {
-          setStatus('success');
+          dispatch({ type: 'SUCCESS' });
           posthog.capture('github_account_connected', { username: result.githubUsername });
           toast.success(`Successfully connected GitHub account: @${result.githubUsername}`);
 
@@ -80,11 +101,10 @@ export default function GitHubCallbackPage() {
         } else {
           throw new Error('Failed to connect GitHub account');
         }
-      } catch (error) {
-        console.error('Error handling GitHub callback:', error);
-        setStatus('error');
-        const errorMsg = error instanceof Error ? error.message : 'Failed to connect GitHub account';
-        setError(errorMsg);
+      } catch (err) {
+        console.error('Error handling GitHub callback:', err);
+        const errorMsg = err instanceof Error ? err.message : 'Failed to connect GitHub account';
+        dispatch({ type: 'ERROR', error: errorMsg });
         posthog.capture('github_connection_failed', { error: errorMsg });
         toast.error('Failed to connect GitHub account');
         setTimeout(() => navigate('/profile'), 3000);

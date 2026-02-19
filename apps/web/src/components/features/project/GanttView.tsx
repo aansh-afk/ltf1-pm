@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useReducer } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
@@ -45,15 +45,381 @@ const ROW_HEIGHT = 40
 const SIDEBAR_WIDTH = 300
 const MIN_COLUMN_WIDTH = 30
 
+// Extracted from component to avoid re-creation on every render
+function TimelineHeader({
+  startDate,
+  endDate,
+  zoomLevel,
+  columnWidth,
+}: {
+  startDate: Date
+  endDate: Date
+  zoomLevel: ZoomLevel
+  columnWidth: number
+}) {
+  const headers = []
+  let currentDate = new Date(startDate)
+
+  while (currentDate <= endDate) {
+    let label = ''
+    let width = columnWidth
+    let nextDate = new Date(currentDate)
+
+    switch (zoomLevel) {
+      case 'day':
+        label = format(currentDate, 'MMM dd')
+        nextDate = addDays(currentDate, 1)
+        width = columnWidth
+        break
+      case 'week':
+        label = `Week ${format(currentDate, 'w')}`
+        nextDate = addDays(currentDate, 7)
+        width = columnWidth
+        break
+      case 'month':
+        label = format(currentDate, 'MMM yyyy')
+        nextDate = addDays(currentDate, 30)
+        width = columnWidth
+        break
+      case 'quarter':
+        label = `Q${Math.ceil((currentDate.getMonth() + 1) / 3)} ${format(currentDate, 'yyyy')}`
+        nextDate = addDays(currentDate, 90)
+        width = columnWidth
+        break
+    }
+
+    headers.push(
+      <div
+        key={`header-${label}`}
+        className="border-r border-[var(--theme-border)] text-center py-[4px] text-xs font-bold"
+        style={{
+          width: `${width}px`,
+          minWidth: `${width}px`
+        }}
+      >
+        {label}
+      </div>
+    )
+
+    currentDate = nextDate
+  }
+
+  return <>{headers}</>
+}
+
+function DependencyLines({
+  showDependencies,
+  ganttTasks,
+  tasks,
+  startDate,
+  columnWidth,
+  zoomLevel,
+}: {
+  showDependencies: boolean
+  ganttTasks: GanttTask[]
+  tasks: any[]
+  startDate: Date
+  columnWidth: number
+  zoomLevel: ZoomLevel
+}) {
+  if (!showDependencies) return null
+
+  const lines: JSX.Element[] = []
+  const taskPositions = new Map<Id<"tasks">, { x: number; y: number }>()
+
+  let yPos = 0
+  const calculatePositions = (taskList: GanttTask[]) => {
+    taskList.forEach(task => {
+      const taskStart = differenceInDays(task.startDate, startDate)
+      const x = (taskStart * columnWidth) / (zoomLevel === 'day' ? 1 : 7)
+      taskPositions.set(task.id, { x, y: yPos + ROW_HEIGHT / 2 })
+      yPos += ROW_HEIGHT
+
+      if (task.expanded && task.children) {
+        calculatePositions(task.children)
+      }
+    })
+  }
+  calculatePositions(ganttTasks)
+
+  taskPositions.forEach((pos, taskId) => {
+    const task = tasks.find(t => t._id === taskId)
+    if (task?.dependencies) {
+      task.dependencies.forEach((depId: Id<"tasks">) => {
+        const depPos = taskPositions.get(depId)
+        if (depPos) {
+          lines.push(
+            <line
+              key={`${taskId}-${depId}`}
+              x1={depPos.x}
+              y1={depPos.y}
+              x2={pos.x}
+              y2={pos.y}
+              stroke="var(--theme-info)"
+              strokeWidth={1}
+              strokeDasharray="4,4"
+              markerEnd="url(#arrowhead)"
+              opacity={0.5}
+            />
+          )
+        }
+      })
+    }
+  })
+
+  return (
+    <g>
+      <defs>
+        <marker
+          id="arrowhead"
+          markerWidth="10"
+          markerHeight="7"
+          refX="10"
+          refY="3.5"
+          orient="auto"
+        >
+          <polygon
+            points="0 0, 10 3.5, 0 7"
+            fill="var(--theme-info)"
+          />
+        </marker>
+      </defs>
+      {lines}
+    </g>
+  )
+}
+
+type GanttAction =
+  | { type: 'SET_ZOOM'; level: ZoomLevel }
+  | { type: 'SELECT_TASK'; taskId: Id<"tasks"> | null }
+  | { type: 'TOGGLE_EXPAND'; taskId: Id<"tasks"> }
+  | { type: 'START_DRAG'; taskId: Id<"tasks"> }
+  | { type: 'END_DRAG' }
+  | { type: 'TOGGLE_CRITICAL_PATH' }
+  | { type: 'TOGGLE_MILESTONES' }
+  | { type: 'TOGGLE_DEPENDENCIES' }
+
+interface GanttState {
+  zoomLevel: ZoomLevel
+  selectedTask: Id<"tasks"> | null
+  expandedTasks: Set<Id<"tasks">>
+  isDragging: boolean
+  draggedTask: Id<"tasks"> | null
+  showCriticalPath: boolean
+  showMilestones: boolean
+  showDependencies: boolean
+}
+
+const ganttInitialState: GanttState = {
+  zoomLevel: 'week',
+  selectedTask: null,
+  expandedTasks: new Set(),
+  isDragging: false,
+  draggedTask: null,
+  showCriticalPath: true,
+  showMilestones: true,
+  showDependencies: true,
+}
+
+function ganttReducer(state: GanttState, action: GanttAction): GanttState {
+  switch (action.type) {
+    case 'SET_ZOOM':
+      return { ...state, zoomLevel: action.level }
+    case 'SELECT_TASK':
+      return { ...state, selectedTask: action.taskId }
+    case 'TOGGLE_EXPAND': {
+      const next = new Set(state.expandedTasks)
+      if (next.has(action.taskId)) next.delete(action.taskId)
+      else next.add(action.taskId)
+      return { ...state, expandedTasks: next }
+    }
+    case 'START_DRAG':
+      return { ...state, isDragging: true, draggedTask: action.taskId }
+    case 'END_DRAG':
+      return { ...state, isDragging: false, draggedTask: null }
+    case 'TOGGLE_CRITICAL_PATH':
+      return { ...state, showCriticalPath: !state.showCriticalPath }
+    case 'TOGGLE_MILESTONES':
+      return { ...state, showMilestones: !state.showMilestones }
+    case 'TOGGLE_DEPENDENCIES':
+      return { ...state, showDependencies: !state.showDependencies }
+    default:
+      return state
+  }
+}
+
+// --- Sub-components ---
+
+interface GanttToolbarProps {
+  zoomLevel: ZoomLevel
+  showCriticalPath: boolean
+  showMilestones: boolean
+  showDependencies: boolean
+  onSetZoom: (level: ZoomLevel) => void
+  onToggleCriticalPath: () => void
+  onToggleMilestones: () => void
+  onToggleDependencies: () => void
+  onExport: () => void
+}
+
+function GanttToolbar({
+  zoomLevel,
+  showCriticalPath,
+  showMilestones,
+  showDependencies,
+  onSetZoom,
+  onToggleCriticalPath,
+  onToggleMilestones,
+  onToggleDependencies,
+  onExport,
+}: GanttToolbarProps) {
+  return (
+    <div className="flex items-center justify-between p-[10px] border-b-2 border-[var(--theme-border)]">
+      <div className="flex items-center gap-[8px]">
+        <h2 className="text-[14px] font-semibold font-bold">GANTT CHART</h2>
+
+        {/* Zoom controls */}
+        <div className="flex items-center gap-[4px]">
+          <button
+            onClick={() => onSetZoom('day')}
+            className={clsx(
+              'px-[8px] py-6px text-xs font-bold border-2',
+              zoomLevel === 'day'
+                ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]'
+                : 'bg-transparent border-[var(--theme-border)]'
+            )}
+          >
+            DAY
+          </button>
+          <button
+            onClick={() => onSetZoom('week')}
+            className={clsx(
+              'px-[8px] py-6px text-xs font-bold border-2',
+              zoomLevel === 'week'
+                ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]'
+                : 'bg-transparent border-[var(--theme-border)]'
+            )}
+          >
+            WEEK
+          </button>
+          <button
+            onClick={() => onSetZoom('month')}
+            className={clsx(
+              'px-[8px] py-6px text-xs font-bold border-2',
+              zoomLevel === 'month'
+                ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]'
+                : 'bg-transparent border-[var(--theme-border)]'
+            )}
+          >
+            MONTH
+          </button>
+        </div>
+
+        {/* View options */}
+        <div className="flex items-center gap-[4px]">
+          <button
+            onClick={onToggleCriticalPath}
+            className={clsx(
+              'px-[8px] py-6px text-xs font-bold border-2',
+              showCriticalPath
+                ? 'bg-[var(--theme-error)] text-[var(--theme-background)] border-[var(--theme-error)]'
+                : 'bg-transparent border-[var(--theme-border)]'
+            )}
+          >
+            CRITICAL PATH
+          </button>
+          <button
+            onClick={onToggleMilestones}
+            className={clsx(
+              'px-[8px] py-6px text-xs font-bold border-2',
+              showMilestones
+                ? 'bg-[var(--theme-warning)] text-[var(--theme-background)] border-[var(--theme-warning)]'
+                : 'bg-transparent border-[var(--theme-border)]'
+            )}
+          >
+            MILESTONES
+          </button>
+          <button
+            onClick={onToggleDependencies}
+            className={clsx(
+              'px-[8px] py-6px text-xs font-bold border-2',
+              showDependencies
+                ? 'bg-[var(--theme-info)] text-[var(--theme-background)] border-[var(--theme-info)]'
+                : 'bg-transparent border-[var(--theme-border)]'
+            )}
+          >
+            DEPENDENCIES
+          </button>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-[4px]">
+        <button
+          onClick={onExport}
+          className="flex items-center gap-[4px] px-[10px] py-[4px] bg-transparent border-2 border-[var(--theme-border)] hover:bg-[var(--theme-hover)]"
+        >
+          <HiOutlineDownload className="w-16px h-16px" />
+          <span className="text-xs font-bold">EXPORT</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+interface GanttTaskSidebarProps {
+  flatTasks: Array<{ task: GanttTask; level: number }>
+  selectedTask: Id<"tasks"> | null
+  showCriticalPath: boolean
+  showMilestones: boolean
+  onToggleExpansion: (taskId: Id<"tasks">) => void
+}
+
+function GanttTaskSidebar({ flatTasks, selectedTask, showCriticalPath, showMilestones, onToggleExpansion }: GanttTaskSidebarProps) {
+  return (
+    <div
+      className="border-r-2 border-[var(--theme-border)] overflow-y-auto"
+      style={{ width: `${SIDEBAR_WIDTH}px`, minWidth: `${SIDEBAR_WIDTH}px` }}
+    >
+      {/* Header */}
+      <div className="h-[60px] border-b-2 border-[var(--theme-border)] flex items-center px-[10px] font-bold text-xs">
+        TASK NAME
+      </div>
+
+      {/* Task rows */}
+      {flatTasks.map(({ task, level }) => (
+        <div
+          key={task.id}
+          className={clsx(
+            'h-[40px] border-b border-[var(--theme-border)] flex items-center px-[10px] text-sm',
+            selectedTask === task.id && 'bg-[var(--theme-hover)]'
+          )}
+          style={{ paddingLeft: `${16 + level * 24}px` }}
+        >
+          {task.children && task.children.length > 0 && (
+            <button
+              onClick={() => onToggleExpansion(task.id)}
+              className="mr-[4px]"
+            >
+              {task.expanded ? <HiOutlineChevronDown /> : <HiOutlineChevronRight />}
+            </button>
+          )}
+          <span className={clsx(
+            task.criticalPath && showCriticalPath && 'text-[var(--theme-error)] font-bold',
+            task.milestone && showMilestones && 'text-[var(--theme-warning)]'
+          )}>
+            {task.title}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// --- Main component ---
+
 export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
-  const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('week')
-  const [selectedTask, setSelectedTask] = useState<Id<"tasks"> | null>(null)
-  const [expandedTasks, setExpandedTasks] = useState<Set<Id<"tasks">>>(new Set())
-  const [isDragging, setIsDragging] = useState(false)
-  const [draggedTask, setDraggedTask] = useState<Id<"tasks"> | null>(null)
-  const [showCriticalPath, setShowCriticalPath] = useState(true)
-  const [showMilestones, setShowMilestones] = useState(true)
-  const [showDependencies, setShowDependencies] = useState(true)
+  const [state, dispatch] = useReducer(ganttReducer, ganttInitialState)
+  const { zoomLevel, selectedTask, expandedTasks, isDragging, draggedTask, showCriticalPath, showMilestones, showDependencies } = state
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const ganttRef = useRef<SVGSVGElement>(null)
   
@@ -149,60 +515,6 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
     }
   }, [zoomLevel])
   
-  // Render timeline header
-  const renderTimelineHeader = () => {
-    const headers = []
-    let currentDate = new Date(startDate)
-    let columnIndex = 0
-    
-    while (currentDate <= endDate) {
-      let label = ''
-      let width = columnWidth
-      let nextDate = new Date(currentDate)
-      
-      switch (zoomLevel) {
-        case 'day':
-          label = format(currentDate, 'MMM dd')
-          nextDate = addDays(currentDate, 1)
-          width = columnWidth
-          break
-        case 'week':
-          label = `Week ${format(currentDate, 'w')}`
-          nextDate = addDays(currentDate, 7)
-          width = columnWidth
-          break
-        case 'month':
-          label = format(currentDate, 'MMM yyyy')
-          nextDate = addDays(currentDate, 30)
-          width = columnWidth
-          break
-        case 'quarter':
-          label = `Q${Math.ceil((currentDate.getMonth() + 1) / 3)} ${format(currentDate, 'yyyy')}`
-          nextDate = addDays(currentDate, 90)
-          width = columnWidth
-          break
-      }
-      
-      headers.push(
-        <div
-          key={columnIndex}
-          className="border-r border-[var(--theme-border)] text-center py-[4px] text-xs font-bold"
-          style={{ 
-            width: `${width}px`,
-            minWidth: `${width}px`
-          }}
-        >
-          {label}
-        </div>
-      )
-      
-      currentDate = nextDate
-      columnIndex++
-    }
-    
-    return headers
-  }
-  
   // Render task bar
   const renderTaskBar = (task: GanttTask, yPosition: number) => {
     const taskStart = differenceInDays(task.startDate, startDate)
@@ -230,7 +542,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
             fill={barColor}
             transform={`rotate(45 ${x} ${yPosition + ROW_HEIGHT / 2})`}
             className="cursor-pointer hover:opacity-80"
-            onClick={() => setSelectedTask(task.id)}
+            onClick={() => dispatch({ type: 'SELECT_TASK', taskId: task.id })}
           />
           <text
             x={x + 25}
@@ -258,7 +570,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
           stroke={barColor}
           strokeWidth={2}
           className="cursor-pointer"
-          onClick={() => setSelectedTask(task.id)}
+          onClick={() => dispatch({ type: 'SELECT_TASK', taskId: task.id })}
         />
         
         {/* Progress bar */}
@@ -301,77 +613,6 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
     )
   }
   
-  // Render dependencies
-  const renderDependencies = () => {
-    if (!showDependencies) return null
-    
-    const lines: JSX.Element[] = []
-    const taskPositions = new Map<Id<"tasks">, { x: number, y: number }>()
-    
-    // Calculate positions
-    let yPos = 0
-    const calculatePositions = (tasks: GanttTask[]) => {
-      tasks.forEach(task => {
-        const taskStart = differenceInDays(task.startDate, startDate)
-        const x = (taskStart * columnWidth) / (zoomLevel === 'day' ? 1 : 7)
-        taskPositions.set(task.id, { x, y: yPos + ROW_HEIGHT / 2 })
-        yPos += ROW_HEIGHT
-        
-        if (task.expanded && task.children) {
-          calculatePositions(task.children)
-        }
-      })
-    }
-    calculatePositions(ganttTasks)
-    
-    // Draw dependency lines
-    taskPositions.forEach((pos, taskId) => {
-      const task = tasks.find(t => t._id === taskId)
-      if (task?.dependencies) {
-        task.dependencies.forEach(depId => {
-          const depPos = taskPositions.get(depId)
-          if (depPos) {
-            lines.push(
-              <line
-                key={`${taskId}-${depId}`}
-                x1={depPos.x}
-                y1={depPos.y}
-                x2={pos.x}
-                y2={pos.y}
-                stroke="var(--theme-info)"
-                strokeWidth={1}
-                strokeDasharray="4,4"
-                markerEnd="url(#arrowhead)"
-                opacity={0.5}
-              />
-            )
-          }
-        })
-      }
-    })
-    
-    return (
-      <g>
-        <defs>
-          <marker
-            id="arrowhead"
-            markerWidth="10"
-            markerHeight="7"
-            refX="10"
-            refY="3.5"
-            orient="auto"
-          >
-            <polygon
-              points="0 0, 10 3.5, 0 7"
-              fill="var(--theme-info)"
-            />
-          </marker>
-        </defs>
-        {lines}
-      </g>
-    )
-  }
-  
   // Flatten tasks for rendering
   const flattenTasks = (tasks: GanttTask[], level = 0): Array<{ task: GanttTask, level: number }> => {
     const result: Array<{ task: GanttTask, level: number }> = []
@@ -390,15 +631,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
   
   // Handle task expansion
   const toggleTaskExpansion = (taskId: Id<"tasks">) => {
-    setExpandedTasks(prev => {
-      const next = new Set(prev)
-      if (next.has(taskId)) {
-        next.delete(taskId)
-      } else {
-        next.add(taskId)
-      }
-      return next
-    })
+    dispatch({ type: 'TOGGLE_EXPAND', taskId })
   }
   
   // Handle task update
@@ -439,135 +672,28 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
   return (
     <div className="h-full flex flex-col bg-[var(--theme-background)]">
       {/* Toolbar */}
-      <div className="flex items-center justify-between p-[10px] border-b-2 border-[var(--theme-border)]">
-        <div className="flex items-center gap-[8px]">
-          <h2 className="text-[14px] font-semibold font-bold">GANTT CHART</h2>
-          
-          {/* Zoom controls */}
-          <div className="flex items-center gap-[4px]">
-            <button
-              onClick={() => setZoomLevel('day')}
-              className={clsx(
-                'px-[8px] py-6px text-xs font-bold border-2',
-                zoomLevel === 'day' 
-                  ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]'
-                  : 'bg-transparent border-[var(--theme-border)]'
-              )}
-            >
-              DAY
-            </button>
-            <button
-              onClick={() => setZoomLevel('week')}
-              className={clsx(
-                'px-[8px] py-6px text-xs font-bold border-2',
-                zoomLevel === 'week' 
-                  ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]'
-                  : 'bg-transparent border-[var(--theme-border)]'
-              )}
-            >
-              WEEK
-            </button>
-            <button
-              onClick={() => setZoomLevel('month')}
-              className={clsx(
-                'px-[8px] py-6px text-xs font-bold border-2',
-                zoomLevel === 'month' 
-                  ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]'
-                  : 'bg-transparent border-[var(--theme-border)]'
-              )}
-            >
-              MONTH
-            </button>
-          </div>
-          
-          {/* View options */}
-          <div className="flex items-center gap-[4px]">
-            <button
-              onClick={() => setShowCriticalPath(!showCriticalPath)}
-              className={clsx(
-                'px-[8px] py-6px text-xs font-bold border-2',
-                showCriticalPath 
-                  ? 'bg-[var(--theme-error)] text-[var(--theme-background)] border-[var(--theme-error)]'
-                  : 'bg-transparent border-[var(--theme-border)]'
-              )}
-            >
-              CRITICAL PATH
-            </button>
-            <button
-              onClick={() => setShowMilestones(!showMilestones)}
-              className={clsx(
-                'px-[8px] py-6px text-xs font-bold border-2',
-                showMilestones 
-                  ? 'bg-[var(--theme-warning)] text-[var(--theme-background)] border-[var(--theme-warning)]'
-                  : 'bg-transparent border-[var(--theme-border)]'
-              )}
-            >
-              MILESTONES
-            </button>
-            <button
-              onClick={() => setShowDependencies(!showDependencies)}
-              className={clsx(
-                'px-[8px] py-6px text-xs font-bold border-2',
-                showDependencies 
-                  ? 'bg-[var(--theme-info)] text-[var(--theme-background)] border-[var(--theme-info)]'
-                  : 'bg-transparent border-[var(--theme-border)]'
-              )}
-            >
-              DEPENDENCIES
-            </button>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-[4px]">
-          <button
-            onClick={exportToImage}
-            className="flex items-center gap-[4px] px-[10px] py-[4px] bg-transparent border-2 border-[var(--theme-border)] hover:bg-[var(--theme-hover)]"
-          >
-            <HiOutlineDownload className="w-16px h-16px" />
-            <span className="text-xs font-bold">EXPORT</span>
-          </button>
-        </div>
-      </div>
+      <GanttToolbar
+        zoomLevel={zoomLevel}
+        showCriticalPath={showCriticalPath}
+        showMilestones={showMilestones}
+        showDependencies={showDependencies}
+        onSetZoom={(level) => dispatch({ type: 'SET_ZOOM', level })}
+        onToggleCriticalPath={() => dispatch({ type: 'TOGGLE_CRITICAL_PATH' })}
+        onToggleMilestones={() => dispatch({ type: 'TOGGLE_MILESTONES' })}
+        onToggleDependencies={() => dispatch({ type: 'TOGGLE_DEPENDENCIES' })}
+        onExport={exportToImage}
+      />
       
       {/* Gantt Chart */}
       <div className="flex-1 flex overflow-hidden">
         {/* Task List Sidebar */}
-        <div 
-          className="border-r-2 border-[var(--theme-border)] overflow-y-auto"
-          style={{ width: `${SIDEBAR_WIDTH}px`, minWidth: `${SIDEBAR_WIDTH}px` }}
-        >
-          {/* Header */}
-          <div className="h-[60px] border-b-2 border-[var(--theme-border)] flex items-center px-[10px] font-bold text-xs">
-            TASK NAME
-          </div>
-          
-          {/* Task rows */}
-          {flatTasks.map(({ task, level }, index) => (
-            <div
-              key={task.id}
-              className={clsx(
-                'h-[40px] border-b border-[var(--theme-border)] flex items-center px-[10px] text-sm',
-                selectedTask === task.id && 'bg-[var(--theme-hover)]'
-              )}
-              style={{ paddingLeft: `${16 + level * 24}px` }}
-            >
-              {task.children && task.children.length > 0 && (
-                <button
-                  onClick={() => toggleTaskExpansion(task.id)}
-                  className="mr-[4px]"
-                >
-                  {task.expanded ? <HiOutlineChevronDown /> : <HiOutlineChevronRight />}
-                </button>
-              )}
-              <span className={clsx(
-                task.criticalPath && showCriticalPath && 'text-[var(--theme-error)] font-bold',
-                task.milestone && showMilestones && 'text-[var(--theme-warning)]'
-              )}>
-                {task.title}
-              </span>
-            </div>
-          ))}
-        </div>
+        <GanttTaskSidebar
+          flatTasks={flatTasks}
+          selectedTask={selectedTask}
+          showCriticalPath={showCriticalPath}
+          showMilestones={showMilestones}
+          onToggleExpansion={toggleTaskExpansion}
+        />
         
         {/* Timeline Area */}
         <div 
@@ -576,7 +702,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
         >
           {/* Timeline Header */}
           <div className="h-[60px] border-b-2 border-[var(--theme-border)] flex sticky top-0 bg-[var(--theme-background-secondary)] z-10">
-            {renderTimelineHeader()}
+            <TimelineHeader startDate={startDate} endDate={endDate} zoomLevel={zoomLevel} columnWidth={columnWidth} />
           </div>
           
           {/* Gantt Bars */}
@@ -592,7 +718,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
               if (zoomLevel === 'day' && i % 2 !== 0) return null
               return (
                 <line
-                  key={i}
+                  key={`grid-${i * columnWidth}`}
                   x1={i * columnWidth}
                   y1={0}
                   x2={i * columnWidth}
@@ -610,7 +736,7 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
               if (isWeekend(date)) {
                 return (
                   <rect
-                    key={`weekend-${i}`}
+                    key={`weekend-${format(date, 'yyyy-MM-dd')}`}
                     x={i * columnWidth}
                     y={0}
                     width={columnWidth}
@@ -624,7 +750,14 @@ export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
             })}
             
             {/* Dependencies */}
-            {renderDependencies()}
+            <DependencyLines
+              showDependencies={showDependencies}
+              ganttTasks={ganttTasks}
+              tasks={tasks}
+              startDate={startDate}
+              columnWidth={columnWidth}
+              zoomLevel={zoomLevel}
+            />
             
             {/* Task bars */}
             {flatTasks.map(({ task }, index) => 

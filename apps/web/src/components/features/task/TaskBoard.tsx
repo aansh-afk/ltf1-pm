@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect, memo, useCallback } from 'react'
+import React, { useState, useReducer, useRef, useEffect, memo, useCallback } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { HiOutlinePlus } from 'react-icons/hi'
 import TaskCard from './TaskCard'
 import CreateTaskModal from './CreateTaskModal'
@@ -30,13 +30,48 @@ const columns = [
   { id: 'done', title: 'DONE', borderColor: 'border-brutal-success', bgColor: 'bg-brutal-success', textColor: 'text-brutal-success' },
 ]
 
+interface DragState {
+  draggedTask: any
+  hoveredColumn: string | null
+  dropPosition: { column: string; index: number } | null
+  draggedOverTask: string | null
+}
+
+type DragAction =
+  | { type: 'DRAG_START'; task: any }
+  | { type: 'SET_HOVERED_COLUMN'; column: string | null }
+  | { type: 'SET_DROP_POSITION'; position: { column: string; index: number } | null }
+  | { type: 'SET_DRAGGED_OVER_TASK'; taskId: string | null }
+  | { type: 'DRAG_END' }
+
+const dragInitialState: DragState = {
+  draggedTask: null,
+  hoveredColumn: null,
+  dropPosition: null,
+  draggedOverTask: null,
+}
+
+function dragReducer(state: DragState, action: DragAction): DragState {
+  switch (action.type) {
+    case 'DRAG_START':
+      return { ...state, draggedTask: action.task }
+    case 'SET_HOVERED_COLUMN':
+      return { ...state, hoveredColumn: action.column }
+    case 'SET_DROP_POSITION':
+      return { ...state, dropPosition: action.position }
+    case 'SET_DRAGGED_OVER_TASK':
+      return { ...state, draggedOverTask: action.taskId }
+    case 'DRAG_END':
+      return dragInitialState
+    default:
+      return state
+  }
+}
+
 const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTaskEdit, onTaskDelete, onTaskDuplicate, isCompact = false, onCompactToggle }: TaskBoardProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createStatus, setCreateStatus] = useState<string>('backlog')
-  const [draggedTask, setDraggedTask] = useState<any>(null)
-  const [hoveredColumn, setHoveredColumn] = useState<string | null>(null)
-  const [dropPosition, setDropPosition] = useState<{ column: string; index: number } | null>(null)
-  const [draggedOverTask, setDraggedOverTask] = useState<string | null>(null)
+  const [drag, dispatchDrag] = useReducer(dragReducer, dragInitialState)
   const columnRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
   const [hasOverflow, setHasOverflow] = useState<{ [key: string]: boolean }>({})
   const [isCompactView, setIsCompactView] = useState(isCompact)
@@ -44,11 +79,6 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
 
   const moveTask = useMutation(api.tasks.mutations.moveTask)
-
-  // Sync internal state with prop
-  useEffect(() => {
-    setIsCompactView(isCompact)
-  }, [isCompact])
 
   // Handle compact toggle
   const handleCompactToggle = useCallback(() => {
@@ -58,7 +88,7 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
   }, [isCompactView, onCompactToggle])
 
   const handleDragStart = useCallback((e: React.DragEvent, task: any) => {
-    setDraggedTask(task)
+    dispatchDrag({ type: 'DRAG_START', task })
     e.dataTransfer.effectAllowed = 'move'
   }, [])
 
@@ -69,45 +99,43 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
 
   const handleDragOverTask = (e: React.DragEvent, taskId: string, columnId: string, index: number) => {
     e.preventDefault()
-    if (!draggedTask || draggedTask._id === taskId) return
+    if (!drag.draggedTask || drag.draggedTask._id === taskId) return
 
     const rect = e.currentTarget.getBoundingClientRect()
     const midpoint = rect.top + rect.height / 2
     const insertIndex = e.clientY < midpoint ? index : index + 1
 
     // Only update if position actually changed to reduce re-renders
-    if (!dropPosition || dropPosition.column !== columnId || dropPosition.index !== insertIndex) {
-      setDropPosition({ column: columnId, index: insertIndex })
+    if (!drag.dropPosition || drag.dropPosition.column !== columnId || drag.dropPosition.index !== insertIndex) {
+      dispatchDrag({ type: 'SET_DROP_POSITION', position: { column: columnId, index: insertIndex } })
     }
-    if (draggedOverTask !== taskId) {
-      setDraggedOverTask(taskId)
+    if (drag.draggedOverTask !== taskId) {
+      dispatchDrag({ type: 'SET_DRAGGED_OVER_TASK', taskId })
     }
   }
 
   const handleDragLeaveTask = useCallback(() => {
     // Small delay to prevent flicker when moving between tasks
     setTimeout(() => {
-      setDraggedOverTask(null)
+      dispatchDrag({ type: 'SET_DRAGGED_OVER_TASK', taskId: null })
     }, 50)
   }, [])
 
   const handleDrop = async (e: React.DragEvent, newStatus: string) => {
     e.preventDefault()
 
-    if (!draggedTask) {
-      setDraggedTask(null)
-      setDropPosition(null)
-      setDraggedOverTask(null)
+    if (!drag.draggedTask) {
+      dispatchDrag({ type: 'DRAG_END' })
       return
     }
 
-    const targetPosition = dropPosition?.column === newStatus && dropPosition?.index !== undefined
-      ? dropPosition.index
+    const targetPosition = drag.dropPosition?.column === newStatus && drag.dropPosition?.index !== undefined
+      ? drag.dropPosition.index
       : tasks.filter(t => t.status === newStatus).length
 
     try {
       await moveTask({
-        taskId: draggedTask._id,
+        taskId: drag.draggedTask._id,
         status: newStatus as any,
         position: targetPosition,
       })
@@ -117,15 +145,11 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
       toast.error('Failed to move task')
     }
 
-    setDraggedTask(null)
-    setDropPosition(null)
-    setDraggedOverTask(null)
+    dispatchDrag({ type: 'DRAG_END' })
   }
 
   const handleDragEnd = useCallback(() => {
-    setDraggedTask(null)
-    setDropPosition(null)
-    setDraggedOverTask(null)
+    dispatchDrag({ type: 'DRAG_END' })
   }, [])
 
   const getTasksByStatus = useCallback((status: string) => {
@@ -179,17 +203,17 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
               padding="none"
               className={clsx(
                 "flex flex-col relative h-full",
-                hoveredColumn === column.id && draggedTask && "border-primary-brutalist bg-primary-brutalist/5",
-                draggedTask && !hoveredColumn && "border-opacity-50"
+                drag.hoveredColumn === column.id && drag.draggedTask && "border-primary-brutalist bg-primary-brutalist/5",
+                drag.draggedTask && !drag.hoveredColumn && "border-opacity-50"
               )}
               onDragOver={(e) => {
                 handleDragOver(e)
-                setHoveredColumn(column.id)
+                dispatchDrag({ type: 'SET_HOVERED_COLUMN', column: column.id })
               }}
-              onDragLeave={() => setHoveredColumn(null)}
+              onDragLeave={() => dispatchDrag({ type: 'SET_HOVERED_COLUMN', column: null })}
               onDrop={(e) => {
                 handleDrop(e, column.id)
-                setHoveredColumn(null)
+                dispatchDrag({ type: 'SET_HOVERED_COLUMN', column: null })
               }}
             >
               {/* Column Header */}
@@ -242,12 +266,12 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
                 <AnimatePresence>
                   {columnTasks.map((task, index) => {
                     // Show drop indicator before this task
-                    const showDropIndicatorBefore = dropPosition?.column === column.id && dropPosition?.index === index
+                    const showDropIndicatorBefore = drag.dropPosition?.column === column.id && drag.dropPosition?.index === index
 
                     return (
                       <React.Fragment key={task._id}>
                         {/* Drop Position Indicator */}
-                        {showDropIndicatorBefore && draggedTask && (
+                        {showDropIndicatorBefore && drag.draggedTask && (
                           <div
                             className="relative mb-[4px] transition-all duration-150"
                             style={{ height: isCompactView ? 64 : 136 }}
@@ -260,10 +284,10 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
                           </div>
                         )}
 
-                        <motion.div
+                        <m.div
                           initial={{ opacity: 0 }}
                           animate={{
-                            opacity: draggedTask?._id === task._id ? 0.5 : 1
+                            opacity: drag.draggedTask?._id === task._id ? 0.5 : 1
                           }}
                           exit={{ opacity: 0 }}
                           whileHover={{
@@ -294,13 +318,13 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
                             }}
                             isCompact={isCompactView}
                           />
-                        </motion.div>
+                        </m.div>
                       </React.Fragment>
                     )
                   })}
 
                   {/* Drop indicator at the end of the column */}
-                  {dropPosition?.column === column.id && dropPosition?.index === columnTasks.length && draggedTask && (
+                  {drag.dropPosition?.column === column.id && drag.dropPosition?.index === columnTasks.length && drag.draggedTask && (
                     <div
                       className="relative transition-all duration-150"
                       style={{ height: isCompactView ? 64 : 136 }}

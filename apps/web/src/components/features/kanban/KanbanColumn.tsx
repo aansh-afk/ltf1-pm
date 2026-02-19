@@ -2,7 +2,7 @@ import React, { memo } from 'react'
 import { HiOutlinePlus } from 'react-icons/hi'
 import clsx from 'clsx'
 import KanbanCard from './KanbanCard'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 
 interface KanbanColumnProps {
     id: string
@@ -126,7 +126,7 @@ const KanbanColumn = memo(function KanbanColumn({
                                     </div>
                                 )}
 
-                                <motion.div
+                                <m.div
                                     layout
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{
@@ -148,7 +148,7 @@ const KanbanColumn = memo(function KanbanColumn({
                                         onDuplicate={onTaskDuplicate}
                                         onViewDetails={onViewDetails}
                                     />
-                                </motion.div>
+                                </m.div>
                             </React.Fragment>
                         )
                     })}

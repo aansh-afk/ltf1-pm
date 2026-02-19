@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Outlet, Link, useLocation, useParams } from 'react-router-dom'
 import { UserButton } from '@clerk/clerk-react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import {
   HiOutlineHome,
   HiOutlineBriefcase,
@@ -26,6 +26,103 @@ import WorkspaceMobileBlocker from '../common/WorkspaceMobileBlocker'
 import FeedbackWidget from '../features/feedback/FeedbackWidget'
 import ShortcutHelp from '../shortcuts/ShortcutHelp'
 
+
+// --- Sub-components ---
+
+interface StatusBarFooterProps {
+  stats: {
+    memory: { used: number; percentage?: number }
+    cpu: { usage: number; trend: string }
+    tasks: { total: number; active: number }
+    system: { status: string; errors: number; uptime: number }
+  }
+  formatMemory: (bytes: number) => string
+  workspaceId?: string
+  projectId?: string
+}
+
+function StatusBarFooter({ stats, formatMemory, workspaceId, projectId }: StatusBarFooterProps) {
+  return (
+    <footer className="h-[28px] bg-[var(--theme-background-secondary)] border-t border-[var(--theme-border)] flex items-center px-[12px] shrink-0">
+      <div className="flex items-center gap-[16px] text-[11px] font-mono w-full">
+        <span>
+          <span className="text-[var(--theme-primary)]">MEM:</span>{' '}
+          <span className={clsx(
+            stats.memory.percentage && stats.memory.percentage > 75 ? "text-[var(--theme-error)]" : "text-[var(--theme-foreground)]/60"
+          )}>
+            {formatMemory(stats.memory.used)}
+          </span>
+          {stats.memory.percentage && (
+            <span className={clsx(
+              "ml-[2px]",
+              stats.memory.percentage > 75 ? "text-[var(--theme-error)]/80" : "text-[var(--theme-foreground)]/40"
+            )}>
+              ({stats.memory.percentage}%)
+            </span>
+          )}
+        </span>
+
+        <span>
+          <span className="text-[var(--theme-info)]">CPU:</span>{' '}
+          <span className={clsx(
+            stats.cpu.usage > 70 ? "text-[var(--theme-error)]" :
+              stats.cpu.usage > 40 ? "text-[var(--theme-warning)]" : "text-[var(--theme-foreground)]/60"
+          )}>
+            {stats.cpu.usage}%
+          </span>
+          {stats.cpu.trend !== 'stable' && (
+            <span className={clsx(
+              "ml-[2px]",
+              stats.cpu.trend === 'increasing' ? "text-[var(--theme-error)]" : "text-[var(--theme-success)]"
+            )}>
+              {stats.cpu.trend === 'increasing' ? '\u2197' : '\u2198'}
+            </span>
+          )}
+        </span>
+
+        <span>
+          <span className="text-[var(--theme-warning)]">TASKS:</span>{' '}
+          <span className="text-[var(--theme-foreground)]/60">{stats.tasks.total}</span>
+          <span className="text-[var(--theme-foreground)]/40 ml-[2px]">
+            ({stats.tasks.active})
+          </span>
+        </span>
+
+        <GitHubMonitor
+          workspaceId={workspaceId}
+          projectId={projectId}
+          compact={true}
+        />
+
+        <span className="ml-auto">
+          <span className={clsx(
+            stats.system.status === 'NOMINAL' ? "text-[var(--theme-success)]" :
+              stats.system.status === 'DEGRADED' ? "text-[var(--theme-warning)]" : "text-[var(--theme-error)]"
+          )}>
+            SYS:
+          </span>
+          <span className={clsx(
+            "ml-[2px]",
+            stats.system.status === 'NOMINAL' ? "text-[var(--theme-success)]" :
+              stats.system.status === 'DEGRADED' ? "text-[var(--theme-warning)]" : "text-[var(--theme-error)]"
+          )}>
+            {stats.system.status === 'NOMINAL' ? 'OK' : stats.system.status}
+          </span>
+          {stats.system.errors > 0 && (
+            <span className="text-[var(--theme-error)] ml-[2px]">
+              ({stats.system.errors})
+            </span>
+          )}
+          <span className="text-[var(--theme-foreground)]/30 ml-[4px]">
+            {Math.floor(stats.system.uptime / 60)}m
+          </span>
+        </span>
+      </div>
+    </footer>
+  )
+}
+
+// --- Main component ---
 
 const NAV_ITEMS = [
   { path: '/dashboard', label: 'DASHBOARD', icon: HiOutlineHome },
@@ -81,9 +178,11 @@ export default function DashboardLayout() {
         'fixed inset-0 z-[40] lg:hidden',
         sidebarOpen ? 'block' : 'hidden'
       )}>
-        <div
-          className="absolute inset-0 bg-[var(--theme-background)]/90"
+        <button
+          type="button"
+          className="absolute inset-0 bg-[var(--theme-background)]/90 w-full h-full"
           onClick={() => setSidebarOpen(false)}
+          aria-label="Close sidebar"
         />
       </div>
 
@@ -243,7 +342,7 @@ export default function DashboardLayout() {
 
         {/* MAIN CONTENT AREA */}
         <main className="flex-1 overflow-y-auto bg-[var(--theme-background)]">
-          <motion.div
+          <m.div
             key={location.pathname}
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
@@ -254,86 +353,16 @@ export default function DashboardLayout() {
               <WorkspaceMobileBlocker>
                 <Outlet />
               </WorkspaceMobileBlocker>
-          </motion.div>
+          </m.div>
         </main>
 
         {/* STATUS BAR */}
-        <footer className="h-[28px] bg-[var(--theme-background-secondary)] border-t border-[var(--theme-border)] flex items-center px-[12px] shrink-0">
-          <div className="flex items-center gap-[16px] text-[11px] font-mono w-full">
-            <span>
-              <span className="text-[var(--theme-primary)]">MEM:</span>{' '}
-              <span className={clsx(
-                stats.memory.percentage && stats.memory.percentage > 75 ? "text-[var(--theme-error)]" : "text-[var(--theme-foreground)]/60"
-              )}>
-                {formatMemory(stats.memory.used)}
-              </span>
-              {stats.memory.percentage && (
-                <span className={clsx(
-                  "ml-[2px]",
-                  stats.memory.percentage > 75 ? "text-[var(--theme-error)]/80" : "text-[var(--theme-foreground)]/40"
-                )}>
-                  ({stats.memory.percentage}%)
-                </span>
-              )}
-            </span>
-
-            <span>
-              <span className="text-[var(--theme-info)]">CPU:</span>{' '}
-              <span className={clsx(
-                stats.cpu.usage > 70 ? "text-[var(--theme-error)]" :
-                  stats.cpu.usage > 40 ? "text-[var(--theme-warning)]" : "text-[var(--theme-foreground)]/60"
-              )}>
-                {stats.cpu.usage}%
-              </span>
-              {stats.cpu.trend !== 'stable' && (
-                <span className={clsx(
-                  "ml-[2px]",
-                  stats.cpu.trend === 'increasing' ? "text-[var(--theme-error)]" : "text-[var(--theme-success)]"
-                )}>
-                  {stats.cpu.trend === 'increasing' ? '↗' : '↘'}
-                </span>
-              )}
-            </span>
-
-            <span>
-              <span className="text-[var(--theme-warning)]">TASKS:</span>{' '}
-              <span className="text-[var(--theme-foreground)]/60">{stats.tasks.total}</span>
-              <span className="text-[var(--theme-foreground)]/40 ml-[2px]">
-                ({stats.tasks.active})
-              </span>
-            </span>
-
-            <GitHubMonitor
-              workspaceId={params.workspaceId}
-              projectId={params.projectId}
-              compact={true}
-            />
-
-            <span className="ml-auto">
-              <span className={clsx(
-                stats.system.status === 'NOMINAL' ? "text-[var(--theme-success)]" :
-                  stats.system.status === 'DEGRADED' ? "text-[var(--theme-warning)]" : "text-[var(--theme-error)]"
-              )}>
-                SYS:
-              </span>
-              <span className={clsx(
-                "ml-[2px]",
-                stats.system.status === 'NOMINAL' ? "text-[var(--theme-success)]" :
-                  stats.system.status === 'DEGRADED' ? "text-[var(--theme-warning)]" : "text-[var(--theme-error)]"
-              )}>
-                {stats.system.status === 'NOMINAL' ? 'OK' : stats.system.status}
-              </span>
-              {stats.system.errors > 0 && (
-                <span className="text-[var(--theme-error)] ml-[2px]">
-                  ({stats.system.errors})
-                </span>
-              )}
-              <span className="text-[var(--theme-foreground)]/30 ml-[4px]">
-                {Math.floor(stats.system.uptime / 60)}m
-              </span>
-            </span>
-          </div>
-        </footer>
+        <StatusBarFooter
+          stats={stats}
+          formatMemory={formatMemory}
+          workspaceId={params.workspaceId}
+          projectId={params.projectId}
+        />
       </div>
 
       {/* Global Search Modal */}

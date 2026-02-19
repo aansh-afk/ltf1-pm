@@ -13,10 +13,12 @@ export default function TestAI() {
     }
 
     try {
-      const title = await ai.suggestTaskTitle(taskDescription)
-      const points = await ai.estimateComplexity(taskDescription)
-      const priority = await ai.suggestPriority(taskDescription)
-      const labels = await ai.extractLabels(taskDescription)
+      const [title, points, priority, labels] = await Promise.all([
+        ai.suggestTaskTitle(taskDescription),
+        ai.estimateComplexity(taskDescription),
+        ai.suggestPriority(taskDescription),
+        ai.extractLabels(taskDescription),
+      ])
 
       setResults(prev => ({
         ...prev,
@@ -115,6 +117,7 @@ export default function TestAI() {
             className="w-full p-2 bg-black border border-green-500 text-green-500"
             rows={4}
             placeholder="Enter a task description to test AI features..."
+            aria-label="Task description"
           />
         </div>
 

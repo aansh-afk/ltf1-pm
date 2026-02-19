@@ -10,6 +10,7 @@ interface BrutalSliderProps {
   unit?: string
   disabled?: boolean
   showValue?: boolean
+  id?: string
 }
 
 export default function BrutalSlider({
@@ -21,16 +22,18 @@ export default function BrutalSlider({
   label,
   unit = '',
   disabled = false,
-  showValue = true
+  showValue = true,
+  id
 }: BrutalSliderProps) {
   const percentage = ((value - min) / (max - min)) * 100
+  const inputId = id || (label ? `slider-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined)
 
   return (
     <div className="space-y-2">
       {(label || showValue) && (
         <div className="flex justify-between items-center mb-2">
           {label && (
-            <label className="text-sm font-bold uppercase tracking-wider text-[var(--theme-foreground)] font-mono">
+            <label htmlFor={inputId} className="text-sm font-bold uppercase tracking-wider text-[var(--theme-foreground)] font-mono">
               {label}
             </label>
           )}
@@ -44,6 +47,7 @@ export default function BrutalSlider({
 
       <div className="relative">
         <input
+          id={inputId}
           type="range"
           min={min}
           max={max}

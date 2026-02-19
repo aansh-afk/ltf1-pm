@@ -106,10 +106,11 @@ export default function UserDisplay({
 
   return (
     <>
-      <div
+      <button
+        type="button"
         onClick={handleClick}
         className={clsx(
-          'flex items-center gap-[8px] cursor-pointer group relative',
+          'flex items-center gap-[8px] cursor-pointer group relative text-left',
           'hover:bg-[var(--theme-background-secondary)]/20 transition-colors',
           compact ? 'p-2px' : 'p-4px',
           className
@@ -188,7 +189,7 @@ export default function UserDisplay({
             </div>
           </div>
         )}
-      </div>
+      </button>
 
       {/* Profile Modal */}
       {showProfileModal && (

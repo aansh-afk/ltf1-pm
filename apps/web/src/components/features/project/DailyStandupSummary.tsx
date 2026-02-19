@@ -50,6 +50,145 @@ interface StandupData {
   aiGenerated: boolean
 }
 
+// --- Sub-components ---
+
+interface StandupMetricsGridProps {
+  summary: StandupData['summary']
+}
+
+function StandupMetricsGrid({ summary }: StandupMetricsGridProps) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-[8px] mb-[12px]">
+      <div className="p-[10px] border-2 border-[var(--theme-success)]">
+        <div className="flex items-center gap-[4px] mb-[4px]">
+          <HiOutlineCheckCircle className="w-20px h-20px text-[var(--theme-success)]" />
+          <span className="text-brutal-xs font-bold uppercase">Completed</span>
+        </div>
+        <div className="text-[20px] font-bold font-bold">{summary.completed.tasks}</div>
+        <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Tasks</div>
+        {summary.completed.commits > 0 && (
+          <div className="text-brutal-xs mt-4px">
+            {summary.completed.commits} commits
+          </div>
+        )}
+      </div>
+
+      <div className="p-[10px] border-2 border-[var(--theme-info)]">
+        <div className="flex items-center gap-[4px] mb-[4px]">
+          <HiOutlineClock className="w-20px h-20px text-[var(--theme-info)]" />
+          <span className="text-brutal-xs font-bold uppercase">In Progress</span>
+        </div>
+        <div className="text-[20px] font-bold font-bold">{summary.inProgress.tasks}</div>
+        <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Tasks</div>
+        {summary.inProgress.prsInReview > 0 && (
+          <div className="text-brutal-xs mt-4px">
+            {summary.inProgress.prsInReview} PRs in review
+          </div>
+        )}
+      </div>
+
+      <div className="p-[10px] border-2 border-[var(--theme-warning)]">
+        <div className="flex items-center gap-[4px] mb-[4px]">
+          <HiOutlineExclamation className="w-20px h-20px text-[var(--theme-warning)]" />
+          <span className="text-brutal-xs font-bold uppercase">Blockers</span>
+        </div>
+        <div className="text-[20px] font-bold font-bold">{summary.blockers.length}</div>
+        <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Issues</div>
+      </div>
+
+      <div className="p-[10px] border-2 border-[var(--theme-border)]">
+        <div className="flex items-center gap-[4px] mb-[4px]">
+          <svg className="w-20px h-20px" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+          <span className="text-brutal-xs font-bold uppercase">Git Activity</span>
+        </div>
+        <div className="text-[20px] font-bold font-bold">
+          {summary.completed.prsMerged}
+        </div>
+        <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">PRs Merged</div>
+        {summary.completed.prsOpened > 0 && (
+          <div className="text-brutal-xs mt-4px">
+            {summary.completed.prsOpened} opened
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+interface StandupCompactViewProps {
+  standupData: StandupData
+  getMoodIcon: (mood?: string) => React.ReactNode
+}
+
+function StandupCompactView({ standupData, getMoodIcon }: StandupCompactViewProps) {
+  return (
+    <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[10px]">
+      <div className="flex items-center justify-between mb-[6px]">
+        <div className="flex items-center gap-[4px]">
+          <HiOutlineCalendar className="w-16px h-16px text-[var(--theme-primary)]" />
+          <h3 className="text-brutal-sm font-bold uppercase">Today's Standup</h3>
+          {standupData.aiGenerated && (
+            <HiOutlineSparkles className="w-14px h-14px text-[var(--theme-primary)]" title="AI-Generated" />
+          )}
+        </div>
+        {standupData.teamMood && (
+          <div className="flex items-center gap-4px" title={`Team mood: ${standupData.teamMood}`}>
+            {getMoodIcon(standupData.teamMood)}
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-[6px] mb-[6px]">
+        <div className="flex items-center gap-[4px]">
+          <HiOutlineCheckCircle className="w-16px h-16px text-[var(--theme-success)]" />
+          <div>
+            <div className="text-[14px] font-semibold font-bold">{standupData.summary.completed.tasks}</div>
+            <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Completed</div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-[4px]">
+          <HiOutlineClock className="w-16px h-16px text-[var(--theme-info)]" />
+          <div>
+            <div className="text-[14px] font-semibold font-bold">{standupData.summary.inProgress.tasks}</div>
+            <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">In Progress</div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-[4px]">
+          <HiOutlineExclamation className="w-16px h-16px text-[var(--theme-warning)]" />
+          <div>
+            <div className="text-[14px] font-semibold font-bold">{standupData.summary.blockers.length}</div>
+            <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Blockers</div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-[4px]">
+          <svg className="w-16px h-16px" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+          <div>
+            <div className="text-[14px] font-semibold font-bold">
+              {standupData.summary.completed.commits + standupData.summary.completed.prsMerged}
+            </div>
+            <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Git Activity</div>
+          </div>
+        </div>
+      </div>
+
+      {standupData.narrative && (
+        <p className="text-brutal-xs text-[var(--theme-foreground-secondary)] italic">
+          "{standupData.narrative}"
+        </p>
+      )}
+    </div>
+  )
+}
+
+// --- Main component ---
+
 export default function DailyStandupSummary({ projectId, compact = false }: DailyStandupSummaryProps) {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [standupData, setStandupData] = useState<StandupData | null>(null)
@@ -155,69 +294,7 @@ export default function DailyStandupSummary({ projectId, compact = false }: Dail
   if (!standupData) return null
   
   if (compact) {
-    // Compact view for overview tab
-    return (
-      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[10px]">
-        <div className="flex items-center justify-between mb-[6px]">
-          <div className="flex items-center gap-[4px]">
-            <HiOutlineCalendar className="w-16px h-16px text-[var(--theme-primary)]" />
-            <h3 className="text-brutal-sm font-bold uppercase">Today's Standup</h3>
-            {standupData.aiGenerated && (
-              <HiOutlineSparkles className="w-14px h-14px text-[var(--theme-primary)]" title="AI-Generated" />
-            )}
-          </div>
-          {standupData.teamMood && (
-            <div className="flex items-center gap-4px" title={`Team mood: ${standupData.teamMood}`}>
-              {getMoodIcon(standupData.teamMood)}
-            </div>
-          )}
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-[6px] mb-[6px]">
-          <div className="flex items-center gap-[4px]">
-            <HiOutlineCheckCircle className="w-16px h-16px text-[var(--theme-success)]" />
-            <div>
-              <div className="text-[14px] font-semibold font-bold">{standupData.summary.completed.tasks}</div>
-              <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Completed</div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-[4px]">
-            <HiOutlineClock className="w-16px h-16px text-[var(--theme-info)]" />
-            <div>
-              <div className="text-[14px] font-semibold font-bold">{standupData.summary.inProgress.tasks}</div>
-              <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">In Progress</div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-[4px]">
-            <HiOutlineExclamation className="w-16px h-16px text-[var(--theme-warning)]" />
-            <div>
-              <div className="text-[14px] font-semibold font-bold">{standupData.summary.blockers.length}</div>
-              <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Blockers</div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-[4px]">
-            <svg className="w-16px h-16px" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-            </svg>
-            <div>
-              <div className="text-[14px] font-semibold font-bold">
-                {standupData.summary.completed.commits + standupData.summary.completed.prsMerged}
-              </div>
-              <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Git Activity</div>
-            </div>
-          </div>
-        </div>
-        
-        {standupData.narrative && (
-          <p className="text-brutal-xs text-[var(--theme-foreground-secondary)] italic">
-            "{standupData.narrative}"
-          </p>
-        )}
-      </div>
-    )
+    return <StandupCompactView standupData={standupData} getMoodIcon={getMoodIcon} />
   }
   
   // Full view
@@ -293,70 +370,15 @@ export default function DailyStandupSummary({ projectId, compact = false }: Dail
       )}
       
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-[8px] mb-[12px]">
-        <div className="p-[10px] border-2 border-[var(--theme-success)]">
-          <div className="flex items-center gap-[4px] mb-[4px]">
-            <HiOutlineCheckCircle className="w-20px h-20px text-[var(--theme-success)]" />
-            <span className="text-brutal-xs font-bold uppercase">Completed</span>
-          </div>
-          <div className="text-[20px] font-bold font-bold">{standupData.summary.completed.tasks}</div>
-          <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Tasks</div>
-          {standupData.summary.completed.commits > 0 && (
-            <div className="text-brutal-xs mt-4px">
-              {standupData.summary.completed.commits} commits
-            </div>
-          )}
-        </div>
-        
-        <div className="p-[10px] border-2 border-[var(--theme-info)]">
-          <div className="flex items-center gap-[4px] mb-[4px]">
-            <HiOutlineClock className="w-20px h-20px text-[var(--theme-info)]" />
-            <span className="text-brutal-xs font-bold uppercase">In Progress</span>
-          </div>
-          <div className="text-[20px] font-bold font-bold">{standupData.summary.inProgress.tasks}</div>
-          <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Tasks</div>
-          {standupData.summary.inProgress.prsInReview > 0 && (
-            <div className="text-brutal-xs mt-4px">
-              {standupData.summary.inProgress.prsInReview} PRs in review
-            </div>
-          )}
-        </div>
-        
-        <div className="p-[10px] border-2 border-[var(--theme-warning)]">
-          <div className="flex items-center gap-[4px] mb-[4px]">
-            <HiOutlineExclamation className="w-20px h-20px text-[var(--theme-warning)]" />
-            <span className="text-brutal-xs font-bold uppercase">Blockers</span>
-          </div>
-          <div className="text-[20px] font-bold font-bold">{standupData.summary.blockers.length}</div>
-          <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">Issues</div>
-        </div>
-        
-        <div className="p-[10px] border-2 border-[var(--theme-border)]">
-          <div className="flex items-center gap-[4px] mb-[4px]">
-            <svg className="w-20px h-20px" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-            </svg>
-            <span className="text-brutal-xs font-bold uppercase">Git Activity</span>
-          </div>
-          <div className="text-[20px] font-bold font-bold">
-            {standupData.summary.completed.prsMerged}
-          </div>
-          <div className="text-brutal-xs text-[var(--theme-foreground-secondary)]">PRs Merged</div>
-          {standupData.summary.completed.prsOpened > 0 && (
-            <div className="text-brutal-xs mt-4px">
-              {standupData.summary.completed.prsOpened} opened
-            </div>
-          )}
-        </div>
-      </div>
+      <StandupMetricsGrid summary={standupData.summary} />
       
       {/* Key Achievements */}
       {standupData.keyAchievements && standupData.keyAchievements.length > 0 && (
         <div className="mb-[12px]">
           <h3 className="text-brutal-sm font-bold uppercase mb-[6px]">🎯 Key Achievements</h3>
           <div className="space-y-[4px]">
-            {standupData.keyAchievements.map((achievement, index) => (
-              <div key={index} className="flex items-start gap-[4px] p-[4px] bg-[var(--theme-success)]/10 border border-[var(--theme-success)]">
+            {standupData.keyAchievements.map((achievement) => (
+              <div key={achievement} className="flex items-start gap-[4px] p-[4px] bg-[var(--theme-success)]/10 border border-[var(--theme-success)]">
                 <span className="text-brutal-sm">✓</span>
                 <span className="text-brutal-sm">{achievement}</span>
               </div>
@@ -370,9 +392,9 @@ export default function DailyStandupSummary({ projectId, compact = false }: Dail
         <div className="mb-[12px]">
           <h3 className="text-brutal-sm font-bold uppercase mb-[6px]">🎯 Focus Areas</h3>
           <div className="space-y-[4px]">
-            {standupData.focusAreas.map((area, index) => (
-              <div key={index} className="flex items-start gap-[4px] p-[4px] bg-[var(--theme-info)]/10 border border-[var(--theme-info)]">
-                <span className="text-brutal-sm font-bold">{index + 1}.</span>
+            {standupData.focusAreas.map((area, areaIndex) => (
+              <div key={area} className="flex items-start gap-[4px] p-[4px] bg-[var(--theme-info)]/10 border border-[var(--theme-info)]">
+                <span className="text-brutal-sm font-bold">{areaIndex + 1}.</span>
                 <span className="text-brutal-sm">{area}</span>
               </div>
             ))}
@@ -385,8 +407,8 @@ export default function DailyStandupSummary({ projectId, compact = false }: Dail
         <div className="mb-[12px]">
           <h3 className="text-brutal-sm font-bold uppercase mb-[6px]">⚠️ Current Blockers</h3>
           <div className="space-y-[4px]">
-            {standupData.summary.blockers.map((blocker, index) => (
-              <div key={index} className="p-[4px] bg-[var(--theme-warning)]/10 border border-[var(--theme-warning)]">
+            {standupData.summary.blockers.map((blocker) => (
+              <div key={blocker.title} className="p-[4px] bg-[var(--theme-warning)]/10 border border-[var(--theme-warning)]">
                 <div className="text-brutal-sm font-bold">{blocker.title}</div>
                 <div className="text-brutal-xs text-[var(--theme-foreground-secondary)] mt-4px">
                   Blocked since: {format(parseISO(blocker.blockedSince), 'MMM d, h:mm a')}
@@ -401,8 +423,8 @@ export default function DailyStandupSummary({ projectId, compact = false }: Dail
       {standupData.summary.highlights.length > 0 && (
         <div className="pt-[8px] border-t border-[var(--theme-border)]">
           <div className="flex flex-wrap gap-[4px]">
-            {standupData.summary.highlights.map((highlight, index) => (
-              <span key={index} className="text-brutal-xs px-[4px] py-4px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
+            {standupData.summary.highlights.map((highlight) => (
+              <span key={highlight} className="text-brutal-xs px-[4px] py-4px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
                 {highlight}
               </span>
             ))}

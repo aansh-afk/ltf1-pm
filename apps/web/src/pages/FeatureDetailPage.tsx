@@ -1,5 +1,5 @@
 import { useParams, Link, Navigate } from 'react-router-dom'
-import { motion, type Variants } from 'framer-motion'
+import { m, type Variants } from 'framer-motion'
 import PublicNavigation from '../components/common/PublicNavigation'
 import Footer from '../components/common/Footer'
 import ColoredPre from '../components/landing/ascii/ColoredPre'
@@ -498,7 +498,7 @@ export default function FeatureDetailPage() {
       {/* Hero */}
       <section className="pt-32 pb-16 md:pt-40 md:pb-24">
         <div className="max-w-5xl mx-auto px-4">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -523,10 +523,10 @@ export default function FeatureDetailPage() {
             <p className="text-lg text-[#6B7280] max-w-2xl mb-6">
               {feature.heroSubtitle}
             </p>
-          </motion.div>
+          </m.div>
 
           {/* Hero ASCII */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
@@ -536,7 +536,7 @@ export default function FeatureDetailPage() {
               text={feature.heroAscii}
               className="font-mono text-[11px] md:text-xs text-[#6B7280] leading-relaxed whitespace-pre select-none"
             />
-          </motion.div>
+          </m.div>
         </div>
       </section>
 
@@ -544,7 +544,7 @@ export default function FeatureDetailPage() {
       {feature.sections.map((section, i) => (
         <section key={section.headline} className="py-10 md:py-14">
           <div className="max-w-5xl mx-auto px-4">
-            <motion.div
+            <m.div
               variants={sectionVariants}
               initial="hidden"
               whileInView="visible"
@@ -576,7 +576,7 @@ export default function FeatureDetailPage() {
                   className="font-mono text-[11px] md:text-xs text-[#6B7280] leading-relaxed whitespace-pre select-none"
                 />
               </div>
-            </motion.div>
+            </m.div>
           </div>
         </section>
       ))}
@@ -584,7 +584,7 @@ export default function FeatureDetailPage() {
       {/* Bottom CTA */}
       <section className="py-12 md:py-16 border-t border-[#2E2E35]">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -610,7 +610,7 @@ export default function FeatureDetailPage() {
                 View all features
               </Link>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       </section>
 

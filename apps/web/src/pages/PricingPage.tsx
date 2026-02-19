@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { motion, type Variants } from 'framer-motion'
+import { m, type Variants } from 'framer-motion'
 import posthog from 'posthog-js'
 import PublicNavigation from '../components/common/PublicNavigation'
 import Footer from '../components/common/Footer'
@@ -202,7 +202,7 @@ export default function PricingPage() {
       {/* Hero */}
       <section className="pt-32 pb-12 md:pt-40 md:pb-16">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -217,7 +217,7 @@ export default function PricingPage() {
               Start free with the open source plan. Upgrade for
               advanced analytics, security, and priority support.
             </p>
-          </motion.div>
+          </m.div>
         </div>
       </section>
 
@@ -226,13 +226,13 @@ export default function PricingPage() {
         <div className="max-w-5xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {tiers.map((tier, i) => (
-              <motion.div
+              <m.div
                 key={tier.name}
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
               >
-                <motion.div
+                <m.div
                   variants={tier.highlight ? highlightCardVariants : cardVariants}
                   initial="rest"
                   whileHover="hover"
@@ -299,8 +299,8 @@ export default function PricingPage() {
                       </button>
                     )}
                   </div>
-                </motion.div>
-              </motion.div>
+                </m.div>
+              </m.div>
             ))}
           </div>
         </div>
@@ -323,7 +323,7 @@ export default function PricingPage() {
 
           {/* Categories */}
           {comparison.map((cat, catIdx) => (
-            <motion.div
+            <m.div
               key={cat.name}
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -349,7 +349,7 @@ export default function PricingPage() {
                   <div><CellValue value={row.enterprise} /></div>
                 </div>
               ))}
-            </motion.div>
+            </m.div>
           ))}
 
           {/* Bottom CTA row */}
@@ -380,7 +380,7 @@ export default function PricingPage() {
       {/* Bottom CTA Banner */}
       <section className="py-12 md:py-16 border-t border-[#2E2E35]">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -403,7 +403,7 @@ export default function PricingPage() {
                 Get Started
               </Link>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       </section>
 

@@ -42,9 +42,13 @@ export default function ProjectInviteModal({
 
   useEffect(() => {
     if (isOpen && inviteLinkData && !inviteLinkData.inviteCode && !isEnsuring) {
-      handleEnsureInviteCode()
+      setIsEnsuring(true)
+      ensureInviteCode({ projectId: projectId as any })
+        .then(() => toast.success('Invite code generated!'))
+        .catch((error: any) => toast.error(error.message || 'Failed to generate invite code'))
+        .finally(() => setIsEnsuring(false))
     }
-  }, [isOpen, inviteLinkData?.inviteCode, isEnsuring])
+  }, [isOpen, inviteLinkData?.inviteCode, isEnsuring, projectId, ensureInviteCode])
 
   const handleEnsureInviteCode = async () => {
     try {
@@ -171,6 +175,7 @@ export default function ProjectInviteModal({
                   type="text"
                   value={inviteUrl || (isEnsuring ? 'Generating...' : 'No invite code available')}
                   readOnly
+                  aria-label="Shareable invite link"
                   className="flex-1 px-3 py-2 bg-[#050505] border-2 border-[#2E2E35] font-mono text-xs text-[#9CA3AF] focus:border-[#6366F1] focus:outline-none"
                 />
                 <button
@@ -207,6 +212,7 @@ export default function ProjectInviteModal({
                   type="text"
                   value={inviteCode || (isEnsuring ? 'Generating...' : 'No invite code available')}
                   readOnly
+                  aria-label="Invite code"
                   className="flex-1 px-3 py-2 bg-[#050505] border-2 border-[#2E2E35] font-mono text-sm text-[#6366F1] font-bold focus:border-[#6366F1] focus:outline-none"
                 />
                 <button

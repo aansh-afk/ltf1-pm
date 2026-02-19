@@ -65,8 +65,9 @@ export default function JoinProjectPage() {
         {!inviteCode && (
           <form onSubmit={handleManualCodeSubmit} className="mb-[16px]">
             <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
-              <label className="block text-brutal-sm mb-12px">PROJECT INVITE CODE</label>
+              <label htmlFor="join-project-code" className="block text-brutal-sm mb-12px">PROJECT INVITE CODE</label>
               <input
+                id="join-project-code"
                 type="text"
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value)}

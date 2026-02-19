@@ -257,8 +257,8 @@ export default function TeamActivityFeed({
           <h3 className="text-[14px] font-semibold font-bold uppercase">TEAM ACTIVITY</h3>
         </div>
         <div className="animate-pulse space-y-8px">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-[8px] p-8px bg-basalt-border/20">
+          {['s1','s2','s3','s4','s5'].map((id) => (
+            <div key={id} className="flex items-center gap-[8px] p-8px bg-basalt-border/20">
               <div className="w-40px h-12px bg-basalt-border"></div>
               <div className="w-4 h-4 bg-basalt-border rounded"></div>
               <div className="w-80px h-12px bg-basalt-border"></div>
@@ -328,7 +328,7 @@ export default function TeamActivityFeed({
 
             return (
               <div 
-                key={`${activity._id}-${index}`}
+                key={activity._id}
                 className="flex items-center gap-[8px] p-8px hover:bg-basalt-border/20 transition-colors border-l-2 border-transparent hover:border-primary-brutalist/30"
               >
                 <span className="text-brutal-xs text-primary-brutalist/60 min-w-40px">

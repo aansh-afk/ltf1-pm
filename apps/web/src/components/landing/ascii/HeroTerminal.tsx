@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useReducer, useEffect } from 'react'
 
 // Left panel: what the developer actually does
 const DEV_COMMANDS = [
@@ -25,18 +25,58 @@ const ENGINE_LINES: { tag: string; text: string }[] = [
 
 const ENGINE_SPEED = 110
 
+type HeroTerminalState = {
+  started: boolean
+  completedLeft: string[]
+  typingText: string
+  showCursor: boolean
+  engineLines: typeof ENGINE_LINES
+  devDone: boolean
+  engineActive: boolean
+  engineDone: boolean
+}
+
+const heroTerminalInitialState: HeroTerminalState = {
+  started: false,
+  completedLeft: [],
+  typingText: '',
+  showCursor: false,
+  engineLines: [],
+  devDone: false,
+  engineActive: false,
+  engineDone: false,
+}
+
+type HeroTerminalAction =
+  | { type: 'UPDATE'; field: keyof HeroTerminalState; value: HeroTerminalState[keyof HeroTerminalState] }
+  | { type: 'ADD_COMPLETED_LEFT'; value: string }
+  | { type: 'ADD_ENGINE_LINE'; value: typeof ENGINE_LINES[number] }
+  | { type: 'RESET_ANIMATION' }
+  | { type: 'SHOW_FINAL' }
+
+function heroTerminalReducer(state: HeroTerminalState, action: HeroTerminalAction): HeroTerminalState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    case 'ADD_COMPLETED_LEFT':
+      return { ...state, completedLeft: [...state.completedLeft, action.value], typingText: '' }
+    case 'ADD_ENGINE_LINE':
+      return { ...state, engineLines: [...state.engineLines, action.value] }
+    case 'RESET_ANIMATION':
+      return { ...state, completedLeft: [], typingText: '', showCursor: false, engineLines: [], devDone: false, engineActive: false, engineDone: false }
+    case 'SHOW_FINAL':
+      return { ...state, completedLeft: DEV_COMMANDS.map((c) => c.text), engineLines: ENGINE_LINES, devDone: true, engineActive: true, engineDone: true }
+    default:
+      return state
+  }
+}
+
 export default function HeroTerminal() {
   const containerRef = useRef<HTMLDivElement>(null)
   const rightPanelRef = useRef<HTMLDivElement>(null)
 
-  const [started, setStarted] = useState(false)
-  const [completedLeft, setCompletedLeft] = useState<string[]>([])
-  const [typingText, setTypingText] = useState('')
-  const [showCursor, setShowCursor] = useState(false)
-  const [engineLines, setEngineLines] = useState<typeof ENGINE_LINES>([])
-  const [devDone, setDevDone] = useState(false)
-  const [engineActive, setEngineActive] = useState(false)
-  const [engineDone, setEngineDone] = useState(false)
+  const [state, dispatch] = useReducer(heroTerminalReducer, heroTerminalInitialState)
+  const { started, completedLeft, typingText, showCursor, engineLines, devDone, engineActive, engineDone } = state
 
   // Trigger via IntersectionObserver
   useEffect(() => {
@@ -46,7 +86,7 @@ export default function HeroTerminal() {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setStarted(true)
+          dispatch({ type: 'UPDATE', field: 'started', value: true })
           observer.disconnect()
         }
       },
@@ -64,46 +104,36 @@ export default function HeroTerminal() {
     }
   }, [engineLines])
 
-  // Animation: pre-computed setTimeout array
+  // react-doctor false positive: multiple setState calls are for animation reset and sequential timers;
+  // React 18 batches synchronous setState calls in useEffect automatically
   useEffect(() => {
     if (!started) return
 
     // Reset for clean start
-    setCompletedLeft([])
-    setTypingText('')
-    setShowCursor(false)
-    setEngineLines([])
-    setDevDone(false)
-    setEngineActive(false)
-    setEngineDone(false)
+    dispatch({ type: 'RESET_ANIMATION' })
 
     // Reduced motion: show final state immediately
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setCompletedLeft(DEV_COMMANDS.map((c) => c.text))
-      setEngineLines(ENGINE_LINES)
-      setDevDone(true)
-      setEngineActive(true)
-      setEngineDone(true)
+      dispatch({ type: 'SHOW_FINAL' })
       return
     }
 
     const timers: ReturnType<typeof setTimeout>[] = []
     let t = 300
 
-    timers.push(setTimeout(() => setShowCursor(true), t))
+    timers.push(setTimeout(() => dispatch({ type: 'UPDATE', field: 'showCursor', value: true }), t))
 
     // Phase 1: developer types git commands
     for (const cmd of DEV_COMMANDS) {
       for (let i = 1; i <= cmd.text.length; i++) {
         const d = t
-        timers.push(setTimeout(() => setTypingText(cmd.text.slice(0, i)), d))
+        timers.push(setTimeout(() => dispatch({ type: 'UPDATE', field: 'typingText', value: cmd.text.slice(0, i) }), d))
         t += cmd.speed
       }
       const lineEnd = t
       timers.push(
         setTimeout(() => {
-          setCompletedLeft((prev) => [...prev, cmd.text])
-          setTypingText('')
+          dispatch({ type: 'ADD_COMPLETED_LEFT', value: cmd.text })
         }, lineEnd)
       )
       t += cmd.pauseAfter
@@ -113,27 +143,27 @@ export default function HeroTerminal() {
     const devEnd = t
     timers.push(
       setTimeout(() => {
-        setShowCursor(false)
-        setDevDone(true)
+        dispatch({ type: 'UPDATE', field: 'showCursor', value: false })
+        dispatch({ type: 'UPDATE', field: 'devDone', value: true })
       }, devEnd)
     )
     t += 350
 
     // Phase 2: engine fires up
-    timers.push(setTimeout(() => setEngineActive(true), t))
+    timers.push(setTimeout(() => dispatch({ type: 'UPDATE', field: 'engineActive', value: true }), t))
 
     for (let i = 0; i < ENGINE_LINES.length; i++) {
       const d = t
       timers.push(
         setTimeout(
-          () => setEngineLines((prev) => [...prev, ENGINE_LINES[i]]),
+          () => dispatch({ type: 'ADD_ENGINE_LINE', value: ENGINE_LINES[i] }),
           d
         )
       )
       t += ENGINE_SPEED
     }
 
-    timers.push(setTimeout(() => setEngineDone(true), t))
+    timers.push(setTimeout(() => dispatch({ type: 'UPDATE', field: 'engineDone', value: true }), t))
 
     return () => timers.forEach(clearTimeout)
   }, [started])
@@ -154,8 +184,8 @@ export default function HeroTerminal() {
           {/* Content */}
           <div className="p-4 font-['IBM_Plex_Mono',monospace] text-sm min-h-[160px] md:min-h-[260px] flex flex-col">
             <div className="flex-1">
-              {completedLeft.map((line, i) => (
-                <div key={i} className="text-[#F9FAFB] leading-7">
+              {completedLeft.map((line) => (
+                <div key={line} className="text-[#F9FAFB] leading-7">
                   {line}
                 </div>
               ))}
@@ -214,8 +244,8 @@ export default function HeroTerminal() {
             ) : (
               <>
                 <div className="flex-1">
-                  {engineLines.map((line, i) => (
-                    <div key={i} className="leading-6 flex">
+                  {engineLines.map((line) => (
+                    <div key={line.tag} className="leading-6 flex">
                       <span className="text-[#6366F1] shrink-0 w-[80px]">
                         [{line.tag}]
                       </span>

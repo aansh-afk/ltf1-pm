@@ -89,25 +89,26 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: Cre
     >
       <form onSubmit={handleSubmit} className="space-y-[12px]">
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider mb-[4px] text-[var(--theme-foreground)]">
+          <label htmlFor="create-workspace-name" className="block text-xs font-bold uppercase tracking-wider mb-[4px] text-[var(--theme-foreground)]">
             WORKSPACE NAME *
           </label>
           <BrutalInput
+            id="create-workspace-name"
             type="text"
             placeholder="ENTER WORKSPACE NAME"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            autoFocus
             disabled={isCreating}
             className="w-full"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider mb-[4px] text-[var(--theme-foreground)]">
+          <label htmlFor="create-workspace-description" className="block text-xs font-bold uppercase tracking-wider mb-[4px] text-[var(--theme-foreground)]">
             DESCRIPTION (OPTIONAL)
           </label>
           <textarea
+            id="create-workspace-description"
             placeholder="DESCRIBE THIS WORKSPACE..."
             className="w-full bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)] 
                      focus:border-brutal-info focus:shadow-brutal px-[10px] py-[4px]

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useReducer, useCallback } from 'react'
 import { useAction } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import {
@@ -33,17 +33,47 @@ interface RepoBrowserPanelProps {
   onImported?: () => void
 }
 
+type RepoBrowserState = {
+  dirs: Record<string, DirNode>
+  expanded: Set<string>
+  selected: Set<string>
+  importing: boolean
+  rootLoaded: boolean
+  manualPath: string
+  manualAdding: boolean
+}
+
+const repoBrowserInitialState: RepoBrowserState = {
+  dirs: {},
+  expanded: new Set(),
+  selected: new Set(),
+  importing: false,
+  rootLoaded: false,
+  manualPath: '',
+  manualAdding: false,
+}
+
+type RepoBrowserAction =
+  | { type: 'UPDATE'; field: keyof RepoBrowserState; value: RepoBrowserState[keyof RepoBrowserState] }
+  | { type: 'RESET' }
+
+function repoBrowserReducer(state: RepoBrowserState, action: RepoBrowserAction): RepoBrowserState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    case 'RESET':
+      return repoBrowserInitialState
+    default:
+      return state
+  }
+}
+
 export default function RepoBrowserPanel({
   projectId,
   onImported,
 }: RepoBrowserPanelProps) {
-  const [dirs, setDirs] = useState<Record<string, DirNode>>({})
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [importing, setImporting] = useState(false)
-  const [rootLoaded, setRootLoaded] = useState(false)
-  const [manualPath, setManualPath] = useState('')
-  const [manualAdding, setManualAdding] = useState(false)
+  const [state, dispatch] = useReducer(repoBrowserReducer, repoBrowserInitialState)
+  const { dirs, expanded, selected, importing, rootLoaded, manualPath, manualAdding } = state
 
   const browseRepoContents = useAction(api.integrations.github.docs.browseRepoContents)
   const fetchSelectedDocs = useAction(api.integrations.github.docs.fetchSelectedDocs)
@@ -55,10 +85,10 @@ export default function RepoBrowserPanel({
     // Already loaded or loading
     if (dirs[key]?.loaded || dirs[key]?.loading) return
 
-    setDirs(prev => ({
-      ...prev,
+    dispatch({ type: 'UPDATE', field: 'dirs', value: {
+      ...dirs,
       [key]: { items: [], loaded: false, loading: true },
-    }))
+    }})
 
     try {
       const result = await browseRepoContents({
@@ -67,29 +97,29 @@ export default function RepoBrowserPanel({
       })
 
       if (result.success) {
-        setDirs(prev => ({
-          ...prev,
+        dispatch({ type: 'UPDATE', field: 'dirs', value: {
+          ...dirs,
           [key]: { items: result.items, loaded: true, loading: false },
-        }))
+        }})
       } else {
         toast.error(result.message)
-        setDirs(prev => ({
-          ...prev,
+        dispatch({ type: 'UPDATE', field: 'dirs', value: {
+          ...dirs,
           [key]: { items: [], loaded: true, loading: false },
-        }))
+        }})
       }
     } catch {
       toast.error('Failed to load directory')
-      setDirs(prev => ({
-        ...prev,
+      dispatch({ type: 'UPDATE', field: 'dirs', value: {
+        ...dirs,
         [key]: { items: [], loaded: true, loading: false },
-      }))
+      }})
     }
   }, [browseRepoContents, projectId, dirs])
 
   // Load root on first render
   if (!rootLoaded && !dirs['__root__']?.loading) {
-    setRootLoaded(true)
+    dispatch({ type: 'UPDATE', field: 'rootLoaded', value: true })
     loadDir('')
   }
 
@@ -104,21 +134,19 @@ export default function RepoBrowserPanel({
         await loadDir(path)
       }
     }
-    setExpanded(newExpanded)
+    dispatch({ type: 'UPDATE', field: 'expanded', value: newExpanded })
   }, [expanded, dirs, loadDir])
 
   // Toggle file selection
   const toggleFile = useCallback((path: string) => {
-    setSelected(prev => {
-      const next = new Set(prev)
-      if (next.has(path)) {
-        next.delete(path)
-      } else {
-        next.add(path)
-      }
-      return next
-    })
-  }, [])
+    const next = new Set(selected)
+    if (next.has(path)) {
+      next.delete(path)
+    } else {
+      next.add(path)
+    }
+    dispatch({ type: 'UPDATE', field: 'selected', value: next })
+  }, [selected])
 
   // Select all files in a loaded directory
   const selectAllInDir = useCallback(async (dirPath: string) => {
@@ -127,29 +155,23 @@ export default function RepoBrowserPanel({
       await loadDir(dirPath)
     }
 
-    // Re-read after possible load
-    setDirs(prev => {
-      const node = prev[key]
-      if (!node?.items) return prev
+    const node = dirs[key]
+    if (!node?.items) return
 
-      setSelected(sel => {
-        const next = new Set(sel)
-        for (const item of node.items) {
-          if (item.type === 'file') {
-            next.add(item.path)
-          }
-        }
-        return next
-      })
-      return prev
-    })
-  }, [dirs, loadDir])
+    const next = new Set(selected)
+    for (const item of node.items) {
+      if (item.type === 'file') {
+        next.add(item.path)
+      }
+    }
+    dispatch({ type: 'UPDATE', field: 'selected', value: next })
+  }, [dirs, loadDir, selected])
 
   // Import selected files from the browser
   const handleImportSelected = async () => {
     if (selected.size === 0) return
 
-    setImporting(true)
+    dispatch({ type: 'UPDATE', field: 'importing', value: true })
     try {
       const result = await fetchSelectedDocs({
         projectId: projectId as any,
@@ -158,7 +180,7 @@ export default function RepoBrowserPanel({
 
       if (result.success) {
         toast.success(result.message)
-        setSelected(new Set())
+        dispatch({ type: 'UPDATE', field: 'selected', value: new Set() })
         onImported?.()
       } else {
         toast.error(result.message)
@@ -166,7 +188,7 @@ export default function RepoBrowserPanel({
     } catch {
       toast.error('Failed to import files')
     } finally {
-      setImporting(false)
+      dispatch({ type: 'UPDATE', field: 'importing', value: false })
     }
   }
 
@@ -183,7 +205,7 @@ export default function RepoBrowserPanel({
 
     if (paths.length === 0) return
 
-    setManualAdding(true)
+    dispatch({ type: 'UPDATE', field: 'manualAdding', value: true })
     try {
       const result = await fetchSelectedDocs({
         projectId: projectId as any,
@@ -192,7 +214,7 @@ export default function RepoBrowserPanel({
 
       if (result.success) {
         toast.success(result.message)
-        setManualPath('')
+        dispatch({ type: 'UPDATE', field: 'manualPath', value: '' })
         onImported?.()
       } else {
         toast.error(result.message)
@@ -200,7 +222,7 @@ export default function RepoBrowserPanel({
     } catch {
       toast.error('Failed to fetch files')
     } finally {
-      setManualAdding(false)
+      dispatch({ type: 'UPDATE', field: 'manualAdding', value: false })
     }
   }
 
@@ -210,7 +232,7 @@ export default function RepoBrowserPanel({
     <div className="space-y-[16px]">
       {/* Manual path input */}
       <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[12px]">
-        <label className="block text-brutal-xs font-mono font-bold uppercase text-[var(--theme-foreground)]/60 mb-[6px]">
+        <label htmlFor="repo-manual-path" className="block text-brutal-xs font-mono font-bold uppercase text-[var(--theme-foreground)]/60 mb-[6px]">
           ADD BY PATH
         </label>
         <p className="text-brutal-xs text-[var(--theme-foreground)]/40 mb-[8px]">
@@ -218,9 +240,10 @@ export default function RepoBrowserPanel({
         </p>
         <div className="flex gap-[8px]">
           <input
+            id="repo-manual-path"
             type="text"
             value={manualPath}
-            onChange={(e) => setManualPath(e.target.value)}
+            onChange={(e) => dispatch({ type: 'UPDATE', field: 'manualPath', value: e.target.value })}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && manualPath.trim()) {
                 handleManualAdd()
@@ -409,8 +432,9 @@ function BrowseItem({
 
   // File item
   return (
-    <div
-      className="flex items-center gap-[6px] px-[8px] py-[6px] hover:bg-[var(--theme-background-secondary)] transition-colors cursor-pointer"
+    <button
+      type="button"
+      className="w-full flex items-center gap-[6px] px-[8px] py-[6px] hover:bg-[var(--theme-background-secondary)] transition-colors cursor-pointer text-left"
       style={{ paddingLeft: `${depth * 16 + 8}px` }}
       onClick={() => onToggleFile(item.path)}
     >
@@ -427,6 +451,6 @@ function BrowseItem({
           {item.size < 1024 ? `${item.size}B` : `${(item.size / 1024).toFixed(1)}KB`}
         </span>
       )}
-    </div>
+    </button>
   )
 }

@@ -20,7 +20,7 @@ import BrutalCard from '../components/ui/BrutalCard'
 import BrutalButton from '../components/ui/BrutalButton'
 import BrutalBadge from '../components/ui/BrutalBadge'
 import { useProfileCompletion } from '../hooks/useProfileCompletion'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -30,6 +30,91 @@ const fadeUp = {
 const stagger = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.08 } }
+}
+
+// ── Sub-components ──
+
+interface IdentityCardProps {
+  userName: string
+  role: string
+  userId: string
+  userIdRaw: string
+}
+
+function IdentityCard({ userName, role, userId, userIdRaw }: IdentityCardProps) {
+  return (
+    <BrutalCard variant="default">
+      <div className="flex flex-col items-center text-center">
+        <div className="w-20 h-20 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] flex items-center justify-center mb-3">
+          <HiOutlineUser className="w-10 h-10 text-[var(--theme-foreground)]/20" />
+        </div>
+
+        <h2 className="text-base font-bold uppercase tracking-wider mb-0.5 text-[var(--theme-foreground)]">
+          {userName}
+        </h2>
+        <p className="font-mono text-xs text-[var(--theme-primary)]">
+          {role}
+        </p>
+
+        <div className="w-full border-t border-[var(--theme-border)] mt-3 pt-3">
+          <div className="flex justify-between items-center px-1">
+            <span className="font-mono text-[10px] text-[var(--theme-foreground)]/40 uppercase tracking-wider">STATUS</span>
+            <DeveloperStatusIndicator userId={userId as any} size="sm" showLabel={true} />
+          </div>
+        </div>
+
+        <div className="w-full border-t border-[var(--theme-border)] mt-3 pt-2">
+          <span className="font-mono text-[10px] text-[var(--theme-foreground)]/20 break-all leading-tight block">
+            {userIdRaw}
+          </span>
+        </div>
+      </div>
+    </BrutalCard>
+  )
+}
+
+interface AvailabilityMatrixProps {
+  timezone: string
+  workingHours: { start: string; end: string } | undefined
+  availability: string
+}
+
+function AvailabilityMatrix({ timezone, workingHours, availability }: AvailabilityMatrixProps) {
+  return (
+    <BrutalCard variant="default">
+      <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2 text-[var(--theme-foreground)]">
+        <HiOutlineClock className="w-4 h-4" /> AVAILABILITY
+      </h3>
+      <div className="space-y-1.5">
+        <div className="flex justify-between items-center p-2 bg-[var(--theme-background)] border border-[var(--theme-border)]">
+          <span className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--theme-foreground)]/40 uppercase">
+            <HiOutlineGlobeAlt className="w-3.5 h-3.5" /> TIMEZONE
+          </span>
+          <span className="font-mono text-[10px] text-[var(--theme-info)]">
+            {timezone}
+          </span>
+        </div>
+        <div className="flex justify-between items-center p-2 bg-[var(--theme-background)] border border-[var(--theme-border)]">
+          <span className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--theme-foreground)]/40 uppercase">
+            <HiOutlineClock className="w-3.5 h-3.5" /> HOURS
+          </span>
+          <span className="font-mono text-[10px] text-[var(--theme-foreground)]">
+            {workingHours
+              ? `${workingHours.start} - ${workingHours.end}`
+              : 'N/A'}
+          </span>
+        </div>
+        <div className="flex justify-between items-center p-2 bg-[var(--theme-background)] border border-[var(--theme-border)]">
+          <span className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--theme-foreground)]/40 uppercase">
+            <HiOutlineBriefcase className="w-3.5 h-3.5" /> STATUS
+          </span>
+          <span className="font-mono text-[10px] text-[var(--theme-success)]">
+            {availability}
+          </span>
+        </div>
+      </div>
+    </BrutalCard>
+  )
 }
 
 export default function MyProfilePage() {
@@ -65,7 +150,7 @@ export default function MyProfilePage() {
     }
   }, [currentUser, developerProfile])
 
-  // Check for redirect after profile completion
+  // react-doctor: legitimate - reacts to server-driven profileComplete state for redirect
   useEffect(() => {
     if (profileComplete) {
       const redirectPath = sessionStorage.getItem('profile-completion-redirect')
@@ -88,7 +173,7 @@ export default function MyProfilePage() {
   }
 
   return (
-    <motion.div
+    <m.div
       className="p-4 max-w-6xl mx-auto"
       initial="hidden"
       animate="visible"
@@ -96,7 +181,7 @@ export default function MyProfilePage() {
     >
       {/* Profile Completion Banner */}
       {!profileComplete && (
-        <motion.div variants={fadeUp} className="mb-3">
+        <m.div variants={fadeUp} className="mb-3">
           <div className="border-2 border-[var(--theme-error)] bg-[var(--theme-error)]/5 p-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
@@ -115,11 +200,11 @@ export default function MyProfilePage() {
               </BrutalButton>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       )}
 
       {/* Page Header */}
-      <motion.div variants={fadeUp} className="flex items-center justify-between mb-4">
+      <m.div variants={fadeUp} className="flex items-center justify-between mb-4">
         <div>
           <span className="text-[10px] font-mono font-semibold uppercase tracking-widest text-[var(--theme-foreground)]/40 block mb-1">
             DEVELOPER PROFILE
@@ -134,7 +219,7 @@ export default function MyProfilePage() {
             EDIT PROFILE
           </span>
         </BrutalButton>
-      </motion.div>
+      </m.div>
 
       {/* Profile Content */}
       {developerProfile ? (
@@ -143,79 +228,30 @@ export default function MyProfilePage() {
           {/* LEFT COLUMN - Identity & Status */}
           <div className="lg:col-span-4 space-y-3">
             {/* Identity Card */}
-            <motion.div variants={fadeUp}>
-              <BrutalCard variant="default">
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-20 h-20 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] flex items-center justify-center mb-3">
-                    <HiOutlineUser className="w-10 h-10 text-[var(--theme-foreground)]/20" />
-                  </div>
-
-                  <h2 className="text-base font-bold uppercase tracking-wider mb-0.5 text-[var(--theme-foreground)]">
-                    {currentUser.name || 'UNKNOWN AGENT'}
-                  </h2>
-                  <p className="font-mono text-xs text-[var(--theme-primary)]">
-                    {developerProfile.profile?.role?.toUpperCase() || 'UNASSIGNED ROLE'}
-                  </p>
-
-                  <div className="w-full border-t border-[var(--theme-border)] mt-3 pt-3">
-                    <div className="flex justify-between items-center px-1">
-                      <span className="font-mono text-[10px] text-[var(--theme-foreground)]/40 uppercase tracking-wider">STATUS</span>
-                      <DeveloperStatusIndicator userId={currentUser._id} size="sm" showLabel={true} />
-                    </div>
-                  </div>
-
-                  <div className="w-full border-t border-[var(--theme-border)] mt-3 pt-2">
-                    <span className="font-mono text-[10px] text-[var(--theme-foreground)]/20 break-all leading-tight block">
-                      {currentUser._id}
-                    </span>
-                  </div>
-                </div>
-              </BrutalCard>
-            </motion.div>
+            <m.div variants={fadeUp}>
+              <IdentityCard
+                userName={currentUser.name || 'UNKNOWN AGENT'}
+                role={developerProfile.profile?.role?.toUpperCase() || 'UNASSIGNED ROLE'}
+                userId={currentUser._id}
+                userIdRaw={currentUser._id}
+              />
+            </m.div>
 
             {/* Availability Matrix */}
-            <motion.div variants={fadeUp}>
-              <BrutalCard variant="default">
-                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2 text-[var(--theme-foreground)]">
-                  <HiOutlineClock className="w-4 h-4" /> AVAILABILITY
-                </h3>
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-center p-2 bg-[var(--theme-background)] border border-[var(--theme-border)]">
-                    <span className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--theme-foreground)]/40 uppercase">
-                      <HiOutlineGlobeAlt className="w-3.5 h-3.5" /> TIMEZONE
-                    </span>
-                    <span className="font-mono text-[10px] text-[var(--theme-info)]">
-                      {developerProfile.profile?.timezone || 'N/A'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-2 bg-[var(--theme-background)] border border-[var(--theme-border)]">
-                    <span className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--theme-foreground)]/40 uppercase">
-                      <HiOutlineClock className="w-3.5 h-3.5" /> HOURS
-                    </span>
-                    <span className="font-mono text-[10px] text-[var(--theme-foreground)]">
-                      {developerProfile.profile?.workingHours
-                        ? `${developerProfile.profile.workingHours.start} - ${developerProfile.profile.workingHours.end}`
-                        : 'N/A'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-2 bg-[var(--theme-background)] border border-[var(--theme-border)]">
-                    <span className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--theme-foreground)]/40 uppercase">
-                      <HiOutlineBriefcase className="w-3.5 h-3.5" /> STATUS
-                    </span>
-                    <span className="font-mono text-[10px] text-[var(--theme-success)]">
-                      {developerProfile.profile?.availability || 'N/A'}
-                    </span>
-                  </div>
-                </div>
-              </BrutalCard>
-            </motion.div>
+            <m.div variants={fadeUp}>
+              <AvailabilityMatrix
+                timezone={developerProfile.profile?.timezone || 'N/A'}
+                workingHours={developerProfile.profile?.workingHours}
+                availability={developerProfile.profile?.availability || 'N/A'}
+              />
+            </m.div>
           </div>
 
           {/* RIGHT COLUMN - Details & Stats */}
           <div className="lg:col-span-8 space-y-3">
 
             {/* Bio Section */}
-            <motion.div variants={fadeUp}>
+            <m.div variants={fadeUp}>
               <BrutalCard variant="default">
                 <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2 text-[var(--theme-foreground)] border-b border-[var(--theme-border)] pb-2">
                   <HiOutlineTerminal className="w-4 h-4" /> BIO
@@ -224,11 +260,11 @@ export default function MyProfilePage() {
                   {developerProfile.profile?.bio || '// NO BIOGRAPHICAL DATA AVAILABLE'}
                 </p>
               </BrutalCard>
-            </motion.div>
+            </m.div>
 
             {/* Tech Stack Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <motion.div variants={fadeUp}>
+              <m.div variants={fadeUp}>
                 <BrutalCard variant="default" className="h-full">
                   <h3 className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2 text-[var(--theme-foreground)]">
                     <HiOutlineChip className="w-4 h-4" /> TECHNOLOGIES
@@ -252,9 +288,9 @@ export default function MyProfilePage() {
                     )}
                   </div>
                 </BrutalCard>
-              </motion.div>
+              </m.div>
 
-              <motion.div variants={fadeUp}>
+              <m.div variants={fadeUp}>
                 <BrutalCard variant="default" className="h-full">
                   <h3 className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2 text-[var(--theme-foreground)]">
                     <HiOutlineCode className="w-4 h-4" /> SKILLS & INTERESTS
@@ -288,11 +324,11 @@ export default function MyProfilePage() {
                     </div>
                   </div>
                 </BrutalCard>
-              </motion.div>
+              </m.div>
             </div>
 
             {/* GitHub Stats */}
-            <motion.div variants={fadeUp}>
+            <m.div variants={fadeUp}>
               <GitHubProfileSection
                 userId={currentUser._id}
                 isProfileComplete={profileComplete}
@@ -300,13 +336,13 @@ export default function MyProfilePage() {
                   window.location.reload();
                 }}
               />
-            </motion.div>
+            </m.div>
 
           </div>
         </div>
       ) : (
         // No Profile State
-        <motion.div variants={fadeUp}>
+        <m.div variants={fadeUp}>
           <div className="border-2 border-[var(--theme-border)] border-dashed p-8 text-center">
             <div className="w-10 h-10 mx-auto mb-3 flex items-center justify-center border-2 border-[var(--theme-border)] text-[var(--theme-foreground)]/20">
               <HiOutlineUser className="w-5 h-5" />
@@ -322,7 +358,7 @@ export default function MyProfilePage() {
               CREATE PROFILE
             </BrutalButton>
           </div>
-        </motion.div>
+        </m.div>
       )}
 
       {/* Edit Modal */}
@@ -334,6 +370,6 @@ export default function MyProfilePage() {
           }}
         />
       )}
-    </motion.div>
+    </m.div>
   )
 }

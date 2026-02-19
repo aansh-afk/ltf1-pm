@@ -70,18 +70,18 @@ export default function NpsSurveyModal({ onClose }: { onClose: () => void }) {
               How likely are you to recommend LTF1 to a friend or colleague?
             </p>
             <div className="grid grid-cols-11 gap-1">
-              {Array.from({ length: 11 }, (_, i) => (
+              {[0,1,2,3,4,5,6,7,8,9,10].map((score) => (
                 <button
-                  key={i}
-                  onClick={() => handleScore(i)}
+                  key={`nps-${score}`}
+                  onClick={() => handleScore(score)}
                   className="aspect-square flex items-center justify-center text-xs font-mono border-2 cursor-pointer transition-colors"
                   style={{
-                    borderColor: getScoreColor(i),
+                    borderColor: getScoreColor(score),
                     color: '#F9FAFB',
                     backgroundColor: '#111111',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = getScoreColor(i)
+                    e.currentTarget.style.backgroundColor = getScoreColor(score)
                     e.currentTarget.style.color = '#050505'
                   }}
                   onMouseLeave={(e) => {
@@ -89,7 +89,7 @@ export default function NpsSurveyModal({ onClose }: { onClose: () => void }) {
                     e.currentTarget.style.color = '#F9FAFB'
                   }}
                 >
-                  {i}
+                  {score}
                 </button>
               ))}
             </div>

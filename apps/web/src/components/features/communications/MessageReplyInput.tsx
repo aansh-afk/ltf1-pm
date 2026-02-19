@@ -58,6 +58,7 @@ export default function MessageReplyInput({ channelId, source }: MessageReplyInp
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type a message..."
+          aria-label="Type a reply message"
           disabled={sending}
           className="flex-1 px-3 py-2 bg-[#050505] border-2 border-[#2E2E35] font-mono text-xs text-[#F9FAFB] placeholder-[#6B7280] focus:border-[#6366F1] focus:outline-none transition-colors disabled:opacity-50"
         />

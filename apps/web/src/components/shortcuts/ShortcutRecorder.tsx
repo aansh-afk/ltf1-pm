@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useReducer } from 'react'
 import type { KeyCombo, ShortcutConflict } from '../../types/shortcuts'
 import { useShortcuts } from '../../contexts/ShortcutContext'
 import { HiOutlineExclamationCircle, HiOutlineX } from 'react-icons/hi'
@@ -12,6 +12,44 @@ interface ShortcutRecorderProps {
   className?: string
 }
 
+type RecorderState = {
+  isRecording: boolean
+  recordedKeys: KeyCombo | null
+  conflicts: ShortcutConflict[]
+  pressedKeys: Set<string>
+}
+
+type RecorderAction =
+  | { type: 'START_RECORDING' }
+  | { type: 'STOP_RECORDING' }
+  | { type: 'KEY_DOWN'; keys: KeyCombo; conflicts: ShortcutConflict[]; pressedKeys: Set<string> }
+  | { type: 'KEY_UP' }
+  | { type: 'CANCEL' }
+
+const recorderInitialState: RecorderState = {
+  isRecording: false,
+  recordedKeys: null,
+  conflicts: [],
+  pressedKeys: new Set(),
+}
+
+function recorderReducer(state: RecorderState, action: RecorderAction): RecorderState {
+  switch (action.type) {
+    case 'START_RECORDING':
+      return { isRecording: true, recordedKeys: null, conflicts: [], pressedKeys: new Set() }
+    case 'STOP_RECORDING':
+      return { ...state, isRecording: false, pressedKeys: new Set() }
+    case 'KEY_DOWN':
+      return { ...state, recordedKeys: action.keys, conflicts: action.conflicts, pressedKeys: action.pressedKeys }
+    case 'KEY_UP':
+      return { ...state, pressedKeys: new Set() }
+    case 'CANCEL':
+      return { isRecording: false, recordedKeys: null, conflicts: [], pressedKeys: new Set() }
+    default:
+      return state
+  }
+}
+
 export default function ShortcutRecorder({
   currentKeys,
   onRecord,
@@ -20,10 +58,8 @@ export default function ShortcutRecorder({
   className
 }: ShortcutRecorderProps) {
   const { formatKeyCombo, checkConflicts, recordKeyCombo } = useShortcuts()
-  const [isRecording, setIsRecording] = useState(false)
-  const [recordedKeys, setRecordedKeys] = useState<KeyCombo | null>(null)
-  const [conflicts, setConflicts] = useState<ShortcutConflict[]>([])
-  const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set())
+  const [state, dispatch] = useReducer(recorderReducer, recorderInitialState)
+  const { isRecording, recordedKeys, conflicts, pressedKeys } = state
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -33,31 +69,25 @@ export default function ShortcutRecorder({
       event.preventDefault()
       event.stopPropagation()
 
-      // Record the key combination
       const keys = recordKeyCombo(event)
-      setRecordedKeys(keys)
-
-      // Check for conflicts
       const foundConflicts = checkConflicts(keys, excludeId)
-      setConflicts(foundConflicts)
 
-      // Track pressed keys for visual feedback
       const keySet = new Set<string>()
       if (event.ctrlKey) keySet.add('ctrl')
       if (event.altKey) keySet.add('alt')
       if (event.shiftKey) keySet.add('shift')
       if (event.metaKey) keySet.add('meta')
       keySet.add(event.key.toLowerCase())
-      setPressedKeys(keySet)
+
+      dispatch({ type: 'KEY_DOWN', keys, conflicts: foundConflicts, pressedKeys: keySet })
     }
 
     const handleKeyUp = (event: KeyboardEvent) => {
       event.preventDefault()
       event.stopPropagation()
-      
-      // Clear pressed keys on key up
+
       setTimeout(() => {
-        setPressedKeys(new Set())
+        dispatch({ type: 'KEY_UP' })
       }, 100)
     }
 
@@ -71,16 +101,12 @@ export default function ShortcutRecorder({
   }, [isRecording, recordKeyCombo, checkConflicts, excludeId])
 
   const startRecording = () => {
-    setIsRecording(true)
-    setRecordedKeys(null)
-    setConflicts([])
-    setPressedKeys(new Set())
+    dispatch({ type: 'START_RECORDING' })
     containerRef.current?.focus()
   }
 
   const stopRecording = () => {
-    setIsRecording(false)
-    setPressedKeys(new Set())
+    dispatch({ type: 'STOP_RECORDING' })
   }
 
   const handleSave = () => {
@@ -91,9 +117,7 @@ export default function ShortcutRecorder({
   }
 
   const handleCancel = () => {
-    stopRecording()
-    setRecordedKeys(null)
-    setConflicts([])
+    dispatch({ type: 'CANCEL' })
     onCancel()
   }
 
@@ -173,8 +197,8 @@ export default function ShortcutRecorder({
                 <h4 className="font-mono text-brutal-xs uppercase mb-4px text-brutal-error">
                   CONFLICT DETECTED
                 </h4>
-                {conflicts.map((conflict, index) => (
-                  <p key={index} className="font-mono text-brutal-xs text-cathode-white/80">
+                {conflicts.map((conflict) => (
+                  <p key={conflict.shortcutId2} className="font-mono text-brutal-xs text-cathode-white/80">
                     This combination is already used by: {conflict.shortcutId2}
                   </p>
                 ))}

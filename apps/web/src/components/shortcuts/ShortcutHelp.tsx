@@ -76,9 +76,13 @@ export default function ShortcutHelp() {
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-event-horizon/90 backdrop-blur-sm z-[9998] print:hidden"
+        role="button"
+        tabIndex={0}
+        aria-label="Close shortcut help"
         onClick={() => setHelpOpen(false)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setHelpOpen(false) }}
       />
 
       {/* Help Modal */}
@@ -121,6 +125,7 @@ export default function ShortcutHelp() {
                 placeholder="SEARCH SHORTCUTS..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search shortcuts"
                 className="brutal-input pl-36px w-full"
               />
             </div>
@@ -218,7 +223,7 @@ export default function ShortcutHelp() {
       </div>
 
       {/* Print Styles */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style>{`
         @media print {
           body * {
             visibility: hidden;
@@ -242,7 +247,7 @@ export default function ShortcutHelp() {
             break-inside: avoid;
           }
         }
-      `}} />
+      `}</style>
     </>
   )
 }

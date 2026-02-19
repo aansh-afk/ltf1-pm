@@ -1,3 +1,5 @@
+const MARQUEE_IDS = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o'] as const
+
 interface MarqueeBackgroundProps {
   text?: string;
   speed?: 'slow' | 'normal' | 'fast';
@@ -18,9 +20,9 @@ export default function MarqueeBackground({
       {/* First row */}
       <div className="flex whitespace-nowrap">
         <div className={`flex whitespace-nowrap ${animationClass}`}>
-          {Array.from({ length: 15 }, (_, i) => (
-            <span 
-              key={i} 
+          {MARQUEE_IDS.map((id) => (
+            <span
+              key={`r1a-${id}`}
               className="text-[#333333] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-32px opacity-10 select-none"
             >
               {text}
@@ -28,9 +30,9 @@ export default function MarqueeBackground({
           ))}
         </div>
         <div className={`flex whitespace-nowrap ${animation2Class}`}>
-          {Array.from({ length: 15 }, (_, i) => (
-            <span 
-              key={i} 
+          {MARQUEE_IDS.map((id) => (
+            <span
+              key={`r1b-${id}`}
               className="text-[#333333] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-32px opacity-10 select-none"
             >
               {text}
@@ -38,13 +40,13 @@ export default function MarqueeBackground({
           ))}
         </div>
       </div>
-      
+
       {/* Second row with offset */}
       <div className="flex whitespace-nowrap mt-64px">
         <div className={`flex whitespace-nowrap ${animationClass}`} style={{ animationDelay: '-8s' }}>
-          {Array.from({ length: 15 }, (_, i) => (
-            <span 
-              key={i} 
+          {MARQUEE_IDS.map((id) => (
+            <span
+              key={`r2a-${id}`}
               className="text-[#333333] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-32px opacity-5 select-none"
             >
               {text}
@@ -52,9 +54,9 @@ export default function MarqueeBackground({
           ))}
         </div>
         <div className={`flex whitespace-nowrap ${animation2Class}`} style={{ animationDelay: '-8s' }}>
-          {Array.from({ length: 15 }, (_, i) => (
-            <span 
-              key={i} 
+          {MARQUEE_IDS.map((id) => (
+            <span
+              key={`r2b-${id}`}
               className="text-[#333333] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-32px opacity-5 select-none"
             >
               {text}
@@ -62,13 +64,13 @@ export default function MarqueeBackground({
           ))}
         </div>
       </div>
-      
+
       {/* Third row for full coverage */}
       <div className="flex whitespace-nowrap mt-64px">
         <div className={`flex whitespace-nowrap ${animationClass}`} style={{ animationDelay: '-16s' }}>
-          {Array.from({ length: 15 }, (_, i) => (
-            <span 
-              key={i} 
+          {MARQUEE_IDS.map((id) => (
+            <span
+              key={`r3a-${id}`}
               className="text-[#333333] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-32px opacity-5 select-none"
             >
               {text}
@@ -76,9 +78,9 @@ export default function MarqueeBackground({
           ))}
         </div>
         <div className={`flex whitespace-nowrap ${animation2Class}`} style={{ animationDelay: '-16s' }}>
-          {Array.from({ length: 15 }, (_, i) => (
-            <span 
-              key={i} 
+          {MARQUEE_IDS.map((id) => (
+            <span
+              key={`r3b-${id}`}
               className="text-[#333333] text-4xl md:text-6xl font-bold uppercase tracking-wider mx-32px opacity-5 select-none"
             >
               {text}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useReducer } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { useMutation, useAction } from 'convex/react'
 import { api } from '@convex/_generated/api'
@@ -33,6 +33,43 @@ interface Repository {
   installationId?: number
 }
 
+type ConnectRepoState = {
+  mode: 'picker' | 'manual'
+  url: string
+  provider: 'github' | 'gitlab' | 'bitbucket'
+  isConnecting: boolean
+  searchQuery: string
+  isLoading: boolean
+  repositories: Repository[]
+  hasOAuth: boolean
+}
+
+const connectRepoInitialState: ConnectRepoState = {
+  mode: 'picker',
+  url: '',
+  provider: 'github',
+  isConnecting: false,
+  searchQuery: '',
+  isLoading: false,
+  repositories: [],
+  hasOAuth: true,
+}
+
+type ConnectRepoAction =
+  | { type: 'UPDATE'; field: keyof ConnectRepoState; value: unknown }
+  | { type: 'RESET_MANUAL' }
+
+function connectRepoReducer(state: ConnectRepoState, action: ConnectRepoAction): ConnectRepoState {
+  switch (action.type) {
+    case 'UPDATE':
+      return { ...state, [action.field]: action.value }
+    case 'RESET_MANUAL':
+      return { ...state, url: '', provider: 'github' }
+    default:
+      return state
+  }
+}
+
 export default function ConnectRepositoryModal({
   isOpen,
   onClose,
@@ -40,19 +77,13 @@ export default function ConnectRepositoryModal({
   workspaceId,
   onSuccess
 }: ConnectRepositoryModalProps) {
-  const [mode, setMode] = useState<'picker' | 'manual'>('picker')
-  const [url, setUrl] = useState('')
-  const [provider, setProvider] = useState<'github' | 'gitlab' | 'bitbucket'>('github')
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [repositories, setRepositories] = useState<Repository[]>([])
-  const [hasOAuth, setHasOAuth] = useState(true)
+  const [state, dispatch] = useReducer(connectRepoReducer, connectRepoInitialState)
+  const { mode, url, provider, isConnecting, searchQuery, isLoading, repositories, hasOAuth } = state
 
   const connectRepository = useMutation(api.projects.mutations.connectRepository)
   const fetchAvailableRepositories = useAction(api.integrations.github.actions.fetchAvailableRepositories)
 
-  // Load repositories when modal opens
+  // react-doctor: legitimate - fetches data when modal prop-driven open or workspaceId changes
   useEffect(() => {
     if (isOpen) {
       loadRepositories()
@@ -60,17 +91,17 @@ export default function ConnectRepositoryModal({
   }, [isOpen, workspaceId])
 
   const loadRepositories = async () => {
-    setIsLoading(true)
+    dispatch({ type: 'UPDATE', field: 'isLoading', value: true })
     try {
       const result = await fetchAvailableRepositories({
         workspaceId: workspaceId as Id<'workspaces'> | undefined,
       })
-      setRepositories(result.repositories)
-      setHasOAuth(result.sources.hasOAuth)
+      dispatch({ type: 'UPDATE', field: 'repositories', value: result.repositories })
+      dispatch({ type: 'UPDATE', field: 'hasOAuth', value: result.sources.hasOAuth })
     } catch (error) {
       console.error('Failed to fetch repositories:', error)
     } finally {
-      setIsLoading(false)
+      dispatch({ type: 'UPDATE', field: 'isLoading', value: false })
     }
   }
 
@@ -89,7 +120,7 @@ export default function ConnectRepositoryModal({
         return
       }
 
-      setIsConnecting(true)
+      dispatch({ type: 'UPDATE', field: 'isConnecting', value: true })
 
       try {
         await connectRepository({
@@ -103,12 +134,11 @@ export default function ConnectRepositoryModal({
         onClose()
 
         // Reset form
-        setUrl('')
-        setProvider('github')
+        dispatch({ type: 'RESET_MANUAL' })
       } catch (error: any) {
         toast.error(error.message || 'Failed to connect repository')
       } finally {
-        setIsConnecting(false)
+        dispatch({ type: 'UPDATE', field: 'isConnecting', value: false })
       }
     }
   }
@@ -140,7 +170,7 @@ export default function ConnectRepositoryModal({
   }
 
   const handleConnectRepo = async (repo: Repository) => {
-    setIsConnecting(true)
+    dispatch({ type: 'UPDATE', field: 'isConnecting', value: true })
     try {
       await connectRepository({
         projectId: projectId as Id<'projects'>,
@@ -153,7 +183,7 @@ export default function ConnectRepositoryModal({
     } catch (error: any) {
       toast.error(error.message || 'Failed to connect repository')
     } finally {
-      setIsConnecting(false)
+      dispatch({ type: 'UPDATE', field: 'isConnecting', value: false })
     }
   }
 
@@ -177,7 +207,7 @@ export default function ConnectRepositoryModal({
           <div className="flex bg-[var(--theme-background-secondary)] rounded-lg p-4px border-2 border-[var(--theme-border)]">
             <button
               type="button"
-              onClick={() => setMode('picker')}
+              onClick={() => dispatch({ type: 'UPDATE', field: 'mode', value: 'picker' })}
               className={`px-[10px] py-6px text-brutal-xs font-bold uppercase rounded-md transition-all ${mode === 'picker' ? 'bg-[var(--theme-foreground)] text-[var(--theme-background)]' : 'text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)]'
                 }`}
             >
@@ -185,7 +215,7 @@ export default function ConnectRepositoryModal({
             </button>
             <button
               type="button"
-              onClick={() => setMode('manual')}
+              onClick={() => dispatch({ type: 'UPDATE', field: 'mode', value: 'manual' })}
               className={`px-[10px] py-6px text-brutal-xs font-bold uppercase rounded-md transition-all ${mode === 'manual' ? 'bg-[var(--theme-foreground)] text-[var(--theme-background)]' : 'text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)]'
                 }`}
             >
@@ -205,12 +235,12 @@ export default function ConnectRepositoryModal({
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => dispatch({ type: 'UPDATE', field: 'searchQuery', value: e.target.value })}
                     placeholder="Search..."
                     className="w-full pl-[24px] pr-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
                               font-sans text-brutal-md placeholder:text-[var(--theme-foreground)]/30
                               focus:border-[var(--theme-foreground)] focus:outline-none transition-all shadow-sm"
-                    autoFocus
+                    aria-label="Search repositories"
                   />
                   {isLoading && (
                     <div className="absolute right-[10px] top-1/2 -translate-y-1/2">
@@ -293,13 +323,13 @@ export default function ConnectRepositoryModal({
 
                 <div className="space-y-[12px]">
                   <div>
-                    <label className="block text-brutal-xs font-bold uppercase mb-8px text-[var(--theme-foreground)]/60">Git Provider</label>
+                    <span className="block text-brutal-xs font-bold uppercase mb-8px text-[var(--theme-foreground)]/60">Git Provider</span>
                     <div className="flex gap-[6px]">
                       {(['github', 'gitlab', 'bitbucket'] as const).map((p) => (
                         <button
                           key={p}
                           type="button"
-                          onClick={() => setProvider(p)}
+                          onClick={() => dispatch({ type: 'UPDATE', field: 'provider', value: p })}
                           className={`flex-1 py-12px border-2 font-bold uppercase text-brutal-xs transition-colors rounded-md ${provider === p ? 'border-[var(--theme-foreground)] bg-[var(--theme-foreground)] text-[var(--theme-background)]' : 'border-[var(--theme-border)] hover:border-[var(--theme-foreground)]'
                             }`}
                         >
@@ -310,11 +340,12 @@ export default function ConnectRepositoryModal({
                   </div>
 
                   <div>
-                    <label className="block text-brutal-xs font-bold uppercase mb-8px text-[var(--theme-foreground)]/60">Repository URL</label>
+                    <label htmlFor="repo-url" className="block text-brutal-xs font-bold uppercase mb-8px text-[var(--theme-foreground)]/60">Repository URL</label>
                     <input
+                      id="repo-url"
                       type="url"
                       value={url}
-                      onChange={(e) => setUrl(e.target.value)}
+                      onChange={(e) => dispatch({ type: 'UPDATE', field: 'url', value: e.target.value })}
                       className="w-full px-[10px] py-12px bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-brutal-sm focus:border-[var(--theme-foreground)] focus:outline-none rounded-md"
                       placeholder="https://github.com/username/repo"
                       required

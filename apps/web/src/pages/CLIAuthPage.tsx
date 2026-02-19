@@ -9,18 +9,38 @@
  * 4. Redirect to CLI callback with token, userId, and email
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
 import { useSearchParams, Navigate } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
+
+interface CLIAuthState {
+  status: "loading" | "success" | "error";
+  errorMessage: string;
+}
+
+type CLIAuthAction =
+  | { type: "SUCCESS" }
+  | { type: "ERROR"; message: string };
+
+function cliAuthReducer(state: CLIAuthState, action: CLIAuthAction): CLIAuthState {
+  switch (action.type) {
+    case "SUCCESS":
+      return { status: "success", errorMessage: "" };
+    case "ERROR":
+      return { status: "error", errorMessage: action.message };
+    default:
+      return state;
+  }
+}
 
 export default function CLIAuthPage() {
   const [searchParams] = useSearchParams();
   const { isSignedIn, isLoaded, getToken, sessionId } = useAuth();
   const { user } = useUser();
-  const [status, setStatus] = useState<"loading" | "success" | "error">(
-    "loading",
-  );
-  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [{ status, errorMessage }, dispatch] = useReducer(cliAuthReducer, {
+    status: "loading",
+    errorMessage: "",
+  });
 
   const callbackUrl = searchParams.get("callback");
   const state = searchParams.get("state");
@@ -29,10 +49,10 @@ export default function CLIAuthPage() {
     async function handleAuth() {
       // Validate callback URL
       if (!callbackUrl) {
-        setStatus("error");
-        setErrorMessage(
-          "Missing callback URL. Please use the CLI to authenticate.",
-        );
+        dispatch({
+          type: "ERROR",
+          message: "Missing callback URL. Please use the CLI to authenticate.",
+        });
         return;
       }
 
@@ -41,15 +61,17 @@ export default function CLIAuthPage() {
         const url = new URL(callbackUrl);
         const allowedHosts = ["localhost", "127.0.0.1", "ltf1.dev"];
         if (!allowedHosts.includes(url.hostname)) {
-          setStatus("error");
-          setErrorMessage(
-            "Invalid callback URL. Only localhost and ltf1.dev callbacks are allowed.",
-          );
+          dispatch({
+            type: "ERROR",
+            message: "Invalid callback URL. Only localhost and ltf1.dev callbacks are allowed.",
+          });
           return;
         }
       } catch {
-        setStatus("error");
-        setErrorMessage("Invalid callback URL format.");
+        dispatch({
+          type: "ERROR",
+          message: "Invalid callback URL format.",
+        });
         return;
       }
 
@@ -65,10 +87,10 @@ export default function CLIAuthPage() {
         const token = await getToken({ template: "convex" });
 
         if (!token) {
-          setStatus("error");
-          setErrorMessage(
-            "Failed to get authentication token. Make sure the Convex JWT template is configured in Clerk.",
-          );
+          dispatch({
+            type: "ERROR",
+            message: "Failed to get authentication token. Make sure the Convex JWT template is configured in Clerk.",
+          });
           return;
         }
 
@@ -91,14 +113,16 @@ export default function CLIAuthPage() {
           redirectUrl.searchParams.set("sessionId", sessionId);
         }
 
-        setStatus("success");
+        dispatch({ type: "SUCCESS" });
 
         // Redirect to CLI callback
         window.location.href = redirectUrl.toString();
       } catch (error) {
         console.error("CLI auth error:", error);
-        setStatus("error");
-        setErrorMessage("Failed to complete authentication. Please try again.");
+        dispatch({
+          type: "ERROR",
+          message: "Failed to complete authentication. Please try again.",
+        });
       }
     }
 

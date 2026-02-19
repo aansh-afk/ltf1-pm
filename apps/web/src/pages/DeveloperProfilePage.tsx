@@ -30,6 +30,447 @@ import { formatDistanceToNow } from 'date-fns'
 import DeveloperStatusIndicator from '../components/features/developer/DeveloperStatusIndicator'
 import { EditDeveloperProfileModal } from '../components/features/profile/EditDeveloperProfileModal'
 
+// --- Sub-components ---
+
+interface OverviewTabProps {
+  activityStats: { totalActivities?: number } | null | undefined
+  profile: {
+    techStack?: { name: string; level: number }[]
+    githubStats?: { contributions?: number }
+    yearsExperience?: number
+    email?: string
+    phone?: string
+    githubUsername?: string
+    lastActivity?: string
+  }
+}
+
+function OverviewTab({ activityStats, profile }: OverviewTabProps) {
+  return (
+    <div className="space-y-[12px]">
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-[10px]">
+        <div className="brutal-card p-[10px] text-center">
+          <div className="text-[14px] font-semibold font-bold text-brutal-success">
+            {activityStats?.totalActivities || 0}
+          </div>
+          <div className="font-mono text-brutal-xs text-primary-brutalist/60">
+            ACTIVITIES (30D)
+          </div>
+        </div>
+        <div className="brutal-card p-[10px] text-center">
+          <div className="text-[14px] font-semibold font-bold text-brutal-info">
+            {profile.techStack?.length || 0}
+          </div>
+          <div className="font-mono text-brutal-xs text-primary-brutalist/60">
+            TECHNOLOGIES
+          </div>
+        </div>
+        <div className="brutal-card p-[10px] text-center">
+          <div className="text-[14px] font-semibold font-bold text-brutal-warning">
+            {profile.githubStats?.contributions || 0}
+          </div>
+          <div className="font-mono text-brutal-xs text-primary-brutalist/60">
+            CONTRIBUTIONS
+          </div>
+        </div>
+        <div className="brutal-card p-[10px] text-center">
+          <div className="text-[14px] font-semibold font-bold text-primary-brutalist">
+            {profile.yearsExperience || 0}Y
+          </div>
+          <div className="font-mono text-brutal-xs text-primary-brutalist/60">
+            EXPERIENCE
+          </div>
+        </div>
+      </div>
+
+      {/* Contact Info */}
+      {(profile.email || profile.phone || profile.githubUsername) && (
+        <div className="brutal-card p-[16px]">
+          <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
+            <HiOutlineMail className="w-20px h-20px" />
+            CONTACT INFORMATION
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-[10px]">
+            {profile.email && (
+              <div className="flex items-center gap-[6px]">
+                <HiOutlineMail className="w-16px h-16px text-primary-brutalist/60" />
+                <span className="font-mono text-brutal-sm">{profile.email}</span>
+              </div>
+            )}
+            {profile.phone && (
+              <div className="flex items-center gap-[6px]">
+                <HiOutlinePhone className="w-16px h-16px text-primary-brutalist/60" />
+                <span className="font-mono text-brutal-sm">{profile.phone}</span>
+              </div>
+            )}
+            {profile.githubUsername && (
+              <div className="flex items-center gap-[6px]">
+                <HiOutlineCode className="w-16px h-16px text-primary-brutalist/60" />
+                <a
+                  href={`https://github.com/${profile.githubUsername}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-brutal-sm text-brutal-info hover:underline"
+                >
+                  github.com/{profile.githubUsername}
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Activity */}
+      {profile.lastActivity && (
+        <div className="brutal-card p-[16px]">
+          <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
+            <HiOutlineClock className="w-20px h-20px" />
+            RECENT ACTIVITY
+          </h3>
+          <div className="font-mono text-brutal-sm text-primary-brutalist/80">
+            Last active: {formatDistanceToNow(new Date(profile.lastActivity), { addSuffix: true })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface ExpertiseTabProps {
+  profile: {
+    techStack?: { name: string; level: number }[]
+    skills?: string[]
+    interests?: string[]
+    yearsExperience?: number
+    careerLevel?: string
+  }
+  getExpertiseLevel: (level: number) => { label: string; color: string }
+}
+
+function ExpertiseTab({ profile, getExpertiseLevel }: ExpertiseTabProps) {
+  return (
+    <div className="space-y-[12px]">
+      {/* Tech Stack */}
+      {profile.techStack && profile.techStack.length > 0 && (
+        <div className="brutal-card p-[16px]">
+          <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
+            <HiOutlineCode className="w-20px h-20px" />
+            TECHNOLOGY STACK
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[6px]">
+            {profile.techStack.map((tech) => {
+              const expertise = getExpertiseLevel(tech.level)
+              return (
+                <div key={tech.name} className="flex items-center justify-between p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]">
+                  <span className="font-mono text-brutal-sm font-bold">{tech.name}</span>
+                  <div className="flex items-center gap-8px">
+                    <span className={clsx("font-mono text-brutal-xs font-bold", expertise.color)}>
+                      {expertise.label}
+                    </span>
+                    <div className="flex">
+                      {[0,1,2,3,4,5,6,7,8,9].map((n) => (
+                        <div
+                          key={`sb-${n}`}
+                          className={clsx(
+                            "w-4px h-16px border-r border-[var(--theme-border)] last:border-r-0",
+                            n < tech.level ? "bg-primary-brutalist" : "bg-basalt-border"
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Skills & Interests */}
+      {(profile.skills || profile.interests) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[16px]">
+          {profile.skills && profile.skills.length > 0 && (
+            <div className="brutal-card p-[16px]">
+              <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
+                <HiOutlineBadgeCheck className="w-20px h-20px" />
+                SKILLS
+              </h3>
+              <div className="flex flex-wrap gap-8px">
+                {profile.skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="px-12px py-6px font-mono text-brutal-xs bg-primary-brutalist/20 border-2 border-primary-brutalist text-primary-brutalist font-bold"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {profile.interests && profile.interests.length > 0 && (
+            <div className="brutal-card p-[16px]">
+              <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
+                <HiOutlineHeart className="w-20px h-20px" />
+                INTERESTS
+              </h3>
+              <div className="flex flex-wrap gap-8px">
+                {profile.interests.map((interest) => (
+                  <span
+                    key={interest}
+                    className="px-12px py-6px font-mono text-brutal-xs bg-brutal-info/20 border-2 border-brutal-info text-brutal-info font-bold"
+                  >
+                    {interest}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Experience */}
+      {profile.yearsExperience && (
+        <div className="brutal-card p-[16px]">
+          <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
+            <HiOutlineBookOpen className="w-20px h-20px" />
+            EXPERIENCE
+          </h3>
+          <div className="text-[14px] font-semibold font-bold text-primary-brutalist">
+            {profile.yearsExperience} Years of Professional Development
+          </div>
+          {profile.careerLevel && (
+            <div className="font-mono text-brutal-sm text-primary-brutalist/80 mt-8px">
+              Career Level: {profile.careerLevel.replace('_', ' ').toUpperCase()}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface PreferencesTabProps {
+  profile: {
+    timezone?: string
+    workingHours?: { start?: string; end?: string }
+    communicationPrefs?: string
+    workStyle?: string
+    careerGoals?: string
+    mentoringInterests?: string[]
+  }
+  isOwnProfile: boolean
+}
+
+function PreferencesTab({ profile, isOwnProfile }: PreferencesTabProps) {
+  return (
+    <div className="space-y-[12px]">
+      {/* Work Preferences */}
+      <div className="brutal-card p-[16px]">
+        <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
+          <HiOutlineClock className="w-20px h-20px" />
+          WORK PREFERENCES
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[16px]">
+          <div>
+            <h4 className="font-mono text-brutal-sm font-bold mb-12px">AVAILABILITY</h4>
+            <div className="space-y-8px text-brutal-sm">
+              <div className="flex items-center justify-between">
+                <span>Timezone:</span>
+                <span className="font-mono">{profile.timezone || 'Not specified'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Working Hours:</span>
+                <span className="font-mono">
+                  {profile.workingHours?.start || '09:00'} - {profile.workingHours?.end || '17:00'}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h4 className="font-mono text-brutal-sm font-bold mb-12px">COMMUNICATION</h4>
+            <div className="space-y-8px text-brutal-sm">
+              <div className="flex items-center justify-between">
+                <span>Preferred Method:</span>
+                <span className="font-mono">{profile.communicationPrefs || 'Email'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Response Time:</span>
+                <span className="font-mono">Within 24 hours</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Personal Preferences */}
+      <div className="brutal-card p-[16px]">
+        <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
+          <HiOutlineHeart className="w-20px h-20px" />
+          PERSONAL PREFERENCES
+        </h3>
+        <div className="space-y-[8px]">
+          <div>
+            <h4 className="font-mono text-brutal-sm font-bold mb-8px">WORK STYLE</h4>
+            <p className="text-brutal-sm text-primary-brutalist/80">
+              {profile.workStyle || 'No work style preferences specified.'}
+            </p>
+          </div>
+          <div>
+            <h4 className="font-mono text-brutal-sm font-bold mb-8px">CAREER GOALS</h4>
+            <p className="text-brutal-sm text-primary-brutalist/80">
+              {profile.careerGoals || 'No career goals specified.'}
+            </p>
+          </div>
+          <div>
+            <h4 className="font-mono text-brutal-sm font-bold mb-8px">MENTORING</h4>
+            <p className="text-brutal-sm text-primary-brutalist/80">
+              {profile.mentoringInterests ?
+                `Interested in mentoring: ${profile.mentoringInterests.join(', ')}` :
+                'No mentoring interests specified.'
+              }
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Privacy Settings */}
+      {isOwnProfile && (
+        <div className="brutal-card p-[16px]">
+          <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
+            <HiOutlineCog className="w-20px h-20px" />
+            PRIVACY SETTINGS
+          </h3>
+          <div className="space-y-12px">
+            <label className="flex items-center gap-[6px]">
+              <input type="checkbox" className="brutal-checkbox" />
+              <span className="font-mono text-brutal-sm">Show email to team members</span>
+            </label>
+            <label className="flex items-center gap-[6px]">
+              <input type="checkbox" className="brutal-checkbox" />
+              <span className="font-mono text-brutal-sm">Show phone number to team members</span>
+            </label>
+            <label className="flex items-center gap-[6px]">
+              <input type="checkbox" className="brutal-checkbox" />
+              <span className="font-mono text-brutal-sm">Show GitHub profile publicly</span>
+            </label>
+            <label className="flex items-center gap-[6px]">
+              <input type="checkbox" className="brutal-checkbox" />
+              <span className="font-mono text-brutal-sm">Show activity status to team</span>
+            </label>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface GitHubTabProps {
+  profile: {
+    githubUsername?: string
+    githubStats?: {
+      contributions?: number
+      publicRepos?: number
+      followers?: number
+      following?: number
+      lastUpdated?: string
+    }
+  }
+  isOwnProfile: boolean
+  onSyncGithub: () => void
+  onConnectGithub: () => void
+}
+
+function GitHubTab({ profile, isOwnProfile, onSyncGithub, onConnectGithub }: GitHubTabProps) {
+  return (
+    <div className="space-y-[12px]">
+      {/* GitHub Header */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-brutal-md font-bold flex items-center gap-8px">
+          <HiOutlineChartBar className="w-20px h-20px" />
+          GITHUB STATISTICS
+        </h3>
+        {isOwnProfile && profile.githubUsername && (
+          <button
+            onClick={onSyncGithub}
+            className="brutal-btn-secondary flex items-center gap-8px px-[10px] py-8px"
+          >
+            <HiOutlineRefresh className="w-16px h-16px" />
+            <span className="font-mono text-brutal-xs">SYNC</span>
+          </button>
+        )}
+      </div>
+
+      {profile.githubUsername ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-[10px]">
+            <div className="brutal-card p-[10px] text-center">
+              <div className="text-[14px] font-semibold font-bold text-brutal-success">
+                {profile.githubStats?.contributions || 0}
+              </div>
+              <div className="font-mono text-brutal-xs text-primary-brutalist/60">
+                CONTRIBUTIONS
+              </div>
+            </div>
+            <div className="brutal-card p-[10px] text-center">
+              <div className="text-[14px] font-semibold font-bold text-brutal-info">
+                {profile.githubStats?.publicRepos || 0}
+              </div>
+              <div className="font-mono text-brutal-xs text-primary-brutalist/60">
+                REPOSITORIES
+              </div>
+            </div>
+            <div className="brutal-card p-[10px] text-center">
+              <div className="text-[14px] font-semibold font-bold text-brutal-warning">
+                {profile.githubStats?.followers || 0}
+              </div>
+              <div className="font-mono text-brutal-xs text-primary-brutalist/60">
+                FOLLOWERS
+              </div>
+            </div>
+            <div className="brutal-card p-[10px] text-center">
+              <div className="text-[14px] font-semibold font-bold text-primary-brutalist">
+                {profile.githubStats?.following || 0}
+              </div>
+              <div className="font-mono text-brutal-xs text-primary-brutalist/60">
+                FOLLOWING
+              </div>
+            </div>
+          </div>
+
+          {profile.githubStats?.lastUpdated && (
+            <div className="brutal-card p-[16px]">
+              <h4 className="text-brutal-sm font-bold mb-12px">DATA FRESHNESS</h4>
+              <div className="font-mono text-brutal-sm text-primary-brutalist/80">
+                Last synced: {formatDistanceToNow(new Date(profile.githubStats.lastUpdated), { addSuffix: true })}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="brutal-card p-[24px] text-center">
+          <HiOutlineCode className="w-6 h-6 text-primary-brutalist/30 mx-auto mb-[8px]" />
+          <h4 className="text-brutal-md font-bold mb-8px">NO GITHUB CONNECTED</h4>
+          <p className="text-brutal-sm text-primary-brutalist/60 mb-[8px]">
+            Connect your GitHub account to display statistics and contributions.
+          </p>
+          {isOwnProfile && (
+            <button
+              onClick={onConnectGithub}
+              className="brutal-btn"
+            >
+              CONNECT GITHUB
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// --- Main component ---
+
 export default function DeveloperProfilePage() {
   const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
@@ -170,6 +611,7 @@ export default function DeveloperProfilePage() {
                     <select
                       value={profile.status?.current || 'available'}
                       onChange={(e) => handleStatusChange(e.target.value)}
+                      aria-label="Developer status"
                       className="brutal-input text-xs px-8px py-4px"
                     >
                       <option value="available">AVAILABLE</option>
@@ -238,382 +680,24 @@ export default function DeveloperProfilePage() {
       {/* Tab Content */}
       <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
         {activeTab === 'overview' && (
-          <div className="space-y-[12px]">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-[10px]">
-              <div className="brutal-card p-[10px] text-center">
-                <div className="text-[14px] font-semibold font-bold text-brutal-success">
-                  {activityStats?.totalActivities || 0}
-                </div>
-                <div className="font-mono text-brutal-xs text-primary-brutalist/60">
-                  ACTIVITIES (30D)
-                </div>
-              </div>
-              <div className="brutal-card p-[10px] text-center">
-                <div className="text-[14px] font-semibold font-bold text-brutal-info">
-                  {profile.techStack?.length || 0}
-                </div>
-                <div className="font-mono text-brutal-xs text-primary-brutalist/60">
-                  TECHNOLOGIES
-                </div>
-              </div>
-              <div className="brutal-card p-[10px] text-center">
-                <div className="text-[14px] font-semibold font-bold text-brutal-warning">
-                  {profile.githubStats?.contributions || 0}
-                </div>
-                <div className="font-mono text-brutal-xs text-primary-brutalist/60">
-                  CONTRIBUTIONS
-                </div>
-              </div>
-              <div className="brutal-card p-[10px] text-center">
-                <div className="text-[14px] font-semibold font-bold text-primary-brutalist">
-                  {profile.yearsExperience || 0}Y
-                </div>
-                <div className="font-mono text-brutal-xs text-primary-brutalist/60">
-                  EXPERIENCE
-                </div>
-              </div>
-            </div>
-
-            {/* Contact Info */}
-            {(profile.email || profile.phone || profile.githubUsername) && (
-              <div className="brutal-card p-[16px]">
-                <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
-                  <HiOutlineMail className="w-20px h-20px" />
-                  CONTACT INFORMATION
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-[10px]">
-                  {profile.email && (
-                    <div className="flex items-center gap-[6px]">
-                      <HiOutlineMail className="w-16px h-16px text-primary-brutalist/60" />
-                      <span className="font-mono text-brutal-sm">{profile.email}</span>
-                    </div>
-                  )}
-                  {profile.phone && (
-                    <div className="flex items-center gap-[6px]">
-                      <HiOutlinePhone className="w-16px h-16px text-primary-brutalist/60" />
-                      <span className="font-mono text-brutal-sm">{profile.phone}</span>
-                    </div>
-                  )}
-                  {profile.githubUsername && (
-                    <div className="flex items-center gap-[6px]">
-                      <HiOutlineCode className="w-16px h-16px text-primary-brutalist/60" />
-                      <a 
-                        href={`https://github.com/${profile.githubUsername}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-mono text-brutal-sm text-brutal-info hover:underline"
-                      >
-                        github.com/{profile.githubUsername}
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Recent Activity */}
-            {profile.lastActivity && (
-              <div className="brutal-card p-[16px]">
-                <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
-                  <HiOutlineClock className="w-20px h-20px" />
-                  RECENT ACTIVITY
-                </h3>
-                <div className="font-mono text-brutal-sm text-primary-brutalist/80">
-                  Last active: {formatDistanceToNow(new Date(profile.lastActivity), { addSuffix: true })}
-                </div>
-              </div>
-            )}
-          </div>
+          <OverviewTab activityStats={activityStats} profile={profile} />
         )}
 
         {activeTab === 'expertise' && (
-          <div className="space-y-[12px]">
-            {/* Tech Stack */}
-            {profile.techStack && profile.techStack.length > 0 && (
-              <div className="brutal-card p-[16px]">
-                <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
-                  <HiOutlineCode className="w-20px h-20px" />
-                  TECHNOLOGY STACK
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[6px]">
-                  {profile.techStack.map((tech, index) => {
-                    const expertise = getExpertiseLevel(tech.level)
-                    return (
-                      <div key={index} className="flex items-center justify-between p-12px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]">
-                        <span className="font-mono text-brutal-sm font-bold">{tech.name}</span>
-                        <div className="flex items-center gap-8px">
-                          <span className={clsx("font-mono text-brutal-xs font-bold", expertise.color)}>
-                            {expertise.label}
-                          </span>
-                          <div className="flex">
-                            {Array.from({ length: 10 }, (_, i) => (
-                              <div
-                                key={i}
-                                className={clsx(
-                                  "w-4px h-16px border-r border-[var(--theme-border)] last:border-r-0",
-                                  i < tech.level ? "bg-primary-brutalist" : "bg-basalt-border"
-                                )}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Skills & Interests */}
-            {(profile.skills || profile.interests) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-[16px]">
-                {profile.skills && profile.skills.length > 0 && (
-                  <div className="brutal-card p-[16px]">
-                    <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
-                      <HiOutlineBadgeCheck className="w-20px h-20px" />
-                      SKILLS
-                    </h3>
-                    <div className="flex flex-wrap gap-8px">
-                      {profile.skills.map((skill, index) => (
-                        <span
-                          key={index}
-                          className="px-12px py-6px font-mono text-brutal-xs bg-primary-brutalist/20 border-2 border-primary-brutalist text-primary-brutalist font-bold"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {profile.interests && profile.interests.length > 0 && (
-                  <div className="brutal-card p-[16px]">
-                    <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
-                      <HiOutlineHeart className="w-20px h-20px" />
-                      INTERESTS
-                    </h3>
-                    <div className="flex flex-wrap gap-8px">
-                      {profile.interests.map((interest, index) => (
-                        <span
-                          key={index}
-                          className="px-12px py-6px font-mono text-brutal-xs bg-brutal-info/20 border-2 border-brutal-info text-brutal-info font-bold"
-                        >
-                          {interest}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Experience */}
-            {profile.yearsExperience && (
-              <div className="brutal-card p-[16px]">
-                <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
-                  <HiOutlineBookOpen className="w-20px h-20px" />
-                  EXPERIENCE
-                </h3>
-                <div className="text-[14px] font-semibold font-bold text-primary-brutalist">
-                  {profile.yearsExperience} Years of Professional Development
-                </div>
-                {profile.careerLevel && (
-                  <div className="font-mono text-brutal-sm text-primary-brutalist/80 mt-8px">
-                    Career Level: {profile.careerLevel.replace('_', ' ').toUpperCase()}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <ExpertiseTab profile={profile} getExpertiseLevel={getExpertiseLevel} />
         )}
 
         {activeTab === 'github' && (
-          <div className="space-y-[12px]">
-            {/* GitHub Header */}
-            <div className="flex items-center justify-between">
-              <h3 className="text-brutal-md font-bold flex items-center gap-8px">
-                <HiOutlineChartBar className="w-20px h-20px" />
-                GITHUB STATISTICS
-              </h3>
-              {isOwnProfile && profile.githubUsername && (
-                <button
-                  onClick={handleSyncGithub}
-                  className="brutal-btn-secondary flex items-center gap-8px px-[10px] py-8px"
-                >
-                  <HiOutlineRefresh className="w-16px h-16px" />
-                  <span className="font-mono text-brutal-xs">SYNC</span>
-                </button>
-              )}
-            </div>
-
-            {profile.githubUsername ? (
-              <>
-                {/* GitHub Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-[10px]">
-                  <div className="brutal-card p-[10px] text-center">
-                    <div className="text-[14px] font-semibold font-bold text-brutal-success">
-                      {profile.githubStats?.contributions || 0}
-                    </div>
-                    <div className="font-mono text-brutal-xs text-primary-brutalist/60">
-                      CONTRIBUTIONS
-                    </div>
-                  </div>
-                  <div className="brutal-card p-[10px] text-center">
-                    <div className="text-[14px] font-semibold font-bold text-brutal-info">
-                      {profile.githubStats?.publicRepos || 0}
-                    </div>
-                    <div className="font-mono text-brutal-xs text-primary-brutalist/60">
-                      REPOSITORIES
-                    </div>
-                  </div>
-                  <div className="brutal-card p-[10px] text-center">
-                    <div className="text-[14px] font-semibold font-bold text-brutal-warning">
-                      {profile.githubStats?.followers || 0}
-                    </div>
-                    <div className="font-mono text-brutal-xs text-primary-brutalist/60">
-                      FOLLOWERS
-                    </div>
-                  </div>
-                  <div className="brutal-card p-[10px] text-center">
-                    <div className="text-[14px] font-semibold font-bold text-primary-brutalist">
-                      {profile.githubStats?.following || 0}
-                    </div>
-                    <div className="font-mono text-brutal-xs text-primary-brutalist/60">
-                      FOLLOWING
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recent Activity */}
-                {profile.githubStats?.lastUpdated && (
-                  <div className="brutal-card p-[16px]">
-                    <h4 className="text-brutal-sm font-bold mb-12px">DATA FRESHNESS</h4>
-                    <div className="font-mono text-brutal-sm text-primary-brutalist/80">
-                      Last synced: {formatDistanceToNow(new Date(profile.githubStats.lastUpdated), { addSuffix: true })}
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="brutal-card p-[24px] text-center">
-                <HiOutlineCode className="w-6 h-6 text-primary-brutalist/30 mx-auto mb-[8px]" />
-                <h4 className="text-brutal-md font-bold mb-8px">NO GITHUB CONNECTED</h4>
-                <p className="text-brutal-sm text-primary-brutalist/60 mb-[8px]">
-                  Connect your GitHub account to display statistics and contributions.
-                </p>
-                {isOwnProfile && (
-                  <button
-                    onClick={() => setShowEditModal(true)}
-                    className="brutal-btn"
-                  >
-                    CONNECT GITHUB
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
+          <GitHubTab
+            profile={profile}
+            isOwnProfile={isOwnProfile}
+            onSyncGithub={handleSyncGithub}
+            onConnectGithub={() => setShowEditModal(true)}
+          />
         )}
 
         {activeTab === 'preferences' && (
-          <div className="space-y-[12px]">
-            {/* Work Preferences */}
-            <div className="brutal-card p-[16px]">
-              <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
-                <HiOutlineClock className="w-20px h-20px" />
-                WORK PREFERENCES
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-[16px]">
-                <div>
-                  <h4 className="font-mono text-brutal-sm font-bold mb-12px">AVAILABILITY</h4>
-                  <div className="space-y-8px text-brutal-sm">
-                    <div className="flex items-center justify-between">
-                      <span>Timezone:</span>
-                      <span className="font-mono">{profile.timezone || 'Not specified'}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Working Hours:</span>
-                      <span className="font-mono">
-                        {profile.workingHours?.start || '09:00'} - {profile.workingHours?.end || '17:00'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-mono text-brutal-sm font-bold mb-12px">COMMUNICATION</h4>
-                  <div className="space-y-8px text-brutal-sm">
-                    <div className="flex items-center justify-between">
-                      <span>Preferred Method:</span>
-                      <span className="font-mono">{profile.communicationPrefs || 'Email'}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Response Time:</span>
-                      <span className="font-mono">Within 24 hours</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Personal Preferences */}
-            <div className="brutal-card p-[16px]">
-              <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
-                <HiOutlineHeart className="w-20px h-20px" />
-                PERSONAL PREFERENCES
-              </h3>
-              <div className="space-y-[8px]">
-                <div>
-                  <h4 className="font-mono text-brutal-sm font-bold mb-8px">WORK STYLE</h4>
-                  <p className="text-brutal-sm text-primary-brutalist/80">
-                    {profile.workStyle || 'No work style preferences specified.'}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-mono text-brutal-sm font-bold mb-8px">CAREER GOALS</h4>
-                  <p className="text-brutal-sm text-primary-brutalist/80">
-                    {profile.careerGoals || 'No career goals specified.'}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-mono text-brutal-sm font-bold mb-8px">MENTORING</h4>
-                  <p className="text-brutal-sm text-primary-brutalist/80">
-                    {profile.mentoringInterests ? 
-                      `Interested in mentoring: ${profile.mentoringInterests.join(', ')}` :
-                      'No mentoring interests specified.'
-                    }
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Privacy Settings */}
-            {isOwnProfile && (
-              <div className="brutal-card p-[16px]">
-                <h3 className="text-brutal-md font-bold mb-[8px] flex items-center gap-8px">
-                  <HiOutlineCog className="w-20px h-20px" />
-                  PRIVACY SETTINGS
-                </h3>
-                <div className="space-y-12px">
-                  <label className="flex items-center gap-[6px]">
-                    <input type="checkbox" className="brutal-checkbox" />
-                    <span className="font-mono text-brutal-sm">Show email to team members</span>
-                  </label>
-                  <label className="flex items-center gap-[6px]">
-                    <input type="checkbox" className="brutal-checkbox" />
-                    <span className="font-mono text-brutal-sm">Show phone number to team members</span>
-                  </label>
-                  <label className="flex items-center gap-[6px]">
-                    <input type="checkbox" className="brutal-checkbox" />
-                    <span className="font-mono text-brutal-sm">Show GitHub profile publicly</span>
-                  </label>
-                  <label className="flex items-center gap-[6px]">
-                    <input type="checkbox" className="brutal-checkbox" />
-                    <span className="font-mono text-brutal-sm">Show activity status to team</span>
-                  </label>
-                </div>
-              </div>
-            )}
-          </div>
+          <PreferencesTab profile={profile} isOwnProfile={isOwnProfile} />
         )}
       </div>
 

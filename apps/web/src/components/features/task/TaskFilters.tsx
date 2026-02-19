@@ -1,4 +1,4 @@
-import { useState, useEffect, memo, useCallback, useTransition } from 'react'
+import { useState, memo, useCallback, useTransition } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import {
@@ -96,10 +96,6 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
     workspaceId ? { workspaceId: workspaceId as any } : 'skip'
   )
 
-  useEffect(() => {
-    setLocalFilters(filters)
-  }, [filters])
-
   const handleApplyFilters = useCallback(() => {
     onFiltersChange(localFilters)
     onClose()
@@ -164,9 +160,13 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-[var(--theme-background-secondary)]/50 z-40"
+        role="button"
+        tabIndex={0}
+        aria-label="Close filters"
         onClick={onClose}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClose() } }}
       />
       
       {/* Filter Panel */}
@@ -195,10 +195,11 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
         <div className="p-[16px] space-y-32px">
           {/* Search */}
           <div>
-            <label className="block text-brutal-sm mb-[4px] uppercase">SEARCH</label>
+            <label htmlFor="task-filter-search" className="block text-brutal-sm mb-[4px] uppercase">SEARCH</label>
             <div className="relative">
               <HiOutlineSearch className="absolute left-12px top-1/2 -translate-y-1/2 w-16px h-16px text-neutral-500" />
               <input
+                id="task-filter-search"
                 type="text"
                 placeholder="SEARCH TASKS..."
                 className="w-full pl-40px pr-[8px] py-[8px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
@@ -334,8 +335,9 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
                     <span className="font-mono text-brutal-sm text-neutral-500">UNASSIGNED</span>
                   </label>
                   {workspaceMembers.map(member => (
-                    <label key={member.userId} className="flex items-center gap-[6px] cursor-pointer">
+                    <label key={member.userId} htmlFor={`filter-assignee-${member.userId}`} aria-label={member.user.name} className="flex items-center gap-[6px] cursor-pointer">
                       <input
+                        id={`filter-assignee-${member.userId}`}
                         type="checkbox"
                         checked={localFilters.assigneeIds.includes(member.userId)}
                         onChange={() => toggleArrayFilter('assigneeIds', member.userId)}
@@ -403,10 +405,11 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
             {activeSection === 'dueDate' && (
               <div className="space-y-[6px]">
                 <div>
-                  <label className="block text-brutal-xs mb-[2px] text-neutral-500">FROM</label>
+                  <label htmlFor="task-filter-due-from" className="block text-brutal-xs mb-[2px] text-neutral-500">FROM</label>
                   <input
+                    id="task-filter-due-from"
                     type="date"
-                    className="w-full px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+                    className="w-full px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]
                              font-mono text-brutal-sm
                              focus:border-primary-brutalist focus:outline-none transition-colors"
                     value={localFilters.dueDateRange.start || ''}
@@ -414,10 +417,11 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
                   />
                 </div>
                 <div>
-                  <label className="block text-brutal-xs mb-[2px] text-neutral-500">TO</label>
+                  <label htmlFor="task-filter-due-to" className="block text-brutal-xs mb-[2px] text-neutral-500">TO</label>
                   <input
+                    id="task-filter-due-to"
                     type="date"
-                    className="w-full px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] 
+                    className="w-full px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)]
                              font-mono text-brutal-sm
                              focus:border-primary-brutalist focus:outline-none transition-colors"
                     value={localFilters.dueDateRange.end || ''}

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { motion, type Variants } from 'framer-motion'
+import { m, type Variants } from 'framer-motion'
 
 interface Feature {
   slug: string
@@ -56,7 +56,7 @@ export default function FeaturesPreviewSection() {
     <section id="features" className="py-24 md:py-32 bg-[#050505]">
       <div className="max-w-5xl mx-auto px-6">
         {/* Header */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -79,12 +79,12 @@ export default function FeaturesPreviewSection() {
           >
             View all features &rarr;
           </Link>
-        </motion.div>
+        </m.div>
 
         {/* Feature rows */}
         <div className="flex flex-col gap-3">
           {features.map((feature, i) => (
-            <motion.div
+            <m.div
               key={feature.slug}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -92,7 +92,7 @@ export default function FeaturesPreviewSection() {
               transition={{ duration: 0.4, delay: i * 0.08 }}
             >
               <Link to={`/features/${feature.slug}`} className="block">
-                <motion.div
+                <m.div
                   variants={rowVariants}
                   initial="rest"
                   whileHover="hover"
@@ -130,15 +130,15 @@ export default function FeaturesPreviewSection() {
                   </div>
 
                   {/* Arrow */}
-                  <motion.span
+                  <m.span
                     variants={arrowVariants}
                     className="text-[#F9FAFB] text-xl shrink-0 hidden md:block"
                   >
                     &rarr;
-                  </motion.span>
-                </motion.div>
+                  </m.span>
+                </m.div>
               </Link>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </div>

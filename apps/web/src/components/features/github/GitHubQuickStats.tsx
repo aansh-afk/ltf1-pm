@@ -32,7 +32,7 @@ export default function GitHubQuickStats({
     <BrutalCard className="py-[8px] px-[12px]" padding="none">
       <div className="flex items-center gap-[8px] font-mono text-brutal-xs text-[var(--theme-foreground)]/60 flex-wrap">
         {items.map((item, idx) => (
-          <span key={idx} className="flex items-center gap-[4px]">
+          <span key={item.value} className="flex items-center gap-[4px]">
             {idx > 0 && <span className="text-[var(--theme-foreground)]/20 mr-[4px]">{'\u2502'}</span>}
             <span>{item.icon}</span>
             <span>{item.value}</span>

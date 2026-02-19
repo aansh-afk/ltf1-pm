@@ -1,6 +1,6 @@
 import { SignUp } from '@clerk/clerk-react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import PublicNavigation from '../components/common/PublicNavigation'
 import { usePageTitle } from '../hooks/usePageTitle'
 
@@ -37,7 +37,7 @@ export default function SignUpPage() {
 
       <div className="flex min-h-[calc(100vh-72px)]">
         {/* Left panel — image (hidden on mobile) */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -50,10 +50,10 @@ export default function SignUpPage() {
           />
           {/* Dark overlay for contrast */}
           <div className="absolute inset-0 bg-[#050505]/40" />
-        </motion.div>
+        </m.div>
 
         {/* Right panel — Clerk Sign Up */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
@@ -75,7 +75,7 @@ export default function SignUpPage() {
               Sign in
             </Link>
           </p>
-        </motion.div>
+        </m.div>
       </div>
     </div>
   )

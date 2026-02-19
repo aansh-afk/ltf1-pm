@@ -27,7 +27,7 @@ import WorkspaceAnalytics from '@/components/features/analytics/WorkspaceAnalyti
 import clsx from 'clsx'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalModal from '@/components/ui/BrutalModal'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { toast } from 'react-hot-toast'
 
 interface WorkspaceTab {
@@ -88,31 +88,6 @@ export default function WorkspaceManagementPage() {
     { id: 'billing', label: 'Billing', icon: HiOutlineCreditCard },
     { id: 'danger', label: 'Danger Zone', icon: HiOutlineExclamation },
   ]
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'overview':
-        return <OverviewTab workspace={workspace} projects={projects} members={members} />
-      case 'projects':
-        return <ProjectsTab workspaceId={workspaceId!} projects={projects} />
-      case 'members':
-        return <MembersTab workspaceId={workspaceId!} members={members} workspace={workspace} />
-      case 'settings':
-        return <SettingsTab workspace={workspace} />
-      case 'analytics':
-        return <WorkspaceAnalytics workspaceId={workspaceId!} />
-      case 'communications':
-        return <CommunicationsTab workspace={workspace} workspaceId={workspaceId!} />
-      case 'integrations':
-        return <WorkspaceIntegrationsTab workspace={workspace} />
-      case 'billing':
-        return <BillingTab workspace={workspace} />
-      case 'danger':
-        return <DangerTab workspace={workspace} />
-      default:
-        return <OverviewTab workspace={workspace} projects={projects} members={members} />
-    }
-  }
 
   return (
     <div className="h-full flex flex-col md:flex-row">
@@ -182,15 +157,23 @@ export default function WorkspaceManagementPage() {
         {/* Grid Background Effect */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
-        <motion.div
+        <m.div
           key={activeTab}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
           className="relative z-10"
         >
-          {renderTabContent()}
-        </motion.div>
+          {activeTab === 'overview' && <OverviewTab workspace={workspace} projects={projects} members={members} />}
+          {activeTab === 'projects' && <ProjectsTab workspaceId={workspaceId!} projects={projects} />}
+          {activeTab === 'members' && <MembersTab workspaceId={workspaceId!} members={members} workspace={workspace} />}
+          {activeTab === 'settings' && <SettingsTab workspace={workspace} />}
+          {activeTab === 'analytics' && <WorkspaceAnalytics workspaceId={workspaceId!} />}
+          {activeTab === 'communications' && <CommunicationsTab workspace={workspace} workspaceId={workspaceId!} />}
+          {activeTab === 'integrations' && <WorkspaceIntegrationsTab workspace={workspace} />}
+          {activeTab === 'billing' && <BillingTab workspace={workspace} />}
+          {activeTab === 'danger' && <DangerTab workspace={workspace} />}
+        </m.div>
       </main>
     </div>
   )
@@ -360,7 +343,8 @@ function ProjectsTab({ workspaceId, projects }: any) {
         ))}
 
         {/* New Project Placeholder */}
-        <div
+        <button
+          type="button"
           onClick={() => setIsCreateModalOpen(true)}
           className="border-2 border-dashed border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/50 hover:bg-[var(--theme-background-secondary)] hover:border-[var(--theme-primary)] transition-all p-4 flex flex-col items-center justify-center cursor-pointer min-h-[140px] group"
         >
@@ -368,7 +352,7 @@ function ProjectsTab({ workspaceId, projects }: any) {
             <HiOutlinePlus className="w-4 h-4 text-[var(--theme-foreground-tertiary)] group-hover:text-[var(--theme-primary)] transition-colors" />
           </div>
           <span className="font-mono text-[10px] font-semibold text-[var(--theme-foreground-tertiary)] group-hover:text-[var(--theme-primary)] uppercase tracking-wider transition-colors">Create New Project</span>
-        </div>
+        </button>
       </div>
 
       <CreateProjectModal
@@ -560,15 +544,15 @@ function MembersTab({ workspaceId, members, workspace }: any) {
 
           {/* Email Section */}
           <div className="space-y-[8px]">
-            <h4 className="font-mono text-xs font-bold text-[var(--theme-foreground)]">EMAIL ADDRESS</h4>
+            <label htmlFor="ws-invite-email" className="block font-mono text-xs font-bold text-[var(--theme-foreground)]">EMAIL ADDRESS</label>
             <input
+              id="ws-invite-email"
               type="email"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm text-[var(--theme-primary)] font-bold focus:border-[var(--theme-primary)] focus:outline-none placeholder:text-[var(--theme-foreground-tertiary)] placeholder:font-normal"
               placeholder="user@example.com"
               required
-              autoFocus
             />
           </div>
 
@@ -674,16 +658,18 @@ function SettingsTab({ workspace }: any) {
         <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] mb-3 pb-2 border-b border-[var(--theme-border)]">General Settings</h3>
         <div className="space-y-3">
           <div>
-            <label className="block font-mono text-[10px] font-semibold mb-1.5 uppercase tracking-wider text-[var(--theme-foreground-secondary)]">Workspace Name</label>
+            <label htmlFor="ws-mgmt-name" className="block font-mono text-[10px] font-semibold mb-1.5 uppercase tracking-wider text-[var(--theme-foreground-secondary)]">Workspace Name</label>
             <input
+              id="ws-mgmt-name"
               type="text"
               defaultValue={workspace.name}
               className="w-full px-3 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-sm text-[var(--theme-foreground)] placeholder-[var(--theme-foreground-tertiary)] focus:border-[var(--theme-primary)] focus:outline-none transition-colors"
             />
           </div>
           <div>
-            <label className="block font-mono text-[10px] font-semibold mb-1.5 uppercase tracking-wider text-[var(--theme-foreground-secondary)]">Description</label>
+            <label htmlFor="ws-mgmt-description" className="block font-mono text-[10px] font-semibold mb-1.5 uppercase tracking-wider text-[var(--theme-foreground-secondary)]">Description</label>
             <textarea
+              id="ws-mgmt-description"
               defaultValue={workspace.description}
               className="w-full px-3 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-sm text-[var(--theme-foreground)] h-24 placeholder-[var(--theme-foreground-tertiary)] focus:border-[var(--theme-primary)] focus:outline-none transition-colors resize-none"
             />

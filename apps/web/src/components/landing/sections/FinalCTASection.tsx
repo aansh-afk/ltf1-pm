@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Link } from 'react-router-dom'
 
 export default function FinalCTASection() {
@@ -18,7 +18,7 @@ export default function FinalCTASection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
             {/* Left: CTA content */}
             <div className="p-8 md:p-12 flex flex-col justify-center">
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -59,12 +59,12 @@ export default function FinalCTASection() {
                     Free &middot; Open Source &middot; Self-hostable
                   </span>
                 </div>
-              </motion.div>
+              </m.div>
             </div>
 
             {/* Right: ASCII art */}
             <div className="border-t md:border-t-0 md:border-l border-[#2E2E35] bg-[#0A0A0A] p-8 md:p-12 flex items-center justify-center">
-              <motion.pre
+              <m.pre
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
@@ -87,7 +87,7 @@ export default function FinalCTASection() {
   └──────────────────────────┘
 
   > happy shipping.`}
-              </motion.pre>
+              </m.pre>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { motion, type Variants } from 'framer-motion'
+import { m, type Variants } from 'framer-motion'
 
 const tiers = [
   {
@@ -62,7 +62,7 @@ export default function PricingPreviewSection() {
   return (
     <section className="py-24 md:py-32 bg-[#050505] relative overflow-hidden">
       <div className="max-w-5xl mx-auto px-6 relative z-10">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -78,18 +78,18 @@ export default function PricingPreviewSection() {
           <p className="text-base text-[#6B7280] max-w-lg">
             Start free. Scale when you need to.
           </p>
-        </motion.div>
+        </m.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
           {tiers.map((tier, index) => (
-            <motion.div
+            <m.div
               key={tier.name}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.08, duration: 0.5 }}
             >
-              <motion.div
+              <m.div
                 variants={tier.highlight ? highlightCardVariants : cardVariants}
                 initial="rest"
                 whileHover="hover"
@@ -147,8 +147,8 @@ export default function PricingPreviewSection() {
                     </Link>
                   )}
                 </div>
-              </motion.div>
-            </motion.div>
+              </m.div>
+            </m.div>
           ))}
         </div>
 
