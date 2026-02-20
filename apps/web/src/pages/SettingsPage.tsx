@@ -413,6 +413,128 @@ const TABS: { id: SettingsTab; label: string; icon: React.ComponentType<any> }[]
   { id: 'shortcuts', label: 'Shortcuts', icon: HiOutlineTerminal },
 ]
 
+interface SettingsHeaderProps {
+  hasUnsavedProfile: boolean
+  hasUnsavedPreferences: boolean
+  isSavingProfile: boolean
+  isSavingPreferences: boolean
+  onSave: () => void
+}
+
+function SettingsHeader({ hasUnsavedProfile, hasUnsavedPreferences, isSavingProfile, isSavingPreferences, onSave }: SettingsHeaderProps) {
+  return (
+    <div className="mb-4 flex flex-col md:flex-row md:items-end justify-between gap-3">
+      <div>
+        <span className="text-[10px] font-mono font-semibold uppercase tracking-widest text-[var(--theme-foreground)]/40 inline-block mb-1">
+          Account
+        </span>
+        <h1 className="text-xl font-bold tracking-tight text-[var(--theme-foreground)]">Settings</h1>
+        <p className="text-xs text-[var(--theme-foreground)]/40 mt-1 font-mono">
+          Manage your account settings and preferences
+        </p>
+      </div>
+      {(hasUnsavedProfile || hasUnsavedPreferences) && (
+        <div className="flex items-center gap-3">
+          <span className="text-brutal-warning font-bold uppercase text-xs font-mono flex items-center gap-2">
+            <HiOutlineExclamation className="w-3.5 h-3.5" /> Unsaved
+          </span>
+          <BrutalButton variant="primary" size="sm" onClick={onSave} className="flex items-center gap-2">
+            <HiOutlineSave className="w-3.5 h-3.5" />
+            {isSavingProfile || isSavingPreferences ? 'Saving...' : 'Save'}
+          </BrutalButton>
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface SettingsSidebarProps {
+  activeTab: SettingsTab
+  onTabChange: (tab: SettingsTab) => void
+}
+
+interface SettingsContentProps {
+  activeTab: SettingsTab
+  profileData: { name: string; bio: string; avatarUrl: string; githubUsername: string }
+  authEmail: string
+  setProfileData: (updater: (prev: any) => any) => void
+  preferences: any
+  setPreferences: (updater: (prev: any) => any) => void
+  currentUser: any
+  developerProfile: any
+  onResetProfile: () => void
+  onResetAccessibility: () => void
+  onResetNotifications: () => void
+  onEditDeveloperProfile: () => void
+}
+
+function SettingsContent({
+  activeTab, profileData, authEmail, setProfileData, preferences, setPreferences,
+  currentUser, developerProfile, onResetProfile, onResetAccessibility,
+  onResetNotifications, onEditDeveloperProfile,
+}: SettingsContentProps) {
+  return (
+    <div className="lg:col-span-9">
+      <BrutalCard className="min-h-[600px] p-4">
+        {activeTab === 'profile' && (
+          <ProfileTab profileData={profileData} authEmail={authEmail}
+            setProfileData={setProfileData} onReset={onResetProfile} />
+        )}
+        {activeTab === 'developer' && (
+          <DeveloperTab currentUser={currentUser} developerProfile={developerProfile}
+            onEditProfile={onEditDeveloperProfile} />
+        )}
+        {activeTab === 'accessibility' && (
+          <AccessibilityTab preferences={preferences} setPreferences={setPreferences}
+            onReset={onResetAccessibility} />
+        )}
+        {activeTab === 'notifications' && (
+          <NotificationsTab preferences={preferences} setPreferences={setPreferences}
+            onReset={onResetNotifications} />
+        )}
+        {activeTab === 'workspace' && (
+          <WorkspaceTab preferences={preferences} setPreferences={setPreferences} />
+        )}
+        {activeTab === 'github' && <GitHubSettingsTab />}
+        {activeTab === 'ai' && <AISettingsTab />}
+        {activeTab === 'shortcuts' && <ShortcutSettings />}
+      </BrutalCard>
+    </div>
+  )
+}
+
+function SettingsSidebar({ activeTab, onTabChange }: SettingsSidebarProps) {
+  return (
+    <div className="lg:col-span-3">
+      <BrutalCard className="sticky top-6 p-0 overflow-hidden">
+        <div className="bg-[var(--theme-background-secondary)] p-4 border-b-2 border-[var(--theme-border)]">
+          <h3 className="font-bold uppercase text-sm">Settings</h3>
+        </div>
+        <div className="flex flex-col">
+          {TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={clsx(
+                'w-full px-4 py-3 flex items-center gap-3',
+                'border-b border-[var(--theme-border)] last:border-b-0',
+                'font-mono text-xs font-bold uppercase tracking-wider',
+                'transition-all text-left hover:bg-[var(--theme-background-secondary)]',
+                activeTab === tab.id
+                  ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] hover:bg-[var(--theme-primary)]'
+                  : 'text-[var(--theme-foreground)]'
+              )}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </BrutalCard>
+    </div>
+  )
+}
+
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
   const [showEditDeveloperProfile, setShowEditDeveloperProfile] = useState(false)
@@ -603,137 +725,28 @@ export default function SettingsPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Header */}
-      <div className="mb-4 flex flex-col md:flex-row md:items-end justify-between gap-3">
-        <div>
-          <span className="text-[10px] font-mono font-semibold uppercase tracking-widest text-[var(--theme-foreground)]/40 inline-block mb-1">
-            Account
-          </span>
-          <h1 className="text-xl font-bold tracking-tight text-[var(--theme-foreground)]">
-            Settings
-          </h1>
-          <p className="text-xs text-[var(--theme-foreground)]/40 mt-1 font-mono">
-            Manage your account settings and preferences
-          </p>
-        </div>
-
-        {/* Global Save Status */}
-        {(hasUnsavedProfile || hasUnsavedPreferences) && (
-          <div className="flex items-center gap-3">
-            <span className="text-brutal-warning font-bold uppercase text-xs font-mono flex items-center gap-2">
-              <HiOutlineExclamation className="w-3.5 h-3.5" />
-              Unsaved
-            </span>
-            <BrutalButton
-              variant="primary"
-              size="sm"
-              onClick={() => {
-                if (hasUnsavedProfile) forceSaveProfile()
-                if (hasUnsavedPreferences) forceSavePreferences()
-              }}
-              className="flex items-center gap-2"
-            >
-              <HiOutlineSave className="w-3.5 h-3.5" />
-              {isSavingProfile || isSavingPreferences ? 'Saving...' : 'Save'}
-            </BrutalButton>
-          </div>
-        )}
-      </div>
+      <SettingsHeader
+        hasUnsavedProfile={hasUnsavedProfile}
+        hasUnsavedPreferences={hasUnsavedPreferences}
+        isSavingProfile={isSavingProfile}
+        isSavingPreferences={isSavingPreferences}
+        onSave={() => {
+          if (hasUnsavedProfile) forceSaveProfile()
+          if (hasUnsavedPreferences) forceSavePreferences()
+        }}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-        {/* Sidebar Navigation */}
-        <div className="lg:col-span-3">
-          <BrutalCard className="sticky top-6 p-0 overflow-hidden">
-            <div className="bg-[var(--theme-background-secondary)] p-4 border-b-2 border-[var(--theme-border)]">
-              <h3 className="font-bold uppercase text-sm">Settings</h3>
-            </div>
-            <div className="flex flex-col">
-              {TABS.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={clsx(
-                    'w-full px-4 py-3 flex items-center gap-3',
-                    'border-b border-[var(--theme-border)] last:border-b-0',
-                    'font-mono text-xs font-bold uppercase tracking-wider',
-                    'transition-all text-left hover:bg-[var(--theme-background-secondary)]',
-                    activeTab === tab.id
-                      ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] hover:bg-[var(--theme-primary)]'
-                      : 'text-[var(--theme-foreground)]'
-                  )}
-                >
-                  <tab.icon className="w-4 h-4" />
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </BrutalCard>
-        </div>
-
-        {/* Content Area */}
-        <div className="lg:col-span-9">
-          <BrutalCard className="min-h-[600px] p-4">
-            {/* PROFILE TAB */}
-            {activeTab === 'profile' && (
-              <ProfileTab
-                profileData={profileData}
-                authEmail={authUser?.primaryEmailAddress?.emailAddress || ''}
-                setProfileData={setProfileData}
-                onReset={resetProfile}
-              />
-            )}
-
-            {/* DEVELOPER TAB */}
-            {activeTab === 'developer' && (
-              <DeveloperTab
-                currentUser={currentUser}
-                developerProfile={developerProfile}
-                onEditProfile={() => setShowEditDeveloperProfile(true)}
-              />
-            )}
-
-            {/* ACCESSIBILITY TAB */}
-            {activeTab === 'accessibility' && (
-              <AccessibilityTab
-                preferences={preferences}
-                setPreferences={setPreferences}
-                onReset={resetAccessibility}
-              />
-            )}
-
-            {/* NOTIFICATIONS TAB */}
-            {activeTab === 'notifications' && (
-              <NotificationsTab
-                preferences={preferences}
-                setPreferences={setPreferences}
-                onReset={resetNotifications}
-              />
-            )}
-
-            {/* WORKSPACE TAB */}
-            {activeTab === 'workspace' && (
-              <WorkspaceTab
-                preferences={preferences}
-                setPreferences={setPreferences}
-              />
-            )}
-
-            {/* GITHUB TAB */}
-            {activeTab === 'github' && (
-              <GitHubSettingsTab />
-            )}
-
-            {/* AI TAB */}
-            {activeTab === 'ai' && (
-              <AISettingsTab />
-            )}
-
-            {/* SHORTCUTS TAB */}
-            {activeTab === 'shortcuts' && (
-              <ShortcutSettings />
-            )}
-          </BrutalCard>
-        </div>
+        <SettingsSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        <SettingsContent
+          activeTab={activeTab} profileData={profileData}
+          authEmail={authUser?.primaryEmailAddress?.emailAddress || ''}
+          setProfileData={setProfileData} preferences={preferences}
+          setPreferences={setPreferences} currentUser={currentUser}
+          developerProfile={developerProfile} onResetProfile={resetProfile}
+          onResetAccessibility={resetAccessibility} onResetNotifications={resetNotifications}
+          onEditDeveloperProfile={() => setShowEditDeveloperProfile(true)}
+        />
       </div>
 
       {/* Modals */}

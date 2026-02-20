@@ -1428,6 +1428,230 @@ function TeamTab({ project, tasks, taskFilters, workspaceId, projectId, dispatch
   )
 }
 
+// --- Project Header ---
+
+interface ProjectHeaderProps {
+  project: any
+  workspaceId: string
+  activeTab: TabType
+  taskCount: number
+  tabs: { id: string; label: string; icon: React.ReactNode }[]
+  onNavigateBack: () => void
+  onInvite: () => void
+  onCreateTask: () => void
+  onTabChange: (tab: TabType) => void
+}
+
+function ProjectHeader({ project, workspaceId, activeTab, taskCount, tabs, onNavigateBack, onInvite, onCreateTask, onTabChange }: ProjectHeaderProps) {
+  return (
+    <div className="border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)] sticky top-0 z-40">
+      <div className="px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onNavigateBack}
+            className="group flex items-center gap-2 font-['IBM_Plex_Mono',monospace] text-xs text-[var(--theme-foreground)]/60 hover:text-[var(--theme-primary)] transition-colors"
+          >
+            <HiOutlineArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" />
+            BACK TO WORKSPACE
+          </button>
+          <div className="h-8 w-[2px] bg-[var(--theme-border)]" />
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-bold uppercase tracking-tight flex items-center gap-3">{project.name}</h1>
+              <BrutalBadge variant={
+                project.status === 'active' ? 'default' :
+                  project.status === 'completed' ? 'success' :
+                    project.status === 'on_hold' ? 'warning' : 'outline'
+              }>
+                {project.status}
+              </BrutalBadge>
+            </div>
+            <div className="font-['IBM_Plex_Mono',monospace] text-xs text-[var(--theme-foreground)]/60 flex items-center gap-2">
+              <span>ID: {project.key}</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <BrutalButton size="sm" variant="ghost" onClick={onInvite}>
+            <HiOutlineUserGroup className="w-4 h-4 mr-2" /> INVITE
+          </BrutalButton>
+          <BrutalButton size="sm" variant="primary" onClick={onCreateTask}>
+            <HiOutlinePlus className="w-4 h-4 mr-2" /> NEW TASK
+          </BrutalButton>
+        </div>
+      </div>
+      <div className="px-5 flex items-end gap-0.5 overflow-x-auto no-scrollbar border-t border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/30" role="tablist" aria-label="Project sections">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id as TabType)}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            className={clsx(
+              "relative px-4 py-2.5 font-['IBM_Plex_Mono',monospace] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer",
+              "border-r border-[var(--theme-border)]",
+              "focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary)] focus:ring-offset-1 focus:ring-offset-[var(--theme-background)]",
+              activeTab === tab.id
+                ? "bg-[var(--theme-background)] text-[var(--theme-primary)] border-t-2 border-t-[var(--theme-primary)]"
+                : "text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
+            )}
+          >
+            <div className="flex items-center gap-2">
+              {tab.icon}
+              {tab.label}
+              {tab.id === 'tasks' && (
+                <span className={clsx(
+                  "ml-1 px-1.5 py-0.5 text-[10px]",
+                  activeTab === tab.id ? "bg-[var(--theme-primary)] text-[var(--theme-background)]" : "bg-[var(--theme-border)]"
+                )}>
+                  {taskCount}
+                </span>
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// --- Project Modals ---
+
+interface ProjectModalsProps {
+  state: PageState
+  projectId: string
+  workspaceId: string
+  project: any
+  taskFilters: TaskFiltersType
+  selectedTask: any
+  dispatch: React.Dispatch<PageAction>
+  onDeleteTask: (task: any) => Promise<void>
+}
+
+function ProjectModals({ state, projectId, workspaceId, project, taskFilters, selectedTask, dispatch, onDeleteTask }: ProjectModalsProps) {
+  return (
+    <>
+      {projectId && (
+        <CreateTaskModal isOpen={state.showCreateTaskModal}
+          onClose={() => dispatch({ type: 'CLOSE_MODALS' })}
+          projectId={projectId} onSuccess={() => { }} />
+      )}
+      {selectedTask && (
+        <EditTaskModal isOpen={state.showEditTaskModal}
+          onClose={() => dispatch({ type: 'CLOSE_MODALS' })}
+          task={selectedTask}
+          onDelete={async () => { await onDeleteTask(selectedTask); dispatch({ type: 'CLOSE_MODALS' }) }} />
+      )}
+      {workspaceId && (
+        <TaskFilters isOpen={state.showAdvancedFilters}
+          onClose={() => dispatch({ type: 'TOGGLE_ADVANCED_FILTERS' })}
+          filters={taskFilters}
+          onFiltersChange={(filters: TaskFiltersType) => dispatch({ type: 'SET_TASK_FILTERS', filters })}
+          workspaceId={workspaceId} />
+      )}
+      {projectId && (
+        <CreateSprintModal isOpen={state.showCreateSprintModal}
+          onClose={() => dispatch({ type: 'CLOSE_MODALS' })}
+          projectId={projectId}
+          onSuccess={() => dispatch({ type: 'CLOSE_MODALS' })} />
+      )}
+      {projectId && workspaceId && (
+        <ScheduleMeetingModal isOpen={state.showScheduleMeetingModal}
+          onClose={() => dispatch({ type: 'CLOSE_MODALS' })}
+          projectId={projectId} workspaceId={workspaceId}
+          onSuccess={() => dispatch({ type: 'CLOSE_MODALS' })} />
+      )}
+      {projectId && project && (
+        <ProjectInviteModal isOpen={state.showProjectInviteModal}
+          onClose={() => dispatch({ type: 'CLOSE_MODALS' })}
+          projectId={projectId} projectName={project.name} />
+      )}
+      {state.showExpertiseSearch && (
+        <ExpertiseSearchModal onClose={() => dispatch({ type: 'CLOSE_MODALS' })} workspaceId={workspaceId} />
+      )}
+      {state.showExpertiseMatrix && workspaceId && (
+        <TeamExpertiseMatrix workspaceId={workspaceId}
+          onClose={() => dispatch({ type: 'CLOSE_MODALS' })} isModal={true} />
+      )}
+    </>
+  )
+}
+
+// --- Tab Content ---
+
+interface ProjectTabContentProps {
+  activeTab: TabType
+  taskView: TaskViewType
+  project: any
+  workspaceId: string
+  projectId: string
+  tasks: any[] | undefined
+  allSprints: any[] | undefined
+  activeSprint: any
+  taskFilters: TaskFiltersType
+  selectedSprintId: string | null
+  isCompactView: boolean
+  healthCards: HealthCard[]
+  currentUser: any
+  projectMeetings: any[] | undefined
+  availableTeams: any[] | undefined
+  assignTeam: any
+  dispatch: React.Dispatch<PageAction>
+  getStatusColor: (status: string) => string
+  handleEditTask: (task: any) => void
+  handleDeleteTask: (task: any) => Promise<void>
+  handleDuplicateTask: (task: any) => Promise<void>
+}
+
+function ProjectTabContent({
+  activeTab, taskView, project, workspaceId, projectId, tasks, allSprints,
+  activeSprint, taskFilters, selectedSprintId, isCompactView, healthCards,
+  currentUser, projectMeetings, availableTeams, assignTeam, dispatch,
+  getStatusColor, handleEditTask, handleDeleteTask, handleDuplicateTask,
+}: ProjectTabContentProps) {
+  return (
+    <main className={clsx(
+      "flex-1 p-5",
+      (activeTab === 'tasks' && taskView === 'kanban') ? "overflow-hidden flex flex-col" : "overflow-y-auto"
+    )}>
+      <m.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className={clsx((activeTab === 'tasks' && taskView === 'kanban') && "h-full flex flex-col")}>
+        {activeTab === 'overview' && (
+          <OverviewTab project={project} allSprints={allSprints} tasks={tasks}
+            healthCards={healthCards} getStatusColor={getStatusColor} />
+        )}
+        {activeTab === 'tasks' && (
+          <TasksTab project={project} workspaceId={workspaceId} tasks={tasks}
+            allSprints={allSprints} activeSprint={activeSprint} taskFilters={taskFilters}
+            taskView={taskView} selectedSprintId={selectedSprintId} isCompactView={isCompactView}
+            projectId={projectId} dispatch={dispatch} handleEditTask={handleEditTask}
+            handleDeleteTask={handleDeleteTask} handleDuplicateTask={handleDuplicateTask} />
+        )}
+        {activeTab === 'team' && (
+          <TeamTab project={project} tasks={tasks} taskFilters={taskFilters}
+            workspaceId={workspaceId} projectId={projectId} dispatch={dispatch} />
+        )}
+        {activeTab === 'github' && <GitHubProjectTab project={project} workspaceId={workspaceId as any} />}
+        {activeTab === 'meetings' && (
+          <MeetingsTab projectMeetings={projectMeetings} currentUserId={currentUser?._id}
+            onScheduleMeeting={() => dispatch({ type: 'OPEN_SCHEDULE_MEETING' })} />
+        )}
+        {activeTab === 'docs' && (
+          <ProjectDocsHub projectId={projectId} workspaceId={workspaceId}
+            tasks={tasks ?? []} sprints={allSprints ?? []} projectDetails={project} />
+        )}
+        {activeTab === 'logs' && (
+          <TeamActivityFeed projectId={projectId} workspaceId={workspaceId} limit={50} showFilters={true} />
+        )}
+        {activeTab === 'settings' && (
+          <SettingsTab project={project} availableTeams={availableTeams} assignTeam={assignTeam} />
+        )}
+      </m.div>
+    </main>
+  )
+}
+
 // --- Main Component ---
 
 export default function ProjectManagementPage() {

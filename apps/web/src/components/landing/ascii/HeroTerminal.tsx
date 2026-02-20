@@ -53,6 +53,8 @@ type HeroTerminalAction =
   | { type: 'ADD_ENGINE_LINE'; value: typeof ENGINE_LINES[number] }
   | { type: 'RESET_ANIMATION' }
   | { type: 'SHOW_FINAL' }
+  | { type: 'START_ANIMATION'; payload: { reducedMotion: boolean } }
+  | { type: 'DEV_DONE' }
 
 function heroTerminalReducer(state: HeroTerminalState, action: HeroTerminalAction): HeroTerminalState {
   switch (action.type) {
@@ -66,6 +68,15 @@ function heroTerminalReducer(state: HeroTerminalState, action: HeroTerminalActio
       return { ...state, completedLeft: [], typingText: '', showCursor: false, engineLines: [], devDone: false, engineActive: false, engineDone: false }
     case 'SHOW_FINAL':
       return { ...state, completedLeft: DEV_COMMANDS.map((c) => c.text), engineLines: ENGINE_LINES, devDone: true, engineActive: true, engineDone: true }
+    case 'START_ANIMATION': {
+      const reset: HeroTerminalState = { ...state, completedLeft: [], typingText: '', showCursor: false, engineLines: [], devDone: false, engineActive: false, engineDone: false }
+      if (action.payload.reducedMotion) {
+        return { ...reset, completedLeft: DEV_COMMANDS.map((c) => c.text), engineLines: ENGINE_LINES, devDone: true, engineActive: true, engineDone: true }
+      }
+      return reset
+    }
+    case 'DEV_DONE':
+      return { ...state, showCursor: false, devDone: true }
     default:
       return state
   }
@@ -104,19 +115,14 @@ export default function HeroTerminal() {
     }
   }, [engineLines])
 
-  // react-doctor false positive: multiple setState calls are for animation reset and sequential timers;
-  // React 18 batches synchronous setState calls in useEffect automatically
+  // Compound START_ANIMATION action handles reset + reduced motion in one dispatch
   useEffect(() => {
     if (!started) return
 
-    // Reset for clean start
-    dispatch({ type: 'RESET_ANIMATION' })
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    dispatch({ type: 'START_ANIMATION', payload: { reducedMotion } })
 
-    // Reduced motion: show final state immediately
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      dispatch({ type: 'SHOW_FINAL' })
-      return
-    }
+    if (reducedMotion) return
 
     const timers: ReturnType<typeof setTimeout>[] = []
     let t = 300
@@ -139,14 +145,9 @@ export default function HeroTerminal() {
       t += cmd.pauseAfter
     }
 
-    // Dev done
+    // Dev done — single compound dispatch
     const devEnd = t
-    timers.push(
-      setTimeout(() => {
-        dispatch({ type: 'UPDATE', field: 'showCursor', value: false })
-        dispatch({ type: 'UPDATE', field: 'devDone', value: true })
-      }, devEnd)
-    )
+    timers.push(setTimeout(() => dispatch({ type: 'DEV_DONE' }), devEnd))
     t += 350
 
     // Phase 2: engine fires up
