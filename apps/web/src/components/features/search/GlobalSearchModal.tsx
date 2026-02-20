@@ -183,6 +183,11 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
   const resultsRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<NodeJS.Timeout>()
 
+  const handleClose = useCallback(() => {
+    dispatch({ type: 'RESET' })
+    onClose()
+  }, [onClose])
+
   const performSearch = useCallback(async (query: string, filter: string | null) => {
     if (!query.trim()) {
       dispatch({ type: 'SET_RESULTS', value: [] })
@@ -231,14 +236,6 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFilter])
 
-  // react-doctor: legitimate - modal focus trap and state reset on prop-driven open
-  useEffect(() => {
-    if (isOpen) {
-      dispatch({ type: 'RESET' })
-      setTimeout(() => inputRef.current?.focus(), 100)
-    }
-  }, [isOpen])
-
   // Keyboard navigation
   useEffect(() => {
     if (!isOpen) return
@@ -261,14 +258,14 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
           break
         case 'Escape':
           e.preventDefault()
-          onClose()
+          handleClose()
           break
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, results, selectedIndex, onClose])
+  }, [isOpen, results, selectedIndex, handleClose])
 
   // Scroll selected item into view
   useEffect(() => {
@@ -282,7 +279,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
 
   const handleSelectResult = (result: SearchResult) => {
     navigate(result.url)
-    onClose()
+    handleClose()
   }
 
   const filters = [
@@ -353,7 +350,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-[var(--theme-background)]/90 z-[100]"
-            onClick={onClose}
+            onClick={handleClose}
           />
 
           {/* Search Modal */}
@@ -378,7 +375,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
                     className="flex-1 bg-transparent text-[var(--theme-foreground)] outline-none text-lg placeholder:text-[var(--theme-foreground)]/50 placeholder:text-sm"
                   />
                   <button
-                    onClick={onClose}
+                    onClick={handleClose}
                     className="p-[4px] hover:bg-[var(--theme-hover)] transition-colors"
                     aria-label="Close search"
                   >

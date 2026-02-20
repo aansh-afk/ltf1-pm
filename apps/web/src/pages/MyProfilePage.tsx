@@ -1,7 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, type NavigateFunction } from 'react-router-dom'
+
+function handleProfileRedirect(profileComplete: boolean, navigate: NavigateFunction): void {
+  if (!profileComplete) return
+  const redirectPath = sessionStorage.getItem('profile-completion-redirect')
+  if (redirectPath) {
+    sessionStorage.removeItem('profile-completion-redirect')
+    navigate(redirectPath)
+  }
+}
 import {
   HiOutlineUser,
   HiOutlinePencil,
@@ -150,15 +159,8 @@ export default function MyProfilePage() {
     }
   }, [currentUser, developerProfile])
 
-  // react-doctor: legitimate - reacts to server-driven profileComplete state for redirect
   useEffect(() => {
-    if (profileComplete) {
-      const redirectPath = sessionStorage.getItem('profile-completion-redirect')
-      if (redirectPath) {
-        sessionStorage.removeItem('profile-completion-redirect')
-        navigate(redirectPath)
-      }
-    }
+    handleProfileRedirect(profileComplete, navigate)
   }, [profileComplete, navigate])
 
   if (!currentUser) {

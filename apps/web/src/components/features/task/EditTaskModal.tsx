@@ -1,4 +1,4 @@
-import { useReducer, useEffect } from 'react'
+import { useReducer } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
@@ -230,47 +230,43 @@ function TaskDatesEstimate({ startDate, dueDate, estimateHours, dispatch }: Task
   )
 }
 
+function deriveInitialState(task: any): EditTaskState {
+  if (!task) return initialEditState
+
+  let taskAssigneeIds: string[] = []
+  if (task.assigneeIds && task.assigneeIds.length > 0) {
+    taskAssigneeIds = task.assigneeIds
+  } else if (task.assigneeId) {
+    taskAssigneeIds = [task.assigneeId]
+  }
+
+  return {
+    title: task.title || '',
+    description: task.description || '',
+    type: task.type || 'task',
+    priority: task.priority || 'medium',
+    status: task.status || 'todo',
+    assigneeIds: taskAssigneeIds,
+    labels: task.labels?.join(', ') || '',
+    estimateHours: task.estimate?.hours?.toString() || '',
+    startDate: task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '',
+    dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+    isUpdating: false,
+    useSmartAssignment: true,
+  }
+}
+
 export default function EditTaskModal({
   isOpen,
   onClose,
   task,
   onDelete
 }: EditTaskModalProps) {
-  const [state, dispatch] = useReducer(editTaskReducer, initialEditState)
+  const [state, dispatch] = useReducer(editTaskReducer, task, deriveInitialState)
   const { title, description, type, priority, status, assigneeIds, labels, estimateHours, startDate, dueDate, isUpdating, useSmartAssignment } = state
 
   const updateTask = useMutation(api.tasks.mutations.updateTask)
   const project = useQuery(api.projects.queries.getProject, { projectId: task?.projectId })
-
-  // react-doctor: legitimate - syncs external task prop into local form reducer state
-  useEffect(() => {
-    if (task) {
-      let taskAssigneeIds: string[] = []
-      if (task.assigneeIds && task.assigneeIds.length > 0) {
-        taskAssigneeIds = task.assigneeIds
-      } else if (task.assigneeId) {
-        taskAssigneeIds = [task.assigneeId]
-      }
-
-      dispatch({
-        type: 'LOAD_TASK',
-        payload: {
-          title: task.title || '',
-          description: task.description || '',
-          type: task.type || 'task',
-          priority: task.priority || 'medium',
-          status: task.status || 'todo',
-          assigneeIds: taskAssigneeIds,
-          labels: task.labels?.join(', ') || '',
-          estimateHours: task.estimate?.hours?.toString() || '',
-          startDate: task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '',
-          dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
-          isUpdating: false,
-          useSmartAssignment: true,
-        }
-      })
-    }
-  }, [task])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -331,6 +327,7 @@ export default function EditTaskModal({
 
   return (
     <BrutalModal
+      key={task?._id ?? 'new'}
       isOpen={isOpen}
       onClose={onClose}
       title={`EDIT TASK: ${task?.project?.key || 'PROJ'}-${task?.number || '0'}`}

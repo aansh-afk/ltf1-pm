@@ -266,18 +266,6 @@ export default function CommandPalette() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isCommandPaletteOpen, selectedIndex, flatCommands])
 
-  // react-doctor: legitimate - modal focus trap and state reset on prop-driven open
-  useEffect(() => {
-    if (isCommandPaletteOpen) {
-      // Small delay to ensure DOM is ready
-      requestAnimationFrame(() => {
-        searchInputRef.current?.focus()
-      })
-      setSearchQuery('')
-      setSelectedIndex(0)
-    }
-  }, [isCommandPaletteOpen])
-
   // Scroll selected into view
   useEffect(() => {
     if (listRef.current && selectedIndex >= 0) {

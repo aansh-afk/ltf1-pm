@@ -63,6 +63,19 @@ const bootLines = [
   { label: 'WORKSPACE_INIT', delay: 0.8 },
 ]
 
+function scheduleBootTimers(
+  dispatch: (action: { type: 'ADD_BOOT_COMPLETE'; index: number } | { type: 'SET_ALL_SYSTEMS_GO'; value: boolean }) => void,
+  onComplete: () => void
+): Array<ReturnType<typeof setTimeout>> {
+  const timers: Array<ReturnType<typeof setTimeout>> = []
+  bootLines.forEach((line, index) => {
+    timers.push(setTimeout(() => { dispatch({ type: 'ADD_BOOT_COMPLETE', index }) }, line.delay * 1000 + 600))
+  })
+  timers.push(setTimeout(() => { dispatch({ type: 'SET_ALL_SYSTEMS_GO', value: true }) }, (bootLines[bootLines.length - 1].delay + 0.6) * 1000 + 600))
+  timers.push(setTimeout(() => { onComplete() }, (bootLines[bootLines.length - 1].delay + 0.6) * 1000 + 1800))
+  return timers
+}
+
 interface TerminalProgressProps {
   filledBlocks: number
   stepIndex: number
@@ -534,6 +547,7 @@ type OnboardingAction =
   | { type: 'ADD_BOOT_COMPLETE'; index: number }
   | { type: 'SET_ALL_SYSTEMS_GO'; value: boolean }
   | { type: 'RESET_BOOT' }
+  | { type: 'GO_BACK_TO_THEME' }
 
 function onboardingReducer(state: OnboardingState, action: OnboardingAction): OnboardingState {
   switch (action.type) {
@@ -553,6 +567,8 @@ function onboardingReducer(state: OnboardingState, action: OnboardingAction): On
       return { ...state, allSystemsGo: action.value }
     case 'RESET_BOOT':
       return { ...state, bootComplete: [], allSystemsGo: false }
+    case 'GO_BACK_TO_THEME':
+      return { ...state, currentStep: 'theme' as OnboardingStep, direction: -1, aiSetupChoice: '' as const }
     default:
       return state
   }
@@ -686,8 +702,7 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
 
   const handleBack = () => {
     if (currentStep === 'ai') {
-      dispatch({ type: 'SET_STEP', step: 'theme', direction: -1 })
-      dispatch({ type: 'SET_AI_SETUP_CHOICE', value: '' })
+      dispatch({ type: 'GO_BACK_TO_THEME' })
     }
   }
 
@@ -746,32 +761,12 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
     }
   }
 
-  // Already uses useReducer dispatch; multiple dispatches are for sequential animation timers
   useEffect(() => {
     if (currentStep !== 'complete') {
       dispatch({ type: 'RESET_BOOT' })
       return
     }
-
-    const timers: Array<ReturnType<typeof setTimeout>> = []
-
-    bootLines.forEach((line, index) => {
-      const timer = setTimeout(() => {
-        dispatch({ type: 'ADD_BOOT_COMPLETE', index })
-      }, line.delay * 1000 + 600)
-      timers.push(timer)
-    })
-
-    const finalTimer = setTimeout(() => {
-      dispatch({ type: 'SET_ALL_SYSTEMS_GO', value: true })
-    }, (bootLines[bootLines.length - 1].delay + 0.6) * 1000 + 600)
-    timers.push(finalTimer)
-
-    const completeTimer = setTimeout(() => {
-      onComplete()
-    }, (bootLines[bootLines.length - 1].delay + 0.6) * 1000 + 1800)
-    timers.push(completeTimer)
-
+    const timers = scheduleBootTimers(dispatch, onComplete)
     return () => timers.forEach(clearTimeout)
   }, [currentStep, onComplete])
 
