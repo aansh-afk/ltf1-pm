@@ -415,372 +415,235 @@ function GanttTaskSidebar({ flatTasks, selectedTask, showCriticalPath, showMiles
   )
 }
 
+interface GanttTaskBarProps {
+  task: GanttTask
+  yPosition: number
+  startDate: Date
+  columnWidth: number
+  zoomLevel: ZoomLevel
+  showCriticalPath: boolean
+  showMilestones: boolean
+  onSelectTask: (taskId: Id<"tasks">) => void
+}
+
+function GanttTaskBar({ task, yPosition, startDate, columnWidth, zoomLevel, showCriticalPath, showMilestones, onSelectTask }: GanttTaskBarProps) {
+  const taskStart = differenceInDays(task.startDate, startDate)
+  const taskDuration = differenceInDays(task.endDate, task.startDate) || 1
+  const x = (taskStart * columnWidth) / (zoomLevel === 'day' ? 1 : 7)
+  const width = (taskDuration * columnWidth) / (zoomLevel === 'day' ? 1 : 7)
+  const progressWidth = width * (task.progress / 100)
+
+  const barColor = task.criticalPath && showCriticalPath ? 'var(--theme-error)' :
+    task.priority === 'urgent' ? 'var(--theme-error)' :
+    task.priority === 'high' ? 'var(--theme-warning)' :
+    task.priority === 'medium' ? 'var(--theme-info)' :
+    'var(--theme-success)'
+
+  if (task.milestone && showMilestones) {
+    return (
+      <g key={task.id}>
+        <rect x={x - 10} y={yPosition + ROW_HEIGHT / 2 - 10} width={20} height={20} fill={barColor}
+          transform={`rotate(45 ${x} ${yPosition + ROW_HEIGHT / 2})`} className="cursor-pointer hover:opacity-80"
+          onClick={() => onSelectTask(task.id)} />
+        <text x={x + 25} y={yPosition + ROW_HEIGHT / 2 + 5} fill="var(--theme-foreground)" fontSize="12" className="select-none">
+          {task.title}
+        </text>
+      </g>
+    )
+  }
+
+  return (
+    <g key={task.id}>
+      <rect x={x} y={yPosition + 10} width={width} height={20} rx={2} fill={`${barColor}20`}
+        stroke={barColor} strokeWidth={2} className="cursor-pointer" onClick={() => onSelectTask(task.id)} />
+      <rect x={x} y={yPosition + 10} width={progressWidth} height={20} rx={2} fill={barColor} className="pointer-events-none" />
+      {width > 50 && (
+        <text x={x + 5} y={yPosition + 24} fill="var(--theme-foreground)" fontSize="11" className="select-none pointer-events-none">
+          {task.title.length > 20 ? task.title.substring(0, 20) + '...' : task.title}
+        </text>
+      )}
+      {width > 30 && (
+        <text x={x + width - 25} y={yPosition + 24} fill="var(--theme-foreground)" fontSize="10" className="select-none pointer-events-none">
+          {task.progress}%
+        </text>
+      )}
+    </g>
+  )
+}
+
+interface GanttSVGContentProps {
+  ganttRef: React.RefObject<SVGSVGElement | null>
+  flatTasks: Array<{ task: GanttTask; level: number }>
+  ganttTasks: GanttTask[]
+  tasks: any[]
+  startDate: Date
+  totalDays: number
+  columnWidth: number
+  zoomLevel: ZoomLevel
+  showCriticalPath: boolean
+  showMilestones: boolean
+  showDependencies: boolean
+  onSelectTask: (taskId: Id<"tasks">) => void
+}
+
+function GanttSVGContent({ ganttRef, flatTasks, ganttTasks, tasks, startDate, totalDays, columnWidth, zoomLevel, showCriticalPath, showMilestones, showDependencies, onSelectTask }: GanttSVGContentProps) {
+  const todayOffset = differenceInDays(new Date(), startDate)
+  const todayX = (todayOffset * columnWidth) / (zoomLevel === 'day' ? 1 : 7)
+
+  return (
+    <svg
+      ref={ganttRef}
+      width={totalDays * columnWidth / (zoomLevel === 'day' ? 1 : 7)}
+      height={flatTasks.length * ROW_HEIGHT}
+      className="relative"
+    >
+      {Array.from({ length: Math.min(Math.ceil(totalDays / (zoomLevel === 'day' ? 1 : 7)), 100) }).map((_, i) => {
+        if (zoomLevel === 'day' && i % 2 !== 0) return null
+        return (
+          <line key={`grid-${i * columnWidth}`} x1={i * columnWidth} y1={0} x2={i * columnWidth} y2={flatTasks.length * ROW_HEIGHT}
+            stroke="var(--theme-border)" strokeWidth={1} opacity={0.3} />
+        )
+      })}
+      {zoomLevel === 'day' && Array.from({ length: Math.min(totalDays, 30) }).map((_, i) => {
+        const date = addDays(startDate, i)
+        if (!isWeekend(date)) return null
+        return (
+          <rect key={`weekend-${format(date, 'yyyy-MM-dd')}`} x={i * columnWidth} y={0} width={columnWidth}
+            height={flatTasks.length * ROW_HEIGHT} fill="var(--theme-hover)" opacity={0.1} />
+        )
+      })}
+      <DependencyLines showDependencies={showDependencies} ganttTasks={ganttTasks} tasks={tasks}
+        startDate={startDate} columnWidth={columnWidth} zoomLevel={zoomLevel} />
+      {flatTasks.map(({ task }, index) => (
+        <GanttTaskBar key={task.id} task={task} yPosition={index * ROW_HEIGHT} startDate={startDate}
+          columnWidth={columnWidth} zoomLevel={zoomLevel} showCriticalPath={showCriticalPath}
+          showMilestones={showMilestones} onSelectTask={onSelectTask} />
+      ))}
+      <line x1={todayX} y1={0} x2={todayX} y2={flatTasks.length * ROW_HEIGHT}
+        stroke="var(--theme-error)" strokeWidth={2} strokeDasharray="4,4" />
+    </svg>
+  )
+}
+
 // --- Main component ---
 
 export default function GanttView({ projectId, workspaceId }: GanttViewProps) {
   const [state, dispatch] = useReducer(ganttReducer, ganttInitialState)
-  const { zoomLevel, selectedTask, expandedTasks, isDragging, draggedTask, showCriticalPath, showMilestones, showDependencies } = state
+  const { zoomLevel, selectedTask, expandedTasks, showCriticalPath, showMilestones, showDependencies } = state
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const ganttRef = useRef<SVGSVGElement>(null)
-  
-  // Fetch tasks
+
   const tasks = useQuery(api.tasks.queries.getProjectTasks, { projectId }) || []
   const updateTask = useMutation(api.tasks.mutations.updateTask)
-  
-  // Process tasks into Gantt format
+
   const ganttTasks = useMemo(() => {
     const taskMap = new Map<Id<"tasks">, GanttTask>()
-    
-    // First pass: create all tasks
     tasks.forEach(task => {
       const startDate = task.startDate ? new Date(task.startDate) : new Date()
       const endDate = task.dueDate ? new Date(task.dueDate) : addDays(startDate, 7)
-      
       taskMap.set(task._id, {
-        id: task._id,
-        title: task.title,
-        startDate,
-        endDate,
-        progress: task.progress || 0,
-        dependencies: task.dependencies || [],
-        assigneeIds: task.assigneeIds || [],
-        status: task.status,
-        priority: task.priority,
-        type: task.type,
-        milestone: task.milestone || false,
-        criticalPath: task.criticalPath || false,
-        children: [],
-        expanded: expandedTasks.has(task._id)
+        id: task._id, title: task.title, startDate, endDate,
+        progress: task.progress || 0, dependencies: task.dependencies || [],
+        assigneeIds: task.assigneeIds || [], status: task.status,
+        priority: task.priority, type: task.type,
+        milestone: task.milestone || false, criticalPath: task.criticalPath || false,
+        children: [], expanded: expandedTasks.has(task._id)
       })
     })
-    
-    // Second pass: build hierarchy
     const rootTasks: GanttTask[] = []
     tasks.forEach(task => {
       const ganttTask = taskMap.get(task._id)!
       if (task.parentTaskId && taskMap.has(task.parentTaskId)) {
-        const parent = taskMap.get(task.parentTaskId)!
-        parent.children?.push(ganttTask)
+        taskMap.get(task.parentTaskId)!.children?.push(ganttTask)
       } else {
         rootTasks.push(ganttTask)
       }
     })
-    
     return rootTasks
   }, [tasks, expandedTasks])
-  
-  // Calculate date range
+
   const { startDate, endDate, totalDays } = useMemo(() => {
     if (ganttTasks.length === 0) {
       const start = startOfMonth(new Date())
-      const end = addDays(start, 90)
-      return { startDate: start, endDate: end, totalDays: 90 }
+      return { startDate: start, endDate: addDays(start, 90), totalDays: 90 }
     }
-    
     let minDate = new Date()
     let maxDate = new Date()
-    
     const processTask = (task: GanttTask) => {
       if (task.startDate < minDate) minDate = task.startDate
       if (task.endDate > maxDate) maxDate = task.endDate
       task.children?.forEach(processTask)
     }
-    
     ganttTasks.forEach(processTask)
-    
-    // Add padding based on zoom level to optimize performance
     const paddingDays = zoomLevel === 'day' ? 3 : 7
     const start = addDays(minDate, -paddingDays)
-    
-    // Limit the visible range in day view for performance
     const maxDaysInView = zoomLevel === 'day' ? 30 : 180
     const calculatedEnd = addDays(maxDate, paddingDays)
-    const limitedEnd = differenceInDays(calculatedEnd, start) > maxDaysInView 
-      ? addDays(start, maxDaysInView)
-      : calculatedEnd
-    
-    const days = differenceInDays(limitedEnd, start)
-    
-    return { startDate: start, endDate: limitedEnd, totalDays: days }
+    const limitedEnd = differenceInDays(calculatedEnd, start) > maxDaysInView ? addDays(start, maxDaysInView) : calculatedEnd
+    return { startDate: start, endDate: limitedEnd, totalDays: differenceInDays(limitedEnd, start) }
   }, [ganttTasks, zoomLevel])
-  
-  // Calculate column width based on zoom
+
   const columnWidth = useMemo(() => {
     switch (zoomLevel) {
-      case 'day': return 60  // Increased for better visibility and performance
+      case 'day': return 60
       case 'week': return 100
       case 'month': return 200
       case 'quarter': return 300
       default: return 100
     }
   }, [zoomLevel])
-  
-  // Render task bar
-  const renderTaskBar = (task: GanttTask, yPosition: number) => {
-    const taskStart = differenceInDays(task.startDate, startDate)
-    const taskDuration = differenceInDays(task.endDate, task.startDate) || 1
-    const x = (taskStart * columnWidth) / (zoomLevel === 'day' ? 1 : 7)
-    const width = (taskDuration * columnWidth) / (zoomLevel === 'day' ? 1 : 7)
-    const progressWidth = width * (task.progress / 100)
-    
-    // Task bar colors based on priority
-    const barColor = task.criticalPath && showCriticalPath ? 'var(--theme-error)' :
-                    task.priority === 'urgent' ? 'var(--theme-error)' :
-                    task.priority === 'high' ? 'var(--theme-warning)' :
-                    task.priority === 'medium' ? 'var(--theme-info)' :
-                    'var(--theme-success)'
-    
-    if (task.milestone && showMilestones) {
-      // Render milestone as diamond
-      return (
-        <g key={task.id}>
-          <rect
-            x={x - 10}
-            y={yPosition + ROW_HEIGHT / 2 - 10}
-            width={20}
-            height={20}
-            fill={barColor}
-            transform={`rotate(45 ${x} ${yPosition + ROW_HEIGHT / 2})`}
-            className="cursor-pointer hover:opacity-80"
-            onClick={() => dispatch({ type: 'SELECT_TASK', taskId: task.id })}
-          />
-          <text
-            x={x + 25}
-            y={yPosition + ROW_HEIGHT / 2 + 5}
-            fill="var(--theme-foreground)"
-            fontSize="12"
-            className="select-none"
-          >
-            {task.title}
-          </text>
-        </g>
-      )
-    }
-    
-    return (
-      <g key={task.id}>
-        {/* Task bar background */}
-        <rect
-          x={x}
-          y={yPosition + 10}
-          width={width}
-          height={20}
-          rx={2}
-          fill={`${barColor}20`}
-          stroke={barColor}
-          strokeWidth={2}
-          className="cursor-pointer"
-          onClick={() => dispatch({ type: 'SELECT_TASK', taskId: task.id })}
-        />
-        
-        {/* Progress bar */}
-        <rect
-          x={x}
-          y={yPosition + 10}
-          width={progressWidth}
-          height={20}
-          rx={2}
-          fill={barColor}
-          className="pointer-events-none"
-        />
-        
-        {/* Task title */}
-        {width > 50 && (
-          <text
-            x={x + 5}
-            y={yPosition + 24}
-            fill="var(--theme-foreground)"
-            fontSize="11"
-            className="select-none pointer-events-none"
-          >
-            {task.title.length > 20 ? task.title.substring(0, 20) + '...' : task.title}
-          </text>
-        )}
-        
-        {/* Progress percentage */}
-        {width > 30 && (
-          <text
-            x={x + width - 25}
-            y={yPosition + 24}
-            fill="var(--theme-foreground)"
-            fontSize="10"
-            className="select-none pointer-events-none"
-          >
-            {task.progress}%
-          </text>
-        )}
-      </g>
-    )
-  }
-  
-  // Flatten tasks for rendering
-  const flattenTasks = (tasks: GanttTask[], level = 0): Array<{ task: GanttTask, level: number }> => {
+
+  const flattenTasks = (taskList: GanttTask[], level = 0): Array<{ task: GanttTask, level: number }> => {
     const result: Array<{ task: GanttTask, level: number }> = []
-    
-    tasks.forEach(task => {
+    taskList.forEach(task => {
       result.push({ task, level })
-      if (task.expanded && task.children) {
-        result.push(...flattenTasks(task.children, level + 1))
-      }
+      if (task.expanded && task.children) result.push(...flattenTasks(task.children, level + 1))
     })
-    
     return result
   }
-  
+
   const flatTasks = flattenTasks(ganttTasks)
-  
-  // Handle task expansion
-  const toggleTaskExpansion = (taskId: Id<"tasks">) => {
-    dispatch({ type: 'TOGGLE_EXPAND', taskId })
-  }
-  
-  // Handle task update
-  const handleTaskUpdate = async (taskId: Id<"tasks">, updates: any) => {
-    try {
-      await updateTask({ taskId, updates })
-      toast.success('Task updated')
-    } catch (error) {
-      toast.error('Failed to update task')
-    }
-  }
-  
-  // Export to image
+
   const exportToImage = () => {
     if (!ganttRef.current) return
-    
     const svg = ganttRef.current
     const svgData = new XMLSerializer().serializeToString(svg)
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     const img = new Image()
-    
     img.onload = () => {
       canvas.width = img.width
       canvas.height = img.height
       ctx?.drawImage(img, 0, 0)
-      const pngUrl = canvas.toDataURL('image/png')
-      
       const downloadLink = document.createElement('a')
       downloadLink.download = `gantt-chart-${Date.now()}.png`
-      downloadLink.href = pngUrl
+      downloadLink.href = canvas.toDataURL('image/png')
       downloadLink.click()
     }
-    
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData)
   }
-  
+
   return (
     <div className="h-full flex flex-col bg-[var(--theme-background)]">
-      {/* Toolbar */}
       <GanttToolbar
-        zoomLevel={zoomLevel}
-        showCriticalPath={showCriticalPath}
-        showMilestones={showMilestones}
-        showDependencies={showDependencies}
-        onSetZoom={(level) => dispatch({ type: 'SET_ZOOM', level })}
+        zoomLevel={zoomLevel} showCriticalPath={showCriticalPath} showMilestones={showMilestones}
+        showDependencies={showDependencies} onSetZoom={(level) => dispatch({ type: 'SET_ZOOM', level })}
         onToggleCriticalPath={() => dispatch({ type: 'TOGGLE_CRITICAL_PATH' })}
         onToggleMilestones={() => dispatch({ type: 'TOGGLE_MILESTONES' })}
         onToggleDependencies={() => dispatch({ type: 'TOGGLE_DEPENDENCIES' })}
         onExport={exportToImage}
       />
-      
-      {/* Gantt Chart */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Task List Sidebar */}
-        <GanttTaskSidebar
-          flatTasks={flatTasks}
-          selectedTask={selectedTask}
-          showCriticalPath={showCriticalPath}
-          showMilestones={showMilestones}
-          onToggleExpansion={toggleTaskExpansion}
-        />
-        
-        {/* Timeline Area */}
-        <div 
-          ref={scrollContainerRef}
-          className="flex-1 overflow-auto"
-        >
-          {/* Timeline Header */}
+        <GanttTaskSidebar flatTasks={flatTasks} selectedTask={selectedTask} showCriticalPath={showCriticalPath}
+          showMilestones={showMilestones} onToggleExpansion={(taskId) => dispatch({ type: 'TOGGLE_EXPAND', taskId })} />
+        <div ref={scrollContainerRef} className="flex-1 overflow-auto">
           <div className="h-[60px] border-b-2 border-[var(--theme-border)] flex sticky top-0 bg-[var(--theme-background-secondary)] z-10">
             <TimelineHeader startDate={startDate} endDate={endDate} zoomLevel={zoomLevel} columnWidth={columnWidth} />
           </div>
-          
-          {/* Gantt Bars */}
-          <svg
-            ref={ganttRef}
-            width={totalDays * columnWidth / (zoomLevel === 'day' ? 1 : 7)}
-            height={flatTasks.length * ROW_HEIGHT}
-            className="relative"
-          >
-            {/* Grid lines - optimized to render fewer lines */}
-            {Array.from({ length: Math.min(Math.ceil(totalDays / (zoomLevel === 'day' ? 1 : 7)), 100) }).map((_, i) => {
-              // Skip every other line in day view for performance
-              if (zoomLevel === 'day' && i % 2 !== 0) return null
-              return (
-                <line
-                  key={`grid-${i * columnWidth}`}
-                  x1={i * columnWidth}
-                  y1={0}
-                  x2={i * columnWidth}
-                  y2={flatTasks.length * ROW_HEIGHT}
-                  stroke="var(--theme-border)"
-                  strokeWidth={1}
-                  opacity={0.3}
-                />
-              )
-            })}
-            
-            {/* Weekend highlighting - optimized to only render visible weekends */}
-            {zoomLevel === 'day' && Array.from({ length: Math.min(totalDays, 30) }).map((_, i) => {
-              const date = addDays(startDate, i)
-              if (isWeekend(date)) {
-                return (
-                  <rect
-                    key={`weekend-${format(date, 'yyyy-MM-dd')}`}
-                    x={i * columnWidth}
-                    y={0}
-                    width={columnWidth}
-                    height={flatTasks.length * ROW_HEIGHT}
-                    fill="var(--theme-hover)"
-                    opacity={0.1}
-                  />
-                )
-              }
-              return null
-            })}
-            
-            {/* Dependencies */}
-            <DependencyLines
-              showDependencies={showDependencies}
-              ganttTasks={ganttTasks}
-              tasks={tasks}
-              startDate={startDate}
-              columnWidth={columnWidth}
-              zoomLevel={zoomLevel}
-            />
-            
-            {/* Task bars */}
-            {flatTasks.map(({ task }, index) => 
-              renderTaskBar(task, index * ROW_HEIGHT)
-            )}
-            
-            {/* Today line */}
-            {(() => {
-              const todayOffset = differenceInDays(new Date(), startDate)
-              const x = (todayOffset * columnWidth) / (zoomLevel === 'day' ? 1 : 7)
-              return (
-                <line
-                  x1={x}
-                  y1={0}
-                  x2={x}
-                  y2={flatTasks.length * ROW_HEIGHT}
-                  stroke="var(--theme-error)"
-                  strokeWidth={2}
-                  strokeDasharray="4,4"
-                />
-              )
-            })()}
-          </svg>
+          <GanttSVGContent ganttRef={ganttRef} flatTasks={flatTasks} ganttTasks={ganttTasks} tasks={tasks}
+            startDate={startDate} totalDays={totalDays} columnWidth={columnWidth} zoomLevel={zoomLevel}
+            showCriticalPath={showCriticalPath} showMilestones={showMilestones} showDependencies={showDependencies}
+            onSelectTask={(taskId) => dispatch({ type: 'SELECT_TASK', taskId })} />
         </div>
       </div>
     </div>

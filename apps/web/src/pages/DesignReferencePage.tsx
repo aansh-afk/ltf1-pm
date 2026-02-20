@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useReducer } from 'react'
 import BrutalButton from '../components/ui/BrutalButton'
 import BrutalCard from '../components/ui/BrutalCard'
 import BrutalBadge from '../components/ui/BrutalBadge'
@@ -139,23 +139,65 @@ const COLOR_TOKENS = [
 // ─────────────────────────────────────────────
 // Main Page
 // ─────────────────────────────────────────────
+type DemoState = {
+  toggle1: boolean
+  toggle2: boolean
+  toggle3: boolean
+  check1: boolean
+  check2: boolean
+  check3: boolean
+  sliderVal: number
+  modalOpen: boolean
+  modalSize: 'sm' | 'md' | 'lg' | 'xl'
+  multiVal: string[]
+  activeSection: string
+}
+
+type DemoAction =
+  | { type: 'SET_TOGGLE1'; value: boolean }
+  | { type: 'SET_TOGGLE2'; value: boolean }
+  | { type: 'SET_TOGGLE3'; value: boolean }
+  | { type: 'SET_CHECK1'; value: boolean }
+  | { type: 'SET_CHECK2'; value: boolean }
+  | { type: 'SET_CHECK3'; value: boolean }
+  | { type: 'SET_SLIDER'; value: number }
+  | { type: 'OPEN_MODAL'; size: 'sm' | 'md' | 'lg' | 'xl' }
+  | { type: 'CLOSE_MODAL' }
+  | { type: 'SET_MULTI'; value: string[] }
+  | { type: 'SET_SECTION'; value: string }
+
+const initialDemoState: DemoState = {
+  toggle1: true, toggle2: false, toggle3: true,
+  check1: true, check2: false, check3: true,
+  sliderVal: 60,
+  modalOpen: false, modalSize: 'md',
+  multiVal: ['react', 'typescript'],
+  activeSection: 'colors',
+}
+
+function demoReducer(state: DemoState, action: DemoAction): DemoState {
+  switch (action.type) {
+    case 'SET_TOGGLE1': return { ...state, toggle1: action.value }
+    case 'SET_TOGGLE2': return { ...state, toggle2: action.value }
+    case 'SET_TOGGLE3': return { ...state, toggle3: action.value }
+    case 'SET_CHECK1': return { ...state, check1: action.value }
+    case 'SET_CHECK2': return { ...state, check2: action.value }
+    case 'SET_CHECK3': return { ...state, check3: action.value }
+    case 'SET_SLIDER': return { ...state, sliderVal: action.value }
+    case 'OPEN_MODAL': return { ...state, modalOpen: true, modalSize: action.size }
+    case 'CLOSE_MODAL': return { ...state, modalOpen: false }
+    case 'SET_MULTI': return { ...state, multiVal: action.value }
+    case 'SET_SECTION': return { ...state, activeSection: action.value }
+    default: return state
+  }
+}
+
 export default function DesignReferencePage() {
-  // Interactive state for demos
-  const [toggle1, setToggle1] = useState(true)
-  const [toggle2, setToggle2] = useState(false)
-  const [toggle3, setToggle3] = useState(true)
-  const [check1, setCheck1] = useState(true)
-  const [check2, setCheck2] = useState(false)
-  const [check3, setCheck3] = useState(true)
-  const [sliderVal, setSliderVal] = useState(60)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [modalSize, setModalSize] = useState<'sm' | 'md' | 'lg' | 'xl'>('md')
-  const [multiVal, setMultiVal] = useState<string[]>(['react', 'typescript'])
-  const [activeSection, setActiveSection] = useState('colors')
+  const [state, dispatch] = useReducer(demoReducer, initialDemoState)
+  const { toggle1, toggle2, toggle3, check1, check2, check3, sliderVal, modalOpen, modalSize, multiVal, activeSection } = state
 
   const openModal = (size: 'sm' | 'md' | 'lg' | 'xl') => {
-    setModalSize(size)
-    setModalOpen(true)
+    dispatch({ type: 'OPEN_MODAL', size })
   }
 
   return (
@@ -175,7 +217,7 @@ export default function DesignReferencePage() {
             <a
               key={s.id}
               href={`#${s.id}`}
-              onClick={() => setActiveSection(s.id)}
+              onClick={() => dispatch({ type: 'SET_SECTION', value: s.id })}
               className={`block px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
                 activeSection === s.id
                   ? 'text-[var(--theme-primary)] bg-[var(--theme-primary)]/10'
@@ -690,7 +732,7 @@ export default function DesignReferencePage() {
                 { value: 'framer', label: 'Framer Motion' },
               ]}
               value={multiVal}
-              onChange={setMultiVal}
+              onChange={(v) => dispatch({ type: 'SET_MULTI', value: v })}
               placeholder="SELECT TECHNOLOGIES"
             />
             <div className="mt-2 font-mono text-[9px] text-[var(--theme-foreground)]/40">
@@ -833,20 +875,20 @@ export default function DesignReferencePage() {
               <DemoBlock className="space-y-3">
                 <BrutalCheckbox
                   checked={check1}
-                  onChange={setCheck1}
+                  onChange={(v) => dispatch({ type: 'SET_CHECK1', value: v })}
                   label="Default variant"
                   variant="default"
                 />
                 <BrutalCheckbox
                   checked={check2}
-                  onChange={setCheck2}
+                  onChange={(v) => dispatch({ type: 'SET_CHECK2', value: v })}
                   label="Success variant"
                   variant="success"
                   description="Task completed successfully"
                 />
                 <BrutalCheckbox
                   checked={check3}
-                  onChange={setCheck3}
+                  onChange={(v) => dispatch({ type: 'SET_CHECK3', value: v })}
                   label="Danger variant"
                   variant="danger"
                   description="Destructive action required"
@@ -907,9 +949,9 @@ export default function DesignReferencePage() {
             <div>
               <SubHeading label="Sizes (interactive)" />
               <DemoBlock className="space-y-4">
-                <BrutalToggle size="sm" checked={toggle1} onChange={setToggle1} label="Small toggle" />
-                <BrutalToggle size="md" checked={toggle2} onChange={setToggle2} label="Medium toggle" />
-                <BrutalToggle size="lg" checked={toggle3} onChange={setToggle3} label="Large toggle" />
+                <BrutalToggle size="sm" checked={toggle1} onChange={(v) => dispatch({ type: 'SET_TOGGLE1', value: v })} label="Small toggle" />
+                <BrutalToggle size="md" checked={toggle2} onChange={(v) => dispatch({ type: 'SET_TOGGLE2', value: v })} label="Medium toggle" />
+                <BrutalToggle size="lg" checked={toggle3} onChange={(v) => dispatch({ type: 'SET_TOGGLE3', value: v })} label="Large toggle" />
               </DemoBlock>
             </div>
             <div>
@@ -975,7 +1017,7 @@ export default function DesignReferencePage() {
               <DemoBlock>
                 <BrutalSlider
                   value={sliderVal}
-                  onChange={setSliderVal}
+                  onChange={(v) => dispatch({ type: 'SET_SLIDER', value: v })}
                   min={0}
                   max={100}
                   step={1}
@@ -990,7 +1032,7 @@ export default function DesignReferencePage() {
               <DemoBlock>
                 <BrutalSlider
                   value={sliderVal}
-                  onChange={setSliderVal}
+                  onChange={(v) => dispatch({ type: 'SET_SLIDER', value: v })}
                   min={0}
                   max={100}
                   step={5}
@@ -1076,10 +1118,7 @@ export default function DesignReferencePage() {
           <DemoBlock>
             <BrutalButton
               variant="ghost"
-              onClick={() => {
-                setModalSize('sm')
-                setModalOpen(true)
-              }}
+              onClick={() => dispatch({ type: 'OPEN_MODAL', size: 'sm' })}
             >
               Open Headerless Modal
             </BrutalButton>
@@ -1087,7 +1126,7 @@ export default function DesignReferencePage() {
 
           <BrutalModal
             isOpen={modalOpen}
-            onClose={() => setModalOpen(false)}
+            onClose={() => dispatch({ type: 'CLOSE_MODAL' })}
             title={`Modal — Size: ${modalSize.toUpperCase()}`}
             size={modalSize}
           >
@@ -1101,8 +1140,8 @@ export default function DesignReferencePage() {
                 <BrutalProgress value={75} showLabel />
               </div>
               <div className="flex justify-end gap-2">
-                <BrutalButton variant="ghost" onClick={() => setModalOpen(false)}>Cancel</BrutalButton>
-                <BrutalButton variant="primary" onClick={() => setModalOpen(false)}>Confirm</BrutalButton>
+                <BrutalButton variant="ghost" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>Cancel</BrutalButton>
+                <BrutalButton variant="primary" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>Confirm</BrutalButton>
               </div>
             </div>
           </BrutalModal>
@@ -1237,8 +1276,8 @@ export default function DesignReferencePage() {
                 </div>
                 {/* Palette dots */}
                 <div className="flex" style={{ backgroundColor: theme.bg }}>
-                  {[theme.bg, theme.fg, theme.accent, '#22C55E', '#EF4444'].map((c, i) => (
-                    <div key={i} className="flex-1 h-3" style={{ backgroundColor: c }} />
+                  {[theme.bg, theme.fg, theme.accent, '#22C55E', '#EF4444'].map((c) => (
+                    <div key={c} className="flex-1 h-3" style={{ backgroundColor: c }} />
                   ))}
                 </div>
                 {/* Description */}

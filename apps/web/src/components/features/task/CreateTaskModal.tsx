@@ -1,13 +1,32 @@
-import { useReducer } from 'react'
+import { useReducer, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
 import toast from 'react-hot-toast'
 import posthog from 'posthog-js'
 import BrutalModal from '../../ui/BrutalModal'
+import BrutalButton from '../../ui/BrutalButton'
+import BrutalToggle from '../../ui/BrutalToggle'
 import MultiSelect from '../../ui/MultiSelect'
 import { TaskAssignmentHelper } from '../task/TaskAssignmentHelper'
-import { HiOutlineSwitchHorizontal, HiOutlineLightBulb } from 'react-icons/hi'
+import { HiOutlineLightBulb } from 'react-icons/hi'
+
+// --- Type & Priority chip data ---
+
+const TASK_TYPES = [
+  { value: 'task',        label: 'TASK',    icon: '▣', color: 'var(--theme-foreground)' },
+  { value: 'feature',     label: 'FEATURE', icon: '◆', color: 'var(--theme-primary)' },
+  { value: 'bug',         label: 'BUG',     icon: '✕', color: 'var(--theme-error)' },
+  { value: 'improvement', label: 'IMPROVE', icon: '▲', color: 'var(--theme-info)' },
+  { value: 'epic',        label: 'EPIC',    icon: '★', color: 'var(--theme-warning)' },
+] as const
+
+const PRIORITIES = [
+  { value: 'low',    label: 'LOW',       color: 'var(--theme-foreground)', bg: 'var(--theme-foreground)' },
+  { value: 'medium', label: 'MED',       color: 'var(--theme-warning)',    bg: 'var(--theme-warning)' },
+  { value: 'high',   label: 'HIGH',      color: 'var(--theme-error)',      bg: 'var(--theme-error)' },
+  { value: 'urgent', label: '⚡ URGENT', color: 'var(--theme-error)',      bg: 'var(--theme-error)' },
+] as const
 
 // --- Sub-components ---
 
@@ -42,29 +61,33 @@ function TaskAssignmentSection({
 }: TaskAssignmentSectionProps) {
   return (
     <div className="space-y-[8px]">
-      <div className="flex items-center justify-between">
-        <span className="block text-brutal-sm">
-          TASK ASSIGNMENT
-        </span>
-        <button
-          type="button"
-          onClick={onToggleSmartAssignment}
-          className="flex items-center gap-[4px] font-mono text-brutal-xs text-primary-brutalist hover:text-brutal-info transition-colors"
-        >
-          {useSmartAssignment ? (
-            <>
-              <HiOutlineLightBulb className="w-20px h-20px" />
-              SMART ASSIGNMENT ON
-            </>
-          ) : (
-            <>
-              <HiOutlineSwitchHorizontal className="w-20px h-20px" />
-              SMART ASSIGNMENT OFF
-            </>
-          )}
-        </button>
+      {/* Smart Assignment toggle row */}
+      <div
+        className="flex items-center justify-between p-3 border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
+      >
+        <div className="flex items-center gap-2">
+          <HiOutlineLightBulb
+            className="w-4 h-4 flex-shrink-0"
+            style={{ color: useSmartAssignment ? 'var(--theme-primary)' : 'var(--theme-foreground)', opacity: useSmartAssignment ? 1 : 0.4 }}
+          />
+          <div>
+            <div className="font-mono text-xs font-bold uppercase" style={{ color: 'var(--theme-foreground)' }}>
+              Smart Assignment
+            </div>
+            <div className="font-mono text-[10px]" style={{ color: 'var(--theme-foreground)', opacity: 0.4 }}>
+              AI-powered team matching
+            </div>
+          </div>
+        </div>
+        <BrutalToggle
+          checked={useSmartAssignment}
+          onChange={onToggleSmartAssignment}
+          disabled={isCreating}
+          size="sm"
+        />
       </div>
 
+      {/* Assignment content */}
       {useSmartAssignment ? (
         <>
           <TaskAssignmentHelper
@@ -77,7 +100,7 @@ function TaskAssignmentSection({
             mode="compact"
           />
           <div>
-            <label htmlFor="create-task-estimate-smart" className="block text-brutal-sm mb-[4px]">
+            <label htmlFor="create-task-estimate-smart" className="block font-mono text-[11px] font-bold uppercase tracking-wider mb-[4px]" style={{ color: 'var(--theme-foreground)', opacity: 0.6 }}>
               ESTIMATE (HOURS)
             </label>
             <input
@@ -85,9 +108,12 @@ function TaskAssignmentSection({
               type="number"
               placeholder="0"
               className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
-                       font-mono text-brutal-md placeholder:text-neutral-600
-                       focus:border-primary-brutalist focus:outline-none transition-colors
+                       font-mono text-sm placeholder:opacity-30
+                       focus:outline-none transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ color: 'var(--theme-foreground)' }}
+              onFocus={e => (e.currentTarget.style.borderColor = 'var(--theme-primary)')}
+              onBlur={e => (e.currentTarget.style.borderColor = '')}
               value={estimateHours}
               onChange={(e) => onEstimateChange(e.target.value)}
               min="0"
@@ -99,7 +125,7 @@ function TaskAssignmentSection({
       ) : (
         <div className="grid grid-cols-2 gap-[8px]">
           <div>
-            <label htmlFor="create-task-assignees" className="block text-brutal-sm mb-[4px]">
+            <label htmlFor="create-task-assignees" className="block font-mono text-[11px] font-bold uppercase tracking-wider mb-[4px]" style={{ color: 'var(--theme-foreground)', opacity: 0.6 }}>
               ASSIGNEES (OPTIONAL)
             </label>
             <MultiSelect
@@ -116,7 +142,7 @@ function TaskAssignmentSection({
           </div>
 
           <div>
-            <label htmlFor="create-task-estimate-manual" className="block text-brutal-sm mb-[4px]">
+            <label htmlFor="create-task-estimate-manual" className="block font-mono text-[11px] font-bold uppercase tracking-wider mb-[4px]" style={{ color: 'var(--theme-foreground)', opacity: 0.6 }}>
               ESTIMATE (HOURS)
             </label>
             <input
@@ -124,9 +150,12 @@ function TaskAssignmentSection({
               type="number"
               placeholder="0"
               className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
-                       font-mono text-brutal-md placeholder:text-neutral-600
-                       focus:border-primary-brutalist focus:outline-none transition-colors
+                       font-mono text-sm placeholder:opacity-30
+                       focus:outline-none transition-colors
                        disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ color: 'var(--theme-foreground)' }}
+              onFocus={e => (e.currentTarget.style.borderColor = 'var(--theme-primary)')}
+              onBlur={e => (e.currentTarget.style.borderColor = '')}
               value={estimateHours}
               onChange={(e) => onEstimateChange(e.target.value)}
               min="0"
@@ -134,6 +163,178 @@ function TaskAssignmentSection({
               disabled={isCreating}
             />
           </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// --- Chip sub-components ---
+
+interface TaskTypeChipsProps {
+  selectedType: CreateTaskState['type']
+  isDisabled: boolean
+  onSelect: (v: CreateTaskState['type']) => void
+}
+
+function TaskTypeChips({ selectedType, isDisabled, onSelect }: TaskTypeChipsProps) {
+  return (
+    <div>
+      <div className="font-mono text-[11px] font-bold uppercase tracking-wider mb-[8px]" style={{ color: 'var(--theme-foreground)', opacity: 0.6 }}>
+        TYPE
+      </div>
+      <div className="flex flex-wrap gap-[6px]">
+        {TASK_TYPES.map(t => {
+          const isSelected = selectedType === t.value
+          return (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => onSelect(t.value)}
+              disabled={isDisabled}
+              className="inline-flex items-center gap-[5px] px-3 py-1.5 border-2 font-mono text-xs uppercase tracking-wider transition-colors duration-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                borderColor: isSelected ? t.color : 'var(--theme-border)',
+                backgroundColor: isSelected ? `color-mix(in srgb, ${t.color} 12%, transparent)` : 'transparent',
+                color: isSelected ? t.color : undefined,
+                opacity: isSelected ? 1 : undefined,
+              }}
+              aria-pressed={isSelected}
+            >
+              <span style={{ color: isSelected ? t.color : 'var(--theme-foreground)', opacity: isSelected ? 1 : 0.35 }}>{t.icon}</span>
+              <span style={{ color: isSelected ? t.color : 'var(--theme-foreground)', opacity: isSelected ? 1 : 0.4 }}>{t.label}</span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+interface TaskPriorityChipsProps {
+  selectedPriority: CreateTaskState['priority']
+  isDisabled: boolean
+  onSelect: (v: CreateTaskState['priority']) => void
+}
+
+function TaskPriorityChips({ selectedPriority, isDisabled, onSelect }: TaskPriorityChipsProps) {
+  return (
+    <div>
+      <div className="font-mono text-[11px] font-bold uppercase tracking-wider mb-[8px]" style={{ color: 'var(--theme-foreground)', opacity: 0.6 }}>
+        PRIORITY
+      </div>
+      <div className="flex flex-wrap gap-[6px]">
+        {PRIORITIES.map(p => {
+          const isSelected = selectedPriority === p.value
+          const isUrgent = p.value === 'urgent'
+          return (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => onSelect(p.value)}
+              disabled={isDisabled}
+              className="inline-flex items-center px-3 py-1.5 border-2 font-mono text-xs uppercase tracking-wider transition-colors duration-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                borderColor: isSelected ? p.color : 'var(--theme-border)',
+                backgroundColor: isSelected ? `color-mix(in srgb, ${p.bg} ${isUrgent ? '20%' : '12%'}, transparent)` : 'transparent',
+                color: isSelected ? p.color : undefined,
+              }}
+              aria-pressed={isSelected}
+            >
+              <span style={{ color: isSelected ? p.color : 'var(--theme-foreground)', opacity: isSelected ? 1 : 0.4 }}>{p.label}</span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+interface TaskDateFieldsProps {
+  startDate: string
+  dueDate: string
+  isDisabled: boolean
+  onStartDateChange: (v: string) => void
+  onDueDateChange: (v: string) => void
+}
+
+function TaskDateFields({ startDate, dueDate, isDisabled, onStartDateChange, onDueDateChange }: TaskDateFieldsProps) {
+  const inputClass = "w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+  const labelClass = "block font-mono text-[11px] font-bold uppercase tracking-wider mb-[4px]"
+  return (
+    <div className="grid grid-cols-2 gap-[8px]">
+      <div>
+        <label htmlFor="create-task-start-date" className={labelClass} style={{ color: 'var(--theme-foreground)', opacity: 0.6 }}>
+          START DATE (OPTIONAL)
+        </label>
+        <input
+          id="create-task-start-date"
+          type="date"
+          className={inputClass}
+          style={{ color: 'var(--theme-foreground)' }}
+          onFocus={e => (e.currentTarget.style.borderColor = 'var(--theme-primary)')}
+          onBlur={e => (e.currentTarget.style.borderColor = '')}
+          value={startDate}
+          onChange={(e) => onStartDateChange(e.target.value)}
+          disabled={isDisabled}
+        />
+      </div>
+      <div>
+        <label htmlFor="create-task-due-date" className={labelClass} style={{ color: 'var(--theme-foreground)', opacity: 0.6 }}>
+          DUE DATE (OPTIONAL)
+        </label>
+        <input
+          id="create-task-due-date"
+          type="date"
+          className={inputClass}
+          style={{ color: 'var(--theme-foreground)' }}
+          onFocus={e => (e.currentTarget.style.borderColor = 'var(--theme-primary)')}
+          onBlur={e => (e.currentTarget.style.borderColor = '')}
+          value={dueDate}
+          onChange={(e) => onDueDateChange(e.target.value)}
+          disabled={isDisabled}
+        />
+      </div>
+    </div>
+  )
+}
+
+interface TaskLabelsFieldProps {
+  labels: string
+  parsedLabels: string[]
+  isDisabled: boolean
+  onLabelsChange: (v: string) => void
+}
+
+function TaskLabelsField({ labels, parsedLabels, isDisabled, onLabelsChange }: TaskLabelsFieldProps) {
+  return (
+    <div>
+      <label htmlFor="create-task-labels" className="block font-mono text-[11px] font-bold uppercase tracking-wider mb-[4px]" style={{ color: 'var(--theme-foreground)', opacity: 0.6 }}>
+        LABELS (COMMA-SEPARATED)
+      </label>
+      <input
+        id="create-task-labels"
+        type="text"
+        placeholder="FRONTEND, URGENT, REFACTOR"
+        className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm uppercase placeholder:opacity-30 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{ color: 'var(--theme-foreground)' }}
+        onFocus={e => (e.currentTarget.style.borderColor = 'var(--theme-primary)')}
+        onBlur={e => (e.currentTarget.style.borderColor = '')}
+        value={labels}
+        onChange={(e) => onLabelsChange(e.target.value)}
+        disabled={isDisabled}
+      />
+      {parsedLabels.length > 0 && (
+        <div className="flex flex-wrap gap-[4px] mt-[6px]">
+          {parsedLabels.map((lbl) => (
+            <span
+              key={lbl}
+              className="inline-flex items-center px-2 py-0.5 border font-mono text-[10px] uppercase tracking-wider"
+              style={{ borderColor: 'var(--theme-border)', color: 'var(--theme-foreground)', opacity: 0.6, backgroundColor: 'var(--theme-background)' }}
+            >
+              {lbl}
+            </span>
+          ))}
         </div>
       )}
     </div>
@@ -216,6 +417,8 @@ export default function CreateTaskModal({
   const [state, dispatch] = useReducer(createTaskReducer, defaultDueDate, createInitialState)
   const { title, description, type, priority, assigneeIds, labels, estimateHours, startDate, dueDate, isCreating, useSmartAssignment } = state
 
+  const [titleFocused, setTitleFocused] = useState(false)
+
   const createTask = useMutation(api.tasks.mutations.createTask)
   const project = useQuery(api.projects.queries.getProject, { projectId })
 
@@ -263,134 +466,103 @@ export default function CreateTaskModal({
     }
   }
 
+  // Parsed label chips for live preview
+  const parsedLabels = labels
+    .split(',')
+    .map(l => l.trim())
+    .filter(Boolean)
+
   return (
     <BrutalModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Create New Task"
+      title="NEW TASK"
       size="xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-[12px]">
-        {/* TITLE */}
+      <form onSubmit={handleSubmit} className="space-y-[14px]">
+
+        {/* BREADCRUMB SUBTITLE */}
+        <div className="font-mono text-[10px] -mt-1 mb-1 uppercase tracking-widest" style={{ color: 'var(--theme-foreground)', opacity: 0.3 }}>
+          {project?.name?.toUpperCase() || 'PROJECT'} / CREATE
+        </div>
+
+        {/* TITLE — with left accent bar on focus */}
         <div>
-          <label htmlFor="create-task-title" className="block text-brutal-sm mb-[4px]">
+          <label htmlFor="create-task-title" className="block font-mono text-[11px] font-bold uppercase tracking-wider mb-[4px]" style={{ color: 'var(--theme-foreground)', opacity: 0.6 }}>
             TITLE
           </label>
-          <input
-            id="create-task-title"
-            type="text"
-            placeholder="TASK TITLE"
-            className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
-                     font-mono text-brutal-md uppercase placeholder:text-neutral-600
-                     focus:border-primary-brutalist focus:outline-none transition-colors
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-            value={title}
-            onChange={(e) => dispatch({ type: 'UPDATE', field: 'title', value: e.target.value })}
-            disabled={isCreating}
-          />
+          <div className="relative">
+            {/* Left accent bar visible when focused */}
+            <div
+              className="absolute left-0 top-0 bottom-0 w-0.5 transition-opacity duration-150"
+              style={{
+                backgroundColor: 'var(--theme-primary)',
+                opacity: titleFocused ? 1 : 0,
+              }}
+            />
+            <input
+              id="create-task-title"
+              type="text"
+              placeholder="TASK TITLE"
+              className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
+                       font-mono text-sm uppercase placeholder:opacity-30
+                       focus:outline-none transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ color: 'var(--theme-foreground)', borderColor: titleFocused ? 'var(--theme-primary)' : undefined }}
+              value={title}
+              onChange={(e) => dispatch({ type: 'UPDATE', field: 'title', value: e.target.value })}
+              onFocus={() => setTitleFocused(true)}
+              onBlur={() => setTitleFocused(false)}
+              disabled={isCreating}
+            />
+          </div>
         </div>
 
         {/* DESCRIPTION */}
         <div>
-          <label htmlFor="create-task-description" className="block text-brutal-sm mb-[4px]">
+          <label htmlFor="create-task-description" className="block font-mono text-[11px] font-bold uppercase tracking-wider mb-[4px]" style={{ color: 'var(--theme-foreground)', opacity: 0.6 }}>
             DESCRIPTION (OPTIONAL)
           </label>
           <textarea
             id="create-task-description"
             placeholder="ADD A DESCRIPTION..."
             className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
-                     font-mono text-brutal-md placeholder:text-neutral-600
-                     focus:border-primary-brutalist focus:outline-none transition-colors
+                     font-mono text-sm placeholder:opacity-30
+                     focus:outline-none transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed resize-none"
+            style={{ color: 'var(--theme-foreground)' }}
+            onFocus={e => (e.currentTarget.style.borderColor = 'var(--theme-primary)')}
+            onBlur={e => (e.currentTarget.style.borderColor = '')}
             value={description}
             onChange={(e) => dispatch({ type: 'UPDATE', field: 'description', value: e.target.value })}
-            rows={4}
+            rows={3}
             disabled={isCreating}
           />
         </div>
 
-        {/* TYPE & PRIORITY */}
-        <div className="grid grid-cols-2 gap-[8px]">
-          <div>
-            <label htmlFor="create-task-type" className="block text-brutal-sm mb-[4px]">
-              TYPE
-            </label>
-            <select
-              id="create-task-type"
-              className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
-                       font-mono text-brutal-md uppercase
-                       focus:border-primary-brutalist focus:outline-none transition-colors
-                       disabled:opacity-50 disabled:cursor-not-allowed"
-              value={type}
-              onChange={(e) => dispatch({ type: 'UPDATE', field: 'type', value: e.target.value as any })}
-              disabled={isCreating}
-            >
-              <option value="task">📋 TASK</option>
-              <option value="feature">✨ FEATURE</option>
-              <option value="bug">🐛 BUG</option>
-              <option value="improvement">💡 IMPROVEMENT</option>
-              <option value="epic">🎯 EPIC</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="create-task-priority" className="block text-brutal-sm mb-[4px]">
-              PRIORITY
-            </label>
-            <select
-              id="create-task-priority"
-              className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
-                       font-mono text-brutal-md uppercase
-                       focus:border-primary-brutalist focus:outline-none transition-colors
-                       disabled:opacity-50 disabled:cursor-not-allowed"
-              value={priority}
-              onChange={(e) => dispatch({ type: 'UPDATE', field: 'priority', value: e.target.value as any })}
-              disabled={isCreating}
-            >
-              <option value="low">LOW</option>
-              <option value="medium">MEDIUM</option>
-              <option value="high">HIGH</option>
-              <option value="urgent">URGENT</option>
-            </select>
-          </div>
-        </div>
+        {/* TYPE & PRIORITY chips */}
+        <TaskTypeChips
+          selectedType={type}
+          isDisabled={isCreating}
+          onSelect={(v) => dispatch({ type: 'UPDATE', field: 'type', value: v })}
+        />
+        <TaskPriorityChips
+          selectedPriority={priority}
+          isDisabled={isCreating}
+          onSelect={(v) => dispatch({ type: 'UPDATE', field: 'priority', value: v })}
+        />
 
         {/* DATES */}
-        <div className="grid grid-cols-2 gap-[8px]">
-          <div>
-            <label htmlFor="create-task-start-date" className="block text-brutal-sm mb-[4px]">
-              START DATE (OPTIONAL)
-            </label>
-            <input
-              id="create-task-start-date"
-              type="date"
-              className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
-                       font-mono text-brutal-md
-                       focus:border-primary-brutalist focus:outline-none transition-colors
-                       disabled:opacity-50 disabled:cursor-not-allowed"
-              value={startDate}
-              onChange={(e) => dispatch({ type: 'UPDATE', field: 'startDate', value: e.target.value })}
-              disabled={isCreating}
-            />
-          </div>
+        <TaskDateFields
+          startDate={startDate}
+          dueDate={dueDate}
+          isDisabled={isCreating}
+          onStartDateChange={(v) => dispatch({ type: 'UPDATE', field: 'startDate', value: v })}
+          onDueDateChange={(v) => dispatch({ type: 'UPDATE', field: 'dueDate', value: v })}
+        />
 
-          <div>
-            <label htmlFor="create-task-due-date" className="block text-brutal-sm mb-[4px]">
-              DUE DATE (OPTIONAL)
-            </label>
-            <input
-              id="create-task-due-date"
-              type="date"
-              className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
-                       font-mono text-brutal-md
-                       focus:border-primary-brutalist focus:outline-none transition-colors
-                       disabled:opacity-50 disabled:cursor-not-allowed"
-              value={dueDate}
-              onChange={(e) => dispatch({ type: 'UPDATE', field: 'dueDate', value: e.target.value })}
-              disabled={isCreating}
-            />
-          </div>
-        </div>
+        {/* SECTION DIVIDER */}
+        <div className="border-t border-[var(--theme-border)] opacity-50" />
 
         {/* ASSIGNEE & ESTIMATE */}
         <TaskAssignmentSection
@@ -408,56 +580,37 @@ export default function CreateTaskModal({
           onEstimateChange={(value) => dispatch({ type: 'UPDATE', field: 'estimateHours', value })}
         />
 
+        {/* SECTION DIVIDER */}
+        <div className="border-t border-[var(--theme-border)] opacity-50" />
+
         {/* LABELS */}
-        <div>
-          <label htmlFor="create-task-labels" className="block text-brutal-sm mb-[4px]">
-            LABELS (COMMA-SEPARATED)
-          </label>
-          <input
-            id="create-task-labels"
-            type="text"
-            placeholder="FRONTEND, URGENT, REFACTOR"
-            className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
-                     font-mono text-brutal-md uppercase placeholder:text-neutral-600
-                     focus:border-primary-brutalist focus:outline-none transition-colors
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-            value={labels}
-            onChange={(e) => dispatch({ type: 'UPDATE', field: 'labels', value: e.target.value })}
-            disabled={isCreating}
-          />
-        </div>
+        <TaskLabelsField
+          labels={labels}
+          parsedLabels={parsedLabels}
+          isDisabled={isCreating}
+          onLabelsChange={(v) => dispatch({ type: 'UPDATE', field: 'labels', value: v })}
+        />
 
         {/* ACTIONS */}
         <div className="flex justify-end gap-[8px] pt-[12px] border-t-2 border-[var(--theme-border)]">
-          <button
+          <BrutalButton
             type="button"
-            className="px-[12px] py-[8px] bg-transparent border-2 border-[var(--theme-border)]
-                     font-mono text-brutal-md uppercase tracking-wider
-                     hover:bg-basalt-border transition-colors
-                     disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="ghost"
+            size="md"
             onClick={onClose}
             disabled={isCreating}
           >
             CANCEL
-          </button>
-          <button
+          </BrutalButton>
+          <BrutalButton
             type="submit"
-            className="px-[12px] py-[8px] bg-primary-brutalist border-2 border-[var(--theme-border)]
-                     font-mono text-brutal-md uppercase tracking-wider text-event-horizon
-                     hover:bg-yellow-400 transition-colors shadow-brutal-sm
-                     disabled:opacity-50 disabled:cursor-not-allowed
-                     flex items-center gap-[4px]"
+            variant="primary"
+            size="md"
+            loading={isCreating}
             disabled={isCreating}
           >
-            {isCreating ? (
-              <>
-                <div className="w-16px h-16px border-2 border-event-horizon border-t-transparent rounded-full animate-spin" />
-                CREATING...
-              </>
-            ) : (
-              'CREATE TASK'
-            )}
-          </button>
+            CREATE TASK
+          </BrutalButton>
         </div>
       </form>
     </BrutalModal>

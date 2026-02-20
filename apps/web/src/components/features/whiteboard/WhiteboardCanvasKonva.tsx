@@ -110,6 +110,86 @@ function whiteboardReducer(state: WhiteboardState, action: WhiteboardAction): Wh
     }
 }
 
+// --- Element Renderer ---
+
+interface WhiteboardElementProps {
+    element: Element | Partial<Element>
+    isPreview: boolean
+    activeTool: Tool
+    selectedIds: string[]
+    editingTextId: string | null
+    onDragEnd: (e: Konva.KonvaEventObject<MouseEvent>) => void
+    onTransformEnd: (e: Konva.KonvaEventObject<Event>) => void
+    onMouseDown: (e: Konva.KonvaEventObject<MouseEvent>) => void
+    onDoubleClick: (e: Konva.KonvaEventObject<MouseEvent>) => void
+}
+
+function WhiteboardElement({ element, isPreview, activeTool, selectedIds, editingTextId, onDragEnd, onTransformEnd, onMouseDown, onDoubleClick }: WhiteboardElementProps) {
+    if (!element.position || !element.size || !element.style) return null
+
+    const props = {
+        key: element.id || 'preview',
+        id: element.id,
+        x: element.position.x,
+        y: element.position.y,
+        width: element.size.width,
+        height: element.size.height,
+        rotation: element.rotation || 0,
+        draggable: activeTool === 'SELECT' && !(element as Element).locked && !isPreview && !editingTextId,
+        onDragEnd,
+        onTransformEnd,
+        onClick: onMouseDown,
+        onTap: onMouseDown,
+        onDblClick: onDoubleClick,
+    }
+
+    if (element.type === ELEMENT_TYPES.SHAPE) {
+        if (element.data?.shape === SHAPE_TYPES.RECTANGLE) {
+            return <Rect {...props} fill={element.style.fill} stroke={element.style.stroke} strokeWidth={element.style.strokeWidth} />
+        } else if (element.data?.shape === SHAPE_TYPES.CIRCLE) {
+            return (
+                <Circle {...props} x={props.x + props.width / 2} y={props.y + props.height / 2}
+                    width={props.width} height={props.height} fill={element.style.fill}
+                    stroke={element.style.stroke} strokeWidth={element.style.strokeWidth} />
+            )
+        }
+    } else if (element.type === ELEMENT_TYPES.TEXT) {
+        return (
+            <Text {...props} text={element.data?.text} fontSize={element.style.fontSize}
+                fill={element.style.stroke} fontFamily="monospace" visible={editingTextId !== element.id}
+                stroke={selectedIds.includes(element.id!) ? '#00FFFF' : undefined}
+                strokeWidth={selectedIds.includes(element.id!) ? 1 : 0} />
+        )
+    } else if (element.type === ELEMENT_TYPES.STICKY) {
+        return (
+            <Group {...props}>
+                <Rect width={props.width} height={props.height} fill={element.style.fill}
+                    shadowColor="black" shadowBlur={10} shadowOpacity={0.2}
+                    stroke={selectedIds.includes(element.id!) ? '#00FFFF' : 'rgba(0,0,0,0.1)'}
+                    strokeWidth={selectedIds.includes(element.id!) ? 2 : 1} />
+                <Text x={10} y={10} width={props.width - 20} text={element.data?.text}
+                    fontSize={14} fill="black" fontFamily="monospace" visible={editingTextId !== element.id} />
+            </Group>
+        )
+    } else if (element.type === ELEMENT_TYPES.DRAWING) {
+        return (
+            <Line key={element.id || 'preview'} points={element.data?.points || []}
+                stroke={element.style.stroke} strokeWidth={element.style.strokeWidth}
+                tension={0.5} lineCap="round" lineJoin="round" />
+        )
+    } else if (element.type === ELEMENT_TYPES.ARROW) {
+        return (
+            <Arrow key={element.id || 'preview'} points={element.data?.points || []}
+                stroke={element.style.stroke} strokeWidth={element.style.strokeWidth}
+                pointerLength={element.style.pointerLength} pointerWidth={element.style.pointerWidth}
+                fill={element.style.stroke} />
+        )
+    } else if (element.type === ELEMENT_TYPES.IMAGE) {
+        return <URLImage key={element.id} image={element.data} {...props} />
+    }
+    return null
+}
+
 // --- Sub-components ---
 
 interface WhiteboardToolbarProps {
@@ -227,15 +307,81 @@ function WhiteboardTextOverlay({ editingTextValue, editingTextPos, fontSize, col
     )
 }
 
-// --- Main Component ---
+// --- Canvas Stage ---
 
-export default function WhiteboardCanvasKonva({
-    workspaceId,
-    whiteboardId: initialWhiteboardId,
-    projectId,
-    meetingId,
-}: WhiteboardCanvasProps) {
-    // --- State ---
+interface WhiteboardStageProps {
+    stageRef: React.RefObject<Konva.Stage | null>
+    transformerRef: React.RefObject<Konva.Transformer | null>
+    elements: Element[]
+    currentElement: Partial<Element> | null
+    activeTool: Tool
+    selectedIds: string[]
+    editingTextId: string | null
+    stageScale: number
+    stagePos: { x: number; y: number }
+    eraserPath: { x: number; y: number }[]
+    onWheel: (e: Konva.KonvaEventObject<WheelEvent>) => void
+    onMouseDown: (e: Konva.KonvaEventObject<MouseEvent>) => void
+    onMouseMove: (e: Konva.KonvaEventObject<MouseEvent>) => void
+    onMouseUp: () => void
+    onDragEnd: (e: Konva.KonvaEventObject<MouseEvent>) => void
+    onTransformEnd: (e: Konva.KonvaEventObject<Event>) => void
+    onDoubleClick: (e: Konva.KonvaEventObject<MouseEvent>) => void
+}
+
+function WhiteboardStage({
+    stageRef, transformerRef, elements, currentElement, activeTool, selectedIds,
+    editingTextId, stageScale, stagePos, eraserPath, onWheel, onMouseDown,
+    onMouseMove, onMouseUp, onDragEnd, onTransformEnd, onDoubleClick,
+}: WhiteboardStageProps) {
+    return (
+        <Stage
+            ref={stageRef}
+            width={window.innerWidth}
+            height={window.innerHeight}
+            onWheel={onWheel}
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={onMouseUp}
+            scaleX={stageScale}
+            scaleY={stageScale}
+            x={stagePos.x}
+            y={stagePos.y}
+            draggable={activeTool === 'PAN'}
+        >
+            <Layer>
+                {elements.map(el => (
+                    <WhiteboardElement key={el.id} element={el} isPreview={false}
+                        activeTool={activeTool} selectedIds={selectedIds} editingTextId={editingTextId}
+                        onDragEnd={onDragEnd} onTransformEnd={onTransformEnd}
+                        onMouseDown={onMouseDown} onDoubleClick={onDoubleClick} />
+                ))}
+                {currentElement && (
+                    <WhiteboardElement element={currentElement} isPreview={true}
+                        activeTool={activeTool} selectedIds={selectedIds} editingTextId={editingTextId}
+                        onDragEnd={onDragEnd} onTransformEnd={onTransformEnd}
+                        onMouseDown={onMouseDown} onDoubleClick={onDoubleClick} />
+                )}
+                {eraserPath.length > 0 && (
+                    <Line points={eraserPath.flatMap(p => [p.x, p.y])} stroke="#ff0000"
+                        strokeWidth={5} opacity={0.5} lineCap="round" lineJoin="round" listening={false} />
+                )}
+                <Transformer ref={transformerRef} />
+            </Layer>
+        </Stage>
+    )
+}
+
+// --- Whiteboard Hook (event handlers & state) ---
+
+interface UseWhiteboardCanvasArgs {
+    workspaceId: Id<'workspaces'>
+    initialWhiteboardId?: Id<'whiteboards'>
+    projectId?: Id<'projects'>
+    meetingId?: Id<'meetings'>
+}
+
+function useWhiteboardCanvas({ workspaceId, initialWhiteboardId, projectId, meetingId }: UseWhiteboardCanvasArgs) {
     const [state, dispatch] = useReducer(whiteboardReducer, {
         whiteboardId: initialWhiteboardId,
         activeTool: 'SELECT' as Tool,
@@ -260,14 +406,12 @@ export default function WhiteboardCanvasKonva({
     const set = <K extends keyof WhiteboardState>(field: K, value: WhiteboardState[K]) =>
         dispatch({ type: 'UPDATE', field, value: value as WhiteboardState[keyof WhiteboardState] })
 
-    // Refs
     const stageRef = useRef<Konva.Stage | null>(null)
     const transformerRef = useRef<Konva.Transformer | null>(null)
     const isDrawing = useRef(false)
     const isErasing = useRef(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    // --- Queries & Mutations ---
     const whiteboard = useQuery(api.whiteboard.getWhiteboard, whiteboardId ? { whiteboardId } : 'skip')
     const createWhiteboard = useMutation(api.whiteboard.createWhiteboard)
     const addElement = useMutation(api.whiteboard.addElement)
@@ -275,16 +419,12 @@ export default function WhiteboardCanvasKonva({
     const deleteElement = useMutation(api.whiteboard.deleteElement)
     const updateCursor = useMutation(api.whiteboard.updateCursor)
 
-    // --- Effects ---
-
-    // Sync elements from backend
     useEffect(() => {
         if (whiteboard?.elements) {
             set('elements', whiteboard.elements as Element[])
         }
     }, [whiteboard?.elements])
 
-    // Create whiteboard if needed
     useEffect(() => {
         if (!whiteboardId) {
             createWhiteboard({
@@ -298,7 +438,6 @@ export default function WhiteboardCanvasKonva({
         }
     }, [whiteboardId, workspaceId, projectId, meetingId, createWhiteboard])
 
-    // Update Transformer selection
     useEffect(() => {
         if (selectedIds.length > 0 && transformerRef.current && stageRef.current) {
             const nodes = selectedIds.map(id => stageRef.current!.findOne('#' + id)).filter(Boolean)
@@ -310,7 +449,6 @@ export default function WhiteboardCanvasKonva({
         }
     }, [selectedIds, elements])
 
-    // Throttled cursor update
     const throttledUpdateCursor = useMemo(
         () => debounce((pos: { x: number, y: number }) => {
             if (whiteboardId) {
@@ -320,23 +458,18 @@ export default function WhiteboardCanvasKonva({
         [whiteboardId, updateCursor]
     )
 
-    // --- Handlers ---
-
     const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
         e.evt.preventDefault()
         const scaleBy = 1.1
         const stage = e.target.getStage()
         if (!stage) return
-
         const oldScale = stage.scaleX()
         const pointerPosition = stage.getPointerPosition()
         if (!pointerPosition) return
-
         const mousePointTo = {
             x: pointerPosition.x / oldScale - stage.x() / oldScale,
             y: pointerPosition.y / oldScale - stage.y() / oldScale,
         }
-
         const newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy
         set('stageScale', newScale)
         set('stagePos', {
@@ -345,86 +478,60 @@ export default function WhiteboardCanvasKonva({
         })
     }
 
+    const handleTextSubmit = async () => {
+        if (editingTextId && whiteboardId) {
+            await updateElement({
+                whiteboardId, elementId: editingTextId,
+                updates: { data: { text: editingTextValue } }
+            })
+            set('editingTextId', null)
+        }
+    }
+
     const handleMouseDown = async (e: Konva.KonvaEventObject<MouseEvent>) => {
         if (!whiteboardId) return
-
-        // If editing text, commit on click outside
-        if (editingTextId) {
-            handleTextSubmit()
-            return
-        }
-
+        if (editingTextId) { handleTextSubmit(); return }
         const stage = e.target.getStage()
         if (!stage) return
-
         const pos = stage.getRelativePointerPosition()
         if (!pos || typeof pos.x !== 'number' || typeof pos.y !== 'number' || isNaN(pos.x) || isNaN(pos.y)) return
 
-        // Eraser Tool Logic
         if (activeTool === 'ERASER') {
             isErasing.current = true
             set('eraserPath', [{ x: pos.x, y: pos.y }])
             return
         }
-
-        // Select Tool Logic
         if (activeTool === 'SELECT') {
-            const clickedOnEmpty = e.target === stage
-            if (clickedOnEmpty) {
-                set('selectedIds', [])
-                return
-            }
-
+            if (e.target === stage) { set('selectedIds', []); return }
             const id = e.target.id()
             if (id) {
                 if (e.evt.shiftKey) {
                     set('selectedIds', selectedIds.includes(id) ? selectedIds.filter(i => i !== id) : [...selectedIds, id])
-                } else {
-                    if (!selectedIds.includes(id)) {
-                        set('selectedIds', [id])
-                    }
+                } else if (!selectedIds.includes(id)) {
+                    set('selectedIds', [id])
                 }
             }
             return
         }
-
-        // Pan Tool Logic
-        if (activeTool === 'PAN') {
-            set('isDragging', true)
-            return
-        }
-
-        // Drawing Tool Logic
+        if (activeTool === 'PAN') { set('isDragging', true); return }
         if (activeTool === 'DRAWING') {
             isDrawing.current = true
-            const newElement: Partial<Element> = {
-                type: ELEMENT_TYPES.DRAWING,
-                data: { points: [pos.x, pos.y] },
-                position: { x: 0, y: 0 },
-                size: { width: 0, height: 0 },
-                rotation: 0,
+            set('currentElement', {
+                type: ELEMENT_TYPES.DRAWING, data: { points: [pos.x, pos.y] },
+                position: { x: 0, y: 0 }, size: { width: 0, height: 0 }, rotation: 0,
                 style: { stroke: '#FFFFFF', strokeWidth: 2 },
-            }
-            set('currentElement', newElement)
+            })
             return
         }
-
-        // Arrow Tool Logic
         if (activeTool === 'ARROW') {
             isDrawing.current = true
-            const newElement: Partial<Element> = {
-                type: ELEMENT_TYPES.ARROW,
-                data: { points: [pos.x, pos.y, pos.x, pos.y] }, // Start and end same initially
-                position: { x: 0, y: 0 },
-                size: { width: 0, height: 0 },
-                rotation: 0,
+            set('currentElement', {
+                type: ELEMENT_TYPES.ARROW, data: { points: [pos.x, pos.y, pos.x, pos.y] },
+                position: { x: 0, y: 0 }, size: { width: 0, height: 0 }, rotation: 0,
                 style: { stroke: '#FFFFFF', strokeWidth: 2, pointerLength: 10, pointerWidth: 10 },
-            }
-            set('currentElement', newElement)
+            })
             return
         }
-
-        // Shape Creation Logic
         const newElement: Partial<Element> = {
             type: activeTool === 'RECTANGLE' || activeTool === 'CIRCLE' ? ELEMENT_TYPES.SHAPE :
                 activeTool === 'TEXT' ? ELEMENT_TYPES.TEXT :
@@ -433,14 +540,11 @@ export default function WhiteboardCanvasKonva({
                 activeTool === 'CIRCLE' ? { shape: SHAPE_TYPES.CIRCLE } :
                     activeTool === 'TEXT' ? { text: 'Double click to edit' } :
                         activeTool === 'STICKY' ? { text: 'Note' } : {},
-            position: { x: pos.x, y: pos.y },
-            size: { width: 0, height: 0 },
-            rotation: 0,
+            position: { x: pos.x, y: pos.y }, size: { width: 0, height: 0 }, rotation: 0,
             style: {
                 fill: activeTool === 'STICKY' ? '#FFFF00' : 'transparent',
                 stroke: activeTool === 'STICKY' ? 'transparent' : '#FFFFFF',
-                strokeWidth: 2,
-                fontSize: 16
+                strokeWidth: 2, fontSize: 16
             },
         }
         set('currentElement', newElement)
@@ -450,74 +554,40 @@ export default function WhiteboardCanvasKonva({
     const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
         const stage = e.target.getStage()
         if (!stage) return
-
         const pos = stage.getRelativePointerPosition()
         if (!pos || typeof pos.x !== 'number' || typeof pos.y !== 'number' || isNaN(pos.x) || isNaN(pos.y)) return
-
         throttledUpdateCursor(pos)
 
-        // Eraser Logic
         if (activeTool === 'ERASER' && isErasing.current) {
             set('eraserPath', [...eraserPath, { x: pos.x, y: pos.y }])
-
-            // Check intersection with elements
-            // Simple bounding box check for now
             const hitElements = elements.filter(el => {
                 if (el.locked) return false
-                const x = el.position.x
-                const y = el.position.y
-                const w = el.size.width
-                const h = el.size.height
-
-                // Check if cursor is inside element
-                return pos.x >= x && pos.x <= x + w && pos.y >= y && pos.y <= y + h
+                return pos.x >= el.position.x && pos.x <= el.position.x + el.size.width &&
+                    pos.y >= el.position.y && pos.y <= el.position.y + el.size.height
             })
-
             if (hitElements.length > 0) {
-                // Delete hit elements
                 set('elements', elements.filter(e => !hitElements.some(h => h.id === e.id)))
-                hitElements.forEach(async (el) => {
-                    await deleteElement({ whiteboardId, elementId: el.id })
-                })
+                hitElements.forEach(async (el) => { await deleteElement({ whiteboardId, elementId: el.id }) })
             }
             return
         }
-
         if (activeTool === 'PAN' && isDragging) return
         if (!isDragging && !isDrawing.current) return
-
         if (activeTool === 'DRAWING' && isDrawing.current && currentElement) {
-            const newPoints = (currentElement.data?.points || []).concat([pos.x, pos.y])
-            set('currentElement', {
-                ...currentElement,
-                data: { ...currentElement.data, points: newPoints }
-            })
+            set('currentElement', { ...currentElement, data: { ...currentElement.data, points: (currentElement.data?.points || []).concat([pos.x, pos.y]) } })
             return
         }
-
         if (activeTool === 'ARROW' && isDrawing.current && currentElement) {
-            const startX = currentElement.data.points[0]
-            const startY = currentElement.data.points[1]
-            set('currentElement', {
-                ...currentElement,
-                data: { ...currentElement.data, points: [startX, startY, pos.x, pos.y] }
-            })
+            set('currentElement', { ...currentElement, data: { ...currentElement.data, points: [currentElement.data.points[0], currentElement.data.points[1], pos.x, pos.y] } })
             return
         }
-
         if (currentElement && currentElement.position) {
-            const startX = currentElement.position.x
-            const startY = currentElement.position.y
-            const width = pos.x - startX
-            const height = pos.y - startY
-
+            const width = pos.x - currentElement.position.x
+            const height = pos.y - currentElement.position.y
             set('currentElement', {
                 ...currentElement,
                 size: { width: Math.abs(width), height: Math.abs(height) },
-                position: {
-                    x: width < 0 ? pos.x : startX,
-                    y: height < 0 ? pos.y : startY
-                }
+                position: { x: width < 0 ? pos.x : currentElement.position.x, y: height < 0 ? pos.y : currentElement.position.y }
             })
         }
     }
@@ -525,40 +595,21 @@ export default function WhiteboardCanvasKonva({
     const handleMouseUp = async () => {
         set('isDragging', false)
         isDrawing.current = false
-
-        if (activeTool === 'ERASER') {
-            isErasing.current = false
-            set('eraserPath', [])
-            return
-        }
-
+        if (activeTool === 'ERASER') { isErasing.current = false; set('eraserPath', []); return }
         if (currentElement && whiteboardId) {
             if (activeTool !== 'DRAWING' && activeTool !== 'ARROW' && (currentElement.size!.width < 5 || currentElement.size!.height < 5)) {
-                // For text, give it a default size if clicked (not dragged)
-                if (activeTool === 'TEXT') {
-                    // Keep it, it has default text
-                } else {
-                    set('currentElement', null)
-                    return
-                }
+                if (activeTool !== 'TEXT') { set('currentElement', null); return }
             }
-
             await addElement({
                 whiteboardId,
                 element: {
-                    type: currentElement.type as Element['type'],
-                    data: currentElement.data,
-                    position: currentElement.position!,
-                    size: currentElement.size || { width: 100, height: 50 }, // Default for text
-                    rotation: currentElement.rotation || 0,
-                    style: currentElement.style
+                    type: currentElement.type as Element['type'], data: currentElement.data,
+                    position: currentElement.position!, size: currentElement.size || { width: 100, height: 50 },
+                    rotation: currentElement.rotation || 0, style: currentElement.style
                 } as Omit<Element, 'id' | 'locked' | 'createdBy'>
             })
             set('currentElement', null)
-
-            if (activeTool !== 'DRAWING' && activeTool !== 'ARROW') {
-                set('activeTool', 'SELECT')
-            }
+            if (activeTool !== 'DRAWING' && activeTool !== 'ARROW') { set('activeTool', 'SELECT') }
         }
     }
 
@@ -566,37 +617,23 @@ export default function WhiteboardCanvasKonva({
         if (!whiteboardId) return
         const node = e.target as Konva.Node
         const id = node.id()
-        const element = elements.find(el => el.id === id)
-        if (element) {
-            await updateElement({
-                whiteboardId,
-                elementId: id,
-                updates: {
-                    position: { x: node.x(), y: node.y() }
-                }
-            })
+        if (elements.find(el => el.id === id)) {
+            await updateElement({ whiteboardId, elementId: id, updates: { position: { x: node.x(), y: node.y() } } })
         }
     }
 
     const handleTransformEnd = async (e: Konva.KonvaEventObject<Event>) => {
         if (!whiteboardId) return
         const node = e.target as Konva.Transformer
-        const id = node.id()
         const scaleX = node.scaleX()
         const scaleY = node.scaleY()
-
         node.scaleX(1)
         node.scaleY(1)
-
         await updateElement({
-            whiteboardId,
-            elementId: id,
+            whiteboardId, elementId: node.id(),
             updates: {
                 position: { x: node.x(), y: node.y() },
-                size: {
-                    width: Math.max(5, node.width() * scaleX),
-                    height: Math.max(5, node.height() * scaleY)
-                },
+                size: { width: Math.max(5, node.width() * scaleX), height: Math.max(5, node.height() * scaleY) },
                 rotation: node.rotation()
             }
         })
@@ -604,301 +641,118 @@ export default function WhiteboardCanvasKonva({
 
     const handleDelete = async () => {
         if (!whiteboardId || selectedIds.length === 0) return
-        for (const id of selectedIds) {
-            await deleteElement({ whiteboardId, elementId: id })
-        }
+        for (const id of selectedIds) { await deleteElement({ whiteboardId, elementId: id }) }
         set('selectedIds', [])
     }
 
-    // Text Editing Handlers
     const handleDoubleClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
         const id = e.target.id()
         const element = elements.find(el => el.id === id)
         if (element && (element.type === ELEMENT_TYPES.TEXT || element.type === ELEMENT_TYPES.STICKY)) {
             set('editingTextId', id)
             set('editingTextValue', element.data.text)
-
-            // Calculate absolute position for textarea
             const stage = e.target.getStage()
             if (stage) {
                 const textNode = e.target as Konva.Text
                 const tr = textNode.getAbsoluteTransform()
                 const pos = tr.getTranslation()
                 const scale = stage.scaleX()
-
-                set('editingTextPos', {
-                    x: pos.x,
-                    y: pos.y,
-                    width: textNode.width() * scale,
-                    height: textNode.height() * scale
-                })
+                set('editingTextPos', { x: pos.x, y: pos.y, width: textNode.width() * scale, height: textNode.height() * scale })
             }
         }
     }
 
-    const handleTextSubmit = async () => {
-        if (editingTextId && whiteboardId) {
-            await updateElement({
-                whiteboardId,
-                elementId: editingTextId,
-                updates: {
-                    data: { text: editingTextValue }
-                }
-            })
-            set('editingTextId', null)
-        }
-    }
-
-    // Image Upload Handler
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file && whiteboardId) {
             const reader = new FileReader()
             reader.onload = async (event) => {
                 const base64 = event.target?.result as string
-                // Get center of screen
                 const stage = stageRef.current
                 const center = stage ? {
                     x: (-stage.x() + stage.width() / 2) / stage.scaleX(),
                     y: (-stage.y() + stage.height() / 2) / stage.scaleY()
                 } : { x: 0, y: 0 }
-
                 await addElement({
                     whiteboardId,
-                    element: {
-                        type: ELEMENT_TYPES.IMAGE,
-                        data: { url: base64 },
-                        position: center,
-                        size: { width: 200, height: 200 },
-                        rotation: 0,
-                        style: {}
-                    } as any
+                    element: { type: ELEMENT_TYPES.IMAGE, data: { url: base64 }, position: center,
+                        size: { width: 200, height: 200 }, rotation: 0, style: {} } as any
                 })
             }
             reader.readAsDataURL(file)
         }
     }
 
-    // Property Changes
     const updateSelectedStyle = async (styleUpdate: any) => {
         if (!whiteboardId || selectedIds.length === 0) return
         for (const id of selectedIds) {
             const element = elements.find(el => el.id === id)
             if (element) {
-                await updateElement({
-                    whiteboardId,
-                    elementId: id,
-                    updates: {
-                        style: { ...element.style, ...styleUpdate }
-                    }
-                })
+                await updateElement({ whiteboardId, elementId: id, updates: { style: { ...element.style, ...styleUpdate } } })
             }
         }
     }
 
-    // --- Render Helpers ---
-
-    const renderElement = (element: Element | Partial<Element>, isPreview = false) => {
-        if (!element.position || !element.size || !element.style) return null
-
-        const props = {
-            key: element.id || 'preview',
-            id: element.id,
-            x: element.position.x,
-            y: element.position.y,
-            width: element.size.width,
-            height: element.size.height,
-            rotation: element.rotation || 0,
-            draggable: activeTool === 'SELECT' && !(element as Element).locked && !isPreview && !editingTextId,
-            onDragEnd: handleDragEnd,
-            onTransformEnd: handleTransformEnd,
-            onClick: handleMouseDown,
-            onTap: handleMouseDown,
-            onDblClick: handleDoubleClick,
-        }
-
-        if (element.type === ELEMENT_TYPES.SHAPE) {
-            if (element.data?.shape === SHAPE_TYPES.RECTANGLE) {
-                return <Rect {...props} fill={element.style.fill} stroke={element.style.stroke} strokeWidth={element.style.strokeWidth} />
-            } else if (element.data?.shape === SHAPE_TYPES.CIRCLE) {
-                return (
-                    <Circle
-                        {...props}
-                        x={props.x + props.width / 2}
-                        y={props.y + props.height / 2}
-                        width={props.width}
-                        height={props.height}
-                        fill={element.style.fill}
-                        stroke={element.style.stroke}
-                        strokeWidth={element.style.strokeWidth}
-                    />
-                )
-            }
-        } else if (element.type === ELEMENT_TYPES.TEXT) {
-            return (
-                <Text
-                    {...props}
-                    text={element.data?.text}
-                    fontSize={element.style.fontSize}
-                    fill={element.style.stroke}
-                    fontFamily="monospace"
-                    visible={editingTextId !== element.id}
-                    // Add a subtle border if selected to differentiate
-                    stroke={selectedIds.includes(element.id!) ? '#00FFFF' : undefined}
-                    strokeWidth={selectedIds.includes(element.id!) ? 1 : 0}
-                />
-            )
-        } else if (element.type === ELEMENT_TYPES.STICKY) {
-            return (
-                <Group {...props}>
-                    <Rect
-                        width={props.width}
-                        height={props.height}
-                        fill={element.style.fill}
-                        shadowColor="black"
-                        shadowBlur={10}
-                        shadowOpacity={0.2}
-                        stroke={selectedIds.includes(element.id!) ? '#00FFFF' : 'rgba(0,0,0,0.1)'}
-                        strokeWidth={selectedIds.includes(element.id!) ? 2 : 1}
-                    />
-                    <Text
-                        x={10}
-                        y={10}
-                        width={props.width - 20}
-                        text={element.data?.text}
-                        fontSize={14}
-                        fill="black"
-                        fontFamily="monospace"
-                        visible={editingTextId !== element.id}
-                    />
-                </Group>
-            )
-        } else if (element.type === ELEMENT_TYPES.DRAWING) {
-            return (
-                <Line
-                    key={element.id || 'preview'}
-                    points={element.data?.points || []}
-                    stroke={element.style.stroke}
-                    strokeWidth={element.style.strokeWidth}
-                    tension={0.5}
-                    lineCap="round"
-                    lineJoin="round"
-                />
-            )
-        } else if (element.type === ELEMENT_TYPES.ARROW) {
-            return (
-                <Arrow
-                    key={element.id || 'preview'}
-                    points={element.data?.points || []}
-                    stroke={element.style.stroke}
-                    strokeWidth={element.style.strokeWidth}
-                    pointerLength={element.style.pointerLength}
-                    pointerWidth={element.style.pointerWidth}
-                    fill={element.style.stroke}
-                />
-            )
-        } else if (element.type === ELEMENT_TYPES.IMAGE) {
-            return <URLImage key={element.id} image={element.data} {...props} />
-        }
-        return null
+    return {
+        state, set, stageRef, transformerRef, fileInputRef,
+        handleWheel, handleMouseDown, handleMouseMove, handleMouseUp,
+        handleDragEnd, handleTransformEnd, handleDelete, handleDoubleClick,
+        handleTextSubmit, handleImageUpload, updateSelectedStyle,
     }
+}
 
-    // --- UI Render ---
+// --- Main Component ---
 
-    // Cursor style based on tool
-    const getCursorStyle = () => {
-        switch (activeTool) {
-            case 'ERASER': return 'crosshair' // Or a custom eraser cursor
-            case 'PAN': return isDragging ? 'grabbing' : 'grab'
-            case 'TEXT': return 'text'
-            case 'DRAWING': return 'crosshair'
-            case 'ARROW': return 'crosshair'
-            default: return 'default'
-        }
-    }
+export default function WhiteboardCanvasKonva({
+    workspaceId, whiteboardId: initialWhiteboardId, projectId, meetingId,
+}: WhiteboardCanvasProps) {
+    const {
+        state, set, stageRef, transformerRef, fileInputRef,
+        handleWheel, handleMouseDown, handleMouseMove, handleMouseUp,
+        handleDragEnd, handleTransformEnd, handleDelete, handleDoubleClick,
+        handleTextSubmit, handleImageUpload, updateSelectedStyle,
+    } = useWhiteboardCanvas({ workspaceId, initialWhiteboardId, projectId, meetingId })
+
+    const {
+        activeTool, selectedIds, stageScale, stagePos, isDragging,
+        eraserPath, editingTextId, editingTextValue, editingTextPos,
+        elements, currentElement,
+    } = state
+
+    const cursorStyle = activeTool === 'ERASER' ? 'crosshair'
+        : activeTool === 'PAN' ? (isDragging ? 'grabbing' : 'grab')
+        : activeTool === 'TEXT' ? 'text'
+        : (activeTool === 'DRAWING' || activeTool === 'ARROW') ? 'crosshair'
+        : 'default'
 
     return (
-        <div
-            className="relative w-full h-full bg-[#111] overflow-hidden"
-            style={{ cursor: getCursorStyle() }}
-        >
-            {/* Toolbar */}
-            <WhiteboardToolbar
-                activeTool={activeTool}
-                selectedIds={selectedIds}
-                fileInputRef={fileInputRef}
-                onToolChange={(tool) => set('activeTool', tool)}
-                onDelete={handleDelete}
+        <div className="relative w-full h-full bg-[#111] overflow-hidden" style={{ cursor: cursorStyle }}>
+            <WhiteboardToolbar activeTool={activeTool} selectedIds={selectedIds} fileInputRef={fileInputRef}
+                onToolChange={(tool) => set('activeTool', tool)} onDelete={handleDelete} />
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+            {selectedIds.length > 0 && <WhiteboardPropertiesPanel onStyleUpdate={updateSelectedStyle} />}
+            <WhiteboardStage
+                stageRef={stageRef} transformerRef={transformerRef}
+                elements={elements} currentElement={currentElement}
+                activeTool={activeTool} selectedIds={selectedIds} editingTextId={editingTextId}
+                stageScale={stageScale} stagePos={stagePos} eraserPath={eraserPath}
+                onWheel={handleWheel} onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}
+                onDragEnd={handleDragEnd} onTransformEnd={handleTransformEnd}
+                onDoubleClick={handleDoubleClick}
             />
-
-            <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleImageUpload}
-            />
-
-            {/* Properties Panel */}
-            {selectedIds.length > 0 && (
-                <WhiteboardPropertiesPanel onStyleUpdate={updateSelectedStyle} />
-            )}
-
-            {/* Canvas */}
-            <Stage
-                ref={stageRef}
-                width={window.innerWidth}
-                height={window.innerHeight}
-                onWheel={handleWheel}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                scaleX={stageScale}
-                scaleY={stageScale}
-                x={stagePos.x}
-                y={stagePos.y}
-                draggable={activeTool === 'PAN'}
-            >
-                <Layer>
-                    {elements.map(el => renderElement(el))}
-                    {currentElement && renderElement(currentElement, true)}
-
-                    {/* Eraser Trail */}
-                    {eraserPath.length > 0 && (
-                        <Line
-                            points={eraserPath.flatMap(p => [p.x, p.y])}
-                            stroke="#ff0000"
-                            strokeWidth={5}
-                            opacity={0.5}
-                            lineCap="round"
-                            lineJoin="round"
-                            listening={false}
-                        />
-                    )}
-
-                    <Transformer ref={transformerRef} />
-                </Layer>
-            </Stage>
-
-            {/* Text Editing Overlay */}
             {editingTextId && (
                 <WhiteboardTextOverlay
-                    editingTextValue={editingTextValue}
-                    editingTextPos={editingTextPos}
+                    editingTextValue={editingTextValue} editingTextPos={editingTextPos}
                     fontSize={elements.find(e => e.id === editingTextId)?.style.fontSize || 16}
                     color={elements.find(e => e.id === editingTextId)?.style.stroke || 'white'}
-                    stageScale={stageScale}
-                    onValueChange={(value) => set('editingTextValue', value)}
+                    stageScale={stageScale} onValueChange={(value) => set('editingTextValue', value)}
                     onSubmit={handleTextSubmit}
                 />
             )}
-
-            {/* Zoom Controls */}
-            <WhiteboardZoomControls
-                stageScale={stageScale}
+            <WhiteboardZoomControls stageScale={stageScale}
                 onZoomIn={() => set('stageScale', stageScale * 1.2)}
-                onZoomOut={() => set('stageScale', stageScale / 1.2)}
-            />
+                onZoomOut={() => set('stageScale', stageScale / 1.2)} />
         </div>
     )
 }

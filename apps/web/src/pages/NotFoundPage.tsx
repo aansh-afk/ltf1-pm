@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useEffect, useRef, useCallback, useReducer } from 'react'
+import { useState, useEffect, useRef, useCallback, useReducer } from 'react'
 
 // ── Fake memory dump hex ──
 function generateHexDump(): string[] {
@@ -407,6 +407,8 @@ type NotFoundAction =
   | { type: 'CLEAR_TERM' }
   | { type: 'ADD_TERM_LINE'; text: string; color: string }
   | { type: 'TOGGLE_CURSOR' }
+  | { type: 'BOOT_FLICKER'; visible: boolean }
+  | { type: 'BOOT_TO_CRASH' }
 
 function notFoundReducer(state: NotFoundState, action: NotFoundAction): NotFoundState {
   switch (action.type) {
@@ -418,6 +420,10 @@ function notFoundReducer(state: NotFoundState, action: NotFoundAction): NotFound
       return { ...state, termLines: [...state.termLines, { text: action.text, color: action.color }] }
     case 'TOGGLE_CURSOR':
       return { ...state, showCursor: !state.showCursor }
+    case 'BOOT_FLICKER':
+      return { ...state, bootFlicker: !action.visible }
+    case 'BOOT_TO_CRASH':
+      return { ...state, bootFlicker: false, phase: 'crash' }
     default:
       return state
   }
@@ -437,12 +443,12 @@ export default function NotFoundPage() {
     1200
   )
 
-  // React 18 auto-batches: dispatches are in separate setTimeout callbacks for boot animation sequence
+  // Boot animation: flicker sequence then transition to crash phase
   useEffect(() => {
-    const t1 = setTimeout(() => dispatch({ type: 'UPDATE', field: 'bootFlicker', value: false }), 150)
-    const t2 = setTimeout(() => dispatch({ type: 'UPDATE', field: 'bootFlicker', value: true }), 200)
-    const t3 = setTimeout(() => dispatch({ type: 'UPDATE', field: 'bootFlicker', value: false }), 250)
-    const t4 = setTimeout(() => dispatch({ type: 'UPDATE', field: 'phase', value: 'crash' }), 400)
+    const t1 = setTimeout(() => dispatch({ type: 'BOOT_FLICKER', visible: true }), 150)
+    const t2 = setTimeout(() => dispatch({ type: 'BOOT_FLICKER', visible: false }), 200)
+    const t3 = setTimeout(() => dispatch({ type: 'BOOT_FLICKER', visible: true }), 250)
+    const t4 = setTimeout(() => dispatch({ type: 'BOOT_TO_CRASH' }), 400)
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4) }
   }, [])
 
