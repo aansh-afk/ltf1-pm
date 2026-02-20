@@ -1652,6 +1652,79 @@ function ProjectTabContent({
   )
 }
 
+// --- Keyboard Shortcuts Hook ---
+
+function useProjectShortcuts(
+  activeTab: TabType, selectedTask: any, currentContext: string | null,
+  dispatch: React.Dispatch<PageAction>
+) {
+  const isInputFocused = useCallback(() => {
+    const el = document.activeElement
+    return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el?.getAttribute('contenteditable') === 'true'
+  }, [])
+
+  useTemporaryShortcut(
+    { modifiers: [], key: 'n', display: 'N' },
+    () => { if (!isInputFocused()) dispatch({ type: 'OPEN_CREATE_TASK' }) },
+    { enabled: activeTab === 'tasks' }
+  )
+  useTemporaryShortcut(
+    { modifiers: [], key: 'm', display: 'M' },
+    () => { if (!isInputFocused()) dispatch({ type: 'TOGGLE_MY_TASKS' }) },
+    { enabled: activeTab === 'tasks' }
+  )
+  useTemporaryShortcut(
+    { modifiers: [], key: '/', display: '/' },
+    () => {
+      if (!isInputFocused()) {
+        const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement
+        if (searchInput) searchInput.focus()
+      }
+    },
+    { enabled: activeTab === 'tasks' }
+  )
+  useTemporaryShortcut(
+    { modifiers: [], key: 't', display: 'T' },
+    () => {
+      if (!isInputFocused() && selectedTask) {
+        dispatch({ type: 'SET_CONTEXT', context: currentContext === selectedTask.key ? null : selectedTask.key })
+        toast.success(currentContext === selectedTask.key ? 'Timer stopped' : `Timer started for ${selectedTask.key}`)
+      }
+    },
+    { enabled: activeTab === 'tasks' }
+  )
+  useTemporaryShortcut(
+    { modifiers: [], key: 'b', display: 'B' },
+    () => { if (!isInputFocused() && selectedTask) { toast.success(`Task ${selectedTask.key} marked as blocked`) } },
+    { enabled: activeTab === 'tasks' }
+  )
+  useTemporaryShortcut(
+    { modifiers: [], key: '1', display: '1' },
+    () => { if (!isInputFocused()) toast.success('Switched focus to backlog column') },
+    { enabled: activeTab === 'tasks' }
+  )
+  useTemporaryShortcut(
+    { modifiers: [], key: '2', display: '2' },
+    () => { if (!isInputFocused()) toast.success('Switched focus to todo column') },
+    { enabled: activeTab === 'tasks' }
+  )
+  useTemporaryShortcut(
+    { modifiers: [], key: '3', display: '3' },
+    () => { if (!isInputFocused()) toast.success('Switched focus to in progress column') },
+    { enabled: activeTab === 'tasks' }
+  )
+  useTemporaryShortcut(
+    { modifiers: [], key: '4', display: '4' },
+    () => { if (!isInputFocused()) toast.success('Switched focus to in review column') },
+    { enabled: activeTab === 'tasks' }
+  )
+  useTemporaryShortcut(
+    { modifiers: [], key: '5', display: '5' },
+    () => { if (!isInputFocused()) toast.success('Switched focus to done column') },
+    { enabled: activeTab === 'tasks' }
+  )
+}
+
 // --- Main Component ---
 
 export default function ProjectManagementPage() {
@@ -1748,81 +1821,7 @@ export default function ProjectManagementPage() {
     workspaceId ? { workspaceId: workspaceId as any } : 'skip'
   )
 
-  // Page-specific keyboard shortcuts via central shortcut system
-  const isInputFocused = useCallback(() => {
-    const el = document.activeElement
-    return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el?.getAttribute('contenteditable') === 'true'
-  }, [])
-
-  useTemporaryShortcut(
-    { modifiers: [], key: 'n', display: 'N' },
-    () => { if (!isInputFocused()) dispatch({ type: 'OPEN_CREATE_TASK' }) },
-    { enabled: activeTab === 'tasks' }
-  )
-
-  useTemporaryShortcut(
-    { modifiers: [], key: 'm', display: 'M' },
-    () => { if (!isInputFocused()) dispatch({ type: 'TOGGLE_MY_TASKS' }) },
-    { enabled: activeTab === 'tasks' }
-  )
-
-  useTemporaryShortcut(
-    { modifiers: [], key: '/', display: '/' },
-    () => {
-      if (!isInputFocused()) {
-        const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement
-        if (searchInput) searchInput.focus()
-      }
-    },
-    { enabled: activeTab === 'tasks' }
-  )
-
-  useTemporaryShortcut(
-    { modifiers: [], key: 't', display: 'T' },
-    () => {
-      if (!isInputFocused() && selectedTask) {
-        dispatch({ type: 'SET_CONTEXT', context: currentContext === selectedTask.key ? null : selectedTask.key })
-        toast.success(currentContext === selectedTask.key ? 'Timer stopped' : `Timer started for ${selectedTask.key}`)
-      }
-    },
-    { enabled: activeTab === 'tasks' }
-  )
-
-  useTemporaryShortcut(
-    { modifiers: [], key: 'b', display: 'B' },
-    () => {
-      if (!isInputFocused() && selectedTask) {
-        toast.success(`Task ${selectedTask.key} marked as blocked`)
-      }
-    },
-    { enabled: activeTab === 'tasks' }
-  )
-
-  useTemporaryShortcut(
-    { modifiers: [], key: '1', display: '1' },
-    () => { if (!isInputFocused()) toast.success('Switched focus to backlog column') },
-    { enabled: activeTab === 'tasks' }
-  )
-  useTemporaryShortcut(
-    { modifiers: [], key: '2', display: '2' },
-    () => { if (!isInputFocused()) toast.success('Switched focus to todo column') },
-    { enabled: activeTab === 'tasks' }
-  )
-  useTemporaryShortcut(
-    { modifiers: [], key: '3', display: '3' },
-    () => { if (!isInputFocused()) toast.success('Switched focus to in progress column') },
-    { enabled: activeTab === 'tasks' }
-  )
-  useTemporaryShortcut(
-    { modifiers: [], key: '4', display: '4' },
-    () => { if (!isInputFocused()) toast.success('Switched focus to in review column') },
-    { enabled: activeTab === 'tasks' }
-  )
-  useTemporaryShortcut(
-    { modifiers: [], key: '5', display: '5' },
-    () => { if (!isInputFocused()) toast.success('Switched focus to done column') },
-    { enabled: activeTab === 'tasks' }
-  )
+  useProjectShortcuts(activeTab, selectedTask, currentContext, dispatch)
 
   const tabs = [
     { id: 'overview', label: 'OVERVIEW', icon: <HiOutlineHome className="w-14px h-14px" /> },
@@ -1897,247 +1896,33 @@ export default function ProjectManagementPage() {
     }
   }
 
-  const renderDocsTab = () => (
-    <ProjectDocsHub
-      projectId={projectId}
-      workspaceId={workspaceId}
-      tasks={tasks ?? []}
-      sprints={allSprints ?? []}
-      projectDetails={project}
-    />
-  )
-
   return (
     <div className="min-h-screen bg-[var(--theme-background)] flex flex-col">
-      {/* Project Header */}
-      <div className="border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)] sticky top-0 z-40">
-        <div className="px-5 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate(`/workspace/${workspaceId}`)}
-              className="group flex items-center gap-2 font-['IBM_Plex_Mono',monospace] text-xs text-[var(--theme-foreground)]/60 hover:text-[var(--theme-primary)] transition-colors"
-            >
-              <HiOutlineArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" />
-              BACK TO WORKSPACE
-            </button>
-
-            <div className="h-8 w-[2px] bg-[var(--theme-border)]" />
-
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-xl font-bold uppercase tracking-tight flex items-center gap-3">
-                  {project.name}
-                </h1>
-                <BrutalBadge variant={
-                  project.status === 'active' ? 'default' :
-                    project.status === 'completed' ? 'success' :
-                      project.status === 'on_hold' ? 'warning' : 'outline'
-                }>
-                  {project.status}
-                </BrutalBadge>
-              </div>
-              <div className="font-['IBM_Plex_Mono',monospace] text-xs text-[var(--theme-foreground)]/60 flex items-center gap-2">
-                <span>ID: {project.key}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <BrutalButton size="sm" variant="ghost" onClick={() => dispatch({ type: 'OPEN_PROJECT_INVITE' })}>
-              <HiOutlineUserGroup className="w-4 h-4 mr-2" />
-              INVITE
-            </BrutalButton>
-            <BrutalButton size="sm" variant="primary" onClick={() => dispatch({ type: 'OPEN_CREATE_TASK' })}>
-              <HiOutlinePlus className="w-4 h-4 mr-2" />
-              NEW TASK
-            </BrutalButton>
-          </div>
-        </div>
-
-        {/* Project Navigation Tabs */}
-        <div className="px-5 flex items-end gap-0.5 overflow-x-auto no-scrollbar border-t border-[var(--theme-border)] bg-[var(--theme-background-secondary)]/30" role="tablist" aria-label="Project sections">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => dispatch({ type: 'SET_TAB', tab: tab.id as TabType })}
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              className={clsx(
-                "relative px-4 py-2.5 font-['IBM_Plex_Mono',monospace] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer",
-                "border-r border-[var(--theme-border)]",
-                "focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary)] focus:ring-offset-1 focus:ring-offset-[var(--theme-background)]",
-                activeTab === tab.id
-                  ? "bg-[var(--theme-background)] text-[var(--theme-primary)] border-t-2 border-t-[var(--theme-primary)]"
-                  : "text-[var(--theme-foreground)]/60 hover:text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
-              )}
-            >
-              <div className="flex items-center gap-2">
-                {tab.icon}
-                {tab.label}
-                {tab.id === 'tasks' && (
-                  <span className={clsx(
-                    "ml-1 px-1.5 py-0.5 text-[10px]",
-                    activeTab === tab.id ? "bg-[var(--theme-primary)] text-[var(--theme-background)]" : "bg-[var(--theme-border)]"
-                  )}>
-                    {tasks?.length || 0}
-                  </span>
-                )}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Main Viewport */}
-      <main className={clsx(
-        "flex-1 p-5",
-        (activeTab === 'tasks' && taskView === 'kanban') ? "overflow-hidden flex flex-col" : "overflow-y-auto"
-      )}>
-        <m.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-          className={clsx((activeTab === 'tasks' && taskView === 'kanban') && "h-full flex flex-col")}
-        >
-          {activeTab === 'overview' && (
-            <OverviewTab
-              project={project}
-              allSprints={allSprints}
-              tasks={tasks}
-              healthCards={healthCards}
-              getStatusColor={getStatusColor}
-            />
-          )}
-          {activeTab === 'tasks' && (
-            <TasksTab
-              project={project}
-              workspaceId={workspaceId as string}
-              tasks={tasks}
-              allSprints={allSprints}
-              activeSprint={activeSprint}
-              taskFilters={taskFilters}
-              taskView={taskView}
-              selectedSprintId={selectedSprintId}
-              isCompactView={isCompactView}
-              projectId={projectId as string}
-              dispatch={dispatch}
-              handleEditTask={handleEditTask}
-              handleDeleteTask={handleDeleteTask}
-              handleDuplicateTask={handleDuplicateTask}
-            />
-          )}
-          {activeTab === 'team' && (
-            <TeamTab
-              project={project}
-              tasks={tasks}
-              taskFilters={taskFilters}
-              workspaceId={workspaceId as string}
-              projectId={projectId as string}
-              dispatch={dispatch}
-            />
-          )}
-          {activeTab === 'github' && <GitHubProjectTab project={project} workspaceId={workspaceId as any} />}
-          {activeTab === 'meetings' && (
-            <MeetingsTab
-              projectMeetings={projectMeetings}
-              currentUserId={currentUser?._id}
-              onScheduleMeeting={() => dispatch({ type: 'OPEN_SCHEDULE_MEETING' })}
-            />
-          )}
-          {activeTab === 'docs' && renderDocsTab()}
-          {activeTab === 'logs' && (
-            <TeamActivityFeed
-              projectId={projectId}
-              workspaceId={workspaceId}
-              limit={50}
-              showFilters={true}
-            />
-          )}
-          {activeTab === 'settings' && (
-            <SettingsTab
-              project={project}
-              availableTeams={availableTeams}
-              assignTeam={assignTeam}
-            />
-          )}
-        </m.div>
-      </main>
-
-      {/* Modals */}
-      {projectId && (
-        <CreateTaskModal
-          isOpen={showCreateTaskModal}
-          onClose={() => dispatch({ type: 'CLOSE_MODALS' })}
-          projectId={projectId}
-          onSuccess={() => { }}
-        />
-      )}
-
-      {selectedTask && (
-        <EditTaskModal
-          isOpen={showEditTaskModal}
-          onClose={() => dispatch({ type: 'CLOSE_MODALS' })}
-          task={selectedTask}
-          onDelete={async () => {
-            await handleDeleteTask(selectedTask)
-            dispatch({ type: 'CLOSE_MODALS' })
-          }}
-        />
-      )}
-
-      {workspaceId && (
-        <TaskFilters
-          isOpen={showAdvancedFilters}
-          onClose={() => dispatch({ type: 'TOGGLE_ADVANCED_FILTERS' })}
-          filters={taskFilters}
-          onFiltersChange={(filters: TaskFiltersType) => dispatch({ type: 'SET_TASK_FILTERS', filters })}
-          workspaceId={workspaceId}
-        />
-      )}
-
-      {projectId && (
-        <CreateSprintModal
-          isOpen={showCreateSprintModal}
-          onClose={() => dispatch({ type: 'CLOSE_MODALS' })}
-          projectId={projectId}
-          onSuccess={() => dispatch({ type: 'CLOSE_MODALS' })}
-        />
-      )}
-
-      {projectId && workspaceId && (
-        <ScheduleMeetingModal
-          isOpen={showScheduleMeetingModal}
-          onClose={() => dispatch({ type: 'CLOSE_MODALS' })}
-          projectId={projectId}
-          workspaceId={workspaceId}
-          onSuccess={() => dispatch({ type: 'CLOSE_MODALS' })}
-        />
-      )}
-
-      {projectId && project && (
-        <ProjectInviteModal
-          isOpen={showProjectInviteModal}
-          onClose={() => dispatch({ type: 'CLOSE_MODALS' })}
-          projectId={projectId}
-          projectName={project.name}
-        />
-      )}
-
-      {showExpertiseSearch && (
-        <ExpertiseSearchModal
-          onClose={() => dispatch({ type: 'CLOSE_MODALS' })}
-          workspaceId={workspaceId}
-        />
-      )}
-
-      {showExpertiseMatrix && workspaceId && (
-        <TeamExpertiseMatrix
-          workspaceId={workspaceId}
-          onClose={() => dispatch({ type: 'CLOSE_MODALS' })}
-          isModal={true}
-        />
-      )}
+      <ProjectHeader
+        project={project} workspaceId={workspaceId} activeTab={activeTab}
+        taskCount={tasks?.length || 0} tabs={tabs}
+        onNavigateBack={() => navigate(`/workspace/${workspaceId}`)}
+        onInvite={() => dispatch({ type: 'OPEN_PROJECT_INVITE' })}
+        onCreateTask={() => dispatch({ type: 'OPEN_CREATE_TASK' })}
+        onTabChange={(tab) => dispatch({ type: 'SET_TAB', tab })}
+      />
+      <ProjectTabContent
+        activeTab={activeTab} taskView={taskView} project={project}
+        workspaceId={workspaceId as string} projectId={projectId as string}
+        tasks={tasks} allSprints={allSprints} activeSprint={activeSprint}
+        taskFilters={taskFilters} selectedSprintId={selectedSprintId}
+        isCompactView={isCompactView} healthCards={healthCards}
+        currentUser={currentUser} projectMeetings={projectMeetings}
+        availableTeams={availableTeams} assignTeam={assignTeam}
+        dispatch={dispatch} getStatusColor={getStatusColor}
+        handleEditTask={handleEditTask} handleDeleteTask={handleDeleteTask}
+        handleDuplicateTask={handleDuplicateTask}
+      />
+      <ProjectModals
+        state={state} projectId={projectId as string} workspaceId={workspaceId as string}
+        project={project} taskFilters={taskFilters} selectedTask={selectedTask}
+        dispatch={dispatch} onDeleteTask={handleDeleteTask}
+      />
     </div>
   )
 }
