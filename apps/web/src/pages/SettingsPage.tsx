@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { useAuth } from '@clerk/clerk-react'
@@ -535,14 +535,16 @@ function SettingsSidebar({ activeTab, onTabChange }: SettingsSidebarProps) {
   )
 }
 
-export default function SettingsPage() {
+interface SettingsPageContentProps {
+  currentUser: any
+}
+
+function SettingsPageContent({ currentUser }: SettingsPageContentProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
   const [showEditDeveloperProfile, setShowEditDeveloperProfile] = useState(false)
   const { user: authUser } = useAuth()
 
   // Queries
-  const currentUser = useQuery(api.auth.users.getCurrentUser)
-  const workspaces = useQuery(api.workspaces.queries.getUserWorkspaces)
   const developerProfile = useQuery(
     api.developers.queries.getDeveloperProfile,
     currentUser ? { userId: currentUser._id } : 'skip'
@@ -552,7 +554,7 @@ export default function SettingsPage() {
   const updateProfile = useMutation(api.auth.users.updateUserProfile)
   const updatePreferences = useMutation(api.auth.users.updateUserPreferences)
 
-  // Profile state
+  // Profile state — initialized directly from currentUser data
   const {
     value: profileData,
     setValue: setProfileData,
@@ -562,10 +564,10 @@ export default function SettingsPage() {
     forceSave: forceSaveProfile
   } = useSettingsState({
     defaultValue: {
-      name: '',
-      bio: '',
-      avatarUrl: '',
-      githubUsername: '',
+      name: currentUser.name || '',
+      bio: currentUser.bio || '',
+      avatarUrl: currentUser.avatarUrl || '',
+      githubUsername: currentUser.githubUsername || '',
     },
     onSave: async (data) => {
       await updateProfile(data)
@@ -573,7 +575,7 @@ export default function SettingsPage() {
     }
   })
 
-  // Preferences state
+  // Preferences state — initialized directly from currentUser data
   const {
     value: preferences,
     setValue: setPreferences,
@@ -583,7 +585,12 @@ export default function SettingsPage() {
     forceSave: forceSavePreferences
   } = useSettingsState({
     defaultValue: {
-      notifications: { email: true, push: true, slack: false },
+      notifications: {
+        email: true,
+        push: true,
+        slack: false,
+        ...currentUser.preferences?.notifications
+      },
       accessibility: {
         fontScale: 1,
         lineHeight: 1.4,
@@ -591,14 +598,16 @@ export default function SettingsPage() {
         reducedMotion: false,
         highContrast: false,
         focusWidth: 2,
+        ...currentUser.preferences?.accessibility
       },
       defaults: {
         projectView: 'kanban',
         taskPriority: 'medium',
         taskType: 'task',
         autoAssignSelf: false,
+        ...currentUser.preferences?.defaults
       },
-      defaultWorkspaceId: undefined,
+      defaultWorkspaceId: currentUser.preferences?.defaultWorkspaceId,
     },
     onSave: async (data) => {
       try {
@@ -613,47 +622,6 @@ export default function SettingsPage() {
       }
     }
   })
-
-  // Legitimate useEffect: syncs server-loaded user data into form state
-  useEffect(() => {
-    if (currentUser) {
-      setProfileDataWithoutSave({
-        name: currentUser.name || '',
-        bio: currentUser.bio || '',
-        avatarUrl: currentUser.avatarUrl || '',
-        githubUsername: currentUser.githubUsername || '',
-      })
-
-      if (currentUser.preferences) {
-        const mergedPreferences = {
-          notifications: {
-            email: true,
-            push: true,
-            slack: false,
-            ...currentUser.preferences.notifications
-          },
-          accessibility: {
-            fontScale: 1,
-            lineHeight: 1.4,
-            letterSpacing: 'normal',
-            reducedMotion: false,
-            highContrast: false,
-            focusWidth: 2,
-            ...currentUser.preferences.accessibility
-          },
-          defaults: {
-            projectView: 'kanban',
-            taskPriority: 'medium',
-            taskType: 'task',
-            autoAssignSelf: false,
-            ...currentUser.preferences.defaults
-          },
-          defaultWorkspaceId: currentUser.preferences.defaultWorkspaceId
-        }
-        setPreferencesWithoutSave(mergedPreferences)
-      }
-    }
-  }, [currentUser, setProfileDataWithoutSave, setPreferencesWithoutSave])
 
   const resetProfile = async () => {
     const resetData = {
@@ -710,14 +678,6 @@ export default function SettingsPage() {
     }
   }
 
-  if (!currentUser) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-xs font-semibold font-mono uppercase tracking-wider text-[var(--theme-foreground)]/50 animate-pulse">Loading settings...</div>
-      </div>
-    )
-  }
-
   return (
     <m.div
       className="p-4 bg-[var(--theme-background)]"
@@ -758,6 +718,21 @@ export default function SettingsPage() {
       )}
     </m.div>
   )
+}
+
+export default function SettingsPage() {
+  // Queries
+  const currentUser = useQuery(api.auth.users.getCurrentUser)
+
+  if (!currentUser) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-xs font-semibold font-mono uppercase tracking-wider text-[var(--theme-foreground)]/50 animate-pulse">Loading settings...</div>
+      </div>
+    )
+  }
+
+  return <SettingsPageContent key={currentUser._id} currentUser={currentUser} />
 }
 
 // Helper component for section headers if needed

@@ -44,6 +44,20 @@ const defaultSettings: AccessibilitySettings = {
   focusVisibility: 'normal'
 }
 
+type SetSettingsFn = React.Dispatch<React.SetStateAction<AccessibilitySettings>>
+
+function attachMotionListener(setSettings: SetSettingsFn, mq: MediaQueryList): () => void {
+  const handler = (e: MediaQueryListEvent) => { setSettings(prev => ({ ...prev, reducedMotion: e.matches })) }
+  mq.addEventListener('change', handler)
+  return () => mq.removeEventListener('change', handler)
+}
+
+function attachContrastListener(setSettings: SetSettingsFn, mq: MediaQueryList): () => void {
+  const handler = (e: MediaQueryListEvent) => { setSettings(prev => ({ ...prev, highContrastMode: e.matches })) }
+  mq.addEventListener('change', handler)
+  return () => mq.removeEventListener('change', handler)
+}
+
 const AccessibilityContext = createContext<AccessibilityContextType | null>(null)
 
 interface AccessibilityProviderProps {
@@ -72,7 +86,6 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
     initializeMotionPreferences()
     initializeKeyboardNavigation()
 
-    // Detect system preferences and apply saved settings in a single setState call
     const motionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     const contrastMediaQuery = window.matchMedia('(prefers-contrast: high)')
 
@@ -82,8 +95,6 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
         reducedMotion: motionMediaQuery.matches || prev.reducedMotion,
         highContrastMode: contrastMediaQuery.matches || prev.highContrastMode
       }
-
-      // Apply saved settings to DOM
       if (updated.highContrastMode) {
         document.documentElement.setAttribute('data-accessibility', 'high-contrast')
       }
@@ -93,25 +104,15 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
       if (updated.fontSize !== 'normal') {
         document.documentElement.setAttribute('data-font-size', updated.fontSize)
       }
-
       return updated
     })
 
-    // Listen for system preference changes
-    const handleMotionChange = (e: MediaQueryListEvent) => {
-      setSettings(prev => ({ ...prev, reducedMotion: e.matches }))
-    }
-
-    const handleContrastChange = (e: MediaQueryListEvent) => {
-      setSettings(prev => ({ ...prev, highContrastMode: e.matches }))
-    }
-
-    motionMediaQuery.addEventListener('change', handleMotionChange)
-    contrastMediaQuery.addEventListener('change', handleContrastChange)
+    const cleanupMotion = attachMotionListener(setSettings, motionMediaQuery)
+    const cleanupContrast = attachContrastListener(setSettings, contrastMediaQuery)
 
     return () => {
-      motionMediaQuery.removeEventListener('change', handleMotionChange)
-      contrastMediaQuery.removeEventListener('change', handleContrastChange)
+      cleanupMotion()
+      cleanupContrast()
     }
   }, [])
 
