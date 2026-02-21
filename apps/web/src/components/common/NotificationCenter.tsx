@@ -1,17 +1,31 @@
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../../convex/_generated/api'
 import type { Id } from '../../../../../convex/_generated/dataModel'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, isToday, isYesterday, isThisWeek } from 'date-fns'
+import { useNavigate } from 'react-router-dom'
+import {
+  HiOutlineClipboardList,
+  HiOutlineChatAlt2,
+  HiOutlineAtSymbol,
+  HiOutlineLightningBolt,
+  HiOutlineCheckCircle,
+  HiOutlineUserAdd,
+  HiOutlineMailOpen,
+  HiOutlineCode,
+} from 'react-icons/hi'
 
-const TYPE_ICONS: Record<string, string> = {
-  task_assigned: '\u{1F4CB}',
-  task_comment: '\u{1F4AC}',
-  task_mention: '@',
-  sprint_started: '\u{1F680}',
-  sprint_completed: '\u2705',
-  member_joined: '\u{1F44B}',
-  pr_merged: '\u{1F500}',
+const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  task_assigned: HiOutlineClipboardList,
+  task_comment: HiOutlineChatAlt2,
+  task_mention: HiOutlineAtSymbol,
+  sprint_started: HiOutlineLightningBolt,
+  sprint_completed: HiOutlineCheckCircle,
+  member_joined: HiOutlineUserAdd,
+  pr_merged: HiOutlineCode,
 }
+
+const FALLBACK_ICON = HiOutlineMailOpen
 
 const TYPE_LABELS: Record<string, string> = {
   task_assigned: 'ASSIGNED',
@@ -23,28 +37,110 @@ const TYPE_LABELS: Record<string, string> = {
   pr_merged: 'GIT',
 }
 
+type DateGroup = 'TODAY' | 'YESTERDAY' | 'THIS WEEK' | 'OLDER'
+
 interface NotificationCenterProps {
   workspaceId: Id<'workspaces'>
   onClose: () => void
 }
 
 export default function NotificationCenter({ workspaceId, onClose }: NotificationCenterProps) {
+  const navigate = useNavigate()
   const notifications = useQuery(api.notifications.getNotifications, { workspaceId, limit: 30 })
   const markAsRead = useMutation(api.notifications.markAsRead)
   const markAllAsRead = useMutation(api.notifications.markAllAsRead)
+  const [isMarkingAll, setIsMarkingAll] = useState(false)
 
   const handleMarkAllRead = async () => {
-    await markAllAsRead({ workspaceId })
+    setIsMarkingAll(true)
+    try {
+      await markAllAsRead({ workspaceId })
+    } finally {
+      setIsMarkingAll(false)
+    }
   }
 
   const handleClick = async (notificationId: Id<'notifications'>, link?: string) => {
     await markAsRead({ notificationId })
     if (link) {
-      window.location.href = link
+      navigate(link)
+      onClose()
     }
   }
 
   const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0
+
+  const groupedNotifications = useMemo(() => {
+    if (!notifications || notifications.length === 0) return null
+
+    const groups: Array<{ label: DateGroup; items: typeof notifications }> = []
+    const buckets: Record<DateGroup, typeof notifications> = {
+      'TODAY': [],
+      'YESTERDAY': [],
+      'THIS WEEK': [],
+      'OLDER': [],
+    }
+
+    for (const n of notifications) {
+      const date = new Date(n._creationTime)
+      if (isToday(date)) {
+        buckets['TODAY'].push(n)
+      } else if (isYesterday(date)) {
+        buckets['YESTERDAY'].push(n)
+      } else if (isThisWeek(date)) {
+        buckets['THIS WEEK'].push(n)
+      } else {
+        buckets['OLDER'].push(n)
+      }
+    }
+
+    const order: Array<DateGroup> = ['TODAY', 'YESTERDAY', 'THIS WEEK', 'OLDER']
+    for (const label of order) {
+      if (buckets[label].length > 0) {
+        groups.push({ label, items: buckets[label] })
+      }
+    }
+
+    return groups
+  }, [notifications])
+
+  const renderNotification = (notification: NonNullable<typeof notifications>[number]) => {
+    const IconComponent = TYPE_ICONS[notification.type] || FALLBACK_ICON
+    return (
+      <button
+        key={notification._id}
+        onClick={() => handleClick(notification._id, notification.link)}
+        className={`w-full text-left px-4 py-3 border-b border-[var(--theme-border)]/50 hover:bg-[var(--theme-background-secondary)] transition-colors ${
+          !notification.isRead ? 'border-l-2 border-l-[#6366F1] bg-[#6366F1]/5' : ''
+        }`}
+      >
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 shrink-0 text-[var(--theme-foreground)]/60">
+            <IconComponent className="w-4 h-4" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="text-[9px] font-mono font-bold uppercase text-[var(--theme-foreground)]/40 tracking-wider">
+                {TYPE_LABELS[notification.type] || notification.type}
+              </span>
+              <span className="text-[9px] font-mono text-[var(--theme-foreground)]/30">
+                {formatDistanceToNow(new Date(notification._creationTime), { addSuffix: true })}
+              </span>
+            </div>
+            <p className={`text-sm font-medium truncate ${!notification.isRead ? 'text-[var(--theme-foreground)]' : 'text-[var(--theme-foreground)]/70'}`}>
+              {notification.title}
+            </p>
+            <p className="text-xs font-mono text-[var(--theme-foreground)]/50 truncate mt-0.5">
+              {notification.body}
+            </p>
+          </div>
+          {!notification.isRead && (
+            <span className="w-2 h-2 bg-[#6366F1] shrink-0 mt-2" />
+          )}
+        </div>
+      </button>
+    )
+  }
 
   return (
     <div className="w-[380px] max-h-[520px] flex flex-col bg-[var(--theme-background)] border-2 border-[var(--theme-border)]"
@@ -63,9 +159,10 @@ export default function NotificationCenter({ workspaceId, onClose }: Notificatio
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllRead}
-              className="text-[10px] font-mono font-bold uppercase text-[#6366F1] hover:text-[#4F46E5] transition-colors"
+              disabled={isMarkingAll}
+              className="text-[10px] font-mono font-bold uppercase text-[#6366F1] hover:text-[#4F46E5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              MARK ALL READ
+              {isMarkingAll ? 'MARKING...' : 'MARK ALL READ'}
             </button>
           )}
           <button
@@ -91,42 +188,18 @@ export default function NotificationCenter({ workspaceId, onClose }: Notificatio
             <span className="text-2xl mb-2">0</span>
             <p className="font-mono text-xs text-[var(--theme-foreground)]/40 uppercase">NO NOTIFICATIONS</p>
           </div>
-        ) : (
-          notifications.map((notification) => (
-            <button
-              key={notification._id}
-              onClick={() => handleClick(notification._id, notification.link)}
-              className={`w-full text-left px-4 py-3 border-b border-[var(--theme-border)]/50 hover:bg-[var(--theme-background-secondary)] transition-colors ${
-                !notification.isRead ? 'border-l-2 border-l-[#6366F1] bg-[#6366F1]/5' : ''
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <span className="text-base mt-0.5 shrink-0">
-                  {TYPE_ICONS[notification.type] || '\u{1F514}'}
+        ) : groupedNotifications ? (
+          groupedNotifications.map((group) => (
+            <div key={group.label}>
+              <div className="sticky top-0 bg-[#0A0A0A] border-b border-[#2E2E35] py-1 px-3 z-10">
+                <span className="text-xs font-mono font-bold uppercase text-[#6B7280] tracking-wider">
+                  {group.label}
                 </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[9px] font-mono font-bold uppercase text-[var(--theme-foreground)]/40 tracking-wider">
-                      {TYPE_LABELS[notification.type] || notification.type}
-                    </span>
-                    <span className="text-[9px] font-mono text-[var(--theme-foreground)]/30">
-                      {formatDistanceToNow(new Date(notification._creationTime), { addSuffix: true })}
-                    </span>
-                  </div>
-                  <p className={`text-sm font-medium truncate ${!notification.isRead ? 'text-[var(--theme-foreground)]' : 'text-[var(--theme-foreground)]/70'}`}>
-                    {notification.title}
-                  </p>
-                  <p className="text-xs font-mono text-[var(--theme-foreground)]/50 truncate mt-0.5">
-                    {notification.body}
-                  </p>
-                </div>
-                {!notification.isRead && (
-                  <span className="w-2 h-2 bg-[#6366F1] shrink-0 mt-2" />
-                )}
               </div>
-            </button>
+              {group.items.map(renderNotification)}
+            </div>
           ))
-        )}
+        ) : null}
       </div>
     </div>
   )

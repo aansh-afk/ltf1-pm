@@ -453,7 +453,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
                 }}
                 onDelete={handleDeleteWorkflow}
               />
-          )))
+          ))
         )}
         </div>
       )}

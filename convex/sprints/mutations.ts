@@ -169,6 +169,17 @@ export const updateSprint = mutation({
 
       for (const pm of projectMembers) {
         if (pm.userId !== user._id && pm.status === "active") {
+          await ctx.scheduler.runAfter(0, internal.notifications.createNotification, {
+            userId: pm.userId,
+            workspaceId: project.workspaceId,
+            type: "sprint_started",
+            title: "Sprint Started",
+            body: `Sprint "${args.name || sprint.name}" has started`,
+            actorId: user._id,
+            entityId: args.sprintId,
+            entityType: "sprint",
+          });
+
           const memberUser = await ctx.db.get(pm.userId);
           if (memberUser && memberUser.preferences?.notifications?.email !== false) {
             const emailContent = sprintStarted({
@@ -198,6 +209,17 @@ export const updateSprint = mutation({
 
       for (const pm of projectMembers) {
         if (pm.userId !== user._id && pm.status === "active") {
+          await ctx.scheduler.runAfter(0, internal.notifications.createNotification, {
+            userId: pm.userId,
+            workspaceId: project.workspaceId,
+            type: "sprint_completed",
+            title: "Sprint Completed",
+            body: `Sprint "${sprint.name}" has been completed`,
+            actorId: user._id,
+            entityId: args.sprintId,
+            entityType: "sprint",
+          });
+
           const memberUser = await ctx.db.get(pm.userId);
           if (memberUser && memberUser.preferences?.notifications?.email !== false) {
             const emailContent = sprintCompleted({

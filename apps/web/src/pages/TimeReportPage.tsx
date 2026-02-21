@@ -13,6 +13,7 @@ import {
   HiOutlineCalendar,
   HiOutlineFilter,
   HiOutlineDocumentReport,
+  HiOutlineDownload,
 } from 'react-icons/hi'
 
 // ─── Date range helpers ────────────────────────────────────────────
@@ -100,6 +101,9 @@ export default function TimeReportPage() {
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
 
+  // Billable filter state
+  const [billableOnly, setBillableOnly] = useState(false)
+
   const { startDate, endDate } = useMemo(() => {
     switch (rangeKey) {
       case 'this_week':
@@ -137,12 +141,19 @@ export default function TimeReportPage() {
 
   const avgPerDay = timeStats ? timeStats.totalTime / dayCount : 0
 
-  // Group entries by date for display
-  const groupedEntries = useMemo(() => {
-    if (!timeEntries || timeEntries.length === 0) return []
+  // Apply billable filter to entries
+  const filteredEntries = useMemo(() => {
+    if (!timeEntries) return []
+    if (!billableOnly) return timeEntries
+    return timeEntries.filter((e) => e.billable === true)
+  }, [timeEntries, billableOnly])
 
-    const groups = new Map<string, typeof timeEntries>()
-    const sorted = [...timeEntries].sort((a, b) => b.startTime - a.startTime)
+  // Group filtered entries by date for display
+  const filteredGroupedEntries = useMemo(() => {
+    if (filteredEntries.length === 0) return []
+
+    const groups = new Map<string, typeof filteredEntries>()
+    const sorted = [...filteredEntries].sort((a, b) => b.startTime - a.startTime)
 
     for (const entry of sorted) {
       const dateKey = new Date(entry.startTime).toLocaleDateString('en-US', {
@@ -161,7 +172,41 @@ export default function TimeReportPage() {
       entries,
       totalMs: entries.reduce((s, e) => s + (e.duration || 0), 0),
     }))
-  }, [timeEntries])
+  }, [filteredEntries])
+
+  // Calculate total time from filtered entries
+  const filteredTotalMs = useMemo(() => {
+    return filteredEntries.reduce((sum, e) => sum + (e.duration || 0), 0)
+  }, [filteredEntries])
+
+  // CSV Export
+  const handleExportCSV = () => {
+    if (!filteredEntries.length) return
+
+    const headers = 'Date,Start Time,End Time,Duration (h),Task ID,Description,Billable,Approved'
+    const rows = filteredEntries.map((entry) => {
+      const dur = entry.duration || (entry.endTime ? entry.endTime - entry.startTime : 0)
+      const durationH = (dur / 3600000).toFixed(2)
+      const date = formatDate(entry.startTime)
+      const start = formatTime(entry.startTime)
+      const end = entry.endTime ? formatTime(entry.endTime) : ''
+      const desc = (entry.description || '').replace(/,/g, ';').replace(/"/g, '""')
+      const billable = entry.billable ? 'Yes' : 'No'
+      const approved = entry.approved ? 'Yes' : 'No'
+      return `${date},${start},${end},${durationH},${String(entry.taskId)},"${desc}",${billable},${approved}`
+    })
+
+    const csv = [headers, ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `time-report-${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
 
   // Task breakdown from stats
   const taskBreakdown = timeStats?.taskBreakdown ?? []
@@ -191,9 +236,19 @@ export default function TimeReportPage() {
               Workspace Analytics
             </span>
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-[var(--theme-foreground)]">
-            TIME REPORTS
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold tracking-tight text-[var(--theme-foreground)]">
+              TIME REPORTS
+            </h1>
+            <button
+              onClick={handleExportCSV}
+              disabled={!filteredEntries.length}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono font-bold uppercase tracking-wider border-2 border-[var(--theme-border)] text-[var(--theme-foreground)]/50 hover:border-[#6366F1] hover:text-[#6366F1] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <HiOutlineDownload className="w-3.5 h-3.5" />
+              Export CSV
+            </button>
+          </div>
           <p className="text-xs font-mono text-[var(--theme-foreground)]/50 mt-1">
             Track logged hours, billable time, and session breakdowns.
           </p>
@@ -227,6 +282,21 @@ export default function TimeReportPage() {
                   {opt.label}
                 </button>
               ))}
+
+              {/* Divider */}
+              <div className="w-px h-5 bg-[var(--theme-border)] mx-1" />
+
+              {/* Billable Filter Toggle */}
+              <button
+                onClick={() => setBillableOnly((prev) => !prev)}
+                className={`px-3 py-1.5 text-[11px] font-mono font-bold uppercase tracking-wider border-2 transition-all ${
+                  billableOnly
+                    ? 'border-[var(--theme-success)] bg-[var(--theme-success)]/10 text-[var(--theme-success)]'
+                    : 'border-[var(--theme-border)] text-[var(--theme-foreground)]/50 hover:border-[var(--theme-foreground)]/30'
+                }`}
+              >
+                Billable Only
+              </button>
             </div>
 
             {rangeKey === 'custom' && (
@@ -470,6 +540,19 @@ export default function TimeReportPage() {
                       </div>
                     </div>
                   ))}
+
+                {/* Total Summary Row */}
+                <div className="sticky bottom-0 grid grid-cols-12 gap-2 px-4 py-3 bg-[#111111] border-t-2 border-[#2E2E35]">
+                  <div className="col-span-7 text-xs font-mono font-bold uppercase tracking-wider text-[var(--theme-foreground)]">
+                    TOTAL
+                  </div>
+                  <div className="col-span-3 text-xs font-mono font-bold text-[#6366F1] text-right">
+                    {formatHours(timeStats?.totalTime ?? 0)}
+                  </div>
+                  <div className="col-span-2 text-xs font-mono font-bold text-[var(--theme-foreground)] text-right">
+                    100%
+                  </div>
+                </div>
               </div>
             </BrutalCard>
           </m.div>
@@ -488,7 +571,7 @@ export default function TimeReportPage() {
                 Session Log
               </span>
               <span className="text-[10px] font-mono text-[var(--theme-foreground)]/30 ml-auto">
-                {timeEntries?.length ?? 0} entries
+                {filteredEntries.length} entries
               </span>
             </div>
 
@@ -498,9 +581,10 @@ export default function TimeReportPage() {
                   <div key={i} className="h-10 bg-[var(--theme-border)] animate-pulse" />
                 ))}
               </div>
-            ) : groupedEntries.length > 0 ? (
+            ) : filteredGroupedEntries.length > 0 ? (
+              <>
               <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1 custom-scrollbar">
-                {groupedEntries.map((group) => (
+                {filteredGroupedEntries.map((group) => (
                   <div key={group.date}>
                     {/* Day header */}
                     <div className="flex items-center justify-between px-2 py-1.5 bg-[var(--theme-background)] border border-[var(--theme-border)] mb-1">
@@ -570,6 +654,17 @@ export default function TimeReportPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Session Log Total Footer */}
+              <div className="sticky bottom-0 flex items-center justify-between px-4 py-3 bg-[#111111] border-t-2 border-[#2E2E35] mt-2">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--theme-foreground)]">
+                  TOTAL
+                </span>
+                <span className="text-xs font-mono font-bold text-[#6366F1]">
+                  {formatHours(filteredTotalMs / 3600000)}
+                </span>
+              </div>
+              </>
             ) : (
               /* ─── EMPTY STATE ──────────────────────────────── */
               <div className="border-2 border-[var(--theme-border)] border-dashed p-10 text-center">

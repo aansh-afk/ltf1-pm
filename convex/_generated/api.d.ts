@@ -91,6 +91,7 @@ import type * as integrations_slack_queries from "../integrations/slack/queries.
 import type * as internalQueries from "../internalQueries.js";
 import type * as meetings_mutations from "../meetings/mutations.js";
 import type * as meetings_queries from "../meetings/queries.js";
+import type * as migrations_backfillNotifications from "../migrations/backfillNotifications.js";
 import type * as migrations_clearOldActivities from "../migrations/clearOldActivities.js";
 import type * as migrations_migrateToMultipleAssignees from "../migrations/migrateToMultipleAssignees.js";
 import type * as migrations from "../migrations.js";
@@ -106,7 +107,6 @@ import type * as sprints_queries from "../sprints/queries.js";
 import type * as sprints_snapshots from "../sprints/snapshots.js";
 import type * as tasks_mutations from "../tasks/mutations.js";
 import type * as tasks_queries from "../tasks/queries.js";
-import type * as tasks_timeTracking from "../tasks/timeTracking.js";
 import type * as teams from "../teams.js";
 import type * as timeEntries from "../timeEntries.js";
 import type * as video from "../video.js";
@@ -202,6 +202,7 @@ declare const fullApi: ApiFromModules<{
   internalQueries: typeof internalQueries;
   "meetings/mutations": typeof meetings_mutations;
   "meetings/queries": typeof meetings_queries;
+  "migrations/backfillNotifications": typeof migrations_backfillNotifications;
   "migrations/clearOldActivities": typeof migrations_clearOldActivities;
   "migrations/migrateToMultipleAssignees": typeof migrations_migrateToMultipleAssignees;
   migrations: typeof migrations;
@@ -217,7 +218,6 @@ declare const fullApi: ApiFromModules<{
   "sprints/snapshots": typeof sprints_snapshots;
   "tasks/mutations": typeof tasks_mutations;
   "tasks/queries": typeof tasks_queries;
-  "tasks/timeTracking": typeof tasks_timeTracking;
   teams: typeof teams;
   timeEntries: typeof timeEntries;
   video: typeof video;

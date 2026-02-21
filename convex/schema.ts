@@ -17,6 +17,16 @@ export default defineSchema({
         email: v.boolean(),
         push: v.boolean(),
         slack: v.boolean(),
+        types: v.optional(v.object({
+          task_assigned: v.optional(v.boolean()),
+          task_unassigned: v.optional(v.boolean()),
+          task_comment: v.optional(v.boolean()),
+          task_mention: v.optional(v.boolean()),
+          sprint_started: v.optional(v.boolean()),
+          sprint_completed: v.optional(v.boolean()),
+          member_joined: v.optional(v.boolean()),
+          workspace_invitation: v.optional(v.boolean()),
+        })),
       })),
       defaultWorkspaceId: v.optional(v.id("workspaces")),
       accessibility: v.optional(v.object({
