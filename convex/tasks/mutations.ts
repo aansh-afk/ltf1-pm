@@ -691,17 +691,35 @@ export const bulkUpdateTasks = mutation({
   args: {
     taskIds: v.array(v.id("tasks")),
     updates: v.object({
-      status: v.optional(v.string()),
-      priority: v.optional(v.string()),
+      status: v.optional(v.union(
+        v.literal("backlog"),
+        v.literal("todo"),
+        v.literal("in_progress"),
+        v.literal("in_review"),
+        v.literal("done"),
+        v.literal("cancelled")
+      )),
+      priority: v.optional(v.union(
+        v.literal("urgent"),
+        v.literal("high"),
+        v.literal("medium"),
+        v.literal("low")
+      )),
       assigneeIds: v.optional(v.array(v.id("users"))),
       labels: v.optional(v.array(v.string())),
-      sprintId: v.optional(v.union(v.id("sprints"), v.null())),
+      sprintId: v.optional(v.id("sprints")),
     }),
   },
   returns: v.object({ updatedCount: v.number() }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first()
+    if (!user) throw new Error("User not found")
 
     // Filter out undefined fields from updates
     const cleanUpdates: Record<string, unknown> = {}
@@ -715,6 +733,9 @@ export const bulkUpdateTasks = mutation({
     for (const taskId of args.taskIds) {
       const task = await ctx.db.get(taskId)
       if (!task) continue
+      const project = await ctx.db.get(task.projectId)
+      if (!project) continue
+      await requirePermission(ctx.db, user._id, project.workspaceId, "task.edit")
       await ctx.db.patch(taskId, cleanUpdates)
       updatedCount++
     }
@@ -732,10 +753,19 @@ export const bulkDeleteTasks = mutation({
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Unauthorized")
 
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first()
+    if (!user) throw new Error("User not found")
+
     let deletedCount = 0
     for (const taskId of args.taskIds) {
       const task = await ctx.db.get(taskId)
       if (!task) continue
+      const project = await ctx.db.get(task.projectId)
+      if (!project) continue
+      await requirePermission(ctx.db, user._id, project.workspaceId, "task.delete")
       await ctx.db.delete(taskId)
       deletedCount++
     }
