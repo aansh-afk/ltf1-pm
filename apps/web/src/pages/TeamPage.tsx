@@ -25,10 +25,12 @@ import BrutalBadge from '@/components/ui/BrutalBadge'
 import CreateSprintModal from '@/components/features/sprint/CreateSprintModal'
 import SprintBoard from '@/components/features/sprint/SprintBoard'
 import SprintPlanning from '@/components/features/sprint/SprintPlanning'
+import BurndownChart from '../components/features/sprint/BurndownChart'
+import VelocityChart from '../components/features/sprint/VelocityChart'
 import EmptyState from '@/components/common/EmptyState'
 import { m } from 'framer-motion'
 
-type TabType = 'members' | 'sprints'
+type TabType = 'members' | 'sprints' | 'analytics'
 
 type TeamPageState = {
   activeTab: TabType
@@ -472,6 +474,7 @@ export default function TeamPage() {
         {[
           { id: 'members' as TabType, label: 'MEMBERS' },
           { id: 'sprints' as TabType, label: 'SPRINTS' },
+          { id: 'analytics' as TabType, label: 'ANALYTICS' },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -489,7 +492,30 @@ export default function TeamPage() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'members' ? renderMembersTab() : renderSprintsTab()}
+      {activeTab === 'members' ? renderMembersTab() : activeTab === 'sprints' ? renderSprintsTab() : (
+        <m.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="p-4 space-y-4"
+        >
+          <h2 className="text-sm font-bold font-mono uppercase text-[var(--theme-foreground)]">
+            SPRINT ANALYTICS
+          </h2>
+          {currentSprint ? (
+            <BurndownChart sprintId={currentSprint._id} sprintName={currentSprint.name} />
+          ) : (
+            <div className="border-2 border-[var(--theme-border)] p-6 text-center">
+              <p className="text-sm font-mono text-[var(--theme-foreground)]/60">
+                No active sprint. Select a sprint to view burndown.
+              </p>
+            </div>
+          )}
+          {selectedProjectId && (
+            <VelocityChart projectId={selectedProjectId} />
+          )}
+        </m.div>
+      )}
 
       {/* Modals */}
       <ExpertiseSearchModal
