@@ -10,40 +10,50 @@ export default defineSchema({
     role: v.union(v.literal("admin"), v.literal("user")),
     status: v.optional(v.union(v.literal("active"), v.literal("waitlisted"))),
     waitlistPosition: v.optional(v.number()),
-    preferences: v.optional(v.object({
-      theme: v.optional(v.string()),
-      hasCompletedOnboarding: v.optional(v.boolean()),
-      notifications: v.optional(v.object({
-        email: v.boolean(),
-        push: v.boolean(),
-        slack: v.boolean(),
-        types: v.optional(v.object({
-          task_assigned: v.optional(v.boolean()),
-          task_unassigned: v.optional(v.boolean()),
-          task_comment: v.optional(v.boolean()),
-          task_mention: v.optional(v.boolean()),
-          sprint_started: v.optional(v.boolean()),
-          sprint_completed: v.optional(v.boolean()),
-          member_joined: v.optional(v.boolean()),
-          workspace_invitation: v.optional(v.boolean()),
-        })),
-      })),
-      defaultWorkspaceId: v.optional(v.id("workspaces")),
-      accessibility: v.optional(v.object({
-        fontScale: v.optional(v.number()),       // 0.5 to 1.5
-        lineHeight: v.optional(v.number()),      // 1.2 to 1.8
-        letterSpacing: v.optional(v.string()),   // normal, wide, extra-wide
-        reducedMotion: v.optional(v.boolean()),
-        highContrast: v.optional(v.boolean()),
-        focusWidth: v.optional(v.number()),      // 2, 4, 6
-      })),
-      defaults: v.optional(v.object({
-        projectView: v.optional(v.string()),     // kanban, list, table
-        taskPriority: v.optional(v.string()),    // low, medium, high, urgent
-        taskType: v.optional(v.string()),        // task, feature, bug, improvement, epic
-        autoAssignSelf: v.optional(v.boolean()),
-      })),
-    })),
+    preferences: v.optional(
+      v.object({
+        theme: v.optional(v.string()),
+        hasCompletedOnboarding: v.optional(v.boolean()),
+        notifications: v.optional(
+          v.object({
+            email: v.boolean(),
+            push: v.boolean(),
+            slack: v.boolean(),
+            types: v.optional(
+              v.object({
+                task_assigned: v.optional(v.boolean()),
+                task_unassigned: v.optional(v.boolean()),
+                task_comment: v.optional(v.boolean()),
+                task_mention: v.optional(v.boolean()),
+                sprint_started: v.optional(v.boolean()),
+                sprint_completed: v.optional(v.boolean()),
+                member_joined: v.optional(v.boolean()),
+                workspace_invitation: v.optional(v.boolean()),
+              }),
+            ),
+          }),
+        ),
+        defaultWorkspaceId: v.optional(v.id("workspaces")),
+        accessibility: v.optional(
+          v.object({
+            fontScale: v.optional(v.number()), // 0.5 to 1.5
+            lineHeight: v.optional(v.number()), // 1.2 to 1.8
+            letterSpacing: v.optional(v.string()), // normal, wide, extra-wide
+            reducedMotion: v.optional(v.boolean()),
+            highContrast: v.optional(v.boolean()),
+            focusWidth: v.optional(v.number()), // 2, 4, 6
+          }),
+        ),
+        defaults: v.optional(
+          v.object({
+            projectView: v.optional(v.string()), // kanban, list, table
+            taskPriority: v.optional(v.string()), // low, medium, high, urgent
+            taskType: v.optional(v.string()), // task, feature, bug, improvement, epic
+            autoAssignSelf: v.optional(v.boolean()),
+          }),
+        ),
+      }),
+    ),
     githubUsername: v.optional(v.string()),
     githubTokenValidated: v.optional(v.boolean()),
     bio: v.optional(v.string()),
@@ -69,14 +79,20 @@ export default defineSchema({
         meetings: v.boolean(),
         timeTracking: v.boolean(),
       }),
-      integrations: v.optional(v.object({
-        githubToken: v.optional(v.string()),
-        githubInstallationId: v.optional(v.number()),
-        googleCalendarId: v.optional(v.string()),
-      })),
+      integrations: v.optional(
+        v.object({
+          githubToken: v.optional(v.string()),
+          githubInstallationId: v.optional(v.number()),
+          googleCalendarId: v.optional(v.string()),
+        }),
+      ),
     }),
     subscription: v.object({
-      plan: v.union(v.literal("free"), v.literal("pro"), v.literal("enterprise")),
+      plan: v.union(
+        v.literal("free"),
+        v.literal("pro"),
+        v.literal("enterprise"),
+      ),
       validUntil: v.optional(v.number()),
       seats: v.number(),
     }),
@@ -89,7 +105,12 @@ export default defineSchema({
   workspaceMembers: defineTable({
     workspaceId: v.id("workspaces"),
     userId: v.id("users"),
-    role: v.union(v.literal("owner"), v.literal("admin"), v.literal("member"), v.literal("viewer")),
+    role: v.union(
+      v.literal("owner"),
+      v.literal("admin"),
+      v.literal("member"),
+      v.literal("viewer"),
+    ),
     permissions: v.array(v.string()),
     joinedAt: v.number(),
   })
@@ -102,7 +123,12 @@ export default defineSchema({
     email: v.string(),
     role: v.union(v.literal("admin"), v.literal("member"), v.literal("viewer")),
     invitedBy: v.id("users"),
-    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined"), v.literal("expired")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("declined"),
+      v.literal("expired"),
+    ),
     createdAt: v.number(),
     expiresAt: v.number(),
   })
@@ -135,10 +161,19 @@ export default defineSchema({
   projectMembers: defineTable({
     projectId: v.id("projects"),
     userId: v.id("users"),
-    role: v.union(v.literal("lead"), v.literal("member"), v.literal("contributor"), v.literal("viewer")),
+    role: v.union(
+      v.literal("lead"),
+      v.literal("member"),
+      v.literal("contributor"),
+      v.literal("viewer"),
+    ),
     joinedAt: v.number(),
     invitedBy: v.optional(v.id("users")),
-    status: v.union(v.literal("active"), v.literal("pending"), v.literal("removed")),
+    status: v.union(
+      v.literal("active"),
+      v.literal("pending"),
+      v.literal("removed"),
+    ),
   })
     .index("by_project", ["projectId"])
     .index("by_user", ["userId"])
@@ -149,8 +184,18 @@ export default defineSchema({
     projectId: v.id("projects"),
     invitedEmail: v.string(),
     invitedBy: v.id("users"),
-    role: v.union(v.literal("lead"), v.literal("member"), v.literal("contributor"), v.literal("viewer")),
-    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined"), v.literal("expired")),
+    role: v.union(
+      v.literal("lead"),
+      v.literal("member"),
+      v.literal("contributor"),
+      v.literal("viewer"),
+    ),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("declined"),
+      v.literal("expired"),
+    ),
     inviteCode: v.string(),
     expiresAt: v.number(),
     createdAt: v.number(),
@@ -168,33 +213,53 @@ export default defineSchema({
     leadId: v.optional(v.id("users")),
     members: v.optional(v.array(v.id("users"))), // Array of user IDs who are members
     teamIds: v.optional(v.array(v.id("teams"))), // Array of Team IDs assigned to this project
-    status: v.union(v.literal("planning"), v.literal("active"), v.literal("on_hold"), v.literal("completed"), v.literal("archived")),
+    status: v.union(
+      v.literal("planning"),
+      v.literal("active"),
+      v.literal("on_hold"),
+      v.literal("completed"),
+      v.literal("archived"),
+    ),
     visibility: v.union(v.literal("public"), v.literal("private")),
     inviteCode: v.optional(v.string()), // UUID for project joining
-    repository: v.optional(v.object({
-      provider: v.union(v.literal("github"), v.literal("gitlab"), v.literal("bitbucket")),
-      url: v.string(),
-      name: v.string(),
-      owner: v.string(),
-      defaultBranch: v.string(),
-      connectedAt: v.number(),
-    })),
+    repository: v.optional(
+      v.object({
+        provider: v.union(
+          v.literal("github"),
+          v.literal("gitlab"),
+          v.literal("bitbucket"),
+        ),
+        url: v.string(),
+        name: v.string(),
+        owner: v.string(),
+        defaultBranch: v.string(),
+        connectedAt: v.number(),
+      }),
+    ),
     settings: v.object({
       taskPrefix: v.string(),
       defaultAssigneeId: v.optional(v.id("users")),
-      workflowType: v.union(v.literal("kanban"), v.literal("scrum"), v.literal("hybrid")),
+      workflowType: v.union(
+        v.literal("kanban"),
+        v.literal("scrum"),
+        v.literal("hybrid"),
+      ),
     }),
-    teamSettings: v.optional(v.object({
-      maxMembers: v.optional(v.number()),
-      allowSelfJoin: v.optional(v.boolean()),
-      requireApproval: v.optional(v.boolean()),
-      autoAssignLead: v.optional(v.boolean()),
-    })),
-    metadata: v.optional(v.object({
-      color: v.string(),
-      icon: v.string(),
-      tags: v.array(v.string()),
-    })),
+    teamSettings: v.optional(
+      v.object({
+        maxMembers: v.optional(v.number()),
+        allowSelfJoin: v.optional(v.boolean()),
+        requireApproval: v.optional(v.boolean()),
+        autoAssignLead: v.optional(v.boolean()),
+      }),
+    ),
+    metadata: v.optional(
+      v.object({
+        color: v.string(),
+        icon: v.string(),
+        tags: v.array(v.string()),
+      }),
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -203,7 +268,10 @@ export default defineSchema({
     .index("by_lead", ["leadId"])
     .index("by_status", ["status"])
     .index("by_invite_code", ["inviteCode"])
-    .searchIndex("search_name", { searchField: "name", filterFields: ["workspaceId", "status"] }),
+    .searchIndex("search_name", {
+      searchField: "name",
+      filterFields: ["workspaceId", "status"],
+    }),
 
   tasks: defineTable({
     projectId: v.id("projects"),
@@ -217,10 +285,21 @@ export default defineSchema({
       v.literal("in_progress"),
       v.literal("in_review"),
       v.literal("done"),
-      v.literal("cancelled")
+      v.literal("cancelled"),
     ),
-    priority: v.union(v.literal("urgent"), v.literal("high"), v.literal("medium"), v.literal("low")),
-    type: v.union(v.literal("feature"), v.literal("bug"), v.literal("improvement"), v.literal("task"), v.literal("epic")),
+    priority: v.union(
+      v.literal("urgent"),
+      v.literal("high"),
+      v.literal("medium"),
+      v.literal("low"),
+    ),
+    type: v.union(
+      v.literal("feature"),
+      v.literal("bug"),
+      v.literal("improvement"),
+      v.literal("task"),
+      v.literal("epic"),
+    ),
     assigneeIds: v.optional(v.array(v.id("users"))),
     assigneeId: v.optional(v.id("users")), // Deprecated - kept for migration
     reporterId: v.id("users"),
@@ -232,25 +311,33 @@ export default defineSchema({
     progress: v.optional(v.number()), // 0-100 progress percentage
     milestone: v.optional(v.boolean()), // Is this a milestone
     criticalPath: v.optional(v.boolean()), // Is on critical path
-    estimate: v.optional(v.object({
-      points: v.optional(v.number()),
-      hours: v.optional(v.number()),
-    })),
+    estimate: v.optional(
+      v.object({
+        points: v.optional(v.number()),
+        hours: v.optional(v.number()),
+      }),
+    ),
     timeTracked: v.optional(v.number()), // Total milliseconds tracked
-    git: v.optional(v.object({
-      branch: v.optional(v.string()),
-      commits: v.array(v.string()),
-      pullRequestUrl: v.optional(v.string()),
-      pullRequestStatus: v.optional(v.union(v.literal("open"), v.literal("merged"), v.literal("closed"))),
-    })),
+    git: v.optional(
+      v.object({
+        branch: v.optional(v.string()),
+        commits: v.array(v.string()),
+        pullRequestUrl: v.optional(v.string()),
+        pullRequestStatus: v.optional(
+          v.union(v.literal("open"), v.literal("merged"), v.literal("closed")),
+        ),
+      }),
+    ),
     // GitHub Issue sync (bi-directional)
-    githubIssue: v.optional(v.object({
-      repositoryFullName: v.string(),
-      issueNumber: v.number(),
-      issueUrl: v.string(),
-      syncEnabled: v.boolean(),
-      lastSyncedAt: v.optional(v.number()),
-    })),
+    githubIssue: v.optional(
+      v.object({
+        repositoryFullName: v.string(),
+        issueNumber: v.number(),
+        issueUrl: v.string(),
+        syncEnabled: v.boolean(),
+        lastSyncedAt: v.optional(v.number()),
+      }),
+    ),
     gitlabIssueId: v.optional(v.number()), // GitLab issue ID if synced
     gitlabIssueUrl: v.optional(v.string()), // GitLab issue URL
     sprintId: v.optional(v.id("sprints")),
@@ -265,7 +352,10 @@ export default defineSchema({
     .index("by_sprint", ["sprintId"])
     .index("by_parent", ["parentTaskId"])
     .index("by_project_number", ["projectId", "number"])
-    .searchIndex("search_title", { searchField: "title", filterFields: ["projectId", "status"] }),
+    .searchIndex("search_title", {
+      searchField: "title",
+      filterFields: ["projectId", "status"],
+    }),
 
   sprints: defineTable({
     projectId: v.id("projects"),
@@ -273,13 +363,20 @@ export default defineSchema({
     goal: v.optional(v.string()),
     startDate: v.number(),
     endDate: v.number(),
-    status: v.union(v.literal("planning"), v.literal("active"), v.literal("completed")),
+    status: v.union(
+      v.literal("planning"),
+      v.literal("active"),
+      v.literal("completed"),
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_project", ["projectId"])
     .index("by_status", ["status"])
-    .searchIndex("search_name", { searchField: "name", filterFields: ["projectId", "status"] }),
+    .searchIndex("search_name", {
+      searchField: "name",
+      filterFields: ["projectId", "status"],
+    }),
 
   comments: defineTable({
     taskId: v.id("tasks"),
@@ -299,8 +396,7 @@ export default defineSchema({
     mimeType: v.string(),
     storageId: v.string(),
     createdAt: v.number(),
-  })
-    .index("by_task", ["taskId"]),
+  }).index("by_task", ["taskId"]),
 
   meetings: defineTable({
     workspaceId: v.id("workspaces"),
@@ -313,7 +409,7 @@ export default defineSchema({
       v.literal("retrospective"),
       v.literal("planning"),
       v.literal("review"),
-      v.literal("custom")
+      v.literal("custom"),
     ),
     organizerId: v.id("users"),
     startTime: v.number(),
@@ -321,36 +417,57 @@ export default defineSchema({
     location: v.optional(v.string()),
     meetingUrl: v.optional(v.string()),
     googleEventId: v.optional(v.string()),
-    attendees: v.array(v.object({
-      userId: v.id("users"),
-      status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined"), v.literal("tentative")),
-      responseTime: v.optional(v.number()),
-    })),
+    attendees: v.array(
+      v.object({
+        userId: v.id("users"),
+        status: v.union(
+          v.literal("pending"),
+          v.literal("accepted"),
+          v.literal("declined"),
+          v.literal("tentative"),
+        ),
+        responseTime: v.optional(v.number()),
+      }),
+    ),
     relatedTasks: v.array(v.id("tasks")),
-    recurrence: v.optional(v.object({
-      frequency: v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly")),
-      interval: v.number(),
-      endDate: v.optional(v.number()),
-    })),
+    recurrence: v.optional(
+      v.object({
+        frequency: v.union(
+          v.literal("daily"),
+          v.literal("weekly"),
+          v.literal("monthly"),
+        ),
+        interval: v.number(),
+        endDate: v.optional(v.number()),
+      }),
+    ),
     notes: v.optional(v.string()),
-    actionItems: v.optional(v.array(v.object({
-      id: v.string(),
-      description: v.string(),
-      assigneeId: v.optional(v.id("users")),
-      completed: v.boolean(),
-      createdTaskId: v.optional(v.id("tasks")),
-      createdAt: v.number(),
-    }))),
-    template: v.optional(v.object({
-      agenda: v.optional(v.array(v.string())),
-      duration: v.optional(v.number()), // in minutes
-      isRecurring: v.boolean(),
-    })),
-    recordings: v.array(v.object({
-      url: v.string(),
-      duration: v.number(),
-      createdAt: v.number(),
-    })),
+    actionItems: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          description: v.string(),
+          assigneeId: v.optional(v.id("users")),
+          completed: v.boolean(),
+          createdTaskId: v.optional(v.id("tasks")),
+          createdAt: v.number(),
+        }),
+      ),
+    ),
+    template: v.optional(
+      v.object({
+        agenda: v.optional(v.array(v.string())),
+        duration: v.optional(v.number()), // in minutes
+        isRecurring: v.boolean(),
+      }),
+    ),
+    recordings: v.array(
+      v.object({
+        url: v.string(),
+        duration: v.number(),
+        createdAt: v.number(),
+      }),
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -373,7 +490,7 @@ export default defineSchema({
       v.literal("sprint_completed"),
       v.literal("member_joined"),
       v.literal("workspace_invitation"),
-      v.literal("pr_merged")
+      v.literal("pr_merged"),
     ),
     title: v.string(),
     body: v.string(),
@@ -394,8 +511,7 @@ export default defineSchema({
     returnUrl: v.optional(v.string()),
     createdAt: v.number(),
     expiresAt: v.number(),
-  })
-    .index("by_state", ["state"]),
+  }).index("by_state", ["state"]),
 
   githubConnections: defineTable({
     userId: v.id("users"),
@@ -411,8 +527,7 @@ export default defineSchema({
     .index("by_github_id", ["githubId"]),
 
   // Temporary permissive schema for migration - will be restored after user clears old data
-  activities: defineTable(v.any())
-    .index("by_type", ["type", "timestamp"]),
+  activities: defineTable(v.any()).index("by_type", ["type", "timestamp"]),
 
   timeEntries: defineTable({
     taskId: v.id("tasks"),
@@ -429,22 +544,34 @@ export default defineSchema({
     .index("by_task", ["taskId"])
     .index("by_user", ["userId"])
     .index("by_task_and_user", ["taskId", "userId"])
+    .index("by_user_and_startTime", ["userId", "startTime"])
     .index("by_start_time", ["startTime"]),
 
   aiTasks: defineTable({
     workspaceId: v.id("workspaces"),
     userId: v.id("users"),
-    sourceType: v.union(v.literal("commit"), v.literal("pr"), v.literal("comment"), v.literal("manual")),
+    sourceType: v.union(
+      v.literal("commit"),
+      v.literal("pr"),
+      v.literal("comment"),
+      v.literal("manual"),
+    ),
     sourceData: v.any(),
-    suggestedTasks: v.array(v.object({
-      title: v.string(),
-      description: v.string(),
-      type: v.string(),
-      priority: v.string(),
-      estimate: v.optional(v.number()),
-      confidence: v.number(),
-    })),
-    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("rejected")),
+    suggestedTasks: v.array(
+      v.object({
+        title: v.string(),
+        description: v.string(),
+        type: v.string(),
+        priority: v.string(),
+        estimate: v.optional(v.number()),
+        confidence: v.number(),
+      }),
+    ),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("rejected"),
+    ),
     processedAt: v.optional(v.number()),
     createdAt: v.number(),
   })
@@ -459,7 +586,10 @@ export default defineSchema({
     type: v.string(), // task.title.generate, sprint.analysis, etc.
     input: v.string(),
     output: v.string(),
-    model: v.union(v.literal("gemini-2.5-flash"), v.literal("gemini-2.5-flash-lite")),
+    model: v.union(
+      v.literal("gemini-2.5-flash"),
+      v.literal("gemini-2.5-flash-lite"),
+    ),
     tokens: v.object({
       input: v.number(),
       output: v.number(),
@@ -468,11 +598,13 @@ export default defineSchema({
     cost: v.number(),
     latency: v.number(), // milliseconds
     cached: v.boolean(),
-    feedback: v.optional(v.object({
-      helpful: v.boolean(),
-      rating: v.number(), // 1-5
-      comment: v.optional(v.string()),
-    })),
+    feedback: v.optional(
+      v.object({
+        helpful: v.boolean(),
+        rating: v.number(), // 1-5
+        comment: v.optional(v.string()),
+      }),
+    ),
     createdAt: v.number(),
   })
     .index("by_user", ["userId"])
@@ -483,16 +615,27 @@ export default defineSchema({
   // AI-generated insights and recommendations
   aiInsights: defineTable({
     workspaceId: v.id("workspaces"),
-    targetType: v.union(v.literal("task"), v.literal("sprint"), v.literal("project"), v.literal("team"), v.literal("user")),
+    targetType: v.union(
+      v.literal("task"),
+      v.literal("sprint"),
+      v.literal("project"),
+      v.literal("team"),
+      v.literal("user"),
+    ),
     targetId: v.string(), // ID of the target entity
     insightType: v.union(
       v.literal("risk"),
       v.literal("recommendation"),
       v.literal("opportunity"),
       v.literal("anomaly"),
-      v.literal("prediction")
+      v.literal("prediction"),
     ),
-    severity: v.union(v.literal("critical"), v.literal("high"), v.literal("medium"), v.literal("low")),
+    severity: v.union(
+      v.literal("critical"),
+      v.literal("high"),
+      v.literal("medium"),
+      v.literal("low"),
+    ),
     title: v.string(),
     description: v.string(),
     recommendations: v.array(v.string()),
@@ -525,75 +668,122 @@ export default defineSchema({
     userId: v.id("users"),
 
     // Profile information (from frontend form)
-    profile: v.optional(v.object({
-      role: v.optional(v.string()),
-      bio: v.optional(v.string()),
-      location: v.optional(v.string()),
-      phone: v.optional(v.string()),
-      githubUsername: v.optional(v.string()),
-      yearsExperience: v.optional(v.number()),
-      careerLevel: v.optional(v.union(v.literal("junior"), v.literal("mid"), v.literal("senior"), v.literal("lead"), v.literal("principal"))),
-      skills: v.optional(v.array(v.string())),
-      interests: v.optional(v.array(v.string())),
-      workingHours: v.optional(v.object({
-        start: v.string(),
-        end: v.string(),
-      })),
-      communicationPrefs: v.optional(v.union(v.literal("email"), v.literal("slack"), v.literal("teams"), v.literal("discord"))),
-      workStyle: v.optional(v.string()),
-      careerGoals: v.optional(v.string()),
-      mentoringInterests: v.optional(v.array(v.string())),
-      technologies: v.optional(v.array(v.object({
-        name: v.string(),
-        level: v.union(v.literal("expert"), v.literal("proficient"), v.literal("learning")),
-      }))),
-      timezone: v.optional(v.string()),
-      availability: v.optional(v.string()),
-    })),
+    profile: v.optional(
+      v.object({
+        role: v.optional(v.string()),
+        bio: v.optional(v.string()),
+        location: v.optional(v.string()),
+        phone: v.optional(v.string()),
+        githubUsername: v.optional(v.string()),
+        yearsExperience: v.optional(v.number()),
+        careerLevel: v.optional(
+          v.union(
+            v.literal("junior"),
+            v.literal("mid"),
+            v.literal("senior"),
+            v.literal("lead"),
+            v.literal("principal"),
+          ),
+        ),
+        skills: v.optional(v.array(v.string())),
+        interests: v.optional(v.array(v.string())),
+        workingHours: v.optional(
+          v.object({
+            start: v.string(),
+            end: v.string(),
+          }),
+        ),
+        communicationPrefs: v.optional(
+          v.union(
+            v.literal("email"),
+            v.literal("slack"),
+            v.literal("teams"),
+            v.literal("discord"),
+          ),
+        ),
+        workStyle: v.optional(v.string()),
+        careerGoals: v.optional(v.string()),
+        mentoringInterests: v.optional(v.array(v.string())),
+        technologies: v.optional(
+          v.array(
+            v.object({
+              name: v.string(),
+              level: v.union(
+                v.literal("expert"),
+                v.literal("proficient"),
+                v.literal("learning"),
+              ),
+            }),
+          ),
+        ),
+        timezone: v.optional(v.string()),
+        availability: v.optional(v.string()),
+      }),
+    ),
 
     // Work status
-    status: v.optional(v.union(
-      v.literal("LOCKED_IN"),
-      v.literal("AVAILABLE"),
-      v.literal("IN_REVIEW"),
-      v.literal("AFK"),
-      v.literal("IN_MEETING")
-    )),
+    status: v.optional(
+      v.union(
+        v.literal("LOCKED_IN"),
+        v.literal("AVAILABLE"),
+        v.literal("IN_REVIEW"),
+        v.literal("AFK"),
+        v.literal("IN_MEETING"),
+      ),
+    ),
     statusMessage: v.optional(v.string()),
     timezone: v.optional(v.string()),
-    workHours: v.optional(v.object({
-      start: v.string(), // "09:00"
-      end: v.string(),   // "17:00"
-      days: v.array(v.number()), // [1,2,3,4,5] for Mon-Fri
-    })),
-    techStack: v.optional(v.array(v.object({
-      name: v.string(),
-      level: v.union(v.literal("expert"), v.literal("proficient"), v.literal("learning")),
-      yearsOfExperience: v.optional(v.number()),
-    }))),
+    workHours: v.optional(
+      v.object({
+        start: v.string(), // "09:00"
+        end: v.string(), // "17:00"
+        days: v.array(v.number()), // [1,2,3,4,5] for Mon-Fri
+      }),
+    ),
+    techStack: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          level: v.union(
+            v.literal("expert"),
+            v.literal("proficient"),
+            v.literal("learning"),
+          ),
+          yearsOfExperience: v.optional(v.number()),
+        }),
+      ),
+    ),
     currentFocus: v.optional(v.string()),
-    reviewPreferences: v.optional(v.object({
-      maxConcurrentReviews: v.number(),
-      preferredFileTypes: v.array(v.string()),
-      averageResponseTime: v.optional(v.number()), // in hours
-    })),
-    githubStats: v.optional(v.object({
-      username: v.optional(v.string()),
-      totalPRs: v.number(),
-      totalReviews: v.number(),
-      avgReviewTime: v.number(), // in hours
-      languages: v.array(v.object({
-        name: v.string(),
-        percentage: v.number(),
-      })),
-      lastSynced: v.number(),
-    })),
+    reviewPreferences: v.optional(
+      v.object({
+        maxConcurrentReviews: v.number(),
+        preferredFileTypes: v.array(v.string()),
+        averageResponseTime: v.optional(v.number()), // in hours
+      }),
+    ),
+    githubStats: v.optional(
+      v.object({
+        username: v.optional(v.string()),
+        totalPRs: v.number(),
+        totalReviews: v.number(),
+        avgReviewTime: v.number(), // in hours
+        languages: v.array(
+          v.object({
+            name: v.string(),
+            percentage: v.number(),
+          }),
+        ),
+        lastSynced: v.number(),
+      }),
+    ),
     gitCoAuthorString: v.optional(v.string()),
-    availability: v.optional(v.object({
-      forProjects: v.boolean(),
-      forReviews: v.boolean(),
-      forPairing: v.boolean(),
-    })),
+    availability: v.optional(
+      v.object({
+        forProjects: v.boolean(),
+        forReviews: v.boolean(),
+        forPairing: v.boolean(),
+      }),
+    ),
     profileCompleteness: v.number(), // 0-100
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -674,7 +864,11 @@ export default defineSchema({
     signature: v.string(), // Webhook signature
     receivedAt: v.number(),
     processedAt: v.optional(v.number()),
-    status: v.union(v.literal("pending"), v.literal("processed"), v.literal("failed")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("processed"),
+      v.literal("failed"),
+    ),
     error: v.optional(v.string()),
   })
     .index("by_type", ["eventType", "receivedAt"])
@@ -755,9 +949,9 @@ export default defineSchema({
     githubUsername: v.string(),
     githubEmail: v.optional(v.string()),
     mappingType: v.union(
-      v.literal("oauth"),      // Auto-created from OAuth connection
-      v.literal("manual"),     // Manually linked by admin
-      v.literal("inferred")    // Inferred from email match
+      v.literal("oauth"), // Auto-created from OAuth connection
+      v.literal("manual"), // Manually linked by admin
+      v.literal("inferred"), // Inferred from email match
     ),
     verified: v.boolean(),
     createdAt: v.number(),
@@ -800,9 +994,9 @@ export default defineSchema({
     githubTeamSlug: v.string(),
     githubTeamId: v.number(),
     syncDirection: v.union(
-      v.literal("github_to_ltf1"),   // GitHub is source of truth
-      v.literal("ltf1_to_github"),   // LTF1 is source of truth
-      v.literal("bidirectional")     // Sync both ways
+      v.literal("github_to_ltf1"), // GitHub is source of truth
+      v.literal("ltf1_to_github"), // LTF1 is source of truth
+      v.literal("bidirectional"), // Sync both ways
     ),
     syncMembers: v.boolean(),
     lastSyncAt: v.optional(v.number()),
@@ -817,8 +1011,8 @@ export default defineSchema({
   githubIssueSyncQueue: defineTable({
     workspaceId: v.id("workspaces"),
     direction: v.union(
-      v.literal("to_github"),    // LTF1 task → GitHub issue
-      v.literal("from_github")   // GitHub issue → LTF1 task
+      v.literal("to_github"), // LTF1 task → GitHub issue
+      v.literal("from_github"), // GitHub issue → LTF1 task
     ),
     taskId: v.optional(v.id("tasks")),
     githubIssueNumber: v.optional(v.number()),
@@ -828,14 +1022,14 @@ export default defineSchema({
       v.literal("update"),
       v.literal("close"),
       v.literal("reopen"),
-      v.literal("sync_comments")
+      v.literal("sync_comments"),
     ),
     payload: v.any(), // Operation-specific data
     status: v.union(
       v.literal("pending"),
       v.literal("processing"),
       v.literal("completed"),
-      v.literal("failed")
+      v.literal("failed"),
     ),
     retryCount: v.number(),
     lastError: v.optional(v.string()),
@@ -850,7 +1044,11 @@ export default defineSchema({
 
   newsletter: defineTable({
     email: v.string(),
-    source: v.union(v.literal("coming_soon"), v.literal("landing"), v.literal("blog")),
+    source: v.union(
+      v.literal("coming_soon"),
+      v.literal("landing"),
+      v.literal("blog"),
+    ),
     status: v.union(v.literal("active"), v.literal("unsubscribed")),
     ipAddress: v.optional(v.string()), // For anti-spam
     userAgent: v.optional(v.string()), // For analytics
@@ -883,7 +1081,11 @@ export default defineSchema({
   aiProviderKeys: defineTable({
     scope: v.union(v.literal("user"), v.literal("project")),
     scopeId: v.string(), // clerkId for user, projectId string for project
-    provider: v.union(v.literal("gemini"), v.literal("openai"), v.literal("anthropic")),
+    provider: v.union(
+      v.literal("gemini"),
+      v.literal("openai"),
+      v.literal("anthropic"),
+    ),
     encryptedApiKey: v.string(),
     displayName: v.optional(v.string()),
     defaultModel: v.optional(v.string()),
@@ -901,15 +1103,23 @@ export default defineSchema({
   projectAISettings: defineTable({
     projectId: v.id("projects"),
     activeKeyId: v.optional(v.id("aiProviderKeys")),
-    functionModelMap: v.optional(v.record(v.string(), v.object({
-      provider: v.union(v.literal("gemini"), v.literal("openai"), v.literal("anthropic")),
-      model: v.string(),
-    }))),
+    functionModelMap: v.optional(
+      v.record(
+        v.string(),
+        v.object({
+          provider: v.union(
+            v.literal("gemini"),
+            v.literal("openai"),
+            v.literal("anthropic"),
+          ),
+          model: v.string(),
+        }),
+      ),
+    ),
     aiEnabled: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),
-  })
-    .index("by_project", ["projectId"]),
+  }).index("by_project", ["projectId"]),
 
   // AI Credits and BYOK System
   userAICredits: defineTable({
@@ -932,7 +1142,7 @@ export default defineSchema({
     subscriptionTier: v.union(
       v.literal("free"),
       v.literal("pro"),
-      v.literal("enterprise")
+      v.literal("enterprise"),
     ),
 
     // Usage metrics
@@ -942,8 +1152,7 @@ export default defineSchema({
 
     createdAt: v.string(),
     updatedAt: v.string(),
-  })
-    .index("by_user", ["userId"]),
+  }).index("by_user", ["userId"]),
 
   // AI usage logs for tracking and billing
   aiUsageLogs: defineTable({
@@ -963,7 +1172,7 @@ export default defineSchema({
     keyType: v.union(
       v.literal("platform"), // Our key
       v.literal("user"), // User's BYOK
-      v.literal("free") // Free tier
+      v.literal("free"), // Free tier
     ),
 
     // Response info
@@ -997,8 +1206,7 @@ export default defineSchema({
 
     createdAt: v.string(),
     updatedAt: v.string(),
-  })
-    .index("by_tier", ["tier"]),
+  }).index("by_tier", ["tier"]),
 
   aiCredits: defineTable({
     userId: v.id("users"),
@@ -1008,8 +1216,7 @@ export default defineSchema({
     lastResetDate: v.string(), // Last date credits were reset
     createdAt: v.number(),
     updatedAt: v.number(),
-  })
-    .index("by_user", ["userId"]),
+  }).index("by_user", ["userId"]),
 
   // GitLab Integration Tables
   gitlabOAuthStates: defineTable({
@@ -1017,8 +1224,7 @@ export default defineSchema({
     userId: v.string(),
     createdAt: v.number(),
     expiresAt: v.number(),
-  })
-    .index("by_state", ["state"]),
+  }).index("by_state", ["state"]),
 
   gitlabIntegrations: defineTable({
     userId: v.string(),
@@ -1033,8 +1239,7 @@ export default defineSchema({
     gitlabAvatarUrl: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),
-  })
-    .index("by_user", ["userId"]),
+  }).index("by_user", ["userId"]),
 
   gitlabProjects: defineTable({
     userId: v.string(),
@@ -1094,7 +1299,11 @@ export default defineSchema({
     projectId: v.optional(v.id("projects")),
     channelId: v.string(),
     channelName: v.string(),
-    channelType: v.union(v.literal("project"), v.literal("general"), v.literal("alerts")),
+    channelType: v.union(
+      v.literal("project"),
+      v.literal("general"),
+      v.literal("alerts"),
+    ),
     syncEvents: v.array(v.string()),
     active: v.boolean(),
     createdAt: v.number(),
@@ -1188,11 +1397,13 @@ export default defineSchema({
     metadata: v.optional(v.any()),
     ipAddress: v.optional(v.string()),
     userAgent: v.optional(v.string()),
-    location: v.optional(v.object({
-      country: v.optional(v.string()),
-      city: v.optional(v.string()),
-      region: v.optional(v.string()),
-    })),
+    location: v.optional(
+      v.object({
+        country: v.optional(v.string()),
+        city: v.optional(v.string()),
+        region: v.optional(v.string()),
+      }),
+    ),
     timestamp: v.number(),
     sessionId: v.optional(v.string()),
   })
@@ -1205,7 +1416,11 @@ export default defineSchema({
   // Custom Fields
   customFieldDefinitions: defineTable({
     workspaceId: v.id("workspaces"),
-    entityType: v.union(v.literal("task"), v.literal("project"), v.literal("user")),
+    entityType: v.union(
+      v.literal("task"),
+      v.literal("project"),
+      v.literal("user"),
+    ),
     key: v.string(),
     label: v.string(),
     type: v.union(
@@ -1216,21 +1431,25 @@ export default defineSchema({
       v.literal("multiselect"),
       v.literal("boolean"),
       v.literal("url"),
-      v.literal("email")
+      v.literal("email"),
     ),
     options: v.optional(v.array(v.string())), // For select/multiselect
     required: v.boolean(),
     defaultValue: v.optional(v.any()),
-    validation: v.optional(v.object({
-      min: v.optional(v.number()),
-      max: v.optional(v.number()),
-      pattern: v.optional(v.string()),
-      message: v.optional(v.string()),
-    })),
-    permissions: v.optional(v.object({
-      view: v.array(v.string()), // Role IDs
-      edit: v.array(v.string()),
-    })),
+    validation: v.optional(
+      v.object({
+        min: v.optional(v.number()),
+        max: v.optional(v.number()),
+        pattern: v.optional(v.string()),
+        message: v.optional(v.string()),
+      }),
+    ),
+    permissions: v.optional(
+      v.object({
+        view: v.array(v.string()), // Role IDs
+        edit: v.array(v.string()),
+      }),
+    ),
     order: v.number(),
     active: v.boolean(),
     createdAt: v.number(),
@@ -1261,22 +1480,28 @@ export default defineSchema({
         v.literal("event"),
         v.literal("schedule"),
         v.literal("webhook"),
-        v.literal("manual")
+        v.literal("manual"),
       ),
       eventType: v.optional(v.string()),
       schedule: v.optional(v.string()), // Cron expression
       webhookUrl: v.optional(v.string()),
-      conditions: v.optional(v.array(v.object({
-        field: v.string(),
-        operator: v.string(),
-        value: v.any(),
-      }))),
+      conditions: v.optional(
+        v.array(
+          v.object({
+            field: v.string(),
+            operator: v.string(),
+            value: v.any(),
+          }),
+        ),
+      ),
     }),
-    actions: v.array(v.object({
-      type: v.string(),
-      config: v.any(),
-      order: v.number(),
-    })),
+    actions: v.array(
+      v.object({
+        type: v.string(),
+        config: v.any(),
+        order: v.number(),
+      }),
+    ),
     enabled: v.boolean(),
     lastRun: v.optional(v.number()),
     runCount: v.number(),
@@ -1294,17 +1519,19 @@ export default defineSchema({
       v.literal("pending"),
       v.literal("running"),
       v.literal("completed"),
-      v.literal("failed")
+      v.literal("failed"),
     ),
     triggeredBy: v.string(),
     triggerData: v.optional(v.any()),
-    executionLog: v.array(v.object({
-      timestamp: v.number(),
-      action: v.string(),
-      status: v.string(),
-      message: v.string(),
-      data: v.optional(v.any()),
-    })),
+    executionLog: v.array(
+      v.object({
+        timestamp: v.number(),
+        action: v.string(),
+        status: v.string(),
+        message: v.string(),
+        data: v.optional(v.any()),
+      }),
+    ),
     startedAt: v.number(),
     completedAt: v.optional(v.number()),
     error: v.optional(v.string()),
@@ -1323,18 +1550,20 @@ export default defineSchema({
       v.literal("private"),
       v.literal("direct"),
       v.literal("project"),
-      v.literal("sprint")
+      v.literal("sprint"),
     ),
     entityId: v.optional(v.string()), // For project/sprint channels
     members: v.array(v.id("users")),
     admins: v.array(v.id("users")),
-    settings: v.optional(v.object({
-      allowThreads: v.boolean(),
-      allowReactions: v.boolean(),
-      allowFiles: v.boolean(),
-      allowGuestAccess: v.boolean(),
-      autoArchiveAfterDays: v.optional(v.number()),
-    })),
+    settings: v.optional(
+      v.object({
+        allowThreads: v.boolean(),
+        allowReactions: v.boolean(),
+        allowFiles: v.boolean(),
+        allowGuestAccess: v.boolean(),
+        autoArchiveAfterDays: v.optional(v.number()),
+      }),
+    ),
     archived: v.boolean(),
     pinnedMessages: v.array(v.id("chatMessages")),
     lastActivityAt: v.number(),
@@ -1359,31 +1588,37 @@ export default defineSchema({
       v.literal("code"),
       v.literal("system"),
       v.literal("task"),
-      v.literal("meeting")
+      v.literal("meeting"),
     ),
-    metadata: v.optional(v.object({
-      fileName: v.optional(v.string()),
-      fileUrl: v.optional(v.string()),
-      fileSize: v.optional(v.number()),
-      mimeType: v.optional(v.string()),
-      codeLanguage: v.optional(v.string()),
-      taskId: v.optional(v.id("tasks")),
-      meetingId: v.optional(v.id("meetings")),
-      editedAt: v.optional(v.number()),
-      editedBy: v.optional(v.id("users")),
-    })),
+    metadata: v.optional(
+      v.object({
+        fileName: v.optional(v.string()),
+        fileUrl: v.optional(v.string()),
+        fileSize: v.optional(v.number()),
+        mimeType: v.optional(v.string()),
+        codeLanguage: v.optional(v.string()),
+        taskId: v.optional(v.id("tasks")),
+        meetingId: v.optional(v.id("meetings")),
+        editedAt: v.optional(v.number()),
+        editedBy: v.optional(v.id("users")),
+      }),
+    ),
     parentId: v.optional(v.id("chatMessages")), // For threads
     threadCount: v.number(),
-    reactions: v.array(v.object({
-      emoji: v.string(),
-      userId: v.id("users"),
-      createdAt: v.number(),
-    })),
+    reactions: v.array(
+      v.object({
+        emoji: v.string(),
+        userId: v.id("users"),
+        createdAt: v.number(),
+      }),
+    ),
     mentions: v.array(v.id("users")),
-    readBy: v.array(v.object({
-      userId: v.id("users"),
-      readAt: v.number(),
-    })),
+    readBy: v.array(
+      v.object({
+        userId: v.id("users"),
+        readAt: v.number(),
+      }),
+    ),
     deleted: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -1413,7 +1648,7 @@ export default defineSchema({
     notifyFor: v.union(
       v.literal("all"),
       v.literal("mentions"),
-      v.literal("none")
+      v.literal("none"),
     ),
   })
     .index("by_user", ["userId"])
@@ -1427,19 +1662,25 @@ export default defineSchema({
     type: v.union(
       v.literal("meeting"),
       v.literal("instant"),
-      v.literal("persistent")
+      v.literal("persistent"),
     ),
     meetingId: v.optional(v.id("meetings")),
     hostId: v.id("users"),
-    participants: v.array(v.object({
-      userId: v.id("users"),
-      joinedAt: v.number(),
-      leftAt: v.optional(v.number()),
-      role: v.union(v.literal("host"), v.literal("presenter"), v.literal("participant")),
-      audio: v.boolean(),
-      video: v.boolean(),
-      screen: v.boolean(),
-    })),
+    participants: v.array(
+      v.object({
+        userId: v.id("users"),
+        joinedAt: v.number(),
+        leftAt: v.optional(v.number()),
+        role: v.union(
+          v.literal("host"),
+          v.literal("presenter"),
+          v.literal("participant"),
+        ),
+        audio: v.boolean(),
+        video: v.boolean(),
+        screen: v.boolean(),
+      }),
+    ),
     settings: v.object({
       maxParticipants: v.number(),
       allowGuests: v.boolean(),
@@ -1454,7 +1695,7 @@ export default defineSchema({
     status: v.union(
       v.literal("scheduled"),
       v.literal("active"),
-      v.literal("ended")
+      v.literal("ended"),
     ),
     startedAt: v.optional(v.number()),
     endedAt: v.optional(v.number()),
@@ -1473,43 +1714,49 @@ export default defineSchema({
     projectId: v.optional(v.id("projects")),
     meetingId: v.optional(v.id("meetings")),
     thumbnail: v.optional(v.string()),
-    elements: v.array(v.object({
-      id: v.string(),
-      type: v.union(
-        v.literal("shape"),
-        v.literal("text"),
-        v.literal("line"),
-        v.literal("image"),
-        v.literal("sticky"),
-        v.literal("drawing"),
-        v.literal("arrow")
-      ),
-      data: v.any(), // Element-specific data
-      position: v.object({
-        x: v.number(),
-        y: v.number(),
+    elements: v.array(
+      v.object({
+        id: v.string(),
+        type: v.union(
+          v.literal("shape"),
+          v.literal("text"),
+          v.literal("line"),
+          v.literal("image"),
+          v.literal("sticky"),
+          v.literal("drawing"),
+          v.literal("arrow"),
+        ),
+        data: v.any(), // Element-specific data
+        position: v.object({
+          x: v.number(),
+          y: v.number(),
+        }),
+        size: v.object({
+          width: v.number(),
+          height: v.number(),
+        }),
+        rotation: v.number(),
+        style: v.any(),
+        locked: v.boolean(),
+        createdBy: v.id("users"),
+        updatedBy: v.id("users"),
+        createdAt: v.number(),
+        updatedAt: v.number(),
       }),
-      size: v.object({
-        width: v.number(),
-        height: v.number(),
+    ),
+    collaborators: v.array(
+      v.object({
+        userId: v.id("users"),
+        cursor: v.optional(
+          v.object({
+            x: v.number(),
+            y: v.number(),
+          }),
+        ),
+        color: v.string(),
+        lastActiveAt: v.number(),
       }),
-      rotation: v.number(),
-      style: v.any(),
-      locked: v.boolean(),
-      createdBy: v.id("users"),
-      updatedBy: v.id("users"),
-      createdAt: v.number(),
-      updatedAt: v.number(),
-    })),
-    collaborators: v.array(v.object({
-      userId: v.id("users"),
-      cursor: v.optional(v.object({
-        x: v.number(),
-        y: v.number(),
-      })),
-      color: v.string(),
-      lastActiveAt: v.number(),
-    })),
+    ),
     version: v.number(),
     locked: v.boolean(),
     public: v.boolean(),
@@ -1535,7 +1782,11 @@ export default defineSchema({
   // GitHub Rate Limiting
   githubRateLimits: defineTable({
     installationId: v.number(),
-    apiType: v.union(v.literal("core"), v.literal("search"), v.literal("graphql")),
+    apiType: v.union(
+      v.literal("core"),
+      v.literal("search"),
+      v.literal("graphql"),
+    ),
     remaining: v.number(),
     reset: v.number(), // Unix timestamp
     limit: v.number(),
@@ -1547,17 +1798,24 @@ export default defineSchema({
   // GitHub Operation Logs
   githubOperationLogs: defineTable({
     timestamp: v.number(),
-    level: v.union(v.literal("debug"), v.literal("info"), v.literal("warn"), v.literal("error")),
+    level: v.union(
+      v.literal("debug"),
+      v.literal("info"),
+      v.literal("warn"),
+      v.literal("error"),
+    ),
     operation: v.string(),
     installationId: v.optional(v.number()),
     workspaceId: v.optional(v.id("workspaces")),
     duration: v.optional(v.number()),
     rateLimitRemaining: v.optional(v.number()),
-    error: v.optional(v.object({
-      code: v.string(),
-      message: v.string(),
-      retryable: v.boolean(),
-    })),
+    error: v.optional(
+      v.object({
+        code: v.string(),
+        message: v.string(),
+        retryable: v.boolean(),
+      }),
+    ),
     metadata: v.optional(v.any()),
   })
     .index("by_timestamp", ["timestamp"])
@@ -1574,7 +1832,7 @@ export default defineSchema({
       v.literal("github"),
       v.literal("discord"),
       v.literal("jira"),
-      v.literal("internal")
+      v.literal("internal"),
     ),
     sourceChannelId: v.id("commsChannels"),
     sourceMessageId: v.optional(v.string()), // External message ID for dedup
@@ -1586,7 +1844,7 @@ export default defineSchema({
       v.literal("text"),
       v.literal("markdown"),
       v.literal("code"),
-      v.literal("system")
+      v.literal("system"),
     ),
     metadata: v.optional(v.any()), // Source-specific data (PR url, issue link, etc.)
     externalCreatedAt: v.optional(v.number()), // Original timestamp from source
@@ -1605,7 +1863,7 @@ export default defineSchema({
       v.literal("github"),
       v.literal("discord"),
       v.literal("jira"),
-      v.literal("internal")
+      v.literal("internal"),
     ),
     externalId: v.string(), // Channel/repo/issue ID from the source
     name: v.string(),
@@ -1615,7 +1873,7 @@ export default defineSchema({
       v.literal("issue"),
       v.literal("pr"),
       v.literal("direct"),
-      v.literal("thread")
+      v.literal("thread"),
     ),
     parentId: v.optional(v.string()), // Parent channel/repo ID
     parentName: v.optional(v.string()),
@@ -1643,12 +1901,12 @@ export default defineSchema({
       v.literal("github"),
       v.literal("discord"),
       v.literal("jira"),
-      v.literal("internal")
+      v.literal("internal"),
     ),
     status: v.union(
       v.literal("pending"),
       v.literal("sent"),
-      v.literal("failed")
+      v.literal("failed"),
     ),
     externalMessageId: v.optional(v.string()),
     error: v.optional(v.string()),
@@ -1679,7 +1937,11 @@ export default defineSchema({
     discordChannelId: v.string(),
     discordChannelName: v.string(),
     projectId: v.optional(v.id("projects")),
-    channelType: v.union(v.literal("text"), v.literal("voice"), v.literal("forum")),
+    channelType: v.union(
+      v.literal("text"),
+      v.literal("voice"),
+      v.literal("forum"),
+    ),
     syncEvents: v.array(v.string()),
     active: v.boolean(),
     createdAt: v.number(),
@@ -1715,7 +1977,7 @@ export default defineSchema({
     syncDirection: v.union(
       v.literal("to_ltf1"),
       v.literal("to_jira"),
-      v.literal("bidirectional")
+      v.literal("bidirectional"),
     ),
     syncTypes: v.array(v.string()), // e.g., ["issue", "comment", "status"]
     active: v.boolean(),
@@ -1733,7 +1995,11 @@ export default defineSchema({
     message: v.string(),
     page: v.string(),
     userAgent: v.optional(v.string()),
-    status: v.union(v.literal("new"), v.literal("reviewed"), v.literal("resolved")),
+    status: v.union(
+      v.literal("new"),
+      v.literal("reviewed"),
+      v.literal("resolved"),
+    ),
     createdAt: v.number(),
   })
     .index("by_status", ["status"])
