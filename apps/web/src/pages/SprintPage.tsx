@@ -16,6 +16,7 @@ import WorkspaceSelector from '@/components/common/WorkspaceSelector'
 import CreateSprintModal from '@/components/features/sprint/CreateSprintModal'
 import SprintBoard from '@/components/features/sprint/SprintBoard'
 import SprintPlanning from '@/components/features/sprint/SprintPlanning'
+import BurndownChart from '@/components/features/sprint/BurndownChart'
 import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
 import clsx from 'clsx'
 
@@ -268,6 +269,11 @@ export default function SprintPage() {
       {/* Current Sprint Info */}
       {currentSprint && (
         <CurrentSprintInfoCard sprint={currentSprint} />
+      )}
+
+      {/* Burndown Chart */}
+      {currentSprint && (
+        <BurndownChart sprintId={currentSprint._id} sprintName={currentSprint.name} />
       )}
 
       {/* View Toggle */}
