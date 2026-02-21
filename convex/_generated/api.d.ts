@@ -102,6 +102,7 @@ import type * as resources from "../resources.js";
 import type * as search from "../search.js";
 import type * as sprints_mutations from "../sprints/mutations.js";
 import type * as sprints_queries from "../sprints/queries.js";
+import type * as sprints_snapshots from "../sprints/snapshots.js";
 import type * as tasks_mutations from "../tasks/mutations.js";
 import type * as tasks_queries from "../tasks/queries.js";
 import type * as tasks_timeTracking from "../tasks/timeTracking.js";
@@ -211,6 +212,7 @@ declare const fullApi: ApiFromModules<{
   search: typeof search;
   "sprints/mutations": typeof sprints_mutations;
   "sprints/queries": typeof sprints_queries;
+  "sprints/snapshots": typeof sprints_snapshots;
   "tasks/mutations": typeof tasks_mutations;
   "tasks/queries": typeof tasks_queries;
   "tasks/timeTracking": typeof tasks_timeTracking;
