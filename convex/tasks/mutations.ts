@@ -686,3 +686,60 @@ export const stopTimeTracking = mutation({
     }
   }
 });
+
+export const bulkUpdateTasks = mutation({
+  args: {
+    taskIds: v.array(v.id("tasks")),
+    updates: v.object({
+      status: v.optional(v.string()),
+      priority: v.optional(v.string()),
+      assigneeIds: v.optional(v.array(v.id("users"))),
+      labels: v.optional(v.array(v.string())),
+      sprintId: v.optional(v.union(v.id("sprints"), v.null())),
+    }),
+  },
+  returns: v.object({ updatedCount: v.number() }),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error("Unauthorized")
+
+    // Filter out undefined fields from updates
+    const cleanUpdates: Record<string, unknown> = {}
+    if (args.updates.status !== undefined) cleanUpdates.status = args.updates.status
+    if (args.updates.priority !== undefined) cleanUpdates.priority = args.updates.priority
+    if (args.updates.assigneeIds !== undefined) cleanUpdates.assigneeIds = args.updates.assigneeIds
+    if (args.updates.labels !== undefined) cleanUpdates.labels = args.updates.labels
+    if (args.updates.sprintId !== undefined) cleanUpdates.sprintId = args.updates.sprintId
+
+    let updatedCount = 0
+    for (const taskId of args.taskIds) {
+      const task = await ctx.db.get(taskId)
+      if (!task) continue
+      await ctx.db.patch(taskId, cleanUpdates)
+      updatedCount++
+    }
+
+    return { updatedCount }
+  },
+})
+
+export const bulkDeleteTasks = mutation({
+  args: {
+    taskIds: v.array(v.id("tasks")),
+  },
+  returns: v.object({ deletedCount: v.number() }),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error("Unauthorized")
+
+    let deletedCount = 0
+    for (const taskId of args.taskIds) {
+      const task = await ctx.db.get(taskId)
+      if (!task) continue
+      await ctx.db.delete(taskId)
+      deletedCount++
+    }
+
+    return { deletedCount }
+  },
+})
