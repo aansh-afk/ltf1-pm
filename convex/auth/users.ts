@@ -94,6 +94,16 @@ export const ensureUserExists = internalMutation({
         email: v.boolean(),
         push: v.boolean(),
         slack: v.boolean(),
+        types: v.optional(v.object({
+          task_assigned: v.optional(v.boolean()),
+          task_unassigned: v.optional(v.boolean()),
+          task_comment: v.optional(v.boolean()),
+          task_mention: v.optional(v.boolean()),
+          sprint_started: v.optional(v.boolean()),
+          sprint_completed: v.optional(v.boolean()),
+          member_joined: v.optional(v.boolean()),
+          workspace_invitation: v.optional(v.boolean()),
+        })),
       })),
       defaultWorkspaceId: v.optional(v.id("workspaces")),
       accessibility: v.optional(v.object({
@@ -198,6 +208,16 @@ export const createCurrentUser = mutation({
         email: v.boolean(),
         push: v.boolean(),
         slack: v.boolean(),
+        types: v.optional(v.object({
+          task_assigned: v.optional(v.boolean()),
+          task_unassigned: v.optional(v.boolean()),
+          task_comment: v.optional(v.boolean()),
+          task_mention: v.optional(v.boolean()),
+          sprint_started: v.optional(v.boolean()),
+          sprint_completed: v.optional(v.boolean()),
+          member_joined: v.optional(v.boolean()),
+          workspace_invitation: v.optional(v.boolean()),
+        })),
       })),
       defaultWorkspaceId: v.optional(v.id("workspaces")),
       accessibility: v.optional(v.object({
@@ -283,6 +303,16 @@ export const updateUserPreferences = mutation({
         email: v.optional(v.boolean()),
         push: v.optional(v.boolean()),
         slack: v.optional(v.boolean()),
+        types: v.optional(v.object({
+          task_assigned: v.optional(v.boolean()),
+          task_unassigned: v.optional(v.boolean()),
+          task_comment: v.optional(v.boolean()),
+          task_mention: v.optional(v.boolean()),
+          sprint_started: v.optional(v.boolean()),
+          sprint_completed: v.optional(v.boolean()),
+          member_joined: v.optional(v.boolean()),
+          workspace_invitation: v.optional(v.boolean()),
+        })),
       })),
       defaultWorkspaceId: v.optional(v.id("workspaces")),
       accessibility: v.optional(v.object({
@@ -321,6 +351,7 @@ export const updateUserPreferences = mutation({
       email: args.preferences.notifications.email ?? user.preferences?.notifications?.email ?? true,
       push: args.preferences.notifications.push ?? user.preferences?.notifications?.push ?? true,
       slack: args.preferences.notifications.slack ?? user.preferences?.notifications?.slack ?? false,
+      types: { ...user.preferences?.notifications?.types, ...args.preferences.notifications?.types },
     } : user.preferences?.notifications;
 
     // Build the preferences object, excluding defaultWorkspaceId if it's undefined

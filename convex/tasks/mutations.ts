@@ -90,13 +90,12 @@ export const createTask = mutation({
     if (args.assigneeIds && args.assigneeIds.length > 0) {
       for (const assigneeId of args.assigneeIds) {
         if (assigneeId !== user._id) {
-          await ctx.db.insert("notifications", {
+          await ctx.scheduler.runAfter(0, internal.notifications.createNotification, {
             userId: assigneeId,
             workspaceId: project.workspaceId,
             type: "task_assigned",
             title: "New Task Assigned",
             body: `You've been assigned to "${args.title}"`,
-            isRead: false,
             actorId: user._id,
             entityId: taskId,
             entityType: "task",
@@ -342,13 +341,12 @@ export const updateTask = mutation({
       // Find users who are newly assigned
       for (const assigneeId of newAssignees) {
         if (!previousAssignees.has(assigneeId) && assigneeId !== user._id) {
-          await ctx.db.insert("notifications", {
+          await ctx.scheduler.runAfter(0, internal.notifications.createNotification, {
             userId: assigneeId,
             workspaceId: project.workspaceId,
             type: "task_assigned",
             title: "Task Assigned",
             body: `You've been assigned to "${task.title}"`,
-            isRead: false,
             actorId: user._id,
             entityId: args.taskId,
             entityType: "task",
@@ -379,13 +377,12 @@ export const updateTask = mutation({
       // Optionally notify users who were unassigned
       for (const assigneeId of previousAssignees) {
         if (!newAssignees.has(assigneeId) && assigneeId !== user._id) {
-          await ctx.db.insert("notifications", {
+          await ctx.scheduler.runAfter(0, internal.notifications.createNotification, {
             userId: assigneeId,
             workspaceId: project.workspaceId,
             type: "task_unassigned",
             title: "Task Unassigned",
             body: `You've been unassigned from "${task.title}"`,
-            isRead: false,
             actorId: user._id,
             entityId: args.taskId,
             entityType: "task",

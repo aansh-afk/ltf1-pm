@@ -251,6 +251,106 @@ function NotificationsTab({ preferences, setPreferences, onReset }: Notification
           </p>
         </div>
       </div>
+
+      <div className="space-y-4 p-4 border-2 border-[var(--theme-border)]">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)]/60 mb-2">Notification Types</h3>
+
+        <BrutalToggle
+          label="Task Assignments"
+          checked={preferences.notifications?.types?.task_assigned !== false}
+          onChange={(checked) => setPreferences(prev => ({
+            ...prev,
+            notifications: {
+              ...prev.notifications!,
+              types: { ...prev.notifications?.types, task_assigned: checked }
+            }
+          }))}
+        />
+
+        <BrutalToggle
+          label="Task Unassignment"
+          checked={preferences.notifications?.types?.task_unassigned !== false}
+          onChange={(checked) => setPreferences(prev => ({
+            ...prev,
+            notifications: {
+              ...prev.notifications!,
+              types: { ...prev.notifications?.types, task_unassigned: checked }
+            }
+          }))}
+        />
+
+        <BrutalToggle
+          label="Comments"
+          checked={preferences.notifications?.types?.task_comment !== false}
+          onChange={(checked) => setPreferences(prev => ({
+            ...prev,
+            notifications: {
+              ...prev.notifications!,
+              types: { ...prev.notifications?.types, task_comment: checked }
+            }
+          }))}
+        />
+
+        <BrutalToggle
+          label="Mentions"
+          checked={preferences.notifications?.types?.task_mention !== false}
+          onChange={(checked) => setPreferences(prev => ({
+            ...prev,
+            notifications: {
+              ...prev.notifications!,
+              types: { ...prev.notifications?.types, task_mention: checked }
+            }
+          }))}
+        />
+
+        <BrutalToggle
+          label="Sprint Started"
+          checked={preferences.notifications?.types?.sprint_started !== false}
+          onChange={(checked) => setPreferences(prev => ({
+            ...prev,
+            notifications: {
+              ...prev.notifications!,
+              types: { ...prev.notifications?.types, sprint_started: checked }
+            }
+          }))}
+        />
+
+        <BrutalToggle
+          label="Sprint Completed"
+          checked={preferences.notifications?.types?.sprint_completed !== false}
+          onChange={(checked) => setPreferences(prev => ({
+            ...prev,
+            notifications: {
+              ...prev.notifications!,
+              types: { ...prev.notifications?.types, sprint_completed: checked }
+            }
+          }))}
+        />
+
+        <BrutalToggle
+          label="New Members"
+          checked={preferences.notifications?.types?.member_joined !== false}
+          onChange={(checked) => setPreferences(prev => ({
+            ...prev,
+            notifications: {
+              ...prev.notifications!,
+              types: { ...prev.notifications?.types, member_joined: checked }
+            }
+          }))}
+        />
+
+        <BrutalToggle
+          label="Workspace Invitations"
+          checked={preferences.notifications?.types?.workspace_invitation !== false}
+          onChange={(checked) => setPreferences(prev => ({
+            ...prev,
+            notifications: {
+              ...prev.notifications!,
+              types: { ...prev.notifications?.types, workspace_invitation: checked }
+            }
+          }))}
+        />
+      </div>
     </div>
   )
 }
@@ -667,6 +767,16 @@ function SettingsPageContent({ currentUser }: SettingsPageContentProps) {
         email: true,
         push: true,
         slack: false,
+        types: {
+          task_assigned: true,
+          task_unassigned: true,
+          task_comment: true,
+          task_mention: true,
+          sprint_started: true,
+          sprint_completed: true,
+          member_joined: true,
+          workspace_invitation: true,
+        },
       }
     }
     setPreferencesWithoutSave(resetPrefs)

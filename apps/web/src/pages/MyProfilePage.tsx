@@ -232,8 +232,8 @@ export default function MyProfilePage() {
             {/* Identity Card */}
             <m.div variants={fadeUp}>
               <IdentityCard
-                userName={currentUser.name || 'UNKNOWN AGENT'}
-                role={developerProfile.profile?.role?.toUpperCase() || 'UNASSIGNED ROLE'}
+                userName={currentUser.name || 'Set your name'}
+                role={developerProfile.profile?.role?.toUpperCase() || 'Add your role in Edit Profile'}
                 userId={currentUser._id}
                 userIdRaw={currentUser._id}
               />
@@ -259,7 +259,7 @@ export default function MyProfilePage() {
                   <HiOutlineTerminal className="w-4 h-4" /> BIO
                 </h3>
                 <p className="font-mono text-xs leading-relaxed text-[var(--theme-foreground)]/70 whitespace-pre-wrap">
-                  {developerProfile.profile?.bio || '// NO BIOGRAPHICAL DATA AVAILABLE'}
+                  {developerProfile.profile?.bio || <span className="text-[#6B7280] italic">No bio yet. Click Edit Profile to add one.</span>}
                 </p>
               </BrutalCard>
             </m.div>
@@ -286,7 +286,7 @@ export default function MyProfilePage() {
                         </BrutalBadge>
                       ))
                     ) : (
-                      <span className="font-mono text-[10px] text-[var(--theme-foreground)]/30">// NO TECH STACK DEFINED</span>
+                      <span className="text-[#6B7280] italic text-[10px] font-mono">No tech stack defined yet.</span>
                     )}
                   </div>
                 </BrutalCard>
@@ -307,7 +307,7 @@ export default function MyProfilePage() {
                           </span>
                         ))}
                         {(!developerProfile.profile?.skills || developerProfile.profile.skills.length === 0) && (
-                          <span className="font-mono text-[10px] text-[var(--theme-foreground)]/30">// NONE</span>
+                          <span className="text-[#6B7280] italic text-[10px] font-mono">No skills listed yet.</span>
                         )}
                       </div>
                     </div>
@@ -320,7 +320,7 @@ export default function MyProfilePage() {
                           </span>
                         ))}
                         {(!developerProfile.profile?.interests || developerProfile.profile.interests.length === 0) && (
-                          <span className="font-mono text-[10px] text-[var(--theme-foreground)]/30">// NONE</span>
+                          <span className="text-[#6B7280] italic text-[10px] font-mono">No interests listed yet.</span>
                         )}
                       </div>
                     </div>
