@@ -33,7 +33,7 @@ export const getSlackIntegration = query({
     }
 
     // Return integration without the bot access token — token must stay server-side only
-    const { botAccessToken: _excluded, ...safeIntegration } = integration
+    const { botAccessToken: _bot, accessToken: _access, ...safeIntegration } = integration
     return safeIntegration
   },
 })
