@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 const NAV_LINKS = [
   { to: '/features', label: 'Features' },
   { to: '/pricing', label: 'Pricing' },
+  { to: '/changelog', label: 'Changelog' },
   { to: '/contact', label: 'Contact' },
 ]
 
