@@ -3,6 +3,7 @@ import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { m } from 'framer-motion'
 import { useProfileCompletion } from '../hooks/useProfileCompletion'
+import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
 import { Link } from 'react-router-dom'
 import { usePageTitle } from '../hooks/usePageTitle'
 import {
@@ -15,7 +16,6 @@ import {
   HiOutlineUser,
   HiOutlineTerminal,
   HiOutlineChevronRight,
-  HiOutlineServer
 } from 'react-icons/hi'
 import BrutalCard from '../components/ui/BrutalCard'
 import BrutalButton from '../components/ui/BrutalButton'
@@ -43,13 +43,19 @@ export default function Dashboard() {
   const workspaces = dashboardData?.workspaces ?? []
   const recentActivities = dashboardData?.recentActivities ?? []
   const { profileComplete, missingFields } = useProfileCompletion()
+  const { currentWorkspaceId } = useCurrentWorkspace()
+  const meetings = useQuery(
+    api.meetings.queries.getUserMeetings,
+    currentWorkspaceId ? { workspaceId: currentWorkspaceId } : 'skip'
+  )
 
   const stats = useMemo(() => {
     const totalProjects = workspaces.reduce((sum: number, ws: any) => sum + (ws.projectCount || 0), 0)
     const totalMembers = workspaces.reduce((sum: number, ws: any) => sum + (ws.memberCount || 0), 0)
-    const values = [workspaces.length.toString(), totalProjects.toString(), totalMembers.toString(), '0']
+    const meetingsCount = meetings?.length ?? 0
+    const values = [workspaces.length.toString(), totalProjects.toString(), totalMembers.toString(), meetingsCount.toString()]
     return STAT_ICONS.map((s, i) => ({ ...s, value: values[i] }))
-  }, [workspaces])
+  }, [workspaces, meetings])
 
   return (
     <div className="p-4 min-h-screen bg-[var(--theme-background)]">
@@ -244,53 +250,6 @@ export default function Dashboard() {
                     </Link>
                   </div>
                 )}
-              </div>
-            </BrutalCard>
-          </m.div>
-
-          {/* SYSTEM METRICS WIDGET */}
-          <m.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.35 }}
-          >
-            <BrutalCard variant="default" padding="sm">
-              <div className="flex items-center gap-2 mb-2 pb-2 border-b border-[var(--theme-border)]/50">
-                <HiOutlineServer className="w-4 h-4 text-[var(--theme-foreground)]/40" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)]">
-                  System Metrics
-                </h3>
-              </div>
-              <div className="space-y-3 font-mono text-xs">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-[var(--theme-foreground)]/50 uppercase text-[10px] tracking-wider">CPU Load</span>
-                    <span className="text-[var(--theme-success)] font-bold">12%</span>
-                  </div>
-                  <div className="w-full h-1 bg-[var(--theme-border)]/30">
-                    <div className="h-full bg-[var(--theme-success)] w-[12%]" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-[var(--theme-foreground)]/50 uppercase text-[10px] tracking-wider">Memory Usage</span>
-                    <span className="text-[var(--theme-warning)] font-bold">64%</span>
-                  </div>
-                  <div className="w-full h-1 bg-[var(--theme-border)]/30">
-                    <div className="h-full bg-[var(--theme-warning)] w-[64%]" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-[var(--theme-foreground)]/50 uppercase text-[10px] tracking-wider">Network Traffic</span>
-                    <span className="text-[var(--theme-info)] font-bold">1.2 GB/s</span>
-                  </div>
-                  <div className="w-full h-1 bg-[var(--theme-border)]/30">
-                    <div className="h-full bg-[var(--theme-info)] w-[45%]" />
-                  </div>
-                </div>
               </div>
             </BrutalCard>
           </m.div>
