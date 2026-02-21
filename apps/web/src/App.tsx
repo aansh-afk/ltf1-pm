@@ -12,7 +12,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
 import ErrorBoundary from "./components/common/ErrorBoundary";
-import BetaBanner from "./components/common/BetaBanner";
+
 import { OptionalConvexProvider } from "./providers/OptionalConvexProvider";
 import { PostHogProvider } from "./providers/PostHogProvider";
 import { ShortcutProvider } from "./contexts/ShortcutContext";
@@ -291,7 +291,6 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
 function App() {
   return (
     <ErrorBoundary>
-      <BetaBanner />
       <OptionalConvexProvider>
         <Router>
           <PageTransition />
