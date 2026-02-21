@@ -1726,4 +1726,19 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_score", ["score"])
     .index("by_created", ["createdAt"]),
+
+  sprintSnapshots: defineTable({
+    sprintId: v.id("sprints"),
+    projectId: v.id("projects"),
+    date: v.number(), // Unix timestamp (start of day UTC)
+    totalPoints: v.number(),
+    completedPoints: v.number(),
+    remainingPoints: v.number(),
+    totalTasks: v.number(),
+    completedTasks: v.number(),
+    remainingTasks: v.number(),
+  })
+    .index("by_sprint", ["sprintId"])
+    .index("by_sprint_and_date", ["sprintId", "date"])
+    .index("by_project", ["projectId"]),
 });
