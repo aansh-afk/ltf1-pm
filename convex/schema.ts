@@ -353,16 +353,27 @@ export default defineSchema({
 
   notifications: defineTable({
     userId: v.id("users"),
-    type: v.string(),
+    workspaceId: v.id("workspaces"),
+    type: v.union(
+      v.literal("task_assigned"),
+      v.literal("task_comment"),
+      v.literal("task_mention"),
+      v.literal("sprint_started"),
+      v.literal("sprint_completed"),
+      v.literal("member_joined"),
+      v.literal("pr_merged")
+    ),
     title: v.string(),
-    message: v.string(),
-    data: v.optional(v.any()),
-    read: v.boolean(),
-    readAt: v.optional(v.number()),
-    createdAt: v.number(),
+    body: v.string(),
+    link: v.optional(v.string()),
+    isRead: v.boolean(),
+    actorId: v.optional(v.id("users")),
+    entityId: v.optional(v.string()),
+    entityType: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
-    .index("by_user_read", ["userId", "read"]),
+    .index("by_user_and_workspace", ["userId", "workspaceId"])
+    .index("by_user_and_read", ["userId", "isRead"]),
 
   // GitHub OAuth
   githubOAuthStates: defineTable({
