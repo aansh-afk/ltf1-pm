@@ -170,7 +170,7 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
 
   return (
     <Suspense fallback={<BrutalistLoader />}>
-      <div className="min-h-screen bg-[var(--theme-background)] pt-8">
+      <div className="min-h-screen bg-[var(--theme-background)]">
         {/* Global Shortcut Components - only if authenticated */}
         {isAuthenticated && (
           <>
