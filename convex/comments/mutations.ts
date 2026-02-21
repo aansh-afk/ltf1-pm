@@ -68,13 +68,12 @@ export const createComment = mutation({
     const assigneeIds = task.assigneeIds || (task.assigneeId ? [task.assigneeId] : []);
     for (const assigneeId of assigneeIds) {
       if (assigneeId !== user._id) {
-        await ctx.db.insert("notifications", {
+        await ctx.scheduler.runAfter(0, internal.notifications.createNotification, {
           userId: assigneeId,
           workspaceId: project.workspaceId,
           type: "task_comment",
           title: "New Comment",
           body: `${user.name} commented on "${task.title}"`,
-          isRead: false,
           actorId: user._id,
           entityId: args.taskId,
           entityType: "task",
