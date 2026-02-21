@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { internalMutation, mutation, query } from "./_generated/server"
 import type { Doc, Id } from "./_generated/dataModel"
 
 // Audit event types
@@ -117,7 +117,7 @@ export interface AuditLogEntry {
 }
 
 // Create audit log entry
-export const createAuditLog = mutation({
+export const createAuditLog = internalMutation({
   args: {
     workspaceId: v.id("workspaces"),
     eventType: v.string(),
@@ -223,9 +223,21 @@ export const getAuditLogs = query({
     if (!identity) {
       throw new Error("Unauthorized")
     }
-    
-    // TODO: Check if user has permission to view audit logs
-    
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first()
+    if (!user) throw new Error("User not found")
+
+    const member = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_workspace_user", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", user._id)
+      )
+      .unique()
+    if (!member) throw new Error("Access denied: not a workspace member")
+
     let query = ctx.db
       .query("auditLogs")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
