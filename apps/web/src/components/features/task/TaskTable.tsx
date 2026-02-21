@@ -19,6 +19,8 @@ interface TaskTableProps {
   tasks: any[]
   projectId: string
   onTaskUpdate?: () => void
+  selectedIds?: Set<string>
+  onSelectionChange?: (ids: Set<string>) => void
 }
 
 const typeLabels: Record<string, string> = {
@@ -89,8 +91,13 @@ const columns: Column[] = [
   { key: 'actions', label: '', width: 'w-10' }
 ]
 
-const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: TaskTableProps) {
+const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate, selectedIds, onSelectionChange }: TaskTableProps) {
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set())
+
+  // Use external selection state if provided, otherwise fall back to internal state
+  const effectiveSelectedIds = selectedIds ?? selectedTasks
+  const effectiveOnSelectionChange = onSelectionChange ?? setSelectedTasks
+
   const [sortBy, setSortBy] = useState<string>('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -146,24 +153,22 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
   }, [tasks, sortBy, sortOrder])
 
   const handleSelectAll = useCallback(() => {
-    if (selectedTasks.size === tasks.length) {
-      setSelectedTasks(new Set())
+    if (effectiveSelectedIds.size === tasks.length) {
+      effectiveOnSelectionChange(new Set())
     } else {
-      setSelectedTasks(new Set(tasks.map(t => t._id)))
+      effectiveOnSelectionChange(new Set(tasks.map(t => t._id)))
     }
-  }, [selectedTasks.size, tasks])
+  }, [effectiveSelectedIds.size, tasks, effectiveOnSelectionChange])
 
   const handleSelectTask = useCallback((taskId: string) => {
-    setSelectedTasks(prev => {
-      const newSelected = new Set(prev)
-      if (newSelected.has(taskId)) {
-        newSelected.delete(taskId)
-      } else {
-        newSelected.add(taskId)
-      }
-      return newSelected
-    })
-  }, [])
+    const newSelected = new Set(effectiveSelectedIds)
+    if (newSelected.has(taskId)) {
+      newSelected.delete(taskId)
+    } else {
+      newSelected.add(taskId)
+    }
+    effectiveOnSelectionChange(newSelected)
+  }, [effectiveSelectedIds, effectiveOnSelectionChange])
 
   const handleStatusChange = useCallback(async (taskId: any, newStatus: any) => {
     try {
@@ -195,10 +200,10 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
   return (
     <div className="space-y-3">
       {/* Bulk Actions Bar */}
-      {selectedTasks.size > 0 && (
+      {effectiveSelectedIds.size > 0 && (
         <div className="bg-[#6366F1] border-2 border-[#2E2E35] px-3 py-2 flex items-center justify-between">
           <span className="font-mono text-xs text-[#050505] uppercase tracking-wider">
-            {selectedTasks.size} TASKS SELECTED
+            {effectiveSelectedIds.size} TASKS SELECTED
           </span>
           <div className="flex gap-2">
             <button className="px-2 py-1 text-[10px] font-mono uppercase bg-[#0A0A0A] text-[#6366F1] border-2 border-[#2E2E35] hover:border-[#6366F1] transition-colors">
@@ -233,7 +238,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                   >
                     {column.key === 'select' ? (
                       <BrutalCheckbox
-                        checked={selectedTasks.size === tasks.length && tasks.length > 0}
+                        checked={effectiveSelectedIds.size === tasks.length && tasks.length > 0}
                         onChange={handleSelectAll}
                         size="sm"
                       />
@@ -259,13 +264,17 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate }: Ta
                   <tr
                     className={clsx(
                       "border-b border-[#1F1F23] hover:bg-[#111111] transition-colors",
-                      expandedRow === task._id && "bg-[#111111]"
+                      expandedRow === task._id && "bg-[#111111]",
+                      effectiveSelectedIds.has(task._id) && "border-l-2 border-l-[#6366F1] bg-[#6366F1]/5"
                     )}
                   >
                     {/* Select */}
-                    <td className="px-3 py-2">
+                    <td
+                      className="px-3 py-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <BrutalCheckbox
-                        checked={selectedTasks.has(task._id)}
+                        checked={effectiveSelectedIds.has(task._id)}
                         onChange={() => handleSelectTask(task._id)}
                         size="sm"
                       />
