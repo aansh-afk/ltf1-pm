@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useReducer, useEffect } from 'react'
 import { useAction } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
@@ -271,42 +271,66 @@ function RisksSection({ risks, getSeverityColor }: RisksSectionProps) {
   )
 }
 
+interface FetchState {
+  insights: InsightsData | null
+  loading: boolean
+  error: string | null
+  lastRefresh: Date
+}
+
+type FetchAction =
+  | { type: 'FETCH_START' }
+  | { type: 'FETCH_SUCCESS'; data: InsightsData }
+  | { type: 'FETCH_ERROR'; error: string }
+
+function fetchReducer(state: FetchState, action: FetchAction): FetchState {
+  switch (action.type) {
+    case 'FETCH_START':
+      return { ...state, loading: true, error: null }
+    case 'FETCH_SUCCESS':
+      return { ...state, insights: action.data, lastRefresh: new Date(), loading: false }
+    case 'FETCH_ERROR':
+      return { ...state, error: action.error, loading: false }
+    default:
+      return state
+  }
+}
+
 export default function AIInsightsPanel({ projectId, sprintId, compact = false }: AIInsightsPanelProps) {
-  const [fetchState, setFetchState] = useState<{
-    insights: InsightsData | null
-    loading: boolean
-    error: string | null
-    lastRefresh: Date
-  }>({ insights: null, loading: false, error: null, lastRefresh: new Date() })
+  const [fetchState, dispatchFetch] = useReducer(fetchReducer, {
+    insights: null,
+    loading: false,
+    error: null,
+    lastRefresh: new Date(),
+  })
 
   const { insights, loading, error, lastRefresh } = fetchState
 
   const generateInsights = useAction(api.ai.projectInsights.generateProjectInsights)
 
   const fetchInsights = async () => {
-    setFetchState(prev => ({ ...prev, loading: true, error: null }))
+    dispatchFetch({ type: 'FETCH_START' })
     try {
       const data = await generateInsights({ projectId, sprintId })
-      setFetchState(prev => ({ ...prev, insights: data as InsightsData, lastRefresh: new Date(), loading: false }))
+      dispatchFetch({ type: 'FETCH_SUCCESS', data: data as InsightsData })
     } catch (err) {
-      setFetchState(prev => ({ ...prev, error: err instanceof Error ? err.message : 'Failed to generate insights', loading: false }))
+      dispatchFetch({ type: 'FETCH_ERROR', error: err instanceof Error ? err.message : 'Failed to generate insights' })
       console.error('Failed to generate insights:', err)
     }
   }
 
-  // Already uses combined state object pattern; setFetchState calls are in different async contexts
   useEffect(() => {
     let cancelled = false
     const load = async () => {
-      setFetchState(prev => ({ ...prev, loading: true, error: null }))
+      dispatchFetch({ type: 'FETCH_START' })
       try {
         const data = await generateInsights({ projectId, sprintId })
         if (!cancelled) {
-          setFetchState(prev => ({ ...prev, insights: data as InsightsData, lastRefresh: new Date(), loading: false }))
+          dispatchFetch({ type: 'FETCH_SUCCESS', data: data as InsightsData })
         }
       } catch (err) {
         if (!cancelled) {
-          setFetchState(prev => ({ ...prev, error: err instanceof Error ? err.message : 'Failed to generate insights', loading: false }))
+          dispatchFetch({ type: 'FETCH_ERROR', error: err instanceof Error ? err.message : 'Failed to generate insights' })
           console.error('Failed to generate insights:', err)
         }
       }

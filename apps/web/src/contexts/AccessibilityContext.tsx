@@ -44,6 +44,20 @@ const defaultSettings: AccessibilitySettings = {
   focusVisibility: 'normal'
 }
 
+type SetSettingsFn = React.Dispatch<React.SetStateAction<AccessibilitySettings>>
+
+function attachMotionListener(setSettings: SetSettingsFn, mq: MediaQueryList): () => void {
+  const handler = (e: MediaQueryListEvent) => { setSettings(prev => ({ ...prev, reducedMotion: e.matches })) }
+  mq.addEventListener('change', handler)
+  return () => mq.removeEventListener('change', handler)
+}
+
+function attachContrastListener(setSettings: SetSettingsFn, mq: MediaQueryList): () => void {
+  const handler = (e: MediaQueryListEvent) => { setSettings(prev => ({ ...prev, highContrastMode: e.matches })) }
+  mq.addEventListener('change', handler)
+  return () => mq.removeEventListener('change', handler)
+}
+
 const AccessibilityContext = createContext<AccessibilityContextType | null>(null)
 
 interface AccessibilityProviderProps {
@@ -66,55 +80,39 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
     localStorage.setItem('accessibility-settings', JSON.stringify(settings))
   }, [settings])
 
-  // Legitimate useEffect: one-time initialization with system preference detection and media query subscriptions
+  // One-time initialization: detect system preferences and subscribe to media query changes
   useEffect(() => {
     initializeAccessibilityMode()
     initializeMotionPreferences()
     initializeKeyboardNavigation()
 
-    // Detect system preferences
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const prefersHighContrast = window.matchMedia('(prefers-contrast: high)').matches
-
-    if (prefersReducedMotion || prefersHighContrast) {
-      setSettings(prev => ({
-        ...prev,
-        reducedMotion: prefersReducedMotion,
-        highContrastMode: prefersHighContrast
-      }))
-    }
-
-    // Apply saved settings
-    if (settings.highContrastMode) {
-      document.documentElement.setAttribute('data-accessibility', 'high-contrast')
-    }
-
-    if (settings.enhancedFocus) {
-      enhanceFocusVisibility()
-    }
-
-    if (settings.fontSize !== 'normal') {
-      document.documentElement.setAttribute('data-font-size', settings.fontSize)
-    }
-
-    // Listen for system preference changes
     const motionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     const contrastMediaQuery = window.matchMedia('(prefers-contrast: high)')
-    
-    const handleMotionChange = (e: MediaQueryListEvent) => {
-      setSettings(prev => ({ ...prev, reducedMotion: e.matches }))
-    }
-    
-    const handleContrastChange = (e: MediaQueryListEvent) => {
-      setSettings(prev => ({ ...prev, highContrastMode: e.matches }))
-    }
 
-    motionMediaQuery.addEventListener('change', handleMotionChange)
-    contrastMediaQuery.addEventListener('change', handleContrastChange)
+    setSettings(prev => {
+      const updated = {
+        ...prev,
+        reducedMotion: motionMediaQuery.matches || prev.reducedMotion,
+        highContrastMode: contrastMediaQuery.matches || prev.highContrastMode
+      }
+      if (updated.highContrastMode) {
+        document.documentElement.setAttribute('data-accessibility', 'high-contrast')
+      }
+      if (updated.enhancedFocus) {
+        enhanceFocusVisibility()
+      }
+      if (updated.fontSize !== 'normal') {
+        document.documentElement.setAttribute('data-font-size', updated.fontSize)
+      }
+      return updated
+    })
+
+    const cleanupMotion = attachMotionListener(setSettings, motionMediaQuery)
+    const cleanupContrast = attachContrastListener(setSettings, contrastMediaQuery)
 
     return () => {
-      motionMediaQuery.removeEventListener('change', handleMotionChange)
-      contrastMediaQuery.removeEventListener('change', handleContrastChange)
+      cleanupMotion()
+      cleanupContrast()
     }
   }, [])
 

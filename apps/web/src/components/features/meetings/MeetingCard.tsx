@@ -1,325 +1,363 @@
-import { useState } from 'react'
-import { useMutation } from 'convex/react'
-import { api } from '../../../../../../convex/_generated/api'
+import { useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../../../../../convex/_generated/api";
 import {
   HiOutlineVideoCamera,
   HiOutlineLocationMarker,
-  HiOutlineClock,
-  HiOutlineCalendar,
   HiOutlineUsers,
-  HiOutlineCheck,
-  HiOutlineX,
-  HiOutlineExclamationCircle,
   HiOutlineDotsVertical,
   HiOutlinePlay,
   HiOutlineDocument,
-  HiOutlineLink
-} from 'react-icons/hi'
-import { formatDistanceToNow, format } from 'date-fns'
-import clsx from 'clsx'
-import toast from 'react-hot-toast'
-import BrutalCard from '@/components/ui/BrutalCard'
-import BrutalButton from '@/components/ui/BrutalButton'
-import BrutalBadge from '@/components/ui/BrutalBadge'
+  HiOutlinePencil,
+  HiOutlineLightningBolt,
+  HiOutlineRefresh,
+  HiOutlineClipboardList,
+  HiOutlineUserGroup,
+} from "react-icons/hi";
+import { formatDistanceToNow, format } from "date-fns";
+import clsx from "clsx";
+import toast from "react-hot-toast";
 
 interface MeetingCardProps {
-  meeting: any
-  currentUserId?: string
-  onEdit?: (meeting: any) => void
-  onViewNotes?: (meeting: any) => void
+  meeting: any;
+  currentUserId?: string;
+  onEdit?: (meeting: any) => void;
+  onViewNotes?: (meeting: any) => void;
 }
 
 const meetingTypeConfig = {
-  standup: { icon: '🏃', color: 'bg-brutal-info', label: 'STANDUP' },
-  retrospective: { icon: '🔄', color: 'bg-brutal-warning', label: 'RETROSPECTIVE' },
-  planning: { icon: '📋', color: 'bg-primary-brutalist', label: 'PLANNING' },
-  review: { icon: '👥', color: 'bg-brutal-success', label: 'REVIEW' },
-  custom: { icon: '⚙️', color: 'bg-neutral-600', label: 'CUSTOM' },
-}
+  standup: {
+    icon: HiOutlineLightningBolt,
+    label: "STANDUP",
+    color: "var(--theme-info)",
+  },
+  retrospective: {
+    icon: HiOutlineRefresh,
+    label: "RETROSPECTIVE",
+    color: "var(--theme-warning)",
+  },
+  planning: {
+    icon: HiOutlineClipboardList,
+    label: "PLANNING",
+    color: "var(--theme-primary)",
+  },
+  review: {
+    icon: HiOutlineUserGroup,
+    label: "REVIEW",
+    color: "var(--theme-success)",
+  },
+  custom: {
+    icon: HiOutlineCog,
+    label: "CUSTOM",
+    color: "var(--theme-foreground)",
+  },
+};
 
 export default function MeetingCard({
   meeting,
   currentUserId,
   onEdit,
-  onViewNotes
+  onViewNotes,
 }: MeetingCardProps) {
-  const [showMenu, setShowMenu] = useState(false)
-  const [isResponding, setIsResponding] = useState(false)
+  const [showMenu, setShowMenu] = useState(false);
+  const [isResponding, setIsResponding] = useState(false);
 
-  const respondToMeeting = useMutation(api.meetings.mutations.respondToMeeting)
+  const respondToMeeting = useMutation(api.meetings.mutations.respondToMeeting);
 
-  const typeConfig = meetingTypeConfig[meeting.type as keyof typeof meetingTypeConfig] || meetingTypeConfig.custom
-  const isOrganizer = currentUserId === meeting.organizerId
-  const currentUserAttendee = meeting.attendees?.find((a: any) => a.userId === currentUserId)
-  const userResponse = currentUserAttendee?.status || 'pending'
+  const typeConfig =
+    meetingTypeConfig[meeting.type as keyof typeof meetingTypeConfig] ||
+    meetingTypeConfig.custom;
+  const TypeIcon = typeConfig.icon;
+  const isOrganizer = currentUserId === meeting.organizerId;
+  const userAttendee = meeting.attendees?.find(
+    (a: any) => a.userId === currentUserId,
+  );
+  const userResponse = userAttendee?.status || "pending";
 
-  const now = Date.now()
-  const isUpcoming = meeting.startTime > now
-  const isHappening = meeting.startTime <= now && meeting.endTime > now
+  const now = Date.now();
+  const isUpcoming = meeting.startTime > now;
+  const isHappening = meeting.startTime <= now && meeting.endTime > now;
 
-  const handleResponse = async (status: 'accepted' | 'declined' | 'tentative') => {
-    if (!currentUserId) return
+  const acceptedCount =
+    meeting.attendees?.filter((a: any) => a.status === "accepted").length || 0;
+  const totalAttendees = meeting.attendees?.length || 0;
 
-    setIsResponding(true)
+  const handleResponse = async (
+    status: "accepted" | "declined" | "tentative",
+  ) => {
+    if (!currentUserId) return;
+    setIsResponding(true);
     try {
-      await respondToMeeting({
-        meetingId: meeting._id,
-        status,
-      })
-      toast.success(`Meeting ${status}`)
+      await respondToMeeting({ meetingId: meeting._id, status });
+      toast.success(`Meeting ${status}`);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to respond to meeting')
+      toast.error(error.message || "Failed to respond");
     } finally {
-      setIsResponding(false)
+      setIsResponding(false);
     }
-  }
+  };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'accepted': return 'text-brutal-success'
-      case 'declined': return 'text-brutal-error'
-      case 'tentative': return 'text-brutal-warning'
-      default: return 'text-[var(--theme-foreground)]/60'
-    }
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'accepted': return <HiOutlineCheck className="w-3 h-3" />
-      case 'declined': return <HiOutlineX className="w-3 h-3" />
-      case 'tentative': return <HiOutlineExclamationCircle className="w-3 h-3" />
-      default: return <HiOutlineClock className="w-3 h-3" />
-    }
-  }
-
-  const acceptedCount = meeting.attendees?.filter((a: any) => a.status === 'accepted').length || 0
-  const totalAttendees = meeting.attendees?.length || 0
+  const rsvpColor = (status: string) => {
+    if (status === "accepted") return "var(--theme-success)";
+    if (status === "declined") return "var(--theme-error)";
+    if (status === "tentative") return "var(--theme-warning)";
+    return "var(--theme-border)";
+  };
 
   return (
-    <BrutalCard
-      variant={isHappening ? 'neon' : 'default'}
+    <div
       className={clsx(
-        "p-4 transition-all hover:border-[var(--theme-primary)]",
-        isHappening && "border-brutal-success"
+        "flex border-2 transition-colors hover:border-[var(--theme-primary)]/50 bg-[var(--theme-background)]",
+        isHappening
+          ? "border-[var(--theme-success)]"
+          : "border-[var(--theme-border)]",
       )}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <div className={clsx(
-            "w-8 h-8 flex items-center justify-center text-event-horizon text-lg border-2 border-event-horizon",
-            typeConfig.color
-          )}>
-            {typeConfig.icon}
-          </div>
-          <div>
-            <h3 className="font-mono text-sm font-bold uppercase">{meeting.title}</h3>
-            <div className="flex items-center gap-2 text-[10px] font-mono text-[var(--theme-foreground)]/60">
-              <span className="uppercase">{typeConfig.label}</span>
-              {meeting.projectId && (
-                <>
-                  <span>•</span>
-                  <span>PROJECT MEETING</span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {isHappening && (
-            <div className="flex items-center gap-1 text-brutal-success text-[10px] font-bold uppercase animate-pulse">
-              <div className="w-2 h-2 bg-brutal-success"></div>
+      {/* ── Left: date/time column ── */}
+      <div
+        className="w-[100px] shrink-0 flex flex-col items-center justify-center px-3 py-4 border-r-2 border-[var(--theme-border)] text-center"
+        style={{ borderLeft: `3px solid ${typeConfig.color}` }}
+      >
+        {isHappening ? (
+          <div className="flex items-center gap-1 mb-1">
+            <span
+              className="w-1.5 h-1.5 animate-pulse"
+              style={{ backgroundColor: "var(--theme-success)" }}
+            />
+            <span
+              className="font-mono text-[9px] font-bold uppercase"
+              style={{ color: "var(--theme-success)" }}
+            >
               LIVE
-            </div>
-          )}
+            </span>
+          </div>
+        ) : (
+          <div className="font-mono text-[9px] text-[var(--theme-foreground)]/40 uppercase mb-1">
+            {isUpcoming
+              ? formatDistanceToNow(new Date(meeting.startTime), {
+                  addSuffix: false,
+                }).toUpperCase()
+              : "PAST"}
+          </div>
+        )}
+        <div className="font-mono text-lg font-bold leading-none text-[var(--theme-foreground)]">
+          {format(new Date(meeting.startTime), "d")}
+        </div>
+        <div className="font-mono text-[9px] uppercase text-[var(--theme-foreground)]/50 mb-2">
+          {format(new Date(meeting.startTime), "MMM")}
+        </div>
+        <div className="font-mono text-[10px] text-[var(--theme-foreground)]/60">
+          {format(new Date(meeting.startTime), "h:mm")}
+          <span className="text-[8px]">
+            {format(new Date(meeting.startTime), "a")}
+          </span>
+        </div>
+        <div className="font-mono text-[9px] text-[var(--theme-foreground)]/30">
+          {format(new Date(meeting.endTime), "h:mm")}
+          <span className="text-[8px]">
+            {format(new Date(meeting.endTime), "a")}
+          </span>
+        </div>
+      </div>
 
-          <div className="relative">
+      {/* ── Right: details ── */}
+      <div className="flex-1 min-w-0 px-4 py-3">
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <TypeIcon
+              className="w-3.5 h-3.5 shrink-0"
+              style={{ color: typeConfig.color }}
+            />
+            <h3 className="font-mono text-sm font-bold uppercase truncate text-[var(--theme-foreground)]">
+              {meeting.title}
+            </h3>
+            <span
+              className="shrink-0 px-1.5 py-0.5 border font-mono text-[9px] font-bold uppercase"
+              style={{
+                color: typeConfig.color,
+                borderColor: `color-mix(in srgb, ${typeConfig.color} 30%, transparent)`,
+                backgroundColor: `color-mix(in srgb, ${typeConfig.color} 8%, transparent)`,
+              }}
+            >
+              {typeConfig.label}
+            </span>
+          </div>
+
+          {/* Kebab menu */}
+          <div className="relative shrink-0">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-1 hover:bg-[var(--theme-background-secondary)] transition-colors border border-transparent hover:border-[var(--theme-border)]"
+              className="p-1 text-[var(--theme-foreground)]/30 hover:text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)] border border-transparent hover:border-[var(--theme-border)] transition-colors"
             >
-              <HiOutlineDotsVertical className="w-4 h-4" />
+              <HiOutlineDotsVertical className="w-3.5 h-3.5" />
             </button>
-
             {showMenu && (
-              <div className="absolute right-0 top-full mt-1 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-brutal-md z-10 min-w-[160px]">
+              <div className="absolute right-0 top-full mt-0.5 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] z-20 min-w-[140px]">
                 {meeting.meetingUrl && (
                   <button
-                    onClick={() => window.open(meeting.meetingUrl, '_blank')}
-                    className="w-full px-3 py-2 text-left font-mono text-xs uppercase hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] flex items-center gap-2"
+                    onClick={() => window.open(meeting.meetingUrl, "_blank")}
+                    className="w-full px-3 py-1.5 text-left font-mono text-[10px] uppercase hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] flex items-center gap-2 transition-colors"
                   >
-                    <HiOutlinePlay className="w-3 h-3" />
-                    JOIN MEETING
+                    <HiOutlinePlay className="w-3 h-3" /> JOIN
                   </button>
                 )}
-
                 {onViewNotes && (
                   <button
-                    onClick={() => onViewNotes(meeting)}
-                    className="w-full px-3 py-2 text-left font-mono text-xs uppercase hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] flex items-center gap-2"
+                    onClick={() => {
+                      onViewNotes(meeting);
+                      setShowMenu(false);
+                    }}
+                    className="w-full px-3 py-1.5 text-left font-mono text-[10px] uppercase hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] flex items-center gap-2 transition-colors"
                   >
-                    <HiOutlineDocument className="w-3 h-3" />
-                    VIEW NOTES
+                    <HiOutlineDocument className="w-3 h-3" /> NOTES
                   </button>
                 )}
-
                 {isOrganizer && onEdit && (
                   <button
-                    onClick={() => onEdit(meeting)}
-                    className="w-full px-3 py-2 text-left font-mono text-xs uppercase hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] flex items-center gap-2"
+                    onClick={() => {
+                      onEdit(meeting);
+                      setShowMenu(false);
+                    }}
+                    className="w-full px-3 py-1.5 text-left font-mono text-[10px] uppercase hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] flex items-center gap-2 transition-colors"
                   >
-                    <HiOutlineLink className="w-3 h-3" />
-                    EDIT MEETING
+                    <HiOutlinePencil className="w-3 h-3" /> EDIT
                   </button>
                 )}
               </div>
             )}
           </div>
         </div>
-      </div>
 
-      {/* Description */}
-      {meeting.description && (
-        <p className="text-xs font-mono text-[var(--theme-foreground)]/80 mb-3 pl-3 border-l-2 border-[var(--theme-border)]">{meeting.description}</p>
-      )}
+        {/* Description */}
+        {meeting.description && (
+          <p className="font-mono text-[10px] text-[var(--theme-foreground)]/60 mb-2 border-l-2 border-[var(--theme-border)] pl-2">
+            {meeting.description}
+          </p>
+        )}
 
-      {/* Time & Location */}
-      <div className="space-y-2 mb-4">
-        <div className="flex items-center gap-2 text-xs font-mono">
-          <HiOutlineCalendar className="w-4 h-4 text-[var(--theme-primary)]" />
-          <span>
-            {format(new Date(meeting.startTime), 'MMM d, yyyy')}
+        {/* Meta row: location, video, attendees */}
+        <div className="flex items-center gap-4 flex-wrap mb-2">
+          {meeting.location && (
+            <span className="flex items-center gap-1 font-mono text-[10px] text-[var(--theme-foreground)]/50">
+              <HiOutlineLocationMarker className="w-3 h-3" />
+              {meeting.location}
+            </span>
+          )}
+          {meeting.meetingUrl && (
+            <span className="flex items-center gap-1 font-mono text-[10px] text-[var(--theme-foreground)]/50">
+              <HiOutlineVideoCamera className="w-3 h-3" />
+              VIDEO CALL
+            </span>
+          )}
+          <span className="flex items-center gap-1 font-mono text-[10px] text-[var(--theme-foreground)]/50">
+            <HiOutlineUsers className="w-3 h-3" />
+            {acceptedCount}/{totalAttendees} ACCEPTED
           </span>
-          <HiOutlineClock className="w-4 h-4 text-[var(--theme-primary)]" />
-          <span>
-            {format(new Date(meeting.startTime), 'h:mm a')} - {format(new Date(meeting.endTime), 'h:mm a')}
-          </span>
-          {isUpcoming && (
-            <span className="text-[var(--theme-foreground)]/60">
-              ({formatDistanceToNow(new Date(meeting.startTime), { addSuffix: true })})
+          {isOrganizer && (
+            <span className="font-mono text-[9px] px-1.5 py-0.5 border border-[var(--theme-border)] text-[var(--theme-foreground)]/40 uppercase">
+              ORGANIZER
             </span>
           )}
         </div>
 
-        {(meeting.location || meeting.meetingUrl) && (
-          <div className="flex items-center gap-2 text-xs font-mono">
-            {meeting.location && (
-              <>
-                <HiOutlineLocationMarker className="w-4 h-4 text-[var(--theme-primary)]" />
-                <span>{meeting.location}</span>
-              </>
-            )}
-            {meeting.meetingUrl && (
-              <>
-                {meeting.location && <span>•</span>}
-                <HiOutlineVideoCamera className="w-4 h-4 text-[var(--theme-primary)]" />
-                <span>VIDEO CALL</span>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Attendees */}
-      <div className="flex items-center justify-between pt-3 border-t-2 border-[var(--theme-border)]">
-        <div className="flex items-center gap-2">
-          <HiOutlineUsers className="w-4 h-4 text-[var(--theme-primary)]" />
-          <div className="flex items-center gap-1">
-            {meeting.attendees?.slice(0, 5).map((attendee: any) => (
+        {/* Attendee dots */}
+        {meeting.attendees && meeting.attendees.length > 0 && (
+          <div className="flex items-center gap-0.5 mb-3">
+            {meeting.attendees.slice(0, 8).map((attendee: any) => (
               <div
                 key={attendee.userId}
-                className={clsx(
-                  "w-6 h-6 border-2 flex items-center justify-center",
-                  getStatusColor(attendee.status)
-                )}
-                title={`${attendee.user?.name || 'Unknown'} - ${attendee.status}`}
+                className="w-5 h-5 border-2 flex items-center justify-center font-mono text-[8px] font-bold overflow-hidden"
+                style={{ borderColor: rsvpColor(attendee.status) }}
+                title={`${attendee.user?.name || "Unknown"} — ${attendee.status}`}
               >
                 {attendee.user?.avatarUrl ? (
                   <img
                     src={attendee.user.avatarUrl}
-                    alt={attendee.user.name}
+                    alt=""
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-[10px] font-bold">
-                    {attendee.user?.name?.charAt(0) || '?'}
+                  <span style={{ color: rsvpColor(attendee.status) }}>
+                    {attendee.user?.name?.charAt(0) || "?"}
                   </span>
                 )}
               </div>
             ))}
-            {totalAttendees > 5 && (
-              <div className="w-6 h-6 border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] flex items-center justify-center">
-                <span className="text-[10px] font-bold">+{totalAttendees - 5}</span>
-              </div>
+            {totalAttendees > 8 && (
+              <span className="font-mono text-[9px] text-[var(--theme-foreground)]/40 ml-1">
+                +{totalAttendees - 8}
+              </span>
             )}
           </div>
-          <span className="text-[10px] font-mono text-[var(--theme-foreground)]/60">
-            {acceptedCount}/{totalAttendees} ACCEPTED
-          </span>
-        </div>
+        )}
 
-        {/* User Response */}
+        {/* RSVP buttons (non-organizers, upcoming) */}
         {currentUserId && !isOrganizer && isUpcoming && (
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono text-[var(--theme-foreground)]/60 hidden sm:inline">YOUR RESPONSE:</span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => handleResponse('accepted')}
-                disabled={isResponding}
-                className={clsx(
-                  "px-2 py-1 text-[10px] font-mono font-bold uppercase transition-colors border-2",
-                  userResponse === 'accepted'
-                    ? 'bg-brutal-success text-white border-brutal-success'
-                    : 'bg-[var(--theme-background)] border-[var(--theme-border)] hover:border-brutal-success'
-                )}
-              >
-                YES
-              </button>
-              <button
-                onClick={() => handleResponse('tentative')}
-                disabled={isResponding}
-                className={clsx(
-                  "px-2 py-1 text-[10px] font-mono font-bold uppercase transition-colors border-2",
-                  userResponse === 'tentative'
-                    ? 'bg-brutal-warning text-white border-brutal-warning'
-                    : 'bg-[var(--theme-background)] border-[var(--theme-border)] hover:border-brutal-warning'
-                )}
-              >
-                MAYBE
-              </button>
-              <button
-                onClick={() => handleResponse('declined')}
-                disabled={isResponding}
-                className={clsx(
-                  "px-2 py-1 text-[10px] font-mono font-bold uppercase transition-colors border-2",
-                  userResponse === 'declined'
-                    ? 'bg-brutal-error text-white border-brutal-error'
-                    : 'bg-[var(--theme-background)] border-[var(--theme-border)] hover:border-brutal-error'
-                )}
-              >
-                NO
-              </button>
-            </div>
-          </div>
-        )}
+            <span className="font-mono text-[9px] uppercase text-[var(--theme-foreground)]/30 mr-1">
+              RSVP:
+            </span>
+            {(["accepted", "tentative", "declined"] as const).map((status) => {
+              const labels = {
+                accepted: "YES",
+                tentative: "MAYBE",
+                declined: "NO",
+              };
+              const active = userResponse === status;
+              return (
+                <button
+                  key={status}
+                  onClick={() => handleResponse(status)}
+                  disabled={isResponding}
+                  className="px-2 py-0.5 border-2 font-mono text-[10px] font-bold uppercase transition-colors cursor-pointer disabled:opacity-50"
+                  style={{
+                    borderColor: active
+                      ? rsvpColor(status)
+                      : "var(--theme-border)",
+                    color: active
+                      ? rsvpColor(status)
+                      : "var(--theme-foreground)",
+                    backgroundColor: active
+                      ? `color-mix(in srgb, ${rsvpColor(status)} 10%, transparent)`
+                      : "transparent",
+                  }}
+                >
+                  {labels[status]}
+                </button>
+              );
+            })}
 
-        {/* Meeting Status for Organizer */}
-        {isOrganizer && (
-          <div className="flex items-center gap-2 text-xs font-mono">
-            <span className="text-[var(--theme-foreground)]/60 uppercase text-[10px]">ORGANIZER</span>
+            {/* Join button if live */}
             {isHappening && meeting.meetingUrl && (
-              <BrutalButton
-                size="sm"
-                onClick={() => window.open(meeting.meetingUrl, '_blank')}
-                className="h-6 text-[10px]"
+              <button
+                onClick={() => window.open(meeting.meetingUrl, "_blank")}
+                className="ml-auto px-3 py-0.5 border-2 font-mono text-[10px] font-bold uppercase transition-colors"
+                style={{
+                  borderColor: "var(--theme-success)",
+                  color: "var(--theme-success)",
+                }}
               >
-                START
-              </BrutalButton>
+                JOIN NOW
+              </button>
             )}
           </div>
         )}
+
+        {/* Organizer join button if live */}
+        {isOrganizer && isHappening && meeting.meetingUrl && (
+          <button
+            onClick={() => window.open(meeting.meetingUrl, "_blank")}
+            className="px-3 py-0.5 border-2 font-mono text-[10px] font-bold uppercase transition-colors"
+            style={{
+              borderColor: "var(--theme-success)",
+              color: "var(--theme-success)",
+            }}
+          >
+            START MEETING
+          </button>
+        )}
       </div>
-    </BrutalCard>
-  )
+    </div>
+  );
 }

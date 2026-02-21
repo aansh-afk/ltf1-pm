@@ -1,6 +1,6 @@
-import { useState, memo, useCallback } from 'react'
-import { useMutation } from 'convex/react'
-import { api } from '../../../../../../convex/_generated/api'
+import { useState, memo, useCallback } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../../../../../convex/_generated/api";
 import {
   HiOutlineCheckCircle,
   HiOutlinePlay,
@@ -8,125 +8,182 @@ import {
   HiOutlineExclamation,
   HiOutlineCalendar,
   HiOutlineChevronDown,
-  HiOutlineChevronUp
-} from 'react-icons/hi'
-import clsx from 'clsx'
-import { format } from 'date-fns'
-import CreateTaskModal from './CreateTaskModal'
-import BrutalCheckbox from '../../ui/BrutalCheckbox'
+  HiOutlineChevronUp,
+} from "react-icons/hi";
+import clsx from "clsx";
+import { format } from "date-fns";
+import CreateTaskModal from "./CreateTaskModal";
+import BrutalCheckbox from "../../ui/BrutalCheckbox";
 
 interface TaskListProps {
-  tasks: any[]
-  projectId: string
-  onTaskUpdate?: () => void
-  onTaskEdit?: (task: any) => void
-  onTaskDelete?: (task: any) => void
-  onTaskDuplicate?: (task: any) => void
+  tasks: any[];
+  projectId: string;
+  onTaskUpdate?: () => void;
+  onTaskEdit?: (task: any) => void;
+  onTaskDelete?: (task: any) => void;
+  onTaskDuplicate?: (task: any) => void;
 }
 
-const statusConfig = {
-  backlog: { label: 'BACKLOG', color: 'bg-[#6B7280]', icon: HiOutlineClock },
-  todo: { label: 'TO DO', color: 'bg-[#6366F1]', icon: HiOutlinePlay },
-  in_progress: { label: 'IN PROGRESS', color: 'bg-[#06B6D4]', icon: HiOutlinePlay },
-  in_review: { label: 'IN REVIEW', color: 'bg-[#F59E0B]', icon: HiOutlineClock },
-  done: { label: 'DONE', color: 'bg-[#22C55E]', icon: HiOutlineCheckCircle },
-  cancelled: { label: 'CANCELLED', color: 'bg-[#EF4444]', icon: HiOutlineExclamation }
-}
+// Status dot + label using CSS variable tokens
+const statusConfig: Record<
+  string,
+  {
+    label: string;
+    colorVar: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }
+> = {
+  backlog: {
+    label: "BACKLOG",
+    colorVar: "var(--theme-foreground-tertiary)",
+    icon: HiOutlineClock,
+  },
+  todo: {
+    label: "TO DO",
+    colorVar: "var(--theme-primary)",
+    icon: HiOutlinePlay,
+  },
+  in_progress: {
+    label: "IN PROGRESS",
+    colorVar: "var(--theme-info)",
+    icon: HiOutlinePlay,
+  },
+  in_review: {
+    label: "IN REVIEW",
+    colorVar: "var(--theme-warning)",
+    icon: HiOutlineClock,
+  },
+  done: {
+    label: "DONE",
+    colorVar: "var(--theme-success)",
+    icon: HiOutlineCheckCircle,
+  },
+  cancelled: {
+    label: "CANCELLED",
+    colorVar: "var(--theme-error)",
+    icon: HiOutlineExclamation,
+  },
+};
 
-const priorityConfig = {
-  urgent: { label: 'URGENT', color: 'text-[#EF4444]' },
-  high: { label: 'HIGH', color: 'text-[#F59E0B]' },
-  medium: { label: 'MEDIUM', color: 'text-[#6366F1]' },
-  low: { label: 'LOW', color: 'text-[#6B7280]' }
-}
+const priorityConfig: Record<string, { label: string; colorVar: string }> = {
+  urgent: { label: "URGENT", colorVar: "var(--theme-error)" },
+  high: { label: "HIGH", colorVar: "var(--theme-warning)" },
+  medium: { label: "MEDIUM", colorVar: "var(--theme-primary)" },
+  low: { label: "LOW", colorVar: "var(--theme-foreground-tertiary)" },
+};
 
-const typeConfig = {
-  feature: { label: 'FEATURE', color: 'bg-[#22C55E]' },
-  bug: { label: 'BUG', color: 'bg-[#EF4444]' },
-  improvement: { label: 'IMPROVEMENT', color: 'bg-[#06B6D4]' },
-  task: { label: 'TASK', color: 'bg-[#6366F1]' },
-  epic: { label: 'EPIC', color: 'bg-[#F59E0B]' }
-}
+const typeConfig: Record<string, { label: string; colorVar: string }> = {
+  feature: { label: "FEAT", colorVar: "var(--theme-success)" },
+  bug: { label: "BUG", colorVar: "var(--theme-error)" },
+  improvement: { label: "IMPR", colorVar: "var(--theme-info)" },
+  task: { label: "TASK", colorVar: "var(--theme-primary)" },
+  epic: { label: "EPIC", colorVar: "var(--theme-warning)" },
+};
 
-const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTaskEdit, onTaskDelete, onTaskDuplicate }: TaskListProps) {
-  const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set())
-  const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set())
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [sortBy, setSortBy] = useState<'status' | 'priority' | 'dueDate' | 'assignee'>('status')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+const TaskList = memo(function TaskList({
+  tasks,
+  projectId,
+  onTaskUpdate,
+  onTaskEdit,
+  onTaskDelete,
+  onTaskDuplicate: _onTaskDuplicate,
+}: TaskListProps) {
+  const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
+  const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<
+    "status" | "priority" | "dueDate" | "assignee"
+  >("status");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  const updateTask = useMutation(api.tasks.mutations.updateTask)
+  const _updateTask = useMutation(api.tasks.mutations.updateTask);
 
   const toggleTaskExpansion = useCallback((taskId: string) => {
-    setExpandedTasks(prev => {
-      const newSet = new Set(prev)
+    setExpandedTasks((prev) => {
+      const newSet = new Set(prev);
       if (newSet.has(taskId)) {
-        newSet.delete(taskId)
+        newSet.delete(taskId);
       } else {
-        newSet.add(taskId)
+        newSet.add(taskId);
       }
-      return newSet
-    })
-  }, [])
+      return newSet;
+    });
+  }, []);
 
   const toggleTaskSelection = useCallback((taskId: string) => {
-    setSelectedTasks(prev => {
-      const newSet = new Set(prev)
+    setSelectedTasks((prev) => {
+      const newSet = new Set(prev);
       if (newSet.has(taskId)) {
-        newSet.delete(taskId)
+        newSet.delete(taskId);
       } else {
-        newSet.add(taskId)
+        newSet.add(taskId);
       }
-      return newSet
-    })
-  }, [])
+      return newSet;
+    });
+  }, []);
 
   const selectAllTasks = useCallback(() => {
     if (selectedTasks.size === tasks.length) {
-      setSelectedTasks(new Set())
+      setSelectedTasks(new Set());
     } else {
-      setSelectedTasks(new Set(tasks.map(t => t._id)))
+      setSelectedTasks(new Set(tasks.map((t) => t._id)));
     }
-  }, [selectedTasks.size, tasks])
+  }, [selectedTasks.size, tasks]);
 
-  const handleSort = useCallback((field: typeof sortBy) => {
-    if (field === sortBy) {
-      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortBy(field)
-      setSortOrder('asc')
-    }
-  }, [sortBy])
+  const handleSort = useCallback(
+    (field: typeof sortBy) => {
+      if (field === sortBy) {
+        setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+      } else {
+        setSortBy(field);
+        setSortOrder("asc");
+      }
+    },
+    [sortBy],
+  );
 
   // Sort tasks
   const sortedTasks = [...tasks].sort((a, b) => {
-    let compareValue = 0
+    let compareValue = 0;
 
     switch (sortBy) {
-      case 'status':
-        const statusOrder = ['backlog', 'todo', 'in_progress', 'in_review', 'done', 'cancelled']
-        compareValue = statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status)
-        break
-      case 'priority':
-        const priorityOrder = ['urgent', 'high', 'medium', 'low']
-        compareValue = priorityOrder.indexOf(a.priority) - priorityOrder.indexOf(b.priority)
-        break
-      case 'dueDate':
-        if (!a.dueDate) return 1
-        if (!b.dueDate) return -1
-        compareValue = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
-        break
-      case 'assignee':
-        const aName = a.assignees?.[0]?.name || ''
-        const bName = b.assignees?.[0]?.name || ''
-        if (!aName) return 1
-        if (!bName) return -1
-        compareValue = aName.localeCompare(bName)
-        break
+      case "status": {
+        const statusOrder = [
+          "backlog",
+          "todo",
+          "in_progress",
+          "in_review",
+          "done",
+          "cancelled",
+        ];
+        compareValue =
+          statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
+        break;
+      }
+      case "priority": {
+        const priorityOrder = ["urgent", "high", "medium", "low"];
+        compareValue =
+          priorityOrder.indexOf(a.priority) - priorityOrder.indexOf(b.priority);
+        break;
+      }
+      case "dueDate":
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        compareValue =
+          new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        break;
+      case "assignee": {
+        const aName = a.assignees?.[0]?.name || "";
+        const bName = b.assignees?.[0]?.name || "";
+        if (!aName) return 1;
+        if (!bName) return -1;
+        compareValue = aName.localeCompare(bName);
+        break;
+      }
     }
 
-    return sortOrder === 'asc' ? compareValue : -compareValue
-  })
+    return sortOrder === "asc" ? compareValue : -compareValue;
+  });
 
   return (
     <div className="space-y-3">
@@ -138,64 +195,80 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
             onChange={selectAllTasks}
             size="sm"
           />
-          <span className="text-[10px] font-mono uppercase tracking-wider text-[#9CA3AF]">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">
             {selectedTasks.size > 0 && `${selectedTasks.size} SELECTED`}
           </span>
         </div>
 
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="px-3 py-1.5 bg-[#6366F1] text-[#F9FAFB] font-mono text-xs uppercase tracking-wider hover:bg-[#4F46E5] transition-colors border-2 border-[#6366F1]"
+          className="px-3 py-1.5 bg-[var(--theme-primary)] text-[var(--theme-background)] font-mono text-xs uppercase tracking-wider hover:opacity-90 transition-opacity border-2 border-[var(--theme-primary)]"
         >
           + NEW TASK
         </button>
       </div>
 
-      {/* Table Header */}
-      <div className="bg-[#0A0A0A] border-2 border-[#2E2E35]">
-        <div className="grid grid-cols-12 gap-2 px-3 py-2.5 font-mono text-[10px] uppercase tracking-wider text-[#6B7280] border-b-2 border-[#2E2E35]">
-          <div className="col-span-1"></div>
+      {/* Table */}
+      <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
+        {/* Header */}
+        <div className="grid grid-cols-12 gap-2 px-3 py-2 font-mono text-[9px] uppercase tracking-widest text-[var(--theme-foreground-tertiary)] border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+          <div className="col-span-1" />
           <div className="col-span-4">TASK</div>
           <button
-            className="col-span-2 cursor-pointer hover:text-[#6366F1] transition-colors text-left text-[inherit] font-[inherit] tracking-[inherit] uppercase"
-            onClick={() => handleSort('status')}
+            className="col-span-2 text-left font-mono text-[9px] uppercase tracking-widest hover:text-[var(--theme-primary)] transition-colors"
+            onClick={() => handleSort("status")}
           >
-            STATUS {sortBy === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
+            STATUS {sortBy === "status" && (sortOrder === "asc" ? "↑" : "↓")}
           </button>
           <button
-            className="col-span-1 cursor-pointer hover:text-[#6366F1] transition-colors text-left text-[inherit] font-[inherit] tracking-[inherit] uppercase"
-            onClick={() => handleSort('priority')}
+            className="col-span-1 text-left font-mono text-[9px] uppercase tracking-widest hover:text-[var(--theme-primary)] transition-colors"
+            onClick={() => handleSort("priority")}
           >
-            PRIORITY {sortBy === 'priority' && (sortOrder === 'asc' ? '↑' : '↓')}
+            PRI {sortBy === "priority" && (sortOrder === "asc" ? "↑" : "↓")}
           </button>
           <button
-            className="col-span-2 cursor-pointer hover:text-[#6366F1] transition-colors text-left text-[inherit] font-[inherit] tracking-[inherit] uppercase"
-            onClick={() => handleSort('assignee')}
+            className="col-span-2 text-left font-mono text-[9px] uppercase tracking-widest hover:text-[var(--theme-primary)] transition-colors"
+            onClick={() => handleSort("assignee")}
           >
-            ASSIGNEE {sortBy === 'assignee' && (sortOrder === 'asc' ? '↑' : '↓')}
+            ASSIGNEE{" "}
+            {sortBy === "assignee" && (sortOrder === "asc" ? "↑" : "↓")}
           </button>
           <button
-            className="col-span-2 cursor-pointer hover:text-[#6366F1] transition-colors text-left text-[inherit] font-[inherit] tracking-[inherit] uppercase"
-            onClick={() => handleSort('dueDate')}
+            className="col-span-2 text-left font-mono text-[9px] uppercase tracking-widest hover:text-[var(--theme-primary)] transition-colors"
+            onClick={() => handleSort("dueDate")}
           >
-            DUE DATE {sortBy === 'dueDate' && (sortOrder === 'asc' ? '↑' : '↓')}
+            DUE {sortBy === "dueDate" && (sortOrder === "asc" ? "↑" : "↓")}
           </button>
         </div>
 
         {/* Task Rows */}
         {sortedTasks.map((task) => {
-          const StatusIcon = statusConfig[task.status as keyof typeof statusConfig]?.icon || HiOutlineClock
-          const isExpanded = expandedTasks.has(task._id)
-          const isSelected = selectedTasks.has(task._id)
+          const statusCfg =
+            statusConfig[task.status as keyof typeof statusConfig];
+          const StatusIcon = statusCfg?.icon || HiOutlineClock;
+          const isExpanded = expandedTasks.has(task._id);
+          const isSelected = selectedTasks.has(task._id);
+          const typeCfg = typeConfig[task.type as keyof typeof typeConfig];
+          const priCfg =
+            priorityConfig[task.priority as keyof typeof priorityConfig];
 
           return (
-            <div key={task._id} className="border-b border-[#1F1F23] last:border-b-0">
+            <div
+              key={task._id}
+              className="border-b border-[var(--theme-border)]/50 last:border-b-0"
+              style={
+                isSelected
+                  ? {
+                      backgroundColor:
+                        "color-mix(in srgb, var(--theme-primary) 5%, transparent)",
+                    }
+                  : undefined
+              }
+            >
               {/* Main Row */}
-              <div className={clsx(
-                "grid grid-cols-12 gap-2 px-3 py-2.5 items-center hover:bg-[#111111] transition-colors",
-                isSelected && "bg-[#6366F1]/10"
-              )}>
-                <div className="col-span-1 flex items-center gap-1.5">
+              <div className="grid grid-cols-12 gap-2 px-3 py-2 items-center hover:bg-[var(--theme-background-secondary)]/40 transition-colors">
+                {/* Checkbox + expand */}
+                <div className="col-span-1 flex items-center gap-1">
                   <BrutalCheckbox
                     checked={isSelected}
                     onChange={() => toggleTaskSelection(task._id)}
@@ -203,144 +276,220 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
                   />
                   <button
                     onClick={() => toggleTaskExpansion(task._id)}
-                    className="p-0.5 hover:bg-[#111111] transition-colors"
+                    className="p-0.5 text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-foreground)] transition-colors"
                   >
                     {isExpanded ? (
-                      <HiOutlineChevronUp className="w-3.5 h-3.5 text-[#6B7280]" />
+                      <HiOutlineChevronUp className="w-3 h-3" />
                     ) : (
-                      <HiOutlineChevronDown className="w-3.5 h-3.5 text-[#6B7280]" />
+                      <HiOutlineChevronDown className="w-3 h-3" />
                     )}
                   </button>
                 </div>
 
-                <div className="col-span-4">
-                  <div className="flex items-center gap-1.5">
-                    <span className={clsx(
-                      "px-1 py-0.5 text-[10px] font-mono font-bold",
-                      typeConfig[task.type as keyof typeof typeConfig]?.color || 'bg-[#6366F1]',
-                      "text-[#050505]"
-                    )}>
+                {/* Task key + title */}
+                <div className="col-span-4 flex items-center gap-1.5 min-w-0">
+                  {typeCfg && (
+                    <span
+                      className="px-1 py-0.5 text-[9px] font-mono font-bold shrink-0"
+                      style={{
+                        backgroundColor: `color-mix(in srgb, ${typeCfg.colorVar} 15%, transparent)`,
+                        color: typeCfg.colorVar,
+                        border: `1px solid color-mix(in srgb, ${typeCfg.colorVar} 30%, transparent)`,
+                      }}
+                    >
                       {task.key}
                     </span>
-                    <span className="font-mono text-xs text-[#F9FAFB]">{task.title}</span>
-                  </div>
-                </div>
-
-                <div className="col-span-2">
-                  <div className={clsx(
-                    "inline-flex items-center gap-1 px-1.5 py-0.5",
-                    statusConfig[task.status as keyof typeof statusConfig]?.color || 'bg-[#6B7280]',
-                    "text-[#050505] font-mono text-[10px] uppercase"
-                  )}>
-                    <StatusIcon className="w-3 h-3" />
-                    {statusConfig[task.status as keyof typeof statusConfig]?.label || task.status}
-                  </div>
-                </div>
-
-                <div className="col-span-1">
-                  <span className={clsx(
-                    "font-mono text-[10px] uppercase",
-                    priorityConfig[task.priority as keyof typeof priorityConfig]?.color || 'text-[#6B7280]'
-                  )}>
-                    {priorityConfig[task.priority as keyof typeof priorityConfig]?.label || task.priority}
+                  )}
+                  {!typeCfg && (
+                    <span className="px-1 py-0.5 text-[9px] font-mono font-bold shrink-0 bg-[var(--theme-background-secondary)] text-[var(--theme-foreground-tertiary)] border border-[var(--theme-border)]">
+                      {task.key}
+                    </span>
+                  )}
+                  <span className="font-mono text-xs text-[var(--theme-foreground)] truncate">
+                    {task.title}
                   </span>
                 </div>
 
+                {/* Status */}
+                <div className="col-span-2">
+                  <div
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 font-mono text-[9px] uppercase font-bold"
+                    style={{
+                      color:
+                        statusCfg?.colorVar ||
+                        "var(--theme-foreground-tertiary)",
+                      backgroundColor: `color-mix(in srgb, ${statusCfg?.colorVar || "var(--theme-foreground-tertiary)"} 10%, transparent)`,
+                      border: `1px solid color-mix(in srgb, ${statusCfg?.colorVar || "var(--theme-foreground-tertiary)"} 20%, transparent)`,
+                    }}
+                  >
+                    <StatusIcon className="w-2.5 h-2.5" />
+                    {statusCfg?.label || task.status}
+                  </div>
+                </div>
+
+                {/* Priority */}
+                <div className="col-span-1">
+                  <span
+                    className="font-mono text-[9px] uppercase font-bold"
+                    style={{
+                      color:
+                        priCfg?.colorVar || "var(--theme-foreground-tertiary)",
+                    }}
+                  >
+                    {priCfg?.label || task.priority}
+                  </span>
+                </div>
+
+                {/* Assignee */}
                 <div className="col-span-2">
                   {task.assignees && task.assignees.length > 0 ? (
                     <div className="flex items-center gap-1 flex-wrap">
-                      {task.assignees.slice(0, 2).map((assignee: any, index: number) => (
-                        <div key={assignee._id} className="flex items-center gap-1">
-                          <div className="w-5 h-5 bg-[#6366F1] border border-[#2E2E35] flex items-center justify-center">
-                            <span className="text-[#050505] text-[10px] font-bold">
-                              {assignee.name.charAt(0)}
-                            </span>
+                      {task.assignees
+                        .slice(0, 2)
+                        .map((assignee: any, index: number) => (
+                          <div
+                            key={assignee._id}
+                            className="flex items-center gap-1"
+                          >
+                            <div
+                              className="w-5 h-5 flex items-center justify-center border border-[var(--theme-border)] shrink-0"
+                              style={{
+                                backgroundColor:
+                                  "color-mix(in srgb, var(--theme-primary) 15%, transparent)",
+                                color: "var(--theme-primary)",
+                              }}
+                            >
+                              <span className="text-[9px] font-bold font-mono">
+                                {assignee.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            {index === 0 && task.assignees.length === 1 && (
+                              <span className="text-[10px] font-mono text-[var(--theme-foreground-secondary)] truncate max-w-[60px]">
+                                {assignee.name}
+                              </span>
+                            )}
                           </div>
-                          {index === 0 && task.assignees.length === 1 && (
-                            <span className="text-[10px] font-mono text-[#9CA3AF]">{assignee.name}</span>
-                          )}
-                        </div>
-                      ))}
+                        ))}
                       {task.assignees.length > 2 && (
-                        <span className="text-[10px] font-mono text-[#6B7280]">
+                        <span className="text-[9px] font-mono text-[var(--theme-foreground-tertiary)]">
                           +{task.assignees.length - 2}
                         </span>
                       )}
                     </div>
                   ) : (
-                    <span className="text-[10px] font-mono text-[#6B7280]">UNASSIGNED</span>
+                    <span className="text-[9px] font-mono text-[var(--theme-foreground-tertiary)] uppercase">
+                      NONE
+                    </span>
                   )}
                 </div>
 
+                {/* Due date */}
                 <div className="col-span-2">
                   {task.dueDate ? (
-                    <div className={clsx(
-                      "flex items-center gap-1 text-[10px] font-mono",
-                      new Date(task.dueDate) < new Date() ? 'text-[#EF4444]' : 'text-[#9CA3AF]'
-                    )}>
-                      <HiOutlineCalendar className="w-3 h-3" />
-                      {format(new Date(task.dueDate), 'MMM dd, yyyy')}
+                    <div
+                      className="flex items-center gap-1 text-[9px] font-mono"
+                      style={{
+                        color:
+                          new Date(task.dueDate) < new Date()
+                            ? "var(--theme-error)"
+                            : "var(--theme-foreground-secondary)",
+                      }}
+                    >
+                      <HiOutlineCalendar className="w-3 h-3 shrink-0" />
+                      {format(new Date(task.dueDate), "MMM dd")}
                     </div>
                   ) : (
-                    <span className="text-[10px] font-mono text-[#6B7280]">NO DUE DATE</span>
+                    <span className="text-[9px] font-mono text-[var(--theme-foreground-tertiary)]">
+                      —
+                    </span>
                   )}
                 </div>
               </div>
 
               {/* Expanded Details */}
               {isExpanded && (
-                <div className="px-12 py-2.5 bg-[#111111] border-t border-[#1F1F23]">
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="px-10 py-3 bg-[var(--theme-background-secondary)]/30 border-t border-[var(--theme-border)]/50">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#6B7280] mb-1">Description</h4>
-                      <p className="text-xs font-mono text-[#9CA3AF]">
-                        {task.description || 'No description provided.'}
+                      <h4 className="text-[9px] font-mono font-bold uppercase tracking-widest text-[var(--theme-foreground-tertiary)] mb-1">
+                        Description
+                      </h4>
+                      <p className="text-xs font-mono text-[var(--theme-foreground-secondary)] leading-relaxed">
+                        {task.description || "No description provided."}
                       </p>
                     </div>
 
                     <div className="space-y-2">
-                      <div>
-                        <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#6B7280] mb-1">Details</h4>
-                        <div className="space-y-1 text-[10px] font-mono">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[#6B7280]">TYPE:</span>
-                            <span className="text-[#9CA3AF] uppercase">{task.type}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[#6B7280]">REPORTER:</span>
-                            <span className="text-[#9CA3AF]">{task.reporter?.name || 'Unknown'}</span>
-                          </div>
-                          {task.estimate && (
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[#6B7280]">ESTIMATE:</span>
-                              <span className="text-[#9CA3AF]">{task.estimate.points || task.estimate.hours}h</span>
-                            </div>
-                          )}
-                          {task.labels && task.labels.length > 0 && (
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[#6B7280]">LABELS:</span>
-                              <div className="flex gap-1">
-                                {task.labels.map((label: string) => (
-                                  <span key={label} className="px-1 py-0.5 bg-[#6366F1]/20 text-[#6366F1] text-[10px] font-mono">
-                                    {label}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
+                      <h4 className="text-[9px] font-mono font-bold uppercase tracking-widest text-[var(--theme-foreground-tertiary)] mb-1">
+                        Details
+                      </h4>
+                      <div className="space-y-1 text-[9px] font-mono">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[var(--theme-foreground-tertiary)] w-16">
+                            TYPE
+                          </span>
+                          <span className="text-[var(--theme-foreground)] uppercase">
+                            {task.type}
+                          </span>
                         </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[var(--theme-foreground-tertiary)] w-16">
+                            REPORTER
+                          </span>
+                          <span className="text-[var(--theme-foreground)]">
+                            {task.reporter?.name || "—"}
+                          </span>
+                        </div>
+                        {task.estimate && (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[var(--theme-foreground-tertiary)] w-16">
+                              ESTIMATE
+                            </span>
+                            <span className="text-[var(--theme-foreground)]">
+                              {task.estimate.points || task.estimate.hours}h
+                            </span>
+                          </div>
+                        )}
+                        {task.labels && task.labels.length > 0 && (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[var(--theme-foreground-tertiary)] w-16">
+                              LABELS
+                            </span>
+                            <div className="flex gap-1 flex-wrap">
+                              {task.labels.map((label: string) => (
+                                <span
+                                  key={label}
+                                  className="px-1 py-0.5 text-[9px] font-mono"
+                                  style={{
+                                    color: "var(--theme-primary)",
+                                    backgroundColor:
+                                      "color-mix(in srgb, var(--theme-primary) 10%, transparent)",
+                                    border:
+                                      "1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent)",
+                                  }}
+                                >
+                                  {label}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
-                      <div className="flex gap-1.5">
+                      <div className="flex gap-1.5 pt-1">
                         <button
                           onClick={() => onTaskEdit?.(task)}
-                          className="px-2 py-1 text-[10px] font-mono uppercase border-2 border-[#2E2E35] text-[#9CA3AF] hover:border-[#6366F1] hover:text-[#F9FAFB] transition-colors"
+                          className="px-2 py-1 text-[9px] font-mono font-bold uppercase border border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] transition-colors"
                         >
                           EDIT
                         </button>
                         <button
                           onClick={() => onTaskDelete?.(task)}
-                          className="px-2 py-1 text-[10px] font-mono uppercase border-2 border-[#EF4444]/30 text-[#EF4444] hover:bg-[#EF4444] hover:text-[#F9FAFB] transition-colors"
+                          className="px-2 py-1 text-[9px] font-mono font-bold uppercase border text-[var(--theme-error)] hover:bg-[var(--theme-error)] hover:text-[var(--theme-background)] transition-colors"
+                          style={{
+                            borderColor:
+                              "color-mix(in srgb, var(--theme-error) 40%, transparent)",
+                          }}
                         >
                           DELETE
                         </button>
@@ -350,7 +499,7 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
                 </div>
               )}
             </div>
-          )
+          );
         })}
       </div>
 
@@ -364,7 +513,7 @@ const TaskList = memo(function TaskList({ tasks, projectId, onTaskUpdate, onTask
         />
       )}
     </div>
-  )
-})
+  );
+});
 
-export default TaskList
+export default TaskList;

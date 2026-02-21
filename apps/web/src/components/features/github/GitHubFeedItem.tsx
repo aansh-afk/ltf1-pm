@@ -1,5 +1,5 @@
-import { memo } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { memo } from "react";
+import { m, AnimatePresence } from "framer-motion";
 import {
   FaCode,
   FaCodeBranch,
@@ -9,11 +9,11 @@ import {
   FaCopy,
   FaClock,
   FaTimesCircle,
-} from 'react-icons/fa';
-import { HiOutlineExternalLink } from 'react-icons/hi';
-import { formatDistanceToNow } from 'date-fns';
-import { toast } from 'react-hot-toast';
-import type { UnifiedFeedItem } from './useGitHubCommandCenter';
+} from "react-icons/fa";
+import { HiOutlineExternalLink } from "react-icons/hi";
+import { formatDistanceToNow } from "date-fns";
+import { toast } from "react-hot-toast";
+import type { UnifiedFeedItem } from "./useGitHubCommandCenter";
 
 interface GitHubFeedItemProps {
   item: UnifiedFeedItem;
@@ -23,58 +23,94 @@ interface GitHubFeedItemProps {
   onFocus: () => void;
 }
 
-// --- Accent bar color ---
-function getAccentColor(item: UnifiedFeedItem): string {
-  if (item.type === 'commit') return 'bg-[#06B6D4]';
-  if (item.type === 'pr') {
-    if (item.state === 'merged') return 'bg-[#8B5CF6]';
-    if (item.state === 'closed') return 'bg-[#EF4444]';
-    if (item.state === 'draft') return 'bg-[#F59E0B]';
-    return 'bg-[#22C55E]';
+// --- Accent bar color via inline style (CSS variables) ---
+function getAccentStyle(item: UnifiedFeedItem): React.CSSProperties {
+  if (item.type === "commit") return { backgroundColor: "var(--theme-info)" };
+  if (item.type === "pr") {
+    if (item.state === "merged")
+      return { backgroundColor: "var(--theme-primary)" };
+    if (item.state === "closed")
+      return { backgroundColor: "var(--theme-error)" };
+    if (item.state === "draft")
+      return { backgroundColor: "var(--theme-warning)" };
+    return { backgroundColor: "var(--theme-success)" };
   }
   // issue
-  if (item.state === 'closed') return 'bg-[#6B7280]';
-  return 'bg-[#22C55E]';
+  if (item.state === "closed")
+    return { backgroundColor: "var(--theme-foreground-tertiary)" };
+  return { backgroundColor: "var(--theme-success)" };
+}
+
+// --- Type icon color via inline style ---
+function getIconStyle(item: UnifiedFeedItem): React.CSSProperties {
+  if (item.type === "commit") return { color: "var(--theme-info)" };
+  if (item.type === "pr") {
+    if (item.state === "merged") return { color: "var(--theme-primary)" };
+    if (item.state === "closed") return { color: "var(--theme-error)" };
+    if (item.state === "draft") return { color: "var(--theme-warning)" };
+    return { color: "var(--theme-success)" };
+  }
+  if (item.state === "closed")
+    return { color: "var(--theme-foreground-tertiary)" };
+  return { color: "var(--theme-success)" };
 }
 
 // --- Type icon ---
 function TypeIcon({ item }: { item: UnifiedFeedItem }) {
-  if (item.type === 'commit') return <FaCode className="w-[10px] h-[10px]" />;
-  if (item.type === 'pr') return <FaCodeBranch className="w-[10px] h-[10px] -rotate-90" />;
-  if (item.state === 'closed') return <FaCheckCircle className="w-[10px] h-[10px]" />;
+  if (item.type === "commit") return <FaCode className="w-[10px] h-[10px]" />;
+  if (item.type === "pr")
+    return <FaCodeBranch className="w-[10px] h-[10px] -rotate-90" />;
+  if (item.state === "closed")
+    return <FaCheckCircle className="w-[10px] h-[10px]" />;
   return <FaExclamationCircle className="w-[10px] h-[10px]" />;
-}
-
-function getIconColor(item: UnifiedFeedItem): string {
-  if (item.type === 'commit') return 'text-[#06B6D4]';
-  if (item.type === 'pr') {
-    if (item.state === 'merged') return 'text-[#8B5CF6]';
-    if (item.state === 'closed') return 'text-[#EF4444]';
-    if (item.state === 'draft') return 'text-[#F59E0B]';
-    return 'text-[#22C55E]';
-  }
-  if (item.state === 'closed') return 'text-[#6B7280]';
-  return 'text-[#22C55E]';
 }
 
 // --- State badge ---
 function StateBadge({ item }: { item: UnifiedFeedItem }) {
-  if (!item.state || item.type === 'commit') return null;
+  if (!item.state || item.type === "commit") return null;
 
-  const configs: Record<string, { bg: string; text: string; border: string; icon: React.ReactNode; label: string }> = {
-    open: { bg: 'bg-[#22C55E]/10', text: 'text-[#22C55E]', border: 'border-[#22C55E]/20', icon: <FaClock className="w-[8px] h-[8px]" />, label: 'open' },
-    closed: { bg: 'bg-[#EF4444]/10', text: 'text-[#EF4444]', border: 'border-[#EF4444]/20', icon: <FaTimesCircle className="w-[8px] h-[8px]" />, label: 'closed' },
-    merged: { bg: 'bg-[#8B5CF6]/10', text: 'text-[#8B5CF6]', border: 'border-[#8B5CF6]/20', icon: <FaCheckCircle className="w-[8px] h-[8px]" />, label: 'merged' },
-    draft: { bg: 'bg-[#F59E0B]/10', text: 'text-[#F59E0B]', border: 'border-[#F59E0B]/20', icon: <FaClock className="w-[8px] h-[8px]" />, label: 'draft' },
+  type BadgeConfig = { colorVar: string; icon: React.ReactNode; label: string };
+  const configs: Record<string, BadgeConfig> = {
+    open: {
+      colorVar: "var(--theme-success)",
+      icon: <FaClock className="w-[8px] h-[8px]" />,
+      label: "open",
+    },
+    closed: {
+      colorVar: "var(--theme-error)",
+      icon: <FaTimesCircle className="w-[8px] h-[8px]" />,
+      label: "closed",
+    },
+    merged: {
+      colorVar: "var(--theme-primary)",
+      icon: <FaCheckCircle className="w-[8px] h-[8px]" />,
+      label: "merged",
+    },
+    draft: {
+      colorVar: "var(--theme-warning)",
+      icon: <FaClock className="w-[8px] h-[8px]" />,
+      label: "draft",
+    },
   };
 
-  // For issues, only show open/closed
-  const key = item.type === 'issue' ? (item.state === 'open' ? 'open' : 'closed') : item.state;
+  const key =
+    item.type === "issue"
+      ? item.state === "open"
+        ? "open"
+        : "closed"
+      : item.state;
   const cfg = configs[key];
   if (!cfg) return null;
 
   return (
-    <span className={`inline-flex items-center gap-[3px] px-[5px] py-[1px] rounded font-mono text-[10px] font-bold uppercase border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+    <span
+      className="inline-flex items-center gap-[3px] px-[5px] py-[1px] font-mono text-[10px] font-bold uppercase"
+      style={{
+        color: cfg.colorVar,
+        border: `1px solid color-mix(in srgb, ${cfg.colorVar} 30%, transparent)`,
+        backgroundColor: `color-mix(in srgb, ${cfg.colorVar} 10%, transparent)`,
+      }}
+    >
       {cfg.icon}
       {cfg.label}
     </span>
@@ -85,33 +121,38 @@ function formatTimestamp(ts: number): string {
   try {
     return formatDistanceToNow(new Date(ts), { addSuffix: true });
   } catch {
-    return 'recently';
+    return "recently";
   }
 }
 
-// Simple hash for label colors
-const LABEL_COLORS = [
-  { bg: 'bg-primary-brutalist/10', text: 'text-primary-brutalist', border: 'border-primary-brutalist/20' },
-  { bg: 'bg-[#22C55E]/10', text: 'text-[#22C55E]', border: 'border-[#22C55E]/20' },
-  { bg: 'bg-[#F59E0B]/10', text: 'text-[#F59E0B]', border: 'border-[#F59E0B]/20' },
-  { bg: 'bg-[#8B5CF6]/10', text: 'text-[#8B5CF6]', border: 'border-[#8B5CF6]/20' },
-  { bg: 'bg-[#06B6D4]/10', text: 'text-[#06B6D4]', border: 'border-[#06B6D4]/20' },
-  { bg: 'bg-[#EF4444]/10', text: 'text-[#EF4444]', border: 'border-[#EF4444]/20' },
+// Label colors using CSS variable tokens — cycle through semantic vars
+const LABEL_COLOR_VARS = [
+  "var(--theme-primary)",
+  "var(--theme-success)",
+  "var(--theme-warning)",
+  "var(--theme-info)",
+  "var(--theme-error)",
 ];
 
-function getLabelColor(label: string) {
+function getLabelColorVar(label: string): string {
   let hash = 0;
   for (let i = 0; i < label.length; i++) {
     hash = label.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return LABEL_COLORS[Math.abs(hash) % LABEL_COLORS.length];
+  return LABEL_COLOR_VARS[Math.abs(hash) % LABEL_COLOR_VARS.length];
 }
 
-export default memo(function GitHubFeedItem({ item, isFocused, isExpanded, onToggleExpand, onFocus }: GitHubFeedItemProps) {
+export default memo(function GitHubFeedItem({
+  item,
+  isFocused,
+  isExpanded,
+  onToggleExpand,
+  onFocus,
+}: GitHubFeedItemProps) {
   const copySha = () => {
     if (item.sha) {
       navigator.clipboard.writeText(item.sha);
-      toast.success('SHA copied');
+      toast.success("SHA copied");
     }
   };
 
@@ -119,19 +160,55 @@ export default memo(function GitHubFeedItem({ item, isFocused, isExpanded, onTog
     <button
       type="button"
       onClick={onFocus}
-      className={`group relative pl-[14px] pr-[10px] py-[8px] border bg-[var(--theme-background)] transition-all duration-150 cursor-pointer w-full text-left ${
+      className="group relative pl-[14px] pr-[10px] py-[8px] border bg-[var(--theme-background)] transition-all duration-150 cursor-pointer w-full text-left"
+      style={
         isFocused
-          ? 'border-primary-brutalist bg-primary-brutalist/5'
-          : 'border-[var(--theme-border)] hover:border-primary-brutalist/50'
-      }`}
+          ? {
+              borderColor: "var(--theme-primary)",
+              backgroundColor:
+                "color-mix(in srgb, var(--theme-primary) 5%, transparent)",
+            }
+          : undefined
+      }
+      onMouseEnter={(e) => {
+        if (!isFocused)
+          (e.currentTarget as HTMLElement).style.borderColor =
+            "color-mix(in srgb, var(--theme-primary) 50%, transparent)";
+      }}
+      onMouseLeave={(e) => {
+        if (!isFocused)
+          (e.currentTarget as HTMLElement).style.borderColor =
+            "var(--theme-border)";
+      }}
     >
       {/* Left accent bar */}
-      <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${getAccentColor(item)}`} />
+      <div
+        className="absolute left-0 top-0 bottom-0 w-[3px]"
+        style={getAccentStyle(item)}
+      />
 
       {/* Compact row */}
-      <div className="flex items-center gap-[8px] min-w-0" onClick={(e) => { e.stopPropagation(); onToggleExpand(); }} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); onToggleExpand(); } }}>
+      <div
+        className="flex items-center gap-[8px] min-w-0"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleExpand();
+        }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleExpand();
+          }
+        }}
+      >
         {/* Type icon */}
-        <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center border border-[var(--theme-border)] bg-[var(--theme-background-secondary)] shrink-0 ${getIconColor(item)}`}>
+        <div
+          className="w-[20px] h-[20px] flex items-center justify-center border border-[var(--theme-border)] bg-[var(--theme-background-secondary)] shrink-0"
+          style={getIconStyle(item)}
+        >
           <TypeIcon item={item} />
         </div>
 
@@ -147,8 +224,17 @@ export default memo(function GitHubFeedItem({ item, isFocused, isExpanded, onTog
               </span>
             )}
             <StateBadge item={item} />
-            {item.draft && item.state !== 'draft' && (
-              <span className="shrink-0 px-[5px] py-[1px] rounded font-mono text-[10px] font-bold uppercase bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20">
+            {item.draft && item.state !== "draft" && (
+              <span
+                className="shrink-0 px-[5px] py-[1px] font-mono text-[10px] font-bold uppercase"
+                style={{
+                  color: "var(--theme-warning)",
+                  border:
+                    "1px solid color-mix(in srgb, var(--theme-warning) 30%, transparent)",
+                  backgroundColor:
+                    "color-mix(in srgb, var(--theme-warning) 10%, transparent)",
+                }}
+              >
                 DRAFT
               </span>
             )}
@@ -157,37 +243,75 @@ export default memo(function GitHubFeedItem({ item, isFocused, isExpanded, onTog
           {/* Second line: task keys, branch, labels */}
           <div className="flex items-center gap-[6px] mt-[2px] flex-wrap">
             {item.linkedTaskKeys && item.linkedTaskKeys.length > 0 && (
-              <div className="flex items-center gap-[4px] px-[5px] py-[1px] bg-primary-brutalist/10 rounded border border-primary-brutalist/20">
-                <FaLink className="w-[8px] h-[8px] text-primary-brutalist" />
-                {item.linkedTaskKeys.map(key => (
-                  <span key={key} className="font-mono text-[10px] font-bold text-primary-brutalist">{key}</span>
+              <div
+                className="flex items-center gap-[4px] px-[5px] py-[1px]"
+                style={{
+                  color: "var(--theme-primary)",
+                  border:
+                    "1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent)",
+                  backgroundColor:
+                    "color-mix(in srgb, var(--theme-primary) 10%, transparent)",
+                }}
+              >
+                <FaLink className="w-[8px] h-[8px]" />
+                {item.linkedTaskKeys.map((key) => (
+                  <span key={key} className="font-mono text-[10px] font-bold">
+                    {key}
+                  </span>
                 ))}
               </div>
             )}
             {item.branch && (
-              <span className="inline-flex items-center gap-[3px] px-[5px] py-[1px] rounded font-mono text-[10px] bg-[#06B6D4]/10 text-[#06B6D4] border border-[#06B6D4]/20">
+              <span
+                className="inline-flex items-center gap-[3px] px-[5px] py-[1px] font-mono text-[10px]"
+                style={{
+                  color: "var(--theme-info)",
+                  border:
+                    "1px solid color-mix(in srgb, var(--theme-info) 20%, transparent)",
+                  backgroundColor:
+                    "color-mix(in srgb, var(--theme-info) 10%, transparent)",
+                }}
+              >
                 <FaCodeBranch className="w-[8px] h-[8px]" />
                 {item.branch}
               </span>
             )}
-            {item.labels && item.labels.slice(0, 3).map(label => {
-              const c = getLabelColor(label);
-              return (
-                <span key={label} className={`px-[5px] py-[1px] rounded font-mono text-[10px] font-bold border ${c.bg} ${c.text} ${c.border}`}>
-                  {label}
-                </span>
-              );
-            })}
+            {item.labels &&
+              item.labels.slice(0, 3).map((label) => {
+                const colorVar = getLabelColorVar(label);
+                return (
+                  <span
+                    key={label}
+                    className="px-[5px] py-[1px] font-mono text-[10px] font-bold"
+                    style={{
+                      color: colorVar,
+                      border: `1px solid color-mix(in srgb, ${colorVar} 20%, transparent)`,
+                      backgroundColor: `color-mix(in srgb, ${colorVar} 10%, transparent)`,
+                    }}
+                  >
+                    {label}
+                  </span>
+                );
+              })}
           </div>
         </div>
 
         {/* Right side: author + time */}
         <div className="flex items-center gap-[8px] shrink-0">
           <div className="flex items-center gap-[4px] font-mono text-brutal-xs text-[var(--theme-foreground)]/50">
-            <div className="w-[16px] h-[16px] rounded-full bg-gradient-to-br from-primary-brutalist to-[var(--theme-border)] flex items-center justify-center text-[8px] font-bold text-white shrink-0">
+            <div
+              className="w-[16px] h-[16px] flex items-center justify-center text-[8px] font-bold shrink-0"
+              style={{
+                background:
+                  "linear-gradient(135deg, var(--theme-primary), var(--theme-border))",
+                color: "var(--theme-background)",
+              }}
+            >
               {item.author.charAt(0).toUpperCase()}
             </div>
-            <span className="hidden sm:inline truncate max-w-[80px]">{item.author}</span>
+            <span className="hidden sm:inline truncate max-w-[80px]">
+              {item.author}
+            </span>
           </div>
           <span className="font-mono text-brutal-xs text-[var(--theme-foreground)]/40 whitespace-nowrap">
             {formatTimestamp(item.timestamp)}
@@ -200,26 +324,31 @@ export default memo(function GitHubFeedItem({ item, isFocused, isExpanded, onTog
         {isExpanded && (
           <m.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
+            animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
             <div className="mt-[8px] pt-[8px] border-t border-[var(--theme-border)] space-y-[6px]">
               {/* Commit: full message + copy SHA */}
-              {item.type === 'commit' && (
+              {item.type === "commit" && (
                 <>
-                  {item.body && item.body.includes('\n') && (
-                    <pre className="text-brutal-xs text-[var(--theme-foreground)]/60 font-mono whitespace-pre-wrap bg-[var(--theme-background-secondary)] p-[8px] rounded border border-[var(--theme-border)] max-h-[200px] overflow-y-auto">
+                  {item.body && item.body.includes("\n") && (
+                    <pre className="text-brutal-xs text-[var(--theme-foreground)]/60 font-mono whitespace-pre-wrap bg-[var(--theme-background-secondary)] p-[8px] border border-[var(--theme-border)] max-h-[200px] overflow-y-auto">
                       {item.body}
                     </pre>
                   )}
                   {item.sha && (
                     <div className="flex items-center gap-[6px]">
-                      <span className="font-mono text-brutal-xs text-[var(--theme-foreground)]/50">SHA:</span>
+                      <span className="font-mono text-brutal-xs text-[var(--theme-foreground)]/50">
+                        SHA:
+                      </span>
                       <button
-                        onClick={(e) => { e.stopPropagation(); copySha(); }}
-                        className="flex items-center gap-[4px] px-[6px] py-[2px] bg-[var(--theme-background-secondary)] rounded border border-[var(--theme-border)] hover:border-primary-brutalist/30 transition-colors font-mono text-brutal-xs text-[var(--theme-foreground)]/60"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copySha();
+                        }}
+                        className="flex items-center gap-[4px] px-[6px] py-[2px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs text-[var(--theme-foreground)]/60 hover:border-[var(--theme-primary)] transition-colors"
                       >
                         <FaCopy className="w-[10px] h-[10px] opacity-50" />
                         {item.sha}
@@ -230,40 +359,64 @@ export default memo(function GitHubFeedItem({ item, isFocused, isExpanded, onTog
               )}
 
               {/* PR: description, branch info, timestamps */}
-              {item.type === 'pr' && (
+              {item.type === "pr" && (
                 <>
                   {item.body && (
                     <div className="text-brutal-xs text-[var(--theme-foreground)]/60 leading-relaxed max-h-[150px] overflow-y-auto">
-                      {item.body.slice(0, 500)}{item.body.length > 500 ? '...' : ''}
+                      {item.body.slice(0, 500)}
+                      {item.body.length > 500 ? "..." : ""}
                     </div>
                   )}
                   <div className="flex flex-wrap items-center gap-[8px] font-mono text-brutal-xs text-[var(--theme-foreground)]/50">
                     {item.raw.headBranch && (
                       <span className="flex items-center gap-[4px]">
                         <FaCodeBranch className="w-[10px] h-[10px]" />
-                        {item.raw.headBranch} &rarr; {item.raw.baseBranch || 'main'}
+                        {item.raw.headBranch} &rarr;{" "}
+                        {item.raw.baseBranch || "main"}
                       </span>
                     )}
-                    {item.raw.mergedAt && <span>Merged {formatTimestamp(new Date(item.raw.mergedAt).getTime())}</span>}
-                    {item.raw.closedAt && !item.raw.mergedAt && <span>Closed {formatTimestamp(new Date(item.raw.closedAt).getTime())}</span>}
+                    {item.raw.mergedAt && (
+                      <span>
+                        Merged{" "}
+                        {formatTimestamp(new Date(item.raw.mergedAt).getTime())}
+                      </span>
+                    )}
+                    {item.raw.closedAt && !item.raw.mergedAt && (
+                      <span>
+                        Closed{" "}
+                        {formatTimestamp(new Date(item.raw.closedAt).getTime())}
+                      </span>
+                    )}
                   </div>
                 </>
               )}
 
               {/* Issue: body preview, assignees */}
-              {item.type === 'issue' && (
+              {item.type === "issue" && (
                 <>
                   {item.body && (
                     <div className="text-brutal-xs text-[var(--theme-foreground)]/60 leading-relaxed max-h-[150px] overflow-y-auto">
-                      {item.body.slice(0, 500)}{item.body.length > 500 ? '...' : ''}
+                      {item.body.slice(0, 500)}
+                      {item.body.length > 500 ? "..." : ""}
                     </div>
                   )}
                   {item.assignees && item.assignees.length > 0 && (
                     <div className="flex items-center gap-[6px]">
-                      <span className="font-mono text-brutal-xs text-[var(--theme-foreground)]/50">Assignees:</span>
+                      <span className="font-mono text-brutal-xs text-[var(--theme-foreground)]/50">
+                        Assignees:
+                      </span>
                       <div className="flex items-center gap-[4px]">
-                        {item.assignees.map(a => (
-                          <div key={a} className="w-[18px] h-[18px] rounded-full bg-gradient-to-br from-[#06B6D4] to-[var(--theme-border)] flex items-center justify-center text-[8px] font-bold text-white" title={a}>
+                        {item.assignees.map((a) => (
+                          <div
+                            key={a}
+                            className="w-[18px] h-[18px] flex items-center justify-center text-[8px] font-bold"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, var(--theme-info), var(--theme-border))",
+                              color: "var(--theme-background)",
+                            }}
+                            title={a}
+                          >
                             {a.charAt(0).toUpperCase()}
                           </div>
                         ))}
@@ -272,10 +425,18 @@ export default memo(function GitHubFeedItem({ item, isFocused, isExpanded, onTog
                   )}
                   {item.labels && item.labels.length > 0 && (
                     <div className="flex flex-wrap gap-[4px]">
-                      {item.labels.map(label => {
-                        const c = getLabelColor(label);
+                      {item.labels.map((label) => {
+                        const colorVar = getLabelColorVar(label);
                         return (
-                          <span key={label} className={`px-[5px] py-[1px] rounded font-mono text-[10px] font-bold border ${c.bg} ${c.text} ${c.border}`}>
+                          <span
+                            key={label}
+                            className="px-[5px] py-[1px] font-mono text-[10px] font-bold"
+                            style={{
+                              color: colorVar,
+                              border: `1px solid color-mix(in srgb, ${colorVar} 20%, transparent)`,
+                              backgroundColor: `color-mix(in srgb, ${colorVar} 10%, transparent)`,
+                            }}
+                          >
                             {label}
                           </span>
                         );
@@ -292,7 +453,7 @@ export default memo(function GitHubFeedItem({ item, isFocused, isExpanded, onTog
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-[4px] font-mono text-brutal-xs text-primary-brutalist hover:underline"
+                  className="inline-flex items-center gap-[4px] font-mono text-brutal-xs text-[var(--theme-primary)] hover:underline"
                 >
                   <HiOutlineExternalLink className="w-[12px] h-[12px]" />
                   View on GitHub

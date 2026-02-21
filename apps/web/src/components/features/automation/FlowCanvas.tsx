@@ -1,4 +1,4 @@
-import { useCallback, useState, useMemo, useEffect } from 'react'
+import { useCallback, useState, useMemo } from 'react'
 import ReactFlow, {
   Controls,
   Background,
@@ -82,9 +82,109 @@ interface FlowCanvasProps {
   onSave?: (nodes: Node[], edges: Edge[]) => void
 }
 
+function getTriggerIcon(type: string) {
+  switch (type) {
+    case 'event':
+      return HiOutlineLightningBolt
+    case 'schedule':
+      return HiOutlineClock
+    case 'webhook':
+      return HiOutlineGlobeAlt
+    case 'manual':
+      return HiOutlinePlay
+    default:
+      return HiOutlineLightningBolt
+  }
+}
+
+function getActionDescription(action: any) {
+  if (action.config?.title) return action.config.title
+  if (action.config?.message) return action.config.message
+  return 'Configure action'
+}
+
+function buildWorkflowGraph(wf: any): { nodes: Node[]; edges: Edge[] } {
+  if (!wf) return { nodes: [], edges: [] }
+
+  const newNodes: Node[] = []
+  const newEdges: Edge[] = []
+  let yPosition = 50
+
+  // Create trigger node
+  const triggerNode: Node = {
+    id: 'trigger',
+    type: 'trigger',
+    position: { x: 250, y: yPosition },
+    data: {
+      label: wf.trigger.type.toUpperCase(),
+      description: wf.trigger.event || wf.trigger.schedule || 'Manual trigger',
+      icon: getTriggerIcon(wf.trigger.type),
+    },
+  }
+  newNodes.push(triggerNode)
+  yPosition += 150
+
+  let previousNodeId = 'trigger'
+
+  // Create condition nodes
+  if (wf.conditions && wf.conditions.length > 0) {
+    wf.conditions.forEach((condition: any, index: number) => {
+      const conditionId = `condition-${index}`
+      newNodes.push({
+        id: conditionId,
+        type: 'condition',
+        position: { x: 250, y: yPosition },
+        data: {
+          label: `If ${condition.field}`,
+          description: `${condition.operator} ${condition.value}`,
+        },
+      })
+      newEdges.push({
+        id: `${previousNodeId}-${conditionId}`,
+        source: previousNodeId,
+        target: conditionId,
+        type: 'default',
+        animated: true,
+        markerEnd: { type: MarkerType.ArrowClosed },
+      })
+      previousNodeId = conditionId
+      yPosition += 150
+    })
+  }
+
+  // Create action nodes
+  if (wf.actions && wf.actions.length > 0) {
+    wf.actions.forEach((action: any, index: number) => {
+      const actionId = `action-${index}`
+      newNodes.push({
+        id: actionId,
+        type: 'action',
+        position: { x: 250, y: yPosition },
+        data: {
+          label: action.type.replace('_', ' ').toUpperCase(),
+          description: getActionDescription(action),
+        },
+      })
+      newEdges.push({
+        id: `${previousNodeId}-${actionId}`,
+        source: previousNodeId,
+        target: actionId,
+        type: 'default',
+        animated: true,
+        markerEnd: { type: MarkerType.ArrowClosed },
+      })
+      previousNodeId = actionId
+      yPosition += 150
+    })
+  }
+
+  return { nodes: newNodes, edges: newEdges }
+}
+
 export default function FlowCanvas({ workflow, onSave }: FlowCanvasProps) {
-  const [nodes, setNodes, onNodesChange] = useNodesState([])
-  const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const initialGraph = useMemo(() => buildWorkflowGraph(workflow), [workflow])
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialGraph.nodes)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialGraph.edges)
 
   // Define custom node types
   const nodeTypes = useMemo(
@@ -95,108 +195,6 @@ export default function FlowCanvas({ workflow, onSave }: FlowCanvasProps) {
     }),
     []
   )
-
-  // Load workflow into flow canvas
-  const loadWorkflow = useCallback((wf: any) => {
-    if (!wf) return
-
-    const newNodes: Node[] = []
-    const newEdges: Edge[] = []
-    let yPosition = 50
-
-    // Create trigger node
-    const triggerNode: Node = {
-      id: 'trigger',
-      type: 'trigger',
-      position: { x: 250, y: yPosition },
-      data: {
-        label: wf.trigger.type.toUpperCase(),
-        description: wf.trigger.event || wf.trigger.schedule || 'Manual trigger',
-        icon: getTriggerIcon(wf.trigger.type),
-      },
-    }
-    newNodes.push(triggerNode)
-    yPosition += 150
-
-    let previousNodeId = 'trigger'
-
-    // Create condition nodes
-    if (wf.conditions && wf.conditions.length > 0) {
-      wf.conditions.forEach((condition: any, index: number) => {
-        const conditionId = `condition-${index}`
-        newNodes.push({
-          id: conditionId,
-          type: 'condition',
-          position: { x: 250, y: yPosition },
-          data: {
-            label: `If ${condition.field}`,
-            description: `${condition.operator} ${condition.value}`,
-          },
-        })
-        newEdges.push({
-          id: `${previousNodeId}-${conditionId}`,
-          source: previousNodeId,
-          target: conditionId,
-          type: 'default',
-          animated: true,
-          markerEnd: { type: MarkerType.ArrowClosed },
-        })
-        previousNodeId = conditionId
-        yPosition += 150
-      })
-    }
-
-    // Create action nodes
-    if (wf.actions && wf.actions.length > 0) {
-      wf.actions.forEach((action: any, index: number) => {
-        const actionId = `action-${index}`
-        newNodes.push({
-          id: actionId,
-          type: 'action',
-          position: { x: 250, y: yPosition },
-          data: {
-            label: action.type.replace('_', ' ').toUpperCase(),
-            description: getActionDescription(action),
-          },
-        })
-        newEdges.push({
-          id: `${previousNodeId}-${actionId}`,
-          source: previousNodeId,
-          target: actionId,
-          type: 'default',
-          animated: true,
-          markerEnd: { type: MarkerType.ArrowClosed },
-        })
-        previousNodeId = actionId
-        yPosition += 150
-      })
-    }
-
-    setNodes(newNodes)
-    setEdges(newEdges)
-  }, [setNodes, setEdges])
-
-  // Helper functions
-  const getTriggerIcon = (type: string) => {
-    switch (type) {
-      case 'event':
-        return HiOutlineLightningBolt
-      case 'schedule':
-        return HiOutlineClock
-      case 'webhook':
-        return HiOutlineGlobeAlt
-      case 'manual':
-        return HiOutlinePlay
-      default:
-        return HiOutlineLightningBolt
-    }
-  }
-
-  const getActionDescription = (action: any) => {
-    if (action.config?.title) return action.config.title
-    if (action.config?.message) return action.config.message
-    return 'Configure action'
-  }
 
   // Handle connection
   const onConnect = useCallback(
@@ -237,13 +235,6 @@ export default function FlowCanvas({ workflow, onSave }: FlowCanvasProps) {
       onSave(nodes, edges)
     }
   }
-
-  // react-doctor: legitimate - syncs external workflow prop into local component state
-  useEffect(() => {
-    if (workflow) {
-      loadWorkflow(workflow)
-    }
-  }, [workflow, loadWorkflow])
 
   return (
     <div className="h-600px border-2 border-[var(--theme-border)] bg-[var(--theme-background)]">

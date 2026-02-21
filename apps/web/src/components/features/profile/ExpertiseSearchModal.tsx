@@ -21,7 +21,6 @@ interface ExpertiseSearchModalProps {
 
 export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchModalProps) {
   const [searchQuery, setSearchQuery] = useState('')
-  const [isSearching, setIsSearching] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const searchResults = useQuery(
@@ -32,22 +31,14 @@ export function ExpertiseSearchModal({ onClose, workspaceId }: ExpertiseSearchMo
     } : 'skip'
   )
 
+  // Derived: searching when query is long enough but results haven't loaded yet
+  const isSearching = searchQuery.trim().length >= 2 && searchResults === undefined
+
   useEffect(() => {
     if (searchInputRef.current) {
       searchInputRef.current.focus()
     }
   }, [])
-
-  // react-doctor false positive: setIsSearching calls are in different branches
-  useEffect(() => {
-    if (searchQuery.trim().length >= 2) {
-      setIsSearching(true)
-      const timer = setTimeout(() => setIsSearching(false), 300)
-      return () => clearTimeout(timer)
-    } else {
-      setIsSearching(false)
-    }
-  }, [searchQuery])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {

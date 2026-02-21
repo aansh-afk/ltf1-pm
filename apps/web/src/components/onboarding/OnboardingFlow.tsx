@@ -63,6 +63,19 @@ const bootLines = [
   { label: 'WORKSPACE_INIT', delay: 0.8 },
 ]
 
+function scheduleBootTimers(
+  dispatch: (action: { type: 'ADD_BOOT_COMPLETE'; index: number } | { type: 'SET_ALL_SYSTEMS_GO'; value: boolean }) => void,
+  onComplete: () => void
+): Array<ReturnType<typeof setTimeout>> {
+  const timers: Array<ReturnType<typeof setTimeout>> = []
+  bootLines.forEach((line, index) => {
+    timers.push(setTimeout(() => { dispatch({ type: 'ADD_BOOT_COMPLETE', index }) }, line.delay * 1000 + 600))
+  })
+  timers.push(setTimeout(() => { dispatch({ type: 'SET_ALL_SYSTEMS_GO', value: true }) }, (bootLines[bootLines.length - 1].delay + 0.6) * 1000 + 600))
+  timers.push(setTimeout(() => { onComplete() }, (bootLines[bootLines.length - 1].delay + 0.6) * 1000 + 1800))
+  return timers
+}
+
 interface TerminalProgressProps {
   filledBlocks: number
   stepIndex: number
@@ -269,6 +282,118 @@ function ThemeStep({ direction, showSkipConfirm, themeName, themeDescription, on
   )
 }
 
+interface AIOptionCardProps {
+  selected: boolean
+  icon: React.ReactNode
+  title: string
+  description: string
+  details: string[]
+  onSelect: () => void
+}
+
+function AIOptionCard({ selected, icon, title, description, details, onSelect }: AIOptionCardProps) {
+  return (
+    <m.button
+      variants={staggerItem}
+      whileHover={{
+        y: -2,
+        boxShadow: '4px 4px 0 var(--theme-shadow)',
+        transition: { duration: 0.15 },
+      }}
+      whileTap={{ y: 0, boxShadow: 'none' }}
+      onClick={onSelect}
+      className="w-full p-[16px] border-2 text-left transition-colors"
+      style={{
+        borderRadius: '0px',
+        backgroundColor: selected ? 'var(--theme-background-secondary)' : 'var(--theme-background)',
+        borderColor: selected ? 'var(--theme-primary)' : 'var(--theme-border)',
+        color: 'var(--theme-foreground)',
+        boxShadow: selected ? '4px 4px 0 var(--theme-shadow), inset 0 0 12px rgba(99, 102, 241, 0.08)' : 'none'
+      }}
+    >
+      <div className="flex items-start gap-[8px]">
+        {icon}
+        <div className="flex-1">
+          <div className="flex items-center gap-[8px] mb-[6px]">
+            <h3 className="text-[12px] font-mono uppercase tracking-wider"
+              style={{ color: selected ? 'var(--theme-primary)' : 'var(--theme-foreground)' }}
+            >
+              {title}
+            </h3>
+            {selected && (
+              <m.span
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="w-4 h-4 border-2 flex items-center justify-center"
+                style={{ borderColor: 'var(--theme-primary)', backgroundColor: 'var(--theme-primary)' }}
+              >
+                <HiOutlineCheck className="w-3 h-3" style={{ color: 'var(--theme-background)' }} />
+              </m.span>
+            )}
+          </div>
+          <p className="text-[11px] font-mono mb-[6px]" style={{ color: 'var(--theme-foreground-secondary)' }}>
+            {description}
+          </p>
+          <div className="text-[10px] font-mono space-y-[2px]" style={{ color: 'var(--theme-foreground-tertiary)' }}>
+            {details.map((detail) => (
+              <p key={detail}>- {detail}</p>
+            ))}
+          </div>
+        </div>
+      </div>
+    </m.button>
+  )
+}
+
+interface BYOKInputProps {
+  apiKey: string
+  onApiKeyChange: (value: string) => void
+}
+
+function BYOKInput({ apiKey, onApiKeyChange }: BYOKInputProps) {
+  return (
+    <m.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.25 }}
+      className="space-y-[6px] overflow-hidden"
+    >
+      <label
+        htmlFor="onboarding-gemini-key"
+        className="block text-[11px] font-mono uppercase tracking-wider"
+        style={{ color: 'var(--theme-foreground)' }}
+      >
+        $ ENTER GEMINI_API_KEY:
+      </label>
+      <input
+        id="onboarding-gemini-key"
+        type="password"
+        value={apiKey}
+        onChange={(e) => onApiKeyChange(e.target.value)}
+        placeholder="AIza..."
+        className="w-full px-[10px] py-[8px] border-2 font-mono text-[12px] tracking-wider"
+        style={{
+          borderRadius: '0px',
+          backgroundColor: 'var(--theme-background)',
+          borderColor: 'var(--theme-border)',
+          color: 'var(--theme-foreground)'
+        }}
+      />
+      <div className="flex items-start gap-[8px]">
+        <HiOutlineInformationCircle className="w-4 h-4 flex-shrink-0 mt-[1px]" style={{ color: 'var(--theme-info)' }} />
+        <p className="text-[10px] font-mono tracking-wider" style={{ color: 'var(--theme-foreground-secondary)' }}>
+          Get your key from{' '}
+          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: 'var(--theme-info)' }}>
+            Google AI Studio
+          </a>
+          . Encrypted on save.
+        </p>
+      </div>
+    </m.div>
+  )
+}
+
 interface AIStepProps {
   direction: number
   aiSetupChoice: 'free' | 'byok' | 'skip' | ''
@@ -294,233 +419,48 @@ function AIStep({ direction, aiSetupChoice, apiKey, isValidating, dispatch, onBa
       {/* AI Setup Header */}
       <div
         className="p-[10px] border-2"
-        style={{
-          backgroundColor: 'var(--theme-background-secondary)',
-          borderColor: 'var(--theme-info)'
-        }}
+        style={{ backgroundColor: 'var(--theme-background-secondary)', borderColor: 'var(--theme-info)' }}
       >
         <div className="flex items-start gap-[6px]">
-          <HiOutlineSparkles
-            className="w-4 h-4 flex-shrink-0"
-            style={{ color: 'var(--theme-info)' }}
-          />
+          <HiOutlineSparkles className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--theme-info)' }} />
           <div>
-            <h3
-              className="text-[13px] font-mono uppercase mb-[4px] tracking-wider"
-              style={{ color: 'var(--theme-foreground)' }}
-            >
+            <h3 className="text-[13px] font-mono uppercase mb-[4px] tracking-wider" style={{ color: 'var(--theme-foreground)' }}>
               {'>'} AI CAPABILITIES DETECTED
             </h3>
-            <p
-              className="text-[11px] font-mono"
-              style={{ color: 'var(--theme-foreground-secondary)' }}
-            >
-              Task generation, code reviews, meeting summaries, and more.
-              Select a configuration mode:
+            <p className="text-[11px] font-mono" style={{ color: 'var(--theme-foreground-secondary)' }}>
+              Task generation, code reviews, meeting summaries, and more. Select a configuration mode:
             </p>
           </div>
         </div>
       </div>
 
       {/* Option Cards */}
-      <m.div
-        variants={staggerContainer}
-        initial="hidden"
-        animate="show"
-        className="space-y-[10px]"
-      >
-        {/* Option 1: Free Credits */}
-        <m.button
-          variants={staggerItem}
-          whileHover={{
-            y: -2,
-            boxShadow: '4px 4px 0 var(--theme-shadow)',
-            transition: { duration: 0.15 },
-          }}
-          whileTap={{ y: 0, boxShadow: 'none' }}
-          onClick={() => dispatch({ type: 'SET_AI_SETUP_CHOICE', value: 'free' })}
-          className="w-full p-[16px] border-2 text-left transition-colors"
-          style={{
-            borderRadius: '0px',
-            backgroundColor: aiSetupChoice === 'free'
-              ? 'var(--theme-background-secondary)'
-              : 'var(--theme-background)',
-            borderColor: aiSetupChoice === 'free'
-              ? 'var(--theme-primary)'
-              : 'var(--theme-border)',
-            color: 'var(--theme-foreground)',
-            boxShadow: aiSetupChoice === 'free'
-              ? '4px 4px 0 var(--theme-shadow), inset 0 0 12px rgba(99, 102, 241, 0.08)'
-              : 'none'
-          }}
-        >
-          <div className="flex items-start gap-[8px]">
-            <HiOutlineCreditCard
-              className="w-4 h-4 flex-shrink-0 mt-[2px]"
-              style={{ color: aiSetupChoice === 'free' ? 'var(--theme-primary)' : 'var(--theme-foreground-secondary)' }}
-            />
-            <div className="flex-1">
-              <div className="flex items-center gap-[8px] mb-[6px]">
-                <h3 className="text-[12px] font-mono uppercase tracking-wider"
-                  style={{ color: aiSetupChoice === 'free' ? 'var(--theme-primary)' : 'var(--theme-foreground)' }}
-                >
-                  FREE_TIER
-                </h3>
-                {aiSetupChoice === 'free' && (
-                  <m.span
-                    initial={{ scale: 0.95, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="w-4 h-4 border-2 flex items-center justify-center"
-                    style={{
-                      borderColor: 'var(--theme-primary)',
-                      backgroundColor: 'var(--theme-primary)',
-                    }}
-                  >
-                    <HiOutlineCheck className="w-3 h-3" style={{ color: 'var(--theme-background)' }} />
-                  </m.span>
-                )}
-              </div>
-              <p className="text-[11px] font-mono mb-[6px]"
-                style={{ color: 'var(--theme-foreground-secondary)' }}
-              >
-                100 free AI credits/month. Perfect for exploration.
-              </p>
-              <div className="text-[10px] font-mono space-y-[2px]"
-                style={{ color: 'var(--theme-foreground-tertiary)' }}
-              >
-                <p>- ~50 task generations or code reviews</p>
-                <p>- Rate limited: 10 req/hour</p>
-                <p>- Upgrade anytime</p>
-              </div>
-            </div>
-          </div>
-        </m.button>
+      <m.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-[10px]">
+        <AIOptionCard
+          selected={aiSetupChoice === 'free'}
+          icon={<HiOutlineCreditCard className="w-4 h-4 flex-shrink-0 mt-[2px]" style={{ color: aiSetupChoice === 'free' ? 'var(--theme-primary)' : 'var(--theme-foreground-secondary)' }} />}
+          title="FREE_TIER"
+          description="100 free AI credits/month. Perfect for exploration."
+          details={['~50 task generations or code reviews', 'Rate limited: 10 req/hour', 'Upgrade anytime']}
+          onSelect={() => dispatch({ type: 'SET_AI_SETUP_CHOICE', value: 'free' })}
+        />
 
-        {/* Option 2: BYOK */}
-        <m.button
-          variants={staggerItem}
-          whileHover={{
-            y: -2,
-            boxShadow: '4px 4px 0 var(--theme-shadow)',
-            transition: { duration: 0.15 },
-          }}
-          whileTap={{ y: 0, boxShadow: 'none' }}
-          onClick={() => dispatch({ type: 'SET_AI_SETUP_CHOICE', value: 'byok' })}
-          className="w-full p-[16px] border-2 text-left transition-colors"
-          style={{
-            borderRadius: '0px',
-            backgroundColor: aiSetupChoice === 'byok'
-              ? 'var(--theme-background-secondary)'
-              : 'var(--theme-background)',
-            borderColor: aiSetupChoice === 'byok'
-              ? 'var(--theme-primary)'
-              : 'var(--theme-border)',
-            color: 'var(--theme-foreground)',
-            boxShadow: aiSetupChoice === 'byok'
-              ? '4px 4px 0 var(--theme-shadow), inset 0 0 12px rgba(99, 102, 241, 0.08)'
-              : 'none'
-          }}
-        >
-          <div className="flex items-start gap-[8px]">
-            <HiOutlineKey
-              className="w-4 h-4 flex-shrink-0 mt-[2px]"
-              style={{ color: aiSetupChoice === 'byok' ? 'var(--theme-primary)' : 'var(--theme-foreground-secondary)' }}
-            />
-            <div className="flex-1">
-              <div className="flex items-center gap-[8px] mb-[6px]">
-                <h3 className="text-[12px] font-mono uppercase tracking-wider"
-                  style={{ color: aiSetupChoice === 'byok' ? 'var(--theme-primary)' : 'var(--theme-foreground)' }}
-                >
-                  BYOK_MODE
-                </h3>
-                {aiSetupChoice === 'byok' && (
-                  <m.span
-                    initial={{ scale: 0.95, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="w-4 h-4 border-2 flex items-center justify-center"
-                    style={{
-                      borderColor: 'var(--theme-primary)',
-                      backgroundColor: 'var(--theme-primary)',
-                    }}
-                  >
-                    <HiOutlineCheck className="w-3 h-3" style={{ color: 'var(--theme-background)' }} />
-                  </m.span>
-                )}
-              </div>
-              <p className="text-[11px] font-mono mb-[6px]"
-                style={{ color: 'var(--theme-foreground-secondary)' }}
-              >
-                Bring your own Google Gemini key. Unlimited usage.
-              </p>
-              <div className="text-[10px] font-mono space-y-[2px]"
-                style={{ color: 'var(--theme-foreground-tertiary)' }}
-              >
-                <p>- No credit limits</p>
-                <p>- No rate limiting from LTF1</p>
-                <p>- Encrypted & secure storage</p>
-              </div>
-            </div>
-          </div>
-        </m.button>
+        <AIOptionCard
+          selected={aiSetupChoice === 'byok'}
+          icon={<HiOutlineKey className="w-4 h-4 flex-shrink-0 mt-[2px]" style={{ color: aiSetupChoice === 'byok' ? 'var(--theme-primary)' : 'var(--theme-foreground-secondary)' }} />}
+          title="BYOK_MODE"
+          description="Bring your own Google Gemini key. Unlimited usage."
+          details={['No credit limits', 'No rate limiting from LTF1', 'Encrypted & secure storage']}
+          onSelect={() => dispatch({ type: 'SET_AI_SETUP_CHOICE', value: 'byok' })}
+        />
 
-        {/* API Key Input (shown when BYOK is selected) */}
         <AnimatePresence>
           {aiSetupChoice === 'byok' && (
-            <m.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.25 }}
-              className="space-y-[6px] overflow-hidden"
-            >
-              <label
-                htmlFor="onboarding-gemini-key"
-                className="block text-[11px] font-mono uppercase tracking-wider"
-                style={{ color: 'var(--theme-foreground)' }}
-              >
-                $ ENTER GEMINI_API_KEY:
-              </label>
-              <input
-                id="onboarding-gemini-key"
-                type="password"
-                value={apiKey}
-                onChange={(e) => dispatch({ type: 'SET_API_KEY', value: e.target.value })}
-                placeholder="AIza..."
-                className="w-full px-[10px] py-[8px] border-2 font-mono text-[12px] tracking-wider"
-                style={{
-                  borderRadius: '0px',
-                  backgroundColor: 'var(--theme-background)',
-                  borderColor: 'var(--theme-border)',
-                  color: 'var(--theme-foreground)'
-                }}
-              />
-              <div className="flex items-start gap-[8px]">
-                <HiOutlineInformationCircle
-                  className="w-4 h-4 flex-shrink-0 mt-[1px]"
-                  style={{ color: 'var(--theme-info)' }}
-                />
-                <p
-                  className="text-[10px] font-mono tracking-wider"
-                  style={{ color: 'var(--theme-foreground-secondary)' }}
-                >
-                  Get your key from{' '}
-                  <a
-                    href="https://aistudio.google.com/apikey"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline"
-                    style={{ color: 'var(--theme-info)' }}
-                  >
-                    Google AI Studio
-                  </a>
-                  . Encrypted on save.
-                </p>
-              </div>
-            </m.div>
+            <BYOKInput apiKey={apiKey} onApiKeyChange={(value) => dispatch({ type: 'SET_API_KEY', value })} />
           )}
         </AnimatePresence>
 
-        {/* Option 3: Skip */}
+        {/* Skip Option */}
         <m.button
           variants={staggerItem}
           whileHover={{ y: -1 }}
@@ -530,18 +470,12 @@ function AIStep({ direction, aiSetupChoice, apiKey, isValidating, dispatch, onBa
           style={{
             borderRadius: '0px',
             backgroundColor: 'var(--theme-background)',
-            borderColor: aiSetupChoice === 'skip'
-              ? 'var(--theme-foreground-tertiary)'
-              : 'var(--theme-border)',
+            borderColor: aiSetupChoice === 'skip' ? 'var(--theme-foreground-tertiary)' : 'var(--theme-border)',
             color: 'var(--theme-foreground-tertiary)',
-            boxShadow: aiSetupChoice === 'skip'
-              ? '4px 4px 0 var(--theme-shadow)'
-              : 'none'
+            boxShadow: aiSetupChoice === 'skip' ? '4px 4px 0 var(--theme-shadow)' : 'none'
           }}
         >
-          <p className="text-[11px] font-mono uppercase tracking-wider">
-            SKIP --configure-later
-          </p>
+          <p className="text-[11px] font-mono uppercase tracking-wider">SKIP --configure-later</p>
         </m.button>
       </m.div>
 
@@ -552,12 +486,7 @@ function AIStep({ direction, aiSetupChoice, apiKey, isValidating, dispatch, onBa
           whileTap={{ y: 1 }}
           onClick={onBack}
           className="px-[12px] py-[8px] border-2 font-mono text-[11px] uppercase tracking-wider flex items-center gap-[6px]"
-          style={{
-            borderRadius: '8px',
-            backgroundColor: 'var(--theme-background)',
-            borderColor: 'var(--theme-border)',
-            color: 'var(--theme-foreground)'
-          }}
+          style={{ borderRadius: '8px', backgroundColor: 'var(--theme-background)', borderColor: 'var(--theme-border)', color: 'var(--theme-foreground)' }}
         >
           <HiOutlineArrowLeft className="w-4 h-4" />
           BACK
@@ -618,6 +547,7 @@ type OnboardingAction =
   | { type: 'ADD_BOOT_COMPLETE'; index: number }
   | { type: 'SET_ALL_SYSTEMS_GO'; value: boolean }
   | { type: 'RESET_BOOT' }
+  | { type: 'GO_BACK_TO_THEME' }
 
 function onboardingReducer(state: OnboardingState, action: OnboardingAction): OnboardingState {
   switch (action.type) {
@@ -637,6 +567,8 @@ function onboardingReducer(state: OnboardingState, action: OnboardingAction): On
       return { ...state, allSystemsGo: action.value }
     case 'RESET_BOOT':
       return { ...state, bootComplete: [], allSystemsGo: false }
+    case 'GO_BACK_TO_THEME':
+      return { ...state, currentStep: 'theme' as OnboardingStep, direction: -1, aiSetupChoice: '' as const }
     default:
       return state
   }
@@ -770,8 +702,7 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
 
   const handleBack = () => {
     if (currentStep === 'ai') {
-      dispatch({ type: 'SET_STEP', step: 'theme', direction: -1 })
-      dispatch({ type: 'SET_AI_SETUP_CHOICE', value: '' })
+      dispatch({ type: 'GO_BACK_TO_THEME' })
     }
   }
 
@@ -830,32 +761,12 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
     }
   }
 
-  // Already uses useReducer dispatch; multiple dispatches are for sequential animation timers
   useEffect(() => {
     if (currentStep !== 'complete') {
       dispatch({ type: 'RESET_BOOT' })
       return
     }
-
-    const timers: Array<ReturnType<typeof setTimeout>> = []
-
-    bootLines.forEach((line, index) => {
-      const timer = setTimeout(() => {
-        dispatch({ type: 'ADD_BOOT_COMPLETE', index })
-      }, line.delay * 1000 + 600)
-      timers.push(timer)
-    })
-
-    const finalTimer = setTimeout(() => {
-      dispatch({ type: 'SET_ALL_SYSTEMS_GO', value: true })
-    }, (bootLines[bootLines.length - 1].delay + 0.6) * 1000 + 600)
-    timers.push(finalTimer)
-
-    const completeTimer = setTimeout(() => {
-      onComplete()
-    }, (bootLines[bootLines.length - 1].delay + 0.6) * 1000 + 1800)
-    timers.push(completeTimer)
-
+    const timers = scheduleBootTimers(dispatch, onComplete)
     return () => timers.forEach(clearTimeout)
   }, [currentStep, onComplete])
 
