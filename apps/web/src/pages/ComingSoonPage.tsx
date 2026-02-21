@@ -372,10 +372,10 @@ export default function ComingSoonPage() {
   const [fingerprint, setFingerprint] = useState<string>('')
 
   useEffect(() => {
-    let fp = localStorage.getItem('iceberg_fingerprint')
+    let fp = localStorage.getItem('ltf1_fingerprint')
     if (!fp) {
       fp = crypto.randomUUID()
-      localStorage.setItem('iceberg_fingerprint', fp)
+      localStorage.setItem('ltf1_fingerprint', fp)
     }
     setFingerprint(fp)
   }, [])
