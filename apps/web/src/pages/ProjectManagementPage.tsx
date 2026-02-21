@@ -2903,7 +2903,7 @@ export default function ProjectManagementPage() {
         description: task.description,
         type: task.type,
         priority: task.priority,
-        assigneeId: task.assigneeId,
+        assigneeIds: task.assigneeIds ?? [],
         labels: task.labels,
         estimate: task.estimate,
         startDate: task.startDate,
