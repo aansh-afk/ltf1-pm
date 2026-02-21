@@ -1408,6 +1408,7 @@ export default defineSchema({
     sessionId: v.optional(v.string()),
   })
     .index("by_workspace", ["workspaceId"])
+    .index("by_workspace_and_createdAt", ["workspaceId", "_creationTime"])
     .index("by_user", ["userId"])
     .index("by_event_type", ["eventType"])
     .index("by_entity", ["entityType", "entityId"])
