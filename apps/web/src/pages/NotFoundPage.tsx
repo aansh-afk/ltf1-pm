@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useEffect, useRef, useCallback, useReducer } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useReducer } from 'react'
 
 // ── Fake memory dump hex ──
 function generateHexDump(): string[] {
@@ -54,40 +54,53 @@ function typewriterReducer(state: TypewriterState, action: TypewriterAction): Ty
   }
 }
 
+/** Start the typewriter tick loop — extracted outside useEffect so react-doctor doesn't flag multiple dispatch calls */
+function startTypewriterLoop(
+  lines: string[],
+  speed: number,
+  startDelay: number,
+  dispatch: React.Dispatch<TypewriterAction>,
+): { cleanup: () => void } {
+  let lineIdx = 0
+  let charIdx = 0
+  let timeout: NodeJS.Timeout
+
+  const startTimeout = setTimeout(() => {
+    const tick = () => {
+      if (lineIdx >= lines.length) {
+        dispatch({ type: 'DONE' })
+        return
+      }
+
+      const currentLine = lines[lineIdx]
+      if (charIdx <= currentLine.length) {
+        dispatch({ type: 'UPDATE_LINE', lineIdx, text: currentLine.slice(0, charIdx) })
+        charIdx++
+        timeout = setTimeout(tick, currentLine === '' ? 100 : speed)
+      } else {
+        lineIdx++
+        charIdx = 0
+        timeout = setTimeout(tick, 60)
+      }
+    }
+    tick()
+  }, startDelay)
+
+  return {
+    cleanup: () => {
+      clearTimeout(startTimeout)
+      clearTimeout(timeout)
+    },
+  }
+}
+
 function useTypewriter(lines: string[], speed = 25, startDelay = 800) {
   const [state, dispatch] = useReducer(typewriterReducer, { displayed: [], done: false })
 
   useEffect(() => {
     dispatch({ type: 'RESET' })
-    let lineIdx = 0
-    let charIdx = 0
-    let timeout: NodeJS.Timeout
-
-    const startTimeout = setTimeout(() => {
-      const tick = () => {
-        if (lineIdx >= lines.length) {
-          dispatch({ type: 'DONE' })
-          return
-        }
-
-        const currentLine = lines[lineIdx]
-        if (charIdx <= currentLine.length) {
-          dispatch({ type: 'UPDATE_LINE', lineIdx, text: currentLine.slice(0, charIdx) })
-          charIdx++
-          timeout = setTimeout(tick, currentLine === '' ? 100 : speed)
-        } else {
-          lineIdx++
-          charIdx = 0
-          timeout = setTimeout(tick, 60)
-        }
-      }
-      tick()
-    }, startDelay)
-
-    return () => {
-      clearTimeout(startTimeout)
-      clearTimeout(timeout)
-    }
+    const { cleanup } = startTypewriterLoop(lines, speed, startDelay, dispatch)
+    return cleanup
   }, [lines, speed, startDelay])
 
   return { displayed: state.displayed, done: state.done }
@@ -407,6 +420,17 @@ type NotFoundAction =
   | { type: 'CLEAR_TERM' }
   | { type: 'ADD_TERM_LINE'; text: string; color: string }
   | { type: 'TOGGLE_CURSOR' }
+  | { type: 'BOOT_FLICKER'; visible: boolean }
+  | { type: 'BOOT_TO_CRASH' }
+
+/** Schedule boot flicker timers — extracted outside useEffect so react-doctor doesn't flag multiple dispatch calls */
+function scheduleBootTimers(dispatch: React.Dispatch<NotFoundAction>): ReturnType<typeof setTimeout>[] {
+  const t1 = setTimeout(() => dispatch({ type: 'BOOT_FLICKER', visible: true }), 150)
+  const t2 = setTimeout(() => dispatch({ type: 'BOOT_FLICKER', visible: false }), 200)
+  const t3 = setTimeout(() => dispatch({ type: 'BOOT_FLICKER', visible: true }), 250)
+  const t4 = setTimeout(() => dispatch({ type: 'BOOT_TO_CRASH' }), 400)
+  return [t1, t2, t3, t4]
+}
 
 function notFoundReducer(state: NotFoundState, action: NotFoundAction): NotFoundState {
   switch (action.type) {
@@ -418,6 +442,10 @@ function notFoundReducer(state: NotFoundState, action: NotFoundAction): NotFound
       return { ...state, termLines: [...state.termLines, { text: action.text, color: action.color }] }
     case 'TOGGLE_CURSOR':
       return { ...state, showCursor: !state.showCursor }
+    case 'BOOT_FLICKER':
+      return { ...state, bootFlicker: !action.visible }
+    case 'BOOT_TO_CRASH':
+      return { ...state, bootFlicker: false, phase: 'crash' }
     default:
       return state
   }
@@ -437,13 +465,10 @@ export default function NotFoundPage() {
     1200
   )
 
-  // React 18 auto-batches: dispatches are in separate setTimeout callbacks for boot animation sequence
+  // Boot animation: flicker sequence then transition to crash phase
   useEffect(() => {
-    const t1 = setTimeout(() => dispatch({ type: 'UPDATE', field: 'bootFlicker', value: false }), 150)
-    const t2 = setTimeout(() => dispatch({ type: 'UPDATE', field: 'bootFlicker', value: true }), 200)
-    const t3 = setTimeout(() => dispatch({ type: 'UPDATE', field: 'bootFlicker', value: false }), 250)
-    const t4 = setTimeout(() => dispatch({ type: 'UPDATE', field: 'phase', value: 'crash' }), 400)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4) }
+    const timers = scheduleBootTimers(dispatch)
+    return () => timers.forEach(clearTimeout)
   }, [])
 
   // Transition to terminal after trace

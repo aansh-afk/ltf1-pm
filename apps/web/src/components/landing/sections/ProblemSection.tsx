@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useReducer } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
 
 const WITHOUT_STEPS = [
@@ -27,21 +27,35 @@ const AUTO_LOG = [
   '[NOTIFY]  #team: LTF1-142 in review',
 ]
 
+type LogAction =
+  | { type: 'RESET' }
+  | { type: 'APPEND'; line: string }
+
+function logReducer(state: string[], action: LogAction): string[] {
+  switch (action.type) {
+    case 'RESET':
+      return []
+    case 'APPEND':
+      return [...state, action.line]
+    default:
+      return state
+  }
+}
+
 export default function ProblemSection() {
   const [withLtf1, setWithLtf1] = useState(false)
-  const [visibleLog, setVisibleLog] = useState<string[]>([])
+  const [visibleLog, dispatchLog] = useReducer(logReducer, [])
   const logTimers = useRef<ReturnType<typeof setTimeout>[]>([])
 
-  // react-doctor false positive: setVisibleLog reset is synchronous, subsequent calls are in async timers
   useEffect(() => {
     logTimers.current.forEach(clearTimeout)
     logTimers.current = []
-    setVisibleLog([])
+    dispatchLog({ type: 'RESET' })
 
     if (withLtf1) {
       AUTO_LOG.forEach((line, i) => {
         const timer = setTimeout(() => {
-          setVisibleLog((prev) => [...prev, line])
+          dispatchLog({ type: 'APPEND', line })
         }, 400 + i * 120)
         logTimers.current.push(timer)
       })

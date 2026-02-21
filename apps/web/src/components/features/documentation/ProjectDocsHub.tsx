@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { useQuery, useAction } from 'convex/react'
-import { api } from '../../../../../../convex/_generated/api'
+import { useState, useEffect } from "react";
+import { useQuery, useAction } from "convex/react";
+import { api } from "../../../../../../convex/_generated/api";
 import {
   HiOutlineDocumentText,
   HiOutlineFolder,
@@ -15,82 +15,99 @@ import {
   HiOutlineClipboardCopy,
   HiOutlineDownload,
   HiOutlinePlus,
-} from 'react-icons/hi'
-import { m, AnimatePresence } from 'framer-motion'
-import clsx from 'clsx'
-import toast from 'react-hot-toast'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import LoadingSpinner from '../../common/LoadingSpinner'
-import AIDocumentationHub from './AIDocumentationHub'
-import RepoBrowserPanel from './RepoBrowserModal'
+} from "react-icons/hi";
+import { m, AnimatePresence } from "framer-motion";
+import clsx from "clsx";
+import toast from "react-hot-toast";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import LoadingSpinner from "../../common/LoadingSpinner";
+import AIDocumentationHub from "./AIDocumentationHub";
+import RepoBrowserPanel from "./RepoBrowserModal";
 
 interface ProjectDocsHubProps {
-  projectId: string
-  workspaceId: string
-  tasks?: any[]
-  sprints?: any[]
-  projectDetails?: any
+  projectId: string;
+  workspaceId: string;
+  tasks?: any[];
+  sprints?: any[];
+  projectDetails?: any;
 }
 
-type DocTab = 'repo' | 'ai'
-type RepoView = 'docs' | 'add'
+type DocTab = "repo" | "ai";
+type RepoView = "docs" | "add";
 
 // Build a tree structure from flat paths
 interface TreeNode {
-  name: string
-  path: string
-  type: 'file' | 'folder'
-  children: TreeNode[]
-  content?: string
-  size?: number
-  sha?: string
+  name: string;
+  path: string;
+  type: "file" | "folder";
+  children: TreeNode[];
+  content?: string;
+  size?: number;
+  sha?: string;
 }
 
-function buildFileTree(docs: Array<{ path: string; name: string; content: string; size: number; sha: string }>): TreeNode[] {
-  const root: TreeNode[] = []
+function buildFileTree(
+  docs: Array<{
+    path: string;
+    name: string;
+    content: string;
+    size: number;
+    sha: string;
+  }>,
+): TreeNode[] {
+  const root: TreeNode[] = [];
 
   for (const doc of docs) {
-    const parts = doc.path.split('/')
-    let current = root
+    const parts = doc.path.split("/");
+    let current = root;
 
     for (let i = 0; i < parts.length; i++) {
-      const part = parts[i]
-      const isFile = i === parts.length - 1
+      const part = parts[i];
+      const isFile = i === parts.length - 1;
 
       if (isFile) {
         current.push({
           name: part,
           path: doc.path,
-          type: 'file',
+          type: "file",
           children: [],
           content: doc.content,
           size: doc.size,
           sha: doc.sha,
-        })
+        });
       } else {
-        let folder = current.find(n => n.name === part && n.type === 'folder')
+        let folder = current.find(
+          (n) => n.name === part && n.type === "folder",
+        );
         if (!folder) {
-          folder = { name: part, path: parts.slice(0, i + 1).join('/'), type: 'folder', children: [] }
-          current.push(folder)
+          folder = {
+            name: part,
+            path: parts.slice(0, i + 1).join("/"),
+            type: "folder",
+            children: [],
+          };
+          current.push(folder);
         }
-        current = folder.children
+        current = folder.children;
       }
     }
   }
 
   // Sort: folders first, then files alphabetically (README first)
   function sortNodes(nodes: TreeNode[]): TreeNode[] {
-    return nodes.sort((a, b) => {
-      if (a.type !== b.type) return a.type === 'folder' ? -1 : 1
-      // README always first
-      if (a.name.toLowerCase().startsWith('readme')) return -1
-      if (b.name.toLowerCase().startsWith('readme')) return 1
-      return a.name.localeCompare(b.name)
-    }).map(n => ({ ...n, children: sortNodes(n.children) }))
+    return nodes
+      .sort((a, b) => {
+        if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
+        // README always first
+        if (a.name.toLowerCase().startsWith("readme")) return -1;
+        if (b.name.toLowerCase().startsWith("readme")) return 1;
+        return a.name.localeCompare(b.name);
+      })
+      .map((n) => ({ ...n, children: sortNodes(n.children) }));
   }
 
-  return sortNodes(root)
+  return sortNodes(root);
 }
 
 function FileTreeItem({
@@ -99,23 +116,23 @@ function FileTreeItem({
   onSelect,
   depth = 0,
 }: {
-  node: TreeNode
-  selectedPath: string | null
-  onSelect: (node: TreeNode) => void
-  depth?: number
+  node: TreeNode;
+  selectedPath: string | null;
+  onSelect: (node: TreeNode) => void;
+  depth?: number;
 }) {
-  const [expanded, setExpanded] = useState(depth < 2)
-  const isSelected = node.path === selectedPath
+  const [expanded, setExpanded] = useState(depth < 2);
+  const isSelected = node.path === selectedPath;
 
-  if (node.type === 'folder') {
+  if (node.type === "folder") {
     return (
       <div>
         <button
           onClick={() => setExpanded(!expanded)}
           className={clsx(
-            'w-full flex items-center gap-[6px] px-[8px] py-[6px] text-left transition-colors',
-            'hover:bg-[var(--theme-background-secondary)]',
-            'text-brutal-sm font-mono'
+            "w-full flex items-center gap-[6px] px-[8px] py-[6px] text-left transition-colors",
+            "hover:bg-[var(--theme-background-secondary)]",
+            "text-brutal-sm font-mono",
           )}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
         >
@@ -125,11 +142,13 @@ function FileTreeItem({
             <HiOutlineChevronRight className="w-3 h-3 flex-shrink-0 text-[var(--theme-foreground)]/40" />
           )}
           {expanded ? (
-            <HiOutlineFolderOpen className="w-4 h-4 flex-shrink-0 text-primary-brutalist" />
+            <HiOutlineFolderOpen className="w-4 h-4 flex-shrink-0 text-[var(--theme-primary)]" />
           ) : (
-            <HiOutlineFolder className="w-4 h-4 flex-shrink-0 text-primary-brutalist" />
+            <HiOutlineFolder className="w-4 h-4 flex-shrink-0 text-[var(--theme-primary)]" />
           )}
-          <span className="truncate uppercase text-brutal-xs font-bold">{node.name}</span>
+          <span className="truncate uppercase text-brutal-xs font-bold">
+            {node.name}
+          </span>
         </button>
         {expanded && (
           <div>
@@ -145,80 +164,87 @@ function FileTreeItem({
           </div>
         )}
       </div>
-    )
+    );
   }
 
   return (
     <button
       onClick={() => onSelect(node)}
       className={clsx(
-        'w-full flex items-center gap-[6px] px-[8px] py-[6px] text-left transition-all',
-        'text-brutal-sm font-mono',
+        "w-full flex items-center gap-[6px] px-[8px] py-[6px] text-left transition-all",
+        "text-brutal-sm font-mono",
         isSelected
-          ? 'bg-primary-brutalist/10 border-l-2 border-primary-brutalist text-[var(--theme-foreground)]'
-          : 'hover:bg-[var(--theme-background-secondary)] border-l-2 border-transparent'
+          ? "bg-[var(--theme-primary)]/10 border-l-2 border-[var(--theme-primary)] text-[var(--theme-foreground)]"
+          : "hover:bg-[var(--theme-background-secondary)] border-l-2 border-transparent",
       )}
       style={{ paddingLeft: `${depth * 16 + 8}px` }}
     >
       <HiOutlineDocumentText className="w-4 h-4 flex-shrink-0 text-[var(--theme-foreground)]/60" />
       <span className="truncate">{node.name}</span>
     </button>
-  )
+  );
 }
 
 function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 interface DocsHeaderProps {
-  hasRepo: boolean
-  project: any
-  effectiveTab: DocTab
-  onSetTab: (tab: DocTab) => void
+  hasRepo: boolean;
+  project: any;
+  effectiveTab: DocTab;
+  onSetTab: (tab: DocTab) => void;
 }
 
-function DocsHeader({ hasRepo, project, effectiveTab, onSetTab }: DocsHeaderProps) {
+function DocsHeader({
+  hasRepo,
+  project,
+  effectiveTab,
+  onSetTab,
+}: DocsHeaderProps) {
   return (
     <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]">
       <div className="flex items-center justify-between mb-[8px]">
         <div>
           <h2 className="text-brutal-lg font-bold uppercase flex items-center gap-[8px]">
-            <HiOutlineBookOpen className="w-4 h-4 text-primary-brutalist" />
+            <HiOutlineBookOpen className="w-4 h-4 text-[var(--theme-primary)]" />
             PROJECT DOCS
           </h2>
           <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mt-[4px]">
             {hasRepo
               ? `Synced from ${project?.repository?.owner}/${project?.repository?.name}`
-              : 'Connect a repository to auto-fetch docs, or generate with AI'}
+              : "Connect a repository to auto-fetch docs, or generate with AI"}
           </p>
         </div>
 
         {/* Tab Toggle */}
         <div className="flex items-center gap-0 border-2 border-[var(--theme-border)]">
           <button
-            onClick={() => onSetTab('repo')}
+            onClick={() => onSetTab("repo")}
             className={clsx(
-              'px-[12px] py-[6px] text-brutal-xs font-mono font-bold uppercase transition-all flex items-center gap-[6px]',
-              effectiveTab === 'repo'
-                ? 'bg-primary-brutalist text-white'
-                : 'hover:bg-[var(--theme-background-secondary)]',
-              !hasRepo && 'opacity-50'
+              "px-[12px] py-[6px] text-brutal-xs font-mono font-bold uppercase transition-all flex items-center gap-[6px]",
+              effectiveTab === "repo"
+                ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
+                : "hover:bg-[var(--theme-background-secondary)]",
+              !hasRepo && "opacity-50",
             )}
             disabled={!hasRepo}
-            title={!hasRepo ? 'Connect a GitHub repository first' : 'Repository docs'}
+            title={
+              !hasRepo ? "Connect a GitHub repository first" : "Repository docs"
+            }
           >
             <HiOutlineCode className="w-3.5 h-3.5" />
             REPO DOCS
           </button>
           <button
-            onClick={() => onSetTab('ai')}
+            onClick={() => onSetTab("ai")}
             className={clsx(
-              'px-[12px] py-[6px] text-brutal-xs font-mono font-bold uppercase transition-all flex items-center gap-[6px] border-l-2 border-[var(--theme-border)]',
-              effectiveTab === 'ai'
-                ? 'bg-primary-brutalist text-white'
-                : 'hover:bg-[var(--theme-background-secondary)]'
+              "px-[12px] py-[6px] text-brutal-xs font-mono font-bold uppercase transition-all flex items-center gap-[6px] border-l-2 border-[var(--theme-border)]",
+              effectiveTab === "ai"
+                ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
+                : "hover:bg-[var(--theme-background-secondary)]",
             )}
           >
             <HiOutlineSparkles className="w-3.5 h-3.5" />
@@ -227,24 +253,29 @@ function DocsHeader({ hasRepo, project, effectiveTab, onSetTab }: DocsHeaderProp
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 interface DocContentViewerProps {
-  selectedDoc: TreeNode | null
-  project: any
-  onCopyContent: () => void
-  onDownload: () => void
+  selectedDoc: TreeNode | null;
+  project: any;
+  onCopyContent: () => void;
+  onDownload: () => void;
 }
 
-function DocContentViewer({ selectedDoc, project, onCopyContent, onDownload }: DocContentViewerProps) {
+function DocContentViewer({
+  selectedDoc,
+  project,
+  onCopyContent,
+  onDownload,
+}: DocContentViewerProps) {
   if (!selectedDoc?.content) {
     return (
       <div className="p-[32px] text-center text-[var(--theme-foreground)]/40">
         <HiOutlineDocumentText className="w-10 h-10 mx-auto mb-[8px]" />
         <p className="text-brutal-sm font-mono">SELECT A FILE TO VIEW</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -252,7 +283,7 @@ function DocContentViewer({ selectedDoc, project, onCopyContent, onDownload }: D
       {/* Doc Header */}
       <div className="flex items-center justify-between p-[10px] border-b-2 border-[var(--theme-border)]">
         <div className="flex items-center gap-[8px] min-w-0">
-          <HiOutlineDocumentText className="w-4 h-4 flex-shrink-0 text-primary-brutalist" />
+          <HiOutlineDocumentText className="w-4 h-4 flex-shrink-0 text-[var(--theme-primary)]" />
           <span className="font-mono text-brutal-sm font-bold truncate">
             {selectedDoc.path}
           </span>
@@ -291,36 +322,38 @@ function DocContentViewer({ selectedDoc, project, onCopyContent, onDownload }: D
 
       {/* Markdown Content */}
       <div className="p-[16px] max-h-[600px] overflow-y-auto">
-        <div className="prose prose-invert max-w-none
+        <div
+          className="prose prose-invert max-w-none
           prose-headings:font-mono prose-headings:uppercase prose-headings:tracking-wide
           prose-h1:text-brutal-lg prose-h1:border-b-2 prose-h1:border-[var(--theme-border)] prose-h1:pb-[8px] prose-h1:mb-[12px]
           prose-h2:text-brutal-md prose-h2:mt-[16px] prose-h2:mb-[8px]
           prose-h3:text-brutal-sm prose-h3:mt-[12px] prose-h3:mb-[6px]
           prose-p:text-brutal-sm prose-p:text-[var(--theme-foreground)]/80 prose-p:leading-relaxed
-          prose-a:text-primary-brutalist prose-a:no-underline hover:prose-a:underline
-          prose-code:text-primary-brutalist prose-code:bg-[var(--theme-background-secondary)] prose-code:px-[4px] prose-code:py-[2px] prose-code:text-brutal-xs prose-code:font-mono
+          prose-a:text-[var(--theme-primary)] prose-a:no-underline hover:prose-a:underline
+          prose-code:text-[var(--theme-primary)] prose-code:bg-[var(--theme-background-secondary)] prose-code:px-[4px] prose-code:py-[2px] prose-code:text-brutal-xs prose-code:font-mono
           prose-pre:bg-[var(--theme-background-secondary)] prose-pre:border-2 prose-pre:border-[var(--theme-border)] prose-pre:p-[12px]
           prose-ul:text-brutal-sm prose-ol:text-brutal-sm
           prose-li:text-[var(--theme-foreground)]/80
           prose-strong:text-[var(--theme-foreground)]
-          prose-blockquote:border-l-2 prose-blockquote:border-primary-brutalist prose-blockquote:text-[var(--theme-foreground)]/60
+          prose-blockquote:border-l-2 prose-blockquote:border-[var(--theme-primary)] prose-blockquote:text-[var(--theme-foreground)]/60
           prose-table:text-brutal-sm
           prose-th:bg-[var(--theme-background-secondary)] prose-th:p-[8px] prose-th:border-2 prose-th:border-[var(--theme-border)] prose-th:font-mono prose-th:uppercase
           prose-td:p-[8px] prose-td:border-2 prose-td:border-[var(--theme-border)]
           prose-img:border-2 prose-img:border-[var(--theme-border)]
           prose-hr:border-[var(--theme-border)]
-        ">
+        "
+        >
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {selectedDoc.content}
           </ReactMarkdown>
         </div>
       </div>
     </>
-  )
+  );
 }
 
-const EMPTY_TASKS: NonNullable<ProjectDocsHubProps['tasks']> = []
-const EMPTY_SPRINTS: NonNullable<ProjectDocsHubProps['sprints']> = []
+const EMPTY_TASKS: NonNullable<ProjectDocsHubProps["tasks"]> = [];
+const EMPTY_SPRINTS: NonNullable<ProjectDocsHubProps["sprints"]> = [];
 
 export default function ProjectDocsHub({
   projectId,
@@ -329,92 +362,93 @@ export default function ProjectDocsHub({
   sprints = EMPTY_SPRINTS,
   projectDetails,
 }: ProjectDocsHubProps) {
-  const [activeTab, setActiveTab] = useState<DocTab>('repo')
-  const [repoView, setRepoView] = useState<RepoView>('docs')
-  const [selectedDoc, setSelectedDoc] = useState<TreeNode | null>(null)
-  const [syncing, setSyncing] = useState(false)
+  const [activeTab, setActiveTab] = useState<DocTab>("repo");
+  const [repoView, setRepoView] = useState<RepoView>("docs");
+  const [selectedDoc, setSelectedDoc] = useState<TreeNode | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
-  const repoDocs = useQuery(
-    api.integrations.github.docs.getRepoDocs,
-    { projectId: projectId as any }
-  )
+  const repoDocs = useQuery(api.integrations.github.docs.getRepoDocs, {
+    projectId: projectId as any,
+  });
 
-  const fetchRepoDocs = useAction(api.integrations.github.docs.fetchRepoDocs)
+  const fetchRepoDocs = useAction(api.integrations.github.docs.fetchRepoDocs);
 
   const project = useQuery(
     api.projects.queries.getProject,
-    projectId ? { projectId: projectId as any } : 'skip'
-  )
+    projectId ? { projectId: projectId as any } : "skip",
+  );
 
-  const hasRepo = !!project?.repository
-  const hasDocs = repoDocs && repoDocs.length > 0
-  const fileTree = repoDocs ? buildFileTree(
-    repoDocs.map(d => ({
-      path: d.path,
-      name: d.name,
-      content: d.content,
-      size: d.size,
-      sha: d.sha,
-    }))
-  ) : []
+  const hasRepo = !!project?.repository;
+  const hasDocs = repoDocs && repoDocs.length > 0;
+  const fileTree = repoDocs
+    ? buildFileTree(
+        repoDocs.map((d) => ({
+          path: d.path,
+          name: d.name,
+          content: d.content,
+          size: d.size,
+          sha: d.sha,
+        })),
+      )
+    : [];
 
   // Auto-select README on first load
   useEffect(() => {
     if (repoDocs && repoDocs.length > 0 && !selectedDoc) {
-      const readme = repoDocs.find(d =>
-        d.name.toLowerCase().startsWith('readme')
-      )
+      const readme = repoDocs.find((d) =>
+        d.name.toLowerCase().startsWith("readme"),
+      );
       if (readme) {
         setSelectedDoc({
           name: readme.name,
           path: readme.path,
-          type: 'file',
+          type: "file",
           children: [],
           content: readme.content,
           size: readme.size,
           sha: readme.sha,
-        })
+        });
       }
     }
-  }, [repoDocs, selectedDoc])
+  }, [repoDocs, selectedDoc]);
 
   const handleSync = async () => {
-    setSyncing(true)
+    setSyncing(true);
     try {
-      const result = await fetchRepoDocs({ projectId: projectId as any })
+      const result = await fetchRepoDocs({ projectId: projectId as any });
       if (result.success) {
-        toast.success(result.message)
+        toast.success(result.message);
       } else {
-        toast.error(result.message)
+        toast.error(result.message);
       }
     } catch (error) {
-      toast.error('Failed to sync docs from repository')
+      toast.error("Failed to sync docs from repository");
     } finally {
-      setSyncing(false)
+      setSyncing(false);
     }
-  }
+  };
 
   const handleCopyContent = () => {
     if (selectedDoc?.content) {
-      navigator.clipboard.writeText(selectedDoc.content)
-      toast.success('Copied to clipboard!')
+      navigator.clipboard.writeText(selectedDoc.content);
+      toast.success("Copied to clipboard!");
     }
-  }
+  };
 
   const handleDownload = () => {
     if (selectedDoc?.content) {
-      const blob = new Blob([selectedDoc.content], { type: 'text/markdown' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = selectedDoc.name
-      a.click()
-      URL.revokeObjectURL(url)
+      const blob = new Blob([selectedDoc.content], { type: "text/markdown" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = selectedDoc.name;
+      a.click();
+      URL.revokeObjectURL(url);
     }
-  }
+  };
 
   // If no repo connected, default to AI tab
-  const effectiveTab = !hasRepo && activeTab === 'repo' ? 'ai' : activeTab
+  const effectiveTab = !hasRepo && activeTab === "repo" ? "ai" : activeTab;
 
   return (
     <div className="space-y-[12px]">
@@ -428,7 +462,7 @@ export default function ProjectDocsHub({
 
       {/* Content */}
       <AnimatePresence mode="wait">
-        {effectiveTab === 'repo' ? (
+        {effectiveTab === "repo" ? (
           <m.div
             key="repo"
             initial={{ opacity: 0, y: 10 }}
@@ -445,24 +479,24 @@ export default function ProjectDocsHub({
                 {/* Sub-navigation: VIEW DOCS / ADD FROM REPO */}
                 <div className="flex items-center gap-0 border-2 border-[var(--theme-border)] bg-[var(--theme-background)] mb-[12px]">
                   <button
-                    onClick={() => setRepoView('docs')}
+                    onClick={() => setRepoView("docs")}
                     className={clsx(
-                      'flex-1 px-[12px] py-[8px] text-brutal-xs font-mono font-bold uppercase transition-all flex items-center justify-center gap-[6px]',
-                      repoView === 'docs'
-                        ? 'bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)]'
-                        : 'hover:bg-[var(--theme-background-secondary)]/50 text-[var(--theme-foreground)]/60'
+                      "flex-1 px-[12px] py-[8px] text-brutal-xs font-mono font-bold uppercase transition-all flex items-center justify-center gap-[6px]",
+                      repoView === "docs"
+                        ? "bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)]"
+                        : "hover:bg-[var(--theme-background-secondary)]/50 text-[var(--theme-foreground)]/60",
                     )}
                   >
                     <HiOutlineDocumentText className="w-3.5 h-3.5" />
-                    VIEW DOCS {hasDocs ? `(${repoDocs.length})` : ''}
+                    VIEW DOCS {hasDocs ? `(${repoDocs.length})` : ""}
                   </button>
                   <button
-                    onClick={() => setRepoView('add')}
+                    onClick={() => setRepoView("add")}
                     className={clsx(
-                      'flex-1 px-[12px] py-[8px] text-brutal-xs font-mono font-bold uppercase transition-all flex items-center justify-center gap-[6px] border-l-2 border-[var(--theme-border)]',
-                      repoView === 'add'
-                        ? 'bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)]'
-                        : 'hover:bg-[var(--theme-background-secondary)]/50 text-[var(--theme-foreground)]/60'
+                      "flex-1 px-[12px] py-[8px] text-brutal-xs font-mono font-bold uppercase transition-all flex items-center justify-center gap-[6px] border-l-2 border-[var(--theme-border)]",
+                      repoView === "add"
+                        ? "bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)]"
+                        : "hover:bg-[var(--theme-background-secondary)]/50 text-[var(--theme-foreground)]/60",
                     )}
                   >
                     <HiOutlinePlus className="w-3.5 h-3.5" />
@@ -471,7 +505,7 @@ export default function ProjectDocsHub({
                 </div>
 
                 <AnimatePresence mode="wait">
-                  {repoView === 'add' ? (
+                  {repoView === "add" ? (
                     <m.div
                       key="add"
                       initial={{ opacity: 0, y: 8 }}
@@ -481,7 +515,7 @@ export default function ProjectDocsHub({
                     >
                       <RepoBrowserPanel
                         projectId={projectId}
-                        onImported={() => setRepoView('docs')}
+                        onImported={() => setRepoView("docs")}
                       />
                     </m.div>
                   ) : !hasDocs ? (
@@ -500,13 +534,14 @@ export default function ProjectDocsHub({
                             NO DOCS SYNCED YET
                           </h3>
                           <p className="text-brutal-sm text-[var(--theme-foreground)]/60 mb-[16px]">
-                            Auto-sync markdown files or manually add them from your repository.
+                            Auto-sync markdown files or manually add them from
+                            your repository.
                           </p>
                           <div className="flex items-center justify-center gap-[8px]">
                             <button
                               onClick={handleSync}
                               disabled={syncing}
-                              className="brutal-btn flex items-center gap-[8px]"
+                              className="flex items-center gap-[8px] px-[12px] py-[6px] border-2 border-[var(--theme-primary)] bg-[var(--theme-primary)] text-[var(--theme-background)] font-mono text-brutal-xs font-bold uppercase hover:opacity-90 transition-opacity disabled:opacity-50"
                             >
                               {syncing ? (
                                 <>
@@ -521,8 +556,8 @@ export default function ProjectDocsHub({
                               )}
                             </button>
                             <button
-                              onClick={() => setRepoView('add')}
-                              className="brutal-btn brutal-btn-outline flex items-center gap-[8px]"
+                              onClick={() => setRepoView("add")}
+                              className="flex items-center gap-[8px] px-[12px] py-[6px] border-2 border-[var(--theme-border)] bg-[var(--theme-background)] text-[var(--theme-foreground)] font-mono text-brutal-xs font-bold uppercase hover:border-[var(--theme-primary)] transition-colors"
                             >
                               <HiOutlinePlus className="w-4 h-4" />
                               ADD MANUALLY
@@ -553,7 +588,12 @@ export default function ProjectDocsHub({
                               className="p-[4px] hover:bg-[var(--theme-background-secondary)] transition-colors"
                               title="Re-sync from repository"
                             >
-                              <HiOutlineRefresh className={clsx('w-3.5 h-3.5', syncing && 'animate-spin')} />
+                              <HiOutlineRefresh
+                                className={clsx(
+                                  "w-3.5 h-3.5",
+                                  syncing && "animate-spin",
+                                )}
+                              />
                             </button>
                           </div>
                           <div className="max-h-[600px] overflow-y-auto">
@@ -603,5 +643,5 @@ export default function ProjectDocsHub({
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }

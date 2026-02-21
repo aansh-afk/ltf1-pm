@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
@@ -360,39 +360,36 @@ function SaveIndicator({ hasUnsavedGeneral, hasUnsavedFeatures, isSavingGeneral,
   )
 }
 
-export default function WorkspaceSettingsPage() {
-  const { workspaceId } = useParams()
+interface WorkspaceSettingsContentProps {
+  workspace: any
+  workspaceId: string
+  currentUser: any
+  memberRole: string | undefined
+}
+
+function WorkspaceSettingsContent({ workspace, workspaceId, currentUser, memberRole }: WorkspaceSettingsContentProps) {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('general')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
 
-  // Queries
-  const workspace = useQuery(
-    api.workspaces.queries.getWorkspace,
-    workspaceId ? { workspaceId: workspaceId as any } : 'skip'
-  )
-  const currentUser = useQuery(api.auth.users.getOrCreateCurrentUser)
-  const memberRole = workspace?.members?.find(m => m.userId === currentUser?._id)?.role
-
   // Mutations
   const updateWorkspace = useMutation(api.workspaces.mutations.updateWorkspace)
   const deleteWorkspace = useMutation(api.workspaces.mutations.deleteWorkspace)
 
-  // Settings state
+  // Settings state — initialized directly from workspace data
   const {
     value: generalSettings,
     setValue: setGeneralSettings,
-    setValueWithoutSave: setGeneralSettingsWithoutSave,
     isSaving: isSavingGeneral,
     hasUnsavedChanges: hasUnsavedGeneral,
     forceSave: forceSaveGeneral
   } = useSettingsState({
     defaultValue: {
-      name: '',
-      slug: '',
-      description: '',
-      logoUrl: ''
+      name: workspace.name || '',
+      slug: workspace.slug || '',
+      description: workspace.description || '',
+      logoUrl: workspace.logoUrl || ''
     },
     onSave: async (data) => {
       if (!workspaceId) return
@@ -406,19 +403,18 @@ export default function WorkspaceSettingsPage() {
   const {
     value: featureSettings,
     setValue: setFeatureSettings,
-    setValueWithoutSave: setFeatureSettingsWithoutSave,
     isSaving: isSavingFeatures,
     hasUnsavedChanges: hasUnsavedFeatures,
     forceSave: forceSaveFeatures
   } = useSettingsState({
     defaultValue: {
-      enableProjects: true,
-      enableTasks: true,
-      enableMeetings: true,
-      enableSprints: false,
-      enableTimeTracking: false,
-      enableGitHub: false,
-      enableCalendar: false
+      enableProjects: workspace.settings?.features?.enableProjects ?? true,
+      enableTasks: workspace.settings?.features?.enableTasks ?? true,
+      enableMeetings: workspace.settings?.features?.enableMeetings ?? true,
+      enableSprints: workspace.settings?.features?.enableSprints ?? false,
+      enableTimeTracking: workspace.settings?.features?.enableTimeTracking ?? false,
+      enableGitHub: workspace.settings?.features?.enableGitHub ?? false,
+      enableCalendar: workspace.settings?.features?.enableCalendar ?? false
     },
     onSave: async (data) => {
       if (!workspaceId) return
@@ -431,30 +427,6 @@ export default function WorkspaceSettingsPage() {
       })
     }
   })
-
-  // Legitimate useEffect: syncs server-loaded workspace data into form state
-  useEffect(() => {
-    if (workspace) {
-      setGeneralSettingsWithoutSave({
-        name: workspace.name || '',
-        slug: workspace.slug || '',
-        description: workspace.description || '',
-        logoUrl: workspace.logoUrl || ''
-      })
-
-      if (workspace.settings?.features) {
-        setFeatureSettingsWithoutSave({
-          enableProjects: workspace.settings.features.enableProjects ?? true,
-          enableTasks: workspace.settings.features.enableTasks ?? true,
-          enableMeetings: workspace.settings.features.enableMeetings ?? true,
-          enableSprints: workspace.settings.features.enableSprints ?? false,
-          enableTimeTracking: workspace.settings.features.enableTimeTracking ?? false,
-          enableGitHub: workspace.settings.features.enableGitHub ?? false,
-          enableCalendar: workspace.settings.features.enableCalendar ?? false
-        })
-      }
-    }
-  }, [workspace, setGeneralSettingsWithoutSave, setFeatureSettingsWithoutSave])
 
   const handleDeleteWorkspace = async () => {
     if (!workspaceId || !workspace) return
@@ -470,10 +442,6 @@ export default function WorkspaceSettingsPage() {
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete workspace')
     }
-  }
-
-  if (!workspace || !currentUser) {
-    return <LoadingSpinner size="lg" />
   }
 
   const canEdit = memberRole === 'owner' || memberRole === 'admin'
@@ -571,5 +539,31 @@ export default function WorkspaceSettingsPage() {
         />
       </div>
     </div>
+  )
+}
+
+export default function WorkspaceSettingsPage() {
+  const { workspaceId } = useParams()
+
+  // Queries
+  const workspace = useQuery(
+    api.workspaces.queries.getWorkspace,
+    workspaceId ? { workspaceId: workspaceId as any } : 'skip'
+  )
+  const currentUser = useQuery(api.auth.users.getOrCreateCurrentUser)
+  const memberRole = workspace?.members?.find(m => m.userId === currentUser?._id)?.role
+
+  if (!workspace || !currentUser) {
+    return <LoadingSpinner size="lg" />
+  }
+
+  return (
+    <WorkspaceSettingsContent
+      key={workspace._id}
+      workspace={workspace}
+      workspaceId={workspaceId!}
+      currentUser={currentUser}
+      memberRole={memberRole}
+    />
   )
 }

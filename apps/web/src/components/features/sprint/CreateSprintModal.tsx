@@ -113,7 +113,7 @@ export default function CreateSprintModal({
       <form onSubmit={handleSubmit} className="space-y-3">
         {/* Sprint Name */}
         <div>
-          <label htmlFor="create-sprint-name" className="block font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
+          <label htmlFor="create-sprint-name" className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] mb-1.5">
             SPRINT NAME
           </label>
           <input
@@ -122,14 +122,14 @@ export default function CreateSprintModal({
             value={name}
             onChange={(e) => dispatch({ type: 'UPDATE', field: 'name', value: e.target.value })}
             placeholder="SPRINT 1"
-            className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] rounded-lg font-['IBM_Plex_Mono',monospace] text-xs text-[#F9FAFB] uppercase placeholder:text-[#6B7280] focus:border-[#6366F1] focus:outline-none transition-colors"
+            className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-xs text-[var(--theme-foreground)] uppercase placeholder:text-[var(--theme-foreground-tertiary)] focus:border-[var(--theme-primary)] focus:outline-none transition-colors"
             required
           />
         </div>
 
         {/* Sprint Goal */}
         <div>
-          <label htmlFor="create-sprint-goal" className="block font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
+          <label htmlFor="create-sprint-goal" className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] mb-1.5">
             SPRINT GOAL
           </label>
           <textarea
@@ -138,14 +138,14 @@ export default function CreateSprintModal({
             onChange={(e) => dispatch({ type: 'UPDATE', field: 'goal', value: e.target.value })}
             placeholder="DELIVER USER AUTHENTICATION AND DASHBOARD..."
             rows={3}
-            className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] rounded-lg font-['IBM_Plex_Mono',monospace] text-xs text-[#F9FAFB] uppercase placeholder:text-[#6B7280] focus:border-[#6366F1] focus:outline-none transition-colors resize-none"
+            className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-xs text-[var(--theme-foreground)] uppercase placeholder:text-[var(--theme-foreground-tertiary)] focus:border-[var(--theme-primary)] focus:outline-none transition-colors resize-none"
           />
         </div>
 
         {/* Date Range */}
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label htmlFor="create-sprint-start-date" className="block font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
+            <label htmlFor="create-sprint-start-date" className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] mb-1.5">
               START DATE
             </label>
             <input
@@ -153,12 +153,12 @@ export default function CreateSprintModal({
               type="date"
               value={startDate}
               onChange={(e) => dispatch({ type: 'UPDATE', field: 'startDate', value: e.target.value })}
-              className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] rounded-lg font-['IBM_Plex_Mono',monospace] text-xs text-[#F9FAFB] focus:border-[#6366F1] focus:outline-none transition-colors"
+              className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-xs text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] focus:outline-none transition-colors"
               required
             />
           </div>
           <div>
-            <label htmlFor="create-sprint-end-date" className="block font-['IBM_Plex_Mono',monospace] text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF] mb-1.5">
+            <label htmlFor="create-sprint-end-date" className="block font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] mb-1.5">
               END DATE
             </label>
             <input
@@ -166,25 +166,25 @@ export default function CreateSprintModal({
               type="date"
               value={endDate}
               onChange={(e) => dispatch({ type: 'UPDATE', field: 'endDate', value: e.target.value })}
-              className="w-full px-2.5 py-2 bg-[#0A0A0A] border-2 border-[#2E2E35] rounded-lg font-['IBM_Plex_Mono',monospace] text-xs text-[#F9FAFB] focus:border-[#6366F1] focus:outline-none transition-colors"
+              className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-xs text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] focus:outline-none transition-colors"
               required
             />
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 justify-end pt-3 border-t border-[#1F1F23]">
+        <div className="flex gap-2 justify-end pt-3 border-t border-[var(--theme-border)]">
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-2 bg-[#111111] border-2 border-[#2E2E35] rounded-lg text-[#9CA3AF] font-['IBM_Plex_Mono',monospace] text-xs uppercase tracking-wider hover:border-[#6366F1] hover:text-[#F9FAFB] transition-all disabled:opacity-50"
+            className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] font-mono text-xs uppercase tracking-wider hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] transition-all disabled:opacity-50"
             disabled={isCreating}
           >
             CANCEL
           </button>
           <button
             type="submit"
-            className="px-3 py-2 bg-[#6366F1] text-white font-['IBM_Plex_Mono',monospace] text-xs uppercase tracking-wider font-bold border-2 border-[#4F46E5] rounded-lg hover:bg-[#4F46E5] transition-all disabled:opacity-50"
+            className="px-3 py-2 bg-[var(--theme-primary)] text-[var(--theme-foreground)] font-mono text-xs uppercase tracking-wider font-bold border-2 border-[var(--theme-primary-hover)] hover:bg-[var(--theme-primary-hover)] transition-all disabled:opacity-50"
             disabled={isCreating}
           >
             {isCreating ? 'CREATING...' : 'CREATE SPRINT'}

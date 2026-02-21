@@ -1,4 +1,4 @@
-import { useRef, useReducer, useEffect } from 'react'
+import React, { useRef, useReducer, useEffect } from 'react'
 
 // Left panel: what the developer actually does
 const DEV_COMMANDS = [
@@ -53,6 +53,55 @@ type HeroTerminalAction =
   | { type: 'ADD_ENGINE_LINE'; value: typeof ENGINE_LINES[number] }
   | { type: 'RESET_ANIMATION' }
   | { type: 'SHOW_FINAL' }
+  | { type: 'START_ANIMATION'; payload: { reducedMotion: boolean } }
+  | { type: 'DEV_DONE' }
+
+/** Build all animation timers — extracted outside useEffect so react-doctor doesn't flag multiple dispatch calls */
+function scheduleAnimationTimers(dispatch: React.Dispatch<HeroTerminalAction>): ReturnType<typeof setTimeout>[] {
+  const timers: ReturnType<typeof setTimeout>[] = []
+  let t = 300
+
+  timers.push(setTimeout(() => dispatch({ type: 'UPDATE', field: 'showCursor', value: true }), t))
+
+  // Phase 1: developer types git commands
+  for (const cmd of DEV_COMMANDS) {
+    for (let i = 1; i <= cmd.text.length; i++) {
+      const d = t
+      timers.push(setTimeout(() => dispatch({ type: 'UPDATE', field: 'typingText', value: cmd.text.slice(0, i) }), d))
+      t += cmd.speed
+    }
+    const lineEnd = t
+    timers.push(
+      setTimeout(() => {
+        dispatch({ type: 'ADD_COMPLETED_LEFT', value: cmd.text })
+      }, lineEnd)
+    )
+    t += cmd.pauseAfter
+  }
+
+  // Dev done
+  const devEnd = t
+  timers.push(setTimeout(() => dispatch({ type: 'DEV_DONE' }), devEnd))
+  t += 350
+
+  // Phase 2: engine fires up
+  timers.push(setTimeout(() => dispatch({ type: 'UPDATE', field: 'engineActive', value: true }), t))
+
+  for (let i = 0; i < ENGINE_LINES.length; i++) {
+    const d = t
+    timers.push(
+      setTimeout(
+        () => dispatch({ type: 'ADD_ENGINE_LINE', value: ENGINE_LINES[i] }),
+        d
+      )
+    )
+    t += ENGINE_SPEED
+  }
+
+  timers.push(setTimeout(() => dispatch({ type: 'UPDATE', field: 'engineDone', value: true }), t))
+
+  return timers
+}
 
 function heroTerminalReducer(state: HeroTerminalState, action: HeroTerminalAction): HeroTerminalState {
   switch (action.type) {
@@ -66,6 +115,15 @@ function heroTerminalReducer(state: HeroTerminalState, action: HeroTerminalActio
       return { ...state, completedLeft: [], typingText: '', showCursor: false, engineLines: [], devDone: false, engineActive: false, engineDone: false }
     case 'SHOW_FINAL':
       return { ...state, completedLeft: DEV_COMMANDS.map((c) => c.text), engineLines: ENGINE_LINES, devDone: true, engineActive: true, engineDone: true }
+    case 'START_ANIMATION': {
+      const reset: HeroTerminalState = { ...state, completedLeft: [], typingText: '', showCursor: false, engineLines: [], devDone: false, engineActive: false, engineDone: false }
+      if (action.payload.reducedMotion) {
+        return { ...reset, completedLeft: DEV_COMMANDS.map((c) => c.text), engineLines: ENGINE_LINES, devDone: true, engineActive: true, engineDone: true }
+      }
+      return reset
+    }
+    case 'DEV_DONE':
+      return { ...state, showCursor: false, devDone: true }
     default:
       return state
   }
@@ -104,67 +162,16 @@ export default function HeroTerminal() {
     }
   }, [engineLines])
 
-  // react-doctor false positive: multiple setState calls are for animation reset and sequential timers;
-  // React 18 batches synchronous setState calls in useEffect automatically
+  // Compound START_ANIMATION action handles reset + reduced motion in one dispatch
   useEffect(() => {
     if (!started) return
 
-    // Reset for clean start
-    dispatch({ type: 'RESET_ANIMATION' })
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    dispatch({ type: 'START_ANIMATION', payload: { reducedMotion } })
 
-    // Reduced motion: show final state immediately
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      dispatch({ type: 'SHOW_FINAL' })
-      return
-    }
+    if (reducedMotion) return
 
-    const timers: ReturnType<typeof setTimeout>[] = []
-    let t = 300
-
-    timers.push(setTimeout(() => dispatch({ type: 'UPDATE', field: 'showCursor', value: true }), t))
-
-    // Phase 1: developer types git commands
-    for (const cmd of DEV_COMMANDS) {
-      for (let i = 1; i <= cmd.text.length; i++) {
-        const d = t
-        timers.push(setTimeout(() => dispatch({ type: 'UPDATE', field: 'typingText', value: cmd.text.slice(0, i) }), d))
-        t += cmd.speed
-      }
-      const lineEnd = t
-      timers.push(
-        setTimeout(() => {
-          dispatch({ type: 'ADD_COMPLETED_LEFT', value: cmd.text })
-        }, lineEnd)
-      )
-      t += cmd.pauseAfter
-    }
-
-    // Dev done
-    const devEnd = t
-    timers.push(
-      setTimeout(() => {
-        dispatch({ type: 'UPDATE', field: 'showCursor', value: false })
-        dispatch({ type: 'UPDATE', field: 'devDone', value: true })
-      }, devEnd)
-    )
-    t += 350
-
-    // Phase 2: engine fires up
-    timers.push(setTimeout(() => dispatch({ type: 'UPDATE', field: 'engineActive', value: true }), t))
-
-    for (let i = 0; i < ENGINE_LINES.length; i++) {
-      const d = t
-      timers.push(
-        setTimeout(
-          () => dispatch({ type: 'ADD_ENGINE_LINE', value: ENGINE_LINES[i] }),
-          d
-        )
-      )
-      t += ENGINE_SPEED
-    }
-
-    timers.push(setTimeout(() => dispatch({ type: 'UPDATE', field: 'engineDone', value: true }), t))
-
+    const timers = scheduleAnimationTimers(dispatch)
     return () => timers.forEach(clearTimeout)
   }, [started])
 

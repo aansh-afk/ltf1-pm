@@ -1,394 +1,475 @@
-import { useState, useMemo } from 'react'
-import { useQuery } from 'convex/react'
-import { api } from '../../../../../../convex/_generated/api'
-import { HiOutlineTerminal, HiOutlineUser, HiOutlineCheckCircle, HiOutlineClock, HiOutlinePlay, HiOutlinePause, HiOutlineChat, HiOutlineCode, HiOutlineExclamationCircle, HiOutlinePlus } from 'react-icons/hi'
-import UserDisplay from '../user/UserDisplay'
-import clsx from 'clsx'
+import { useState, useMemo } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../../../../../convex/_generated/api";
+import {
+  HiOutlineTerminal,
+  HiOutlineUser,
+  HiOutlineCheckCircle,
+  HiOutlineClock,
+  HiOutlinePlay,
+  HiOutlinePause,
+  HiOutlineChat,
+  HiOutlineCode,
+  HiOutlineExclamationCircle,
+  HiOutlinePlus,
+} from "react-icons/hi";
+import UserDisplay from "../user/UserDisplay";
+import clsx from "clsx";
 
 interface TeamActivityFeedProps {
-  projectId: string
-  workspaceId?: string
-  limit?: number
-  showFilters?: boolean
-  className?: string
+  projectId: string;
+  workspaceId?: string;
+  limit?: number;
+  showFilters?: boolean;
+  className?: string;
 }
 
 const activityTypeConfig = {
-  // Task activities
-  task_created: { 
-    icon: HiOutlinePlus, 
-    color: 'text-brutal-success', 
-    bgColor: 'bg-brutal-success/20',
-    label: 'CREATED TASK'
+  task_created: {
+    icon: HiOutlinePlus,
+    color: "var(--theme-success)",
+    label: "CREATED TASK",
   },
-  task_completed: { 
-    icon: HiOutlineCheckCircle, 
-    color: 'text-brutal-success', 
-    bgColor: 'bg-brutal-success/20',
-    label: 'COMPLETED'
+  task_completed: {
+    icon: HiOutlineCheckCircle,
+    color: "var(--theme-success)",
+    label: "COMPLETED",
   },
-  task_status_changed: { 
-    icon: HiOutlineTerminal, 
-    color: 'text-brutal-info', 
-    bgColor: 'bg-brutal-info/20',
-    label: 'STATUS CHANGED'
+  task_status_changed: {
+    icon: HiOutlineTerminal,
+    color: "var(--theme-info)",
+    label: "STATUS CHANGED",
   },
-  task_assigned: { 
-    icon: HiOutlineUser, 
-    color: 'text-brutal-info', 
-    bgColor: 'bg-brutal-info/20',
-    label: 'ASSIGNED'
+  task_assigned: {
+    icon: HiOutlineUser,
+    color: "var(--theme-info)",
+    label: "ASSIGNED",
   },
-  task_priority_changed: { 
-    icon: HiOutlineExclamationCircle, 
-    color: 'text-brutal-warning', 
-    bgColor: 'bg-brutal-warning/20',
-    label: 'PRIORITY CHANGED'
+  task_priority_changed: {
+    icon: HiOutlineExclamationCircle,
+    color: "var(--theme-warning)",
+    label: "PRIORITY CHANGED",
   },
-  task_time_started: { 
-    icon: HiOutlinePlay, 
-    color: 'text-brutal-info', 
-    bgColor: 'bg-brutal-info/20',
-    label: 'STARTED TIMER'
+  task_time_started: {
+    icon: HiOutlinePlay,
+    color: "var(--theme-info)",
+    label: "STARTED TIMER",
   },
-  task_time_stopped: { 
-    icon: HiOutlinePause, 
-    color: 'text-brutal-warning', 
-    bgColor: 'bg-brutal-warning/20',
-    label: 'STOPPED TIMER'
+  task_time_stopped: {
+    icon: HiOutlinePause,
+    color: "var(--theme-warning)",
+    label: "STOPPED TIMER",
   },
-  task_commented: { 
-    icon: HiOutlineChat, 
-    color: 'text-primary-brutalist', 
-    bgColor: 'bg-primary-brutalist/20',
-    label: 'COMMENTED'
+  task_commented: {
+    icon: HiOutlineChat,
+    color: "var(--theme-primary)",
+    label: "COMMENTED",
   },
-  task_blocked: { 
-    icon: HiOutlineExclamationCircle, 
-    color: 'text-brutal-error', 
-    bgColor: 'bg-brutal-error/20',
-    label: 'BLOCKED'
+  task_blocked: {
+    icon: HiOutlineExclamationCircle,
+    color: "var(--theme-error)",
+    label: "BLOCKED",
   },
-  task_unblocked: { 
-    icon: HiOutlineCheckCircle, 
-    color: 'text-brutal-success', 
-    bgColor: 'bg-brutal-success/20',
-    label: 'UNBLOCKED'
+  task_unblocked: {
+    icon: HiOutlineCheckCircle,
+    color: "var(--theme-success)",
+    label: "UNBLOCKED",
   },
-  
-  // Team activities
-  member_joined: { 
-    icon: HiOutlineUser, 
-    color: 'text-brutal-success', 
-    bgColor: 'bg-brutal-success/20',
-    label: 'JOINED TEAM'
+  member_joined: {
+    icon: HiOutlineUser,
+    color: "var(--theme-success)",
+    label: "JOINED TEAM",
   },
-  member_removed: { 
-    icon: HiOutlineUser, 
-    color: 'text-brutal-error', 
-    bgColor: 'bg-brutal-error/20',
-    label: 'LEFT TEAM'
+  member_removed: {
+    icon: HiOutlineUser,
+    color: "var(--theme-error)",
+    label: "LEFT TEAM",
   },
-  member_role_changed: { 
-    icon: HiOutlineUser, 
-    color: 'text-brutal-info', 
-    bgColor: 'bg-brutal-info/20',
-    label: 'ROLE CHANGED'
+  member_role_changed: {
+    icon: HiOutlineUser,
+    color: "var(--theme-info)",
+    label: "ROLE CHANGED",
   },
-  
-  // Project activities
-  project_created: { 
-    icon: HiOutlineTerminal, 
-    color: 'text-brutal-success', 
-    bgColor: 'bg-brutal-success/20',
-    label: 'PROJECT CREATED'
+  project_created: {
+    icon: HiOutlineTerminal,
+    color: "var(--theme-success)",
+    label: "PROJECT CREATED",
   },
-  project_updated: { 
-    icon: HiOutlineTerminal, 
-    color: 'text-brutal-info', 
-    bgColor: 'bg-brutal-info/20',
-    label: 'PROJECT UPDATED'
+  project_updated: {
+    icon: HiOutlineTerminal,
+    color: "var(--theme-info)",
+    label: "PROJECT UPDATED",
   },
-  sprint_created: { 
-    icon: HiOutlineTerminal, 
-    color: 'text-brutal-success', 
-    bgColor: 'bg-brutal-success/20',
-    label: 'SPRINT CREATED'
+  sprint_created: {
+    icon: HiOutlineTerminal,
+    color: "var(--theme-success)",
+    label: "SPRINT CREATED",
   },
-  sprint_started: { 
-    icon: HiOutlinePlay, 
-    color: 'text-brutal-info', 
-    bgColor: 'bg-brutal-info/20',
-    label: 'SPRINT STARTED'
+  sprint_started: {
+    icon: HiOutlinePlay,
+    color: "var(--theme-info)",
+    label: "SPRINT STARTED",
   },
-  sprint_completed: { 
-    icon: HiOutlineCheckCircle, 
-    color: 'text-brutal-success', 
-    bgColor: 'bg-brutal-success/20',
-    label: 'SPRINT COMPLETED'
+  sprint_completed: {
+    icon: HiOutlineCheckCircle,
+    color: "var(--theme-success)",
+    label: "SPRINT COMPLETED",
   },
-  
-  // Meeting activities
-  meeting_scheduled: { 
-    icon: HiOutlineClock, 
-    color: 'text-brutal-info', 
-    bgColor: 'bg-brutal-info/20',
-    label: 'MEETING SCHEDULED'
+  meeting_scheduled: {
+    icon: HiOutlineClock,
+    color: "var(--theme-info)",
+    label: "MEETING SCHEDULED",
   },
-  meeting_completed: { 
-    icon: HiOutlineCheckCircle, 
-    color: 'text-brutal-success', 
-    bgColor: 'bg-brutal-success/20',
-    label: 'MEETING COMPLETED'
+  meeting_completed: {
+    icon: HiOutlineCheckCircle,
+    color: "var(--theme-success)",
+    label: "MEETING COMPLETED",
   },
-  meeting_cancelled: { 
-    icon: HiOutlineExclamationCircle, 
-    color: 'text-brutal-error', 
-    bgColor: 'bg-brutal-error/20',
-    label: 'MEETING CANCELLED'
+  meeting_cancelled: {
+    icon: HiOutlineExclamationCircle,
+    color: "var(--theme-error)",
+    label: "MEETING CANCELLED",
   },
-  
-  // Code activities
-  commit_pushed: { 
-    icon: HiOutlineCode, 
-    color: 'text-primary-brutalist', 
-    bgColor: 'bg-primary-brutalist/20',
-    label: 'COMMIT PUSHED'
+  commit_pushed: {
+    icon: HiOutlineCode,
+    color: "var(--theme-primary)",
+    label: "COMMIT PUSHED",
   },
-  pr_opened: { 
-    icon: HiOutlineCode, 
-    color: 'text-brutal-info', 
-    bgColor: 'bg-brutal-info/20',
-    label: 'PR OPENED'
+  pr_opened: {
+    icon: HiOutlineCode,
+    color: "var(--theme-info)",
+    label: "PR OPENED",
   },
-  pr_merged: { 
-    icon: HiOutlineCheckCircle, 
-    color: 'text-brutal-success', 
-    bgColor: 'bg-brutal-success/20',
-    label: 'PR MERGED'
+  pr_merged: {
+    icon: HiOutlineCheckCircle,
+    color: "var(--theme-success)",
+    label: "PR MERGED",
   },
-  pr_reviewed: { 
-    icon: HiOutlineCode, 
-    color: 'text-brutal-warning', 
-    bgColor: 'bg-brutal-warning/20',
-    label: 'PR REVIEWED'
-  }
-}
+  pr_reviewed: {
+    icon: HiOutlineCode,
+    color: "var(--theme-warning)",
+    label: "PR REVIEWED",
+  },
+};
 
 const timeFilterOptions = [
-  { label: 'TODAY', value: 24 },
-  { label: 'WEEK', value: 168 },
-  { label: 'MONTH', value: 720 }
-]
+  { label: "TODAY", value: 24 },
+  { label: "WEEK", value: 168 },
+  { label: "MONTH", value: 720 },
+];
 
 const typeFilterOptions = [
-  { label: 'ALL', value: null },
-  { label: 'TASKS', value: ['task_created', 'task_completed', 'task_status_changed', 'task_assigned'] },
-  { label: 'TEAM', value: ['member_joined', 'member_removed', 'member_role_changed'] },
-  { label: 'CODE', value: ['commit_pushed', 'pr_opened', 'pr_merged', 'pr_reviewed'] }
-]
+  { label: "ALL", value: null },
+  {
+    label: "TASKS",
+    value: [
+      "task_created",
+      "task_completed",
+      "task_status_changed",
+      "task_assigned",
+    ],
+  },
+  {
+    label: "TEAM",
+    value: ["member_joined", "member_removed", "member_role_changed"],
+  },
+  {
+    label: "CODE",
+    value: ["commit_pushed", "pr_opened", "pr_merged", "pr_reviewed"],
+  },
+];
 
-export default function TeamActivityFeed({ 
-  projectId, 
-  workspaceId, 
-  limit = 20, 
-  showFilters = true, 
-  className 
+function getDayLabel(timestamp: number): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today.getTime() - 86400000);
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  if (d.getTime() === today.getTime()) return "TODAY";
+  if (d.getTime() === yesterday.getTime()) return "YESTERDAY";
+  return date
+    .toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    })
+    .toUpperCase();
+}
+
+function formatTime(timestamp: number): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 60) return `${diffMin}m`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `${diffH}h`;
+  return date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatDescription(activity: any): string {
+  if (activity.description) return activity.description;
+  const config =
+    activityTypeConfig[activity.type as keyof typeof activityTypeConfig];
+  return (
+    config?.label ||
+    activity.type?.replace(/_/g, " ").toUpperCase() ||
+    "ACTIVITY"
+  );
+}
+
+export default function TeamActivityFeed({
+  projectId,
+  workspaceId,
+  limit = 20,
+  showFilters = true,
+  className,
 }: TeamActivityFeedProps) {
-  const [timeFilter, setTimeFilter] = useState(24) // Default to today
-  const [typeFilter, setTypeFilter] = useState<string[] | null>(null)
+  const [timeFilter, setTimeFilter] = useState(24);
+  const [typeFilter, setTypeFilter] = useState<string[] | null>(null);
 
-  // Get activities based on project or workspace
   const activities = useQuery(
-    projectId ? api.activities.queries.getRecentTeamActivity : api.activities.queries.getWorkspaceActivities,
-    projectId 
-      ? { 
-          projectId: projectId as any, 
+    projectId
+      ? api.activities.queries.getRecentTeamActivity
+      : api.activities.queries.getWorkspaceActivities,
+    projectId
+      ? {
+          projectId: projectId as any,
           limit,
           timeRangeHours: timeFilter,
-          types: typeFilter || undefined
+          types: typeFilter || undefined,
         }
-      : workspaceId 
-        ? { 
-            workspaceId: workspaceId as any, 
+      : workspaceId
+        ? {
+            workspaceId: workspaceId as any,
             limit,
             timeRangeHours: timeFilter,
-            types: typeFilter || undefined
+            types: typeFilter || undefined,
           }
-        : 'skip'
-  )
+        : "skip",
+  );
 
-  // Activities are already filtered by the backend, so just return them
-  const filteredActivities = useMemo(() => {
-    return activities || []
-  }, [activities])
-
-  const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffMinutes = Math.floor(diffMs / (1000 * 60))
-
-    if (diffMinutes < 60) {
-      return `${diffMinutes}m ago`
-    } else if (diffHours < 24) {
-      return `${diffHours}h ago`
-    } else {
-      return date.toLocaleDateString()
+  // Group activities by day
+  const grouped = useMemo(() => {
+    const list = activities || [];
+    const map: Map<string, any[]> = new Map();
+    for (const a of list) {
+      const label = getDayLabel((a as any).timestamp || Date.now());
+      if (!map.has(label)) map.set(label, []);
+      map.get(label)!.push(a);
     }
-  }
+    return Array.from(map.entries()); // [[dayLabel, activities[]], ...]
+  }, [activities]);
 
-  const formatDescription = (activity: any) => {
-    // Use the description from the activity or fall back to a formatted version
-    if (activity.description) {
-      return activity.description
-    }
-
-    // Fallback formatting for legacy activities
-    const config = activityTypeConfig[activity.type as keyof typeof activityTypeConfig]
-    return `${config?.label || activity.type.replace(/_/g, ' ').toUpperCase()}`
-  }
-
+  // Loading skeleton
   if (!activities) {
     return (
-      <div className={clsx('bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]', className)}>
-        <div className="flex items-center justify-between mb-[8px]">
-          <h3 className="text-[14px] font-semibold font-bold uppercase">TEAM ACTIVITY</h3>
+      <div
+        className={clsx(
+          "bg-[var(--theme-background)] border-2 border-[var(--theme-border)]",
+          className,
+        )}
+      >
+        <div className="px-4 py-3 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest">
+            TEAM ACTIVITY
+          </span>
         </div>
-        <div className="animate-pulse space-y-8px">
-          {['s1','s2','s3','s4','s5'].map((id) => (
-            <div key={id} className="flex items-center gap-[8px] p-8px bg-basalt-border/20">
-              <div className="w-40px h-12px bg-basalt-border"></div>
-              <div className="w-4 h-4 bg-basalt-border rounded"></div>
-              <div className="w-80px h-12px bg-basalt-border"></div>
-              <div className="flex-1 h-12px bg-basalt-border"></div>
+        <div className="p-4 space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center gap-3 animate-pulse">
+              <div className="w-3 h-3 bg-[var(--theme-border)]" />
+              <div className="w-4 h-4 bg-[var(--theme-border)]" />
+              <div className="flex-1 h-3 bg-[var(--theme-border)]" />
+              <div className="w-8 h-3 bg-[var(--theme-border)]" />
             </div>
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className={clsx('bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-[16px]', className)}>
-      <div className="flex items-center justify-between mb-[8px]">
-        <h3 className="text-[14px] font-semibold font-bold uppercase">TEAM ACTIVITY</h3>
-        
+    <div
+      className={clsx(
+        "bg-[var(--theme-background)] border-2 border-[var(--theme-border)]",
+        className,
+      )}
+    >
+      {/* Header + filters */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-widest">
+          TEAM ACTIVITY
+        </span>
+
         {showFilters && (
-          <div className="flex items-center gap-[8px]">
-            {/* Time Filter */}
-            <div className="relative">
-              <select
-                value={timeFilter}
-                onChange={(e) => setTimeFilter(Number(e.target.value))}
-                className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-xs uppercase text-primary-brutalist appearance-none pr-24px pl-8px py-4px cursor-pointer hover:border-primary-brutalist/50 transition-colors"
-              >
-                {timeFilterOptions.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-              <span className="absolute right-8px top-1/2 transform -translate-y-1/2 text-primary-brutalist/60">▼</span>
+          <div className="flex items-center gap-2">
+            {/* Time filter */}
+            <div className="flex items-center border-2 border-[var(--theme-border)]">
+              {timeFilterOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setTimeFilter(opt.value)}
+                  className={clsx(
+                    "px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider transition-colors cursor-pointer",
+                    timeFilter === opt.value
+                      ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
+                      : "text-[var(--theme-foreground)]/50 hover:text-[var(--theme-foreground)]",
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
 
-            {/* Type Filter */}
-            <div className="relative">
-              <select
-                value={typeFilter ? JSON.stringify(typeFilter) : 'null'}
-                onChange={(e) => {
-                  const value = e.target.value
-                  setTypeFilter(value === 'null' ? null : JSON.parse(value))
-                }}
-                className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-brutal-xs uppercase text-primary-brutalist appearance-none pr-24px pl-8px py-4px cursor-pointer hover:border-primary-brutalist/50 transition-colors"
-              >
-                {typeFilterOptions.map(option => (
-                  <option key={option.label} value={option.value ? JSON.stringify(option.value) : 'null'}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <span className="absolute right-8px top-1/2 transform -translate-y-1/2 text-primary-brutalist/60">▼</span>
+            {/* Type filter */}
+            <div className="flex items-center border-2 border-[var(--theme-border)]">
+              {typeFilterOptions.map((opt) => (
+                <button
+                  key={opt.label}
+                  onClick={() => setTypeFilter(opt.value as string[] | null)}
+                  className={clsx(
+                    "px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider transition-colors cursor-pointer",
+                    JSON.stringify(typeFilter) === JSON.stringify(opt.value)
+                      ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
+                      : "text-[var(--theme-foreground)]/50 hover:text-[var(--theme-foreground)]",
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
         )}
       </div>
-      
-      <div className="space-y-8px font-mono text-brutal-sm max-h-400px overflow-y-auto">
-        {filteredActivities.length > 0 ? (
-          filteredActivities.map((activity, index) => {
-            const activityType = (activity as any).type
-            const config = activityTypeConfig[activityType as keyof typeof activityTypeConfig] || {
-              icon: HiOutlineTerminal,
-              color: 'text-primary-brutalist',
-              bgColor: 'bg-primary-brutalist/20',
-              label: activityType ? activityType.replace(/_/g, ' ').toUpperCase() : 'ACTIVITY'
-            }
-            
-            const Icon = config.icon
 
-            return (
-              <div 
-                key={activity._id}
-                className="flex items-center gap-[8px] p-8px hover:bg-basalt-border/20 transition-colors border-l-2 border-transparent hover:border-primary-brutalist/30"
-              >
-                <span className="text-brutal-xs text-primary-brutalist/60 min-w-40px">
-                  {formatTime((activity as any).timestamp || Date.now())}
-                </span>
-                
-                <div className={clsx(
-                  'w-4 h-4 border-2 border-[var(--theme-border)] flex items-center justify-center',
-                  config.bgColor
-                )}>
-                  <Icon className={clsx('w-12px h-12px', config.color)} />
-                </div>
-                
-                <div className="flex items-center gap-8px flex-1 min-w-0">
-                  {(activity as any).actor && (
-                    <UserDisplay 
-                      userId={(activity as any).actorId || (activity as any).actor._id}
-                      size="xs"
-                      showName={false}
-                      showStatus={false}
-                      compact
-                    />
-                  )}
-                  
-                  <span className="text-primary-brutalist font-semibold truncate">
-                    {(activity as any).actor?.name || (activity as any).actorName || 'UNKNOWN USER'}
-                  </span>
-                  
-                  <span className="text-primary-brutalist/80 truncate flex-1">
-                    {formatDescription(activity)}
-                  </span>
-                  
-                  {(activity as any).project && projectId !== (activity as any).projectId && (
-                    <span className="text-brutal-xs text-primary-brutalist/40 bg-basalt-border px-4px py-1px uppercase">
-                      {(activity as any).project.key}
-                    </span>
-                  )}
-                </div>
-
-                {/* Show metadata for status changes, assignments, etc. */}
-                {((activity as any).metadata?.oldValue || (activity as any).metadata?.newValue) && (
-                  <div className="text-brutal-xs text-primary-brutalist/60">
-                    {(activity as any).metadata.oldValue && (activity as any).metadata.newValue && (
-                      <span>{(activity as any).metadata.oldValue} → {(activity as any).metadata.newValue}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            )
-          })
-        ) : (
-          <div className="text-center py-[24px]">
-            <HiOutlineTerminal className="w-6 h-6 text-primary-brutalist/30 mx-auto mb-[8px]" />
-            <h3 className="font-mono text-brutal-sm uppercase mb-[8px]">NO RECENT ACTIVITY</h3>
-            <p className="text-[var(--theme-foreground)]/60">
-              Team activity will appear here as actions are performed
+      {/* Timeline body */}
+      <div className="overflow-y-auto max-h-[600px]">
+        {grouped.length === 0 ? (
+          <div className="py-12 text-center">
+            <HiOutlineTerminal className="w-5 h-5 text-[var(--theme-foreground)]/20 mx-auto mb-3" />
+            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--theme-foreground)]/30">
+              NO RECENT ACTIVITY
             </p>
           </div>
+        ) : (
+          grouped.map(([dayLabel, items]) => (
+            <div key={dayLabel}>
+              {/* Day header */}
+              <div className="flex items-center gap-3 px-4 py-2 border-b border-[var(--theme-border)]/40 bg-[var(--theme-background-secondary)]/40 sticky top-0 z-10">
+                <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-[var(--theme-foreground)]/40">
+                  {dayLabel}
+                </span>
+                <div className="flex-1 h-px bg-[var(--theme-border)]/30" />
+                <span className="font-mono text-[9px] text-[var(--theme-foreground)]/30">
+                  {items.length} events
+                </span>
+              </div>
+
+              {/* Items */}
+              <div className="relative pl-10 pr-4 py-2">
+                {/* Vertical connector line */}
+                <div className="absolute left-[28px] top-0 bottom-0 w-px bg-[var(--theme-border)]/40" />
+
+                <div className="space-y-0">
+                  {items.map((activity: any, idx: number) => {
+                    const aType =
+                      activity.type as keyof typeof activityTypeConfig;
+                    const config = activityTypeConfig[aType] || {
+                      icon: HiOutlineTerminal,
+                      color: "var(--theme-primary)",
+                      label:
+                        aType?.replace(/_/g, " ").toUpperCase() || "ACTIVITY",
+                    };
+                    const Icon = config.icon;
+
+                    return (
+                      <div
+                        key={activity._id || idx}
+                        className="group relative flex items-start gap-3 py-2 hover:bg-[var(--theme-background-secondary)]/30 transition-colors -mx-4 px-4"
+                      >
+                        {/* Timeline dot + icon */}
+                        <div className="absolute left-[-24px] top-[10px] flex items-center justify-center">
+                          <div
+                            className="w-4 h-4 border-2 border-[var(--theme-background)] flex items-center justify-center shrink-0"
+                            style={{
+                              backgroundColor: `color-mix(in srgb, ${config.color} 20%, transparent)`,
+                              outline: `1px solid ${config.color}`,
+                            }}
+                          >
+                            <Icon
+                              className="w-[8px] h-[8px]"
+                              style={{ color: config.color }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Actor avatar */}
+                        {activity.actor && (
+                          <div className="shrink-0 mt-0.5">
+                            <UserDisplay
+                              userId={activity.actorId || activity.actor._id}
+                              size="xs"
+                              showName={false}
+                              showStatus={false}
+                              compact
+                            />
+                          </div>
+                        )}
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline gap-1.5 flex-wrap">
+                            <span className="font-mono text-xs font-bold text-[var(--theme-foreground)]">
+                              {activity.actor?.name ||
+                                activity.actorName ||
+                                "UNKNOWN"}
+                            </span>
+                            <span
+                              className="font-mono text-[10px] font-bold uppercase"
+                              style={{ color: config.color }}
+                            >
+                              {config.label}
+                            </span>
+                            <span className="font-mono text-[10px] text-[var(--theme-foreground)]/50 truncate">
+                              {formatDescription(activity)}
+                            </span>
+                          </div>
+
+                          {/* Metadata arrow (e.g. status old → new) */}
+                          {activity.metadata?.oldValue &&
+                            activity.metadata?.newValue && (
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <span className="font-mono text-[9px] text-[var(--theme-foreground)]/30 uppercase">
+                                  {activity.metadata.oldValue}
+                                </span>
+                                <span className="font-mono text-[9px] text-[var(--theme-foreground)]/20">
+                                  →
+                                </span>
+                                <span className="font-mono text-[9px] text-[var(--theme-foreground)]/50 uppercase">
+                                  {activity.metadata.newValue}
+                                </span>
+                              </div>
+                            )}
+                        </div>
+
+                        {/* Timestamp */}
+                        <span className="font-mono text-[9px] text-[var(--theme-foreground)]/30 shrink-0 mt-1 tabular-nums">
+                          {formatTime(activity.timestamp || Date.now())}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>
-  )
+  );
 }
