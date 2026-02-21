@@ -1,170 +1,189 @@
-import { v } from "convex/values"
-import { mutation, query } from "./_generated/server"
-import { Doc, Id } from "./_generated/dataModel"
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import { Doc, Id } from "./_generated/dataModel";
+
+async function requireAuthenticatedUserMatch(
+  ctx: any,
+  requestedUserId: string,
+) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Unauthorized");
+  }
+
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", identity.subject))
+    .first();
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (identity.subject !== requestedUserId) {
+    throw new Error("Not authorized");
+  }
+
+  return { identity, user };
+}
 
 // Queries
 
 export const getTimeEntry = query({
   args: { timeEntryId: v.id("timeEntries") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
-    const entry = await ctx.db.get(args.timeEntryId)
+    const entry = await ctx.db.get(args.timeEntryId);
     if (!entry) {
-      return null
+      return null;
     }
 
     // Check if user can access this entry
     if (entry.userId !== identity.subject) {
       // TODO: Check if user is a manager/admin
-      throw new Error("You can only view your own time entries")
+      throw new Error("You can only view your own time entries");
     }
 
-    return entry
+    return entry;
   },
-})
+});
 
 export const getTimeEntriesByTask = query({
   args: { taskId: v.id("tasks") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
     return await ctx.db
       .query("timeEntries")
       .withIndex("by_task", (q) => q.eq("taskId", args.taskId))
       .order("desc")
-      .collect()
+      .collect();
   },
-})
+});
 
 export const getTimeEntriesByUser = query({
-  args: { 
+  args: {
     userId: v.string(),
     startDate: v.optional(v.number()),
-    endDate: v.optional(v.number())
+    endDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
+    await requireAuthenticatedUserMatch(ctx, args.userId);
 
-    let query = ctx.db
+    let timeEntriesQuery = ctx.db
       .query("timeEntries")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_user_and_startTime", (q) => q.eq("userId", args.userId));
 
-    const entries = await query.collect()
-
-    // Filter by date range if provided
-    if (args.startDate || args.endDate) {
-      return entries.filter(entry => {
-        if (args.startDate && entry.startTime < args.startDate) return false
-        if (args.endDate && entry.startTime > args.endDate) return false
-        return true
-      })
+    if (args.startDate !== undefined) {
+      timeEntriesQuery = timeEntriesQuery.filter((q) =>
+        q.gte(q.field("startTime"), args.startDate!),
+      );
     }
 
-    return entries
+    if (args.endDate !== undefined) {
+      timeEntriesQuery = timeEntriesQuery.filter((q) =>
+        q.lte(q.field("startTime"), args.endDate!),
+      );
+    }
+
+    return await timeEntriesQuery.collect();
   },
-})
+});
 
 export const getActiveTimeEntry = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
+    await requireAuthenticatedUserMatch(ctx, args.userId);
 
     const entries = await ctx.db
       .query("timeEntries")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .order("desc")
-      .take(1)
+      .take(1);
 
-    const latestEntry = entries[0]
-    
+    const latestEntry = entries[0];
+
     // Check if the latest entry is still active (no endTime)
     if (latestEntry && !latestEntry.endTime) {
-      return latestEntry
+      return latestEntry;
     }
 
-    return null
+    return null;
   },
-})
+});
 
 export const getTimeEntriesByProject = query({
-  args: { 
+  args: {
     projectId: v.id("projects"),
     startDate: v.optional(v.number()),
-    endDate: v.optional(v.number())
+    endDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
     // Get all tasks for the project
     const tasks = await ctx.db
       .query("tasks")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .collect()
+      .collect();
 
-    const taskIds = tasks.map(t => t._id)
+    const taskIds = tasks.map((t) => t._id);
 
     // Get all time entries for these tasks
-    const allEntries: Doc<"timeEntries">[] = []
+    const allEntries: Doc<"timeEntries">[] = [];
     for (const taskId of taskIds) {
       const entries = await ctx.db
         .query("timeEntries")
         .withIndex("by_task", (q) => q.eq("taskId", taskId))
-        .collect()
-      allEntries.push(...entries)
+        .collect();
+      allEntries.push(...entries);
     }
 
     // Filter by date range if provided
     if (args.startDate || args.endDate) {
-      return allEntries.filter(entry => {
-        if (args.startDate && entry.startTime < args.startDate) return false
-        if (args.endDate && entry.startTime > args.endDate) return false
-        return true
-      })
+      return allEntries.filter((entry) => {
+        if (args.startDate && entry.startTime < args.startDate) return false;
+        if (args.endDate && entry.startTime > args.endDate) return false;
+        return true;
+      });
     }
 
-    return allEntries
+    return allEntries;
   },
-})
+});
 
 export const getTimeEntriesForApproval = query({
-  args: { 
+  args: {
     projectId: v.optional(v.id("projects")),
-    userId: v.optional(v.string())
+    userId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
     // TODO: Check if user is a manager/admin
 
-    let entries: Doc<"timeEntries">[] = []
+    let entries: Doc<"timeEntries">[] = [];
 
     if (args.projectId) {
       // Get all tasks for the project
       const tasks = await ctx.db
         .query("tasks")
         .withIndex("by_project", (q) => q.eq("projectId", args.projectId!))
-        .collect()
+        .collect();
 
-      const taskIds = tasks.map(t => t._id)
+      const taskIds = tasks.map((t) => t._id);
 
       // Get all unapproved time entries for these tasks
       for (const taskId of taskIds) {
@@ -172,26 +191,26 @@ export const getTimeEntriesForApproval = query({
           .query("timeEntries")
           .withIndex("by_task", (q) => q.eq("taskId", taskId))
           .filter((q) => q.eq(q.field("approved"), false))
-          .collect()
-        entries.push(...taskEntries)
+          .collect();
+        entries.push(...taskEntries);
       }
     } else if (args.userId) {
       entries = await ctx.db
         .query("timeEntries")
         .withIndex("by_user", (q) => q.eq("userId", args.userId!))
         .filter((q) => q.eq(q.field("approved"), false))
-        .collect()
+        .collect();
     } else {
       // Get all unapproved entries
       entries = await ctx.db
         .query("timeEntries")
         .filter((q) => q.eq(q.field("approved"), false))
-        .collect()
+        .collect();
     }
 
-    return entries
+    return entries;
   },
-})
+});
 
 // Mutations
 
@@ -201,9 +220,9 @@ export const startTimer = mutation({
     description: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
     // Check if there's already an active timer for this user
@@ -211,11 +230,13 @@ export const startTimer = mutation({
       .query("timeEntries")
       .withIndex("by_user", (q) => q.eq("userId", identity.subject))
       .order("desc")
-      .take(1)
+      .take(1);
 
-    const activeEntry = activeEntries[0]
+    const activeEntry = activeEntries[0];
     if (activeEntry && !activeEntry.endTime) {
-      throw new Error("You already have an active timer. Please stop it first.")
+      throw new Error(
+        "You already have an active timer. Please stop it first.",
+      );
     }
 
     // Create new time entry
@@ -228,11 +249,11 @@ export const startTimer = mutation({
       approved: false, // Default to not approved
       createdAt: Date.now(),
       updatedAt: Date.now(),
-    })
+    });
 
-    return entryId
+    return entryId;
   },
-})
+});
 
 export const stopTimer = mutation({
   args: {
@@ -240,47 +261,47 @@ export const stopTimer = mutation({
     description: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
-    const entry = await ctx.db.get(args.timeEntryId)
+    const entry = await ctx.db.get(args.timeEntryId);
     if (!entry) {
-      throw new Error("Time entry not found")
+      throw new Error("Time entry not found");
     }
 
     if (entry.userId !== identity.subject) {
-      throw new Error("You can only stop your own timers")
+      throw new Error("You can only stop your own timers");
     }
 
     if (entry.endTime) {
-      throw new Error("This timer has already been stopped")
+      throw new Error("This timer has already been stopped");
     }
 
-    const endTime = Date.now()
-    const duration = endTime - entry.startTime
+    const endTime = Date.now();
+    const duration = endTime - entry.startTime;
 
     await ctx.db.patch(args.timeEntryId, {
       endTime,
       duration,
       description: args.description || entry.description,
       updatedAt: Date.now(),
-    })
+    });
 
     // Update task time spent
-    const task = await ctx.db.get(entry.taskId)
+    const task = await ctx.db.get(entry.taskId);
     if (task) {
-      const currentTimeTracked = task.timeTracked || 0
+      const currentTimeTracked = task.timeTracked || 0;
       await ctx.db.patch(entry.taskId, {
         timeTracked: currentTimeTracked + duration, // Store in milliseconds
         updatedAt: Date.now(),
-      })
+      });
     }
 
-    return { duration }
+    return { duration };
   },
-})
+});
 
 export const createManualEntry = mutation({
   args: {
@@ -291,16 +312,16 @@ export const createManualEntry = mutation({
     billable: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
     if (args.endTime <= args.startTime) {
-      throw new Error("End time must be after start time")
+      throw new Error("End time must be after start time");
     }
 
-    const duration = args.endTime - args.startTime
+    const duration = args.endTime - args.startTime;
 
     const entryId = await ctx.db.insert("timeEntries", {
       taskId: args.taskId,
@@ -313,21 +334,21 @@ export const createManualEntry = mutation({
       approved: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-    })
+    });
 
     // Update task time spent
-    const task = await ctx.db.get(args.taskId)
+    const task = await ctx.db.get(args.taskId);
     if (task) {
-      const currentTimeTracked = task.timeTracked || 0
+      const currentTimeTracked = task.timeTracked || 0;
       await ctx.db.patch(args.taskId, {
         timeTracked: currentTimeTracked + duration, // Store in milliseconds
         updatedAt: Date.now(),
-      })
+      });
     }
 
-    return entryId
+    return entryId;
   },
-})
+});
 
 export const updateTimeEntry = mutation({
   args: {
@@ -338,91 +359,91 @@ export const updateTimeEntry = mutation({
     billable: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
-    const entry = await ctx.db.get(args.timeEntryId)
+    const entry = await ctx.db.get(args.timeEntryId);
     if (!entry) {
-      throw new Error("Time entry not found")
+      throw new Error("Time entry not found");
     }
 
     if (entry.userId !== identity.subject) {
-      throw new Error("You can only update your own time entries")
+      throw new Error("You can only update your own time entries");
     }
 
     const updates: Partial<Doc<"timeEntries">> = {
       updatedAt: Date.now(),
-    }
+    };
 
     if (args.startTime !== undefined) {
-      updates.startTime = args.startTime
+      updates.startTime = args.startTime;
     }
     if (args.endTime !== undefined) {
-      updates.endTime = args.endTime
+      updates.endTime = args.endTime;
     }
     if (args.description !== undefined) {
-      updates.description = args.description
+      updates.description = args.description;
     }
     if (args.billable !== undefined) {
-      updates.billable = args.billable
+      updates.billable = args.billable;
     }
 
     // Recalculate duration if times changed
-    const newStartTime = updates.startTime || entry.startTime
-    const newEndTime = updates.endTime || entry.endTime
+    const newStartTime = updates.startTime || entry.startTime;
+    const newEndTime = updates.endTime || entry.endTime;
     if (newEndTime) {
-      updates.duration = newEndTime - newStartTime
+      updates.duration = newEndTime - newStartTime;
     }
 
-    await ctx.db.patch(args.timeEntryId, updates)
+    await ctx.db.patch(args.timeEntryId, updates);
 
-    return { success: true }
+    return { success: true };
   },
-})
+});
 
 export const deleteTimeEntry = mutation({
   args: {
     timeEntryId: v.id("timeEntries"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
-    const entry = await ctx.db.get(args.timeEntryId)
+    const entry = await ctx.db.get(args.timeEntryId);
     if (!entry) {
-      throw new Error("Time entry not found")
+      throw new Error("Time entry not found");
     }
 
     if (entry.userId !== identity.subject) {
-      throw new Error("You can only delete your own time entries")
+      throw new Error("You can only delete your own time entries");
     }
 
     if (entry.approved) {
-      throw new Error("Cannot delete approved time entries")
+      throw new Error("Cannot delete approved time entries");
     }
 
     // Update task time spent before deleting
     if (entry.duration) {
-      const task = await ctx.db.get(entry.taskId)
+      const task = await ctx.db.get(entry.taskId);
       if (task) {
-        const currentTimeTracked = task.timeTracked || 0
-        const newTimeTracked = Math.max(0, currentTimeTracked - entry.duration)
+        const currentTimeTracked = task.timeTracked || 0;
+        const newTimeTracked = Math.max(0, currentTimeTracked - entry.duration);
         await ctx.db.patch(entry.taskId, {
           timeTracked: newTimeTracked,
           updatedAt: Date.now(),
-        })
+        });
       }
     }
 
-    await ctx.db.delete(args.timeEntryId)
+    await ctx.db.delete(args.timeEntryId);
 
-    return { success: true }
+    return { success: true };
   },
-})
+});
 
 export const approveTimeEntries = mutation({
   args: {
@@ -430,26 +451,77 @@ export const approveTimeEntries = mutation({
     approved: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
+    const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
-    // TODO: Check if user is a manager/admin
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (args.timeEntryIds.length === 0) {
+      return { success: true, count: 0 };
+    }
+
+    const firstEntry = await ctx.db.get(args.timeEntryIds[0]);
+    if (!firstEntry) {
+      throw new Error("Time entry not found");
+    }
+
+    const firstTask = await ctx.db.get(firstEntry.taskId);
+    if (!firstTask) {
+      throw new Error("Task not found");
+    }
+
+    const firstProject = await ctx.db.get(firstTask.projectId);
+    if (!firstProject) {
+      throw new Error("Project not found");
+    }
+
+    const workspaceId = firstProject.workspaceId;
+
+    const membership = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_workspace_user", (q) =>
+        q.eq("workspaceId", workspaceId).eq("userId", user._id),
+      )
+      .unique();
+    if (!membership || !["admin", "owner"].includes(membership.role)) {
+      throw new Error("Only admins can approve time entries");
+    }
 
     for (const entryId of args.timeEntryIds) {
-      const entry = await ctx.db.get(entryId)
+      const entry = await ctx.db.get(entryId);
       if (entry) {
+        const task = await ctx.db.get(entry.taskId);
+        if (!task) {
+          throw new Error("Task not found");
+        }
+
+        const project = await ctx.db.get(task.projectId);
+        if (!project) {
+          throw new Error("Project not found");
+        }
+
+        if (project.workspaceId !== workspaceId) {
+          throw new Error("All time entries must belong to the same workspace");
+        }
+
         await ctx.db.patch(entryId, {
           approved: args.approved,
           updatedAt: Date.now(),
-        })
+        });
       }
     }
 
-    return { success: true, count: args.timeEntryIds.length }
+    return { success: true, count: args.timeEntryIds.length };
   },
-})
+});
 
 export const getTimeStatsByUser = query({
   args: {
@@ -458,45 +530,45 @@ export const getTimeStatsByUser = query({
     endDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
+    await requireAuthenticatedUserMatch(ctx, args.userId);
+
+    let query = ctx.db
+      .query("timeEntries")
+      .withIndex("by_user_and_startTime", (q) => q.eq("userId", args.userId));
+
+    if (args.startDate !== undefined) {
+      query = query.filter((q) => q.gte(q.field("startTime"), args.startDate!));
     }
 
-    const entries = await ctx.db
-      .query("timeEntries")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .collect()
+    if (args.endDate !== undefined) {
+      query = query.filter((q) => q.lte(q.field("startTime"), args.endDate!));
+    }
 
-    // Filter by date range
-    const filteredEntries = entries.filter(entry => {
-      if (args.startDate && entry.startTime < args.startDate) return false
-      if (args.endDate && entry.startTime > args.endDate) return false
-      return true
-    })
+    const filteredEntries = await query.collect();
 
     // Calculate statistics
-    const totalTime = filteredEntries.reduce((sum, entry) => 
-      sum + (entry.duration || 0), 0
-    )
-    
+    const totalTime = filteredEntries.reduce(
+      (sum, entry) => sum + (entry.duration || 0),
+      0,
+    );
+
     const billableTime = filteredEntries
-      .filter(e => e.billable)
-      .reduce((sum, entry) => sum + (entry.duration || 0), 0)
-    
+      .filter((e) => e.billable)
+      .reduce((sum, entry) => sum + (entry.duration || 0), 0);
+
     const approvedTime = filteredEntries
-      .filter(e => e.approved)
-      .reduce((sum, entry) => sum + (entry.duration || 0), 0)
-    
-    const entryCount = filteredEntries.length
-    const averageSessionTime = entryCount > 0 ? totalTime / entryCount : 0
+      .filter((e) => e.approved)
+      .reduce((sum, entry) => sum + (entry.duration || 0), 0);
+
+    const entryCount = filteredEntries.length;
+    const averageSessionTime = entryCount > 0 ? totalTime / entryCount : 0;
 
     // Group by task for breakdown
-    const taskBreakdown = new Map<Id<"tasks">, number>()
-    filteredEntries.forEach(entry => {
-      const current = taskBreakdown.get(entry.taskId) || 0
-      taskBreakdown.set(entry.taskId, current + (entry.duration || 0))
-    })
+    const taskBreakdown = new Map<Id<"tasks">, number>();
+    filteredEntries.forEach((entry) => {
+      const current = taskBreakdown.get(entry.taskId) || 0;
+      taskBreakdown.set(entry.taskId, current + (entry.duration || 0));
+    });
 
     return {
       totalTime: totalTime / 3600000, // Convert to hours
@@ -505,10 +577,12 @@ export const getTimeStatsByUser = query({
       nonBillableTime: (totalTime - billableTime) / 3600000,
       entryCount,
       averageSessionTime: averageSessionTime / 3600000,
-      taskBreakdown: Array.from(taskBreakdown.entries()).map(([taskId, duration]) => ({
-        taskId,
-        duration: duration / 3600000
-      }))
-    }
+      taskBreakdown: Array.from(taskBreakdown.entries()).map(
+        ([taskId, duration]) => ({
+          taskId,
+          duration: duration / 3600000,
+        }),
+      ),
+    };
   },
-})
+});

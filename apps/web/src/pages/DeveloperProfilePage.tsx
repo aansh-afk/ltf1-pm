@@ -95,7 +95,7 @@ function OverviewTab({ activityStats, profile }: OverviewTabProps) {
             {profile.email && (
               <div className="flex items-center gap-[6px]">
                 <HiOutlineMail className="w-16px h-16px text-primary-brutalist/60" />
-                <span className="font-mono text-brutal-sm">{profile.email}</span>
+                <a href={`mailto:${profile.email}`} className="font-mono text-brutal-sm hover:text-[#6366F1] transition-colors">{profile.email}</a>
               </div>
             )}
             {profile.phone && (
@@ -343,20 +343,20 @@ function PreferencesTab({ profile, isOwnProfile }: PreferencesTabProps) {
             PRIVACY SETTINGS
           </h3>
           <div className="space-y-12px">
-            <label className="flex items-center gap-[6px]">
-              <input type="checkbox" className="brutal-checkbox" />
+            <label className="flex items-center gap-[6px] opacity-50 cursor-not-allowed">
+              <input type="checkbox" className="brutal-checkbox" disabled title="Coming soon" />
               <span className="font-mono text-brutal-sm">Show email to team members</span>
             </label>
-            <label className="flex items-center gap-[6px]">
-              <input type="checkbox" className="brutal-checkbox" />
+            <label className="flex items-center gap-[6px] opacity-50 cursor-not-allowed">
+              <input type="checkbox" className="brutal-checkbox" disabled title="Coming soon" />
               <span className="font-mono text-brutal-sm">Show phone number to team members</span>
             </label>
-            <label className="flex items-center gap-[6px]">
-              <input type="checkbox" className="brutal-checkbox" />
+            <label className="flex items-center gap-[6px] opacity-50 cursor-not-allowed">
+              <input type="checkbox" className="brutal-checkbox" disabled title="Coming soon" />
               <span className="font-mono text-brutal-sm">Show GitHub profile publicly</span>
             </label>
-            <label className="flex items-center gap-[6px]">
-              <input type="checkbox" className="brutal-checkbox" />
+            <label className="flex items-center gap-[6px] opacity-50 cursor-not-allowed">
+              <input type="checkbox" className="brutal-checkbox" disabled title="Coming soon" />
               <span className="font-mono text-brutal-sm">Show activity status to team</span>
             </label>
           </div>
