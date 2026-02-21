@@ -13,6 +13,7 @@ import {
   HiOutlineRefresh,
   HiOutlineClipboardList,
   HiOutlineUserGroup,
+  HiOutlineCog,
 } from "react-icons/hi";
 import { formatDistanceToNow, format } from "date-fns";
 import clsx from "clsx";

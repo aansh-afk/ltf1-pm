@@ -1,6 +1,6 @@
 import { v } from "convex/values"
 import { mutation, query, action } from "./_generated/server"
-import { api } from "./_generated/api"
+import { api, internal } from "./_generated/api"
 import { Id } from "./_generated/dataModel"
 
 // Create a video room
@@ -141,7 +141,7 @@ export const joinRoom = mutation({
       })
 
       // Create audit log
-      await ctx.runMutation(api.audit.createAuditLog, {
+      await ctx.runMutation(internal.audit.createAuditLog, {
         workspaceId: room.workspaceId,
         eventType: "video.room.joined",
         description: "User joined video room",
@@ -395,7 +395,7 @@ export const startRecording = mutation({
     })
 
     // Create audit log
-    await ctx.runMutation(api.audit.createAuditLog, {
+    await ctx.runMutation(internal.audit.createAuditLog, {
       workspaceId: room.workspaceId,
       eventType: "video.recording.started",
       description: "Video recording started",
@@ -442,7 +442,7 @@ export const stopRecording = mutation({
     }
 
     // Create audit log
-    await ctx.runMutation(api.audit.createAuditLog, {
+    await ctx.runMutation(internal.audit.createAuditLog, {
       workspaceId: room.workspaceId,
       eventType: "video.recording.stopped",
       description: "Video recording stopped",

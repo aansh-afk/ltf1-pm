@@ -312,14 +312,71 @@ function BillingTab(_props: BillingTabProps) {
       title="SUBSCRIPTION & BILLING"
       description="Manage your workspace subscription"
     >
-      <BrutalCard variant="neon" className="p-5 text-center">
-        <p className="text-xl font-bold uppercase mb-2">FREE PLAN</p>
-        <p className="text-sm font-mono text-[var(--theme-foreground)]/60 mb-4">
-          You're currently on the free plan with up to 5 members.
+      {/* Beta notice */}
+      <BrutalCard variant="neon" className="p-5 mb-4 border-[var(--theme-primary)]/40">
+        <div className="flex items-start gap-3 mb-4">
+          <span className="text-[10px] font-mono text-[var(--theme-primary)] uppercase tracking-widest border border-[var(--theme-primary)]/30 px-2 py-1 shrink-0 mt-0.5">
+            Beta
+          </span>
+          <div>
+            <p className="text-sm font-bold uppercase mb-1 text-[var(--theme-foreground)]">
+              EVERYTHING IS FREE RIGHT NOW
+            </p>
+            <p className="text-xs font-mono text-[var(--theme-foreground)]/60 leading-relaxed">
+              We're actively building LTF1 and shipping in public. While we're in beta,
+              all Pro &amp; Enterprise features are unlocked for your workspace at no cost.
+              Billing will start when the app officially launches.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+          {[
+            'Unlimited team members',
+            'Unlimited AI credits',
+            'Advanced analytics',
+            'SSO / SAML',
+            'Audit logs',
+            'BYOK (Bring Your Own Key)',
+            'Custom webhooks',
+            'Priority support',
+          ].map((feature) => (
+            <div key={feature} className="flex items-center gap-2 text-xs font-mono">
+              <span className="text-[var(--theme-primary)]">+</span>
+              <span className="text-[var(--theme-foreground)]/70">{feature}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t border-[var(--theme-border)] pt-3">
+          <p className="text-[10px] font-mono text-[var(--theme-foreground)]/40 leading-relaxed">
+            Your workspace is on the <span className="text-[var(--theme-primary)] font-bold">BETA PLAN</span>.
+            No credit card required. No surprise charges.
+            We'll notify you well in advance before any billing goes live.
+          </p>
+        </div>
+      </BrutalCard>
+
+      {/* What's coming */}
+      <BrutalCard className="p-4">
+        <p className="text-[10px] font-mono text-[var(--theme-foreground)]/40 uppercase tracking-widest mb-3">
+          Coming at Launch
         </p>
-        <BrutalButton variant="primary">
-          UPGRADE TO PRO
-        </BrutalButton>
+        <div className="space-y-2">
+          {[
+            { tier: 'Open Source', price: '$0', note: 'Free forever — up to 5 members, 100 AI credits/month' },
+            { tier: 'Pro', price: '$12/user/mo', note: 'Unlimited members, unlimited AI, advanced features' },
+            { tier: 'Enterprise', price: 'Custom', note: 'On-premise, custom SLA, dedicated support' },
+          ].map((item) => (
+            <div key={item.tier} className="flex items-start justify-between gap-4 text-xs font-mono">
+              <div>
+                <span className="text-[var(--theme-foreground)] font-bold">{item.tier}</span>
+                <span className="text-[var(--theme-foreground)]/40 ml-2">— {item.note}</span>
+              </div>
+              <span className="text-[var(--theme-foreground)]/60 shrink-0">{item.price}</span>
+            </div>
+          ))}
+        </div>
       </BrutalCard>
     </SettingsSection>
   )
@@ -547,11 +604,11 @@ export default function WorkspaceSettingsPage() {
 
   // Queries
   const workspace = useQuery(
-    api.workspaces.queries.getWorkspace,
+    api.workspaces.queries.getWorkspaceById,
     workspaceId ? { workspaceId: workspaceId as any } : 'skip'
   )
   const currentUser = useQuery(api.auth.users.getOrCreateCurrentUser)
-  const memberRole = workspace?.members?.find(m => m.userId === currentUser?._id)?.role
+  const memberRole = workspace?.currentUserRole
 
   if (!workspace || !currentUser) {
     return <LoadingSpinner size="lg" />

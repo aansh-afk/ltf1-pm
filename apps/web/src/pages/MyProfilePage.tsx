@@ -367,6 +367,7 @@ export default function MyProfilePage() {
       {showEditModal && (
         <EditDeveloperProfileModal
           userId={currentUser._id}
+          isOpen={showEditModal}
           onClose={() => {
             setShowEditModal(false)
           }}
