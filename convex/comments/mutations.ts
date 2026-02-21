@@ -70,12 +70,14 @@ export const createComment = mutation({
       if (assigneeId !== user._id) {
         await ctx.db.insert("notifications", {
           userId: assigneeId,
-          type: "comment.added",
+          workspaceId: project.workspaceId,
+          type: "task_comment",
           title: "New Comment",
-          message: `${user.name} commented on "${task.title}"`,
-          data: { taskId: args.taskId, commentId },
-          read: false,
-          createdAt: now,
+          body: `${user.name} commented on "${task.title}"`,
+          isRead: false,
+          actorId: user._id,
+          entityId: args.taskId,
+          entityType: "task",
         });
       }
     }

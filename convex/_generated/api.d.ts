@@ -94,6 +94,7 @@ import type * as meetings_queries from "../meetings/queries.js";
 import type * as migrations_clearOldActivities from "../migrations/clearOldActivities.js";
 import type * as migrations_migrateToMultipleAssignees from "../migrations/migrateToMultipleAssignees.js";
 import type * as migrations from "../migrations.js";
+import type * as notifications from "../notifications.js";
 import type * as nps from "../nps.js";
 import type * as projects_members from "../projects/members.js";
 import type * as projects_mutations from "../projects/mutations.js";
@@ -204,6 +205,7 @@ declare const fullApi: ApiFromModules<{
   "migrations/clearOldActivities": typeof migrations_clearOldActivities;
   "migrations/migrateToMultipleAssignees": typeof migrations_migrateToMultipleAssignees;
   migrations: typeof migrations;
+  notifications: typeof notifications;
   nps: typeof nps;
   "projects/members": typeof projects_members;
   "projects/mutations": typeof projects_mutations;

@@ -353,14 +353,16 @@ export default defineSchema({
 
   notifications: defineTable({
     userId: v.id("users"),
-    workspaceId: v.id("workspaces"),
+    workspaceId: v.optional(v.id("workspaces")),
     type: v.union(
       v.literal("task_assigned"),
+      v.literal("task_unassigned"),
       v.literal("task_comment"),
       v.literal("task_mention"),
       v.literal("sprint_started"),
       v.literal("sprint_completed"),
       v.literal("member_joined"),
+      v.literal("workspace_invitation"),
       v.literal("pr_merged")
     ),
     title: v.string(),
