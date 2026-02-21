@@ -18,11 +18,13 @@ import {
 } from 'react-icons/hi'
 import clsx from 'clsx'
 import { useResourceMonitor } from '../../hooks/useResourceMonitor'
+import { useCurrentWorkspace } from '../../hooks/useCurrentWorkspace'
 import { useAfkDetection } from '../../hooks/useAfkDetection'
 import { ProfileCompletionBanner } from '../features/profile/ProfileCompletionBanner'
 import { GitHubMonitor } from '../features/github/GitHubMonitor'
 import GlobalSearchModal from '../features/search/GlobalSearchModal'
 import WorkspaceMobileBlocker from '../common/WorkspaceMobileBlocker'
+import NotificationBell from '../common/NotificationBell'
 import FeedbackWidget from '../features/feedback/FeedbackWidget'
 import ShortcutHelp from '../shortcuts/ShortcutHelp'
 
@@ -147,6 +149,7 @@ export default function DashboardLayout() {
   const params = useParams()
 
   const { stats, formatMemory } = useResourceMonitor()
+  const { currentWorkspaceId } = useCurrentWorkspace()
 
   useAfkDetection({
     afkTimeout: 5 * 60 * 1000,
@@ -330,6 +333,7 @@ export default function DashboardLayout() {
               <HiOutlineSearch className="w-[14px] h-[14px]" />
               <span className="hidden sm:inline">SEARCH</span>
             </button>
+            <NotificationBell workspaceId={currentWorkspaceId as any} />
             <div className="text-[11px] hidden md:block">
               <span className="text-[var(--theme-info)]">STATUS:</span>{' '}
               <span className="text-[var(--theme-foreground)]/60">OK</span>

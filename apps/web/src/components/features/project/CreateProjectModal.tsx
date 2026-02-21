@@ -52,7 +52,7 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!name.trim() || !key.trim()) {
       toast.error('Project name and key are required')
       return
@@ -111,16 +111,16 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
         {/* PROJECT NAME & KEY */}
         <div className="grid grid-cols-3 gap-2">
           <div className="col-span-2">
-            <label htmlFor="create-project-name" className="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-1.5">
+            <label htmlFor="create-project-name" className="block text-xs font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] mb-1.5">
               Project Name
             </label>
             <input
               id="create-project-name"
               type="text"
               placeholder="My Awesome Project"
-              className="w-full px-3 py-2 bg-[#111111] border-2 border-[#2E2E35]
-                       font-mono text-sm text-[#F9FAFB] uppercase placeholder:text-[#6B7280] placeholder:normal-case
-                       focus:border-[#6366F1] focus:outline-none
+              className="w-full px-3 py-2 bg-[var(--theme-background-card,#111111)] border-2 border-[var(--theme-border)]
+                       font-mono text-sm text-[var(--theme-foreground)] uppercase placeholder:text-[var(--theme-foreground-tertiary)] placeholder:normal-case
+                       focus:border-[var(--theme-primary)] focus:outline-none
                        disabled:opacity-50 disabled:cursor-not-allowed"
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
@@ -129,16 +129,16 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
           </div>
 
           <div>
-            <label htmlFor="create-project-key" className="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-1.5">
+            <label htmlFor="create-project-key" className="block text-xs font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] mb-1.5">
               Key
             </label>
             <input
               id="create-project-key"
               type="text"
               placeholder="MAP"
-              className="w-full px-3 py-2 bg-[#111111] border-2 border-[#2E2E35]
-                       font-mono text-sm text-[#F9FAFB] uppercase placeholder:text-[#6B7280]
-                       focus:border-[#6366F1] focus:outline-none
+              className="w-full px-3 py-2 bg-[var(--theme-background-card,#111111)] border-2 border-[var(--theme-border)]
+                       font-mono text-sm text-[var(--theme-foreground)] uppercase placeholder:text-[var(--theme-foreground-tertiary)]
+                       focus:border-[var(--theme-primary)] focus:outline-none
                        disabled:opacity-50 disabled:cursor-not-allowed"
               value={key}
               onChange={(e) => dispatch({ type: 'UPDATE', field: 'key', value: e.target.value.toUpperCase() })}
@@ -150,15 +150,15 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
 
         {/* DESCRIPTION */}
         <div>
-          <label htmlFor="create-project-description" className="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-1.5">
+          <label htmlFor="create-project-description" className="block text-xs font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] mb-1.5">
             Description (optional)
           </label>
           <textarea
             id="create-project-description"
             placeholder="What's this project about?"
-            className="w-full px-3 py-2 bg-[#111111] border-2 border-[#2E2E35]
-                     font-mono text-sm text-[#F9FAFB] placeholder:text-[#6B7280]
-                     focus:border-[#6366F1] focus:outline-none
+            className="w-full px-3 py-2 bg-[var(--theme-background-card,#111111)] border-2 border-[var(--theme-border)]
+                     font-mono text-sm text-[var(--theme-foreground)] placeholder:text-[var(--theme-foreground-tertiary)]
+                     focus:border-[var(--theme-primary)] focus:outline-none
                      disabled:opacity-50 disabled:cursor-not-allowed resize-none"
             value={description}
             onChange={(e) => dispatch({ type: 'UPDATE', field: 'description', value: e.target.value })}
@@ -169,14 +169,14 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
 
         {/* WORKFLOW TYPE */}
         <div>
-          <label htmlFor="create-project-workflow" className="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-1.5">
+          <label htmlFor="create-project-workflow" className="block text-xs font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] mb-1.5">
             Workflow Type
           </label>
           <select
             id="create-project-workflow"
-            className="w-full px-3 py-2 bg-[#111111] border-2 border-[#2E2E35]
-                     font-mono text-sm text-[#F9FAFB] uppercase
-                     focus:border-[#6366F1] focus:outline-none
+            className="w-full px-3 py-2 bg-[var(--theme-background-card,#111111)] border-2 border-[var(--theme-border)]
+                     font-mono text-sm text-[var(--theme-foreground)] uppercase
+                     focus:border-[var(--theme-primary)] focus:outline-none
                      disabled:opacity-50 disabled:cursor-not-allowed"
             value={workflowType}
             onChange={(e) => dispatch({ type: 'UPDATE', field: 'workflowType', value: e.target.value as 'kanban' | 'scrum' | 'hybrid' })}
@@ -189,12 +189,12 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
         </div>
 
         {/* ACTIONS */}
-        <div className="flex justify-end gap-2 pt-3 border-t border-[#1F1F23]">
+        <div className="flex justify-end gap-2 pt-3 border-t border-[var(--theme-border-subtle,#1F1F23)]">
           <button
             type="button"
-            className="px-4 py-2 bg-transparent border-2 border-[#2E2E35]
-                     font-mono text-xs uppercase tracking-wider text-[#9CA3AF]
-                     hover:border-[#F9FAFB]/20 hover:text-[#F9FAFB]
+            className="px-4 py-2 bg-transparent border-2 border-[var(--theme-border)]
+                     font-mono text-xs uppercase tracking-wider text-[var(--theme-foreground-secondary)]
+                     hover:border-[var(--theme-foreground)]/20 hover:text-[var(--theme-foreground)]
                      disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={onClose}
             disabled={isCreating}
@@ -203,9 +203,9 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-[#6366F1] border-2 border-[#4F46E5]
+            className="px-4 py-2 bg-[var(--theme-primary)] border-2 border-[var(--theme-primary-hover,#4F46E5)]
                      font-mono text-xs uppercase tracking-wider text-white
-                     hover:bg-[#4F46E5]
+                     hover:bg-[var(--theme-primary-hover,#4F46E5)]
                      disabled:opacity-50 disabled:cursor-not-allowed
                      flex items-center gap-1.5"
             disabled={isCreating}

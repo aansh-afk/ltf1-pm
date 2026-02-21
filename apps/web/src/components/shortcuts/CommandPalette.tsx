@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useShortcuts } from '../../contexts/ShortcutContext'
 import type { Command } from '../../types/shortcuts'
 import clsx from 'clsx'
@@ -47,8 +49,8 @@ function CommandItem({ cmd, isSelected, formatKeyCombo, onExecute, onHover }: Co
       className={clsx(
         "mx-1 px-3 py-2 flex items-center gap-3 cursor-pointer rounded-md transition-colors w-[calc(100%-0.5rem)] text-left",
         isSelected
-          ? "bg-[#1A1A2E]"
-          : "hover:bg-[#111119]"
+          ? "bg-[var(--theme-background-tertiary)]"
+          : "hover:bg-[var(--theme-hover)]"
       )}
       onClick={() => onExecute(cmd)}
       onMouseEnter={onHover}
@@ -56,7 +58,7 @@ function CommandItem({ cmd, isSelected, formatKeyCombo, onExecute, onHover }: Co
       {/* Icon */}
       <div className={clsx(
         "w-5 h-5 flex items-center justify-center flex-shrink-0",
-        isSelected ? "text-[#9CA3AF]" : "text-[#6B7280]"
+        isSelected ? "text-[var(--theme-foreground-secondary)]" : "text-[var(--theme-foreground-tertiary)]"
       )}>
         {cmd.icon || <HashIcon className="w-3.5 h-3.5" />}
       </div>
@@ -65,12 +67,12 @@ function CommandItem({ cmd, isSelected, formatKeyCombo, onExecute, onHover }: Co
       <div className="flex-1 min-w-0">
         <div className={clsx(
           "text-sm truncate",
-          isSelected ? "text-[#F9FAFB]" : "text-[#D1D5DB]"
+          isSelected ? "text-[var(--theme-foreground)]" : "text-[#D1D5DB]"
         )}>
           {cmd.name}
         </div>
         {cmd.description && (
-          <div className="text-xs text-[#6B7280] truncate mt-0.5">
+          <div className="text-xs text-[var(--theme-foreground-tertiary)] truncate mt-0.5">
             {cmd.description}
           </div>
         )}
@@ -82,7 +84,7 @@ function CommandItem({ cmd, isSelected, formatKeyCombo, onExecute, onHover }: Co
           {formatKeyCombo(cmd.shortcut).split('+').map((part) => (
             <kbd
               key={part}
-              className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-mono text-[#6B7280] bg-[#111111] border border-[#2E2E35] rounded"
+              className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-mono text-[var(--theme-foreground-tertiary)] bg-[#111111] border border-[var(--theme-border)] rounded"
             >
               {part}
             </kbd>
@@ -92,7 +94,7 @@ function CommandItem({ cmd, isSelected, formatKeyCombo, onExecute, onHover }: Co
 
       {/* Chevron for selected */}
       {isSelected && (
-        <ChevronIcon className="w-3.5 h-3.5 text-[#6B7280] flex-shrink-0" />
+        <ChevronIcon className="w-3.5 h-3.5 text-[var(--theme-foreground-tertiary)] flex-shrink-0" />
       )}
     </button>
   )
@@ -104,25 +106,25 @@ interface FooterHintsProps {
 
 function FooterHints({ commandCount }: FooterHintsProps) {
   return (
-    <div className="flex items-center justify-between px-4 py-2 border-t border-[#1F1F23] bg-[#080808]">
+    <div className="flex items-center justify-between px-4 py-2 border-t border-[var(--theme-border-subtle,#1F1F23)] bg-[#080808]">
       <div className="flex items-center gap-3 text-[11px] text-[#4B5563]">
         <span className="flex items-center gap-1">
-          <kbd className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-mono bg-[#111111] border border-[#2E2E35] rounded">
+          <kbd className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-mono bg-[#111111] border border-[var(--theme-border)] rounded">
             ↑
           </kbd>
-          <kbd className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-mono bg-[#111111] border border-[#2E2E35] rounded">
+          <kbd className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-mono bg-[#111111] border border-[var(--theme-border)] rounded">
             ↓
           </kbd>
           <span className="ml-0.5">navigate</span>
         </span>
         <span className="flex items-center gap-1">
-          <kbd className="inline-flex items-center justify-center h-4 px-1 text-[10px] font-mono bg-[#111111] border border-[#2E2E35] rounded">
+          <kbd className="inline-flex items-center justify-center h-4 px-1 text-[10px] font-mono bg-[#111111] border border-[var(--theme-border)] rounded">
             ↵
           </kbd>
           <span className="ml-0.5">select</span>
         </span>
         <span className="flex items-center gap-1">
-          <kbd className="inline-flex items-center justify-center h-4 px-1 text-[10px] font-mono bg-[#111111] border border-[#2E2E35] rounded">
+          <kbd className="inline-flex items-center justify-center h-4 px-1 text-[10px] font-mono bg-[#111111] border border-[var(--theme-border)] rounded">
             esc
           </kbd>
           <span className="ml-0.5">close</span>
@@ -150,6 +152,7 @@ export default function CommandPalette() {
 
   const searchInputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const paletteRef = useRef<HTMLDivElement>(null)
 
   // Load recent commands from localStorage
   useEffect(() => {
@@ -266,6 +269,56 @@ export default function CommandPalette() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isCommandPaletteOpen, selectedIndex, flatCommands])
 
+  // Focus trap: trap Tab/Shift+Tab within the palette
+  useEffect(() => {
+    if (!isCommandPaletteOpen || !paletteRef.current) return
+
+    const palette = paletteRef.current
+
+    const getFocusable = (): HTMLElement[] => {
+      return Array.from(
+        palette.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter(el => !el.closest('[aria-hidden="true"]'))
+    }
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+      const focusable = getFocusable()
+      if (focusable.length === 0) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleTab)
+    return () => document.removeEventListener('keydown', handleTab)
+  }, [isCommandPaletteOpen])
+
+  // Auto-focus search input when opened
+  useEffect(() => {
+    if (isCommandPaletteOpen) {
+      // Small delay to let AnimatePresence mount the element
+      const id = setTimeout(() => {
+        searchInputRef.current?.focus()
+      }, 20)
+      return () => clearTimeout(id)
+    }
+  }, [isCommandPaletteOpen])
+
   // Scroll selected into view
   useEffect(() => {
     if (listRef.current && selectedIndex >= 0) {
@@ -288,91 +341,104 @@ export default function CommandPalette() {
     setSelectedIndex(0)
   }, [setCommandPaletteOpen])
 
-  if (!isCommandPaletteOpen) return null
-
   // Format category labels nicely
   const formatCategory = (cat: string) => {
     return cat.replace(/-/g, ' ')
   }
 
-  return (
-    <>
-      {/* Backdrop - subtle dark overlay */}
-      <div
-        className="fixed inset-0 bg-black/60 z-[9998]"
-        role="button"
-        tabIndex={0}
-        aria-label="Close command palette"
-        onClick={handleClose}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClose() }}
-      />
-
-      {/* Command Palette - Linear style: top-positioned, compact */}
-      <div className="fixed top-[20%] left-1/2 -translate-x-1/2 w-[90vw] max-w-[560px] z-[9999] flex flex-col overflow-hidden rounded-lg border border-[#2E2E35] bg-[#0A0A0A] shadow-2xl">
-
-        {/* Search input */}
-        <div className="flex items-center gap-3 px-4 border-b border-[#1F1F23]">
-          <SearchIcon className="w-4 h-4 text-[#6B7280] flex-shrink-0" />
-          <input
-            ref={searchInputRef}
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value)
-              setSelectedIndex(0)
-            }}
-            placeholder="Type a command or search..."
-            aria-label="Search commands"
-            className="flex-1 py-3 bg-transparent text-sm text-[#F9FAFB] placeholder:text-[#4B5563] focus:outline-none font-sans"
+  const content = (
+    <AnimatePresence>
+      {isCommandPaletteOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 z-[9998]"
+            role="button"
+            tabIndex={0}
+            aria-label="Close command palette"
+            onClick={handleClose}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClose() }}
           />
-          {searchQuery && (
-            <button
-              onClick={() => { setSearchQuery(''); setSelectedIndex(0) }}
-              className="text-[#6B7280] hover:text-[#9CA3AF] text-xs font-mono px-1.5 py-0.5 rounded border border-[#2E2E35]"
-            >
-              ESC
-            </button>
-          )}
-        </div>
 
-        {/* Commands list */}
-        <div ref={listRef} className="max-h-[min(360px,50vh)] overflow-y-auto py-1">
-          {flatCommands.length === 0 ? (
-            <div className="px-4 py-8 text-center">
-              <p className="text-sm text-[#6B7280]">No results found</p>
+          {/* Command Palette - Linear style: top-positioned, compact */}
+          <motion.div
+            ref={paletteRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Command palette"
+            className="fixed top-[20%] left-1/2 -translate-x-1/2 w-[90vw] max-w-[560px] z-[9999] flex flex-col overflow-hidden border border-[var(--theme-border)] bg-[var(--theme-background-secondary)] shadow-2xl"
+            initial={{ opacity: 0, scale: 0.95, y: -8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -8 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+          >
+            {/* Search input */}
+            <div className="flex items-center gap-3 px-4 border-b border-[var(--theme-border-subtle,#1F1F23)]">
+              <SearchIcon className="w-4 h-4 text-[var(--theme-foreground-tertiary)] flex-shrink-0" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setSelectedIndex(0)
+                }}
+                placeholder="Type a command or search..."
+                aria-label="Search commands"
+                className="flex-1 py-3 bg-transparent text-sm text-[var(--theme-foreground)] placeholder:text-[#4B5563] focus:outline-none font-sans"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => { setSearchQuery(''); setSelectedIndex(0) }}
+                  className="text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-foreground-secondary)] text-xs font-mono px-1.5 py-0.5 rounded border border-[var(--theme-border)]"
+                >
+                  ESC
+                </button>
+              )}
             </div>
-          ) : (
-            groupedCommands.map(({ label, items }) => (
-              <div key={label}>
-                {/* Category label */}
-                <div className="px-4 pt-3 pb-1">
-                  <span className="text-[11px] font-medium uppercase tracking-wider text-[#6B7280]">
-                    {formatCategory(label)}
-                  </span>
+
+            {/* Commands list */}
+            <div ref={listRef} className="max-h-[min(360px,50vh)] overflow-y-auto py-1">
+              {flatCommands.length === 0 ? (
+                <div className="px-4 py-8 text-center">
+                  <p className="text-sm text-[var(--theme-foreground-tertiary)]">No results found</p>
                 </div>
+              ) : (
+                groupedCommands.map(({ label, items }) => (
+                  <div key={label}>
+                    {/* Category label */}
+                    <div className="px-4 pt-3 pb-1">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--theme-foreground-tertiary)]">
+                        {formatCategory(label)}
+                      </span>
+                    </div>
 
-                {/* Command items */}
-                {items.map((cmd) => {
-                  const globalIndex = flatCommands.indexOf(cmd)
-                  return (
-                    <CommandItem
-                      key={`${label}-${cmd.id}`}
-                      cmd={cmd}
-                      isSelected={selectedIndex === globalIndex}
-                      formatKeyCombo={formatKeyCombo}
-                      onExecute={handleExecuteCommand}
-                      onHover={() => setSelectedIndex(globalIndex)}
-                    />
-                  )
-                })}
-              </div>
-            ))
-          )}
-        </div>
+                    {/* Command items */}
+                    {items.map((cmd) => {
+                      const globalIndex = flatCommands.indexOf(cmd)
+                      return (
+                        <CommandItem
+                          key={`${label}-${cmd.id}`}
+                          cmd={cmd}
+                          isSelected={selectedIndex === globalIndex}
+                          formatKeyCombo={formatKeyCombo}
+                          onExecute={handleExecuteCommand}
+                          onHover={() => setSelectedIndex(globalIndex)}
+                        />
+                      )
+                    })}
+                  </div>
+                ))
+              )}
+            </div>
 
-        {/* Footer hints */}
-        <FooterHints commandCount={flatCommands.length} />
-      </div>
-    </>
+            {/* Footer hints */}
+            <FooterHints commandCount={flatCommands.length} />
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   )
+
+  return createPortal(content, document.body)
 }

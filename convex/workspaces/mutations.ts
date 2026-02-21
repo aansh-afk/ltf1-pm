@@ -286,12 +286,14 @@ export const inviteToWorkspace = mutation({
 
       await ctx.db.insert("notifications", {
         userId: invitedUser._id,
-        type: "workspace.invitation",
+        workspaceId: args.workspaceId,
+        type: "workspace_invitation",
         title: "Workspace Invitation",
-        message: `You've been invited to join a workspace`,
-        data: { workspaceId: args.workspaceId, role: args.role },
-        read: false,
-        createdAt: now,
+        body: `You've been invited to join a workspace`,
+        isRead: false,
+        actorId: user._id,
+        entityId: args.workspaceId,
+        entityType: "workspace",
       });
 
       // Send email notification

@@ -1,6 +1,6 @@
 import { v } from "convex/values"
 import { action, mutation, query } from "../../_generated/server"
-import { api } from "../../_generated/api"
+import { api, internal } from "../../_generated/api"
 import type { Id } from "../../_generated/dataModel"
 
 // Store Slack workspace integration
@@ -487,7 +487,7 @@ export const sendNotification = action({
   }),
   handler: async (ctx, args) => {
     // Get integration
-    const integration = await ctx.runQuery(api.integrations.slack.queries.getSlackIntegration, {
+    const integration = await ctx.runQuery(internal.integrations.slack.queries.getSlackIntegrationInternal, {
       workspaceId: args.workspaceId,
     })
 

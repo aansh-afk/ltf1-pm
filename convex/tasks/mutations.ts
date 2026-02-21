@@ -92,12 +92,14 @@ export const createTask = mutation({
         if (assigneeId !== user._id) {
           await ctx.db.insert("notifications", {
             userId: assigneeId,
-            type: "task.assigned",
+            workspaceId: project.workspaceId,
+            type: "task_assigned",
             title: "New Task Assigned",
-            message: `You've been assigned to "${args.title}"`,
-            data: { taskId, projectId: args.projectId },
-            read: false,
-            createdAt: now,
+            body: `You've been assigned to "${args.title}"`,
+            isRead: false,
+            actorId: user._id,
+            entityId: taskId,
+            entityType: "task",
           });
 
           // Send email to assignee
@@ -342,12 +344,14 @@ export const updateTask = mutation({
         if (!previousAssignees.has(assigneeId) && assigneeId !== user._id) {
           await ctx.db.insert("notifications", {
             userId: assigneeId,
-            type: "task.assigned",
+            workspaceId: project.workspaceId,
+            type: "task_assigned",
             title: "Task Assigned",
-            message: `You've been assigned to "${task.title}"`,
-            data: { taskId: args.taskId, projectId: task.projectId },
-            read: false,
-            createdAt: Date.now(),
+            body: `You've been assigned to "${task.title}"`,
+            isRead: false,
+            actorId: user._id,
+            entityId: args.taskId,
+            entityType: "task",
           });
 
           // Send email to newly assigned user
@@ -377,12 +381,14 @@ export const updateTask = mutation({
         if (!newAssignees.has(assigneeId) && assigneeId !== user._id) {
           await ctx.db.insert("notifications", {
             userId: assigneeId,
-            type: "task.unassigned",
+            workspaceId: project.workspaceId,
+            type: "task_unassigned",
             title: "Task Unassigned",
-            message: `You've been unassigned from "${task.title}"`,
-            data: { taskId: args.taskId, projectId: task.projectId },
-            read: false,
-            createdAt: Date.now(),
+            body: `You've been unassigned from "${task.title}"`,
+            isRead: false,
+            actorId: user._id,
+            entityId: args.taskId,
+            entityType: "task",
           });
 
           // Send email to unassigned user
@@ -686,3 +692,90 @@ export const stopTimeTracking = mutation({
     }
   }
 });
+
+export const bulkUpdateTasks = mutation({
+  args: {
+    taskIds: v.array(v.id("tasks")),
+    updates: v.object({
+      status: v.optional(v.union(
+        v.literal("backlog"),
+        v.literal("todo"),
+        v.literal("in_progress"),
+        v.literal("in_review"),
+        v.literal("done"),
+        v.literal("cancelled")
+      )),
+      priority: v.optional(v.union(
+        v.literal("urgent"),
+        v.literal("high"),
+        v.literal("medium"),
+        v.literal("low")
+      )),
+      assigneeIds: v.optional(v.array(v.id("users"))),
+      labels: v.optional(v.array(v.string())),
+      sprintId: v.optional(v.id("sprints")),
+    }),
+  },
+  returns: v.object({ updatedCount: v.number() }),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error("Unauthorized")
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first()
+    if (!user) throw new Error("User not found")
+
+    // Filter out undefined fields from updates
+    const cleanUpdates: Record<string, unknown> = {}
+    if (args.updates.status !== undefined) cleanUpdates.status = args.updates.status
+    if (args.updates.priority !== undefined) cleanUpdates.priority = args.updates.priority
+    if (args.updates.assigneeIds !== undefined) cleanUpdates.assigneeIds = args.updates.assigneeIds
+    if (args.updates.labels !== undefined) cleanUpdates.labels = args.updates.labels
+    if (args.updates.sprintId !== undefined) cleanUpdates.sprintId = args.updates.sprintId
+
+    let updatedCount = 0
+    for (const taskId of args.taskIds) {
+      const task = await ctx.db.get(taskId)
+      if (!task) continue
+      const project = await ctx.db.get(task.projectId)
+      if (!project) continue
+      await requirePermission(ctx.db, user._id, project.workspaceId, "task.edit")
+      await ctx.db.patch(taskId, cleanUpdates)
+      updatedCount++
+    }
+
+    return { updatedCount }
+  },
+})
+
+export const bulkDeleteTasks = mutation({
+  args: {
+    taskIds: v.array(v.id("tasks")),
+  },
+  returns: v.object({ deletedCount: v.number() }),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error("Unauthorized")
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first()
+    if (!user) throw new Error("User not found")
+
+    let deletedCount = 0
+    for (const taskId of args.taskIds) {
+      const task = await ctx.db.get(taskId)
+      if (!task) continue
+      const project = await ctx.db.get(task.projectId)
+      if (!project) continue
+      await requirePermission(ctx.db, user._id, project.workspaceId, "task.delete")
+      await ctx.db.delete(taskId)
+      deletedCount++
+    }
+
+    return { deletedCount }
+  },
+})

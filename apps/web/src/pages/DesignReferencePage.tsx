@@ -1143,7 +1143,7 @@ function NotificationsSection() {
         <BrutalNotification
           type="info"
           title="System Update Available"
-          message="LTF1 Iceberg v3.0.0 is ready to install."
+          message="LTF1 v3.0.0 is ready to install."
         />
       </div>
 
@@ -1365,7 +1365,7 @@ function PageHeader() {
   return (
     <div className="border-b-4 border-[var(--theme-primary)] pb-6">
       <div className="font-mono text-[10px] uppercase tracking-widest text-[var(--theme-foreground)]/40 mb-2">
-        LTF1 / ICEBERG
+        LTF1
       </div>
       <h1 className="text-3xl font-bold uppercase tracking-tight text-[var(--theme-foreground)] mb-2">
         Design Museum
@@ -1389,7 +1389,7 @@ function PageFooter() {
     <div className="border-t-2 border-[var(--theme-border)] pt-8 pb-16">
       <div className="flex items-center justify-between">
         <div className="font-mono text-[10px] text-[var(--theme-foreground)]/30 uppercase tracking-widest">
-          LTF1 Iceberg — Design Museum
+          LTF1 — Design Museum
         </div>
         <div className="flex gap-2">
           <BrutalBadge variant="success" size="xs">16 COMPONENTS</BrutalBadge>

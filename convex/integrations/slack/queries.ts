@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { query } from "../../_generated/server"
+import { query, internalQuery } from "../../_generated/server"
 
 export const getSlackIntegration = query({
   args: {
@@ -11,7 +11,6 @@ export const getSlackIntegration = query({
     teamId: v.string(),
     teamName: v.string(),
     botUserId: v.string(),
-    botAccessToken: v.string(),
     incomingWebhookChannel: v.optional(v.string()),
     scopes: v.array(v.string()),
     active: v.boolean(),
@@ -33,20 +32,37 @@ export const getSlackIntegration = query({
       return null
     }
 
-    // Return integration with bot access token (needed for sending messages)
-    return {
-      _id: integration._id,
-      workspaceId: integration.workspaceId,
-      teamId: integration.teamId,
-      teamName: integration.teamName,
-      botUserId: integration.botUserId,
-      botAccessToken: integration.botAccessToken,
-      incomingWebhookChannel: integration.incomingWebhookChannel,
-      scopes: integration.scopes,
-      active: integration.active,
-      createdAt: integration.createdAt,
-      updatedAt: integration.updatedAt,
-    }
+    // Return integration without the bot access token — token must stay server-side only
+    const { botAccessToken: _bot, accessToken: _access, ...safeIntegration } = integration
+    return safeIntegration
+  },
+})
+
+// Internal-only query that returns full integration including tokens (for server-side use)
+export const getSlackIntegrationInternal = internalQuery({
+  args: {
+    workspaceId: v.id("workspaces"),
+  },
+  returns: v.union(v.null(), v.object({
+    _id: v.id("slackIntegrations"),
+    _creationTime: v.number(),
+    workspaceId: v.id("workspaces"),
+    teamId: v.string(),
+    teamName: v.string(),
+    botUserId: v.string(),
+    botAccessToken: v.string(),
+    accessToken: v.optional(v.string()),
+    incomingWebhookChannel: v.optional(v.string()),
+    scopes: v.array(v.string()),
+    active: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })),
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("slackIntegrations")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+      .first()
   },
 })
 

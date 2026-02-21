@@ -705,6 +705,7 @@ export default function DeveloperProfilePage() {
       {showEditModal && (
         <EditDeveloperProfileModal
           userId={userId as Id<"users">}
+          isOpen={showEditModal}
           onClose={() => setShowEditModal(false)}
         />
       )}

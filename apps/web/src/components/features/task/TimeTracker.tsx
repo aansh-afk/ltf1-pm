@@ -1,181 +1,134 @@
-import { useState, useEffect } from 'react'
-import { useMutation } from 'convex/react'
+import { useState, useEffect, useCallback } from 'react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
-import {
-  HiOutlinePlay,
-  HiOutlinePause,
-  HiOutlineStop,
-  HiOutlineClock,
-  HiOutlineCheckCircle
-} from 'react-icons/hi'
-import clsx from 'clsx'
-import toast from 'react-hot-toast'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 
 interface TimeTrackerProps {
-  taskId: string
-  isRunning?: boolean
-  currentDuration?: number
-  onStart?: () => void
-  onPause?: () => void
-  onStop?: () => void
+  taskId: Id<'tasks'>
 }
 
-interface TimeEntry {
-  startTime: number
-  endTime?: number
-  duration: number
-}
+export default function TimeTracker({ taskId }: TimeTrackerProps) {
+  const [elapsed, setElapsed] = useState(0)
+  const [isRunning, setIsRunning] = useState(false)
 
-export default function TimeTracker({
-  taskId,
-  isRunning = false,
-  currentDuration = 0,
-  onStart,
-  onPause,
-  onStop
-}: TimeTrackerProps) {
-  const [localElapsed, setLocalElapsed] = useState(0)
-  const [startTime, setStartTime] = useState<number | null>(null)
+  const startTracking = useMutation(api.tasks.mutations.startTimeTracking)
+  const pauseTracking = useMutation(api.tasks.mutations.pauseTimeTracking)
+  const stopTracking = useMutation(api.tasks.mutations.stopTimeTracking)
 
-  // Derive the displayed elapsed time from the prop + local counter
-  const elapsedTime = isRunning ? currentDuration + localElapsed : currentDuration
+  // Query active time entry to restore state on mount / reconnect
+  const activeEntry = useQuery(api.tasks.queries.getActiveTimeEntry, { taskId })
 
-  // Mutations
-  const startTimeTracking = useMutation(api.tasks.mutations.startTimeTracking)
-  const pauseTimeTracking = useMutation(api.tasks.mutations.pauseTimeTracking)
-  const stopTimeTracking = useMutation(api.tasks.mutations.stopTimeTracking)
-
-  // Timer effect
+  // Sync local state with backend active entry
   useEffect(() => {
-    let intervalId: NodeJS.Timeout | null = null
-
-    if (isRunning && startTime) {
-      intervalId = setInterval(() => {
-        setLocalElapsed(prev => prev + 1000)
-      }, 1000)
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId)
+    if (activeEntry) {
+      setIsRunning(true)
+      const elapsedMs = Date.now() - activeEntry.startTime
+      setElapsed(Math.floor(elapsedMs / 1000))
+    } else {
+      // No active entry -- only reset if we were running
+      // (don't reset paused elapsed)
+      if (isRunning) {
+        setIsRunning(false)
       }
     }
-  }, [isRunning, startTime])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeEntry])
 
-  const formatTime = (milliseconds: number): string => {
-    const totalSeconds = Math.floor(milliseconds / 1000)
+  // Live timer -- tick every second while running
+  useEffect(() => {
+    if (!isRunning) return
+    const interval = setInterval(() => {
+      setElapsed((prev) => prev + 1)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [isRunning])
+
+  const formatTime = useCallback((totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600)
     const minutes = Math.floor((totalSeconds % 3600) / 60)
     const seconds = totalSeconds % 60
-
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-    }
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
-  }
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+  }, [])
 
   const handleStart = async () => {
     try {
-      await startTimeTracking({ taskId: taskId as any })
-      setLocalElapsed(0)
-      setStartTime(Date.now())
-      onStart?.()
-      toast.success('Timer started')
+      await startTracking({ taskId })
+      setIsRunning(true)
+      // If resuming from paused state keep elapsed; fresh start resets
+      if (elapsed === 0) {
+        setElapsed(0)
+      }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to start timer')
+      console.error('Failed to start tracking:', error)
     }
   }
 
   const handlePause = async () => {
     try {
-      await pauseTimeTracking({ 
-        taskId: taskId as any,
-        duration: elapsedTime
-      })
-      setStartTime(null)
-      onPause?.()
-      toast.success('Timer paused')
+      const durationMs = elapsed * 1000
+      await pauseTracking({ taskId, duration: durationMs })
+      setIsRunning(false)
     } catch (error: any) {
-      toast.error(error.message || 'Failed to pause timer')
+      console.error('Failed to pause tracking:', error)
     }
   }
 
   const handleStop = async () => {
     try {
-      await stopTimeTracking({ 
-        taskId: taskId as any,
-        duration: elapsedTime
-      })
-      setStartTime(null)
-      setLocalElapsed(0)
-      onStop?.()
-      toast.success('Timer stopped and time logged')
+      const durationMs = elapsed * 1000
+      await stopTracking({ taskId, duration: durationMs })
+      setIsRunning(false)
+      setElapsed(0)
     } catch (error: any) {
-      toast.error(error.message || 'Failed to stop timer')
+      console.error('Failed to stop tracking:', error)
     }
   }
 
   return (
-    <div className="flex items-center gap-[6px] p-[10px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
-      {/* Time Display */}
-      <div className="flex items-center gap-[4px]">
-        <HiOutlineClock className="w-16px h-16px text-neutral-400" />
-        <span className="font-mono text-[14px] font-semibold font-bold min-w-80px">
-          {formatTime(elapsedTime)}
+    <div className="border-2 border-[var(--theme-border)] bg-[var(--theme-background)] p-3">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--theme-foreground)]/40">
+          TIME TRACKER
+        </span>
+        {isRunning && (
+          <span className="w-2 h-2 bg-[#22C55E] animate-pulse" />
+        )}
+      </div>
+
+      {/* Timer display */}
+      <div className="text-center mb-3">
+        <span className="font-mono text-2xl font-bold tracking-wider text-[var(--theme-foreground)]">
+          {formatTime(elapsed)}
         </span>
       </div>
 
-      {/* Control Buttons */}
-      <div className="flex items-center gap-[4px]">
+      {/* Controls */}
+      <div className="flex gap-2">
         {!isRunning ? (
           <button
             onClick={handleStart}
-            className={clsx(
-              "p-[4px] border-2 border-[var(--theme-border)] transition-colors",
-              "hover:bg-primary-brutalist hover:text-event-horizon",
-              "flex items-center justify-center"
-            )}
-            title="Start Timer"
+            className="flex-1 px-3 py-2 bg-[#6366F1] text-white font-mono text-xs font-bold uppercase border-2 border-[#6366F1] hover:bg-[#4F46E5] transition-colors"
           >
-            <HiOutlinePlay className="w-16px h-16px" />
+            {elapsed > 0 ? 'RESUME' : 'START'}
           </button>
         ) : (
           <button
             onClick={handlePause}
-            className={clsx(
-              "p-[4px] border-2 border-[var(--theme-border)] transition-colors",
-              "bg-warning-brutalist text-event-horizon",
-              "hover:bg-warning-brutalist/80",
-              "flex items-center justify-center"
-            )}
-            title="Pause Timer"
+            className="flex-1 px-3 py-2 bg-[var(--theme-background)] text-[#F59E0B] font-mono text-xs font-bold uppercase border-2 border-[#F59E0B] hover:bg-[#F59E0B]/10 transition-colors"
           >
-            <HiOutlinePause className="w-16px h-16px" />
+            PAUSE
           </button>
         )}
-
-        {(isRunning || elapsedTime > 0) && (
+        {(isRunning || elapsed > 0) && (
           <button
             onClick={handleStop}
-            className={clsx(
-              "p-[4px] border-2 border-[var(--theme-border)] transition-colors",
-              "hover:bg-danger-brutalist hover:text-[var(--theme-foreground)]",
-              "flex items-center justify-center"
-            )}
-            title="Stop Timer & Log Time"
+            className="flex-1 px-3 py-2 bg-[var(--theme-background)] text-[#EF4444] font-mono text-xs font-bold uppercase border-2 border-[#EF4444] hover:bg-[#EF4444]/10 transition-colors"
           >
-            <HiOutlineStop className="w-16px h-16px" />
+            STOP
           </button>
         )}
       </div>
-
-      {/* Status Indicator */}
-      {isRunning && (
-        <div className="flex items-center gap-4px text-brutal-xs text-primary-brutalist">
-          <div className="w-6px h-6px bg-primary-brutalist rounded-full animate-pulse" />
-          TRACKING
-        </div>
-      )}
     </div>
   )
 }

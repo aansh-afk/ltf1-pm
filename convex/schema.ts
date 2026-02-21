@@ -353,16 +353,29 @@ export default defineSchema({
 
   notifications: defineTable({
     userId: v.id("users"),
-    type: v.string(),
+    workspaceId: v.optional(v.id("workspaces")),
+    type: v.union(
+      v.literal("task_assigned"),
+      v.literal("task_unassigned"),
+      v.literal("task_comment"),
+      v.literal("task_mention"),
+      v.literal("sprint_started"),
+      v.literal("sprint_completed"),
+      v.literal("member_joined"),
+      v.literal("workspace_invitation"),
+      v.literal("pr_merged")
+    ),
     title: v.string(),
-    message: v.string(),
-    data: v.optional(v.any()),
-    read: v.boolean(),
-    readAt: v.optional(v.number()),
-    createdAt: v.number(),
+    body: v.string(),
+    link: v.optional(v.string()),
+    isRead: v.boolean(),
+    actorId: v.optional(v.id("users")),
+    entityId: v.optional(v.string()),
+    entityType: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
-    .index("by_user_read", ["userId", "read"]),
+    .index("by_user_and_workspace", ["userId", "workspaceId"])
+    .index("by_user_and_read", ["userId", "isRead"]),
 
   // GitHub OAuth
   githubOAuthStates: defineTable({
@@ -1726,4 +1739,19 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_score", ["score"])
     .index("by_created", ["createdAt"]),
+
+  sprintSnapshots: defineTable({
+    sprintId: v.id("sprints"),
+    projectId: v.id("projects"),
+    date: v.number(), // Unix timestamp (start of day UTC)
+    totalPoints: v.number(),
+    completedPoints: v.number(),
+    remainingPoints: v.number(),
+    totalTasks: v.number(),
+    completedTasks: v.number(),
+    remainingTasks: v.number(),
+  })
+    .index("by_sprint", ["sprintId"])
+    .index("by_sprint_and_date", ["sprintId", "date"])
+    .index("by_project", ["projectId"]),
 });

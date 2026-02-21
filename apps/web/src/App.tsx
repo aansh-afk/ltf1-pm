@@ -12,6 +12,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
 import ErrorBoundary from "./components/common/ErrorBoundary";
+import BetaBanner from "./components/common/BetaBanner";
 import { OptionalConvexProvider } from "./providers/OptionalConvexProvider";
 import { PostHogProvider } from "./providers/PostHogProvider";
 import { ShortcutProvider } from "./contexts/ShortcutContext";
@@ -55,6 +56,7 @@ const CLIAuthPage = lazy(() => import("./pages/CLIAuthPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 const DesignReferencePage = lazy(() => import("./pages/DesignReferencePage"));
+const TimeReportPage = lazy(() => import("./pages/TimeReportPage"));
 import { useEnsureUser } from "./hooks/useEnsureUser";
 import { DataMigrationBanner } from "./components/admin/DataMigrationBanner";
 import CommandPalette from "./components/shortcuts/CommandPalette";
@@ -138,7 +140,7 @@ function AuthenticatedAppContent() {
           onComplete={handleOnboardingComplete}
         />
       )}
-      {showNps && <NpsSurveyModal onClose={() => setShowNps(false)} />}
+      <NpsSurveyModal isOpen={showNps} onClose={() => setShowNps(false)} />
       <AppRoutes isAuthenticated={true} />
     </>
   );
@@ -167,7 +169,7 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
 
   return (
     <Suspense fallback={<BrutalistLoader />}>
-      <div className="min-h-screen bg-[var(--theme-background)]">
+      <div className="min-h-screen bg-[var(--theme-background)] pt-8">
         {/* Global Shortcut Components - only if authenticated */}
         {isAuthenticated && (
           <>
@@ -242,6 +244,7 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
             <Route path="settings" element={<SettingsPage />} />
             <Route path="whiteboard" element={<WhiteboardPage />} />
             <Route path="custom-fields" element={<CustomFieldsPage />} />
+            <Route path="time-report" element={<TimeReportPage />} />
           </Route>
 
           {/* 404 Page - Catch all unmatched routes */}
@@ -286,6 +289,7 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
 function App() {
   return (
     <ErrorBoundary>
+      <BetaBanner />
       <OptionalConvexProvider>
         <Router>
           <PageTransition />

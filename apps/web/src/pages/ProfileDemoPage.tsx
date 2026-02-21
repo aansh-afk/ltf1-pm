@@ -266,12 +266,11 @@ export default function ProfileDemoPage() {
       </div>
 
       {/* Modals */}
-      {showExpertiseSearch && (
-        <ExpertiseSearchModal
-          onClose={() => dispatch({ type: 'UPDATE', field: 'showExpertiseSearch', value: false })}
-          workspaceId={currentWorkspace._id}
-        />
-      )}
+      <ExpertiseSearchModal
+        isOpen={showExpertiseSearch}
+        onClose={() => dispatch({ type: 'UPDATE', field: 'showExpertiseSearch', value: false })}
+        workspaceId={currentWorkspace._id}
+      />
 
       {showExpertiseMatrix && (
         <TeamExpertiseMatrix
@@ -284,6 +283,7 @@ export default function ProfileDemoPage() {
       {showEditProfile && (
         <EditDeveloperProfileModal
           userId={currentUser._id}
+          isOpen={showEditProfile}
           onClose={() => dispatch({ type: 'UPDATE', field: 'showEditProfile', value: false })}
         />
       )}

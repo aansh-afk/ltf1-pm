@@ -1,6 +1,5 @@
 import { useReducer, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { m, AnimatePresence } from 'framer-motion'
 import {
   HiOutlineSearch,
   HiOutlineX,
@@ -12,11 +11,7 @@ import {
   HiOutlineDocumentText
 } from 'react-icons/hi'
 import clsx from 'clsx'
-import { useQuery, useMutation } from 'convex/react'
-import { api } from '../../../../../../convex/_generated/api'
 import BrutalModal from '../../ui/BrutalModal'
-import BrutalInput from '../../ui/BrutalInput'
-import toast from 'react-hot-toast'
 
 interface GlobalSearchModalProps {
   isOpen: boolean
@@ -236,7 +231,17 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFilter])
 
-  // Keyboard navigation
+  // Auto-focus search input when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        inputRef.current?.focus()
+      }, 120)
+    }
+  }, [isOpen])
+
+  // Keyboard navigation (ArrowUp / ArrowDown / Enter)
+  // ESC is handled by BrutalModal — not duplicated here
   useEffect(() => {
     if (!isOpen) return
 
@@ -256,16 +261,12 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
             handleSelectResult(results[selectedIndex])
           }
           break
-        case 'Escape':
-          e.preventDefault()
-          handleClose()
-          break
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, results, selectedIndex, handleClose])
+  }, [isOpen, results, selectedIndex])
 
   // Scroll selected item into view
   useEffect(() => {
@@ -341,107 +342,96 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
   }
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-[var(--theme-background)]/90 z-[100]"
-            onClick={handleClose}
-          />
+    <BrutalModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      size="lg"
+      showCloseButton={false}
+    >
+      {/*
+        BrutalModal wraps children in a p-[16px] div. Use -m-[16px] on this
+        wrapper to escape that padding so the search content sits flush against
+        the modal border, matching the original design.
+      */}
+      <div className="-m-[16px]">
+        {/* Search Header */}
+        <div className="p-[16px] border-b-2 border-[var(--theme-border)]">
+          <div className="flex items-center gap-[8px]">
+            <HiOutlineSearch className="w-4 h-4 text-[var(--theme-foreground)]" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="SEARCH TASKS, PROJECTS, SPRINTS, USERS..."
+              aria-label="Search tasks, projects, sprints, users"
+              className="flex-1 bg-transparent text-[var(--theme-foreground)] outline-none text-lg placeholder:text-[var(--theme-foreground)]/50 placeholder:text-sm"
+            />
+            <button
+              onClick={handleClose}
+              className="p-[4px] hover:bg-[var(--theme-hover)] transition-colors"
+              aria-label="Close search"
+            >
+              <HiOutlineX className="w-20px h-20px" />
+            </button>
+          </div>
 
-          {/* Search Modal */}
-          <m.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-[10%] left-1/2 transform -translate-x-1/2 w-full max-w-[700px] z-[101]"
-          >
-            <div className="bg-[var(--theme-background-secondary)] border-4 border-[var(--theme-border)] shadow-[var(--theme-box-shadow-hover)]">
-              {/* Search Header */}
-              <div className="p-[16px] border-b-2 border-[var(--theme-border)]">
-                <div className="flex items-center gap-[8px]">
-                  <HiOutlineSearch className="w-4 h-4 text-[var(--theme-foreground)]" />
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    placeholder="SEARCH TASKS, PROJECTS, SPRINTS, USERS..."
-                    aria-label="Search tasks, projects, sprints, users"
-                    className="flex-1 bg-transparent text-[var(--theme-foreground)] outline-none text-lg placeholder:text-[var(--theme-foreground)]/50 placeholder:text-sm"
-                  />
-                  <button
-                    onClick={handleClose}
-                    className="p-[4px] hover:bg-[var(--theme-hover)] transition-colors"
-                    aria-label="Close search"
-                  >
-                    <HiOutlineX className="w-20px h-20px" />
-                  </button>
-                </div>
-
-                {/* Filters */}
-                <div className="flex gap-[4px] mt-[8px]">
-                  {filters.map((filter) => (
-                    <button
-                      key={filter.value}
-                      onClick={() => dispatch({
-                        type: 'SET_ACTIVE_FILTER',
-                        value: activeFilter === filter.value ? null : filter.value
-                      })}
-                      className={clsx(
-                        'px-[10px] py-[4px] text-xs font-bold border-2 transition-all',
-                        activeFilter === filter.value
-                          ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]'
-                          : 'bg-transparent text-[var(--theme-foreground)] border-[var(--theme-border)] hover:border-[var(--theme-primary)]'
-                      )}
-                    >
-                      {filter.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Search Results */}
-              <div
-                ref={resultsRef}
-                className="max-h-[400px] overflow-y-auto"
-              >
-                {isSearching ? (
-                  <div className="p-[20px] text-center text-[var(--theme-foreground)]/60">
-                    <div className="animate-pulse">SEARCHING...</div>
-                  </div>
-                ) : results.length > 0 ? (
-                  results.map((result, index) => (
-                    <SearchResultItem
-                      key={result.id}
-                      result={result}
-                      index={index}
-                      selectedIndex={selectedIndex}
-                      onSelect={handleSelectResult}
-                      onHover={(i) => dispatch({ type: 'SET_SELECTED_INDEX', value: i })}
-                    />
-                  ))
-                ) : searchQuery ? (
-                  <div className="p-[20px] text-center text-[var(--theme-foreground)]/60">
-                    NO RESULTS FOUND FOR "{searchQuery.toUpperCase()}"
-                  </div>
-                ) : (
-                  <div className="p-[20px] text-center text-[var(--theme-foreground)]/60">
-                    START TYPING TO SEARCH...
-                  </div>
+          {/* Filters */}
+          <div className="flex gap-[4px] mt-[8px]">
+            {filters.map((filter) => (
+              <button
+                key={filter.value}
+                onClick={() => dispatch({
+                  type: 'SET_ACTIVE_FILTER',
+                  value: activeFilter === filter.value ? null : filter.value
+                })}
+                className={clsx(
+                  'px-[10px] py-[4px] text-xs font-bold border-2 transition-all',
+                  activeFilter === filter.value
+                    ? 'bg-[var(--theme-primary)] text-[var(--theme-background)] border-[var(--theme-primary)]'
+                    : 'bg-transparent text-[var(--theme-foreground)] border-[var(--theme-border)] hover:border-[var(--theme-primary)]'
                 )}
-              </div>
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-              {/* Footer */}
-              <SearchFooter resultsCount={results.length} />
+        {/* Search Results */}
+        <div
+          ref={resultsRef}
+          className="max-h-[400px] overflow-y-auto"
+        >
+          {isSearching ? (
+            <div className="p-[20px] text-center text-[var(--theme-foreground)]/60">
+              <div className="animate-pulse">SEARCHING...</div>
             </div>
-          </m.div>
-        </>
-      )}
-    </AnimatePresence>
+          ) : results.length > 0 ? (
+            results.map((result, index) => (
+              <SearchResultItem
+                key={result.id}
+                result={result}
+                index={index}
+                selectedIndex={selectedIndex}
+                onSelect={handleSelectResult}
+                onHover={(i) => dispatch({ type: 'SET_SELECTED_INDEX', value: i })}
+              />
+            ))
+          ) : searchQuery ? (
+            <div className="p-[20px] text-center text-[var(--theme-foreground)]/60">
+              NO RESULTS FOUND FOR "{searchQuery.toUpperCase()}"
+            </div>
+          ) : (
+            <div className="p-[20px] text-center text-[var(--theme-foreground)]/60">
+              START TYPING TO SEARCH...
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <SearchFooter resultsCount={results.length} />
+      </div>
+    </BrutalModal>
   )
 }
