@@ -91,14 +91,14 @@ export default function BrutalModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-[var(--theme-background)]/90 z-50"
+            className="fixed inset-0 bg-[var(--theme-background)]/90 z-[100]"
             onClick={onClose}
           />
 
           {/* MODAL CONTAINER - handles positioning */}
           <div
-            className="fixed z-50"
-            style={{ 
+            className="fixed z-[100]"
+            style={{
               left: 0,
               right: 0,
               top: 0,

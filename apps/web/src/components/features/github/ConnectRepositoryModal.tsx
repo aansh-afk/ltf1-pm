@@ -86,7 +86,7 @@ export default function ConnectRepositoryModal({
   onSuccess,
 }: ConnectRepositoryModalProps) {
   return (
-    <BrutalModal isOpen={isOpen} onClose={onClose} title="UNKNOWN" size="xl">
+    <BrutalModal isOpen={isOpen} onClose={onClose} title="IMPORT GIT REPOSITORY" size="xl">
       <ConnectRepositoryContent
         key={workspaceId}
         onClose={onClose}
@@ -162,6 +162,25 @@ function ConnectRepositoryContent({
     }
   };
 
+  const handleConnectRepo = async (repo: Repository) => {
+    dispatch({ type: "UPDATE", field: "isConnecting", value: true });
+    try {
+      await connectRepository({
+        projectId: projectId as Id<"projects">,
+        repositoryUrl: repo.htmlUrl,
+        provider: "github",
+      });
+      toast.success("Repository connected successfully");
+      onSuccess?.();
+      onClose();
+    } catch (error: any) {
+      console.error("Failed to connect repository:", error);
+      toast.error(error.message || "Failed to connect repository");
+    } finally {
+      dispatch({ type: "UPDATE", field: "isConnecting", value: false });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -230,17 +249,11 @@ function ConnectRepositoryContent({
 
   return (
     <div className="flex flex-col h-[70vh]">
-      {/* Header - Vercel Style */}
-      <div className="px-[16px] py-[12px] border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)] flex items-center justify-between shrink-0">
-        <div>
-          <h2 className="text-[16px] font-bold uppercase mb-4px">
-            Import Git Repository
-          </h2>
-          <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
-            Select a repository to link to your project.
-          </p>
-        </div>
-        {/* Custom Close / Mode Switcher */}
+      {/* Mode Switcher — sits directly below BrutalModal's built-in header */}
+      <div className="px-[16px] py-[10px] border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)] flex items-center justify-between shrink-0">
+        <p className="text-brutal-sm text-[var(--theme-foreground)]/60">
+          Select a repository to link to your project.
+        </p>
         <div className="flex bg-[var(--theme-background-secondary)] p-4px border-2 border-[var(--theme-border)]">
           <button
             type="button"
@@ -379,7 +392,7 @@ function ConnectRepositoryContent({
                         disabled={isConnecting}
                         className="opacity-0 group-hover:opacity-100 focus:opacity-100 px-[12px] py-10px bg-[var(--theme-foreground)] text-[var(--theme-background)] font-bold uppercase text-brutal-sm hover:opacity-90 disabled:opacity-50 transition-all transform translate-x-4 group-hover:translate-x-0"
                       >
-                        Connect
+                        {isConnecting ? "Connecting..." : "Connect"}
                       </button>
                     </div>
                   ))}

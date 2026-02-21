@@ -492,12 +492,11 @@ export default function TeamPage() {
       {activeTab === 'members' ? renderMembersTab() : renderSprintsTab()}
 
       {/* Modals */}
-      {showExpertiseSearch && (
-        <ExpertiseSearchModal
-          onClose={() => dispatch({ type: 'UPDATE', field: 'showExpertiseSearch', value: false })}
-          workspaceId={currentWorkspace._id}
-        />
-      )}
+      <ExpertiseSearchModal
+        isOpen={showExpertiseSearch}
+        onClose={() => dispatch({ type: 'UPDATE', field: 'showExpertiseSearch', value: false })}
+        workspaceId={currentWorkspace._id}
+      />
 
       {showExpertiseMatrix && (
         <TeamExpertiseMatrix

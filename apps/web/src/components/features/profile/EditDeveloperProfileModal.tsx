@@ -15,9 +15,11 @@ import {
 import clsx from 'clsx'
 import { m, AnimatePresence } from 'framer-motion'
 import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalModal from '@/components/ui/BrutalModal'
 
 interface EditDeveloperProfileModalProps {
   userId: Id<"users">
+  isOpen: boolean
   onClose: () => void
 }
 
@@ -616,7 +618,7 @@ function editProfileReducer(state: EditProfileState, action: EditProfileAction):
   }
 }
 
-export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProfileModalProps) {
+export function EditDeveloperProfileModal({ userId, isOpen, onClose }: EditDeveloperProfileModalProps) {
   const [state, dispatch] = useReducer(editProfileReducer, editProfileInitialState)
   const { activeTab, isSaving, tabDirection, formData, hasLoadedProfile } = state
   const prevTabRef = useRef(activeTab)
@@ -743,161 +745,132 @@ export function EditDeveloperProfileModal({ userId, onClose }: EditDeveloperProf
   }
 
   return (
-    <m.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background-secondary)]/80 backdrop-blur-sm"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+    <BrutalModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Edit Developer Profile"
+      size="xl"
+      showCloseButton={true}
     >
-      <m.div
-        className="w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
-        initial={{ opacity: 0, y: 24, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 24, scale: 0.97 }}
-        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        style={{ boxShadow: '6px 6px 0px var(--theme-shadow)' }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
-          <div>
-            <h2 className="text-xl font-bold font-mono uppercase text-[var(--theme-foreground)]">
-              EDIT DEVELOPER PROFILE
-            </h2>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--theme-foreground-secondary)] mt-1">
-              $ PROFILE_EDITOR v2.0 -- MODIFY YOUR CONFIG
-            </p>
-          </div>
-          <m.button
-            onClick={onClose}
-            className="p-2 border-2 border-[var(--theme-border)] bg-[var(--theme-background)] text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-error)] hover:border-[var(--theme-error)] transition-colors rounded-lg"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <HiOutlineX className="w-5 h-5" />
-          </m.button>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="flex border-b-2 border-[var(--theme-border)]">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            return (
-              <m.button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={clsx(
-                  "flex items-center gap-2 px-6 py-4 font-mono text-sm font-bold uppercase transition-colors border-r-2 border-[var(--theme-border)] last:border-r-0 relative",
-                  activeTab === tab.id
-                    ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
-                    : "bg-[var(--theme-background)] text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
-                )}
-                whileHover={{ y: -1 }}
-                whileTap={{ y: 0 }}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-                {activeTab === tab.id && (
-                  <m.div
-                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--theme-background)]"
-                    layoutId="activeTabUnderline"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-              </m.button>
-            )
-          })}
-        </div>
-
-        {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1">
-          <AnimatePresence mode="wait" custom={tabDirection}>
-            {activeTab === 'basic' && (
-              <m.div
-                key="basic"
-                custom={tabDirection}
-                variants={tabVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
-              >
-                <BasicInfoTabPanel formData={formData} dispatch={dispatch} />
-              </m.div>
-            )}
-
-            {activeTab === 'expertise' && (
-              <m.div
-                key="expertise"
-                custom={tabDirection}
-                variants={tabVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
-              >
-                <ExpertiseTabPanel
-                  formData={formData}
-                  onAddTechStack={addTechStack}
-                  onRemoveTechStack={removeTechStack}
-                  onUpdateTechStack={updateTechStack}
-                  onAddSkill={addSkill}
-                  onRemoveSkill={removeSkill}
-                  onAddInterest={addInterest}
-                  onRemoveInterest={removeInterest}
+      {/* Tab Navigation */}
+      <div className="flex border-b-2 border-[var(--theme-border)] -mx-4 mb-4">
+        {tabs.map((tab) => {
+          const Icon = tab.icon
+          return (
+            <m.button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={clsx(
+                "flex items-center gap-2 px-6 py-4 font-mono text-sm font-bold uppercase transition-colors border-r-2 border-[var(--theme-border)] last:border-r-0 relative",
+                activeTab === tab.id
+                  ? "bg-[var(--theme-primary)] text-[var(--theme-background)]"
+                  : "bg-[var(--theme-background)] text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
+              )}
+              whileHover={{ y: -1 }}
+              whileTap={{ y: 0 }}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.label}
+              {activeTab === tab.id && (
+                <m.div
+                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--theme-background)]"
+                  layoutId="activeTabUnderline"
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
-              </m.div>
-            )}
+              )}
+            </m.button>
+          )
+        })}
+      </div>
 
-            {activeTab === 'preferences' && (
-              <m.div
-                key="preferences"
-                custom={tabDirection}
-                variants={tabVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
-              >
-                <PreferencesTabPanel formData={formData} dispatch={dispatch} />
-              </m.div>
-            )}
-          </AnimatePresence>
-        </div>
+      {/* Tab Content */}
+      <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 280px)' }}>
+        <AnimatePresence mode="wait" custom={tabDirection}>
+          {activeTab === 'basic' && (
+            <m.div
+              key="basic"
+              custom={tabDirection}
+              variants={tabVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+            >
+              <BasicInfoTabPanel formData={formData} dispatch={dispatch} />
+            </m.div>
+          )}
 
-        {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
-          <div className="font-mono text-xs text-[var(--theme-foreground-secondary)] uppercase tracking-wider">
-            $ PROFILE_EDITOR v2.0
-          </div>
-          <div className="flex items-center gap-4">
-            <m.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <BrutalButton
-                variant="ghost"
-                onClick={onClose}
-                disabled={isSaving}
-              >
-                CANCEL
-              </BrutalButton>
+          {activeTab === 'expertise' && (
+            <m.div
+              key="expertise"
+              custom={tabDirection}
+              variants={tabVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+            >
+              <ExpertiseTabPanel
+                formData={formData}
+                onAddTechStack={addTechStack}
+                onRemoveTechStack={removeTechStack}
+                onUpdateTechStack={updateTechStack}
+                onAddSkill={addSkill}
+                onRemoveSkill={removeSkill}
+                onAddInterest={addInterest}
+                onRemoveInterest={removeInterest}
+              />
             </m.div>
-            <m.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <BrutalButton
-                onClick={handleSave}
-                disabled={isSaving}
-                className="flex items-center gap-2"
-                style={{ boxShadow: '4px 4px 0px var(--theme-shadow)' }}
-              >
-                {isSaving ? (
-                  <HiOutlineRefresh className="w-4 h-4 animate-spin" />
-                ) : (
-                  <HiOutlineSave className="w-4 h-4" />
-                )}
-                {isSaving ? 'SAVING...' : 'SAVE_PROFILE'}
-              </BrutalButton>
+          )}
+
+          {activeTab === 'preferences' && (
+            <m.div
+              key="preferences"
+              custom={tabDirection}
+              variants={tabVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+            >
+              <PreferencesTabPanel formData={formData} dispatch={dispatch} />
             </m.div>
-          </div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-4 mt-4 border-t-2 border-[var(--theme-border)]">
+        <div className="font-mono text-xs text-[var(--theme-foreground-secondary)] uppercase tracking-wider">
+          $ PROFILE_EDITOR v2.0
         </div>
-      </m.div>
-    </m.div>
+        <div className="flex items-center gap-4">
+          <m.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <BrutalButton
+              variant="ghost"
+              onClick={onClose}
+              disabled={isSaving}
+            >
+              CANCEL
+            </BrutalButton>
+          </m.div>
+          <m.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <BrutalButton
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center gap-2"
+              style={{ boxShadow: '4px 4px 0px var(--theme-shadow)' }}
+            >
+              {isSaving ? (
+                <HiOutlineRefresh className="w-4 h-4 animate-spin" />
+              ) : (
+                <HiOutlineSave className="w-4 h-4" />
+              )}
+              {isSaving ? 'SAVING...' : 'SAVE_PROFILE'}
+            </BrutalButton>
+          </m.div>
+        </div>
+      </div>
+    </BrutalModal>
   )
 }

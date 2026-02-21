@@ -112,12 +112,11 @@ export function TaskAssignmentHelper({
           />
         )}
 
-        {showExpertiseSearch && (
-          <ExpertiseSearchModal
-            onClose={() => setShowExpertiseSearch(false)}
-            workspaceId={workspaceId}
-          />
-        )}
+        <ExpertiseSearchModal
+          isOpen={showExpertiseSearch}
+          onClose={() => setShowExpertiseSearch(false)}
+          workspaceId={workspaceId}
+        />
       </div>
     )
   }
@@ -247,12 +246,11 @@ export function TaskAssignmentHelper({
       </div>
 
       {/* Expertise Search Modal */}
-      {showExpertiseSearch && (
-        <ExpertiseSearchModal
-          onClose={() => setShowExpertiseSearch(false)}
-          workspaceId={workspaceId}
-        />
-      )}
+      <ExpertiseSearchModal
+        isOpen={showExpertiseSearch}
+        onClose={() => setShowExpertiseSearch(false)}
+        workspaceId={workspaceId}
+      />
     </div>
   )
 }
