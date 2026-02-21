@@ -28,6 +28,7 @@ import FeatureDetailPage from "./pages/FeatureDetailPage";
 import FeaturesPage from "./pages/FeaturesPage";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
+import ChangelogPage from "./pages/ChangelogPage";
 
 // Lazy imports - authenticated/secondary pages
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -192,6 +193,7 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
 
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/changelog" element={<ChangelogPage />} />
           <Route path="/features" element={<FeaturesPage />} />
           <Route path="/features/:slug" element={<FeatureDetailPage />} />
           <Route path="/sign-in/*" element={<SignInPage />} />
