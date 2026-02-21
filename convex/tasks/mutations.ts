@@ -92,12 +92,14 @@ export const createTask = mutation({
         if (assigneeId !== user._id) {
           await ctx.db.insert("notifications", {
             userId: assigneeId,
-            type: "task.assigned",
+            workspaceId: project.workspaceId,
+            type: "task_assigned",
             title: "New Task Assigned",
-            message: `You've been assigned to "${args.title}"`,
-            data: { taskId, projectId: args.projectId },
-            read: false,
-            createdAt: now,
+            body: `You've been assigned to "${args.title}"`,
+            isRead: false,
+            actorId: user._id,
+            entityId: taskId,
+            entityType: "task",
           });
 
           // Send email to assignee
@@ -342,12 +344,14 @@ export const updateTask = mutation({
         if (!previousAssignees.has(assigneeId) && assigneeId !== user._id) {
           await ctx.db.insert("notifications", {
             userId: assigneeId,
-            type: "task.assigned",
+            workspaceId: project.workspaceId,
+            type: "task_assigned",
             title: "Task Assigned",
-            message: `You've been assigned to "${task.title}"`,
-            data: { taskId: args.taskId, projectId: task.projectId },
-            read: false,
-            createdAt: Date.now(),
+            body: `You've been assigned to "${task.title}"`,
+            isRead: false,
+            actorId: user._id,
+            entityId: args.taskId,
+            entityType: "task",
           });
 
           // Send email to newly assigned user
@@ -377,12 +381,14 @@ export const updateTask = mutation({
         if (!newAssignees.has(assigneeId) && assigneeId !== user._id) {
           await ctx.db.insert("notifications", {
             userId: assigneeId,
-            type: "task.unassigned",
+            workspaceId: project.workspaceId,
+            type: "task_unassigned",
             title: "Task Unassigned",
-            message: `You've been unassigned from "${task.title}"`,
-            data: { taskId: args.taskId, projectId: task.projectId },
-            read: false,
-            createdAt: Date.now(),
+            body: `You've been unassigned from "${task.title}"`,
+            isRead: false,
+            actorId: user._id,
+            entityId: args.taskId,
+            entityType: "task",
           });
 
           // Send email to unassigned user

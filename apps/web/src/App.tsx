@@ -56,6 +56,7 @@ const CLIAuthPage = lazy(() => import("./pages/CLIAuthPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 const DesignReferencePage = lazy(() => import("./pages/DesignReferencePage"));
+const TimeReportPage = lazy(() => import("./pages/TimeReportPage"));
 import { useEnsureUser } from "./hooks/useEnsureUser";
 import { DataMigrationBanner } from "./components/admin/DataMigrationBanner";
 import CommandPalette from "./components/shortcuts/CommandPalette";
@@ -243,6 +244,7 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
             <Route path="settings" element={<SettingsPage />} />
             <Route path="whiteboard" element={<WhiteboardPage />} />
             <Route path="custom-fields" element={<CustomFieldsPage />} />
+            <Route path="time-report" element={<TimeReportPage />} />
           </Route>
 
           {/* 404 Page - Catch all unmatched routes */}
