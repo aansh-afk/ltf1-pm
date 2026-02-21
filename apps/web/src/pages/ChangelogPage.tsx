@@ -1,4 +1,5 @@
-import { m } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import PublicNavigation from '../components/common/PublicNavigation'
 import Footer from '../components/common/Footer'
 import { usePageTitle } from '../hooks/usePageTitle'
@@ -127,16 +128,146 @@ function groupByPlatform(changes: ChangeEntry[]) {
   return groups
 }
 
+/* ── Mobile platform accordion ──────────────────────────── */
+
+function MobilePlatformGroup({ platform, label, entries }: {
+  platform: Platform
+  label: string
+  entries: ChangeEntry[]
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="border border-[#2E2E35] bg-[#0A0A0A]">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left outline-none focus:outline-none focus-visible:ring-1 focus-visible:ring-[#6366F1]"
+      >
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[10px] tracking-widest px-1.5 py-0.5 border border-[#2E2E35] text-[#6B7280]">
+            {PLATFORM_CONFIG[platform].label}
+          </span>
+          <span className="text-[#6B7280] text-xs font-mono">{label}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[#6B7280] text-[10px] font-mono">{entries.length}</span>
+          <span
+            className="text-[#6B7280] text-xs transition-transform duration-200"
+            style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}
+          >
+            ▸
+          </span>
+        </div>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <m.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <ul className="flex flex-col gap-2 px-4 pb-4">
+              {entries.map((entry, j) => {
+                const cfg = TYPE_CONFIG[entry.type]
+                return (
+                  <li key={j} className="flex items-start gap-2">
+                    <span
+                      className="shrink-0 font-mono text-[9px] tracking-wider px-1 py-px mt-[3px] font-semibold"
+                      style={{ color: cfg.color }}
+                    >
+                      {cfg.label}
+                    </span>
+                    <span className="text-[#9CA3AF] text-[13px] leading-relaxed">
+                      {entry.text}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+          </m.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+/* ── Floating mobile version indicator ──────────────────── */
+
+function MobileVersionIndicator() {
+  const [activeVersion, setActiveVersion] = useState<Release | null>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const sectionEls = document.querySelectorAll<HTMLElement>('[data-version]')
+    if (sectionEls.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const version = entry.target.getAttribute('data-version')
+            const release = RELEASES.find((r) => r.version === version)
+            if (release) setActiveVersion(release)
+          }
+        }
+      },
+      { rootMargin: '-80px 0px -60% 0px', threshold: 0 },
+    )
+
+    sectionEls.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 400)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  if (!activeVersion || !visible) return null
+
+  return (
+    <m.div
+      initial={{ y: -40, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: -40, opacity: 0 }}
+      className="md:hidden fixed top-[68px] left-0 right-0 z-40 flex justify-center pointer-events-none"
+    >
+      <div
+        className="pointer-events-auto px-4 py-1.5 border bg-[#0A0A0A]/90 backdrop-blur-sm flex items-center gap-2 shadow-[2px_2px_0px_rgba(0,0,0,0.5)]"
+        style={{ borderColor: activeVersion.tagColor }}
+      >
+        <span
+          className="font-mono text-sm font-bold"
+          style={{ color: activeVersion.tagColor }}
+        >
+          v{activeVersion.version}
+        </span>
+        <span className="w-px h-3 bg-[#2E2E35]" />
+        <span className="font-mono text-[9px] tracking-widest text-[#6B7280]">
+          {activeVersion.tag}
+        </span>
+      </div>
+    </m.div>
+  )
+}
+
+/* ── Page ────────────────────────────────────────────────── */
+
 export default function ChangelogPage() {
   usePageTitle('Changelog — LTF1')
 
   return (
     <div className="min-h-screen bg-[#050505]">
       <PublicNavigation />
+      <MobileVersionIndicator />
 
       {/* Hero */}
       <section className="pt-32 pb-16 md:pt-40 md:pb-20">
-        <div className="max-w-4xl mx-auto px-6">
+        <div className="max-w-5xl mx-auto px-6">
           <m.div {...fadeUp}>
             <span className="text-[#6B7280] text-xs font-mono uppercase tracking-wider inline-block mb-4">
               Changelog
@@ -160,14 +291,15 @@ export default function ChangelogPage() {
               return (
                 <m.div
                   key={release.version}
+                  data-version={release.version}
                   initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.05 }}
                 >
-                  <div className="flex flex-col md:flex-row md:gap-12 pb-16">
-                    {/* Sticky version sidebar */}
-                    <div className="md:w-44 shrink-0 mb-6 md:mb-0">
+                  {/* ── Desktop: sticky sidebar layout ── */}
+                  <div className="hidden md:flex md:items-start md:gap-12 pb-16">
+                    <div className="md:w-44 shrink-0 md:self-stretch">
                       <div className="md:sticky md:top-24">
                         <span
                           className="font-mono text-2xl font-bold block mb-2"
@@ -189,13 +321,11 @@ export default function ChangelogPage() {
                       </div>
                     </div>
 
-                    {/* Release body */}
                     <div className="flex-1 min-w-0">
                       <p className="text-[#9CA3AF] text-sm leading-relaxed mb-6">
                         {release.summary}
                       </p>
 
-                      {/* Platform groups */}
                       <div className="flex flex-col gap-6">
                         {groups.map((group) => (
                           <div key={group.platform}>
@@ -233,9 +363,51 @@ export default function ChangelogPage() {
                     </div>
                   </div>
 
+                  {/* ── Mobile: card layout with version header + accordion platforms ── */}
+                  <div className="md:hidden pb-12">
+                    {/* Version card header */}
+                    <div
+                      className="border-l-2 pl-4 mb-4"
+                      style={{ borderColor: release.tagColor }}
+                    >
+                      <div className="flex items-center gap-3 mb-1">
+                        <span
+                          className="font-mono text-xl font-bold"
+                          style={{ color: release.tagColor }}
+                        >
+                          v{release.version}
+                        </span>
+                        <span
+                          className="font-mono text-[9px] tracking-widest px-1.5 py-0.5 border"
+                          style={{
+                            color: release.tagColor,
+                            borderColor: release.tagColor,
+                            backgroundColor: `${release.tagColor}10`,
+                          }}
+                        >
+                          {release.tag}
+                        </span>
+                      </div>
+                      <p className="text-[#6B7280] text-xs font-mono mb-3">{release.date}</p>
+                      <p className="text-[#9CA3AF] text-[13px] leading-relaxed">{release.summary}</p>
+                    </div>
+
+                    {/* Platform accordions */}
+                    <div className="flex flex-col gap-2">
+                      {groups.map((group) => (
+                        <MobilePlatformGroup
+                          key={group.platform}
+                          platform={group.platform}
+                          label={group.label}
+                          entries={group.entries}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Version separator */}
                   {i < RELEASES.length - 1 && (
-                    <div className="h-px bg-gradient-to-r from-[#2E2E35] via-[#2E2E35]/50 to-transparent mb-16" />
+                    <div className="h-px bg-gradient-to-r from-[#2E2E35] via-[#2E2E35]/50 to-transparent mb-12 md:mb-16" />
                   )}
                 </m.div>
               )
