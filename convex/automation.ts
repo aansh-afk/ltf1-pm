@@ -563,7 +563,7 @@ export const updateWorkflowLastExecuted = mutation({
   handler: async (ctx, args) => {
     await ctx.db.patch(args.workflowId, {
       lastRun: args.lastExecutedAt,
-      runCount: (await ctx.db.get(args.workflowId))?.runCount ?? 0 + 1,
+      runCount: ((await ctx.db.get(args.workflowId))?.runCount ?? 0) + 1,
     })
   },
 })
