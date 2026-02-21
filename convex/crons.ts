@@ -60,4 +60,12 @@ crons.interval(
   {}
 );
 
+// Daily sprint snapshot at midnight UTC for burndown charts
+crons.cron(
+  "daily sprint snapshot",
+  "0 0 * * *",
+  internal.sprints.snapshots.captureAllActiveSprintSnapshots,
+  {}
+);
+
 export default crons;
