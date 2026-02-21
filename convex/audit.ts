@@ -332,19 +332,33 @@ export const getAuditLogStats = query({
     if (!identity) {
       throw new Error("Unauthorized")
     }
-    
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first()
+    if (!user) throw new Error("User not found")
+
+    const member = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_workspace_user", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", user._id)
+      )
+      .unique()
+    if (!member) throw new Error("Access denied: not a workspace member")
+
     const logs = await ctx.db
       .query("auditLogs")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
       .collect()
-    
+
     // Filter by date range
     const filteredLogs = logs.filter(log => {
       if (args.startDate && log.timestamp < args.startDate) return false
       if (args.endDate && log.timestamp > args.endDate) return false
       return true
     })
-    
+
     // Calculate statistics
     const stats = {
       totalEvents: filteredLogs.length,
@@ -409,14 +423,26 @@ export const exportAuditLogs = query({
     if (!identity) {
       throw new Error("Unauthorized")
     }
-    
-    // TODO: Check if user has permission to export audit logs
-    
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first()
+    if (!user) throw new Error("User not found")
+
+    const member = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_workspace_user", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", user._id)
+      )
+      .unique()
+    if (!member) throw new Error("Access denied: not a workspace member")
+
     const logs = await ctx.db
       .query("auditLogs")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
       .collect()
-    
+
     // Filter by date range
     const filteredLogs = logs.filter(log => {
       if (args.startDate && log.timestamp < args.startDate) return false
@@ -474,9 +500,22 @@ export const setRetentionPolicy = mutation({
     if (!identity) {
       throw new Error("Unauthorized")
     }
-    
-    // TODO: Check if user is admin
-    
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first()
+    if (!user) throw new Error("User not found")
+
+    const member = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_workspace_user", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", user._id)
+      )
+      .unique()
+    if (!member) throw new Error("Access denied: not a workspace member")
+    if (member.role !== "admin" && member.role !== "owner") throw new Error("Access denied: admin required")
+
     // Note: Retention policy is set per workspace ID in a future implementation
     // For now, we'll use the default retention policy of 90 days
     
@@ -501,7 +540,7 @@ export const setRetentionPolicy = mutation({
 })
 
 // Clean up old audit logs based on retention policy
-export const cleanupAuditLogs = mutation({
+export const cleanupAuditLogs = internalMutation({
   args: {
     workspaceId: v.id("workspaces"),
   },
