@@ -16,8 +16,12 @@ export const getProjectMembers = query({
       throw new Error("Project not found");
     }
 
-    // Get all member IDs from the project
-    const memberIds = project.members || [];
+    // Get all member IDs from the projectMembers junction table
+    const projectMembersRows = await ctx.db
+      .query("projectMembers")
+      .withIndex("by_project", (q) => q.eq("projectId", project._id))
+      .collect()
+    const memberIds = projectMembersRows.map(m => m.userId)
     
     // Fetch all member details
     const members = await Promise.all(
