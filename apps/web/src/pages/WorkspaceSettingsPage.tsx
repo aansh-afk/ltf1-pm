@@ -608,7 +608,7 @@ export default function WorkspaceSettingsPage() {
     workspaceId ? { workspaceId: workspaceId as any } : 'skip'
   )
   const currentUser = useQuery(api.auth.users.getOrCreateCurrentUser)
-  const memberRole = workspace?.members?.find(m => m.userId === currentUser?._id)?.role
+  const memberRole = workspace?.currentUserRole
 
   if (!workspace || !currentUser) {
     return <LoadingSpinner size="lg" />
