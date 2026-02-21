@@ -1,4 +1,4 @@
-import React, { useCallback, Suspense, useReducer } from "react";
+import React, { useState, useEffect, useCallback, Suspense, useReducer } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
@@ -36,6 +36,7 @@ import {
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import CreateTaskModal from "@/components/features/task/CreateTaskModal";
 import EditTaskModal from "@/components/features/task/EditTaskModal";
+import BulkActionBar from "@/components/features/task/BulkActionBar";
 import KanbanBoard from "@/components/features/kanban/KanbanBoard";
 import TaskList from "@/components/features/task/TaskList";
 import { GitHubProjectTab } from "@/components/features/github/GitHubProjectTab";
@@ -2855,6 +2856,28 @@ export default function ProjectManagementPage() {
   const deleteTask = useMutation(api.tasks.mutations.deleteTask);
   const createTask = useMutation(api.tasks.mutations.createTask);
   const assignTeam = useMutation(api.projects.mutations.assignTeam);
+  const bulkUpdateTasks = useMutation(api.tasks.mutations.bulkUpdateTasks);
+  const bulkDeleteTasks = useMutation(api.tasks.mutations.bulkDeleteTasks);
+
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+
+  // Cmd+A / Ctrl+A to select all visible tasks; Escape to clear selection
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+        const tag = (document.activeElement as HTMLElement)?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        e.preventDefault();
+        const allIds = tasks?.map((t) => t._id) ?? [];
+        setSelectedTaskIds(new Set(allIds));
+      }
+      if (e.key === 'Escape' && selectedTaskIds.size > 0) {
+        setSelectedTaskIds(new Set());
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [tasks, selectedTaskIds.size]);
 
   // Move task handlers to top level
   const handleEditTask = (task: any) => {
@@ -3114,6 +3137,30 @@ export default function ProjectManagementPage() {
         selectedTask={selectedTask}
         dispatch={dispatch}
         onDeleteTask={handleDeleteTask}
+      />
+      <BulkActionBar
+        selectedCount={selectedTaskIds.size}
+        selectedIds={Array.from(selectedTaskIds) as any}
+        onClearSelection={() => setSelectedTaskIds(new Set())}
+        onStatusChange={async (status) => {
+          await bulkUpdateTasks({
+            taskIds: Array.from(selectedTaskIds) as any,
+            updates: { status },
+          });
+          setSelectedTaskIds(new Set());
+        }}
+        onPriorityChange={async (priority) => {
+          await bulkUpdateTasks({
+            taskIds: Array.from(selectedTaskIds) as any,
+            updates: { priority },
+          });
+          setSelectedTaskIds(new Set());
+        }}
+        onDelete={async () => {
+          if (!window.confirm(`Delete ${selectedTaskIds.size} task${selectedTaskIds.size === 1 ? '' : 's'}?`)) return;
+          await bulkDeleteTasks({ taskIds: Array.from(selectedTaskIds) as any });
+          setSelectedTaskIds(new Set());
+        }}
       />
     </div>
   );
