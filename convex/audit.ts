@@ -246,7 +246,7 @@ export const getAuditLogs = query({
 
     let logs = await ctx.db
       .query("auditLogs")
-      .withIndex("by_workspace_and_createdAt", (q) =>
+      .withIndex("by_workspace_and_timestamp", (q) =>
         q.eq("workspaceId", args.workspaceId),
       )
       .order("desc")
