@@ -2551,12 +2551,11 @@ function ProjectModals({
           projectName={project.name}
         />
       )}
-      {state.showExpertiseSearch && (
-        <ExpertiseSearchModal
-          onClose={() => dispatch({ type: "CLOSE_MODALS" })}
-          workspaceId={workspaceId}
-        />
-      )}
+      <ExpertiseSearchModal
+        isOpen={state.showExpertiseSearch}
+        onClose={() => dispatch({ type: "CLOSE_MODALS" })}
+        workspaceId={workspaceId}
+      />
       {state.showExpertiseMatrix && workspaceId && (
         <TeamExpertiseMatrix
           workspaceId={workspaceId}

@@ -138,7 +138,7 @@ function AuthenticatedAppContent() {
           onComplete={handleOnboardingComplete}
         />
       )}
-      {showNps && <NpsSurveyModal onClose={() => setShowNps(false)} />}
+      <NpsSurveyModal isOpen={showNps} onClose={() => setShowNps(false)} />
       <AppRoutes isAuthenticated={true} />
     </>
   );
