@@ -1,7 +1,7 @@
-// Email templates for Iceberg notifications
+// Email templates for LTF1 notifications
 // All templates return HTML strings with inline styles for email client compatibility
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://iceberg-l.vercel.app";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ltf1.vercel.app";
 
 function layout(content: string): string {
   return `<!DOCTYPE html>
@@ -12,7 +12,7 @@ function layout(content: string): string {
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background-color:#0A0A0A;border:2px solid #2E2E35;max-width:600px;width:100%;">
   <tr><td style="padding:32px 40px 24px;border-bottom:1px solid #1F1F23;">
-    <span style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:#6366F1;letter-spacing:-0.5px;">iceberg</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:#6366F1;letter-spacing:-0.5px;">LTF1</span>
   </td></tr>
   <tr><td style="padding:32px 40px;">
     ${content}
@@ -66,7 +66,11 @@ export function workspaceInvitation(params: {
   workspaceName: string;
   role: string;
   inviteeEmail: string;
+  workspaceId?: string;
 }): { subject: string; html: string } {
+  const signupUrl = params.workspaceId
+    ? `${BASE_URL}/sign-up?invite=${encodeURIComponent(params.inviteeEmail)}&workspace=${params.workspaceId}`
+    : `${BASE_URL}/sign-up`;
   return {
     subject: `You've been invited to ${params.workspaceName}`,
     html: layout(
@@ -79,7 +83,7 @@ export function workspaceInvitation(params: {
           { label: "Role", value: params.role },
           { label: "Invited as", value: params.inviteeEmail },
         ]) +
-        button("Accept Invitation", `${BASE_URL}/sign-up`)
+        button("Accept Invitation", signupUrl)
     ),
   };
 }
