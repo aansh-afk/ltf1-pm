@@ -161,7 +161,7 @@ const TaskFiltersComponent = memo(function TaskFiltersComponent({ isOpen, onClos
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-[var(--theme-background-secondary)]/50 z-40"
+        className="fixed inset-0 bg-[var(--theme-background-secondary)]/50 backdrop-blur-sm z-40"
         role="button"
         tabIndex={0}
         aria-label="Close filters"

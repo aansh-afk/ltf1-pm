@@ -91,7 +91,7 @@ export default function BrutalModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-[var(--theme-background)]/90 z-[100]"
+            className="fixed inset-0 bg-[var(--theme-background)]/90 backdrop-blur-sm z-[100]"
             onClick={onClose}
           />
 

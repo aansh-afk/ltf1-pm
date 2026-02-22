@@ -539,7 +539,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
 
   const Container = isModal ? 'div' : 'div'
   const containerProps = isModal ? {
-    className: "fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background-secondary)]/80"
+    className: "fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background-secondary)]/80 backdrop-blur-sm"
   } : {
     className: "p-[16px]"
   }
