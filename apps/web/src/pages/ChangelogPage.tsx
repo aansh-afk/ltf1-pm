@@ -30,6 +30,23 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    version: '0.4.0',
+    date: 'Feb 22, 2026',
+    tag: 'ADMIN + EMAIL',
+    tagColor: '#8B5CF6',
+    summary: 'Admin bug reports page, email system rebrand to LTF1, external user invitation flow, and notification schema fixes.',
+    changes: [
+      { type: 'feat', platform: 'web', text: 'Admin Bug Reports page at /admin/bugs — filter by status and severity, expand rows for full detail, screenshots, recorded steps' },
+      { type: 'security', platform: 'api', text: 'Bug report queries and mutations require admin role — backend + frontend guards' },
+      { type: 'feat', platform: 'web', text: 'BUG REPORTS nav link in sidebar visible only to admin users' },
+      { type: 'feat', platform: 'api', text: 'External user invitations — non-registered users receive signup link with workspace invite context' },
+      { type: 'feat', platform: 'api', text: 'Auto-accept pending workspace invitations when new users complete signup' },
+      { type: 'fix', platform: 'api', text: 'Email sender and templates rebranded from Iceberg to LTF1' },
+      { type: 'fix', platform: 'api', text: 'Notifications schema relaxed to accept legacy document shapes (dot-notation types, old field names)' },
+      { type: 'fix', platform: 'web', text: 'Report Bug button in beta banner sized down for cleaner layout' },
+    ],
+  },
+  {
     version: '0.3.0',
     date: 'Feb 22, 2026',
     tag: 'SECURITY + POLISH',
