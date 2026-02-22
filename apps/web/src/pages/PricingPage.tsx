@@ -88,6 +88,107 @@ const tiers: Tier[] = [
   },
 ]
 
+/* ─── Feature Comparison Data ───────────────────────────────── */
+
+interface ComparisonRow {
+  feature: string
+  open: string | boolean
+  pro: string | boolean
+}
+
+interface ComparisonCategory {
+  name: string
+  rows: ComparisonRow[]
+}
+
+const comparison: ComparisonCategory[] = [
+  {
+    name: 'Core Features',
+    rows: [
+      { feature: 'Projects', open: 'Unlimited', pro: 'Unlimited' },
+      { feature: 'Team members', open: 'Up to 5', pro: 'Unlimited' },
+      { feature: 'Tasks & issues', open: 'Unlimited', pro: 'Unlimited' },
+      { feature: 'Sprint management', open: true, pro: true },
+      { feature: 'Whiteboard', open: true, pro: true },
+      { feature: 'Custom fields', open: true, pro: true },
+      { feature: 'Import & export', open: true, pro: true },
+    ],
+  },
+  {
+    name: 'Git Integration',
+    rows: [
+      { feature: 'GitHub sync', open: true, pro: true },
+      { feature: 'GitLab sync', open: true, pro: true },
+      { feature: 'Bitbucket sync', open: true, pro: true },
+      { feature: 'PR-driven updates', open: true, pro: true },
+      { feature: 'Branch tracking', open: true, pro: true },
+      { feature: 'Custom webhooks', open: false, pro: true },
+    ],
+  },
+  {
+    name: 'Integrations',
+    rows: [
+      { feature: 'Slack notifications', open: true, pro: true },
+      { feature: 'Discord notifications', open: true, pro: true },
+      { feature: 'Email digests', open: true, pro: true },
+      { feature: 'Custom webhooks', open: false, pro: true },
+      { feature: 'API access', open: true, pro: true },
+    ],
+  },
+  {
+    name: 'AI & Intelligence',
+    rows: [
+      { feature: 'AI credits', open: '100/month', pro: 'Unlimited' },
+      { feature: 'Code complexity estimates', open: true, pro: true },
+      { feature: 'Tech debt surfacing', open: false, pro: true },
+      { feature: 'Sprint suggestions', open: false, pro: true },
+      { feature: 'BYOK (Bring Your Own Key)', open: false, pro: true },
+    ],
+  },
+  {
+    name: 'Analytics & Reporting',
+    rows: [
+      { feature: 'Git-based velocity', open: 'Basic', pro: 'Advanced' },
+      { feature: 'Team dashboards', open: true, pro: true },
+      { feature: 'Cycle time metrics', open: false, pro: true },
+      { feature: 'Custom reports', open: false, pro: true },
+    ],
+  },
+  {
+    name: 'Team Management',
+    rows: [
+      { feature: 'Workload visibility', open: true, pro: true },
+      { feature: 'Role-based access', open: 'Basic', pro: 'Advanced' },
+      { feature: 'Private teams', open: false, pro: true },
+      { feature: 'Guest accounts', open: false, pro: true },
+    ],
+  },
+  {
+    name: 'Security & Compliance',
+    rows: [
+      { feature: 'SSO / SAML', open: false, pro: true },
+      { feature: 'Audit logs', open: false, pro: true },
+      { feature: 'Data retention controls', open: false, pro: true },
+    ],
+  },
+  {
+    name: 'Support',
+    rows: [
+      { feature: 'Community support', open: true, pro: true },
+      { feature: 'Priority support', open: false, pro: '48h SLA' },
+      { feature: 'Onboarding assistance', open: false, pro: true },
+    ],
+  },
+]
+
+/* ─── Cell Renderer ─────────────────────────────────────────── */
+
+function CellValue({ value }: { value: string | boolean }) {
+  if (value === true) return <span className="text-[#F9FAFB]">+</span>
+  if (value === false) return <span className="text-[#2E2E35]">-</span>
+  return <span className="text-[#9CA3AF]">{value}</span>
+}
+
 /* ─── Animations ────────────────────────────────────────────── */
 
 const cardVariants: Variants = {
@@ -258,6 +359,60 @@ export default function PricingPage() {
 
           {/* Footer note */}
           <FooterNote />
+        </div>
+      </section>
+
+      {/* Feature Comparison Table */}
+      <section className="pb-14 md:pb-20">
+        <div className="max-w-4xl mx-auto px-4">
+          {/* Beta badge */}
+          <div className="flex items-center justify-center mb-8">
+            <span className="text-[10px] font-mono text-[#F59E0B] uppercase tracking-widest font-bold border border-[#F59E0B]/30 px-3 py-1">
+              ★ All features free during beta
+            </span>
+          </div>
+
+          {/* Sticky header row */}
+          <div className="border-b-2 border-[#2E2E35] pb-4 mb-0 sticky top-0 bg-[#050505] z-20 pt-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div />
+              {tiers.map((t) => (
+                <div key={t.name} className="text-xs font-mono text-[#6B7280] uppercase tracking-wider">
+                  {t.name}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Categories */}
+          {comparison.map((cat, catIdx) => (
+            <m.div
+              key={cat.name}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ duration: 0.4, delay: catIdx * 0.04 }}
+            >
+              {/* Category header */}
+              <div className="pt-10 pb-4 border-b border-[#2E2E35]">
+                <span className="text-sm font-bold text-[#F9FAFB]">
+                  {cat.name}
+                </span>
+              </div>
+
+              {/* Rows */}
+              {cat.rows.map((row) => (
+                <div
+                  key={row.feature}
+                  className="grid grid-cols-3 gap-4 py-3 border-b border-[#2E2E35]/50 text-xs font-mono"
+                >
+                  <div className="text-[#9CA3AF]">{row.feature}</div>
+                  <div><CellValue value={row.open} /></div>
+                  <div><CellValue value={row.pro} /></div>
+                </div>
+              ))}
+            </m.div>
+          ))}
         </div>
       </section>
 
