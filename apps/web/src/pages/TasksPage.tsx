@@ -1,7 +1,9 @@
-import { useReducer, useEffect } from 'react'
-import { useQuery } from 'convex/react'
+import { useReducer, useEffect, useState, useCallback } from 'react'
+import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
+import type { Id } from '../../../../convex/_generated/dataModel'
 import { HiOutlineViewBoards, HiOutlineViewList, HiOutlineFilter, HiOutlineCalendar, HiOutlineViewGrid, HiOutlineSearch, HiOutlineClipboardList } from 'react-icons/hi'
+import BulkActionBar from '@/components/features/task/BulkActionBar'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import WorkspaceSelector from '@/components/common/WorkspaceSelector'
 import KanbanBoard from '@/components/features/kanban/KanbanBoard'
@@ -137,9 +139,12 @@ interface TaskContentAreaProps {
   hasActiveFilters: boolean
   viewMode: 'board' | 'list' | 'calendar' | 'table'
   selectedProjectId: string
+  selectedTaskIds: Set<Id<"tasks">>
+  onToggleTask: (id: Id<"tasks">) => void
+  onToggleAll: (allIds: Id<"tasks">[]) => void
 }
 
-function TaskContentArea({ tasks, hasActiveFilters, viewMode, selectedProjectId }: TaskContentAreaProps) {
+function TaskContentArea({ tasks, hasActiveFilters, viewMode, selectedProjectId, selectedTaskIds, onToggleTask, onToggleAll }: TaskContentAreaProps) {
   if (tasks === undefined) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -164,39 +169,77 @@ function TaskContentArea({ tasks, hasActiveFilters, viewMode, selectedProjectId 
     )
   }
 
+  const allTaskIds = tasks.map((t: any) => t._id as Id<"tasks">)
+  const allSelected = tasks.length > 0 && selectedTaskIds.size === tasks.length
+
   return (
-    <div className="h-full">
-      {viewMode === 'board' ? (
-        <KanbanBoard
-          tasks={tasks}
-          projectId={selectedProjectId}
-          onTaskUpdate={() => { }}
+    <div className="h-full flex flex-col">
+      {/* Select-all bar */}
+      <div className="flex items-center gap-2 px-3 py-1 border-b border-[var(--theme-border)] bg-[var(--theme-background-secondary)] shrink-0">
+        <input
+          type="checkbox"
+          checked={allSelected}
+          onChange={() => onToggleAll(allTaskIds)}
+          className="w-4 h-4 accent-[#6366F1] cursor-pointer"
+          aria-label="Select all tasks"
         />
-      ) : viewMode === 'list' ? (
-        <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
-          <TaskList
+        <span className="font-mono text-[10px] uppercase text-[var(--theme-foreground-tertiary)]">
+          {selectedTaskIds.size > 0 ? `${selectedTaskIds.size} / ${tasks.length}` : 'SELECT ALL'}
+        </span>
+        {/* Per-task quick selection chips */}
+        {tasks.length <= 50 && (
+          <div className="flex items-center gap-1 ml-2 overflow-x-auto scrollbar-hide flex-1" style={{ scrollbarWidth: 'none' }}>
+            {tasks.map((t: any) => (
+              <button
+                key={t._id}
+                onClick={() => onToggleTask(t._id)}
+                className={clsx(
+                  "shrink-0 px-1.5 py-0.5 font-mono text-[9px] uppercase border transition-colors",
+                  selectedTaskIds.has(t._id)
+                    ? "border-[#6366F1] bg-[#6366F1]/20 text-[#6366F1]"
+                    : "border-[var(--theme-border)] text-[var(--theme-foreground-tertiary)] hover:border-[var(--theme-foreground-secondary)]"
+                )}
+                title={t.title}
+              >
+                #{t.number}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="flex-1 min-h-0">
+        {viewMode === 'board' ? (
+          <KanbanBoard
             tasks={tasks}
             projectId={selectedProjectId}
             onTaskUpdate={() => { }}
           />
-        </div>
-      ) : viewMode === 'calendar' ? (
-        <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
-          <TaskCalendar
-            tasks={tasks}
-            projectId={selectedProjectId}
-            onTaskUpdate={() => { }}
-          />
-        </div>
-      ) : (
-        <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
-          <TaskTable
-            tasks={tasks}
-            projectId={selectedProjectId}
-            onTaskUpdate={() => { }}
-          />
-        </div>
-      )}
+        ) : viewMode === 'list' ? (
+          <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
+            <TaskList
+              tasks={tasks}
+              projectId={selectedProjectId}
+              onTaskUpdate={() => { }}
+            />
+          </div>
+        ) : viewMode === 'calendar' ? (
+          <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
+            <TaskCalendar
+              tasks={tasks}
+              projectId={selectedProjectId}
+              onTaskUpdate={() => { }}
+            />
+          </div>
+        ) : (
+          <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
+            <TaskTable
+              tasks={tasks}
+              projectId={selectedProjectId}
+              onTaskUpdate={() => { }}
+            />
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -228,6 +271,48 @@ export default function TasksPage() {
   const { currentWorkspaceId, isLoading: workspaceLoading, hasWorkspaceContext, workspaces } = useCurrentWorkspace()
   const [state, dispatch] = useReducer(tasksPageReducer, initialTasksPageState)
   const { selectedProjectId, viewMode, isFiltersOpen, filters, quickSearch } = state
+
+  // Bulk selection state
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<Id<"tasks">>>(new Set())
+  const bulkUpdate = useMutation(api.tasks.mutations.bulkUpdateTasks)
+  const bulkDelete = useMutation(api.tasks.mutations.bulkDeleteTasks)
+
+  const handleToggleTask = useCallback((id: Id<"tasks">) => {
+    setSelectedTaskIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
+  const handleToggleAll = useCallback((allIds: Id<"tasks">[]) => {
+    setSelectedTaskIds(prev => {
+      if (prev.size === allIds.length) return new Set()
+      return new Set(allIds)
+    })
+  }, [])
+
+  const handleClearSelection = useCallback(() => setSelectedTaskIds(new Set()), [])
+
+  const handleBulkStatusChange = useCallback(async (status: string) => {
+    const ids = Array.from(selectedTaskIds)
+    await bulkUpdate({ taskIds: ids, updates: { status: status as any } })
+    setSelectedTaskIds(new Set())
+  }, [selectedTaskIds, bulkUpdate])
+
+  const handleBulkPriorityChange = useCallback(async (priority: string) => {
+    const ids = Array.from(selectedTaskIds)
+    await bulkUpdate({ taskIds: ids, updates: { priority: priority as any } })
+    setSelectedTaskIds(new Set())
+  }, [selectedTaskIds, bulkUpdate])
+
+  const handleBulkDelete = useCallback(async () => {
+    if (!confirm(`Delete ${selectedTaskIds.size} task(s)? This cannot be undone.`)) return
+    const ids = Array.from(selectedTaskIds)
+    await bulkDelete({ taskIds: ids })
+    setSelectedTaskIds(new Set())
+  }, [selectedTaskIds, bulkDelete])
 
   const projects = useQuery(
     api.projects.queries.getWorkspaceProjects,
@@ -308,6 +393,11 @@ export default function TasksPage() {
         return
       }
 
+      if (e.key === 'Escape' && selectedTaskIds.size > 0) {
+        setSelectedTaskIds(new Set())
+        return
+      }
+
       if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
         switch (e.key.toLowerCase()) {
           case 'b':
@@ -331,7 +421,7 @@ export default function TasksPage() {
 
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
-  }, [])
+  }, [selectedTaskIds.size])
 
   if (workspaceLoading) {
     return (
@@ -483,8 +573,21 @@ export default function TasksPage() {
           hasActiveFilters={!!hasActiveFilters}
           viewMode={viewMode}
           selectedProjectId={selectedProjectId}
+          selectedTaskIds={selectedTaskIds}
+          onToggleTask={handleToggleTask}
+          onToggleAll={handleToggleAll}
         />
       </div>
+
+      {/* Bulk Action Bar */}
+      <BulkActionBar
+        selectedCount={selectedTaskIds.size}
+        selectedIds={Array.from(selectedTaskIds)}
+        onClearSelection={handleClearSelection}
+        onStatusChange={handleBulkStatusChange}
+        onPriorityChange={handleBulkPriorityChange}
+        onDelete={handleBulkDelete}
+      />
 
       {/* Filter Panel */}
       {currentWorkspaceId && (
