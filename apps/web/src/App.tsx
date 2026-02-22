@@ -12,6 +12,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
 import ErrorBoundary from "./components/common/ErrorBoundary";
+import BetaBanner from "./components/common/BetaBanner";
 
 import { OptionalConvexProvider } from "./providers/OptionalConvexProvider";
 import { PostHogProvider } from "./providers/PostHogProvider";
@@ -134,6 +135,7 @@ function AuthenticatedAppContent() {
 
   return (
     <>
+      <BetaBanner />
       <DataMigrationBanner />
       {showOnboarding && (
         <OnboardingFlow
