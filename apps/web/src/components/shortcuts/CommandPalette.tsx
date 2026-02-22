@@ -67,10 +67,11 @@ function CommandItem({ cmd, isSelected, formatKeyCombo, onExecute, onHover }: Co
       <div className="flex-1 min-w-0">
         <div className={clsx(
           "text-sm truncate",
-          isSelected ? "text-[var(--theme-foreground)]" : "text-[#D1D5DB]"
+          isSelected ? "text-[var(--theme-foreground)]" : "text-[var(--theme-foreground-secondary)]"
         )}>
           {cmd.name}
         </div>
+
         {cmd.description && (
           <div className="text-xs text-[var(--theme-foreground-tertiary)] truncate mt-0.5">
             {cmd.description}
@@ -106,8 +107,8 @@ interface FooterHintsProps {
 
 function FooterHints({ commandCount }: FooterHintsProps) {
   return (
-    <div className="flex items-center justify-between px-4 py-2 border-t border-[var(--theme-border-subtle,#1F1F23)] bg-[#080808]">
-      <div className="flex items-center gap-3 text-[11px] text-[#4B5563]">
+    <div className="flex items-center justify-between px-4 py-2 border-t border-[var(--theme-border-subtle,#1F1F23)] bg-[var(--theme-background)]">
+      <div className="flex items-center gap-3 text-[11px] text-[var(--theme-foreground-tertiary)]">
         <span className="flex items-center gap-1">
           <kbd className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-mono bg-[#111111] border border-[var(--theme-border)] rounded">
             ↑
@@ -130,7 +131,7 @@ function FooterHints({ commandCount }: FooterHintsProps) {
           <span className="ml-0.5">close</span>
         </span>
       </div>
-      <span className="text-[11px] text-[#4B5563]">
+      <span className="text-[11px] text-[var(--theme-foreground-tertiary)]">
         {commandCount} commands
       </span>
     </div>
@@ -352,7 +353,7 @@ export default function CommandPalette() {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/60 z-[9998]"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998]"
             role="button"
             tabIndex={0}
             aria-label="Close command palette"
@@ -360,18 +361,19 @@ export default function CommandPalette() {
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClose() }}
           />
 
-          {/* Command Palette - Linear style: top-positioned, compact */}
-          <motion.div
-            ref={paletteRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Command palette"
-            className="fixed top-[20%] left-1/2 -translate-x-1/2 w-[90vw] max-w-[560px] z-[9999] flex flex-col overflow-hidden border border-[var(--theme-border)] bg-[var(--theme-background-secondary)] shadow-2xl"
-            initial={{ opacity: 0, scale: 0.95, y: -8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -8 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-          >
+          {/* Command Palette - centered container to avoid transform conflicts */}
+          <div className="fixed inset-0 z-[9999] flex justify-center pointer-events-none" style={{ paddingTop: '20vh' }}>
+            <motion.div
+              ref={paletteRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Command palette"
+              className="w-[90vw] max-w-[560px] h-fit flex flex-col overflow-hidden border border-[var(--theme-border)] bg-[var(--theme-background-secondary)] shadow-2xl pointer-events-auto"
+              initial={{ opacity: 0, scale: 0.97, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: -10 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+            >
             {/* Search input */}
             <div className="flex items-center gap-3 px-4 border-b border-[var(--theme-border-subtle,#1F1F23)]">
               <SearchIcon className="w-4 h-4 text-[var(--theme-foreground-tertiary)] flex-shrink-0" />
@@ -385,7 +387,7 @@ export default function CommandPalette() {
                 }}
                 placeholder="Type a command or search..."
                 aria-label="Search commands"
-                className="flex-1 py-3 bg-transparent text-sm text-[var(--theme-foreground)] placeholder:text-[#4B5563] focus:outline-none font-sans"
+                className="flex-1 py-3 bg-transparent text-sm text-[var(--theme-foreground)] placeholder:text-[var(--theme-foreground-tertiary)] focus:outline-none font-sans"
               />
               {searchQuery && (
                 <button
@@ -435,6 +437,7 @@ export default function CommandPalette() {
             {/* Footer hints */}
             <FooterHints commandCount={flatCommands.length} />
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>

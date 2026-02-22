@@ -12,6 +12,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
 import ErrorBoundary from "./components/common/ErrorBoundary";
+import BetaBanner from "./components/common/BetaBanner";
 
 import { OptionalConvexProvider } from "./providers/OptionalConvexProvider";
 import { PostHogProvider } from "./providers/PostHogProvider";
@@ -58,6 +59,7 @@ const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 const DesignReferencePage = lazy(() => import("./pages/DesignReferencePage"));
 const TimeReportPage = lazy(() => import("./pages/TimeReportPage"));
+const AdminBugReportsPage = lazy(() => import("./pages/AdminBugReportsPage"));
 import { useEnsureUser } from "./hooks/useEnsureUser";
 import { DataMigrationBanner } from "./components/admin/DataMigrationBanner";
 import CommandPalette from "./components/shortcuts/CommandPalette";
@@ -134,6 +136,7 @@ function AuthenticatedAppContent() {
 
   return (
     <>
+      <BetaBanner />
       <DataMigrationBanner />
       {showOnboarding && (
         <OnboardingFlow
@@ -247,7 +250,10 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
             <Route path="whiteboard" element={<WhiteboardPage />} />
             <Route path="custom-fields" element={<CustomFieldsPage />} />
             <Route path="time-report" element={<TimeReportPage />} />
+            <Route path="admin/bugs" element={<AdminBugReportsPage />} />
           </Route>
+
+          {/* AI Test Page */}
 
           {/* 404 Page - Catch all unmatched routes */}
           <Route path="*" element={<NotFoundPage />} />

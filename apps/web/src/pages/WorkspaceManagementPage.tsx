@@ -164,7 +164,7 @@ export default function WorkspaceManagementPage() {
           transition={{ duration: 0.25 }}
           className="relative z-10"
         >
-          {activeTab === 'overview' && <OverviewTab workspace={workspace} projects={projects} members={members} />}
+          {activeTab === 'overview' && <OverviewTab workspace={workspace} projects={projects} members={members} workspaceId={workspaceId} setActiveTab={setActiveTab} />}
           {activeTab === 'projects' && <ProjectsTab workspaceId={workspaceId!} projects={projects} />}
           {activeTab === 'members' && <MembersTab workspaceId={workspaceId!} members={members} workspace={workspace} />}
           {activeTab === 'settings' && <SettingsTab workspace={workspace} />}
@@ -180,7 +180,7 @@ export default function WorkspaceManagementPage() {
 }
 
 // Overview Tab Component
-function OverviewTab({ workspace, projects, members }: any) {
+function OverviewTab({ workspace, projects, members, workspaceId, setActiveTab }: any) {
   const stats = [
     { icon: HiOutlineFolder, label: 'Active Projects', value: projects?.length || 0, color: 'var(--theme-primary)', width: 'w-3/4' },
     { icon: HiOutlineUsers, label: 'Members', value: members?.length || 0, color: 'var(--theme-info)', width: 'w-1/2' },
@@ -280,9 +280,14 @@ function OverviewTab({ workspace, projects, members }: any) {
               <span className="text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)]">Quick Actions</span>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {['New Project', 'Invite User', 'View Logs', 'Deploy'].map((action) => (
-                <button key={action} className="p-2 border border-[var(--theme-border)] hover:border-[var(--theme-primary)] hover:bg-[var(--theme-primary)]/5 text-xs font-mono text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-foreground)] text-left transition-colors">
-                  {action}
+              {[
+                { label: 'New Project', action: () => setActiveTab('projects') },
+                { label: 'Invite User', action: () => setActiveTab('members') },
+                { label: 'View Logs', action: () => setActiveTab('analytics') },
+                { label: 'Settings', action: () => setActiveTab('settings') },
+              ].map((item) => (
+                <button key={item.label} onClick={item.action} className="p-2 border border-[var(--theme-border)] hover:border-[var(--theme-primary)] hover:bg-[var(--theme-primary)]/5 text-xs font-mono text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-foreground)] text-left transition-colors">
+                  {item.label}
                 </button>
               ))}
             </div>
@@ -370,8 +375,12 @@ function MembersTab({ workspaceId, members, workspace }: any) {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'member' | 'admin' | 'viewer'>('member')
   const [isInviting, setIsInviting] = useState(false)
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null)
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
 
   const inviteToWorkspace = useMutation(api.workspaces.mutations.inviteToWorkspace)
+  const updateMemberRole = useMutation(api.workspaces.mutations.updateMemberRole)
+  const removeMember = useMutation(api.workspaces.mutations.removeMember)
   const pendingInvitations = useQuery(
     api.workspaces.queries.getPendingInvitations,
     workspaceId ? { workspaceId: workspaceId as any } : 'skip'
@@ -401,6 +410,35 @@ function MembersTab({ workspaceId, members, workspace }: any) {
       setIsInviting(false)
     }
   }
+
+  const handleRoleChange = async (userId: string, newRole: 'member' | 'admin' | 'viewer') => {
+    try {
+      await updateMemberRole({
+        workspaceId: workspaceId as any,
+        userId: userId as any,
+        role: newRole,
+      })
+      toast.success('Member role updated')
+      setEditingMemberId(null)
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update role')
+    }
+  }
+
+  const handleRemoveMember = async (userId: string) => {
+    try {
+      await removeMember({
+        workspaceId: workspaceId as any,
+        userId: userId as any,
+      })
+      toast.success('Member removed from workspace')
+      setConfirmRemoveId(null)
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to remove member')
+    }
+  }
+
+  const isLastMember = members?.length === 1
 
   return (
     <div className="p-4">
@@ -456,9 +494,79 @@ function MembersTab({ workspaceId, members, workspace }: any) {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      <button className="text-[10px] font-mono text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-primary)] transition-colors">Edit</button>
-                      <button className="text-[10px] font-mono text-[var(--theme-error)] hover:text-[var(--theme-error)]/80 transition-colors">Remove</button>
+                    <div className="flex items-center justify-end gap-3 relative">
+                      {editingMemberId === member.userId ? (
+                        <div className="flex items-center gap-1">
+                          {(['admin', 'member', 'viewer'] as const).map((r) => (
+                            <button
+                              key={r}
+                              onClick={() => handleRoleChange(member.userId, r)}
+                              className={clsx(
+                                "px-2 py-0.5 text-[10px] font-mono font-semibold uppercase border transition-colors",
+                                member.role === r
+                                  ? "border-[var(--theme-primary)] text-[var(--theme-primary)] bg-[var(--theme-primary)]/10"
+                                  : "border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)]"
+                              )}
+                            >
+                              {r}
+                            </button>
+                          ))}
+                          <button
+                            onClick={() => setEditingMemberId(null)}
+                            className="px-1 text-[10px] font-mono text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-foreground)] transition-colors"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => member.role !== 'owner' && setEditingMemberId(member.userId)}
+                          className={clsx(
+                            "text-[10px] font-mono transition-colors",
+                            member.role === 'owner'
+                              ? "text-[var(--theme-foreground-tertiary)] cursor-not-allowed"
+                              : "text-[var(--theme-foreground-secondary)] hover:text-[var(--theme-primary)]"
+                          )}
+                          disabled={member.role === 'owner'}
+                          title={member.role === 'owner' ? 'Cannot edit owner role' : 'Change role'}
+                        >
+                          Edit
+                        </button>
+                      )}
+                      {confirmRemoveId === member.userId ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleRemoveMember(member.userId)}
+                            className="px-2 py-0.5 text-[10px] font-mono font-bold border-2 border-[var(--theme-error)] text-[var(--theme-error)] bg-[var(--theme-error)]/10 hover:bg-[var(--theme-error)]/20 transition-colors"
+                          >
+                            CONFIRM
+                          </button>
+                          <button
+                            onClick={() => setConfirmRemoveId(null)}
+                            className="px-1 text-[10px] font-mono text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-foreground)] transition-colors"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => !isLastMember && member.role !== 'owner' && setConfirmRemoveId(member.userId)}
+                          className={clsx(
+                            "text-[10px] font-mono transition-colors",
+                            isLastMember || member.role === 'owner'
+                              ? "text-[var(--theme-foreground-tertiary)] cursor-not-allowed"
+                              : "text-[var(--theme-error)] hover:text-[var(--theme-error)]/80"
+                          )}
+                          disabled={isLastMember || member.role === 'owner'}
+                          title={
+                            member.role === 'owner' ? 'Cannot remove workspace owner'
+                              : isLastMember ? 'Cannot remove the last member'
+                              : 'Remove from workspace'
+                          }
+                        >
+                          Remove
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

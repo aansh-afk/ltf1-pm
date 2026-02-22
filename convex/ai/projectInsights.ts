@@ -99,9 +99,9 @@ export const generateProjectInsights = action({
       }
     }
 
-    // Get user's API key
-    const userApiKey = await ctx.runQuery(internal.internalQueries.getUserApiKey, {});
-    
+    // Resolve API key: platform env vars (beta: all users get AI)
+    const userApiKey = process.env.CEREBRAS_API_KEY || process.env.GROQ_API_KEY;
+
     if (!userApiKey) {
       // Return basic insights without AI
       return {
@@ -147,9 +147,10 @@ Provide a JSON response with:
 Response must be valid JSON only, no markdown or explanation.`;
 
     try {
-      const aiResponse = await ctx.runAction(internal.internalQueries.generateWithGemini, {
+      const aiResponse = await ctx.runAction(internal.internalQueries.generateWithAI, {
         prompt,
-        model: "gemini-2.5-flash",
+        model: "gpt-oss-120b",
+        complexity: "high",
         temperature: 0.3,
         apiKey: userApiKey,
       });
@@ -194,11 +195,11 @@ export const generateTasksFromDescription = action({
     
     if (!project) throw new Error("Project not found");
 
-    // Get user's API key
-    const userApiKey = await ctx.runQuery(internal.internalQueries.getUserApiKey, {});
-    
+    // Resolve API key: platform env vars (beta: all users get AI)
+    const userApiKey = process.env.CEREBRAS_API_KEY || process.env.GROQ_API_KEY;
+
     if (!userApiKey) {
-      throw new Error("AI features require API key setup");
+      throw new Error("AI features require API key setup. Set CEREBRAS_API_KEY or GROQ_API_KEY in your Convex environment.");
     }
 
     const prompt = `
@@ -221,9 +222,10 @@ Generate 3-8 specific tasks that would be needed to implement this feature. For 
 Response must be a valid JSON object with a "tasks" array containing the task objects. No markdown or explanation.`;
 
     try {
-      const aiResponse = await ctx.runAction(internal.internalQueries.generateWithGemini, {
+      const aiResponse = await ctx.runAction(internal.internalQueries.generateWithAI, {
         prompt,
-        model: "gemini-2.5-flash",
+        model: "gpt-oss-120b",
+        complexity: "medium",
         temperature: 0.7,
         apiKey: userApiKey,
       });
@@ -321,9 +323,9 @@ export const generateStandupSummary = action({
       summaryData.highlights.push(`⚠️ ${blockedTasks.length} tasks currently blocked`);
     }
 
-    // Get user's API key for enhanced summary
-    const userApiKey = await ctx.runQuery(internal.internalQueries.getUserApiKey, {});
-    
+    // Resolve API key: platform env vars (beta: all users get AI)
+    const userApiKey = process.env.CEREBRAS_API_KEY || process.env.GROQ_API_KEY;
+
     if (!userApiKey) {
       // Return basic summary without AI
       return {
@@ -362,9 +364,10 @@ Provide a JSON response with:
 Response must be valid JSON only.`;
 
     try {
-      const aiResponse = await ctx.runAction(internal.internalQueries.generateWithGemini, {
+      const aiResponse = await ctx.runAction(internal.internalQueries.generateWithAI, {
         prompt,
-        model: "gemini-2.5-flash",
+        model: "gpt-oss-120b",
+        complexity: "low",
         temperature: 0.5,
         apiKey: userApiKey,
       });
