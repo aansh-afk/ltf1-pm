@@ -82,8 +82,9 @@ const tiers: Tier[] = [
       'Time Tracking',
       'Custom Fields',
       'Sprint planning',
+      'Role-based access control',
     ],
-    cta: { label: 'Join Early Access', to: '/sign-up', style: 'primary' },
+    cta: { label: 'Join Early Access', to: '/waitlist', style: 'primary' },
   },
 ]
 
@@ -112,7 +113,7 @@ function FooterNote() {
     >
       <HiOutlineSparkles className="w-3 h-3 text-[#6B7280] shrink-0 mt-0.5" />
       <p className="text-[10px] font-mono text-[#6B7280] leading-relaxed">
-        Additional tiers and Stripe billing integration coming soon.
+        Stripe billing coming soon. During Early Access, all Pro features are available free.
       </p>
     </m.div>
   )
@@ -277,7 +278,7 @@ export default function PricingPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                to="/sign-up"
+                to="/waitlist"
                 className="bg-[#F9FAFB] text-[#050505] font-bold text-sm px-6 py-3"
               >
                 Join Early Access
