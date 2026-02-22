@@ -3,7 +3,7 @@
 
 export interface AITaskConfig {
   taskType: string
-  model: 'gemini-2.5-flash' | 'gemini-2.5-flash-lite' | 'auto'
+  model: 'gpt-oss-120b' | 'openai/gpt-oss-20b' | 'auto'
   temperature: number
   maxTokens: number
   cacheEnabled: boolean
@@ -21,7 +21,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
   
   'task.title.generate': {
     taskType: 'Generate task title from description',
-    model: 'gemini-2.5-flash-lite',
+    model: 'gpt-oss-120b',
     temperature: 0.3,
     maxTokens: 50,
     cacheEnabled: true,
@@ -31,7 +31,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
 
   'task.priority.suggest': {
     taskType: 'Suggest task priority',
-    model: 'gemini-2.5-flash-lite',
+    model: 'gpt-oss-120b',
     temperature: 0.2,
     maxTokens: 20,
     cacheEnabled: true,
@@ -41,7 +41,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
 
   'task.label.extract': {
     taskType: 'Extract labels from description',
-    model: 'gemini-2.5-flash-lite',
+    model: 'gpt-oss-120b',
     temperature: 0.1,
     maxTokens: 100,
     cacheEnabled: true,
@@ -51,7 +51,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
 
   'task.points.estimate': {
     taskType: 'Estimate story points',
-    model: 'gemini-2.5-flash-lite',
+    model: 'gpt-oss-120b',
     temperature: 0.4,
     maxTokens: 30,
     cacheEnabled: true,
@@ -61,7 +61,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
 
   'user.availability.check': {
     taskType: 'Check user availability',
-    model: 'gemini-2.5-flash-lite',
+    model: 'gpt-oss-120b',
     temperature: 0.1,
     maxTokens: 50,
     cacheEnabled: true,
@@ -71,7 +71,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
 
   'commit.message.generate': {
     taskType: 'Generate commit message',
-    model: 'gemini-2.5-flash-lite',
+    model: 'gpt-oss-120b',
     temperature: 0.5,
     maxTokens: 100,
     cacheEnabled: false,
@@ -81,7 +81,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
 
   'search.query.parse': {
     taskType: 'Parse natural language search',
-    model: 'gemini-2.5-flash-lite',
+    model: 'gpt-oss-120b',
     temperature: 0.2,
     maxTokens: 100,
     cacheEnabled: true,
@@ -137,7 +137,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
 
   'sprint.analysis.complete': {
     taskType: 'Complete sprint analysis',
-    model: 'gemini-2.5-flash',
+    model: 'gpt-oss-120b',
     temperature: 0.7,
     maxTokens: 2000,
     cacheEnabled: false,
@@ -147,7 +147,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
 
   'code.review.comprehensive': {
     taskType: 'Comprehensive code review',
-    model: 'gemini-2.5-flash',
+    model: 'gpt-oss-120b',
     temperature: 0.6,
     maxTokens: 3000,
     cacheEnabled: false,
@@ -157,7 +157,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
 
   'documentation.generate': {
     taskType: 'Generate comprehensive documentation',
-    model: 'gemini-2.5-flash',
+    model: 'gpt-oss-120b',
     temperature: 0.5,
     maxTokens: 4000,
     cacheEnabled: true,
@@ -167,7 +167,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
 
   'architecture.design': {
     taskType: 'Design system architecture',
-    model: 'gemini-2.5-flash',
+    model: 'gpt-oss-120b',
     temperature: 0.8,
     maxTokens: 5000,
     cacheEnabled: false,
@@ -177,7 +177,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
 
   'project.risk.analysis': {
     taskType: 'Project risk analysis',
-    model: 'gemini-2.5-flash',
+    model: 'gpt-oss-120b',
     temperature: 0.6,
     maxTokens: 2500,
     cacheEnabled: false,
@@ -187,7 +187,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
 
   'team.performance.analysis': {
     taskType: 'Team performance analysis',
-    model: 'gemini-2.5-flash',
+    model: 'gpt-oss-120b',
     temperature: 0.5,
     maxTokens: 3000,
     cacheEnabled: false,
@@ -197,7 +197,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
 
   'test.cases.generate': {
     taskType: 'Generate comprehensive test cases',
-    model: 'gemini-2.5-flash',
+    model: 'gpt-oss-120b',
     temperature: 0.4,
     maxTokens: 4000,
     cacheEnabled: true,
@@ -207,7 +207,7 @@ export const AI_TASK_ROUTING: Record<string, AITaskConfig> = {
 
   'meeting.transcript.analyze': {
     taskType: 'Analyze meeting transcript',
-    model: 'gemini-2.5-flash',
+    model: 'gpt-oss-120b',
     temperature: 0.5,
     maxTokens: 3000,
     cacheEnabled: false,
@@ -241,14 +241,14 @@ export const COST_OPTIMIZATION = {
 
   // Fallback strategies when primary model fails
   fallbackStrategies: {
-    'gemini-2.5-flash': 'gemini-2.5-flash-lite',
-    'gemini-2.5-flash-lite': 'cached-response'
+    'gpt-oss-120b': 'gpt-oss-120b',
+    'gpt-oss-120b': 'cached-response'
   },
 
   // Maximum retries per model
   maxRetries: {
-    'gemini-2.5-flash': 2,
-    'gemini-2.5-flash-lite': 3
+    'gpt-oss-120b': 2,
+    'gpt-oss-120b': 3
   }
 }
 
@@ -267,8 +267,8 @@ export const BATCH_CONFIG = {
 
   // Batch size limits
   maxBatchSize: {
-    'gemini-2.5-flash': 10,
-    'gemini-2.5-flash-lite': 25
+    'gpt-oss-120b': 10,
+    'gpt-oss-120b': 25
   },
 
   // Wait time before processing batch (ms)
@@ -308,11 +308,11 @@ export const PROMPT_TEMPLATES = {
 export const USAGE_LIMITS = {
   // Per user per day
   daily: {
-    'gemini-2.5-flash': {
+    'gpt-oss-120b': {
       requests: 100,
       tokens: 500000
     },
-    'gemini-2.5-flash-lite': {
+    'gpt-oss-120b': {
       requests: 1000,
       tokens: 2000000
     }
@@ -320,12 +320,12 @@ export const USAGE_LIMITS = {
 
   // Per workspace per month
   monthly: {
-    'gemini-2.5-flash': {
+    'gpt-oss-120b': {
       requests: 5000,
       tokens: 25000000,
       cost: 50 // USD
     },
-    'gemini-2.5-flash-lite': {
+    'gpt-oss-120b': {
       requests: 50000,
       tokens: 100000000,
       cost: 20 // USD
@@ -334,11 +334,11 @@ export const USAGE_LIMITS = {
 
   // Rate limiting
   rateLimit: {
-    'gemini-2.5-flash': {
+    'gpt-oss-120b': {
       requestsPerMinute: 60,
       tokensPerMinute: 100000
     },
-    'gemini-2.5-flash-lite': {
+    'gpt-oss-120b': {
       requestsPerMinute: 200,
       tokensPerMinute: 50000
     }
@@ -447,8 +447,8 @@ export function isWithinQuota(model: string, usage: { requests: number; tokens: 
 export function calculateEstimatedCost(tokens: number, model: string): number {
   // Rough cost estimation
   const rates = {
-    'gemini-2.5-flash': 0.0014,      // $1.40 per 1M tokens average
-    'gemini-2.5-flash-lite': 0.0004  // $0.40 per 1M tokens average
+    'gpt-oss-120b': 0.0014,      // $1.40 per 1M tokens average
+    'gpt-oss-120b': 0.0004  // $0.40 per 1M tokens average
   }
   
   const rate = rates[model as keyof typeof rates] || 0.001

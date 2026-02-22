@@ -14,7 +14,8 @@ import {
   HiOutlineUser,
   HiOutlineSearch,
   HiOutlinePencilAlt,
-  HiOutlineRefresh
+  HiOutlineRefresh,
+  HiOutlineExclamationCircle
 } from 'react-icons/hi'
 import clsx from 'clsx'
 import { useResourceMonitor } from '../../hooks/useResourceMonitor'
@@ -27,6 +28,7 @@ import WorkspaceMobileBlocker from '../common/WorkspaceMobileBlocker'
 import NotificationBell from '../common/NotificationBell'
 import FeedbackWidget from '../features/feedback/FeedbackWidget'
 import ShortcutHelp from '../shortcuts/ShortcutHelp'
+import { useEnsureUser } from '../../hooks/useEnsureUser'
 
 
 // --- Sub-components ---
@@ -171,8 +173,12 @@ export default function DashboardLayout() {
   }, [])
 
   const isExpanded = !isCollapsed
+  const { user } = useEnsureUser()
+  const isAdmin = user?.role === 'admin'
 
-  const navItems = NAV_ITEMS
+  const navItems = isAdmin
+    ? [...NAV_ITEMS, { path: '/admin/bugs' as const, label: 'BUG REPORTS' as const, icon: HiOutlineExclamationCircle }]
+    : [...NAV_ITEMS]
 
   return (
     <div className="flex h-screen bg-[var(--theme-background)]">

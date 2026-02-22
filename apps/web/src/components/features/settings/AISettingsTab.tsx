@@ -20,29 +20,22 @@ import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalBadge from '@/components/ui/BrutalBadge'
 import BrutalModal from '../../ui/BrutalModal'
 
-type AIProvider = 'gemini' | 'openai' | 'anthropic'
+type AIProvider = 'cerebras' | 'groq'
 
 const PROVIDER_INFO: Record<AIProvider, { label: string; color: string; placeholder: string; helpUrl: string; helpLabel: string }> = {
-  gemini: {
-    label: 'Google Gemini',
-    color: '#4285F4',
-    placeholder: 'AIza...',
-    helpUrl: 'https://aistudio.google.com/apikey',
-    helpLabel: 'Google AI Studio',
+  cerebras: {
+    label: 'Cerebras',
+    color: '#6366F1',
+    placeholder: 'csk-...',
+    helpUrl: 'https://cloud.cerebras.ai',
+    helpLabel: 'Cerebras Cloud',
   },
-  openai: {
-    label: 'OpenAI',
-    color: '#10A37F',
-    placeholder: 'sk-...',
-    helpUrl: 'https://platform.openai.com/api-keys',
-    helpLabel: 'OpenAI Dashboard',
-  },
-  anthropic: {
-    label: 'Anthropic',
-    color: '#D4A27F',
-    placeholder: 'sk-ant-...',
-    helpUrl: 'https://console.anthropic.com/settings/keys',
-    helpLabel: 'Anthropic Console',
+  groq: {
+    label: 'Groq',
+    color: '#F59E0B',
+    placeholder: 'gsk_...',
+    helpUrl: 'https://console.groq.com/keys',
+    helpLabel: 'Groq Console',
   },
 }
 
@@ -55,7 +48,7 @@ type AISettingsState = {
 }
 
 const aiSettingsInitialState: AISettingsState = {
-  selectedProvider: 'gemini',
+  selectedProvider: 'cerebras',
   apiKey: '',
   showApiKey: false,
   isValidating: false,
@@ -432,7 +425,7 @@ export default function AISettingsTab() {
       {/* AI Configuration Status */}
       <SettingsSection
         title="AI Configuration"
-        description="Manage your AI providers and API keys. Add keys for Gemini, OpenAI, or Anthropic."
+        description="Manage your AI providers and API keys. Add keys for Cerebras or Groq."
       >
         <div className="space-y-6">
           {/* Current Status */}

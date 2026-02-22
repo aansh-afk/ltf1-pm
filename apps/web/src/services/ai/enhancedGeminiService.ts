@@ -28,7 +28,7 @@ const COMPLEXITY_TO_CATEGORY: Record<string, string> = {
 }
 
 // Enhanced AI service - thin wrapper over Convex backend action
-export class EnhancedGeminiService {
+export class EnhancedAIService {
   private convexClient: ConvexReactClient
   private projectId: string | undefined
 
@@ -142,11 +142,11 @@ export class EnhancedGeminiService {
 }
 
 // Singleton instance
-let serviceInstance: EnhancedGeminiService | null = null
+let serviceInstance: EnhancedAIService | null = null
 
-export const getEnhancedGeminiService = (convexClient: ConvexReactClient, projectId?: string): EnhancedGeminiService => {
+export const getEnhancedAIService = (convexClient: ConvexReactClient, projectId?: string): EnhancedAIService => {
   if (!serviceInstance) {
-    serviceInstance = new EnhancedGeminiService(convexClient, projectId)
+    serviceInstance = new EnhancedAIService(convexClient, projectId)
   }
   if (projectId) {
     serviceInstance.setProjectId(projectId)

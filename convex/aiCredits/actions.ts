@@ -2,9 +2,8 @@
 
 import { v } from "convex/values"
 import { action } from "../_generated/server"
-import { GoogleGenerativeAI } from "@google/generative-ai"
 
-// Validate an API key by making a test request
+// Validate an API key by making a test request (legacy — uses Cerebras now)
 export const validateApiKey = action({
   args: {
     apiKey: v.string()
@@ -15,23 +14,24 @@ export const validateApiKey = action({
   }),
   handler: async (ctx, args) => {
     try {
-      const genAI = new GoogleGenerativeAI(args.apiKey)
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
-      
-      // Simple test to validate the key
-      const result = await model.generateContent("Say 'test'")
-      const response = await result.response
-      
-      if (!response) {
-        return { isValid: false, error: "Invalid API key - no response" }
-      }
-      
+      const OpenAI = (await import("openai")).default
+      const client = new OpenAI({
+        apiKey: args.apiKey,
+        baseURL: "https://api.cerebras.ai/v1",
+      })
+
+      await client.chat.completions.create({
+        model: "gpt-oss-120b",
+        messages: [{ role: "user", content: "Say 'test'" }],
+        max_tokens: 5,
+      })
+
       return { isValid: true }
     } catch (error: any) {
       console.error("API key validation error:", error)
-      return { 
-        isValid: false, 
-        error: error.message?.includes("API_KEY_INVALID") 
+      return {
+        isValid: false,
+        error: error.message?.includes("API_KEY_INVALID") || error.message?.includes("Invalid API Key")
           ? "Invalid API key. Please check and try again."
           : "Failed to validate API key. Please ensure it's correct."
       }
