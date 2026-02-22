@@ -143,7 +143,7 @@ export function DevThemeMonitor({
 
       {/* Full Testing Panel Modal */}
       {showPanel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="max-w-4xl w-full max-h-[90vh] overflow-auto">
             <ThemeTestingPanel 
               onClose={() => setShowPanel(false)}
