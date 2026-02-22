@@ -18,7 +18,7 @@ export const sendEmail = internalAction({
     const from = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
     const { error } = await resend.emails.send({
-      from: `Iceberg <${from}>`,
+      from: `LTF1 <${from}>`,
       to: args.to,
       subject: args.subject,
       html: args.html,

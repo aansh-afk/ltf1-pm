@@ -335,13 +335,14 @@ export const inviteToWorkspace = mutation({
         expiresAt: now + 30 * 24 * 60 * 60 * 1000, // 30 days
       });
 
-      // Send invitation email to non-registered user
+      // Send invitation email to non-registered user with signup link
       const workspace = await ctx.db.get(args.workspaceId);
       const emailContent = workspaceInvitation({
         inviterName: user.name || user.email,
         workspaceName: workspace?.name || "workspace",
         role: args.role,
         inviteeEmail: args.email,
+        workspaceId: args.workspaceId,
       });
       await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
         to: args.email,
