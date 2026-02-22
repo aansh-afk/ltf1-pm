@@ -2,16 +2,13 @@ import { useReducer, useMemo } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
-import { 
-  HiOutlineX, 
-  HiOutlineFilter,
+import {
+  HiOutlineX,
   HiOutlineUser,
   HiOutlineCode,
   HiOutlineChartBar,
   HiOutlineSearch,
   HiOutlineDownload,
-  HiOutlineEye,
-  HiOutlineEyeOff,
   HiOutlineSortAscending,
   HiOutlineSortDescending
 } from 'react-icons/hi'
@@ -53,133 +50,29 @@ const matrixInitialState: MatrixState = {
 type MatrixAction = { type: 'UPDATE'; field: keyof MatrixState; value: unknown }
 
 function matrixReducer(state: MatrixState, action: MatrixAction): MatrixState {
-  switch (action.type) {
-    case 'UPDATE':
-      return { ...state, [action.field]: action.value }
-    default:
-      return state
-  }
+  if (action.type === 'UPDATE') return { ...state, [action.field]: action.value }
+  return state
 }
 
-// --- Sub-components ---
-
-interface MatrixControlsProps {
-  searchQuery: string
-  onSearchChange: (query: string) => void
-  viewMode: ViewMode
-  onViewModeChange: (mode: ViewMode) => void
-  sortBy: SortOption
-  onSortByChange: (sort: SortOption) => void
-  sortAsc: boolean
-  onSortAscToggle: () => void
-  showEmptySkills: boolean
-  onShowEmptySkillsChange: (show: boolean) => void
-  minLevel: number
-  onMinLevelChange: (level: number) => void
-}
-
-function MatrixControls({ searchQuery, onSearchChange, viewMode, onViewModeChange, sortBy, onSortByChange, sortAsc, onSortAscToggle, showEmptySkills, onShowEmptySkillsChange, minLevel, onMinLevelChange }: MatrixControlsProps) {
-  return (
-    <div className="p-[10px] border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)]/50">
-      <div className="flex flex-wrap items-center gap-[6px]">
-        <div className="flex-1 min-w-200px relative">
-          <HiOutlineSearch className="absolute left-12px top-50% transform -translate-y-50% w-4 h-4 text-primary-brutalist/60" />
-          <input
-            id="team-matrix-search"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="brutal-input w-full pl-40px pr-[6px] py-[4px] text-brutal-sm"
-            placeholder="Search technologies..."
-            aria-label="Search technologies"
-          />
-        </div>
-
-        <div className="flex items-center gap-[4px]">
-          <button
-            onClick={() => onViewModeChange('matrix')}
-            className={clsx(
-              "px-[8px] py-[4px] font-mono text-brutal-xs font-bold transition-all",
-              viewMode === 'matrix'
-                ? "bg-primary-brutalist text-event-horizon"
-                : "bg-basalt-border text-primary-brutalist hover:bg-primary-brutalist/20"
-            )}
-          >
-            MATRIX
-          </button>
-          <button
-            onClick={() => onViewModeChange('grouped')}
-            className={clsx(
-              "px-[8px] py-[4px] font-mono text-brutal-xs font-bold transition-all",
-              viewMode === 'grouped'
-                ? "bg-primary-brutalist text-event-horizon"
-                : "bg-basalt-border text-primary-brutalist hover:bg-primary-brutalist/20"
-            )}
-          >
-            GROUPED
-          </button>
-        </div>
-
-        <div className="flex items-center gap-[4px]">
-          <label htmlFor="team-matrix-sort" className="font-mono text-brutal-xs text-primary-brutalist/60">SORT:</label>
-          <select
-            id="team-matrix-sort"
-            value={sortBy}
-            onChange={(e) => onSortByChange(e.target.value as SortOption)}
-            className="brutal-input px-[4px] py-4px text-brutal-xs"
-          >
-            <option value="name">NAME</option>
-            <option value="expertise">EXPERTISE</option>
-            <option value="status">STATUS</option>
-          </select>
-          <button
-            onClick={onSortAscToggle}
-            className="brutal-btn-secondary p-6px"
-          >
-            {sortAsc ? (
-              <HiOutlineSortAscending className="w-4 h-4" />
-            ) : (
-              <HiOutlineSortDescending className="w-4 h-4" />
-            )}
-          </button>
-        </div>
-
-        <div className="flex items-center gap-[6px]">
-          <label htmlFor="team-matrix-show-all" className="flex items-center gap-6px">
-            <input
-              id="team-matrix-show-all"
-              type="checkbox"
-              checked={showEmptySkills}
-              onChange={(e) => onShowEmptySkillsChange(e.target.checked)}
-              className="brutal-checkbox"
-            />
-            <span className="font-mono text-brutal-xs">SHOW ALL</span>
-          </label>
-
-          <div className="flex items-center gap-6px">
-            <label htmlFor="team-matrix-min-level" className="font-mono text-brutal-xs text-primary-brutalist/60">MIN LEVEL:</label>
-            <input
-              id="team-matrix-min-level"
-              type="range"
-              min="1"
-              max="10"
-              value={minLevel}
-              onChange={(e) => onMinLevelChange(parseInt(e.target.value))}
-              className="w-60px"
-            />
-            <span className="font-mono text-brutal-xs font-bold w-5">{minLevel}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+// --- Expertise level helpers ---
 
 interface ExpertiseLevelInfo {
   label: string
-  color: string
-  textColor: string
+  abbr: string
+  bg: string
+  text: string
+  border: string
 }
+
+function getExpertiseLevel(level: number): ExpertiseLevelInfo | null {
+  if (level >= 8) return { label: 'Expert', abbr: 'EXP', bg: 'bg-[#22C55E]/15', text: 'text-[#22C55E]', border: 'border-[#22C55E]/30' }
+  if (level >= 6) return { label: 'Advanced', abbr: 'ADV', bg: 'bg-[#6366F1]/15', text: 'text-[#6366F1]', border: 'border-[#6366F1]/30' }
+  if (level >= 4) return { label: 'Intermediate', abbr: 'INT', bg: 'bg-[#F59E0B]/15', text: 'text-[#F59E0B]', border: 'border-[#F59E0B]/30' }
+  if (level >= 2) return { label: 'Beginner', abbr: 'BEG', bg: 'bg-[var(--theme-foreground-tertiary)]/10', text: 'text-[var(--theme-foreground-tertiary)]', border: 'border-[var(--theme-foreground-tertiary)]/20' }
+  return null
+}
+
+// --- Sub-components ---
 
 interface MatrixMember {
   userId: string
@@ -188,7 +81,21 @@ interface MatrixMember {
   expertise: Array<{ name: string; level: number }>
 }
 
-interface MatrixTableViewProps {
+function ExpertiseCell({ level }: { level: ExpertiseLevelInfo | null }) {
+  if (!level) return <div className="w-full h-full" />
+  return (
+    <div className={clsx(
+      'inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-mono font-bold border',
+      level.bg, level.text, level.border
+    )}>
+      {level.abbr}
+    </div>
+  )
+}
+
+function MatrixTableView({
+  technologies, members, selectedTech, onSelectTech, onMemberClick, getMemberExpertise
+}: {
   technologies: string[]
   members: MatrixMember[]
   selectedTech: string | null
@@ -196,30 +103,37 @@ interface MatrixTableViewProps {
   onSelectTech: (tech: string | null) => void
   onMemberClick: (userId: string) => void
   getMemberExpertise: (memberId: string, tech: string) => ExpertiseLevelInfo | null
-}
+}) {
+  if (members.length === 0) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-sm text-[var(--theme-foreground-tertiary)]">No team members found.</p>
+      </div>
+    )
+  }
 
-function MatrixTableView({ technologies, members, selectedTech, selectedMember, onSelectTech, onMemberClick, getMemberExpertise }: MatrixTableViewProps) {
   return (
-    <div className="min-w-800px">
-      <table className="w-full">
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
         <thead>
-          <tr className="border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] sticky top-0 z-10">
-            <th className="p-[8px] text-left font-mono text-brutal-xs font-bold text-primary-brutalist sticky left-0 bg-[var(--theme-background-secondary)] border-r-2 border-[var(--theme-border)] min-w-200px">
-              TEAM MEMBER
+          <tr className="border-b-2 border-[var(--theme-border)]">
+            <th className="sticky left-0 z-10 bg-[var(--theme-background-secondary)] p-3 text-left text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] border-r border-[var(--theme-border)] min-w-[200px]">
+              Team Member
             </th>
-            <th className="p-[8px] text-center font-mono text-brutal-xs font-bold text-primary-brutalist border-r-2 border-[var(--theme-border)]">
-              STATUS
+            <th className="bg-[var(--theme-background-secondary)] p-3 text-center text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] border-r border-[var(--theme-border)] min-w-[80px]">
+              Status
             </th>
             {technologies.map((tech) => (
               <th
                 key={tech}
                 className={clsx(
-                  "p-[8px] text-center font-mono text-brutal-xs font-bold text-primary-brutalist border-r border-[var(--theme-border)]/50 cursor-pointer hover:bg-primary-brutalist/10",
-                  selectedTech === tech && "bg-primary-brutalist/20"
+                  'bg-[var(--theme-background-secondary)] p-2 text-center text-[11px] font-mono font-bold uppercase tracking-wider border-r border-[var(--theme-border)]/50 cursor-pointer hover:bg-[var(--theme-hover)] transition-colors min-w-[60px]',
+                  selectedTech === tech ? 'text-[#6366F1] bg-[#6366F1]/10' : 'text-[var(--theme-foreground-secondary)]'
                 )}
                 onClick={() => onSelectTech(selectedTech === tech ? null : tech)}
+                title={`Click to highlight ${tech}`}
               >
-                <div className="writing-mode-vertical whitespace-nowrap">
+                <div className="whitespace-nowrap" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', maxHeight: '100px' }}>
                   {tech}
                 </div>
               </th>
@@ -231,53 +145,41 @@ function MatrixTableView({ technologies, members, selectedTech, selectedMember, 
             <tr
               key={member.userId}
               className={clsx(
-                "border-b border-[var(--theme-border)]/50 hover:bg-primary-brutalist/5 transition-colors",
-                selectedMember === member.userId && "bg-primary-brutalist/10",
-                idx % 2 === 0 ? "bg-[var(--theme-background)]" : "bg-[var(--theme-background-secondary)]"
+                'border-b border-[var(--theme-border)]/50 hover:bg-[var(--theme-hover)] transition-colors',
+                idx % 2 === 0 ? 'bg-[var(--theme-background)]' : 'bg-[var(--theme-background-secondary)]/50'
               )}
             >
-              <td
-                className="p-[8px] font-mono text-brutal-sm font-bold sticky left-0 border-r-2 border-[var(--theme-border)]"
-                style={{ backgroundColor: idx % 2 === 0 ? 'var(--carbon-plate)' : 'var(--event-horizon)' }}
-              >
+              <td className={clsx(
+                'sticky left-0 z-[5] p-3 border-r border-[var(--theme-border)]',
+                idx % 2 === 0 ? 'bg-[var(--theme-background)]' : 'bg-[var(--theme-background-secondary)]'
+              )}>
                 <button
                   type="button"
-                  className="flex items-center gap-[4px] cursor-pointer hover:text-primary-brutalist w-full text-left"
+                  className="flex items-center gap-2 text-sm font-medium text-[var(--theme-foreground)] hover:text-[#6366F1] transition-colors w-full text-left"
                   onClick={() => onMemberClick(member.userId)}
                 >
-                  <HiOutlineUser className="w-4 h-4" />
-                  {member.name || 'UNKNOWN'}
+                  <HiOutlineUser className="w-3.5 h-3.5 text-[var(--theme-foreground-tertiary)] shrink-0" />
+                  {member.name || 'Unknown'}
                 </button>
               </td>
-              <td className="p-[8px] text-center border-r-2 border-[var(--theme-border)]">
+              <td className="p-3 text-center border-r border-[var(--theme-border)]">
                 <DeveloperStatusIndicator
                   userId={member.userId as Id<"users">}
                   size="sm"
                   showLabel={false}
                 />
               </td>
-              {technologies.map((tech) => {
-                const expertise = getMemberExpertise(member.userId, tech)
-                return (
-                  <td
-                    key={tech}
-                    className={clsx(
-                      "p-[4px] text-center border-r border-[var(--theme-border)]/30",
-                      selectedTech === tech && "bg-primary-brutalist/10"
-                    )}
-                  >
-                    {expertise && (
-                      <div className={clsx(
-                        "inline-flex items-center justify-center w-5 h-4 font-mono text-brutal-xs font-bold",
-                        expertise.color,
-                        expertise.textColor
-                      )}>
-                        {expertise.label}
-                      </div>
-                    )}
-                  </td>
-                )
-              })}
+              {technologies.map((tech) => (
+                <td
+                  key={tech}
+                  className={clsx(
+                    'p-2 text-center border-r border-[var(--theme-border)]/30',
+                    selectedTech === tech && 'bg-[#6366F1]/5'
+                  )}
+                >
+                  <ExpertiseCell level={getMemberExpertise(member.userId, tech)} />
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>
@@ -286,68 +188,60 @@ function MatrixTableView({ technologies, members, selectedTech, selectedMember, 
   )
 }
 
-interface GroupedViewProps {
+function GroupedView({
+  technologies, members, minLevel, showEmptySkills, onMemberClick
+}: {
   technologies: string[]
   members: MatrixMember[]
   minLevel: number
   showEmptySkills: boolean
-  getExpertiseLevel: (level: number) => ExpertiseLevelInfo | null
   onMemberClick: (userId: string) => void
-}
-
-function GroupedView({ technologies, members, minLevel, showEmptySkills, getExpertiseLevel, onMemberClick }: GroupedViewProps) {
+}) {
   return (
-    <div className="p-[16px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[8px]">
+    <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
       {technologies.map((tech) => {
-        const experts = members.filter(member =>
-          member.expertise.some(e => e.name === tech && e.level >= minLevel)
-        ).sort((a, b) => {
-          const aLevel = a.expertise.find(e => e.name === tech)?.level || 0
-          const bLevel = b.expertise.find(e => e.name === tech)?.level || 0
-          return bLevel - aLevel
-        })
+        const experts = members
+          .filter(m => m.expertise.some(e => e.name === tech && e.level >= minLevel))
+          .sort((a, b) => {
+            const aL = a.expertise.find(e => e.name === tech)?.level || 0
+            const bL = b.expertise.find(e => e.name === tech)?.level || 0
+            return bL - aL
+          })
 
         if (!showEmptySkills && experts.length === 0) return null
 
         return (
-          <div key={tech} className="brutal-card p-[10px]">
-            <h3 className="font-mono text-brutal-sm font-bold mb-[6px] flex items-center gap-[4px]">
-              <HiOutlineCode className="w-4 h-4" />
+          <div key={tech} className="border border-[var(--theme-border)] bg-[var(--theme-card)] p-3">
+            <h3 className="text-xs font-mono font-bold text-[var(--theme-foreground)] mb-2 flex items-center gap-1.5">
+              <HiOutlineCode className="w-3.5 h-3.5 text-[#6366F1]" />
               {tech}
-              <span className="text-brutal-xs text-primary-brutalist/60">({experts.length})</span>
+              <span className="text-[var(--theme-foreground-tertiary)] font-normal">({experts.length})</span>
             </h3>
             {experts.length === 0 ? (
-              <p className="font-mono text-brutal-xs text-primary-brutalist/40">No experts</p>
+              <p className="text-xs text-[var(--theme-foreground-tertiary)]">No experts yet</p>
             ) : (
-              <div className="space-y-[4px]">
+              <div className="space-y-1">
                 {experts.map((member) => {
-                  const expertise = member.expertise.find(e => e.name === tech)!
-                  const level = getExpertiseLevel(expertise.level)!
-
+                  const exp = member.expertise.find(e => e.name === tech)!
+                  const level = getExpertiseLevel(exp.level)!
                   return (
                     <button
                       type="button"
                       key={member.userId}
-                      className="flex items-center justify-between p-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] hover:border-primary-brutalist cursor-pointer transition-all w-full text-left"
+                      className="flex items-center justify-between p-2 bg-[var(--theme-background)] border border-[var(--theme-border)] hover:border-[#6366F1]/50 transition-colors w-full text-left"
                       onClick={() => onMemberClick(member.userId)}
                     >
-                      <div className="flex items-center gap-[4px]">
+                      <div className="flex items-center gap-2">
                         <DeveloperStatusIndicator
                           userId={member.userId as Id<"users">}
                           size="sm"
                           showLabel={false}
                         />
-                        <span className="font-mono text-brutal-xs">
+                        <span className="text-xs text-[var(--theme-foreground)]">
                           {member.name || 'Unknown'}
                         </span>
                       </div>
-                      <div className={clsx(
-                        "px-[4px] py-4px font-mono text-brutal-xs font-bold",
-                        level.color,
-                        level.textColor
-                      )}>
-                        {level.label}
-                      </div>
+                      <ExpertiseCell level={level} />
                     </button>
                   )
                 })}
@@ -360,53 +254,6 @@ function GroupedView({ technologies, members, minLevel, showEmptySkills, getExpe
   )
 }
 
-interface ExpertiseLegendProps {
-  selectedTech: string | null
-}
-
-function ExpertiseLegend({ selectedTech }: ExpertiseLegendProps) {
-  return (
-    <div className="p-[10px] border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-[8px]">
-          <span className="font-mono text-brutal-xs font-bold text-primary-brutalist">EXPERTISE LEVELS:</span>
-          <div className="flex items-center gap-[6px]">
-            <div className="flex items-center gap-4px">
-              <div className="w-5 h-5 bg-primary-brutalist/30 flex items-center justify-center">
-                <span className="font-mono text-brutal-xs font-bold">BEG</span>
-              </div>
-              <span className="font-mono text-brutal-xs text-primary-brutalist/60">BEGINNER (2-3)</span>
-            </div>
-            <div className="flex items-center gap-4px">
-              <div className="w-5 h-5 bg-brutal-warning flex items-center justify-center">
-                <span className="font-mono text-brutal-xs font-bold text-event-horizon">INT</span>
-              </div>
-              <span className="font-mono text-brutal-xs text-primary-brutalist/60">INTERMEDIATE (4-5)</span>
-            </div>
-            <div className="flex items-center gap-4px">
-              <div className="w-5 h-5 bg-brutal-info flex items-center justify-center">
-                <span className="font-mono text-brutal-xs font-bold text-event-horizon">ADV</span>
-              </div>
-              <span className="font-mono text-brutal-xs text-primary-brutalist/60">ADVANCED (6-7)</span>
-            </div>
-            <div className="flex items-center gap-4px">
-              <div className="w-5 h-5 bg-brutal-success flex items-center justify-center">
-                <span className="font-mono text-brutal-xs font-bold text-event-horizon">EXP</span>
-              </div>
-              <span className="font-mono text-brutal-xs text-primary-brutalist/60">EXPERT (8-10)</span>
-            </div>
-          </div>
-        </div>
-        {selectedTech && (
-          <div className="font-mono text-brutal-xs text-primary-brutalist/60">
-            Selected: <span className="font-bold text-primary-brutalist">{selectedTech}</span>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 // --- Main Component ---
 
 export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: TeamExpertiseMatrixProps) {
@@ -414,81 +261,55 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
   const [state, dispatch] = useReducer(matrixReducer, matrixInitialState)
   const { searchQuery, selectedTech, selectedMember, showEmptySkills, sortBy, sortAsc, viewMode, minLevel } = state
 
-  // Get team expertise matrix data
-  const matrixData = useQuery(
-    api.developers.queries.getTeamExpertiseMatrix,
-    { workspaceId }
-  )
+  const matrixData = useQuery(api.developers.queries.getTeamExpertiseMatrix, { workspaceId })
 
-  // Filter and sort data
   const processedData = useMemo(() => {
     if (!matrixData) return null
 
-    // Filter technologies based on search
     let filteredTechs = matrixData.technologies
     if (searchQuery) {
-      filteredTechs = filteredTechs.filter(tech => 
+      filteredTechs = filteredTechs.filter(tech =>
         tech.toLowerCase().includes(searchQuery.toLowerCase())
       )
     }
 
-    // Filter members if one is selected
     let filteredMembers = matrixData.members
     if (selectedMember) {
       filteredMembers = filteredMembers.filter(m => m.userId === selectedMember)
     }
 
-    // Sort members
     const sortedMembers = [...filteredMembers].sort((a, b) => {
       let comparison = 0
-      
       switch (sortBy) {
         case 'name':
           comparison = (a.name || '').localeCompare(b.name || '')
           break
         case 'expertise':
-          const aExpertise = a.expertise.length
-          const bExpertise = b.expertise.length
-          comparison = aExpertise - bExpertise
+          comparison = a.expertise.length - b.expertise.length
           break
         case 'status':
           comparison = (a.status || '').localeCompare(b.status || '')
           break
       }
-      
       return sortAsc ? comparison : -comparison
     })
 
-    // Filter technologies to only show those with experts if not showing empty
     if (!showEmptySkills) {
-      filteredTechs = filteredTechs.filter(tech => 
-        sortedMembers.some(member => 
+      filteredTechs = filteredTechs.filter(tech =>
+        sortedMembers.some(member =>
           member.expertise.some(exp => exp.name === tech && exp.level >= minLevel)
         )
       )
     }
 
-    return {
-      technologies: filteredTechs,
-      members: sortedMembers
-    }
+    return { technologies: filteredTechs, members: sortedMembers }
   }, [matrixData, searchQuery, selectedMember, sortBy, sortAsc, showEmptySkills, minLevel])
-
-  const getExpertiseLevel = (level: number) => {
-    if (level >= 8) return { label: 'EXP', color: 'bg-brutal-success', textColor: 'text-event-horizon' }
-    if (level >= 6) return { label: 'ADV', color: 'bg-brutal-info', textColor: 'text-event-horizon' }
-    if (level >= 4) return { label: 'INT', color: 'bg-brutal-warning', textColor: 'text-event-horizon' }
-    if (level >= 2) return { label: 'BEG', color: 'bg-primary-brutalist/30', textColor: 'text-primary-brutalist' }
-    return null
-  }
 
   const getMemberExpertise = (memberId: string, tech: string) => {
     const member = processedData?.members.find(m => m.userId === memberId)
     if (!member) return null
-    
     const expertise = member.expertise.find(e => e.name === tech)
     if (!expertise || expertise.level < minLevel) return null
-    
     return getExpertiseLevel(expertise.level)
   }
 
@@ -502,7 +323,6 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
 
   const exportMatrix = () => {
     if (!processedData) return
-
     const csv = [
       ['Team Member', 'Status', ...processedData.technologies].join(','),
       ...processedData.members.map(member => {
@@ -531,107 +351,192 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
 
   if (!processedData) {
     return (
-      <div className="p-[24px] text-center">
-        <div className="animate-pulse text-brutal-sm">Loading expertise matrix...</div>
+      <div className="p-8 text-center">
+        <div className="text-sm text-[var(--theme-foreground-tertiary)] animate-pulse">Loading expertise matrix...</div>
       </div>
     )
   }
 
-  const Container = isModal ? 'div' : 'div'
-  const containerProps = isModal ? {
-    className: "fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background-secondary)]/80 backdrop-blur-sm"
-  } : {
-    className: "p-[16px]"
-  }
+  const update = (field: keyof MatrixState, value: unknown) =>
+    dispatch({ type: 'UPDATE', field, value })
 
-  return (
-    <Container {...containerProps}>
-      <div className={clsx(
-        "bg-[var(--theme-background)] border-2 border-[var(--theme-border)]",
-        isModal ? "w-full max-w-7xl max-h-[90vh] overflow-hidden shadow-brutal" : ""
-      )}>
-        {/* Header */}
-        <div className="p-[16px] border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-[14px] font-semibold font-bold mb-[4px] flex items-center gap-[6px]">
-                <HiOutlineChartBar className="w-4 h-4" />
-                TEAM EXPERTISE MATRIX
-              </h2>
-              <p className="font-mono text-brutal-sm text-primary-brutalist/80">
-                {processedData.members.length} MEMBERS • {processedData.technologies.length} TECHNOLOGIES
-              </p>
-            </div>
-            <div className="flex items-center gap-[6px]">
+  const content = (
+    <div className={clsx(
+      'bg-[var(--theme-background)] border-2 border-[var(--theme-border)] flex flex-col',
+      isModal ? 'w-full max-w-6xl max-h-[90vh] shadow-[4px_4px_0px_rgba(0,0,0,0.8)]' : ''
+    )}>
+      {/* Header */}
+      <div className="px-5 py-4 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] flex items-start justify-between shrink-0">
+        <div>
+          <h2 className="text-sm font-bold text-[var(--theme-foreground)] flex items-center gap-2">
+            <HiOutlineChartBar className="w-4 h-4 text-[#6366F1]" />
+            TEAM EXPERTISE MATRIX
+          </h2>
+          <p className="text-xs font-mono text-[var(--theme-foreground-tertiary)] mt-1">
+            {processedData.members.length} members · {processedData.technologies.length} technologies
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={exportMatrix}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono font-bold uppercase border border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] hover:border-[#6366F1] hover:text-[#6366F1] transition-colors"
+          >
+            <HiOutlineDownload className="w-3.5 h-3.5" />
+            Export
+          </button>
+          {isModal && onClose && (
+            <button
+              onClick={onClose}
+              className="p-1.5 border border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] hover:border-[#EF4444] hover:text-[#EF4444] transition-colors"
+            >
+              <HiOutlineX className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="px-5 py-3 border-b border-[var(--theme-border)] bg-[var(--theme-background)]/50 shrink-0">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[180px] max-w-[300px]">
+            <HiOutlineSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--theme-foreground-tertiary)]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => update('searchQuery', e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-[var(--theme-foreground)] placeholder:text-[var(--theme-foreground-tertiary)] focus:outline-none focus:border-[#6366F1]/50"
+              placeholder="Search technologies..."
+            />
+          </div>
+
+          {/* View mode */}
+          <div className="flex items-center border border-[var(--theme-border)]">
+            {(['matrix', 'grouped'] as const).map((mode) => (
               <button
-                onClick={exportMatrix}
-                className="brutal-btn-secondary flex items-center gap-[4px] px-[8px] py-[4px]"
-                title="Export as CSV"
+                key={mode}
+                onClick={() => update('viewMode', mode)}
+                className={clsx(
+                  'px-3 py-1.5 text-[11px] font-mono font-bold uppercase transition-colors',
+                  viewMode === mode
+                    ? 'bg-[#6366F1] text-white'
+                    : 'text-[var(--theme-foreground-secondary)] hover:bg-[var(--theme-hover)]'
+                )}
               >
-                <HiOutlineDownload className="w-4 h-4" />
-                <span className="font-mono text-brutal-xs">EXPORT</span>
+                {mode}
               </button>
-              {isModal && onClose && (
-                <button
-                  onClick={onClose}
-                  className="brutal-btn-secondary p-[4px]"
-                >
-                  <HiOutlineX className="w-5 h-5" />
-                </button>
-              )}
+            ))}
+          </div>
+
+          {/* Sort */}
+          <div className="flex items-center gap-1.5">
+            <label className="text-[11px] font-mono text-[var(--theme-foreground-tertiary)] uppercase">Sort:</label>
+            <select
+              value={sortBy}
+              onChange={(e) => update('sortBy', e.target.value)}
+              className="px-2 py-1.5 text-[11px] font-mono bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-[var(--theme-foreground)] focus:outline-none focus:border-[#6366F1]/50"
+            >
+              <option value="name">Name</option>
+              <option value="expertise">Expertise</option>
+              <option value="status">Status</option>
+            </select>
+            <button
+              onClick={() => update('sortAsc', !sortAsc)}
+              className="p-1.5 border border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] hover:border-[#6366F1]/50 transition-colors"
+            >
+              {sortAsc
+                ? <HiOutlineSortAscending className="w-3.5 h-3.5" />
+                : <HiOutlineSortDescending className="w-3.5 h-3.5" />
+              }
+            </button>
+          </div>
+
+          {/* Show all + min level */}
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showEmptySkills}
+                onChange={(e) => update('showEmptySkills', e.target.checked)}
+                className="w-3.5 h-3.5 accent-[#6366F1]"
+              />
+              <span className="text-[11px] font-mono text-[var(--theme-foreground-secondary)]">Show all</span>
+            </label>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-mono text-[var(--theme-foreground-tertiary)]">Min:</span>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                value={minLevel}
+                onChange={(e) => update('minLevel', parseInt(e.target.value))}
+                className="w-16 accent-[#6366F1]"
+              />
+              <span className="text-[11px] font-mono font-bold text-[var(--theme-foreground)] w-4 text-center">{minLevel}</span>
             </div>
           </div>
         </div>
-
-        <MatrixControls
-          searchQuery={searchQuery}
-          onSearchChange={(q) => dispatch({ type: 'UPDATE', field: 'searchQuery', value: q })}
-          viewMode={viewMode}
-          onViewModeChange={(m) => dispatch({ type: 'UPDATE', field: 'viewMode', value: m })}
-          sortBy={sortBy}
-          onSortByChange={(s) => dispatch({ type: 'UPDATE', field: 'sortBy', value: s })}
-          sortAsc={sortAsc}
-          onSortAscToggle={() => dispatch({ type: 'UPDATE', field: 'sortAsc', value: !sortAsc })}
-          showEmptySkills={showEmptySkills}
-          onShowEmptySkillsChange={(s) => dispatch({ type: 'UPDATE', field: 'showEmptySkills', value: s })}
-          minLevel={minLevel}
-          onMinLevelChange={(l) => dispatch({ type: 'UPDATE', field: 'minLevel', value: l })}
-        />
-
-        {/* Matrix Content */}
-        <div className="overflow-auto" style={{ maxHeight: isModal ? '60vh' : 'calc(100vh - 300px)' }}>
-          {viewMode === 'matrix' ? (
-            <MatrixTableView
-              technologies={processedData.technologies}
-              members={processedData.members}
-              selectedTech={selectedTech}
-              selectedMember={selectedMember}
-              onSelectTech={(tech) => dispatch({ type: 'UPDATE', field: 'selectedTech', value: tech })}
-              onMemberClick={handleMemberClick}
-              getMemberExpertise={getMemberExpertise}
-            />
-          ) : (
-            <GroupedView
-              technologies={processedData.technologies}
-              members={processedData.members}
-              minLevel={minLevel}
-              showEmptySkills={showEmptySkills}
-              getExpertiseLevel={getExpertiseLevel}
-              onMemberClick={handleMemberClick}
-            />
-          )}
-        </div>
-
-        <ExpertiseLegend selectedTech={selectedTech} />
       </div>
 
-      <style>{`
-        .writing-mode-vertical {
-          writing-mode: vertical-rl;
-          text-orientation: mixed;
-          max-height: 120px;
-        }
-      `}</style>
-    </Container>
+      {/* Content */}
+      <div className="flex-1 overflow-auto min-h-0" style={{ maxHeight: isModal ? '55vh' : 'calc(100vh - 320px)' }}>
+        {viewMode === 'matrix' ? (
+          <MatrixTableView
+            technologies={processedData.technologies}
+            members={processedData.members}
+            selectedTech={selectedTech}
+            selectedMember={selectedMember}
+            onSelectTech={(tech) => update('selectedTech', tech)}
+            onMemberClick={handleMemberClick}
+            getMemberExpertise={getMemberExpertise}
+          />
+        ) : (
+          <GroupedView
+            technologies={processedData.technologies}
+            members={processedData.members}
+            minLevel={minLevel}
+            showEmptySkills={showEmptySkills}
+            onMemberClick={handleMemberClick}
+          />
+        )}
+      </div>
+
+      {/* Legend */}
+      <div className="px-5 py-3 border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] shrink-0">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-4">
+            <span className="text-[11px] font-mono font-bold text-[var(--theme-foreground-secondary)] uppercase">Levels:</span>
+            {[
+              { abbr: 'BEG', label: '2-3', bg: 'bg-[var(--theme-foreground-tertiary)]/10', text: 'text-[var(--theme-foreground-tertiary)]', border: 'border-[var(--theme-foreground-tertiary)]/20' },
+              { abbr: 'INT', label: '4-5', bg: 'bg-[#F59E0B]/15', text: 'text-[#F59E0B]', border: 'border-[#F59E0B]/30' },
+              { abbr: 'ADV', label: '6-7', bg: 'bg-[#6366F1]/15', text: 'text-[#6366F1]', border: 'border-[#6366F1]/30' },
+              { abbr: 'EXP', label: '8-10', bg: 'bg-[#22C55E]/15', text: 'text-[#22C55E]', border: 'border-[#22C55E]/30' },
+            ].map(({ abbr, label, bg, text, border }) => (
+              <div key={abbr} className="flex items-center gap-1.5">
+                <div className={clsx('inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-mono font-bold border', bg, text, border)}>
+                  {abbr}
+                </div>
+                <span className="text-[11px] font-mono text-[var(--theme-foreground-tertiary)]">{label}</span>
+              </div>
+            ))}
+          </div>
+          {selectedTech && (
+            <span className="text-[11px] font-mono text-[var(--theme-foreground-tertiary)]">
+              Highlighting: <span className="font-bold text-[#6366F1]">{selectedTech}</span>
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
   )
+
+  if (isModal) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background)]/80 backdrop-blur-sm p-4">
+        {content}
+      </div>
+    )
+  }
+
+  return <div className="p-4">{content}</div>
 }
