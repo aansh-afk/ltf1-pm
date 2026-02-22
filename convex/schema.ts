@@ -493,12 +493,16 @@ export default defineSchema({
       v.literal("pr_merged"),
     ),
     title: v.string(),
-    body: v.string(),
+    body: v.optional(v.string()),
+    message: v.optional(v.string()),
     link: v.optional(v.string()),
-    isRead: v.boolean(),
+    isRead: v.optional(v.boolean()),
+    read: v.optional(v.boolean()),
     actorId: v.optional(v.id("users")),
     entityId: v.optional(v.string()),
     entityType: v.optional(v.string()),
+    data: v.optional(v.any()),
+    createdAt: v.optional(v.number()),
   })
     .index("by_user", ["userId"])
     .index("by_user_and_workspace", ["userId", "workspaceId"])
@@ -1082,9 +1086,8 @@ export default defineSchema({
     scope: v.union(v.literal("user"), v.literal("project")),
     scopeId: v.string(), // clerkId for user, projectId string for project
     provider: v.union(
-      v.literal("gemini"),
-      v.literal("openai"),
-      v.literal("anthropic"),
+      v.literal("cerebras"),
+      v.literal("groq"),
     ),
     encryptedApiKey: v.string(),
     displayName: v.optional(v.string()),
@@ -1108,9 +1111,8 @@ export default defineSchema({
         v.string(),
         v.object({
           provider: v.union(
-            v.literal("gemini"),
-            v.literal("openai"),
-            v.literal("anthropic"),
+            v.literal("cerebras"),
+            v.literal("groq"),
           ),
           model: v.string(),
         }),
@@ -2015,6 +2017,51 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_score", ["score"])
+    .index("by_created", ["createdAt"]),
+
+  bugReports: defineTable({
+    userId: v.optional(v.string()),
+    userEmail: v.optional(v.string()),
+    userName: v.optional(v.string()),
+    title: v.string(),
+    description: v.string(),
+    severity: v.union(
+      v.literal("critical"),
+      v.literal("high"),
+      v.literal("medium"),
+      v.literal("low"),
+    ),
+    url: v.string(),
+    browserInfo: v.string(),
+    viewportSize: v.string(),
+    consoleErrors: v.array(
+      v.object({
+        message: v.string(),
+        source: v.optional(v.string()),
+        timestamp: v.number(),
+      }),
+    ),
+    screenshotIds: v.array(v.id("_storage")),
+    recordedSteps: v.array(
+      v.object({
+        type: v.union(v.literal("click"), v.literal("input"), v.literal("navigation")),
+        target: v.string(),
+        value: v.optional(v.string()),
+        url: v.string(),
+        timestamp: v.number(),
+      }),
+    ),
+    status: v.union(
+      v.literal("new"),
+      v.literal("triaged"),
+      v.literal("in_progress"),
+      v.literal("resolved"),
+      v.literal("closed"),
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_user", ["userId"])
     .index("by_created", ["createdAt"]),
 
   sprintSnapshots: defineTable({

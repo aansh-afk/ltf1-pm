@@ -37,6 +37,7 @@ import type * as audit from "../audit.js";
 import type * as auth_permissions from "../auth/permissions.js";
 import type * as auth_users from "../auth/users.js";
 import type * as automation from "../automation.js";
+import type * as bugReports from "../bugReports.js";
 import type * as chat from "../chat.js";
 import type * as clerk from "../clerk.js";
 import type * as cliRefresh from "../cliRefresh.js";
@@ -148,6 +149,7 @@ declare const fullApi: ApiFromModules<{
   "auth/permissions": typeof auth_permissions;
   "auth/users": typeof auth_users;
   automation: typeof automation;
+  bugReports: typeof bugReports;
   chat: typeof chat;
   clerk: typeof clerk;
   cliRefresh: typeof cliRefresh;

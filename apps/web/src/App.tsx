@@ -59,6 +59,7 @@ const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 const DesignReferencePage = lazy(() => import("./pages/DesignReferencePage"));
 const TimeReportPage = lazy(() => import("./pages/TimeReportPage"));
+const AdminBugReportsPage = lazy(() => import("./pages/AdminBugReportsPage"));
 import { useEnsureUser } from "./hooks/useEnsureUser";
 import { DataMigrationBanner } from "./components/admin/DataMigrationBanner";
 import CommandPalette from "./components/shortcuts/CommandPalette";
@@ -249,7 +250,10 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
             <Route path="whiteboard" element={<WhiteboardPage />} />
             <Route path="custom-fields" element={<CustomFieldsPage />} />
             <Route path="time-report" element={<TimeReportPage />} />
+            <Route path="admin/bugs" element={<AdminBugReportsPage />} />
           </Route>
+
+          {/* AI Test Page */}
 
           {/* 404 Page - Catch all unmatched routes */}
           <Route path="*" element={<NotFoundPage />} />

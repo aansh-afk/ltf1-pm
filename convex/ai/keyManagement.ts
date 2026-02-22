@@ -15,7 +15,7 @@ export const getProviderKeys = query({
       _id: v.id("aiProviderKeys"),
       scope: v.union(v.literal("user"), v.literal("project")),
       scopeId: v.string(),
-      provider: v.union(v.literal("gemini"), v.literal("openai"), v.literal("anthropic")),
+      provider: v.union(v.literal("cerebras"), v.literal("groq")),
       displayName: v.optional(v.string()),
       defaultModel: v.optional(v.string()),
       modelOverrides: v.optional(v.record(v.string(), v.string())),
@@ -75,7 +75,7 @@ export const getMyProviderKeys = query({
       _id: v.id("aiProviderKeys"),
       scope: v.union(v.literal("user"), v.literal("project")),
       scopeId: v.string(),
-      provider: v.union(v.literal("gemini"), v.literal("openai"), v.literal("anthropic")),
+      provider: v.union(v.literal("cerebras"), v.literal("groq")),
       displayName: v.optional(v.string()),
       defaultModel: v.optional(v.string()),
       modelOverrides: v.optional(v.record(v.string(), v.string())),
@@ -139,7 +139,7 @@ export const getProjectAISettings = query({
         v.record(
           v.string(),
           v.object({
-            provider: v.union(v.literal("gemini"), v.literal("openai"), v.literal("anthropic")),
+            provider: v.union(v.literal("cerebras"), v.literal("groq")),
             model: v.string(),
           })
         )
@@ -179,7 +179,7 @@ export const saveProviderKey = action({
   args: {
     scope: v.union(v.literal("user"), v.literal("project")),
     scopeId: v.string(),
-    provider: v.union(v.literal("gemini"), v.literal("openai"), v.literal("anthropic")),
+    provider: v.union(v.literal("cerebras"), v.literal("groq")),
     apiKey: v.string(),
     displayName: v.optional(v.string()),
     defaultModel: v.optional(v.string()),
@@ -227,7 +227,7 @@ export const insertProviderKey = internalMutation({
   args: {
     scope: v.union(v.literal("user"), v.literal("project")),
     scopeId: v.string(),
-    provider: v.union(v.literal("gemini"), v.literal("openai"), v.literal("anthropic")),
+    provider: v.union(v.literal("cerebras"), v.literal("groq")),
     encryptedApiKey: v.string(),
     displayName: v.optional(v.string()),
     defaultModel: v.optional(v.string()),
@@ -336,7 +336,7 @@ export const updateProjectAISettings = mutation({
       v.record(
         v.string(),
         v.object({
-          provider: v.union(v.literal("gemini"), v.literal("openai"), v.literal("anthropic")),
+          provider: v.union(v.literal("cerebras"), v.literal("groq")),
           model: v.string(),
         })
       )
