@@ -353,7 +353,7 @@ export default function CommandPalette() {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/60 z-[9998]"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998]"
             role="button"
             tabIndex={0}
             aria-label="Close command palette"
@@ -361,18 +361,19 @@ export default function CommandPalette() {
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClose() }}
           />
 
-          {/* Command Palette - Linear style: top-positioned, compact */}
-          <motion.div
-            ref={paletteRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Command palette"
-            className="fixed top-[20%] left-1/2 -translate-x-1/2 w-[90vw] max-w-[560px] z-[9999] flex flex-col overflow-hidden border border-[var(--theme-border)] bg-[var(--theme-background-secondary)] shadow-2xl"
-            initial={{ opacity: 0, scale: 0.95, y: -8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -8 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-          >
+          {/* Command Palette - centered container to avoid transform conflicts */}
+          <div className="fixed inset-0 z-[9999] flex justify-center pointer-events-none" style={{ paddingTop: '20vh' }}>
+            <motion.div
+              ref={paletteRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Command palette"
+              className="w-[90vw] max-w-[560px] h-fit flex flex-col overflow-hidden border border-[var(--theme-border)] bg-[var(--theme-background-secondary)] shadow-2xl pointer-events-auto"
+              initial={{ opacity: 0, scale: 0.97, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: -10 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+            >
             {/* Search input */}
             <div className="flex items-center gap-3 px-4 border-b border-[var(--theme-border-subtle,#1F1F23)]">
               <SearchIcon className="w-4 h-4 text-[var(--theme-foreground-tertiary)] flex-shrink-0" />
@@ -436,6 +437,7 @@ export default function CommandPalette() {
             {/* Footer hints */}
             <FooterHints commandCount={flatCommands.length} />
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
