@@ -28,7 +28,7 @@ export const createOrUpdateUser = internalMutation({
       });
       return existingUser._id;
     } else {
-      return await ctx.db.insert("users", {
+      const userId = await ctx.db.insert("users", {
         clerkId: args.clerkId,
         email: args.email,
         name: args.name,
@@ -47,6 +47,27 @@ export const createOrUpdateUser = internalMutation({
         createdAt: now,
         updatedAt: now,
       });
+
+      // Auto-accept any pending workspace invitations for this email
+      const pendingInvites = await ctx.db
+        .query("workspaceInvitations")
+        .withIndex("by_email", (q) => q.eq("email", args.email))
+        .collect();
+
+      for (const invite of pendingInvites) {
+        if (invite.status === "pending" && invite.expiresAt > now) {
+          await ctx.db.insert("workspaceMembers", {
+            workspaceId: invite.workspaceId,
+            userId,
+            role: invite.role,
+            permissions: [],
+            joinedAt: now,
+          });
+          await ctx.db.patch(invite._id, { status: "accepted" });
+        }
+      }
+
+      return userId;
     }
   },
 });

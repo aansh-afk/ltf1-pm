@@ -1105,7 +1105,7 @@ export const WORKFLOW_TEMPLATES = {
           projectId: "{{project.gitlabProjectId}}",
           title: "{{task.title}}",
           description: "{{task.description}}",
-          labels: ["from-iceberg", "{{task.priority}}"],
+          labels: ["from-ltf1", "{{task.priority}}"],
         },
         order: 1,
       },
