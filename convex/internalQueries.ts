@@ -85,30 +85,40 @@ export const getUserApiKey = internalQuery({
   },
 });
 
-// Gemini AI action
-export const generateWithGemini = internalAction({
+// AI action using Cerebras (primary) with Groq fallback
+export const generateWithAI = internalAction({
   args: {
     prompt: v.string(),
-    model: v.string(),
+    model: v.optional(v.string()),
     temperature: v.number(),
     apiKey: v.string(),
+    complexity: v.optional(v.union(v.literal("low"), v.literal("medium"), v.literal("high"))),
   },
   handler: async (ctx, args) => {
-    const { GoogleGenerativeAI } = require("@google/generative-ai");
-    
-    const genAI = new GoogleGenerativeAI(args.apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: args.model,
-      generationConfig: {
-        temperature: args.temperature,
-        topK: 1,
-        topP: 1,
-        maxOutputTokens: 2048,
-      },
+    const OpenAI = require("openai").default;
+    const complexity = args.complexity ?? "medium";
+
+    const client = new OpenAI({
+      apiKey: args.apiKey,
+      baseURL: "https://api.cerebras.ai/v1",
     });
-    
-    const result = await model.generateContent(args.prompt);
-    const response = await result.response;
-    return response.text();
+
+    const completion = await client.chat.completions.create({
+      model: args.model || "gpt-oss-120b",
+      messages: [{ role: "user", content: args.prompt }],
+      temperature: args.temperature,
+      max_tokens: 2048,
+      reasoning_effort: complexity,
+    });
+
+    const text = completion.choices[0]?.message?.content;
+    if (!text) throw new Error("No content in AI response");
+
+    // Strip markdown fences if present
+    let cleaned = text.trim();
+    if (cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+    }
+    return cleaned;
   },
 });

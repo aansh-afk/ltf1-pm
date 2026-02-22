@@ -248,7 +248,7 @@ export const TimerWidget: React.FC<{ taskId: Id<"tasks"> }> = ({ taskId }) => {
       </BrutalButton>
 
       {showTracker && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
           <TimeTracker
             taskId={taskId}
             onClose={() => setShowTracker(false)}

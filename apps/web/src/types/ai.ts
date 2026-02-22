@@ -59,7 +59,7 @@ export interface AIUsageMetrics {
 }
 
 export interface AIModelConfig {
-  provider: 'openrouter' | 'gemini' | 'openai'
+  provider: 'cerebras' | 'groq'
   model: string
   temperature: number
   maxTokens: number

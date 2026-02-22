@@ -548,7 +548,7 @@ export default function CustomFieldsManager({ workspaceId }: CustomFieldsManager
 
       {/* New/Edit Field Modal */}
       {(showNewField || editingField) && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 overflow-y-auto">
           <div className="bg-black border-2 border-white p-6 w-full max-w-2xl my-8">
             <h3 className="text-white text-xl font-bold mb-4">
               {editingField ? 'Edit Field' : 'Create New Field'}

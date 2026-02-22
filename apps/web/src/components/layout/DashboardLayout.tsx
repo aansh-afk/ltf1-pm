@@ -14,7 +14,8 @@ import {
   HiOutlineUser,
   HiOutlineSearch,
   HiOutlinePencilAlt,
-  HiOutlineRefresh
+  HiOutlineRefresh,
+  HiOutlineExclamationCircle
 } from 'react-icons/hi'
 import clsx from 'clsx'
 import { useResourceMonitor } from '../../hooks/useResourceMonitor'
@@ -27,6 +28,7 @@ import WorkspaceMobileBlocker from '../common/WorkspaceMobileBlocker'
 import NotificationBell from '../common/NotificationBell'
 import FeedbackWidget from '../features/feedback/FeedbackWidget'
 import ShortcutHelp from '../shortcuts/ShortcutHelp'
+import { useEnsureUser } from '../../hooks/useEnsureUser'
 
 
 // --- Sub-components ---
@@ -171,8 +173,12 @@ export default function DashboardLayout() {
   }, [])
 
   const isExpanded = !isCollapsed
+  const { user } = useEnsureUser()
+  const isAdmin = user?.role === 'admin'
 
-  const navItems = NAV_ITEMS
+  const navItems = isAdmin
+    ? [...NAV_ITEMS, { path: '/admin/bugs' as const, label: 'BUG REPORTS' as const, icon: HiOutlineExclamationCircle }]
+    : [...NAV_ITEMS]
 
   return (
     <div className="flex h-screen bg-[var(--theme-background)]">
@@ -195,7 +201,7 @@ export default function DashboardLayout() {
           'fixed inset-y-0 left-0 z-[50] bg-[var(--theme-background-secondary)] border-r border-[var(--theme-border)] transform lg:relative lg:translate-x-0 flex flex-col',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
           isExpanded ? 'w-[220px]' : 'w-[48px]',
-          'transition-all duration-200 ease-in-out'
+          'transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]'
         )}
       >
         {/* SIDEBAR HEADER */}
@@ -203,7 +209,7 @@ export default function DashboardLayout() {
           <h1 className={clsx(
             "text-[13px] font-bold tracking-wide",
             !isExpanded && "opacity-0",
-            "transition-opacity duration-200 ease-in-out"
+            "transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
           )}>
             <span className="text-[var(--theme-foreground)]">LTF1</span>
           </h1>
@@ -233,7 +239,7 @@ export default function DashboardLayout() {
                   isActive
                     ? 'bg-[var(--theme-background)] text-[var(--theme-info)] border-l-2 border-[var(--theme-info)]'
                     : 'text-[var(--theme-foreground)]/70 hover:bg-[var(--theme-hover)] hover:text-[var(--theme-foreground)]',
-                  'transition-all duration-200 ease-in-out'
+                  'transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]'
                 )}
                 title={!isExpanded ? item.label : undefined}
               >
@@ -287,7 +293,7 @@ export default function DashboardLayout() {
             </div>
             {isExpanded && (
               <div className={clsx(
-                "transition-opacity duration-200 ease-in-out"
+                "transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
               )}>
                 <p className="text-[11px] text-[var(--theme-foreground)]/60">ACCOUNT</p>
                 <p className="text-[11px] text-[var(--theme-info)]">ACTIVE</p>

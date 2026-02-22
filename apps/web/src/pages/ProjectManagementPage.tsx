@@ -1508,6 +1508,7 @@ function WorkloadDistribution({
   memberStats,
   workloadMax,
   teamTotals,
+  dispatch,
 }: {
   memberStats: any[];
   workloadMax: number;
@@ -1517,6 +1518,7 @@ function WorkloadDistribution({
     inProgressTasks: number;
     avgProductivity: number;
   };
+  dispatch: React.Dispatch<any>;
 }) {
   return (
     <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
@@ -1623,12 +1625,42 @@ function WorkloadDistribution({
                       <button
                         className="px-2 py-0.5 border-2 border-[var(--theme-border)] font-mono text-[10px] font-bold uppercase text-[var(--theme-foreground)]/60 hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] transition-colors"
                         title="Reassign tasks"
+                        onClick={() => {
+                          dispatch({ type: "SET_TAB", tab: "tasks" });
+                          dispatch({
+                            type: "SET_TASK_FILTERS",
+                            filters: {
+                              search: "",
+                              status: [],
+                              priority: ["urgent", "high"],
+                              type: [],
+                              assigneeIds: [member._id],
+                              labels: [],
+                              dueDateRange: { start: null, end: null },
+                            },
+                          });
+                        }}
                       >
                         BALANCE
                       </button>
                       <button
                         className="px-2 py-0.5 border-2 border-[var(--theme-border)] font-mono text-[10px] font-bold uppercase text-[var(--theme-foreground)]/60 hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] transition-colors"
                         title="View task details"
+                        onClick={() => {
+                          dispatch({ type: "SET_TAB", tab: "tasks" });
+                          dispatch({
+                            type: "SET_TASK_FILTERS",
+                            filters: {
+                              search: "",
+                              status: [],
+                              priority: [],
+                              type: [],
+                              assigneeIds: [member._id],
+                              labels: [],
+                              dueDateRange: { start: null, end: null },
+                            },
+                          });
+                        }}
                       >
                         DETAILS
                       </button>
@@ -2303,6 +2335,7 @@ function TeamTab({
         memberStats={memberStats}
         workloadMax={workloadMax}
         teamTotals={teamTotals}
+        dispatch={dispatch}
       />
       <TeamMembersGrid
         memberStats={memberStats}
@@ -2861,24 +2894,6 @@ export default function ProjectManagementPage() {
 
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
 
-  // Cmd+A / Ctrl+A to select all visible tasks; Escape to clear selection
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
-        const tag = (document.activeElement as HTMLElement)?.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-        e.preventDefault();
-        const allIds = tasks?.map((t) => t._id) ?? [];
-        setSelectedTaskIds(new Set(allIds));
-      }
-      if (e.key === 'Escape' && selectedTaskIds.size > 0) {
-        setSelectedTaskIds(new Set());
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [tasks, selectedTaskIds.size]);
-
   // Move task handlers to top level
   const handleEditTask = (task: any) => {
     dispatch({ type: "OPEN_EDIT_TASK", task });
@@ -2931,6 +2946,24 @@ export default function ProjectManagementPage() {
     api.tasks.queries.getProjectTasks,
     projectId ? { projectId: projectId as any } : "skip",
   );
+
+  // Cmd+A / Ctrl+A to select all visible tasks; Escape to clear selection
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+        const tag = (document.activeElement as HTMLElement)?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        e.preventDefault();
+        const allIds = tasks?.map((t) => t._id) ?? [];
+        setSelectedTaskIds(new Set(allIds));
+      }
+      if (e.key === 'Escape' && selectedTaskIds.size > 0) {
+        setSelectedTaskIds(new Set());
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [tasks, selectedTaskIds.size]);
 
   // Get current sprint for this project
   const activeSprint = useQuery(

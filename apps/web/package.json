@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.35.4",
-    "@google/generative-ai": "^0.24.1",
     "@hello-pangea/dnd": "^18.0.1",
     "@ltf1/backend": "workspace:*",
     "@ltf1/types": "workspace:*",
@@ -24,6 +23,7 @@
     "convex": "^1.25.4",
     "date-fns": "^3.6.0",
     "framer-motion": "^10.17.0",
+    "html2canvas": "^1.4.1",
     "konva": "^9.3.22",
     "lodash": "^4.17.21",
     "lucide-react": "^0.554.0",
