@@ -1343,11 +1343,10 @@ function SidebarNav({ activeSection, dispatch }: { activeSection: string; dispat
       </div>
       <nav className="flex-1 px-2">
         {SECTIONS.map((s) => (
-          <a
+          <button
+            type="button"
             key={s.id}
-            href={`#${s.id}`}
-            onClick={(e) => {
-              e.preventDefault()
+            onClick={() => {
               dispatch({ type: 'SET_SECTION', value: s.id })
               document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
             }}
@@ -1358,7 +1357,7 @@ function SidebarNav({ activeSection, dispatch }: { activeSection: string; dispat
             }`}
           >
             {s.label}
-          </a>
+          </button>
         ))}
       </nav>
     </aside>
