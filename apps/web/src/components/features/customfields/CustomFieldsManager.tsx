@@ -3,6 +3,7 @@ import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
+import BrutalSelect from '../../ui/BrutalSelect'
 import { 
   HiOutlinePlus,
   HiOutlineTrash,
@@ -308,16 +309,16 @@ export default function CustomFieldsManager({ workspaceId }: CustomFieldsManager
       
       case 'select':
         return (
-          <select
+          <BrutalSelect
             value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full p-2 bg-black text-white border-2 border-white font-mono"
-          >
-            <option value="">Select {field.label}</option>
-            {field.options?.map(option => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
+            onChange={(v) => onChange(v)}
+            placeholder={`Select ${field.label}`}
+            options={field.options?.map(option => ({
+              value: option,
+              label: option,
+            })) || []}
+            fullWidth
+          />
         )
       
       case 'multiselect':
@@ -583,17 +584,17 @@ export default function CustomFieldsManager({ workspaceId }: CustomFieldsManager
               
               {/* Field Type */}
               <div>
-                <label className="text-white text-sm">Field Type</label>
-                <select
+                <BrutalSelect
+                  label="Field Type"
                   value={fieldForm.type}
-                  onChange={(e) => setFieldForm(prev => ({ ...prev, type: e.target.value as FieldType }))}
+                  onChange={(v) => setFieldForm(prev => ({ ...prev, type: v as FieldType }))}
                   disabled={!!editingField}
-                  className="w-full p-2 bg-black text-white border-2 border-white font-mono disabled:opacity-50"
-                >
-                  {FIELD_TYPES.map(type => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
-                  ))}
-                </select>
+                  options={FIELD_TYPES.map(type => ({
+                    value: type.value,
+                    label: type.label,
+                  }))}
+                  fullWidth
+                />
               </div>
               
               {/* Options for select/multiselect */}

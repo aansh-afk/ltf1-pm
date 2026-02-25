@@ -11,6 +11,7 @@ import {
   HiOutlineClock
 } from 'react-icons/hi'
 import clsx from 'clsx'
+import BrutalSelect from '../../ui/BrutalSelect'
 import toast from 'react-hot-toast'
 import CreateTaskModal from './CreateTaskModal'
 import BrutalCheckbox from '../../ui/BrutalCheckbox'
@@ -307,23 +308,12 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate, sele
 
                     {/* Status */}
                     <td className="px-3 py-2">
-                      <select
-                        aria-label="Task status"
+                      <BrutalSelect
                         value={task.status}
-                        onChange={(e) => handleStatusChange(task._id, e.target.value)}
-                        className={clsx(
-                          "px-1.5 py-0.5 bg-transparent border-2",
-                          "font-mono text-[10px] uppercase",
-                          "focus:outline-none cursor-pointer",
-                          statusColors[task.status] || 'text-[#6B7280] border-[#6B7280]'
-                        )}
-                      >
-                        {Object.entries(statusLabels).map(([value, label]) => (
-                          <option key={value} value={value} className="bg-[#0A0A0A] text-[#F9FAFB]">
-                            {label}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(v) => handleStatusChange(task._id, v)}
+                        options={Object.entries(statusLabels).map(([value, label]) => ({ value, label }))}
+                        compact
+                      />
                     </td>
 
                     {/* Priority */}

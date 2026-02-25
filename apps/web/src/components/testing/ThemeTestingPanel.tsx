@@ -7,6 +7,7 @@ import React, { useState } from 'react'
 import { useThemeTesting, useThemeTestingStatus } from '../../hooks/useThemeTesting'
 import { useTheme } from '../../contexts/ThemeContext'
 import { globalThemes } from '../../themes/globalThemes'
+import BrutalSelect from '../ui/BrutalSelect'
 
 interface ThemeTestingPanelProps {
   className?: string
@@ -183,18 +184,15 @@ export function ThemeTestingPanel({ className = '', onClose }: ThemeTestingPanel
         <div>
           <h3 className="font-bold uppercase text-sm mb-3">Test Single Theme</h3>
           <div className="flex space-x-3">
-            <select
+            <BrutalSelect
               value={selectedTheme}
-              onChange={(e) => setSelectedTheme(e.target.value)}
-              disabled={isRunning}
-              className="brutal-select flex-1"
-            >
-              {availableThemes.map(theme => (
-                <option key={theme} value={theme}>
-                  {globalThemes[theme].name}
-                </option>
-              ))}
-            </select>
+              onChange={(value: string) => setSelectedTheme(value)}
+              options={availableThemes.map(theme => ({
+                value: theme,
+                label: globalThemes[theme].name,
+              }))}
+              label="Theme"
+            />
             
             <button
               onClick={() => runSingleThemeTest(selectedTheme)}

@@ -6,6 +6,7 @@ import BrutalCard from '@/components/ui/BrutalCard'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalInput from '@/components/ui/BrutalInput'
 import { Users, Calendar, TrendingUp, AlertTriangle, Plus, Save, BarChart3 } from 'lucide-react'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 
 interface ResourcePlannerProps {
   projectId: Id<"projects">
@@ -317,19 +318,17 @@ const ResourcePlanner: React.FC<ResourcePlannerProps> = ({ projectId, workspaceI
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Team Member</label>
-                <select
+                <BrutalSelect
+                  label="Team Member"
                   value={selectedUser || ''}
-                  onChange={(e) => setSelectedUser(e.target.value as Id<"users">)}
-                  className="w-full px-3 py-2 border-2 border-black focus:outline-none"
-                >
-                  <option value="">Select member...</option>
-                  {users?.map(user => (
-                    <option key={user._id} value={user._id}>
-                      {user.name} ({teamUtilization.find(u => u.user._id === user._id)?.totalAllocation || 0}% allocated)
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setSelectedUser(v as Id<"users">)}
+                  placeholder="Select member..."
+                  options={users?.map(user => ({
+                    value: user._id,
+                    label: `${user.name} (${teamUtilization.find(u => u.user._id === user._id)?.totalAllocation || 0}% allocated)`,
+                  })) || []}
+                  fullWidth
+                />
               </div>
 
               <div>

@@ -11,6 +11,7 @@ import {
   HiOutlineLightBulb,
 } from "react-icons/hi";
 import clsx from "clsx";
+import BrutalSelect from "../../ui/BrutalSelect";
 import MultiSelect from "../../ui/MultiSelect";
 import { TaskAssignmentHelper } from "../task/TaskAssignmentHelper";
 
@@ -156,92 +157,52 @@ function TaskFormFields({
 
       {/* Type and Priority */}
       <div className="grid grid-cols-2 gap-[8px]">
-        <div className="space-y-[4px]">
-          <label
-            htmlFor="type"
-            className="text-xs font-mono uppercase tracking-wider"
-          >
-            TYPE
-          </label>
-          <select
-            id="type"
-            value={type}
-            onChange={(e) =>
-              dispatch({
-                type: "UPDATE",
-                field: "type",
-                value: e.target.value as any,
-              })
-            }
-            className="brutal-input"
-          >
-            {typeOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <BrutalSelect
+          id="type"
+          label="TYPE"
+          value={type}
+          onChange={(v) =>
+            dispatch({
+              type: "UPDATE",
+              field: "type",
+              value: v as any,
+            })
+          }
+          options={typeOptions}
+          fullWidth
+        />
 
-        <div className="space-y-[4px]">
-          <label
-            htmlFor="priority"
-            className="text-xs font-mono uppercase tracking-wider"
-          >
-            PRIORITY
-          </label>
-          <select
-            id="priority"
-            value={priority}
-            onChange={(e) =>
-              dispatch({
-                type: "UPDATE",
-                field: "priority",
-                value: e.target.value as any,
-              })
-            }
-            className="brutal-input"
-          >
-            {priorityOptions.map((opt) => (
-              <option
-                key={opt.value}
-                value={opt.value}
-                className={opt.className}
-              >
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <BrutalSelect
+          id="priority"
+          label="PRIORITY"
+          value={priority}
+          onChange={(v) =>
+            dispatch({
+              type: "UPDATE",
+              field: "priority",
+              value: v as any,
+            })
+          }
+          options={priorityOptions}
+          fullWidth
+        />
       </div>
 
       {/* Status */}
-      <div className="space-y-[4px]">
-        <label
-          htmlFor="status"
-          className="text-xs font-mono uppercase tracking-wider"
-        >
-          STATUS
-        </label>
-        <select
-          id="status"
-          value={status}
-          onChange={(e) =>
-            dispatch({
-              type: "UPDATE",
-              field: "status",
-              value: e.target.value as any,
-            })
-          }
-          className="brutal-input"
-        >
-          {statusOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      <BrutalSelect
+        id="status"
+        label="STATUS"
+        value={status}
+        onChange={(v) =>
+          dispatch({
+            type: "UPDATE",
+            field: "status",
+            value: v as any,
+          })
+        }
+        options={statusOptions}
+        fullWidth
+      />
     </>
   );
 }
