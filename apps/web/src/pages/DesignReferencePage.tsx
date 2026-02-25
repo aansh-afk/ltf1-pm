@@ -1346,7 +1346,11 @@ function SidebarNav({ activeSection, dispatch }: { activeSection: string; dispat
           <a
             key={s.id}
             href={`#${s.id}`}
-            onClick={() => dispatch({ type: 'SET_SECTION', value: s.id })}
+            onClick={(e) => {
+              e.preventDefault()
+              dispatch({ type: 'SET_SECTION', value: s.id })
+              document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }}
             className={`block px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
               activeSection === s.id
                 ? 'text-[var(--theme-primary)] bg-[var(--theme-primary)]/10'
