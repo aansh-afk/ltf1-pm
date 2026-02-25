@@ -17,6 +17,7 @@ import {
   HiOutlineExclamation
 } from 'react-icons/hi'
 import clsx from 'clsx'
+import BrutalSelect from '../../ui/BrutalSelect'
 import { 
   format, 
   startOfMonth, 
@@ -399,17 +400,17 @@ function CalendarHeader({ currentDate, viewType, filterType, onNavigateMonth, on
       {/* Actions */}
       <div className="flex items-center gap-[4px]">
         {/* Filter */}
-        <select
+        <BrutalSelect
           value={filterType}
-          onChange={(e) => onSetFilter(e.target.value as any)}
-          aria-label="Filter event type"
-          className="px-[8px] py-6px text-xs font-bold bg-transparent border-2 border-[var(--theme-border)] outline-none"
-        >
-          <option value="all">ALL EVENTS</option>
-          <option value="tasks">TASKS ONLY</option>
-          <option value="meetings">MEETINGS ONLY</option>
-          <option value="sprints">SPRINTS ONLY</option>
-        </select>
+          onChange={(v) => onSetFilter(v as any)}
+          options={[
+            { value: 'all', label: 'ALL EVENTS' },
+            { value: 'tasks', label: 'TASKS ONLY' },
+            { value: 'meetings', label: 'MEETINGS ONLY' },
+            { value: 'sprints', label: 'SPRINTS ONLY' },
+          ]}
+          compact
+        />
 
         <button
           onClick={onCreateTask}

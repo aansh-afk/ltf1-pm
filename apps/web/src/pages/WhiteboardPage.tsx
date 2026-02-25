@@ -12,6 +12,7 @@ import {
   HiOutlineChatAlt2,
   HiOutlinePencil,
 } from 'react-icons/hi'
+import BrutalSelect from '../components/ui/BrutalSelect'
 import toast from 'react-hot-toast'
 import { m } from 'framer-motion'
 
@@ -162,17 +163,15 @@ export default function WhiteboardPage() {
 
         <div className="flex items-center gap-2">
           {workspaces && workspaces.length > 1 && (
-            <select
+            <BrutalSelect
               value={currentWorkspace._id}
-              onChange={(e) => setSelectedWorkspaceId(e.target.value as Id<"workspaces">)}
-              className="px-3 py-1.5 bg-[#111111] border-2 border-[#2E2E35] font-mono text-xs text-[#9CA3AF] focus:border-[#6366F1] focus:outline-none"
-            >
-              {workspaces.map(workspace => (
-                <option key={workspace._id} value={workspace._id}>
-                  {workspace.name}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setSelectedWorkspaceId(v as Id<"workspaces">)}
+              options={workspaces.map(workspace => ({
+                value: workspace._id,
+                label: workspace.name,
+              }))}
+              compact
+            />
           )}
 
           <BrutalButton

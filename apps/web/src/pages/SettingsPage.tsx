@@ -33,6 +33,7 @@ import AISettingsTab from '../components/features/settings/AISettingsTab'
 import BrutalCard from '@/components/ui/BrutalCard'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalBadge from '@/components/ui/BrutalBadge'
+import BrutalSelect from '../components/ui/BrutalSelect'
 
 type SettingsTab = 'profile' | 'developer' | 'accessibility' | 'notifications' | 'workspace' | 'github' | 'ai' | 'shortcuts'
 
@@ -170,22 +171,20 @@ function AccessibilityTab({ preferences, setPreferences, onReset }: Accessibilit
             unit="x"
           />
 
-          <div>
-            <label htmlFor="settings-letter-spacing" className="block text-xs font-bold uppercase mb-2">Letter Spacing</label>
-            <select
-              id="settings-letter-spacing"
-              value={preferences.accessibility?.letterSpacing || 'normal'}
-              onChange={(e) => setPreferences(prev => ({
-                ...prev,
-                accessibility: { ...prev.accessibility!, letterSpacing: e.target.value }
-              }))}
-              className="w-full p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
-            >
-              <option value="normal">Normal</option>
-              <option value="wide">Wide</option>
-              <option value="extra-wide">Extra Wide</option>
-            </select>
-          </div>
+          <BrutalSelect
+            label="Letter Spacing"
+            value={preferences.accessibility?.letterSpacing || 'normal'}
+            onChange={(v) => setPreferences(prev => ({
+              ...prev,
+              accessibility: { ...prev.accessibility!, letterSpacing: v }
+            }))}
+            options={[
+              { value: 'normal', label: 'Normal' },
+              { value: 'wide', label: 'Wide' },
+              { value: 'extra-wide', label: 'Extra Wide' },
+            ]}
+            fullWidth
+          />
 
           <BrutalToggle
             label="Reduce Motion"
@@ -454,40 +453,36 @@ function WorkspaceTab({ preferences, setPreferences }: WorkspaceTabProps) {
       </div>
 
       <div className="space-y-6 p-4 border-2 border-[var(--theme-border)]">
-        <div>
-          <label htmlFor="settings-default-project-view" className="block text-xs font-bold uppercase mb-2">Default Project View</label>
-          <select
-            id="settings-default-project-view"
-            value={preferences.defaults?.projectView || 'kanban'}
-            onChange={(e) => setPreferences(prev => ({
-              ...prev,
-              defaults: { ...prev.defaults!, projectView: e.target.value as any }
-            }))}
-            className="w-full p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
-          >
-            <option value="kanban">Kanban Board</option>
-            <option value="list">List View</option>
-            <option value="timeline">Timeline</option>
-          </select>
-        </div>
+        <BrutalSelect
+          label="Default Project View"
+          value={preferences.defaults?.projectView || 'kanban'}
+          onChange={(v) => setPreferences(prev => ({
+            ...prev,
+            defaults: { ...prev.defaults!, projectView: v as any }
+          }))}
+          options={[
+            { value: 'kanban', label: 'Kanban Board' },
+            { value: 'list', label: 'List View' },
+            { value: 'timeline', label: 'Timeline' },
+          ]}
+          fullWidth
+        />
 
-        <div>
-          <label htmlFor="settings-default-task-priority" className="block text-xs font-bold uppercase mb-2">Default Task Priority</label>
-          <select
-            id="settings-default-task-priority"
-            value={preferences.defaults?.taskPriority || 'medium'}
-            onChange={(e) => setPreferences(prev => ({
-              ...prev,
-              defaults: { ...prev.defaults!, taskPriority: e.target.value as any }
-            }))}
-            className="w-full p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
-          </select>
-        </div>
+        <BrutalSelect
+          label="Default Task Priority"
+          value={preferences.defaults?.taskPriority || 'medium'}
+          onChange={(v) => setPreferences(prev => ({
+            ...prev,
+            defaults: { ...prev.defaults!, taskPriority: v as any }
+          }))}
+          options={[
+            { value: 'low', label: 'Low' },
+            { value: 'medium', label: 'Medium' },
+            { value: 'high', label: 'High' },
+            { value: 'urgent', label: 'Urgent' },
+          ]}
+          fullWidth
+        />
 
         <BrutalToggle
           label="Auto-assign me to new tasks"

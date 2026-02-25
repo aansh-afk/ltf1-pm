@@ -13,6 +13,7 @@ import TaskTable from '@/components/features/task/TaskTable'
 import TaskFilters, { type TaskFilters as TaskFiltersType } from '@/components/features/task/TaskFilters'
 import FilterPresets from '@/components/features/task/FilterPresets'
 import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
+import BrutalSelect from '../components/ui/BrutalSelect'
 import clsx from 'clsx'
 
 const defaultFilters: TaskFiltersType = {
@@ -78,25 +79,15 @@ function TasksToolbar({ hasWorkspaceContext, currentWorkspaceName, selectedProje
           </>
         )}
         <span className="text-[var(--theme-border)] shrink-0">/</span>
-        <div className="relative shrink-0">
-          <select
-            aria-label="Select project"
-            className="appearance-none pl-2 pr-6 py-0.5 bg-transparent border border-[var(--theme-border)]
-                     font-mono text-[10px] uppercase font-bold text-[var(--theme-foreground)]
-                     focus:border-[var(--theme-primary)] focus:outline-none transition-colors cursor-pointer max-w-[160px]"
-            value={selectedProjectId}
-            onChange={(e) => onProjectChange(e.target.value)}
-          >
-            {projects.map((project) => (
-              <option key={project._id} value={project._id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
-          <div className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none">
-            <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[4px] border-t-[var(--theme-foreground-tertiary)]" />
-          </div>
-        </div>
+        <BrutalSelect
+          value={selectedProjectId}
+          onChange={(v) => onProjectChange(v)}
+          options={projects.map((project) => ({
+            value: project._id,
+            label: project.name,
+          }))}
+          compact
+        />
       </div>
 
       <div className="flex items-center gap-2 shrink-0">

@@ -12,6 +12,7 @@ import {
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 import BrutalModal from '../../ui/BrutalModal'
+import BrutalSelect from '../../ui/BrutalSelect'
 
 interface MemberManagementProps {
   workspace: any
@@ -188,18 +189,16 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
               {/* Role */}
               <div className="col-span-3">
                 {canManageMembers && member.role !== 'owner' ? (
-                  <select
+                  <BrutalSelect
                     value={member.role}
-                    onChange={(e) => handleRoleChange(member.userId, e.target.value as any)}
-                    aria-label={`Role for ${member.user?.name || 'member'}`}
-                    className="px-[8px] py-6px bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
-                             font-mono text-brutal-xs uppercase
-                             focus:border-primary-brutalist focus:outline-none transition-colors"
-                  >
-                    <option value="admin">ADMIN</option>
-                    <option value="member">MEMBER</option>
-                    <option value="viewer">VIEWER</option>
-                  </select>
+                    onChange={(v) => handleRoleChange(member.userId, v as any)}
+                    options={[
+                      { value: 'admin', label: 'ADMIN' },
+                      { value: 'member', label: 'MEMBER' },
+                      { value: 'viewer', label: 'VIEWER' },
+                    ]}
+                    compact
+                  />
                 ) : (
                   <div className={clsx(
                     "inline-flex items-center gap-4px px-[4px] py-4px",
@@ -259,19 +258,18 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
           </div>
 
           <div>
-            <label htmlFor="invite-role" className="block text-brutal-sm mb-[4px]">ROLE</label>
-            <select
+            <BrutalSelect
               id="invite-role"
+              label="ROLE"
               value={inviteRole}
-              onChange={(e) => dispatch({ type: 'UPDATE', field: 'inviteRole', value: e.target.value as 'admin' | 'member' | 'viewer' })}
-              className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                       font-mono text-brutal-md uppercase
-                       focus:border-primary-brutalist focus:outline-none transition-colors"
-            >
-              <option value="admin">ADMIN - Can manage workspace and members</option>
-              <option value="member">MEMBER - Can create and edit content</option>
-              <option value="viewer">VIEWER - Can only view content</option>
-            </select>
+              onChange={(v) => dispatch({ type: 'UPDATE', field: 'inviteRole', value: v as 'admin' | 'member' | 'viewer' })}
+              options={[
+                { value: 'admin', label: 'ADMIN - Can manage workspace and members' },
+                { value: 'member', label: 'MEMBER - Can create and edit content' },
+                { value: 'viewer', label: 'VIEWER - Can only view content' },
+              ]}
+              fullWidth
+            />
           </div>
 
           <div className="flex justify-end gap-[8px]">
