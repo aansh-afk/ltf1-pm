@@ -29,6 +29,7 @@ import clsx from 'clsx'
 import BrutalCard from '@/components/ui/BrutalCard'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalBadge from '@/components/ui/BrutalBadge'
+import BrutalSelect from '../components/ui/BrutalSelect'
 
 type ViewMode = 'calendar' | 'list' | 'dashboard'
 type CalendarView = 'month' | 'week' | 'day'
@@ -529,19 +530,19 @@ function MeetingsHeader({
       {showFilters && (
         <BrutalCard className="mb-3 p-3 border-t-0 -mt-3">
           <div className="flex items-center gap-4">
-            <select
+            <BrutalSelect
               value={filters.type || ''}
-              onChange={(e) => onFilterChange({ ...filters, type: e.target.value || undefined })}
-              aria-label="Filter meeting type"
-              className="px-4 py-2 bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-[var(--theme-foreground)] font-mono text-xs uppercase focus:border-[var(--theme-primary)] focus:outline-none transition-colors cursor-pointer"
-            >
-              <option value="">ALL TYPES</option>
-              <option value="standup">STANDUP</option>
-              <option value="retrospective">RETROSPECTIVE</option>
-              <option value="planning">PLANNING</option>
-              <option value="review">REVIEW</option>
-              <option value="custom">CUSTOM</option>
-            </select>
+              onChange={(v) => onFilterChange({ ...filters, type: v || undefined })}
+              options={[
+                { value: '', label: 'ALL TYPES' },
+                { value: 'standup', label: 'STANDUP' },
+                { value: 'retrospective', label: 'RETROSPECTIVE' },
+                { value: 'planning', label: 'PLANNING' },
+                { value: 'review', label: 'REVIEW' },
+                { value: 'custom', label: 'CUSTOM' },
+              ]}
+              compact
+            />
 
             <button
               onClick={() => onFilterChange({})}

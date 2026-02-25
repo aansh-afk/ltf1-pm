@@ -18,6 +18,7 @@ import SprintBoard from '@/components/features/sprint/SprintBoard'
 import SprintPlanning from '@/components/features/sprint/SprintPlanning'
 import BurndownChart from '@/components/features/sprint/BurndownChart'
 import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
+import BrutalSelect from '../components/ui/BrutalSelect'
 import clsx from 'clsx'
 
 // --- Sub-components ---
@@ -244,18 +245,15 @@ export default function SprintPage() {
           {!hasWorkspaceContext && (
             <WorkspaceSelector size="sm" showLabel={false} />
           )}
-          <select
-            aria-label="Select project"
-            className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] font-mono text-xs text-[var(--theme-foreground-secondary)] uppercase focus:border-[var(--theme-primary)] focus:outline-none"
+          <BrutalSelect
             value={selectedProjectId}
-            onChange={(e) => setSelectedProjectId(e.target.value)}
-          >
-            {projects.map((project: any) => (
-              <option key={project._id} value={project._id}>
-                {project.name} ({project.key})
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setSelectedProjectId(v)}
+            options={projects.map((project: any) => ({
+              value: project._id,
+              label: `${project.name} (${project.key})`,
+            }))}
+            compact
+          />
           <button
             onClick={() => setShowCreateModal(true)}
             className="px-4 py-2 bg-[var(--theme-primary)] text-white text-xs font-semibold uppercase tracking-wider border-2 border-[var(--theme-primary-active)] flex items-center gap-1.5 hover:bg-[var(--theme-primary-active)]"

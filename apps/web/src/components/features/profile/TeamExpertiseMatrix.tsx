@@ -13,6 +13,7 @@ import {
   HiOutlineSortDescending
 } from 'react-icons/hi'
 import clsx from 'clsx'
+import BrutalSelect from '../../ui/BrutalSelect'
 import DeveloperStatusIndicator from '../developer/DeveloperStatusIndicator'
 import { useNavigate } from 'react-router-dom'
 
@@ -430,16 +431,16 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
 
           {/* Sort */}
           <div className="flex items-center gap-1.5">
-            <label className="text-[11px] font-mono text-[var(--theme-foreground-tertiary)] uppercase">Sort:</label>
-            <select
+            <BrutalSelect
               value={sortBy}
-              onChange={(e) => update('sortBy', e.target.value)}
-              className="px-2 py-1.5 text-[11px] font-mono bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-[var(--theme-foreground)] focus:outline-none focus:border-[#6366F1]/50"
-            >
-              <option value="name">Name</option>
-              <option value="expertise">Expertise</option>
-              <option value="status">Status</option>
-            </select>
+              onChange={(v) => update('sortBy', v)}
+              options={[
+                { value: 'name', label: 'Name' },
+                { value: 'expertise', label: 'Expertise' },
+                { value: 'status', label: 'Status' },
+              ]}
+              compact
+            />
             <button
               onClick={() => update('sortAsc', !sortAsc)}
               className="p-1.5 border border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] hover:border-[#6366F1]/50 transition-colors"

@@ -5,6 +5,7 @@ import type { Id } from '../../../../../../convex/_generated/dataModel'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalInput from '@/components/ui/BrutalInput'
 import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 import { PDFGenerator } from '@/lib/export/pdfGenerator'
 import { ExcelExporter } from '@/lib/export/excel'
 import { CSVExporter, downloadCSV } from '@/lib/export/csv'
@@ -382,16 +383,17 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({ workspaceId, projectId })
           {scheduleEnabled && (
             <div className="mt-4 grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Frequency</label>
-                <select
+                <BrutalSelect
+                  label="Frequency"
                   value={scheduleFrequency}
-                  onChange={(e) => setScheduleFrequency(e.target.value as any)}
-                  className="w-full px-3 py-2 border border-black rounded-none"
-                >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </select>
+                  onChange={(v) => setScheduleFrequency(v as any)}
+                  options={[
+                    { value: 'daily', label: 'Daily' },
+                    { value: 'weekly', label: 'Weekly' },
+                    { value: 'monthly', label: 'Monthly' },
+                  ]}
+                  fullWidth
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Time</label>

@@ -3,6 +3,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
 import BrutalModal from '../../ui/BrutalModal'
+import BrutalSelect from '../../ui/BrutalSelect'
 import MultiSelect from '../../ui/MultiSelect'
 import {
   HiOutlineCalendar,
@@ -44,40 +45,40 @@ function MeetingScheduleItemRow({ meeting, onUpdateField, onRemove }: MeetingSch
           aria-label="Meeting title"
           className="px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs placeholder:text-neutral-600 focus:border-primary-brutalist focus:outline-none"
         />
-        <select
+        <BrutalSelect
           value={meeting.type}
-          onChange={(e) => onUpdateField(meeting.id, 'type', e.target.value)}
-          aria-label="Meeting type"
-          className="px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
-        >
-          <option value="standup">STANDUP</option>
-          <option value="retrospective">RETROSPECTIVE</option>
-          <option value="planning">PLANNING</option>
-          <option value="review">REVIEW</option>
-          <option value="custom">CUSTOM</option>
-        </select>
-        <select
-          value={meeting.dayOfWeek}
-          onChange={(e) => onUpdateField(
+          onChange={(v) => onUpdateField(meeting.id, 'type', v)}
+          options={[
+            { value: 'standup', label: 'STANDUP' },
+            { value: 'retrospective', label: 'RETROSPECTIVE' },
+            { value: 'planning', label: 'PLANNING' },
+            { value: 'review', label: 'REVIEW' },
+            { value: 'custom', label: 'CUSTOM' },
+          ]}
+          compact
+        />
+        <BrutalSelect
+          value={String(meeting.dayOfWeek)}
+          onChange={(v) => onUpdateField(
             meeting.id,
             'dayOfWeek',
-            e.target.value === 'daily' || e.target.value === 'weekdays'
-              ? e.target.value
-              : parseInt(e.target.value)
+            v === 'daily' || v === 'weekdays'
+              ? v
+              : parseInt(v)
           )}
-          aria-label="Day of week"
-          className="px-[8px] py-[4px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-brutal-xs focus:border-primary-brutalist focus:outline-none"
-        >
-          <option value="daily">DAILY</option>
-          <option value="weekdays">WEEKDAYS</option>
-          <option value="0">SUNDAY</option>
-          <option value="1">MONDAY</option>
-          <option value="2">TUESDAY</option>
-          <option value="3">WEDNESDAY</option>
-          <option value="4">THURSDAY</option>
-          <option value="5">FRIDAY</option>
-          <option value="6">SATURDAY</option>
-        </select>
+          options={[
+            { value: 'daily', label: 'DAILY' },
+            { value: 'weekdays', label: 'WEEKDAYS' },
+            { value: '0', label: 'SUNDAY' },
+            { value: '1', label: 'MONDAY' },
+            { value: '2', label: 'TUESDAY' },
+            { value: '3', label: 'WEDNESDAY' },
+            { value: '4', label: 'THURSDAY' },
+            { value: '5', label: 'FRIDAY' },
+            { value: '6', label: 'SATURDAY' },
+          ]}
+          compact
+        />
         <input
           type="time"
           value={meeting.time}
