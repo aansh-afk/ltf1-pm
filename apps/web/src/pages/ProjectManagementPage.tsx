@@ -73,6 +73,7 @@ import { formatDistanceToNow } from "date-fns";
 import BrutalCard from "@/components/ui/BrutalCard";
 import BrutalButton from "@/components/ui/BrutalButton";
 import BrutalBadge from "@/components/ui/BrutalBadge";
+import BrutalSelect from "../components/ui/BrutalSelect";
 import { m } from "framer-motion";
 
 type TabType =
@@ -738,23 +739,17 @@ function SettingsTab({
           <div>
             <h3 className="text-xs font-bold uppercase mb-2">WORKFLOW</h3>
             <div className="space-y-2">
-              <div>
-                <label
-                  htmlFor="project-settings-workflow-type"
-                  className="block text-xs uppercase mb-1"
-                >
-                  WORKFLOW TYPE
-                </label>
-                <select
-                  id="project-settings-workflow-type"
-                  defaultValue={project.settings?.workflowType || "kanban"}
-                  className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-['IBM_Plex_Mono',monospace] text-xs"
-                >
-                  <option value="kanban">KANBAN</option>
-                  <option value="scrum">SCRUM</option>
-                  <option value="hybrid">HYBRID</option>
-                </select>
-              </div>
+              <BrutalSelect
+                label="WORKFLOW TYPE"
+                value={project.settings?.workflowType || "kanban"}
+                onChange={() => {}}
+                options={[
+                  { value: "kanban", label: "KANBAN" },
+                  { value: "scrum", label: "SCRUM" },
+                  { value: "hybrid", label: "HYBRID" },
+                ]}
+                fullWidth
+              />
             </div>
           </div>
         </div>
@@ -791,34 +786,33 @@ function SettingsTab({
               </div>
 
               <div className="flex gap-2">
-                <select
-                  id="project-settings-assigned-teams"
-                  className="flex-1 px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-['IBM_Plex_Mono',monospace] text-xs"
-                  onChange={async (e) => {
-                    if (e.target.value) {
+                <BrutalSelect
+                  value=""
+                  onChange={async (v) => {
+                    if (v) {
                       try {
                         await assignTeam({
                           projectId: project._id,
-                          teamId: e.target.value as any,
+                          teamId: v as any,
                         });
                         toast.success("Team assigned successfully");
                       } catch (error) {
                         toast.error("Failed to assign team");
                         console.error(error);
                       }
-                      e.target.value = "";
                     }
                   }}
-                >
-                  <option value="">SELECT TEAM TO ASSIGN...</option>
-                  {availableTeams
-                    ?.filter((t) => !project.teamIds?.includes(t._id))
-                    .map((team) => (
-                      <option key={team._id} value={team._id}>
-                        {team.name}
-                      </option>
-                    ))}
-                </select>
+                  options={[
+                    { value: "", label: "SELECT TEAM TO ASSIGN..." },
+                    ...(availableTeams
+                      ?.filter((t) => !project.teamIds?.includes(t._id))
+                      .map((team) => ({
+                        value: team._id,
+                        label: team.name,
+                      })) || []),
+                  ]}
+                  fullWidth
+                />
               </div>
             </div>
           </div>
@@ -936,29 +930,29 @@ function TasksHeaderControls({
         </button>
 
         {/* Sprint Selector */}
-        <select
+        <BrutalSelect
           value={selectedSprintId || "all"}
-          onChange={(e) =>
+          onChange={(v) =>
             dispatch({
               type: "SET_SPRINT_ID",
               sprintId:
-                e.target.value === "all"
+                v === "all"
                   ? "all"
-                  : e.target.value === "backlog"
+                  : v === "backlog"
                     ? null
-                    : e.target.value,
+                    : v,
             })
           }
-          className="h-[32px] px-3 bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-['IBM_Plex_Mono',monospace] text-xs uppercase focus:border-[var(--theme-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary)] focus:ring-offset-1 focus:ring-offset-[var(--theme-background)] transition-colors cursor-pointer"
-        >
-          <option value="all">ALL SPRINTS</option>
-          <option value="backlog">BACKLOG</option>
-          {allSprints?.map((sprint) => (
-            <option key={sprint._id} value={sprint._id}>
-              {sprint.name} {sprint.status === "active" ? "(Active)" : ""}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "all", label: "ALL SPRINTS" },
+            { value: "backlog", label: "BACKLOG" },
+            ...(allSprints?.map((sprint) => ({
+              value: sprint._id,
+              label: `${sprint.name} ${sprint.status === "active" ? "(Active)" : ""}`,
+            })) || []),
+          ]}
+          compact
+        />
 
         {/* View Mode Selector */}
         <div

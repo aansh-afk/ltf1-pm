@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
 import toast from "react-hot-toast";
 import BrutalModal from "../../ui/BrutalModal";
+import BrutalSelect from "../../ui/BrutalSelect";
 import MultiSelect from "../../ui/MultiSelect";
 import {
   HiOutlineVideoCamera,
@@ -189,22 +190,18 @@ function RecurrenceOptionsPanel({
       {isRecurring && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-[8px] p-[10px] bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
           <div>
-            <label
-              htmlFor="schedule-meeting-frequency"
-              className="block text-brutal-xs uppercase mb-[4px]"
-            >
-              FREQUENCY
-            </label>
-            <select
+            <BrutalSelect
               id="schedule-meeting-frequency"
+              label="FREQUENCY"
               value={recurrenceFreq}
-              onChange={(e) => onFreqChange(e.target.value)}
-              className="w-full px-[8px] py-[4px] bg-[var(--theme-background)] border border-[var(--theme-border)] font-mono text-brutal-xs"
-            >
-              <option value="daily">DAILY</option>
-              <option value="weekly">WEEKLY</option>
-              <option value="monthly">MONTHLY</option>
-            </select>
+              onChange={(v) => onFreqChange(v)}
+              options={[
+                { value: 'daily', label: 'DAILY' },
+                { value: 'weekly', label: 'WEEKLY' },
+                { value: 'monthly', label: 'MONTHLY' },
+              ]}
+              fullWidth
+            />
           </div>
           <div>
             <label

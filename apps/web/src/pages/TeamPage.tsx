@@ -22,6 +22,7 @@ import clsx from 'clsx'
 import BrutalCard from '@/components/ui/BrutalCard'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalBadge from '@/components/ui/BrutalBadge'
+import BrutalSelect from '../components/ui/BrutalSelect'
 import CreateSprintModal from '@/components/features/sprint/CreateSprintModal'
 import SprintBoard from '@/components/features/sprint/SprintBoard'
 import SprintPlanning from '@/components/features/sprint/SprintPlanning'
@@ -129,19 +130,19 @@ function MembersFiltersBar({ searchQuery, selectedStatus, onSearchChange, onStat
         />
       </div>
 
-      <select
+      <BrutalSelect
         value={selectedStatus}
-        onChange={(e) => onStatusChange(e.target.value)}
-        aria-label="Filter by status"
-        className="px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] font-mono text-xs uppercase tracking-wider focus:border-[var(--theme-primary)] focus:outline-none cursor-pointer"
-      >
-        <option value="all">ALL STATUSES</option>
-        <option value="AVAILABLE">AVAILABLE</option>
-        <option value="LOCKED_IN">LOCKED IN</option>
-        <option value="IN_REVIEW">IN REVIEW</option>
-        <option value="IN_MEETING">IN MEETING</option>
-        <option value="AFK">AFK</option>
-      </select>
+        onChange={(v) => onStatusChange(v)}
+        options={[
+          { value: 'all', label: 'ALL STATUSES' },
+          { value: 'AVAILABLE', label: 'AVAILABLE' },
+          { value: 'LOCKED_IN', label: 'LOCKED IN' },
+          { value: 'IN_REVIEW', label: 'IN REVIEW' },
+          { value: 'IN_MEETING', label: 'IN MEETING' },
+          { value: 'AFK', label: 'AFK' },
+        ]}
+        compact
+      />
 
       <button
         onClick={onFindExpert}
@@ -361,18 +362,15 @@ export default function TeamPage() {
       <div className="flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-3 w-full md:w-auto">
           <span className="font-mono text-xs text-[var(--theme-foreground-tertiary)] uppercase tracking-wider hidden md:inline">Project:</span>
-          <select
-            className="flex-1 md:w-56 px-3 py-2 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] font-mono text-xs uppercase font-bold text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] focus:outline-none cursor-pointer"
+          <BrutalSelect
             value={selectedProjectId}
-            onChange={(e) => dispatch({ type: 'UPDATE', field: 'selectedProjectId', value: e.target.value })}
-            aria-label="Select project"
-          >
-            {projects?.map((project: any) => (
-              <option key={project._id} value={project._id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => dispatch({ type: 'UPDATE', field: 'selectedProjectId', value: v })}
+            options={projects?.map((project: any) => ({
+              value: project._id,
+              label: project.name,
+            })) || []}
+            compact
+          />
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto">
