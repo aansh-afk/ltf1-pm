@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, Suspense, useReducer } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  Suspense,
+  useReducer,
+} from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
@@ -13,24 +19,14 @@ import {
   HiOutlineTerminal,
   HiOutlineCog,
   HiOutlineExclamationCircle,
-  HiOutlineCheckCircle,
-  HiOutlineXCircle,
   HiOutlineClock,
-  HiOutlineBeaker,
-  HiOutlineDatabase,
   HiOutlineLightningBolt,
   HiOutlineChartBar,
   HiOutlinePlus,
   HiOutlineFilter,
   HiOutlineViewGrid,
-  HiOutlineViewList,
-  HiOutlinePlay,
-  HiOutlinePause,
   HiOutlineChip,
-  HiOutlineUser,
-  HiOutlineDotsVertical,
   HiOutlineArrowRight,
-  HiOutlineChat,
   HiOutlineSearch,
 } from "react-icons/hi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
@@ -47,17 +43,11 @@ import ScheduleMeetingModal from "@/components/features/meetings/ScheduleMeeting
 import MeetingCard from "@/components/features/meetings/MeetingCard";
 import ProjectInviteModal from "@/components/features/project/ProjectInviteModal";
 import UserDisplay from "@/components/features/user/UserDisplay";
-import DeveloperTimeline from "@/components/features/project/DeveloperTimeline";
 const SprintBurndownChart = React.lazy(
   () => import("@/components/features/project/SprintBurndownChart"),
 );
-const TaskDistributionCharts = React.lazy(
-  () => import("@/components/features/project/TaskDistributionCharts"),
-);
 import AIInsightsPanel from "@/components/features/project/AIInsightsPanel";
 import GitHubStyleHeatmap from "@/components/features/project/GitHubStyleHeatmap";
-import SmartTaskGenerator from "@/components/features/project/SmartTaskGenerator";
-import DailyStandupSummary from "@/components/features/project/DailyStandupSummary";
 import GanttView from "@/components/features/project/GanttView";
 import CalendarView from "@/components/features/project/CalendarView";
 import NaturalLanguageTaskCreator from "@/components/features/ai/NaturalLanguageTaskCreator";
@@ -70,7 +60,6 @@ import { useTemporaryShortcut } from "@/contexts/ShortcutContext";
 import clsx from "clsx";
 import toast from "react-hot-toast";
 import { formatDistanceToNow } from "date-fns";
-import BrutalCard from "@/components/ui/BrutalCard";
 import BrutalButton from "@/components/ui/BrutalButton";
 import BrutalBadge from "@/components/ui/BrutalBadge";
 import BrutalSelect from "../components/ui/BrutalSelect";
@@ -158,8 +147,8 @@ const pageInitialState: PageState = {
     labels: [],
     dueDateRange: { start: null, end: null },
     createdDateRange: { start: null, end: null },
-    hasTimeTracked: undefined,
-    isOverdue: undefined,
+    hasTimeTracked: null,
+    isOverdue: null,
   },
 };
 
@@ -210,6 +199,22 @@ function pageReducer(state: PageState, action: PageAction): PageState {
     default:
       return state;
   }
+}
+
+function isTaskBlocked(task: any, allTasks: any[]): boolean {
+  if (!task || task.status === "done" || task.status === "cancelled") {
+    return false;
+  }
+
+  const dependencies = task.dependencies ?? [];
+  if (!Array.isArray(dependencies) || dependencies.length === 0) {
+    return false;
+  }
+
+  return dependencies.some((depId: any) => {
+    const dependencyTask = allTasks.find((t: any) => t._id === depId);
+    return dependencyTask ? dependencyTask.status !== "done" : false;
+  });
 }
 
 // --- Sub-components ---
@@ -310,8 +315,8 @@ function OverviewTab({
                   const inProgress = sprintTasks.filter(
                     (t: any) => t.status === "in_progress",
                   ).length;
-                  const blocked = sprintTasks.filter(
-                    (t: any) => t.status === "blocked" || t.isBlocked,
+                  const blocked = sprintTasks.filter((t: any) =>
+                    isTaskBlocked(t, tasks || []),
                   ).length;
                   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
@@ -667,13 +672,87 @@ interface SettingsTabProps {
   project: any;
   availableTeams: any[] | undefined;
   assignTeam: (args: { projectId: any; teamId: any }) => Promise<any>;
+  updateProject: (args: {
+    projectId: any;
+    name?: string;
+    description?: string;
+    status?: string;
+    leadId?: any;
+  }) => Promise<any>;
+  deleteProject: (args: { projectId: any }) => Promise<any>;
+  members: any[] | undefined;
+  onNavigateBack: () => void;
 }
 
 function SettingsTab({
   project,
   availableTeams,
   assignTeam,
+  updateProject,
+  deleteProject,
+  members,
+  onNavigateBack,
 }: SettingsTabProps) {
+  const [name, setName] = useState(project.name || "");
+  const [description, setDescription] = useState(project.description || "");
+  const [workflowType, setWorkflowType] = useState(
+    project.settings?.workflowType || "kanban",
+  );
+  const [status, setStatus] = useState(project.status || "active");
+  const [leadId, setLeadId] = useState(project.leadId || "");
+  const [saving, setSaving] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+
+  const hasChanges =
+    name !== (project.name || "") ||
+    description !== (project.description || "") ||
+    status !== (project.status || "active") ||
+    leadId !== (project.leadId || "");
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updates: any = { projectId: project._id };
+      if (name !== project.name) updates.name = name;
+      if (description !== project.description)
+        updates.description = description;
+      if (status !== project.status) updates.status = status;
+      if (leadId && leadId !== project.leadId) updates.leadId = leadId;
+
+      await updateProject(updates);
+      toast.success("Project settings saved");
+    } catch (error) {
+      toast.error("Failed to save project settings");
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setName(project.name || "");
+    setDescription(project.description || "");
+    setWorkflowType(project.settings?.workflowType || "kanban");
+    setStatus(project.status || "active");
+    setLeadId(project.leadId || "");
+  };
+
+  const handleArchive = async () => {
+    setArchiving(true);
+    try {
+      await deleteProject({ projectId: project._id });
+      toast.success("Project archived");
+      onNavigateBack();
+    } catch (error) {
+      toast.error("Failed to archive project");
+      console.error(error);
+    } finally {
+      setArchiving(false);
+      setShowArchiveConfirm(false);
+    }
+  };
+
   return (
     <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
       <h2 className="text-xs font-semibold font-bold uppercase mb-3">
@@ -696,7 +775,8 @@ function SettingsTab({
                 <input
                   id="project-settings-name"
                   type="text"
-                  defaultValue={project.name}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-['IBM_Plex_Mono',monospace] text-xs"
                 />
               </div>
@@ -709,7 +789,8 @@ function SettingsTab({
                 </label>
                 <textarea
                   id="project-settings-description"
-                  defaultValue={project.description}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-['IBM_Plex_Mono',monospace] text-xs resize-none"
                 />
@@ -735,14 +816,53 @@ function SettingsTab({
             </div>
           </div>
 
+          {/* Project Status */}
+          <div>
+            <h3 className="text-xs font-bold uppercase mb-2">STATUS</h3>
+            <div className="space-y-2">
+              <BrutalSelect
+                label="PROJECT STATUS"
+                value={status}
+                onChange={(v) => setStatus(v)}
+                options={[
+                  { value: "planning", label: "PLANNING" },
+                  { value: "active", label: "ACTIVE" },
+                  { value: "on_hold", label: "ON HOLD" },
+                  { value: "completed", label: "COMPLETED" },
+                ]}
+                fullWidth
+              />
+            </div>
+          </div>
+
+          {/* Project Lead */}
+          <div>
+            <h3 className="text-xs font-bold uppercase mb-2">PROJECT LEAD</h3>
+            <div className="space-y-2">
+              <BrutalSelect
+                label="LEAD"
+                value={leadId}
+                onChange={(v) => setLeadId(v)}
+                options={[
+                  { value: "", label: "UNASSIGNED" },
+                  ...(members?.map((m: any) => ({
+                    value: m._id || m.userId,
+                    label: (m.name || m.email || "Unknown").toUpperCase(),
+                  })) || []),
+                ]}
+                fullWidth
+              />
+            </div>
+          </div>
+
           {/* Workflow Settings */}
           <div>
             <h3 className="text-xs font-bold uppercase mb-2">WORKFLOW</h3>
             <div className="space-y-2">
               <BrutalSelect
                 label="WORKFLOW TYPE"
-                value={project.settings?.workflowType || "kanban"}
-                onChange={() => {}}
+                value={workflowType}
+                onChange={(v) => setWorkflowType(v)}
                 options={[
                   { value: "kanban", label: "KANBAN" },
                   { value: "scrum", label: "SCRUM" },
@@ -816,36 +936,73 @@ function SettingsTab({
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Danger Zone */}
-        <div className="space-y-3">
-          <div>
-            <h3 className="text-xs font-bold uppercase mb-2 text-[var(--theme-error)]">
-              DANGER ZONE
-            </h3>
-            <div className="border-2 border-[var(--theme-error)] p-2.5">
-              <h4 className="text-xs font-bold uppercase mb-1.5">
-                ARCHIVE PROJECT
-              </h4>
-              <p className="text-xs text-[var(--theme-foreground)]/80 mb-2">
-                Archive this project. It will be hidden from the workspace but
-                data will be preserved.
-              </p>
-              <BrutalButton variant="danger" size="sm">
-                ARCHIVE PROJECT
-              </BrutalButton>
+          {/* Danger Zone */}
+          <div className="mt-6 space-y-3">
+            <div>
+              <h3 className="text-xs font-bold uppercase mb-2 text-[var(--theme-error)]">
+                DANGER ZONE
+              </h3>
+              <div className="border-2 border-[var(--theme-error)] p-2.5">
+                <h4 className="text-xs font-bold uppercase mb-1.5">
+                  ARCHIVE PROJECT
+                </h4>
+                <p className="text-xs text-[var(--theme-foreground)]/80 mb-2">
+                  Archive this project. It will be hidden from the workspace but
+                  data will be preserved.
+                </p>
+                {showArchiveConfirm ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[var(--theme-error)] font-bold">
+                      Are you sure?
+                    </span>
+                    <BrutalButton
+                      variant="danger"
+                      size="sm"
+                      onClick={handleArchive}
+                      disabled={archiving}
+                    >
+                      {archiving ? "ARCHIVING..." : "YES, ARCHIVE"}
+                    </BrutalButton>
+                    <BrutalButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowArchiveConfirm(false)}
+                    >
+                      CANCEL
+                    </BrutalButton>
+                  </div>
+                ) : (
+                  <BrutalButton
+                    variant="danger"
+                    size="sm"
+                    onClick={() => setShowArchiveConfirm(true)}
+                  >
+                    ARCHIVE PROJECT
+                  </BrutalButton>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <div className="flex justify-end gap-3 mt-4 pt-4 border-t-2 border-[var(--theme-border)]">
-        <BrutalButton variant="ghost" size="sm">
+        <BrutalButton
+          variant="ghost"
+          size="sm"
+          onClick={handleCancel}
+          disabled={!hasChanges}
+        >
           CANCEL
         </BrutalButton>
-        <BrutalButton variant="primary" size="sm">
-          SAVE CHANGES
+        <BrutalButton
+          variant="primary"
+          size="sm"
+          onClick={handleSave}
+          disabled={!hasChanges || saving}
+        >
+          {saving ? "SAVING..." : "SAVE CHANGES"}
         </BrutalButton>
       </div>
     </div>
@@ -935,12 +1092,7 @@ function TasksHeaderControls({
           onChange={(v) =>
             dispatch({
               type: "SET_SPRINT_ID",
-              sprintId:
-                v === "all"
-                  ? "all"
-                  : v === "backlog"
-                    ? null
-                    : v,
+              sprintId: v === "all" ? "all" : v === "backlog" ? null : v,
             })
           }
           options={[
@@ -1179,11 +1331,17 @@ function TasksViewRenderer({
       )}
 
       {taskView === "gantt" && (
-        <GanttView projectId={projectId} workspaceId={workspaceId} />
+        <GanttView
+          projectId={projectId as any}
+          workspaceId={workspaceId as any}
+        />
       )}
 
       {taskView === "calendar" && (
-        <CalendarView projectId={projectId} workspaceId={workspaceId} />
+        <CalendarView
+          projectId={projectId as any}
+          workspaceId={workspaceId as any}
+        />
       )}
 
       {taskView === "sprint" && !activeSprint && (
@@ -1350,8 +1508,8 @@ function TasksTab({
         const completedTasks = sprintTasks.filter(
           (t: any) => t.status === "done",
         ).length;
-        const blockedTasks = sprintTasks.filter(
-          (t: any) => t.status === "blocked" || t.isBlocked,
+        const blockedTasks = sprintTasks.filter((t: any) =>
+          isTaskBlocked(t, filteredTasks),
         ).length;
         const inReview = sprintTasks.filter(
           (t: any) => t.status === "in_review",
@@ -1805,12 +1963,20 @@ function WorkloadDistribution({
 function TeamMembersGrid({
   memberStats,
   taskFilters,
+  projectId,
+  removeProjectMember,
+  updateMemberRole,
   dispatch,
 }: {
   memberStats: any[];
   taskFilters: TaskFiltersType;
+  projectId: string;
+  removeProjectMember: any;
+  updateMemberRole: any;
   dispatch: React.Dispatch<PageAction>;
 }) {
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [roleMenuId, setRoleMenuId] = useState<string | null>(null);
   return (
     <div className="border-2 border-[var(--theme-border)] bg-[var(--theme-background)] divide-y-2 divide-[var(--theme-border)]">
       {/* Column header */}
@@ -1924,15 +2090,86 @@ function TeamMembersGrid({
               >
                 TASKS
               </button>
-              <button
-                onClick={() => {
-                  dispatch({ type: "OPEN_CREATE_TASK" });
-                  toast("Creating task for " + (member.name || "team member"));
-                }}
-                className="px-2 py-1 border border-[var(--theme-border)] font-mono text-[9px] font-bold uppercase text-[var(--theme-foreground)]/50 hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] transition-colors"
-              >
-                ASSIGN
-              </button>
+              {/* Role dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() =>
+                    setRoleMenuId(roleMenuId === member._id ? null : member._id)
+                  }
+                  className="px-2 py-1 border border-[var(--theme-border)] font-mono text-[9px] font-bold uppercase text-[var(--theme-foreground)]/50 hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] transition-colors"
+                >
+                  ROLE
+                </button>
+                {roleMenuId === member._id && (
+                  <div className="absolute right-0 top-full mt-1 z-50 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-[4px_4px_0px_var(--theme-shadow)] min-w-[120px]">
+                    {(["lead", "member", "contributor", "viewer"] as const).map(
+                      (role) => (
+                        <button
+                          key={role}
+                          onClick={async () => {
+                            try {
+                              await updateMemberRole({
+                                projectId: projectId as any,
+                                userId: member._id,
+                                role,
+                              });
+                              toast.success(`Role updated to ${role}`);
+                            } catch (error: any) {
+                              toast.error(
+                                error.message || "Failed to update role",
+                              );
+                            }
+                            setRoleMenuId(null);
+                          }}
+                          className={clsx(
+                            "w-full text-left px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-wider hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] transition-colors",
+                            (member.role || "member") === role
+                              ? "text-[var(--theme-primary)] bg-[var(--theme-primary)]/10"
+                              : "text-[var(--theme-foreground)]/60",
+                          )}
+                        >
+                          {role}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Remove member */}
+              {confirmRemoveId === member._id ? (
+                <div className="flex items-center gap-0.5">
+                  <button
+                    onClick={async () => {
+                      try {
+                        await removeProjectMember({
+                          projectId: projectId as any,
+                          userId: member._id,
+                        });
+                        toast.success("Member removed");
+                      } catch (error: any) {
+                        toast.error(error.message || "Failed to remove member");
+                      }
+                      setConfirmRemoveId(null);
+                    }}
+                    className="px-2 py-1 border border-[var(--theme-error)] bg-[var(--theme-error)] font-mono text-[9px] font-bold uppercase text-[var(--theme-background)] hover:opacity-80 transition-colors"
+                  >
+                    YES
+                  </button>
+                  <button
+                    onClick={() => setConfirmRemoveId(null)}
+                    className="px-2 py-1 border border-[var(--theme-border)] font-mono text-[9px] font-bold uppercase text-[var(--theme-foreground)]/50 hover:border-[var(--theme-foreground)] transition-colors"
+                  >
+                    NO
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmRemoveId(member._id)}
+                  className="px-2 py-1 border border-[var(--theme-border)] font-mono text-[9px] font-bold uppercase text-[var(--theme-foreground)]/50 hover:border-[var(--theme-error)] hover:text-[var(--theme-error)] transition-colors"
+                >
+                  REMOVE
+                </button>
+              )}
             </div>
           </div>
         );
@@ -1942,7 +2179,7 @@ function TeamMembersGrid({
       <button
         type="button"
         className="w-full flex items-center gap-2 px-3 py-2.5 border-dashed hover:bg-[var(--theme-background-secondary)]/30 transition-colors group"
-        onClick={() => dispatch({ type: "SET_TAB", tab: "team" })}
+        onClick={() => dispatch({ type: "OPEN_PROJECT_INVITE" })}
       >
         <HiOutlinePlus className="w-3.5 h-3.5 text-[var(--theme-foreground)]/30 group-hover:text-[var(--theme-primary)] transition-colors" />
         <span className="font-mono text-[10px] font-bold uppercase text-[var(--theme-foreground)]/30 group-hover:text-[var(--theme-primary)] transition-colors tracking-wider">
@@ -1957,6 +2194,7 @@ function TeamQuickActions({
   project,
   memberStats,
   teamTotals,
+  bulkUpdateTasks,
   dispatch,
 }: {
   project: any;
@@ -1966,8 +2204,65 @@ function TeamQuickActions({
     completedTasks: number;
     avgProductivity: number;
   };
+  bulkUpdateTasks: any;
   dispatch: React.Dispatch<PageAction>;
 }) {
+  const [isRebalancing, setIsRebalancing] = useState(false);
+  const overloadedCount = memberStats.filter(
+    (member: any) => member.tasksAssigned > 15,
+  ).length;
+  const idleCount = memberStats.filter(
+    (member: any) => member.tasksAssigned === 0,
+  ).length;
+
+  const runAutoRebalance = async (mode: "balanced" | "overloaded" | "idle") => {
+    if (isRebalancing || !project?._id) {
+      return;
+    }
+
+    setIsRebalancing(true);
+    try {
+      const autoRebalanceArgs =
+        mode === "overloaded"
+          ? {
+              projectId: project._id as any,
+              overloadedThreshold: 15,
+            }
+          : mode === "idle"
+            ? {
+                projectId: project._id as any,
+                targetLoad: Math.max(
+                  1,
+                  Math.ceil(
+                    teamTotals.totalTasks / Math.max(memberStats.length, 1),
+                  ),
+                ),
+              }
+            : {
+                projectId: project._id as any,
+              };
+
+      const result = await bulkUpdateTasks({
+        taskIds: [],
+        updates: {},
+        autoRebalance: autoRebalanceArgs,
+      });
+
+      if (result.updatedCount > 0) {
+        toast.success(
+          `Auto-rebalanced ${result.updatedCount} task${result.updatedCount === 1 ? "" : "s"}`,
+        );
+        dispatch({ type: "SET_TAB", tab: "tasks" });
+      } else {
+        toast("No eligible tasks found for automatic rebalance");
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "Automatic rebalance failed");
+    } finally {
+      setIsRebalancing(false);
+    }
+  };
+
   return (
     <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
       <div className="px-4 py-2.5 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
@@ -2006,30 +2301,21 @@ function TeamQuickActions({
 
           {/* BULK REASSIGN */}
           <button
-            onClick={() => {
-              const overloadedMembers = memberStats.filter(
-                (m: any) => m.tasksAssigned > 15,
-              );
-              if (overloadedMembers.length > 0) {
-                console.log(
-                  "Opening bulk reassign for overloaded members:",
-                  overloadedMembers,
-                );
-              } else {
-                console.log("Opening general bulk reassign modal");
-              }
-            }}
+            onClick={() => runAutoRebalance("balanced")}
+            disabled={isRebalancing}
             className={clsx(
               "group flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] border-2 font-mono transition-colors cursor-pointer hover:shadow-[3px_3px_0px_var(--theme-shadow)] hover:translate-x-[-1px] hover:translate-y-[-1px]",
-              memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0
+              overloadedCount > 0
                 ? "border-[var(--theme-warning)] bg-[var(--theme-warning)]/10 hover:bg-[var(--theme-warning)]/20"
                 : "border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:border-[var(--theme-primary)] hover:bg-[var(--theme-background)]",
+              isRebalancing &&
+                "opacity-60 cursor-not-allowed hover:translate-x-0 hover:translate-y-0 hover:shadow-none",
             )}
           >
             <div
               className={clsx(
                 "flex items-center justify-center w-7 h-7 border-2",
-                memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0
+                overloadedCount > 0
                   ? "border-[var(--theme-warning)] bg-[var(--theme-warning)]"
                   : "border-[var(--theme-border)] bg-[var(--theme-background)]",
               )}
@@ -2037,8 +2323,7 @@ function TeamQuickActions({
               <HiOutlineUserGroup
                 className={clsx(
                   "w-3.5 h-3.5",
-                  memberStats.filter((m: any) => m.tasksAssigned > 15).length >
-                    0
+                  overloadedCount > 0
                     ? "text-[var(--theme-background)]"
                     : "text-[var(--theme-primary)]",
                 )}
@@ -2046,11 +2331,11 @@ function TeamQuickActions({
             </div>
             <div className="text-center">
               <div className="font-mono text-[10px] font-bold uppercase">
-                BULK REASSIGN
+                {isRebalancing ? "REBALANCING..." : "BULK REASSIGN"}
               </div>
               <div className="font-mono text-[9px] text-[var(--theme-foreground)]/40 mt-0.5 uppercase">
-                {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0
-                  ? `${memberStats.filter((m: any) => m.tasksAssigned > 15).length} OVERLOADED`
+                {overloadedCount > 0
+                  ? `${overloadedCount} OVERLOADED`
                   : "BALANCE WORKLOAD"}
               </div>
             </div>
@@ -2104,7 +2389,7 @@ function TeamQuickActions({
 
           {/* TEAM SETTINGS */}
           <button
-            onClick={() => console.log("Opening team settings modal")}
+            onClick={() => dispatch({ type: "SET_TAB", tab: "settings" })}
             className="group flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:border-[var(--theme-primary)] hover:bg-[var(--theme-background)] font-mono transition-colors cursor-pointer hover:shadow-[3px_3px_0px_var(--theme-shadow)] hover:translate-x-[-1px] hover:translate-y-[-1px]"
           >
             <div className="flex items-center justify-center w-7 h-7 border-2 border-[var(--theme-border)] bg-[var(--theme-background)] group-hover:border-[var(--theme-primary)]">
@@ -2148,28 +2433,26 @@ function TeamQuickActions({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              {memberStats.filter((m: any) => m.tasksAssigned > 15).length >
-                0 && (
+              {overloadedCount > 0 && (
                 <button
-                  onClick={() =>
-                    console.log("Quick balancing overloaded members")
-                  }
+                  onClick={() => runAutoRebalance("overloaded")}
+                  disabled={isRebalancing}
                   className="px-2.5 py-1 bg-[var(--theme-error)]/20 border-2 border-[var(--theme-error)] font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-error)] hover:bg-[var(--theme-error)] hover:text-[var(--theme-background)]"
                 >
-                  BALANCE{" "}
-                  {memberStats.filter((m: any) => m.tasksAssigned > 15).length}{" "}
-                  OVERLOADED
+                  {isRebalancing
+                    ? "REBALANCING..."
+                    : `BALANCE ${overloadedCount} OVERLOADED`}
                 </button>
               )}
-              {memberStats.filter((m: any) => m.tasksAssigned === 0).length >
-                0 && (
+              {idleCount > 0 && (
                 <button
-                  onClick={() => console.log("Assigning tasks to idle members")}
+                  onClick={() => runAutoRebalance("idle")}
+                  disabled={isRebalancing}
                   className="px-2.5 py-1 bg-[var(--theme-info)]/20 border-2 border-[var(--theme-info)] font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-info)] hover:bg-[var(--theme-info)] hover:text-[var(--theme-background)]"
                 >
-                  ASSIGN TO{" "}
-                  {memberStats.filter((m: any) => m.tasksAssigned === 0).length}{" "}
-                  IDLE
+                  {isRebalancing
+                    ? "ASSIGNING..."
+                    : `ASSIGN TO ${idleCount} IDLE`}
                 </button>
               )}
               {memberStats.filter(
@@ -2200,6 +2483,9 @@ interface TeamTabProps {
   taskFilters: TaskFiltersType;
   workspaceId: string;
   projectId: string;
+  bulkUpdateTasks: any;
+  removeProjectMember: any;
+  updateMemberRole: any;
   dispatch: React.Dispatch<PageAction>;
 }
 
@@ -2209,6 +2495,9 @@ function TeamTab({
   taskFilters,
   workspaceId,
   projectId,
+  bulkUpdateTasks,
+  removeProjectMember,
+  updateMemberRole,
   dispatch,
 }: TeamTabProps) {
   const members = project?.members || [];
@@ -2229,9 +2518,8 @@ function TeamTab({
       tasksInProgress: memberTasks.filter(
         (t: any) => t.status === "in_progress",
       ).length,
-      tasksBlocked: memberTasks.filter(
-        (t: any) => t.status === "blocked" || t.isBlocked,
-      ).length,
+      tasksBlocked: memberTasks.filter((t: any) => isTaskBlocked(t, allTasks))
+        .length,
       tasksTodo: memberTasks.filter(
         (t: any) => t.status === "todo" || t.status === "backlog",
       ).length,
@@ -2334,6 +2622,9 @@ function TeamTab({
       <TeamMembersGrid
         memberStats={memberStats}
         taskFilters={taskFilters}
+        projectId={projectId}
+        removeProjectMember={removeProjectMember}
+        updateMemberRole={updateMemberRole}
         dispatch={dispatch}
       />
 
@@ -2348,6 +2639,7 @@ function TeamTab({
         project={project}
         memberStats={memberStats}
         teamTotals={teamTotals}
+        bulkUpdateTasks={bulkUpdateTasks}
         dispatch={dispatch}
       />
     </div>
@@ -2582,11 +2874,11 @@ function ProjectModals({
       <ExpertiseSearchModal
         isOpen={state.showExpertiseSearch}
         onClose={() => dispatch({ type: "CLOSE_MODALS" })}
-        workspaceId={workspaceId}
+        workspaceId={workspaceId as any}
       />
       {state.showExpertiseMatrix && workspaceId && (
         <TeamExpertiseMatrix
-          workspaceId={workspaceId}
+          workspaceId={workspaceId as any}
           onClose={() => dispatch({ type: "CLOSE_MODALS" })}
           isModal={true}
         />
@@ -2614,11 +2906,18 @@ interface ProjectTabContentProps {
   projectMeetings: any[] | undefined;
   availableTeams: any[] | undefined;
   assignTeam: any;
+  bulkUpdateTasks: any;
+  updateProject: any;
+  archiveProject: any;
+  removeProjectMember: any;
+  updateMemberRole: any;
+  members: any[] | undefined;
   dispatch: React.Dispatch<PageAction>;
   getStatusColor: (status: string) => string;
   handleEditTask: (task: any) => void;
   handleDeleteTask: (task: any) => Promise<void>;
   handleDuplicateTask: (task: any) => Promise<void>;
+  onNavigateBack: () => void;
 }
 
 function ProjectTabContent({
@@ -2638,11 +2937,18 @@ function ProjectTabContent({
   projectMeetings,
   availableTeams,
   assignTeam,
+  bulkUpdateTasks,
+  updateProject,
+  archiveProject,
+  removeProjectMember,
+  updateMemberRole,
+  members,
   dispatch,
   getStatusColor,
   handleEditTask,
   handleDeleteTask,
   handleDuplicateTask,
+  onNavigateBack,
 }: ProjectTabContentProps) {
   return (
     <main
@@ -2698,6 +3004,9 @@ function ProjectTabContent({
             taskFilters={taskFilters}
             workspaceId={workspaceId}
             projectId={projectId}
+            bulkUpdateTasks={bulkUpdateTasks}
+            removeProjectMember={removeProjectMember}
+            updateMemberRole={updateMemberRole}
             dispatch={dispatch}
           />
         )}
@@ -2738,6 +3047,10 @@ function ProjectTabContent({
             project={project}
             availableTeams={availableTeams}
             assignTeam={assignTeam}
+            updateProject={updateProject}
+            deleteProject={archiveProject}
+            members={members}
+            onNavigateBack={onNavigateBack}
           />
         )}
       </m.div>
@@ -2864,18 +3177,9 @@ export default function ProjectManagementPage() {
   const {
     activeTab,
     taskView,
-    showMyTasks,
     isCompactView,
     currentContext,
-    showCreateTaskModal,
-    showEditTaskModal,
-    showCreateSprintModal,
-    showProjectInviteModal,
-    showScheduleMeetingModal,
-    showExpertiseSearch,
-    showExpertiseMatrix,
     selectedTask,
-    showAdvancedFilters,
     selectedSprintId,
     taskFilters,
   } = state;
@@ -2883,10 +3187,22 @@ export default function ProjectManagementPage() {
   const deleteTask = useMutation(api.tasks.mutations.deleteTask);
   const createTask = useMutation(api.tasks.mutations.createTask);
   const assignTeam = useMutation(api.projects.mutations.assignTeam);
-  const bulkUpdateTasks = useMutation(api.tasks.mutations.bulkUpdateTasks);
+  const bulkUpdateTasks = useMutation(
+    api.tasks.mutations.bulkUpdateTasks as any,
+  );
   const bulkDeleteTasks = useMutation(api.tasks.mutations.bulkDeleteTasks);
+  const updateProject = useMutation(api.projects.mutations.updateProject);
+  const archiveProject = useMutation(api.projects.mutations.deleteProject);
+  const removeProjectMember = useMutation(
+    api.projects.mutations.removeProjectMember,
+  );
+  const updateMemberRole = useMutation(
+    api.projects.mutations.updateProjectMemberRole,
+  );
 
-  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Move task handlers to top level
   const handleEditTask = (task: any) => {
@@ -2944,19 +3260,19 @@ export default function ProjectManagementPage() {
   // Cmd+A / Ctrl+A to select all visible tasks; Escape to clear selection
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "a") {
         const tag = (document.activeElement as HTMLElement)?.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
         e.preventDefault();
         const allIds = tasks?.map((t) => t._id) ?? [];
         setSelectedTaskIds(new Set(allIds));
       }
-      if (e.key === 'Escape' && selectedTaskIds.size > 0) {
+      if (e.key === "Escape" && selectedTaskIds.size > 0) {
         setSelectedTaskIds(new Set());
       }
     };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [tasks, selectedTaskIds.size]);
 
   // Get current sprint for this project
@@ -2974,12 +3290,6 @@ export default function ProjectManagementPage() {
   // Get project meetings
   const projectMeetings = useQuery(
     api.meetings.queries.getProjectMeetings,
-    projectId ? { projectId: projectId as any } : "skip",
-  );
-
-  // Get project team members
-  const team = useQuery(
-    api.projects.members.getProjectMembers,
     projectId ? { projectId: projectId as any } : "skip",
   );
 
@@ -3058,22 +3368,30 @@ export default function ProjectManagementPage() {
     );
   }
 
+  const allTasks = tasks ?? [];
+  const completedCount = allTasks.filter((t) => t.status === "done").length;
+  const inProgressCount = allTasks.filter(
+    (t) => t.status === "in_progress",
+  ).length;
+  const blockerCount = allTasks.filter((task) =>
+    isTaskBlocked(task, allTasks),
+  ).length;
+  const activeSprintCount =
+    allSprints?.filter((s) => s.status === "active")?.length ?? 0;
+
   // Real health data based on project statistics
   const healthCards: HealthCard[] = [
     {
       title: "TOTAL TASKS",
       status: tasks && tasks.length > 0 ? "success" : "info",
       value: tasks?.length || 0,
-      subtitle: `${tasks?.filter((t) => t.status === "done").length || 0} completed`,
+      subtitle: `${completedCount} completed`,
       icon: <HiOutlineClipboardList className="w-20px h-20px" />,
     },
     {
       title: "IN PROGRESS",
-      status:
-        tasks?.filter((t) => t.status === "in_progress").length > 5
-          ? "warning"
-          : "info",
-      value: tasks?.filter((t) => t.status === "in_progress").length || 0,
+      status: inProgressCount > 5 ? "warning" : "info",
+      value: inProgressCount,
       subtitle: "Active work",
       icon: <HiOutlineClock className="w-20px h-20px" />,
     },
@@ -3081,20 +3399,14 @@ export default function ProjectManagementPage() {
       title: "SPRINTS",
       status: allSprints && allSprints.length > 0 ? "success" : "info",
       value: allSprints?.length || 0,
-      subtitle: `${allSprints?.filter((s) => s.status === "active").length || 0} active`,
+      subtitle: `${activeSprintCount} active`,
       icon: <HiOutlineLightningBolt className="w-20px h-20px" />,
     },
     {
       title: "BLOCKERS",
-      status:
-        tasks?.filter((t) => t.status === "blocked").length > 0
-          ? "error"
-          : "success",
-      value: tasks?.filter((t) => t.status === "blocked").length || 0,
-      subtitle:
-        tasks?.filter((t) => t.status === "blocked").length > 0
-          ? "Critical issues"
-          : "No blockers",
+      status: blockerCount > 0 ? "error" : "success",
+      value: blockerCount,
+      subtitle: blockerCount > 0 ? "Critical issues" : "No blockers",
       icon: <HiOutlineExclamationCircle className="w-20px h-20px" />,
     },
   ];
@@ -3114,7 +3426,6 @@ export default function ProjectManagementPage() {
     }
   };
 
-  const blockerCount = tasks?.filter((t) => t.status === "blocked").length || 0;
   const memberCount = project?.members?.length || 0;
 
   return (
@@ -3149,11 +3460,18 @@ export default function ProjectManagementPage() {
         projectMeetings={projectMeetings}
         availableTeams={availableTeams}
         assignTeam={assignTeam}
+        bulkUpdateTasks={bulkUpdateTasks}
+        updateProject={updateProject}
+        archiveProject={archiveProject}
+        removeProjectMember={removeProjectMember}
+        updateMemberRole={updateMemberRole}
+        members={project?.members}
         dispatch={dispatch}
         getStatusColor={getStatusColor}
         handleEditTask={handleEditTask}
         handleDeleteTask={handleDeleteTask}
         handleDuplicateTask={handleDuplicateTask}
+        onNavigateBack={() => navigate(`/workspace/${workspaceId}`)}
       />
       <ProjectModals
         state={state}
@@ -3172,20 +3490,27 @@ export default function ProjectManagementPage() {
         onStatusChange={async (status) => {
           await bulkUpdateTasks({
             taskIds: Array.from(selectedTaskIds) as any,
-            updates: { status },
+            updates: { status: status as any },
           });
           setSelectedTaskIds(new Set());
         }}
         onPriorityChange={async (priority) => {
           await bulkUpdateTasks({
             taskIds: Array.from(selectedTaskIds) as any,
-            updates: { priority },
+            updates: { priority: priority as any },
           });
           setSelectedTaskIds(new Set());
         }}
         onDelete={async () => {
-          if (!window.confirm(`Delete ${selectedTaskIds.size} task${selectedTaskIds.size === 1 ? '' : 's'}?`)) return;
-          await bulkDeleteTasks({ taskIds: Array.from(selectedTaskIds) as any });
+          if (
+            !window.confirm(
+              `Delete ${selectedTaskIds.size} task${selectedTaskIds.size === 1 ? "" : "s"}?`,
+            )
+          )
+            return;
+          await bulkDeleteTasks({
+            taskIds: Array.from(selectedTaskIds) as any,
+          });
           setSelectedTaskIds(new Set());
         }}
       />
