@@ -6,6 +6,7 @@ import {
   requirePermission,
 } from "../auth/permissions";
 import { internal } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
 import {
   taskAssigned,
   taskUnassigned,
@@ -867,7 +868,11 @@ export const bulkUpdateTasks = mutation({
         return { updatedCount: 0 };
       }
 
-      const memberIdSet = new Set(assignableMemberIds.map((id) => String(id)));
+      const memberIdByKey: Record<string, Id<"users">> = {};
+      for (const memberId of assignableMemberIds) {
+        memberIdByKey[String(memberId)] = memberId;
+      }
+      const memberIdSet = new Set(Object.keys(memberIdByKey));
 
       const projectTasks = await ctx.db
         .query("tasks")
@@ -986,8 +991,13 @@ export const bulkUpdateTasks = mutation({
           break;
         }
 
+        const targetAssigneeId = memberIdByKey[targetMemberId];
+        if (!targetAssigneeId) {
+          continue;
+        }
+
         await ctx.db.patch(taskToMove._id, {
-          assigneeIds: [targetMemberId as any],
+          assigneeIds: [targetAssigneeId],
           assigneeId: undefined,
           updatedAt: Date.now(),
         });
