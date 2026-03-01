@@ -643,6 +643,12 @@ export default defineSchema({
   })
     .index("by_workspace", ["workspaceId"])
     .index("by_target", ["targetType", "targetId"])
+    .index("by_workspace_and_target_and_insight_type", [
+      "workspaceId",
+      "targetType",
+      "targetId",
+      "insightType",
+    ])
     .index("by_insight_type", ["insightType"])
     .index("by_dismissed", ["dismissed"])
     .index("by_created", ["createdAt"]),

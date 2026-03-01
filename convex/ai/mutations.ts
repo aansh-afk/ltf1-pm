@@ -135,20 +135,22 @@ export const createAIInsight = mutation({
             : {}),
           dedupeKey: args.dedupeKey,
         }
-      : args.metadata;
+      : (args.metadata ?? null);
 
     if (args.dedupeKey) {
       const existingInsights = await ctx.db
         .query("aiInsights")
-        .withIndex("by_target", (q) =>
-          q.eq("targetType", args.targetType).eq("targetId", args.targetId),
+        .withIndex("by_workspace_and_target_and_insight_type", (q) =>
+          q
+            .eq("workspaceId", workspaceMember.workspaceId)
+            .eq("targetType", args.targetType)
+            .eq("targetId", args.targetId)
+            .eq("insightType", args.insightType),
         )
         .collect();
 
       const existingInsight = existingInsights.find(
         (insight) =>
-          insight.workspaceId === workspaceMember.workspaceId &&
-          insight.insightType === args.insightType &&
           !insight.dismissed &&
           insight.metadata &&
           typeof insight.metadata === "object" &&
