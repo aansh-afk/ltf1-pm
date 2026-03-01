@@ -583,6 +583,8 @@ export default defineSchema({
     model: v.union(
       v.literal("gemini-2.5-flash"),
       v.literal("gemini-2.5-flash-lite"),
+      v.literal("gpt-oss-120b"),
+      v.literal("gpt-oss-20b"),
     ),
     tokens: v.object({
       input: v.number(),
@@ -1075,10 +1077,7 @@ export default defineSchema({
   aiProviderKeys: defineTable({
     scope: v.union(v.literal("user"), v.literal("project")),
     scopeId: v.string(), // clerkId for user, projectId string for project
-    provider: v.union(
-      v.literal("cerebras"),
-      v.literal("groq"),
-    ),
+    provider: v.union(v.literal("cerebras"), v.literal("groq")),
     encryptedApiKey: v.string(),
     displayName: v.optional(v.string()),
     defaultModel: v.optional(v.string()),
@@ -1100,10 +1099,7 @@ export default defineSchema({
       v.record(
         v.string(),
         v.object({
-          provider: v.union(
-            v.literal("cerebras"),
-            v.literal("groq"),
-          ),
+          provider: v.union(v.literal("cerebras"), v.literal("groq")),
           model: v.string(),
         }),
       ),
@@ -2034,7 +2030,11 @@ export default defineSchema({
     screenshotIds: v.array(v.id("_storage")),
     recordedSteps: v.array(
       v.object({
-        type: v.union(v.literal("click"), v.literal("input"), v.literal("navigation")),
+        type: v.union(
+          v.literal("click"),
+          v.literal("input"),
+          v.literal("navigation"),
+        ),
         target: v.string(),
         value: v.optional(v.string()),
         url: v.string(),
