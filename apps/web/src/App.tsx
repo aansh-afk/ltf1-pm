@@ -30,6 +30,12 @@ import FeaturesPage from "./pages/FeaturesPage";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import ChangelogPage from "./pages/ChangelogPage";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import CookiesPage from "./pages/CookiesPage";
+import AcceptableUsePage from "./pages/AcceptableUsePage";
+import RefundPolicyPage from "./pages/RefundPolicyPage";
+import DpaPage from "./pages/DpaPage";
 
 // Lazy imports - authenticated/secondary pages
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -49,9 +55,6 @@ const TeamsPage = lazy(() => import("./pages/TeamsPage"));
 const MyProfilePage = lazy(() => import("./pages/MyProfilePage"));
 const WhiteboardPage = lazy(() => import("./pages/WhiteboardPage"));
 const CustomFieldsPage = lazy(() => import("./pages/CustomFieldsPage"));
-const WorkspaceSettingsPage = lazy(
-  () => import("./pages/WorkspaceSettingsPage"),
-);
 const JoinProjectPage = lazy(() => import("./pages/JoinProjectPage"));
 const GitHubCallbackPage = lazy(() => import("./pages/GitHubCallbackPage"));
 const CLIAuthPage = lazy(() => import("./pages/CLIAuthPage"));
@@ -197,6 +200,12 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/changelog" element={<ChangelogPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/cookies" element={<CookiesPage />} />
+          <Route path="/acceptable-use" element={<AcceptableUsePage />} />
+          <Route path="/refunds" element={<RefundPolicyPage />} />
+          <Route path="/dpa" element={<DpaPage />} />
           <Route path="/features" element={<FeaturesPage />} />
           <Route path="/features/:slug" element={<FeatureDetailPage />} />
           <Route path="/sign-in/*" element={<SignInPage />} />
