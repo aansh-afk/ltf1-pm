@@ -46,6 +46,12 @@ const BrutalSelect = forwardRef<HTMLDivElement, BrutalSelectProps>(
     const autoId = useId()
     const selectId = id || autoId
     const listboxId = `${selectId}-listbox`
+    const errorId = `${selectId}-error`
+    const helperId = `${selectId}-helper`
+    const describedBy = [
+      error ? errorId : null,
+      helperText && !error ? helperId : null,
+    ].filter(Boolean).join(' ') || undefined
 
     const selected = options.find((o) => o.value === value)
 
@@ -155,6 +161,8 @@ const BrutalSelect = forwardRef<HTMLDivElement, BrutalSelectProps>(
           aria-haspopup="listbox"
           aria-controls={listboxId}
           aria-label={label || placeholder}
+          aria-describedby={describedBy}
+          aria-disabled={disabled || undefined}
           disabled={disabled}
           onClick={() => {
             if (!disabled) {
@@ -259,14 +267,20 @@ const BrutalSelect = forwardRef<HTMLDivElement, BrutalSelectProps>(
         )}
 
         {/* Error / helper */}
-        {!compact && (error || helperText) && (
+        {!compact && error && (
           <p
-            className={clsx(
-              'text-brutal-xs',
-              error ? 'text-[var(--theme-error)]' : 'text-[var(--theme-foreground)]/70',
-            )}
+            id={errorId}
+            className="text-brutal-xs text-[var(--theme-error)]"
           >
-            {error || helperText}
+            {error}
+          </p>
+        )}
+        {!compact && !error && helperText && (
+          <p
+            id={helperId}
+            className="text-brutal-xs text-[var(--theme-foreground)]/70"
+          >
+            {helperText}
           </p>
         )}
       </div>

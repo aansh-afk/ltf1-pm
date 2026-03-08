@@ -13,8 +13,8 @@ import {
   HiOutlineSortDescending
 } from 'react-icons/hi'
 import clsx from 'clsx'
-import BrutalSelect from '../../ui/BrutalSelect'
-import DeveloperStatusIndicator from '../developer/DeveloperStatusIndicator'
+import BrutalSelect from '@/components/ui/BrutalSelect'
+import DeveloperStatusIndicator from '@/components/features/developer/DeveloperStatusIndicator'
 import { useNavigate } from 'react-router-dom'
 
 interface TeamExpertiseMatrixProps {

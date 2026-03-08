@@ -9,7 +9,8 @@ import {
   HiOutlineCog,
   HiOutlineLockClosed
 } from 'react-icons/hi'
-import BrutalModal from '../../ui/BrutalModal'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
+import BrutalModal from '@/components/ui/BrutalModal'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
 
@@ -31,7 +32,7 @@ export default function ProjectInviteModal({
 
   const inviteLinkData = useQuery(
     api.projects.queries.getProjectInviteLink,
-    isOpen ? { projectId: projectId as any } : 'skip'
+    isOpen ? { projectId: projectId as Id<"projects"> } : 'skip'
   )
 
   const generateNewCode = useMutation(api.projects.mutations.generateProjectInviteCode)
@@ -43,9 +44,9 @@ export default function ProjectInviteModal({
   useEffect(() => {
     if (isOpen && inviteLinkData && !inviteLinkData.inviteCode && !isEnsuring) {
       setIsEnsuring(true)
-      ensureInviteCode({ projectId: projectId as any })
+      ensureInviteCode({ projectId: projectId as Id<"projects"> })
         .then(() => toast.success('Invite code generated!'))
-        .catch((error: any) => toast.error(error.message || 'Failed to generate invite code'))
+        .catch((error: unknown) => toast.error(error instanceof Error ? error.message : 'Failed to generate invite code'))
         .finally(() => setIsEnsuring(false))
     }
   }, [isOpen, inviteLinkData?.inviteCode, isEnsuring, projectId, ensureInviteCode])
@@ -53,10 +54,10 @@ export default function ProjectInviteModal({
   const handleEnsureInviteCode = async () => {
     try {
       setIsEnsuring(true)
-      await ensureInviteCode({ projectId: projectId as any })
+      await ensureInviteCode({ projectId: projectId as Id<"projects"> })
       toast.success('Invite code generated!')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to generate invite code')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to generate invite code')
     } finally {
       setIsEnsuring(false)
     }
@@ -76,10 +77,10 @@ export default function ProjectInviteModal({
   const handleGenerateNewCode = async () => {
     try {
       setIsEnsuring(true)
-      await generateNewCode({ projectId: projectId as any })
+      await generateNewCode({ projectId: projectId as Id<"projects"> })
       toast.success('New single-use invite code generated!')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to generate invite code')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to generate invite code')
     } finally {
       setIsEnsuring(false)
     }

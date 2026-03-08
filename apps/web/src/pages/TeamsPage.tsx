@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
-import { useEnsureUser } from '../hooks/useEnsureUser'
+import { useEnsureUser } from '@/hooks/useEnsureUser'
 import { HiOutlinePlus, HiOutlineUsers, HiOutlineCog, HiOutlineUserAdd } from 'react-icons/hi'
 import { toast } from 'react-hot-toast'
 import { m } from 'framer-motion'
-import BrutalistLoader from '../components/common/BrutalistLoader'
+import BrutalistLoader from '@/components/common/BrutalistLoader'
 import BrutalModal from '@/components/ui/BrutalModal'
 import AddTeamMemberModal from '@/components/features/team/AddTeamMemberModal'
 
@@ -46,6 +47,7 @@ export default function TeamsPage() {
     if (isUserLoading) return <BrutalistLoader />
 
     return (
+        <ErrorBoundary>
         <div className="p-4 max-w-7xl mx-auto min-h-screen">
             {/* Page Header */}
             <m.div
@@ -199,5 +201,6 @@ export default function TeamsPage() {
                 />
             )}
         </div>
+        </ErrorBoundary>
     )
 }

@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, internalMutation } from "../../_generated/server";
 import { internal } from "../../_generated/api";
+import { getCurrentUserOrThrow } from "../../lib/auth";
 
 // Connect a GitHub repository to a project
 export const connectRepositoryToProject = mutation({
@@ -10,15 +11,7 @@ export const connectRepositoryToProject = mutation({
   },
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) throw new Error("User not found");
+    const user = await getCurrentUserOrThrow(ctx);
 
     const project = await ctx.db.get(args.projectId);
     if (!project) throw new Error("Project not found");

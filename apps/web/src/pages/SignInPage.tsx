@@ -1,7 +1,8 @@
 import { SignIn } from "@clerk/clerk-react";
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { Link } from "react-router-dom";
 import { m } from "framer-motion";
-import { usePageTitle } from "../hooks/usePageTitle";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const clerkAppearance = {
   variables: {
@@ -81,6 +82,7 @@ export default function SignInPage() {
   usePageTitle("Sign In");
 
   return (
+    <ErrorBoundary>
     <div className="relative min-h-screen overflow-hidden bg-[#050505] text-[#F9FAFB]">
       <div
         className="pointer-events-none absolute inset-0"
@@ -134,5 +136,6 @@ export default function SignInPage() {
         </div>
       </m.main>
     </div>
+    </ErrorBoundary>
   );
 }

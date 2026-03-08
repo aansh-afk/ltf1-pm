@@ -1,8 +1,9 @@
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { m, type Variants } from 'framer-motion'
-import PublicNavigation from '../components/common/PublicNavigation'
-import Footer from '../components/common/Footer'
-import ColoredPre from '../components/landing/ascii/ColoredPre'
+import PublicNavigation from '@/components/common/PublicNavigation'
+import Footer from '@/components/common/Footer'
+import ColoredPre from '@/components/landing/ascii/ColoredPre'
 
 /* ─── Types ─────────────────────────────────────────────────── */
 
@@ -492,6 +493,7 @@ export default function FeatureDetailPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-[#050505]">
       <PublicNavigation />
 
@@ -616,5 +618,6 @@ export default function FeatureDetailPage() {
 
       <Footer />
     </div>
+    </ErrorBoundary>
   )
 }

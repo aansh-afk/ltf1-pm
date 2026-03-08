@@ -1,4 +1,5 @@
 import { useReducer } from 'react'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
@@ -67,6 +68,7 @@ export default function ProfileDemoPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="p-[16px] space-y-32px">
       {/* Page Header */}
       <div className="mb-[16px]">
@@ -288,5 +290,6 @@ export default function ProfileDemoPage() {
         />
       )}
     </div>
+    </ErrorBoundary>
   )
 }

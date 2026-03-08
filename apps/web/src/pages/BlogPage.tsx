@@ -1,3 +1,4 @@
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { Link } from 'react-router-dom'
 import { m } from 'framer-motion'
 import { useState } from 'react'
@@ -9,8 +10,8 @@ import {
 import { useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { toast } from 'react-hot-toast'
-import PublicNavigation from '../components/common/PublicNavigation'
-import Footer from '../components/common/Footer'
+import PublicNavigation from '@/components/common/PublicNavigation'
+import Footer from '@/components/common/Footer'
 
 interface BlogPost {
   id: string
@@ -164,6 +165,7 @@ export default function BlogPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-carbon-plate">
       <PublicNavigation />
 
@@ -408,5 +410,6 @@ export default function BlogPage() {
 
       <Footer />
     </div>
+    </ErrorBoundary>
   )
 }

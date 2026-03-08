@@ -1,3 +1,4 @@
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useParams } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
@@ -17,6 +18,7 @@ export default function AutomationPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="p-[16px]">
       <div className="mb-[12px]">
         <h1 className="text-brutal-3xl font-bold mb-8px">WORKFLOW AUTOMATION</h1>
@@ -30,5 +32,6 @@ export default function AutomationPage() {
         projectId={projectId as Id<"projects"> | undefined}
       />
     </div>
+    </ErrorBoundary>
   )
 }

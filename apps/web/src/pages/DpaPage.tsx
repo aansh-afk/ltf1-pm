@@ -1,5 +1,6 @@
-import LegalLayout from "../components/legal/LegalLayout";
-import { usePageTitle } from "../hooks/usePageTitle";
+import ErrorBoundary from '@/components/common/ErrorBoundary'
+import LegalLayout from "@/components/legal/LegalLayout";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const COMPANY_NAME = "Vividverseglobal";
 const CONTACT_EMAIL = "Aansh.Naidu@vividverseglobal.com";
@@ -9,6 +10,7 @@ export default function DpaPage() {
   usePageTitle("Data Processing Addendum (DPA)");
 
   return (
+    <ErrorBoundary>
     <LegalLayout
       title="Data Processing Addendum (DPA)"
       summary="This DPA summary describes how LTF1 processes personal data on behalf of workspace customers."
@@ -154,5 +156,6 @@ export default function DpaPage() {
         </p>
       </section>
     </LegalLayout>
+    </ErrorBoundary>
   );
 }

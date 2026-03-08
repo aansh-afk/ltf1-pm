@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { canAccessTask } from "../auth/permissions";
 import { internal } from "../_generated/api";
 import { commentAdded } from "../email/templates";
+import { getCurrentUserOrThrow } from "../lib/auth";
 
 export const createComment = mutation({
   args: {
@@ -10,19 +11,7 @@ export const createComment = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const hasAccess = await canAccessTask(ctx.db, user._id, args.taskId, "task.view");
     if (!hasAccess) {
@@ -131,19 +120,7 @@ export const updateComment = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const comment = await ctx.db.get(args.commentId);
     if (!comment) {
@@ -168,19 +145,7 @@ export const deleteComment = mutation({
     commentId: v.id("comments"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const comment = await ctx.db.get(args.commentId);
     if (!comment) {

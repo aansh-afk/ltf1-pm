@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, action, internalMutation } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
+import { getCurrentUserOrThrow } from "./lib/auth";
 
 // Workflow Trigger Types
 export const TRIGGER_TYPES = {
@@ -137,13 +138,7 @@ export const createWorkflow = mutation({
       throw new Error("Unauthorized");
     }
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const membership = await ctx.db
       .query("workspaceMembers")
@@ -207,18 +202,7 @@ export const updateWorkflow = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const workflow = await ctx.db.get(args.workflowId);
     if (!workflow) {
@@ -250,18 +234,7 @@ export const deleteWorkflow = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const workflow = await ctx.db.get(args.workflowId);
     if (!workflow) {
@@ -1195,6 +1168,7 @@ export const importWorkflowTemplate = mutation({
       throw new Error("Unauthorized");
     }
 
+    // identity.subject used for createdBy below
     return await ctx.db.insert("workflows", {
       workspaceId: args.workspaceId,
       name: args.template.name,

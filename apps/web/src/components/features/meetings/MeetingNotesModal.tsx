@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import toast from 'react-hot-toast'
-import BrutalModal from '../../ui/BrutalModal'
+import BrutalModal from '@/components/ui/BrutalModal'
 import {
   HiOutlinePencil,
   HiOutlineSave,
@@ -15,10 +16,37 @@ import {
 } from 'react-icons/hi'
 import { format } from 'date-fns'
 
+interface MeetingNotesAttendee {
+  userId: Id<"users">
+  status: string
+  user?: {
+    _id: Id<"users">
+    name: string
+    email: string
+    avatarUrl?: string
+  } | null
+}
+
+interface MeetingNotesData {
+  _id: Id<"meetings">
+  title: string
+  type: string
+  organizerId: Id<"users">
+  startTime: number
+  endTime: number
+  notes?: string
+  attendees: MeetingNotesAttendee[]
+  template?: {
+    agenda?: string[]
+    duration?: number
+    isRecurring: boolean
+  }
+}
+
 interface MeetingNotesModalProps {
   isOpen: boolean
   onClose: () => void
-  meeting: any
+  meeting: MeetingNotesData
   currentUserId?: string
 }
 
@@ -42,7 +70,7 @@ export default function MeetingNotesModal({
   }, [meeting?.notes])
 
   const isOrganizer = currentUserId === meeting?.organizerId
-  const canEdit = isOrganizer || meeting?.attendees?.some((a: any) => 
+  const canEdit = isOrganizer || meeting?.attendees?.some((a) =>
     a.userId === currentUserId && a.status === 'accepted'
   )
 
@@ -56,8 +84,8 @@ export default function MeetingNotesModal({
       toast.success('Notes saved')
       setIsEditing(false)
       setLastSaved(new Date())
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to save notes')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to save notes')
     } finally {
       setIsSaving(false)
     }
@@ -82,7 +110,7 @@ export default function MeetingNotesModal({
   }
 
   const generateTemplate = () => {
-    const attendeesList = meeting.attendees?.map((a: any) => 
+    const attendeesList = meeting.attendees?.map((a) =>
       `- ${a.user?.name || 'Unknown'} (${a.status})`
     ).join('\n')
 
@@ -267,8 +295,8 @@ USE MARKDOWN FOR FORMATTING:
               <span className="uppercase">Can Edit:</span>
               <div className="flex items-center gap-[4px]">
                 {meeting.attendees
-                  .filter((a: any) => a.status === 'accepted' || a.userId === meeting.organizerId)
-                  .map((a: any) => (
+                  .filter((a) => a.status === 'accepted' || a.userId === meeting.organizerId)
+                  .map((a) => (
                     <span key={a.userId} className="px-[4px] py-2px bg-[var(--theme-background-secondary)] border border-[var(--theme-border)]">
                       {a.user?.name || 'Unknown'}
                     </span>

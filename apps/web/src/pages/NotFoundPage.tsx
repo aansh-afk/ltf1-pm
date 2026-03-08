@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import React, { useState, useEffect, useRef, useCallback, useReducer } from 'react'
 
 // ── Fake memory dump hex ──
@@ -576,6 +577,7 @@ export default function NotFoundPage() {
   )
 
   return (
+    <ErrorBoundary>
     <div
       className="min-h-screen bg-[var(--theme-background)] flex flex-col relative overflow-hidden cursor-text select-none"
       role="button"
@@ -641,5 +643,6 @@ export default function NotFoundPage() {
         }
       `}</style>
     </div>
+    </ErrorBoundary>
   )
 }

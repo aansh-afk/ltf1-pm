@@ -1,5 +1,6 @@
-import LegalLayout from "../components/legal/LegalLayout";
-import { usePageTitle } from "../hooks/usePageTitle";
+import ErrorBoundary from '@/components/common/ErrorBoundary'
+import LegalLayout from "@/components/legal/LegalLayout";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const EFFECTIVE_DATE = "1 January 2026";
 
@@ -7,6 +8,7 @@ export default function CookiesPage() {
   usePageTitle("Cookie Policy");
 
   return (
+    <ErrorBoundary>
     <LegalLayout
       title="Cookie Policy"
       summary="This Cookie Policy explains how LTF1 uses cookies and similar technologies. Short version: tiny files, useful jobs, no mystery snacks."
@@ -99,5 +101,6 @@ export default function CookiesPage() {
         </p>
       </section>
     </LegalLayout>
+    </ErrorBoundary>
   );
 }

@@ -1,11 +1,13 @@
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { toast } from 'react-hot-toast'
 import { Link } from 'react-router-dom'
-import PublicNavigation from '../components/common/PublicNavigation'
-import Footer from '../components/common/Footer'
-import WaitlistForm from '../components/landing/WaitlistForm'
+import PublicNavigation from '@/components/common/PublicNavigation'
+import Footer from '@/components/common/Footer'
+import WaitlistForm from '@/components/landing/WaitlistForm'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
 
 // ── Radar ping component ──
 function RadarPing() {
@@ -380,6 +382,10 @@ export default function ComingSoonPage() {
     setFingerprint(fp)
   }, [])
 
+  if (stats === undefined) {
+    return <LoadingSpinner size="lg" />
+  }
+
   const handleBoost = async () => {
     try {
       const success = await addToWishlist({ fingerprint })
@@ -404,6 +410,7 @@ export default function ComingSoonPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-[var(--theme-background)] flex flex-col relative overflow-hidden">
       <PublicNavigation />
 
@@ -496,5 +503,6 @@ export default function ComingSoonPage() {
         }
       `}</style>
     </div>
+    </ErrorBoundary>
   )
 }

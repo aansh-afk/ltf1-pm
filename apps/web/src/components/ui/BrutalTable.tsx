@@ -43,7 +43,7 @@ export default function BrutalTable<T extends { id?: string; _id?: string }>({
   if (data.length === 0) {
     return (
       <div className="border-2 border-[var(--theme-border)]">
-        <div className="p-[24px] text-center">
+        <div className="p-[24px] text-center" role="status">
           <p className="text-brutal-sm text-[var(--theme-foreground)]/50">{emptyMessage}</p>
         </div>
       </div>
@@ -53,12 +53,13 @@ export default function BrutalTable<T extends { id?: string; _id?: string }>({
   return (
     <div className="border-2 border-[var(--theme-border)] overflow-hidden bg-[var(--theme-background)]">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full" aria-label="Data table">
           <thead>
             <tr className="bg-[var(--theme-background-secondary)] border-b-2 border-[var(--theme-border)]">
               {columns.map(column => (
                 <th
                   key={column.key}
+                  scope="col"
                   className={clsx(
                     'px-[10px] py-[8px] text-left text-brutal-sm font-bold text-[var(--theme-foreground)]',
                     column.width,

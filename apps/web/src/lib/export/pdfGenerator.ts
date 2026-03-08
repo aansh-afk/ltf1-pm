@@ -5,7 +5,8 @@ import { format } from 'date-fns'
 // Extend jsPDF with autoTable plugin
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: (options: any) => jsPDF
+    autoTable: (options: Record<string, unknown>) => jsPDF
+    lastAutoTable: { finalY: number }
   }
 }
 
@@ -160,7 +161,7 @@ export class PDFGenerator {
   }
 
   // Generate Sprint Report PDF
-  generateSprintReport(sprint: Sprint, tasks: Task[], teamMembers: any[]) {
+  generateSprintReport(sprint: Sprint, tasks: Task[], teamMembers: Array<{ _id: string; name?: string; email?: string }>) {
     this.addHeader('Sprint Report', sprint.name)
     
     // Sprint Overview
@@ -194,7 +195,7 @@ export class PDFGenerator {
       margin: { left: this.margin, right: this.margin },
     })
     
-    this.currentY = (this.doc as any).lastAutoTable.finalY + 10
+    this.currentY = this.doc.lastAutoTable.finalY + 10
     
     // Task Summary
     this.addSection('Task Summary')
@@ -239,7 +240,7 @@ export class PDFGenerator {
       margin: { left: this.margin, right: this.margin },
     })
     
-    this.currentY = (this.doc as any).lastAutoTable.finalY + 10
+    this.currentY = this.doc.lastAutoTable.finalY + 10
     
     // Task List
     this.checkPageBreak()
@@ -290,7 +291,7 @@ export class PDFGenerator {
   }
 
   // Generate Project Status Report PDF
-  generateProjectReport(project: Project, tasks: Task[], sprints: Sprint[], teamMembers: any[]) {
+  generateProjectReport(project: Project, tasks: Task[], sprints: Sprint[], teamMembers: Array<{ _id: string; name?: string; email?: string }>) {
     this.addHeader('Project Status Report', project.name)
     
     // Project Overview
@@ -326,7 +327,7 @@ export class PDFGenerator {
       margin: { left: this.margin, right: this.margin },
     })
     
-    this.currentY = (this.doc as any).lastAutoTable.finalY + 10
+    this.currentY = this.doc.lastAutoTable.finalY + 10
     
     // Sprint Summary
     if (sprints.length > 0) {
@@ -356,7 +357,7 @@ export class PDFGenerator {
         margin: { left: this.margin, right: this.margin },
       })
       
-      this.currentY = (this.doc as any).lastAutoTable.finalY + 10
+      this.currentY = this.doc.lastAutoTable.finalY + 10
     }
     
     // High Priority Tasks
@@ -433,7 +434,7 @@ export class PDFGenerator {
       margin: { left: this.margin, right: this.margin },
     })
     
-    this.currentY = (this.doc as any).lastAutoTable.finalY + 10
+    this.currentY = this.doc.lastAutoTable.finalY + 10
     
     // Agenda
     if (meeting.agenda && meeting.agenda.length > 0) {
@@ -561,7 +562,7 @@ export class PDFGenerator {
         margin: { left: this.margin, right: this.margin },
       })
       
-      this.currentY = (this.doc as any).lastAutoTable.finalY + 10
+      this.currentY = this.doc.lastAutoTable.finalY + 10
     })
     
     // Add footer to all pages

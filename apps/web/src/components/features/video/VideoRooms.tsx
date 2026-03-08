@@ -22,7 +22,7 @@ import {
   HiOutlineHand
 } from 'react-icons/hi'
 import { HiVideoCamera } from 'react-icons/hi2'
-import BrutalSelect from '../../ui/BrutalSelect'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 
 // Video camera slash icon component (since HiOutlineVideoCameraSlash doesn't exist in hi package)
 const VideoCameraSlashIcon = ({ className }: { className?: string }) => (

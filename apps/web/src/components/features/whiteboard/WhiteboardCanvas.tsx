@@ -24,7 +24,7 @@ import {
 import PropertiesPanel from './PropertiesPanel'
 import ContextMenu, { createElementContextMenu, createCanvasContextMenu } from './ContextMenu'
 import StatusBar from './StatusBar'
-import BrutalTooltip from '../../ui/BrutalTooltip'
+import BrutalTooltip from '@/components/ui/BrutalTooltip'
 import SVGPatterns, { getFillValue, getStrokeDashArray } from './SVGPatterns'
 import StylePropertiesPanel from './StylePropertiesPanel'
 import { TextEditor } from './TextEditor'
@@ -87,14 +87,49 @@ interface WhiteboardCanvasProps {
   onClose?: () => void
 }
 
+interface ElementData {
+  shape?: string
+  text?: string
+  points?: number[][]
+  url?: string
+  storageId?: string
+  width?: number
+  height?: number
+  [key: string]: unknown
+}
+
+interface ElementStyle {
+  fill?: string
+  stroke?: string
+  strokeWidth?: number
+  strokeDasharray?: string
+  strokeStyle?: string
+  fillOpacity?: number
+  strokeOpacity?: number
+  opacity?: number
+  fontSize?: number
+  fontFamily?: string
+  fontWeight?: string
+  fontStyle?: string
+  textDecoration?: string
+  textAlign?: string
+  color?: string
+  backgroundColor?: string
+  borderColor?: string
+  borderWidth?: number
+  pointerLength?: number
+  pointerWidth?: number
+  [key: string]: unknown
+}
+
 interface Element {
   id: string
   type: string
-  data: any
+  data: ElementData
   position: { x: number; y: number }
   size: { width: number; height: number }
   rotation: number
-  style: any
+  style: ElementStyle
   locked: boolean
   createdBy: Id<'users'>
   updatedBy: Id<'users'>
@@ -215,7 +250,7 @@ export default function WhiteboardCanvas({
   // UI Enhancement State
   const [showPropertiesPanel, setShowPropertiesPanel] = useState(false)
   const [showStylePanel, setShowStylePanel] = useState(false)
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; options: any[] } | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; options: { label: string; icon?: React.ReactNode; shortcut?: string; action: () => void; disabled?: boolean; divider?: boolean; danger?: boolean }[] } | null>(null)
   const [cursorPosition, setCursorPosition] = useState<{ x: number; y: number } | null>(null)
   const [zenMode, setZenMode] = useState(false)
   const [copiedElement, setCopiedElement] = useState<Element | null>(null)
@@ -686,7 +721,7 @@ export default function WhiteboardCanvas({
     // For DRAWING elements, check if we have enough points (at least 2)
     // For other elements, check if size is big enough
     const isValidDrawing = currentElement.type === ELEMENT_TYPES.DRAWING &&
-                          currentElement.data?.points?.length >= 2
+                          (currentElement.data?.points?.length ?? 0) >= 2
     const isValidShape = currentElement.type !== ELEMENT_TYPES.DRAWING &&
                         (currentElement.size!.width > 5 || currentElement.size!.height > 5)
 
@@ -694,7 +729,7 @@ export default function WhiteboardCanvas({
       await addElement({
         whiteboardId,
         element: {
-          type: currentElement.type as any,
+          type: currentElement.type as 'shape' | 'text' | 'line' | 'image' | 'sticky' | 'drawing',
           data: currentElement.data,
           position: currentElement.position!,
           size: currentElement.size!,
@@ -1018,7 +1053,7 @@ export default function WhiteboardCanvas({
   }, [zoom, pan])
 
   // Handle style changes from StylePropertiesPanel
-  const handleStyleChange = useCallback(async (elementIds: string[], styleChanges: any) => {
+  const handleStyleChange = useCallback(async (elementIds: string[], styleChanges: Partial<ElementStyle>) => {
     if (!whiteboardId) return
 
     const updates = elementIds.map(elementId => ({
@@ -1061,7 +1096,7 @@ export default function WhiteboardCanvas({
   }, [])
 
   // Text formatting handlers
-  const handleTextFormatChange = useCallback(async (changes: any) => {
+  const handleTextFormatChange = useCallback(async (changes: Partial<ElementStyle>) => {
     if (!whiteboardId || !editingTextElement) return
 
     await updateElement({
@@ -1557,9 +1592,10 @@ export default function WhiteboardCanvas({
   // Render element
   const renderElement = (element: Element | Partial<Element>, isPreview = false) => {
     const { id, type, data, position, size, style, locked } = element
+    if (!data || !position || !size || !style) return null
     const isSelected = id ? selectedElements.includes(id) : false
     const elementId = id || 'preview'
-    
+
     switch (type) {
       case ELEMENT_TYPES.SHAPE:
         if (data.shape === SHAPE_TYPES.RECTANGLE) {
@@ -2505,7 +2541,7 @@ export default function WhiteboardCanvas({
             fontWeight={editingTextElement.style?.fontWeight || 'normal'}
             fontStyle={editingTextElement.style?.fontStyle || 'normal'}
             textDecoration={editingTextElement.style?.textDecoration || 'none'}
-            textAlign={(editingTextElement.style?.textAlign as any) || 'left'}
+            textAlign={(editingTextElement.style?.textAlign as 'left' | 'center' | 'right') || 'left'}
             onFontSizeChange={(size) => handleTextFormatChange({ fontSize: size })}
             onFontFamilyChange={(family) => handleTextFormatChange({ fontFamily: family })}
             onToggleBold={() => handleTextFormatChange({

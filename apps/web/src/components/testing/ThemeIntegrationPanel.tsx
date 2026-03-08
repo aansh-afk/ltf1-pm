@@ -8,8 +8,8 @@ import {
   useThemeIntegrationValidation, 
   useIntegrationHealthMonitoring,
   useProductionReadiness 
-} from '../../hooks/useThemeIntegrationValidation'
-import { useTheme } from '../../contexts/ThemeContext'
+} from '@/hooks/useThemeIntegrationValidation'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface ThemeIntegrationPanelProps {
   className?: string

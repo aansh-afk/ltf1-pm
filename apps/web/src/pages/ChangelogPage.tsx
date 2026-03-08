@@ -1,8 +1,9 @@
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { m, AnimatePresence } from 'framer-motion'
 import { useState, useRef, useEffect, useCallback } from 'react'
-import PublicNavigation from '../components/common/PublicNavigation'
-import Footer from '../components/common/Footer'
-import { usePageTitle } from '../hooks/usePageTitle'
+import PublicNavigation from '@/components/common/PublicNavigation'
+import Footer from '@/components/common/Footer'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -278,6 +279,7 @@ export default function ChangelogPage() {
   usePageTitle('Changelog — LTF1')
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-[#050505]">
       <PublicNavigation />
       <MobileVersionIndicator />
@@ -435,5 +437,6 @@ export default function ChangelogPage() {
 
       <Footer />
     </div>
+    </ErrorBoundary>
   )
 }

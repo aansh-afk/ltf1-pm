@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
+import { getCurrentUser, getCurrentUserOrThrow } from "./lib/auth";
 
 // Audit event types
 export const AUDIT_EVENTS = {
@@ -147,10 +148,7 @@ export const createAuditLog = internalMutation({
     let userName: string | undefined;
 
     if (identity) {
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-        .first();
+      const user = await getCurrentUser(ctx);
 
       userEmail = user?.email;
       userName = user?.name;
@@ -225,16 +223,7 @@ export const getAuditLogs = query({
     }),
   ),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) throw new Error("User not found");
+    const user = await getCurrentUserOrThrow(ctx);
 
     const member = await ctx.db
       .query("workspaceMembers")
@@ -336,16 +325,7 @@ export const getAuditLogStats = query({
     ),
   }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) throw new Error("User not found");
+    const user = await getCurrentUserOrThrow(ctx);
 
     const member = await ctx.db
       .query("workspaceMembers")
@@ -434,16 +414,7 @@ export const exportAuditLogs = query({
     data: v.string(),
   }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) throw new Error("User not found");
+    const user = await getCurrentUserOrThrow(ctx);
 
     const member = await ctx.db
       .query("workspaceMembers")
@@ -518,11 +489,7 @@ export const setRetentionPolicy = mutation({
       throw new Error("Unauthorized");
     }
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) throw new Error("User not found");
+    const user = await getCurrentUserOrThrow(ctx);
 
     const member = await ctx.db
       .query("workspaceMembers")

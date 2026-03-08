@@ -1,5 +1,6 @@
-import LegalLayout from "../components/legal/LegalLayout";
-import { usePageTitle } from "../hooks/usePageTitle";
+import ErrorBoundary from '@/components/common/ErrorBoundary'
+import LegalLayout from "@/components/legal/LegalLayout";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const EFFECTIVE_DATE = "1 January 2026";
 const CONTACT_EMAIL = "Aansh.Naidu@vividverseglobal.com";
@@ -8,6 +9,7 @@ export default function AcceptableUsePage() {
   usePageTitle("Acceptable Use Policy");
 
   return (
+    <ErrorBoundary>
     <LegalLayout
       title="Acceptable Use Policy"
       summary="This policy sets rules for safe, lawful, and responsible use of LTF1. Friendly mode: be excellent to each other and don't break the platform."
@@ -107,5 +109,6 @@ export default function AcceptableUsePage() {
         </p>
       </section>
     </LegalLayout>
+    </ErrorBoundary>
   );
 }

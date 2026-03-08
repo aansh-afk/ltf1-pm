@@ -1,6 +1,6 @@
 import { useEffect, useRef, useReducer } from 'react'
-import type { KeyCombo, ShortcutConflict } from '../../types/shortcuts'
-import { useShortcuts } from '../../contexts/ShortcutContext'
+import type { KeyCombo, ShortcutConflict } from '@/types/shortcuts'
+import { useShortcuts } from '@/contexts/ShortcutContext'
 import { HiOutlineExclamationCircle, HiOutlineX } from 'react-icons/hi'
 import clsx from 'clsx'
 

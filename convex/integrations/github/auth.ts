@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation } from "../../_generated/server";
+import { getCurrentUser, getCurrentUserOrThrow } from "../../lib/auth";
 
 // Note: Webhook signature verification and JWT generation
 // are handled in nodeActions.ts using Node.js runtime
@@ -16,18 +17,9 @@ export const verifyInstallationAccess = query({
     projectId: v.optional(v.id("projects")),
   }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return { hasAccess: false, reason: "Not authenticated" };
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
+    const user = await getCurrentUser(ctx);
     if (!user) {
-      return { hasAccess: false, reason: "User not found" };
+      return { hasAccess: false, reason: "Not authenticated" };
     }
 
     const installation = await ctx.db
@@ -90,19 +82,7 @@ export const linkGitHubAccount = mutation({
   },
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     // Update user's GitHub information
     await ctx.db.patch(user._id, {
@@ -141,14 +121,7 @@ export const getUserInstallations = query({
   args: {},
   returns: v.array(v.any()),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
+    const user = await getCurrentUser(ctx);
     if (!user) return [];
 
     const seenIds = new Set<number>();

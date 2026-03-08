@@ -5,7 +5,8 @@ import { v } from "convex/values";
 export const activityTypes = [
   // Task activities
   "task_created",
-  "task_completed", 
+  "task_updated",
+  "task_completed",
   "task_status_changed",
   "task_assigned",
   "task_priority_changed",
@@ -14,82 +15,60 @@ export const activityTypes = [
   "task_commented",
   "task_blocked",
   "task_unblocked",
-  
+
   // Team activities
   "member_joined",
   "member_removed",
   "member_role_changed",
-  
-  // Project activities  
+
+  // Project activities
   "project_created",
   "project_updated",
   "sprint_created",
   "sprint_started",
   "sprint_completed",
-  
+
   // Meeting activities
   "meeting_scheduled",
   "meeting_completed",
   "meeting_cancelled",
-  
-  // Code activities (for future GitHub integration)
+
+  // Code activities (GitHub integration)
   "commit_pushed",
   "pr_opened",
   "pr_merged",
-  "pr_reviewed"
+  "pr_reviewed",
+  "pr_closed",
+  "issue_opened",
+  "issue_closed"
 ] as const;
 
 export type ActivityType = typeof activityTypes[number];
 
+// NOTE: This schema definition is kept in sync with convex/schema.ts activities table.
+// The canonical schema is in convex/schema.ts — update both if changing fields.
 export const activityTable = defineTable({
-  // Core activity fields
-  type: v.union(...activityTypes.map(type => v.literal(type))),
-  projectId: v.id("projects"),
+  type: v.string(), // One of activityTypes above, kept as v.string() for forward-compatibility
   workspaceId: v.id("workspaces"),
-  
-  // Actor (who performed the action)
-  actorId: v.id("users"),
-  actorName: v.string(),
-  
+  projectId: v.optional(v.id("projects")),
+
+  // Actor (who performed the action) — optional for webhook-originated activities
+  actorId: v.optional(v.id("users")),
+  actorName: v.optional(v.string()),
+
   // Target (what was acted upon)
-  targetType: v.union(
-    v.literal("task"),
-    v.literal("project"), 
-    v.literal("sprint"),
-    v.literal("meeting"),
-    v.literal("user"),
-    v.literal("comment")
-  ),
-  targetId: v.optional(v.string()), // ID of the target entity
+  targetType: v.optional(v.string()), // "task", "project", "sprint", "meeting", "user", "comment", "github"
+  targetId: v.optional(v.string()), // Polymorphic reference — may be any table's ID
   targetName: v.optional(v.string()), // Display name of target
-  
+
   // Activity metadata
-  description: v.string(), // Human readable description
-  metadata: v.optional(v.object({
-    // For status changes
-    oldValue: v.optional(v.string()),
-    newValue: v.optional(v.string()),
-    
-    // For assignments
-    assignedTo: v.optional(v.id("users")),
-    assignedToName: v.optional(v.string()),
-    
-    // For time tracking
-    timeSpent: v.optional(v.number()),
-    
-    // For priority changes
-    oldPriority: v.optional(v.string()),
-    newPriority: v.optional(v.string()),
-    
-    // For any additional context
-    extra: v.optional(v.any())
-  })),
-  
+  description: v.optional(v.string()), // Human readable description
+  metadata: v.optional(v.any()), // Truly dynamic: oldValue, newValue, assignedTo, timeSpent, extra, etc.
+
   // Timestamps
-  timestamp: v.number(),
+  timestamp: v.optional(v.number()),
 })
+.index("by_type", ["type", "timestamp"])
 .index("by_project", ["projectId", "timestamp"])
-.index("by_workspace", ["workspaceId", "timestamp"])  
-.index("by_actor", ["actorId", "timestamp"])
-.index("by_target", ["targetType", "targetId", "timestamp"])
-.index("by_type", ["type", "timestamp"]);
+.index("by_workspace", ["workspaceId", "timestamp"])
+.index("by_actor", ["actorId", "timestamp"]);

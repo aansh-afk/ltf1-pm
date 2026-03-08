@@ -10,8 +10,8 @@ import {
   ThemePersistenceUtils,
   type SessionTestResult,
   type CrossSessionValidationResult 
-} from '../utils/themePersistenceValidator'
-import { useTheme } from '../contexts/ThemeContext'
+} from '@/utils/themePersistenceValidator'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface PersistenceValidationState {
   isRunning: boolean

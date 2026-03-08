@@ -5,8 +5,8 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { useThemeTesting, useThemeTestingStatus } from '../../hooks/useThemeTesting'
-import { useTheme } from '../../contexts/ThemeContext'
+import { useThemeTesting, useThemeTestingStatus } from '@/hooks/useThemeTesting'
+import { useTheme } from '@/contexts/ThemeContext'
 import { ThemeTestingPanel } from './ThemeTestingPanel'
 
 interface DevThemeMonitorProps {

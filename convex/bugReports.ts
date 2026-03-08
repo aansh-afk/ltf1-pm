@@ -1,5 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { getCurrentUserOrThrow } from "./lib/auth";
+import { bugSeverityValidator, bugStatusValidator } from "./lib/validators";
 
 export const generateUploadUrl = mutation({
   args: {},
@@ -16,12 +18,7 @@ export const submitBugReport = mutation({
     userName: v.optional(v.string()),
     title: v.string(),
     description: v.string(),
-    severity: v.union(
-      v.literal("critical"),
-      v.literal("high"),
-      v.literal("medium"),
-      v.literal("low"),
-    ),
+    severity: bugSeverityValidator,
     url: v.string(),
     browserInfo: v.string(),
     viewportSize: v.string(),
@@ -61,12 +58,7 @@ const bugReportValidator = v.object({
   userName: v.optional(v.string()),
   title: v.string(),
   description: v.string(),
-  severity: v.union(
-    v.literal("critical"),
-    v.literal("high"),
-    v.literal("medium"),
-    v.literal("low"),
-  ),
+  severity: bugSeverityValidator,
   url: v.string(),
   browserInfo: v.string(),
   viewportSize: v.string(),
@@ -87,38 +79,19 @@ const bugReportValidator = v.object({
       timestamp: v.number(),
     }),
   ),
-  status: v.union(
-    v.literal("new"),
-    v.literal("triaged"),
-    v.literal("in_progress"),
-    v.literal("resolved"),
-    v.literal("closed"),
-  ),
+  status: bugStatusValidator,
   createdAt: v.number(),
 });
 
 async function requireAdmin(ctx: { auth: { getUserIdentity: () => Promise<any> }; db: any }) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new Error("Not authenticated");
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", identity.subject))
-    .first();
-  if (!user || user.role !== "admin") throw new Error("Admin access required");
+  const user = await getCurrentUserOrThrow(ctx as any);
+  if (user.role !== "admin") throw new Error("Admin access required");
   return user;
 }
 
 export const listBugReports = query({
   args: {
-    status: v.optional(
-      v.union(
-        v.literal("new"),
-        v.literal("triaged"),
-        v.literal("in_progress"),
-        v.literal("resolved"),
-        v.literal("closed"),
-      ),
-    ),
+    status: v.optional(bugStatusValidator),
   },
   returns: v.array(bugReportValidator),
   handler: async (ctx, args) => {
@@ -163,13 +136,7 @@ export const getBugReport = query({
 export const updateBugReportStatus = mutation({
   args: {
     id: v.id("bugReports"),
-    status: v.union(
-      v.literal("new"),
-      v.literal("triaged"),
-      v.literal("in_progress"),
-      v.literal("resolved"),
-      v.literal("closed"),
-    ),
+    status: bugStatusValidator,
   },
   returns: v.null(),
   handler: async (ctx, args) => {

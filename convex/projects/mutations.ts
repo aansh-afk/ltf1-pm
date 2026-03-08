@@ -2,6 +2,8 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission, requireProjectPermission } from "../auth/permissions";
 import { internal } from "../_generated/api";
+import { getCurrentUserOrThrow } from "../lib/auth";
+import { projectStatusValidator, projectRoleValidator } from "../lib/validators";
 
 export const createProject = mutation({
   args: {
@@ -13,19 +15,7 @@ export const createProject = mutation({
     workflowType: v.optional(v.union(v.literal("kanban"), v.literal("scrum"), v.literal("hybrid"))),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     await requirePermission(ctx.db, user._id, args.workspaceId, "project.create");
 
@@ -108,28 +98,10 @@ export const updateProject = mutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     leadId: v.optional(v.id("users")),
-    status: v.optional(v.union(
-      v.literal("planning"),
-      v.literal("active"),
-      v.literal("on_hold"),
-      v.literal("completed"),
-      v.literal("archived")
-    )),
+    status: v.optional(projectStatusValidator),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const project = await ctx.db.get(args.projectId);
     if (!project) {
@@ -174,19 +146,7 @@ export const deleteProject = mutation({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const project = await ctx.db.get(args.projectId);
     if (!project) {
@@ -227,19 +187,7 @@ export const connectRepository = mutation({
     provider: v.union(v.literal("github"), v.literal("gitlab"), v.literal("bitbucket")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const project = await ctx.db.get(args.projectId);
     if (!project) {
@@ -315,19 +263,7 @@ export const ensureProjectInviteCode = mutation({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     await requireProjectPermission(ctx.db, user._id, args.projectId, "project.team.invite");
 
@@ -364,19 +300,7 @@ export const generateProjectInviteCode = mutation({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     await requireProjectPermission(ctx.db, user._id, args.projectId, "project.team.invite");
 
@@ -396,19 +320,7 @@ export const joinProjectByCode = mutation({
     inviteCode: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     // Find project by invite code
     const project = await ctx.db
@@ -454,8 +366,7 @@ export const joinProjectByCode = mutation({
     // Check max members limit
     const currentMemberCount = await ctx.db
       .query("projectMembers")
-      .withIndex("by_project", (q) => q.eq("projectId", project._id))
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .withIndex("by_project_and_status", (q) => q.eq("projectId", project._id).eq("status", "active"))
       .collect();
 
     if (project.teamSettings?.maxMembers &&
@@ -522,22 +433,10 @@ export const addProjectMember = mutation({
   args: {
     projectId: v.id("projects"),
     userId: v.id("users"),
-    role: v.union(v.literal("lead"), v.literal("member"), v.literal("contributor"), v.literal("viewer")),
+    role: projectRoleValidator,
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
+    const currentUser = await getCurrentUserOrThrow(ctx);
 
     await requireProjectPermission(ctx.db, currentUser._id, args.projectId, "project.team.manage");
 
@@ -613,19 +512,7 @@ export const removeProjectMember = mutation({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
+    const currentUser = await getCurrentUserOrThrow(ctx);
 
     await requireProjectPermission(ctx.db, currentUser._id, args.projectId, "project.team.remove");
 
@@ -685,22 +572,10 @@ export const updateProjectMemberRole = mutation({
   args: {
     projectId: v.id("projects"),
     userId: v.id("users"),
-    role: v.union(v.literal("lead"), v.literal("member"), v.literal("contributor"), v.literal("viewer")),
+    role: projectRoleValidator,
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
+    const currentUser = await getCurrentUserOrThrow(ctx);
 
     await requireProjectPermission(ctx.db, currentUser._id, args.projectId, "project.team.manage");
 
@@ -756,19 +631,7 @@ export const updateProjectMemberRole = mutation({
     teamId: v.id("teams"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     await requireProjectPermission(ctx.db, user._id, args.projectId, "project.team.manage");
 

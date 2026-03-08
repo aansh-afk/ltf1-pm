@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import LegalLayout from "../components/legal/LegalLayout";
-import { usePageTitle } from "../hooks/usePageTitle";
+import ErrorBoundary from '@/components/common/ErrorBoundary'
+import LegalLayout from "@/components/legal/LegalLayout";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const COMPANY_NAME = "Vividverseglobal";
 const CONTACT_EMAIL = "Aansh.Naidu@vividverseglobal.com";
@@ -10,6 +11,7 @@ export default function TermsPage() {
   usePageTitle("Terms of Service");
 
   return (
+    <ErrorBoundary>
     <LegalLayout
       title="Terms of Service"
       summary="These Terms govern your use of LTF1. Plain-English version: use LTF1 responsibly, respect other users, and we will do our best to keep the service stable and secure."
@@ -185,5 +187,6 @@ export default function TermsPage() {
         </p>
       </section>
     </LegalLayout>
+    </ErrorBoundary>
   );
 }

@@ -1,5 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
+import { getCurrentUserOrThrow } from "../lib/auth";
 
 export const getProjectMeetings = query({
   args: {
@@ -7,19 +8,7 @@ export const getProjectMeetings = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    await getCurrentUserOrThrow(ctx);
 
     // Get project to verify access
     const project = await ctx.db.get(args.projectId);
@@ -123,19 +112,7 @@ export const getUserMeetings = query({
     endDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     let meetingsQuery = ctx.db
       .query("meetings")
@@ -143,7 +120,7 @@ export const getUserMeetings = query({
 
     if (args.startDate && args.endDate) {
       meetingsQuery = meetingsQuery
-        .filter((q) => 
+        .filter((q) =>
           q.and(
             q.gte(q.field("startTime"), args.startDate!),
             q.lte(q.field("startTime"), args.endDate!)
@@ -154,8 +131,8 @@ export const getUserMeetings = query({
     const allMeetings = await meetingsQuery.collect();
 
     // Filter meetings where user is organizer or attendee
-    const userMeetings = allMeetings.filter(meeting => 
-      meeting.organizerId === user._id || 
+    const userMeetings = allMeetings.filter(meeting =>
+      meeting.organizerId === user._id ||
       meeting.attendees.some(attendee => attendee.userId === user._id)
     );
 
@@ -221,19 +198,7 @@ export const getUpcomingMeetings = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const now = Date.now();
     

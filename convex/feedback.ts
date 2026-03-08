@@ -1,5 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { getCurrentUser } from "./lib/auth";
+import { feedbackStatusValidator } from "./lib/validators";
 
 export const submitFeedback = mutation({
   args: {
@@ -9,18 +11,9 @@ export const submitFeedback = mutation({
   },
   returns: v.id("feedback"),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    let userId = undefined;
+    const user = await getCurrentUser(ctx);
+    const userId = user?._id;
 
-    if (identity) {
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-        .unique();
-      if (user) {
-        userId = user._id;
-      }
-    }
 
     return await ctx.db.insert("feedback", {
       userId,
@@ -35,7 +28,7 @@ export const submitFeedback = mutation({
 
 export const listFeedback = query({
   args: {
-    status: v.optional(v.union(v.literal("new"), v.literal("reviewed"), v.literal("resolved"))),
+    status: v.optional(feedbackStatusValidator),
   },
   returns: v.array(
     v.object({
@@ -46,7 +39,7 @@ export const listFeedback = query({
       message: v.string(),
       page: v.string(),
       userAgent: v.optional(v.string()),
-      status: v.union(v.literal("new"), v.literal("reviewed"), v.literal("resolved")),
+      status: feedbackStatusValidator,
       createdAt: v.number(),
     })
   ),

@@ -109,17 +109,19 @@ export default function BrutalCalendar({
           <div className="flex items-center gap-[10px]">
             <button
               onClick={handlePreviousMonth}
+              aria-label="Previous month"
               className="p-[8px] border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] transition-colors text-[var(--theme-foreground)]"
             >
               <HiOutlineChevronLeft className="w-4 h-4" />
             </button>
             
-            <h2 className="font-mono text-[14px] font-semibold uppercase min-w-200px text-center text-[var(--theme-foreground)]">
+            <h2 aria-live="polite" className="font-mono text-[14px] font-semibold uppercase min-w-200px text-center text-[var(--theme-foreground)]">
               {format(currentDate, 'MMMM yyyy')}
             </h2>
             
             <button
               onClick={handleNextMonth}
+              aria-label="Next month"
               className="p-[8px] border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] transition-colors text-[var(--theme-foreground)]"
             >
               <HiOutlineChevronRight className="w-4 h-4" />
@@ -162,6 +164,9 @@ export default function BrutalCalendar({
             <button
               type="button"
               key={dateKey}
+              aria-label={format(day, 'MMMM d, yyyy')}
+              aria-current={isTodayDate ? 'date' : undefined}
+              aria-selected={isSelected || undefined}
               onClick={() => onDateSelect && onDateSelect(day)}
               onMouseEnter={() => setHoveredDate(day)}
               onMouseLeave={() => setHoveredDate(null)}

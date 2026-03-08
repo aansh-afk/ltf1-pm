@@ -1,4 +1,5 @@
 import { useReducer, useEffect, useState, useCallback } from "react";
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
@@ -22,8 +23,8 @@ import TaskFilters, {
   type TaskFilters as TaskFiltersType,
 } from "@/components/features/task/TaskFilters";
 import FilterPresets from "@/components/features/task/FilterPresets";
-import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace";
-import BrutalSelect from "../components/ui/BrutalSelect";
+import { useCurrentWorkspace } from "@/hooks/useCurrentWorkspace";
+import BrutalSelect from "@/components/ui/BrutalSelect";
 import clsx from "clsx";
 
 const defaultFilters: TaskFiltersType = {
@@ -135,7 +136,7 @@ function TasksToolbar({
                   ? "bg-[var(--theme-primary)] text-white"
                   : "text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-foreground)] hover:bg-[var(--theme-background-tertiary)]",
               )}
-              onClick={() => onViewModeChange(mode.id as any)}
+              onClick={() => onViewModeChange(mode.id as "board" | "list" | "calendar" | "table")}
               title={`${mode.label} View`}
             >
               <mode.icon className="w-3.5 h-3.5" />
@@ -148,7 +149,30 @@ function TasksToolbar({
 }
 
 interface TaskContentAreaProps {
-  tasks: any[] | undefined;
+  tasks: Array<{
+    _id: Id<"tasks">;
+    title: string;
+    number: number;
+    status: string;
+    priority: string;
+    type: string;
+    key?: string;
+    dueDate?: number;
+    startDate?: number;
+    description?: string;
+    labels?: string[];
+    assignees?: Array<{ _id: string; name: string; avatarUrl?: string }>;
+    assigneeIds?: string[];
+    assigneeId?: string;
+    assigneeName?: string;
+    reporter?: { name: string };
+    estimate?: { points?: number; hours?: number };
+    project?: { key: string };
+    position: number;
+    createdAt: number;
+    projectId: Id<"projects">;
+    [key: string]: unknown;
+  }> | undefined;
   hasActiveFilters: boolean;
   viewMode: "board" | "list" | "calendar" | "table";
   selectedProjectId: string;
@@ -192,7 +216,7 @@ function TaskContentArea({
     );
   }
 
-  const allTaskIds = tasks.map((t: any) => t._id as Id<"tasks">);
+  const allTaskIds = tasks.map((t) => t._id);
   const allSelected = tasks.length > 0 && selectedTaskIds.size === tasks.length;
 
   return (
@@ -217,7 +241,7 @@ function TaskContentArea({
             className="flex items-center gap-1 ml-2 overflow-x-auto scrollbar-hide flex-1"
             style={{ scrollbarWidth: "none" }}
           >
-            {tasks.map((t: any) => (
+            {tasks.map((t) => (
               <button
                 key={t._id}
                 onClick={() => onToggleTask(t._id)}
@@ -345,7 +369,7 @@ export default function TasksPage() {
   const handleBulkStatusChange = useCallback(
     async (status: string) => {
       const ids = Array.from(selectedTaskIds);
-      await bulkUpdate({ taskIds: ids, updates: { status: status as any } });
+      await bulkUpdate({ taskIds: ids, updates: { status: status as "backlog" | "todo" | "in_progress" | "in_review" | "done" | "cancelled" } });
       setSelectedTaskIds(new Set());
     },
     [selectedTaskIds, bulkUpdate],
@@ -356,7 +380,7 @@ export default function TasksPage() {
       const ids = Array.from(selectedTaskIds);
       await bulkUpdate({
         taskIds: ids,
-        updates: { priority: priority as any },
+        updates: { priority: priority as "urgent" | "high" | "medium" | "low" },
       });
       setSelectedTaskIds(new Set());
     },
@@ -375,7 +399,7 @@ export default function TasksPage() {
 
   const projects = useQuery(
     api.projects.queries.getWorkspaceProjects,
-    currentWorkspaceId ? { workspaceId: currentWorkspaceId as any } : "skip",
+    currentWorkspaceId ? { workspaceId: currentWorkspaceId as Id<"workspaces"> } : "skip",
   );
 
   // Use filtered query when filters are active, otherwise use basic query
@@ -407,7 +431,7 @@ export default function TasksPage() {
     selectedProjectId
       ? hasActiveFilters
         ? {
-            projectId: selectedProjectId as any,
+            projectId: selectedProjectId as Id<"projects">,
             search: effectiveFilters.search || undefined,
             status:
               effectiveFilters.status.length > 0
@@ -437,7 +461,7 @@ export default function TasksPage() {
             hasTimeTracked: effectiveFilters.hasTimeTracked,
             isOverdue: effectiveFilters.isOverdue,
           }
-        : { projectId: selectedProjectId as any }
+        : { projectId: selectedProjectId as Id<"projects"> }
       : "skip",
   );
 
@@ -608,6 +632,7 @@ export default function TasksPage() {
   );
 
   return (
+    <ErrorBoundary>
     <div className="flex flex-col h-screen bg-[var(--theme-background)] overflow-hidden">
       {/* Single compact toolbar */}
       <div className="flex-none z-10 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
@@ -722,5 +747,6 @@ export default function TasksPage() {
         />
       )}
     </div>
+    </ErrorBoundary>
   );
 }

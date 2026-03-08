@@ -4,8 +4,9 @@
  */
 
 import { useState, useCallback, useEffect } from 'react'
-import { themeTestingSuite, ThemeTestingUtils, type ThemeTestingSuiteResults } from '../utils/themeTestingSuite'
-import { useTheme } from '../contexts/ThemeContext'
+import { themeTestingSuite, ThemeTestingUtils, type ThemeTestingSuiteResults } from '@/utils/themeTestingSuite'
+import type { ThemeName } from '@/themes/themeTypes'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface UseThemeTestingReturn {
   // Test state
@@ -109,8 +110,8 @@ export function useThemeTesting(): UseThemeTestingReturn {
         totalDuration: 100, // Placeholder
         themeResults: [],
         overallScore: quickResults.score,
-        passedThemes: quickResults.score >= 80 ? [currentTheme.name as any] : [],
-        failedThemes: quickResults.score < 80 ? [currentTheme.name as any] : [],
+        passedThemes: quickResults.score >= 80 ? [currentTheme.name as ThemeName] : [],
+        failedThemes: quickResults.score < 80 ? [currentTheme.name as ThemeName] : [],
         summary: {
           totalTests: 1,
           passedTests: quickResults.score >= 80 ? 1 : 0,
@@ -157,8 +158,8 @@ export function useThemeTesting(): UseThemeTestingReturn {
           ...fullResults,
           themeResults: [themeResult],
           overallScore: themeResult.overallScore,
-          passedThemes: themeResult.overallScore >= 80 ? [themeName as any] : [],
-          failedThemes: themeResult.overallScore < 80 ? [themeName as any] : [],
+          passedThemes: themeResult.overallScore >= 80 ? [themeName as ThemeName] : [],
+          failedThemes: themeResult.overallScore < 80 ? [themeName as ThemeName] : [],
           summary: {
             totalTests: themeResult.componentResults.length,
             passedTests: themeResult.componentResults.filter(c => c.passed).length,

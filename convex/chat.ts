@@ -2,6 +2,7 @@ import { v } from "convex/values"
 import { mutation, query, action } from "./_generated/server"
 import { api } from "./_generated/api"
 import { Id } from "./_generated/dataModel"
+import { getCurrentUserOrThrow } from "./lib/auth"
 
 // Create a new chat channel
 export const createChannel = mutation({
@@ -20,19 +21,7 @@ export const createChannel = mutation({
     members: v.optional(v.array(v.id("users"))),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     // For direct messages, ensure only 2 members
     if (args.type === "direct" && args.members) {
@@ -127,19 +116,7 @@ export const sendMessage = mutation({
     mentions: v.optional(v.array(v.id("users"))),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     // Check if user is member of channel
     const channel = await ctx.db.get(args.channelId)
@@ -207,19 +184,7 @@ export const editMessage = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const message = await ctx.db.get(args.messageId)
     if (!message || message.senderId !== user._id) {
@@ -244,19 +209,7 @@ export const deleteMessage = mutation({
     messageId: v.id("chatMessages"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const message = await ctx.db.get(args.messageId)
     if (!message) {
@@ -288,19 +241,7 @@ export const addReaction = mutation({
     emoji: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const message = await ctx.db.get(args.messageId)
     if (!message) {
@@ -339,19 +280,7 @@ export const markAsRead = mutation({
     messageIds: v.array(v.id("chatMessages")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     for (const messageId of args.messageIds) {
       const message = await ctx.db.get(messageId)
@@ -374,19 +303,7 @@ export const updateTypingIndicator = mutation({
     isTyping: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const indicator = await ctx.db
       .query("chatTypingIndicators")
@@ -419,19 +336,7 @@ export const getChannels = query({
     includeArchived: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     let channels = await ctx.db
       .query("chatChannels")
@@ -462,19 +367,7 @@ export const getMessages = query({
     parentId: v.optional(v.id("chatMessages")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     // Check if user is member of channel
     const channel = await ctx.db.get(args.channelId)
@@ -566,19 +459,7 @@ export const searchMessages = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     // Get user's channels
     const userChannels = await ctx.db
@@ -639,19 +520,7 @@ export const joinChannel = mutation({
     channelId: v.id("chatChannels"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const channel = await ctx.db.get(args.channelId)
     if (!channel) {
@@ -694,19 +563,7 @@ export const leaveChannel = mutation({
     channelId: v.id("chatChannels"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const channel = await ctx.db.get(args.channelId)
     if (!channel) {
@@ -752,19 +609,7 @@ export const updateNotificationSettings = mutation({
     )),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const settings = await ctx.db
       .query("chatNotificationSettings")
@@ -798,19 +643,7 @@ export const togglePinMessage = mutation({
     messageId: v.id("chatMessages"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const channel = await ctx.db.get(args.channelId)
     if (!channel) {
@@ -844,19 +677,7 @@ export const getUnreadCounts = query({
     workspaceId: v.id("workspaces"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const channels = await ctx.db
       .query("chatChannels")

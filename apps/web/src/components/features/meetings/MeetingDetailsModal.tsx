@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
+import type { Id } from "../../../../../../convex/_generated/dataModel";
 import { format, formatDistanceToNow } from "date-fns";
 import toast from "react-hot-toast";
 import BrutalModal from "../../ui/BrutalModal";
@@ -23,10 +24,63 @@ import {
 } from "react-icons/hi";
 import clsx from "clsx";
 
+type MeetingType = 'standup' | 'retrospective' | 'planning' | 'review' | 'custom'
+type AttendeeStatus = 'pending' | 'accepted' | 'declined' | 'tentative'
+
+interface AttendeeUser {
+  _id: Id<"users">
+  name: string
+  email: string
+  avatarUrl?: string
+}
+
+interface MeetingAttendee {
+  userId: Id<"users">
+  status: AttendeeStatus
+  responseTime?: number
+  user?: AttendeeUser | null
+}
+
+interface ActionItem {
+  id: string
+  description: string
+  text?: string
+  assigneeId?: Id<"users">
+  completed: boolean
+  createdTaskId?: Id<"tasks">
+  createdAt: number
+}
+
+interface MeetingDetailData {
+  _id: Id<"meetings">
+  _creationTime: number
+  title: string
+  description?: string
+  type: MeetingType
+  organizerId: Id<"users">
+  startTime: number
+  endTime: number
+  location?: string
+  meetingUrl?: string
+  projectId?: Id<"projects">
+  attendees: MeetingAttendee[]
+  actionItems?: ActionItem[]
+  recurrence?: {
+    frequency: 'daily' | 'weekly' | 'monthly'
+    interval: number
+    endDate?: number
+  }
+  template?: {
+    agenda?: string[]
+    duration?: number
+    isRecurring: boolean
+  }
+}
+
 interface MeetingDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  meeting: any;
+  meeting: MeetingDetailData;
   currentUserId?: string;
   onEdit?: () => void;
   onViewNotes?: () => void;
@@ -35,7 +89,7 @@ interface MeetingDetailsModalProps {
 // --- Sub-components ---
 
 interface MeetingHeaderProps {
-  meeting: any;
+  meeting: MeetingDetailData;
   typeConfig: { icon: string; color: string; label: string };
   isOrganizer: boolean;
   isHappening: boolean;
@@ -212,7 +266,7 @@ function MeetingResponseSection({
 }
 
 interface AttendeesTabContentProps {
-  meeting: any;
+  meeting: MeetingDetailData;
   acceptedCount: number;
   pendingCount: number;
   tentativeCount: number;
@@ -258,7 +312,7 @@ function AttendeesTabContent({
       </div>
 
       <div className="space-y-[4px]">
-        {meeting.attendees?.map((attendee: any) => (
+        {meeting.attendees?.map((attendee) => (
           <div
             key={attendee.userId}
             className="flex items-center justify-between p-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)]"
@@ -303,7 +357,7 @@ function AttendeesTabContent({
 }
 
 interface ActionsTabContentProps {
-  meeting: any;
+  meeting: MeetingDetailData;
   isPast: boolean;
   newActionItem: string;
   isAddingAction: boolean;
@@ -324,7 +378,7 @@ function ActionsTabContent({
   return (
     <div className="space-y-[6px]">
       {meeting.actionItems && meeting.actionItems.length > 0 ? (
-        meeting.actionItems.map((item: any) => (
+        meeting.actionItems.map((item) => (
           <div
             key={item.id}
             className="p-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] flex items-center justify-between"
@@ -446,7 +500,7 @@ export default function MeetingDetailsModal({
     meetingTypeConfig.custom;
   const isOrganizer = currentUserId === meeting.organizerId;
   const currentUserAttendee = meeting.attendees?.find(
-    (a: any) => a.userId === currentUserId,
+    (a) => a.userId === currentUserId,
   );
   const userResponse = currentUserAttendee?.status || "pending";
 
@@ -456,13 +510,13 @@ export default function MeetingDetailsModal({
   const isPast = meeting.endTime < now;
 
   const acceptedCount =
-    meeting.attendees?.filter((a: any) => a.status === "accepted").length || 0;
+    meeting.attendees?.filter((a) => a.status === "accepted").length || 0;
   const declinedCount =
-    meeting.attendees?.filter((a: any) => a.status === "declined").length || 0;
+    meeting.attendees?.filter((a) => a.status === "declined").length || 0;
   const tentativeCount =
-    meeting.attendees?.filter((a: any) => a.status === "tentative").length || 0;
+    meeting.attendees?.filter((a) => a.status === "tentative").length || 0;
   const pendingCount =
-    meeting.attendees?.filter((a: any) => a.status === "pending").length || 0;
+    meeting.attendees?.filter((a) => a.status === "pending").length || 0;
 
   const handleResponse = async (
     status: "accepted" | "declined" | "tentative",
@@ -476,8 +530,8 @@ export default function MeetingDetailsModal({
         status,
       });
       toast.success(`Meeting ${status}`);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to respond to meeting");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to respond to meeting");
     } finally {
       setIsResponding(false);
     }
@@ -490,8 +544,8 @@ export default function MeetingDetailsModal({
       await deleteMeeting({ meetingId: meeting._id });
       toast.success("Meeting deleted");
       onClose();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete meeting");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete meeting");
     }
   };
 
@@ -503,12 +557,12 @@ export default function MeetingDetailsModal({
       await addActionItem({
         meetingId: meeting._id,
         description: newActionItem.trim(),
-        assigneeId: currentUserId as any,
+        assigneeId: currentUserId as Id<"users">,
       });
       toast.success("Action item added");
       setNewActionItem("");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to add action item");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to add action item");
     } finally {
       setIsAddingAction(false);
     }
@@ -521,8 +575,8 @@ export default function MeetingDetailsModal({
         actionItemId,
       });
       toast.success("Converted to task");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to convert to task");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to convert to task");
     }
   };
 

@@ -13,7 +13,7 @@ import {
 import { HiOutlineExternalLink, HiOutlineTrash } from 'react-icons/hi';
 import BrutalButton from '@/components/ui/BrutalButton';
 import BrutalCard from '@/components/ui/BrutalCard';
-import { GitHubConnectButton } from '../github/GitHubConnectButton';
+import { GitHubConnectButton } from '@/components/features/github/GitHubConnectButton';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 

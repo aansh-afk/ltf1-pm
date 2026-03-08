@@ -12,7 +12,7 @@ import {
   enhanceFocusVisibility,
   restoreFocusVisibility,
   announceToScreenReader
-} from '../utils/accessibility'
+} from '@/utils/accessibility'
 
 interface AccessibilitySettings {
   highContrastMode: boolean

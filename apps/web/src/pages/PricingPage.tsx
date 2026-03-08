@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { m, type Variants } from 'framer-motion'
 import posthog from 'posthog-js'
 import { HiOutlineSparkles } from 'react-icons/hi'
-import PublicNavigation from '../components/common/PublicNavigation'
-import Footer from '../components/common/Footer'
-import { usePageTitle } from '../hooks/usePageTitle'
+import PublicNavigation from '@/components/common/PublicNavigation'
+import Footer from '@/components/common/Footer'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 /* ─── Early Access Banner ────────────────────────────────────── */
 
@@ -225,6 +226,7 @@ function FooterNote() {
 export default function PricingPage() {
   usePageTitle('Pricing — Simple, Transparent Plans')
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-[#050505]">
       <PublicNavigation />
 
@@ -445,5 +447,6 @@ export default function PricingPage() {
 
       <Footer />
     </div>
+    </ErrorBoundary>
   )
 }

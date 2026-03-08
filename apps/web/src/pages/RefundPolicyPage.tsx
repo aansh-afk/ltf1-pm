@@ -1,5 +1,6 @@
-import LegalLayout from "../components/legal/LegalLayout";
-import { usePageTitle } from "../hooks/usePageTitle";
+import ErrorBoundary from '@/components/common/ErrorBoundary'
+import LegalLayout from "@/components/legal/LegalLayout";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const EFFECTIVE_DATE = "1 January 2026";
 const CONTACT_EMAIL = "Aansh.Naidu@vividverseglobal.com";
@@ -8,6 +9,7 @@ export default function RefundPolicyPage() {
   usePageTitle("Refund Policy");
 
   return (
+    <ErrorBoundary>
     <LegalLayout
       title="Refund Policy"
       summary="LTF1 currently has no paid plans. Translation: no subscriptions yet, so no refund gymnastics yet either."
@@ -75,5 +77,6 @@ export default function RefundPolicyPage() {
         </p>
       </section>
     </LegalLayout>
+    </ErrorBoundary>
   );
 }

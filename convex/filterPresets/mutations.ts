@@ -1,5 +1,6 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
+import { getCurrentUserOrThrow } from "../lib/auth";
 
 export const createFilterPreset = mutation({
   args: {
@@ -8,19 +9,7 @@ export const createFilterPreset = mutation({
     filters: v.any()
   },
   handler: async (ctx, { workspaceId, name, filters }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const now = Date.now();
 
@@ -44,19 +33,7 @@ export const updateFilterPreset = mutation({
     filters: v.optional(v.any())
   },
   handler: async (ctx, { presetId, name, filters }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const preset = await ctx.db.get(presetId);
     if (!preset) {
@@ -88,19 +65,7 @@ export const deleteFilterPreset = mutation({
     presetId: v.id("filterPresets")
   },
   handler: async (ctx, { presetId }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const preset = await ctx.db.get(presetId);
     if (!preset) {

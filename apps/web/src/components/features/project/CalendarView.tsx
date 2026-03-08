@@ -17,7 +17,7 @@ import {
   HiOutlineExclamation
 } from 'react-icons/hi'
 import clsx from 'clsx'
-import BrutalSelect from '../../ui/BrutalSelect'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 import { 
   format, 
   startOfMonth, 
@@ -45,6 +45,22 @@ interface CalendarViewProps {
   workspaceId: Id<"workspaces">
 }
 
+interface CalendarEventData {
+  _id: string
+  title?: string
+  name?: string
+  status?: string
+  priority?: string
+  dueDate?: number
+  startDate?: number
+  startTime?: number
+  endTime?: number
+  endDate?: number
+  assigneeIds?: Id<"users">[]
+  milestone?: boolean
+  [key: string]: unknown
+}
+
 interface CalendarEvent {
   id: string
   title: string
@@ -56,7 +72,7 @@ interface CalendarEvent {
   assigneeIds?: Id<"users">[]
   color: string
   icon?: JSX.Element
-  data: any
+  data: CalendarEventData
 }
 
 type ViewType = 'month' | 'week' | 'day' | 'agenda'
@@ -83,7 +99,7 @@ type CalendarAction =
   | { type: 'SET_VIEW'; view: ViewType }
   | { type: 'SET_FILTER'; filter: 'all' | 'tasks' | 'meetings' | 'sprints' }
   | { type: 'OPEN_CREATE_TASK' }
-  | { type: 'OPEN_EDIT_TASK'; task: any }
+  | { type: 'OPEN_EDIT_TASK'; task: CalendarEventData }
   | { type: 'OPEN_SCHEDULE_MEETING' }
   | { type: 'SELECT_EVENT'; event: CalendarEvent | null }
   | { type: 'CLOSE_MODALS' }
@@ -96,7 +112,7 @@ interface CalendarState {
   showCreateTaskModal: boolean
   showEditTaskModal: boolean
   showScheduleMeetingModal: boolean
-  selectedTask: any
+  selectedTask: CalendarEventData | null
   selectedEvent: CalendarEvent | null
 }
 
@@ -402,7 +418,7 @@ function CalendarHeader({ currentDate, viewType, filterType, onNavigateMonth, on
         {/* Filter */}
         <BrutalSelect
           value={filterType}
-          onChange={(v) => onSetFilter(v as any)}
+          onChange={(v) => onSetFilter(v as 'all' | 'tasks' | 'meetings' | 'sprints')}
           options={[
             { value: 'all', label: 'ALL EVENTS' },
             { value: 'tasks', label: 'TASKS ONLY' },
