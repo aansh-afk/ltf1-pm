@@ -31,6 +31,50 @@ interface WorkflowBuilderProps {
   projectId?: Id<"projects">
 }
 
+interface WorkflowActionInput {
+  type: string
+  config: Record<string, unknown>
+}
+
+interface WorkflowConditionInput {
+  field: string
+  operator: string
+  value: string
+}
+
+interface WorkflowTriggerInput {
+  type: string
+  event?: string
+  schedule?: string
+  webhookUrl?: string
+}
+
+/** Shape returned from the Convex getWorkflows query */
+interface WorkflowRecord {
+  _id: Id<"workflows">
+  _creationTime: number
+  workspaceId: Id<"workspaces">
+  name: string
+  description?: string
+  enabled: boolean
+  trigger: {
+    type: string
+    event?: string
+    eventType?: string
+    schedule?: string
+    webhookUrl?: string
+    conditions?: { field: string; operator: string; value: unknown; connector?: 'AND' | 'OR' }[]
+  }
+  actions: { type: string; config: unknown; order: number }[]
+  conditions?: { field: string; operator: string; value: unknown }[]
+  runCount: number
+  lastRun?: number
+  lastRunAt?: number
+  createdBy: string
+  createdAt: number
+  updatedAt: number
+}
+
 const TRIGGER_TYPES = {
   EVENT: { 
     value: 'event', 
@@ -90,16 +134,16 @@ const ACTION_TYPES = [
 type WorkflowBuilderState = {
   viewMode: 'list' | 'flow'
   showCreateModal: boolean
-  editingWorkflow: any
-  selectedWorkflowForFlow: any
+  editingWorkflow: WorkflowRecord | null
+  selectedWorkflowForFlow: WorkflowRecord | null
   selectedTriggerType: string
   workflowName: string
   workflowDescription: string
   selectedEvent: string
   scheduleConfig: string
   webhookUrl: string
-  actions: any[]
-  conditions: any[]
+  actions: WorkflowActionInput[]
+  conditions: WorkflowConditionInput[]
 }
 
 const workflowBuilderInitialState: WorkflowBuilderState = {
@@ -146,21 +190,11 @@ function workflowBuilderReducer(state: WorkflowBuilderState, action: WorkflowBui
 // --- Sub-components ---
 
 interface WorkflowListItemCardProps {
-  workflow: {
-    _id: Id<"workflows">
-    name: string
-    description?: string
-    enabled: boolean
-    trigger: { type: string; event?: string }
-    actions: any[]
-    conditions: any[]
-    runCount?: number
-    lastRunAt?: number
-  }
+  workflow: WorkflowRecord
   onRun: (workflowId: Id<"workflows">) => void
   onToggle: (workflowId: Id<"workflows">, enabled: boolean) => void
-  onViewFlow: (workflow: any) => void
-  onEdit: (workflow: any) => void
+  onViewFlow: (workflow: WorkflowRecord) => void
+  onEdit: (workflow: WorkflowRecord) => void
   onDelete: (workflowId: Id<"workflows">) => void
 }
 
@@ -202,9 +236,9 @@ function WorkflowListItemCard({ workflow, onRun, onToggle, onViewFlow, onEdit, o
             <span className="px-8px py-4px bg-[var(--theme-background-secondary)] text-xs font-mono">
               {workflow.actions.length} ACTIONS
             </span>
-            {workflow.conditions.length > 0 && (
+            {(workflow.conditions?.length ?? 0) > 0 && (
               <span className="px-8px py-4px bg-[var(--theme-background-secondary)] text-xs font-mono">
-                {workflow.conditions.length} CONDITIONS
+                {workflow.conditions?.length} CONDITIONS
               </span>
             )}
           </div>
@@ -294,8 +328,8 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
     }
 
     try {
-      let trigger: any = { type: selectedTriggerType }
-      
+      const trigger: WorkflowTriggerInput = { type: selectedTriggerType }
+
       if (selectedTriggerType === 'event') {
         trigger.event = selectedEvent
       } else if (selectedTriggerType === 'schedule') {
@@ -357,10 +391,10 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
   }
 
   const removeAction = (index: number) => {
-    dispatch({ type: 'UPDATE', field: 'actions', value: actions.filter((_: any, i: number) => i !== index) })
+    dispatch({ type: 'UPDATE', field: 'actions', value: actions.filter((_: WorkflowActionInput, i: number) => i !== index) })
   }
 
-  const updateAction = (index: number, action: any) => {
+  const updateAction = (index: number, action: WorkflowActionInput) => {
     const updatedActions = [...actions]
     updatedActions[index] = action
     dispatch({ type: 'UPDATE', field: 'actions', value: updatedActions })
@@ -371,7 +405,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
   }
 
   const removeCondition = (index: number) => {
-    dispatch({ type: 'UPDATE', field: 'conditions', value: conditions.filter((_: any, i: number) => i !== index) })
+    dispatch({ type: 'UPDATE', field: 'conditions', value: conditions.filter((_: WorkflowConditionInput, i: number) => i !== index) })
   }
 
   const resetForm = () => {
@@ -438,7 +472,7 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
             </BrutalButton>
           </BrutalCard>
         ) : (
-          workflows.map((workflow: any) => (
+          workflows.map((workflow) => (
               <WorkflowListItemCard
                 key={workflow._id}
                 workflow={workflow}
@@ -485,11 +519,11 @@ export default function WorkflowBuilder({ workspaceId, projectId }: WorkflowBuil
                   label="SELECT WORKFLOW:"
                   value={selectedWorkflowForFlow?._id || ''}
                   onChange={(v) => {
-                    const workflow = workflows.find((w: any) => w._id === v)
+                    const workflow = workflows.find((w) => w._id === v)
                     dispatch({ type: 'UPDATE', field: 'selectedWorkflowForFlow', value: workflow })
                   }}
                   placeholder="Select a workflow..."
-                  options={workflows.map((workflow: any) => ({
+                  options={workflows.map((workflow) => ({
                     value: workflow._id,
                     label: workflow.name,
                   }))}

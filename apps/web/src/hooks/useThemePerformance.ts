@@ -4,8 +4,8 @@
  */
 
 import { useEffect, useCallback, useState } from 'react'
-import { themePerformanceOptimizer, ThemePerformanceUtils } from '../utils/themePerformance'
-import { useTheme } from '../contexts/ThemeContext'
+import { themePerformanceOptimizer, ThemePerformanceUtils } from '@/utils/themePerformance'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface ThemePerformanceStats {
   averageSwitchTime: number

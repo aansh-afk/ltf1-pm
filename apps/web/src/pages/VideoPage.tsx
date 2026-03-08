@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
@@ -17,9 +18,11 @@ export default function VideoPage() {
   }
 
   return (
+    <ErrorBoundary>
     <VideoRooms
       workspaceId={currentWorkspace._id}
       meetingId={meetingId as Id<"meetings"> | undefined}
     />
+    </ErrorBoundary>
   )
 }

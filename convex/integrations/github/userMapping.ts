@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query, mutation, internalQuery, internalMutation } from "../../_generated/server";
 import { Id } from "../../_generated/dataModel";
+import { getCurrentUser, getCurrentUserOrThrow } from "../../lib/auth";
 
 // Internal mutation to create user mapping when connecting OAuth
 export const createUserMappingFromOAuth = internalMutation({
@@ -169,20 +170,7 @@ export const manuallyLinkGitHubUser = mutation({
   },
   returns: v.id("githubUserMappings"),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Get current user
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
+    const currentUser = await getCurrentUserOrThrow(ctx);
 
     // Check if current user has admin access to workspace
     const membership = await ctx.db
@@ -260,19 +248,7 @@ export const unlinkGitHubUser = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
+    const currentUser = await getCurrentUserOrThrow(ctx);
 
     const mapping = await ctx.db.get(args.mappingId);
     if (!mapping) {
@@ -318,19 +294,7 @@ export const getWorkspaceUserMappings = query({
     })
   ),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
+    const currentUser = await getCurrentUserOrThrow(ctx);
 
     // Check membership
     const membership = await ctx.db
@@ -385,19 +349,7 @@ export const getUnmappedGitHubUsers = query({
     })
   ),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
+    const currentUser = await getCurrentUserOrThrow(ctx);
 
     // Check membership with admin role
     const membership = await ctx.db
@@ -506,14 +458,7 @@ export const getMyGitHubMapping = query({
     v.null()
   ),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
+    const user = await getCurrentUser(ctx);
     if (!user) return null;
 
     const mapping = await ctx.db

@@ -1,6 +1,6 @@
 import React from 'react'
 import { HiOutlineLockClosed, HiOutlineLockOpen, HiOutlineTrash } from 'react-icons/hi'
-import BrutalInput from '../../ui/BrutalInput'
+import BrutalInput from '@/components/ui/BrutalInput'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
 
 interface Element {

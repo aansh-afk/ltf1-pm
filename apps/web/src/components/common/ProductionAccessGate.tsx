@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import ComingSoonPage from '../../pages/ComingSoonPage'
+import ComingSoonPage from '@/pages/ComingSoonPage'
 
 export default function ProductionAccessGate({ children }: { children: React.ReactNode }) {
   const [isUnlocked, setIsUnlocked] = useState(false)

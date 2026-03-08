@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation, internalQuery, mutation, query } from "../../_generated/server";
 import { Id } from "../../_generated/dataModel";
+import { getCurrentUserOrThrow } from "../../lib/auth";
 
 // Get team mappings for a workspace
 export const getTeamMappings = query({
@@ -70,19 +71,7 @@ export const createTeamMapping = mutation({
   },
   returns: v.id("githubTeamMappings"),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     // Check workspace membership and permissions
     const membership = await ctx.db
@@ -136,23 +125,11 @@ export const updateTeamMapping = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const mapping = await ctx.db.get(args.mappingId);
     if (!mapping) {
       throw new Error("Mapping not found");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
     }
 
     // Check workspace membership and permissions
@@ -183,23 +160,11 @@ export const deleteTeamMapping = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const mapping = await ctx.db.get(args.mappingId);
     if (!mapping) {
       throw new Error("Mapping not found");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
     }
 
     // Check workspace membership and permissions

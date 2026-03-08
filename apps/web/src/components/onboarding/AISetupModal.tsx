@@ -3,7 +3,7 @@ import { HiOutlineSparkles, HiOutlineKey, HiOutlineCreditCard, HiOutlineInformat
 import { useMutation, useAction } from 'convex/react'
 import { api } from '../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
-import BrutalModal from '../ui/BrutalModal'
+import BrutalModal from '@/components/ui/BrutalModal'
 
 // --- Sub-components ---
 

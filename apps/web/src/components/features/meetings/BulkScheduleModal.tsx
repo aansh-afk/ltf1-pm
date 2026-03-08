@@ -1,10 +1,11 @@
 import { useReducer } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import toast from 'react-hot-toast'
-import BrutalModal from '../../ui/BrutalModal'
-import BrutalSelect from '../../ui/BrutalSelect'
-import MultiSelect from '../../ui/MultiSelect'
+import BrutalModal from '@/components/ui/BrutalModal'
+import BrutalSelect from '@/components/ui/BrutalSelect'
+import MultiSelect from '@/components/ui/MultiSelect'
 import {
   HiOutlineCalendar,
   HiOutlineRefresh,
@@ -18,16 +19,23 @@ import clsx from 'clsx'
 
 // --- Sub-components ---
 
+interface BulkMeetingItem {
+  id: number
+  type: string
+  title: string
+  dayOfWeek: number | string
+  time: string
+  duration: number
+}
+
+interface CalculatedMeetingItem extends BulkMeetingItem {
+  startTime: number
+  endTime: number
+}
+
 interface MeetingScheduleItemRowProps {
-  meeting: {
-    id: number
-    type: string
-    title: string
-    dayOfWeek: number | string
-    time: string
-    duration: number
-  }
-  onUpdateField: (id: number, field: string, value: any) => void
+  meeting: BulkMeetingItem
+  onUpdateField: (id: number, field: string, value: string | number) => void
   onRemove: (id: number) => void
 }
 
@@ -155,7 +163,7 @@ const meetingTemplates = [
 
 type BulkScheduleState = {
   selectedTemplate: string | null
-  customMeetings: any[]
+  customMeetings: BulkMeetingItem[]
   startDate: string
   endDate: string
   selectedAttendees: string[]
@@ -164,9 +172,9 @@ type BulkScheduleState = {
 
 type BulkScheduleAction =
   | { type: 'SET_TEMPLATE'; value: string | null }
-  | { type: 'SET_CUSTOM_MEETINGS'; value: any[] }
+  | { type: 'SET_CUSTOM_MEETINGS'; value: BulkMeetingItem[] }
   | { type: 'ADD_CUSTOM_MEETING' }
-  | { type: 'UPDATE_CUSTOM_MEETING'; id: number; field: string; value: any }
+  | { type: 'UPDATE_CUSTOM_MEETING'; id: number; field: string; value: string | number }
   | { type: 'REMOVE_CUSTOM_MEETING'; id: number }
   | { type: 'SET_START_DATE'; value: string }
   | { type: 'SET_END_DATE'; value: string }
@@ -237,7 +245,7 @@ export default function BulkScheduleModal({
   // Get workspace members for attendee selection
   const workspaceMembers = useQuery(
     api.workspaces.queries.getWorkspaceMembers,
-    workspaceId ? { workspaceId: workspaceId as any } : 'skip'
+    workspaceId ? { workspaceId: workspaceId as Id<"workspaces"> } : 'skip'
   )
 
   const attendeeOptions = workspaceMembers?.map(member => ({
@@ -257,7 +265,7 @@ export default function BulkScheduleModal({
   const calculateMeetingDates = () => {
     if (!startDate || !endDate) return []
 
-    const meetings: any[] = []
+    const meetings: CalculatedMeetingItem[] = []
     const start = new Date(startDate)
     const end = new Date(endDate)
 
@@ -326,14 +334,14 @@ export default function BulkScheduleModal({
 
       for (const meeting of meetings) {
         await createMeeting({
-          workspaceId: workspaceId as any,
-          projectId: projectId ? projectId as any : undefined,
-          sprintId: sprintId ? sprintId as any : undefined,
+          workspaceId: workspaceId as Id<"workspaces">,
+          projectId: projectId ? projectId as Id<"projects"> : undefined,
+          sprintId: sprintId ? sprintId as Id<"sprints"> : undefined,
           title: meeting.title,
-          type: meeting.type,
+          type: meeting.type as 'standup' | 'retrospective' | 'planning' | 'review' | 'custom',
           startTime: meeting.startTime,
           endTime: meeting.endTime,
-          attendeeIds: selectedAttendees as any[],
+          attendeeIds: selectedAttendees as Id<"users">[],
           recurrence: {
             frequency: meeting.dayOfWeek === 'daily' ? 'daily' : 'weekly',
             interval: 1,
@@ -345,8 +353,8 @@ export default function BulkScheduleModal({
       toast.success(`Scheduled ${meetings.length} meetings`)
       onSuccess?.()
       onClose()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to schedule meetings')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to schedule meetings')
     } finally {
       dispatch({ type: 'SET_IS_CREATING', value: false })
     }

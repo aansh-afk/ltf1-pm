@@ -9,7 +9,7 @@ import {
   WCAGLevel,
   type ThemeAccessibilityReport 
 } from './accessibility'
-import { globalThemes } from '../themes/globalThemes'
+import { globalThemes } from '@/themes/globalThemes'
 
 // Enhanced accessibility validation for all themes
 export function validateAllThemes(): {

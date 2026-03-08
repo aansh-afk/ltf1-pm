@@ -6,7 +6,108 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import { toast } from 'sonner'
-import { getGeminiService } from '../services/ai/geminiService'
+import { getGeminiService } from '@/services/ai/geminiService'
+
+/** Sprint data input for analysis */
+interface SprintAnalysisInput {
+  name?: string
+  startDate?: string
+  endDate?: string
+  tasks?: Array<{ status?: string; points?: number }>
+  velocity?: number
+}
+
+/** Sprint analysis result */
+interface SprintAnalysisResult {
+  velocity: number
+  predictedCompletion: string
+  completionProbability: number
+  healthScore: number
+  risks: string[]
+  recommendations: string[]
+  insights: { strongPoints: string[]; improvements: string[] }
+}
+
+/** Velocity prediction input */
+interface VelocityPredictionInput {
+  sprints?: Array<{ velocity?: number; completedPoints?: number }>
+  teamSize?: number
+}
+
+/** Velocity prediction result */
+interface VelocityPredictionResult {
+  predicted_velocity: number
+  confidence_level: number
+  range: { optimistic: number; realistic: number; pessimistic: number }
+  factors: { positive: string[]; negative: string[]; neutral: string[] }
+  recommendations: string[]
+}
+
+/** Risk assessment input */
+interface RiskAssessmentInput {
+  projectName?: string
+  tasks?: Array<{ status?: string; priority?: string }>
+  timeline?: { start?: string; end?: string }
+}
+
+/** Risk assessment result */
+interface RiskAssessmentResult {
+  risk_summary: { overall_risk_level: string; risk_score: number }
+  top_risks: Array<{ description: string; severity: string }>
+  recommendations: { immediate_actions: string[] }
+}
+
+/** Question context */
+interface QuestionContext {
+  projectName?: string
+  sprintName?: string
+  data?: Record<string, unknown>
+}
+
+/** Metrics input for anomaly detection */
+interface MetricsInput {
+  velocity?: number[]
+  burndown?: number[]
+  completionRates?: number[]
+}
+
+/** Anomaly detection result */
+interface AnomalyDetectionResult {
+  anomalies: Array<{ metric: string; description: string }>
+  severity: string
+}
+
+/** Recommendations input */
+interface RecommendationsInput {
+  projectData?: Record<string, unknown>
+  metrics?: MetricsInput
+}
+
+/** Recommendations result */
+interface RecommendationsResult {
+  recommendations: string[]
+}
+
+/** Time series data for trend analysis */
+interface TimeSeriesInput {
+  dataPoints?: Array<{ date: string; value: number }>
+  metric?: string
+}
+
+/** Trend analysis result */
+interface TrendAnalysisResult {
+  trend: string
+  forecast: Array<{ date: string; value: number }>
+}
+
+/** Source data for task suggestions */
+interface TaskSourceData {
+  url?: string
+  title?: string
+  body?: string
+  diff?: string
+  [key: string]: unknown
+}
 
 // Fallback mock AI service for when Gemini is not configured
 class MockAIService {
@@ -35,7 +136,7 @@ class MockAIService {
   async extractLabels(description: string): Promise<string[]> {
     const labels: string[] = []
     const lower = description.toLowerCase()
-    
+
     if (lower.includes('frontend')) labels.push('frontend')
     if (lower.includes('backend')) labels.push('backend')
     if (lower.includes('api')) labels.push('api')
@@ -43,15 +144,15 @@ class MockAIService {
     if (lower.includes('ui') || lower.includes('ux')) labels.push('ui/ux')
     if (lower.includes('performance')) labels.push('performance')
     if (lower.includes('security')) labels.push('security')
-    
+
     return labels.length > 0 ? labels : ['general']
   }
 
   async generateCommitMessage(changes: string): Promise<string> {
-    const verb = changes.toLowerCase().includes('fix') ? 'fix' : 
-                changes.toLowerCase().includes('add') ? 'feat' : 
+    const verb = changes.toLowerCase().includes('fix') ? 'fix' :
+                changes.toLowerCase().includes('add') ? 'feat' :
                 changes.toLowerCase().includes('update') ? 'chore' : 'feat'
-    
+
     return `${verb}: ${changes.toLowerCase()}`
   }
 
@@ -60,7 +161,7 @@ class MockAIService {
   }
 
   // Add missing methods for compatibility
-  async analyzeSprint(data: any): Promise<any> {
+  async analyzeSprint(data: SprintAnalysisInput): Promise<SprintAnalysisResult> {
     return {
       velocity: 42,
       predictedCompletion: new Date().toISOString(),
@@ -76,7 +177,7 @@ class MockAIService {
     return '✅ Code looks good!\n\nConsiderations:\n- Add error handling\n- Consider edge cases'
   }
 
-  async predictVelocity(data: any): Promise<any> {
+  async predictVelocity(data: VelocityPredictionInput): Promise<VelocityPredictionResult> {
     return {
       predicted_velocity: 45,
       confidence_level: 0.7,
@@ -86,7 +187,7 @@ class MockAIService {
     }
   }
 
-  async assessRisks(data: any): Promise<any> {
+  async assessRisks(data: RiskAssessmentInput): Promise<RiskAssessmentResult> {
     return {
       risk_summary: { overall_risk_level: 'MEDIUM', risk_score: 42 },
       top_risks: [],
@@ -94,7 +195,7 @@ class MockAIService {
     }
   }
 
-  async answerQuestion(question: string, context: any): Promise<string> {
+  async answerQuestion(question: string, context: QuestionContext): Promise<string> {
     return `Based on the data, ${question.toLowerCase()}`
   }
 
@@ -102,15 +203,15 @@ class MockAIService {
     return `${concept} is a technical concept that...`
   }
 
-  async detectAnomalies(metrics: any): Promise<any> {
+  async detectAnomalies(metrics: MetricsInput): Promise<AnomalyDetectionResult> {
     return { anomalies: [], severity: 'low' }
   }
 
-  async generateRecommendations(data: any): Promise<any> {
+  async generateRecommendations(data: RecommendationsInput): Promise<RecommendationsResult> {
     return { recommendations: ['Continue current practices'] }
   }
 
-  async analyzeTrends(data: any): Promise<any> {
+  async analyzeTrends(data: TimeSeriesInput): Promise<TrendAnalysisResult> {
     return { trend: 'stable', forecast: [] }
   }
 }
@@ -135,7 +236,7 @@ const getAIService = () => {
 export function useAI() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   // Convex mutations
   const trackSession = useMutation(api.ai.mutations.trackAISession)
   const addFeedback = useMutation(api.ai.mutations.addAIFeedback)
@@ -151,7 +252,7 @@ export function useAI() {
     try {
       const aiService = getAIService()
       const title = await aiService.generateTaskTitle(description)
-      
+
       // Track the AI session
       await trackSession({
         type: 'task.title.generate',
@@ -163,10 +264,11 @@ export function useAI() {
         latency: 100,
         cached: false,
       })
-      
+
       return title
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to generate task title')
       throw err
     } finally {
@@ -180,7 +282,7 @@ export function useAI() {
     try {
       const aiService = getAIService()
       const points = await aiService.estimateStoryPoints(description)
-      
+
       await trackSession({
         type: 'task.points.estimate',
         input: description,
@@ -191,10 +293,11 @@ export function useAI() {
         latency: 150,
         cached: false,
       })
-      
+
       return points
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to estimate complexity')
       throw err
     } finally {
@@ -208,7 +311,7 @@ export function useAI() {
     try {
       const aiService = getAIService()
       const priority = await aiService.assessPriority(description)
-      
+
       await trackSession({
         type: 'task.priority.suggest',
         input: description,
@@ -219,10 +322,11 @@ export function useAI() {
         latency: 100,
         cached: false,
       })
-      
+
       return priority
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to suggest priority')
       throw err
     } finally {
@@ -236,7 +340,7 @@ export function useAI() {
     try {
       const aiService = getAIService()
       const labels = await aiService.extractLabels(description)
-      
+
       await trackSession({
         type: 'task.label.extract',
         input: description,
@@ -247,10 +351,11 @@ export function useAI() {
         latency: 120,
         cached: false,
       })
-      
+
       return labels
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to extract labels')
       throw err
     } finally {
@@ -265,7 +370,7 @@ export function useAI() {
     try {
       const aiService = getAIService()
       const message = await aiService.generateCommitMessage(changes)
-      
+
       await trackSession({
         type: 'commit.message.generate',
         input: changes,
@@ -276,10 +381,11 @@ export function useAI() {
         latency: 100,
         cached: false,
       })
-      
+
       return message
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to generate commit message')
       throw err
     } finally {
@@ -293,7 +399,7 @@ export function useAI() {
     try {
       const aiService = getAIService()
       const summary = await aiService.generatePRSummary(description, context)
-      
+
       await trackSession({
         type: 'pr.title.generate',
         input: description,
@@ -304,10 +410,11 @@ export function useAI() {
         latency: 300,
         cached: false,
       })
-      
+
       return summary
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to generate PR summary')
       throw err
     } finally {
@@ -333,7 +440,7 @@ export function useAI() {
         recommendations: ['Review and take action on this insight'],
       })
       toast.success('Insight created')
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error('Failed to create insight')
       throw err
     }
@@ -343,7 +450,7 @@ export function useAI() {
     try {
       await dismissInsight({ insightId, actionTaken })
       toast.success('Insight dismissed')
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error('Failed to dismiss insight')
       throw err
     }
@@ -352,7 +459,7 @@ export function useAI() {
   // AI Task Suggestions
   const createTaskSuggestion = useCallback(async (
     sourceType: 'commit' | 'pr' | 'comment' | 'manual',
-    sourceData: any,
+    sourceData: TaskSourceData,
     suggestions: Array<{
       title: string
       description: string
@@ -369,7 +476,7 @@ export function useAI() {
         suggestedTasks: suggestions,
       })
       toast.success('Task suggestions created')
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error('Failed to create task suggestions')
       throw err
     }
@@ -379,7 +486,7 @@ export function useAI() {
     try {
       await updateAITaskStatus({ taskId, status: 'accepted' })
       toast.success('Task suggestion accepted')
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error('Failed to accept task suggestion')
       throw err
     }
@@ -389,7 +496,7 @@ export function useAI() {
     try {
       await updateAITaskStatus({ taskId, status: 'rejected' })
       toast.info('Task suggestion rejected')
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error('Failed to reject task suggestion')
       throw err
     }
@@ -405,20 +512,20 @@ export function useAI() {
     try {
       await addFeedback({ sessionId, helpful, rating, comment })
       toast.success('Thank you for your feedback!')
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error('Failed to submit feedback')
       throw err
     }
   }, [addFeedback])
 
   // Sprint Analysis
-  const analyzeSprint = useCallback(async (sprintData: any) => {
+  const analyzeSprint = useCallback(async (sprintData: SprintAnalysisInput) => {
     setLoading(true)
     setError(null)
     try {
       const aiService = getAIService()
       const analysis = await aiService.analyzeSprint(sprintData)
-      
+
       await trackSession({
         type: 'sprint.analyze',
         input: JSON.stringify(sprintData),
@@ -429,10 +536,11 @@ export function useAI() {
         latency: 500,
         cached: false,
       })
-      
+
       return analysis
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to analyze sprint')
       throw err
     } finally {
@@ -447,7 +555,7 @@ export function useAI() {
     try {
       const aiService = getAIService()
       const review = await aiService.generateCodeReview(code, context)
-      
+
       await trackSession({
         type: 'code.review.generate',
         input: code.substring(0, 500),
@@ -458,10 +566,11 @@ export function useAI() {
         latency: 700,
         cached: false,
       })
-      
+
       return review
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to generate code review')
       throw err
     } finally {
@@ -470,13 +579,13 @@ export function useAI() {
   }, [trackSession])
 
   // Predictive Analytics
-  const predictVelocity = useCallback(async (historicalData: any) => {
+  const predictVelocity = useCallback(async (historicalData: VelocityPredictionInput) => {
     setLoading(true)
     setError(null)
     try {
       const aiService = getAIService()
       const prediction = await aiService.predictVelocity(historicalData)
-      
+
       await trackSession({
         type: 'velocity.predict',
         input: JSON.stringify(historicalData),
@@ -487,10 +596,11 @@ export function useAI() {
         latency: 400,
         cached: false,
       })
-      
+
       return prediction
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to predict velocity')
       throw err
     } finally {
@@ -498,13 +608,13 @@ export function useAI() {
     }
   }, [trackSession])
 
-  const assessProjectRisks = useCallback(async (projectData: any) => {
+  const assessProjectRisks = useCallback(async (projectData: RiskAssessmentInput) => {
     setLoading(true)
     setError(null)
     try {
       const aiService = getAIService()
       const risks = await aiService.assessRisks(projectData)
-      
+
       await trackSession({
         type: 'risk.assess',
         input: JSON.stringify(projectData),
@@ -515,10 +625,11 @@ export function useAI() {
         latency: 600,
         cached: false,
       })
-      
+
       return risks
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to assess risks')
       throw err
     } finally {
@@ -527,13 +638,13 @@ export function useAI() {
   }, [trackSession])
 
   // Natural Language
-  const askQuestion = useCallback(async (question: string, context: any) => {
+  const askQuestion = useCallback(async (question: string, context: QuestionContext) => {
     setLoading(true)
     setError(null)
     try {
       const aiService = getAIService()
       const answer = await aiService.answerQuestion(question, context)
-      
+
       await trackSession({
         type: 'question.answer',
         input: question,
@@ -544,10 +655,11 @@ export function useAI() {
         latency: 300,
         cached: true,
       })
-      
+
       return answer
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to answer question')
       throw err
     } finally {
@@ -561,7 +673,7 @@ export function useAI() {
     try {
       const aiService = getAIService()
       const explanation = await aiService.explainTechnical(concept, audience)
-      
+
       await trackSession({
         type: 'concept.explain',
         input: concept,
@@ -572,10 +684,11 @@ export function useAI() {
         latency: 400,
         cached: true,
       })
-      
+
       return explanation
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to explain concept')
       throw err
     } finally {
@@ -584,13 +697,13 @@ export function useAI() {
   }, [trackSession])
 
   // Insights Generation
-  const detectAnomalies = useCallback(async (metrics: any) => {
+  const detectAnomalies = useCallback(async (metrics: MetricsInput) => {
     setLoading(true)
     setError(null)
     try {
       const aiService = getAIService()
       const anomalies = await aiService.detectAnomalies(metrics)
-      
+
       await trackSession({
         type: 'anomaly.detect',
         input: JSON.stringify(metrics),
@@ -601,10 +714,11 @@ export function useAI() {
         latency: 500,
         cached: false,
       })
-      
+
       return anomalies
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to detect anomalies')
       throw err
     } finally {
@@ -612,13 +726,13 @@ export function useAI() {
     }
   }, [trackSession])
 
-  const getRecommendations = useCallback(async (data: any) => {
+  const getRecommendations = useCallback(async (data: RecommendationsInput) => {
     setLoading(true)
     setError(null)
     try {
       const aiService = getAIService()
       const recommendations = await aiService.generateRecommendations(data)
-      
+
       await trackSession({
         type: 'recommendation.generate',
         input: JSON.stringify(data),
@@ -629,10 +743,11 @@ export function useAI() {
         latency: 600,
         cached: false,
       })
-      
+
       return recommendations
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to generate recommendations')
       throw err
     } finally {
@@ -640,13 +755,13 @@ export function useAI() {
     }
   }, [trackSession])
 
-  const analyzeTrends = useCallback(async (timeSeriesData: any) => {
+  const analyzeTrends = useCallback(async (timeSeriesData: TimeSeriesInput) => {
     setLoading(true)
     setError(null)
     try {
       const aiService = getAIService()
       const trends = await aiService.analyzeTrends(timeSeriesData)
-      
+
       await trackSession({
         type: 'trend.analyze',
         input: JSON.stringify(timeSeriesData),
@@ -657,10 +772,11 @@ export function useAI() {
         latency: 700,
         cached: false,
       })
-      
+
       return trends
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
       toast.error('Failed to analyze trends')
       throw err
     } finally {
@@ -672,43 +788,43 @@ export function useAI() {
     // State
     loading,
     error,
-    
+
     // Task Intelligence
     suggestTaskTitle,
     estimateComplexity,
     suggestPriority,
     extractLabels,
-    
+
     // Code Intelligence
     generateCommitMessage,
     generatePRSummary,
     generateCodeReview,
-    
+
     // Sprint Analysis
     analyzeSprint,
-    
+
     // Predictive Analytics
     predictVelocity,
     assessProjectRisks,
-    
+
     // Natural Language
     askQuestion,
     explainConcept,
-    
+
     // Insights Generation
     detectAnomalies,
     getRecommendations,
     analyzeTrends,
-    
+
     // Insights Management
     createProjectInsight,
     dismissProjectInsight,
-    
+
     // Task Suggestions
     createTaskSuggestion,
     acceptTaskSuggestion,
     rejectTaskSuggestion,
-    
+
     // Feedback
     provideFeedback,
   }
@@ -724,7 +840,7 @@ export function useAIInsights(targetType?: 'task' | 'sprint' | 'project' | 'team
     api.ai.queries.getActiveInsights,
     targetType && targetId ? { targetType, targetId } : {}
   )
-  
+
   return {
     insights: insights || [],
     loading: insights === undefined,
@@ -737,7 +853,7 @@ export function useAIStats(workspaceId: Id<'workspaces'>, timeRange: 'day' | 'we
     api.ai.queries.getWorkspaceAIStats,
     { workspaceId, timeRange }
   )
-  
+
   return {
     stats,
     loading: stats === undefined,
@@ -747,7 +863,7 @@ export function useAIStats(workspaceId: Id<'workspaces'>, timeRange: 'day' | 'we
 // Hook for pending AI task suggestions
 export function useAITaskSuggestions() {
   const suggestions = useQuery(api.ai.queries.getPendingAITasks, {})
-  
+
   return {
     suggestions: suggestions || [],
     loading: suggestions === undefined,
@@ -760,7 +876,7 @@ export function useAIFeedback(workspaceId: Id<'workspaces'>) {
     api.ai.queries.getAIFeedbackSummary,
     { workspaceId }
   )
-  
+
   return {
     feedback,
     loading: feedback === undefined,
@@ -773,7 +889,7 @@ export function useUserAISessions(limit: number = 50, type?: string) {
     api.ai.queries.getUserAISessions,
     { limit, type }
   )
-  
+
   return {
     sessions: sessions || [],
     loading: sessions === undefined,

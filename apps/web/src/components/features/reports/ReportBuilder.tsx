@@ -15,7 +15,7 @@ interface ReportWidget {
   id: string
   type: 'chart' | 'table' | 'metric' | 'list' | 'timeline'
   dataSource: 'tasks' | 'sprints' | 'projects' | 'timeEntries' | 'users'
-  filters?: Record<string, any>
+  filters?: Record<string, string | number | boolean>
   columns?: string[]
   aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max'
   groupBy?: string
@@ -173,8 +173,8 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({ workspaceId, projectId })
   const addWidget = useCallback((type: string, dataSource: string) => {
     const newWidget: ReportWidget = {
       id: `widget-${Date.now()}`,
-      type: type as any,
-      dataSource: dataSource as any,
+      type: type as ReportWidget['type'],
+      dataSource: dataSource as ReportWidget['dataSource'],
       position: { x: Math.random() * 500, y: Math.random() * 300 },
       size: { width: 300, height: 200 },
       title: `New ${type}`
@@ -386,7 +386,7 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({ workspaceId, projectId })
                 <BrutalSelect
                   label="Frequency"
                   value={scheduleFrequency}
-                  onChange={(v) => setScheduleFrequency(v as any)}
+                  onChange={(v) => setScheduleFrequency(v as 'daily' | 'weekly' | 'monthly')}
                   options={[
                     { value: 'daily', label: 'Daily' },
                     { value: 'weekly', label: 'Weekly' },
@@ -457,8 +457,8 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({ workspaceId, projectId })
               onDragStart={(e) => {
                 const newWidget: ReportWidget = {
                   id: `widget-${Date.now()}`,
-                  type: widget.type as any,
-                  dataSource: widget.dataSources[0] as any,
+                  type: widget.type as ReportWidget['type'],
+                  dataSource: widget.dataSources[0] as ReportWidget['dataSource'],
                   position: { x: 0, y: 0 },
                   size: { width: 300, height: 200 },
                   title: widget.label

@@ -1,5 +1,5 @@
 import { useReducer } from 'react'
-import { useMobileDetection } from '../../hooks/useMobileDetection'
+import { useMobileDetection } from '@/hooks/useMobileDetection'
 
 interface MobileBlockerState {
   choice: 'desktop' | 'urgent' | null

@@ -20,14 +20,37 @@ import {
 import { m, AnimatePresence } from 'framer-motion'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
-import LoadingSpinner from '../../common/LoadingSpinner'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
+
+interface TaskSummary {
+  _id: string
+  title: string
+  status: string
+  priority?: string
+  type?: string
+}
+
+interface SprintSummary {
+  _id: string
+  name: string
+  status: string
+  startDate?: number
+  endDate?: number
+}
+
+interface ProjectDetailsSummary {
+  name: string
+  description?: string
+  status?: string
+}
 
 interface AIDocumentationHubProps {
   projectId: string
   workspaceId: string
-  tasks?: any[]
-  sprints?: any[]
-  projectDetails?: any
+  tasks?: TaskSummary[]
+  sprints?: SprintSummary[]
+  projectDetails?: ProjectDetailsSummary
 }
 
 // Document templates with AI prompts
@@ -108,7 +131,7 @@ type AIDocumentationHubState = {
     includeProjectInfo: boolean
     customContext: string
   }
-  savedDocuments: any[]
+  savedDocuments: SavedDocument[]
   editingDoc: string | null
   showPreview: boolean
 }
@@ -466,7 +489,7 @@ export default function AIDocumentationHub({
       }
 
       const result = await generateAIDocument({
-        projectId: projectId as any,
+        projectId: projectId as Id<"projects">,
         documentType: selectedTemplate,
         context: JSON.stringify(context)
       })
@@ -499,11 +522,11 @@ export default function AIDocumentationHub({
   }
 
   const handleSaveDocument = () => {
-    const newDoc = {
+    const newDoc: SavedDocument = {
       id: Date.now().toString(),
       title: documentTitle,
       content: documentContent,
-      type: selectedTemplate,
+      type: selectedTemplate || 'unknown',
       createdAt: new Date().toISOString(),
       projectId
     }
@@ -583,7 +606,7 @@ export default function AIDocumentationHub({
             dispatch({ type: 'UPDATE', field: 'selectedTemplate', value: doc.type })
           }}
           onDeleteDocument={(docId) => {
-            dispatch({ type: 'UPDATE', field: 'savedDocuments', value: savedDocuments.filter((d: any) => d.id !== docId) })
+            dispatch({ type: 'UPDATE', field: 'savedDocuments', value: savedDocuments.filter((d: SavedDocument) => d.id !== docId) })
             toast.success('Document deleted')
           }}
         />

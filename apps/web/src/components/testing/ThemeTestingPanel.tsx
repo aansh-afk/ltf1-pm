@@ -4,10 +4,10 @@
  */
 
 import React, { useState } from 'react'
-import { useThemeTesting, useThemeTestingStatus } from '../../hooks/useThemeTesting'
-import { useTheme } from '../../contexts/ThemeContext'
-import { globalThemes } from '../../themes/globalThemes'
-import BrutalSelect from '../ui/BrutalSelect'
+import { useThemeTesting, useThemeTestingStatus } from '@/hooks/useThemeTesting'
+import { useTheme } from '@/contexts/ThemeContext'
+import { globalThemes } from '@/themes/globalThemes'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 
 interface ThemeTestingPanelProps {
   className?: string

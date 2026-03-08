@@ -13,11 +13,11 @@ import type {
   ShortcutConflict,
   Command,
   RecordingState,
-} from "../types/shortcuts";
+} from "@/types/shortcuts";
 import {
   getShortcutManager,
   ShortcutManager,
-} from "../services/ShortcutManager";
+} from "@/services/ShortcutManager";
 
 interface ShortcutContextValue {
   // Shortcut management
@@ -138,10 +138,10 @@ export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({
       handleShortcutCommand(command);
     };
 
-    window.addEventListener("shortcut-command" as any, handleCommand);
+    window.addEventListener("shortcut-command", handleCommand as EventListener);
 
     return () => {
-      window.removeEventListener("shortcut-command" as any, handleCommand);
+      window.removeEventListener("shortcut-command", handleCommand as EventListener);
     };
   }, []);
 
@@ -396,10 +396,10 @@ export const useShortcut = (shortcutId: string, handler?: () => void) => {
       }
     };
 
-    window.addEventListener("shortcut-executed" as any, handleShortcut);
+    window.addEventListener("shortcut-executed", handleShortcut as EventListener);
 
     return () => {
-      window.removeEventListener("shortcut-executed" as any, handleShortcut);
+      window.removeEventListener("shortcut-executed", handleShortcut as EventListener);
     };
   }, [shortcutId, handler, shortcut]);
 

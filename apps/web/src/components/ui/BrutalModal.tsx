@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { m, AnimatePresence } from "framer-motion";
@@ -24,6 +24,9 @@ export default function BrutalModal({
 }: BrutalModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
+  const autoId = useId();
+  const titleId = `${autoId}-modal-title`;
+  const bodyId = `${autoId}-modal-body`;
 
   // Handle ESC key and focus trap
   useEffect(() => {
@@ -133,7 +136,8 @@ export default function BrutalModal({
               }}
               role="dialog"
               aria-modal="true"
-              aria-labelledby={title ? "modal-title" : undefined}
+              aria-labelledby={title ? titleId : undefined}
+              aria-describedby={bodyId}
             >
               <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] shadow-[var(--theme-box-shadow-hover)]">
                 {/* HEADER */}
@@ -141,7 +145,7 @@ export default function BrutalModal({
                   <div className="px-[16px] py-[10px] border-b border-[var(--theme-border)] flex items-center justify-between">
                     {title && (
                       <h2
-                        id="modal-title"
+                        id={titleId}
                         className="text-[14px] font-bold uppercase"
                       >
                         {title.toUpperCase()}
@@ -164,7 +168,7 @@ export default function BrutalModal({
                 )}
 
                 {/* CONTENT */}
-                <div className="p-[16px]">{children}</div>
+                <div id={bodyId} className="p-[16px]">{children}</div>
               </div>
             </m.div>
           </div>

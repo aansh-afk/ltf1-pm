@@ -1,4 +1,5 @@
 import React from 'react'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useParams } from 'react-router-dom'
 import type { Id } from '../../../../convex/_generated/dataModel'
 import ReportBuilder from '@/components/features/reports/ReportBuilder'
@@ -41,12 +42,14 @@ const ReportsPage: React.FC = () => {
   }
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-gray-50">
-      <ReportBuilder 
+      <ReportBuilder
         workspaceId={workspaceId as Id<"workspaces">}
         projectId={projectId as Id<"projects"> | undefined}
       />
     </div>
+    </ErrorBoundary>
   )
 }
 

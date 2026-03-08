@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import LegalLayout from "../components/legal/LegalLayout";
-import { usePageTitle } from "../hooks/usePageTitle";
+import ErrorBoundary from '@/components/common/ErrorBoundary'
+import LegalLayout from "@/components/legal/LegalLayout";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const COMPANY_NAME = "Vividverseglobal";
 const CONTACT_EMAIL = "Aansh.Naidu@vividverseglobal.com";
@@ -10,6 +11,7 @@ export default function PrivacyPage() {
   usePageTitle("Privacy Policy");
 
   return (
+    <ErrorBoundary>
     <LegalLayout
       title="Privacy Policy"
       summary="This Privacy Policy explains what data LTF1 collects, how we use it, and your choices. We keep this readable on purpose and avoid hidden data weirdness."
@@ -218,5 +220,6 @@ export default function PrivacyPage() {
         </p>
       </section>
     </LegalLayout>
+    </ErrorBoundary>
   );
 }

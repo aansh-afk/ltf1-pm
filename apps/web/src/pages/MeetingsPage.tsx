@@ -1,6 +1,8 @@
 import { useReducer, useMemo, useCallback } from 'react'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
+import type { Id } from '../../../../convex/_generated/dataModel'
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, isSameDay, addDays, addWeeks, addMonths, subMonths, differenceInMinutes } from 'date-fns'
 import {
   HiOutlineCalendar,
@@ -17,19 +19,74 @@ import {
   HiOutlineLocationMarker,
   HiOutlineVideoCamera
 } from 'react-icons/hi'
-import { useLocalStorage } from '../hooks/useLocalStorage'
-import { useShortcut } from '../contexts/ShortcutContext'
-import MeetingCard from '../components/features/meetings/MeetingCard'
-import ScheduleMeetingModal from '../components/features/meetings/ScheduleMeetingModal'
-import MeetingDetailsModal from '../components/features/meetings/MeetingDetailsModal'
-import MeetingNotesModal from '../components/features/meetings/MeetingNotesModal'
-import BulkScheduleModal from '../components/features/meetings/BulkScheduleModal'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useShortcut } from '@/contexts/ShortcutContext'
+import MeetingCard from '@/components/features/meetings/MeetingCard'
+import ScheduleMeetingModal from '@/components/features/meetings/ScheduleMeetingModal'
+import MeetingDetailsModal from '@/components/features/meetings/MeetingDetailsModal'
+import MeetingNotesModal from '@/components/features/meetings/MeetingNotesModal'
+import BulkScheduleModal from '@/components/features/meetings/BulkScheduleModal'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
 import BrutalCard from '@/components/ui/BrutalCard'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalBadge from '@/components/ui/BrutalBadge'
-import BrutalSelect from '../components/ui/BrutalSelect'
+import BrutalSelect from '@/components/ui/BrutalSelect'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
+
+type MeetingType = 'standup' | 'retrospective' | 'planning' | 'review' | 'custom'
+type AttendeeStatus = 'pending' | 'accepted' | 'declined' | 'tentative'
+
+interface MeetingAttendee {
+  userId: Id<"users">
+  status: AttendeeStatus
+  responseTime?: number
+}
+
+interface MeetingData {
+  _id: Id<"meetings">
+  _creationTime: number
+  workspaceId: Id<"workspaces">
+  projectId?: Id<"projects">
+  sprintId?: Id<"sprints">
+  title: string
+  description?: string
+  type: MeetingType
+  organizerId: Id<"users">
+  startTime: number
+  endTime: number
+  location?: string
+  meetingUrl?: string
+  googleEventId?: string
+  attendees: MeetingAttendee[]
+  relatedTasks: Id<"tasks">[]
+  recurrence?: {
+    frequency: 'daily' | 'weekly' | 'monthly'
+    interval: number
+    endDate?: number
+  }
+  notes?: string
+  actionItems?: Array<{
+    id: string
+    description: string
+    assigneeId?: Id<"users">
+    completed: boolean
+    createdTaskId?: Id<"tasks">
+    createdAt: number
+  }>
+  template?: {
+    agenda?: string[]
+    duration?: number
+    isRecurring: boolean
+  }
+  recordings: Array<{
+    url: string
+    duration: number
+    createdAt: number
+  }>
+  createdAt: number
+  updatedAt: number
+}
 
 type ViewMode = 'calendar' | 'list' | 'dashboard'
 type CalendarView = 'month' | 'week' | 'day'
@@ -57,9 +114,9 @@ type MeetingsPageState = {
   selectedMeetings: Set<string>
   showScheduleModal: boolean
   showBulkScheduleModal: boolean
-  editingMeeting: any
-  viewingMeeting: any
-  notesModalMeeting: any
+  editingMeeting: MeetingData | null
+  viewingMeeting: MeetingData | null
+  notesModalMeeting: MeetingData | null
   showFilters: boolean
 }
 
@@ -71,9 +128,9 @@ type MeetingsPageAction =
   | { type: 'SET_SELECTED_MEETINGS'; value: Set<string> }
   | { type: 'SET_SHOW_SCHEDULE_MODAL'; value: boolean }
   | { type: 'SET_SHOW_BULK_SCHEDULE_MODAL'; value: boolean }
-  | { type: 'SET_EDITING_MEETING'; value: any }
-  | { type: 'SET_VIEWING_MEETING'; value: any }
-  | { type: 'SET_NOTES_MODAL_MEETING'; value: any }
+  | { type: 'SET_EDITING_MEETING'; value: MeetingData | null }
+  | { type: 'SET_VIEWING_MEETING'; value: MeetingData | null }
+  | { type: 'SET_NOTES_MODAL_MEETING'; value: MeetingData | null }
   | { type: 'SET_SHOW_FILTERS'; value: boolean }
   | { type: 'TOGGLE_FILTERS' }
   | { type: 'OPEN_EDIT_FROM_VIEW' }
@@ -135,8 +192,8 @@ interface MeetingsCalendarViewProps {
   calendarView: CalendarView
   setCalendarView: (view: CalendarView) => void
   getCalendarDays: () => Date[]
-  getMeetingsForDay: (date: Date) => any[]
-  onMeetingClick: (meeting: any) => void
+  getMeetingsForDay: (date: Date) => MeetingData[]
+  onMeetingClick: (meeting: MeetingData) => void
 }
 
 function MeetingsCalendarView({ currentDate, calendarView, setCalendarView, getCalendarDays, getMeetingsForDay, onMeetingClick }: MeetingsCalendarViewProps) {
@@ -195,7 +252,7 @@ function MeetingsCalendarView({ currentDate, calendarView, setCalendarView, getC
                     {format(day, 'd')}
                   </div>
                   <div className="space-y-1 flex-1">
-                    {dayMeetings.slice(0, 3).map((meeting: any) => (
+                    {dayMeetings.slice(0, 3).map((meeting) => (
                       <button
                         key={meeting._id}
                         onClick={() => onMeetingClick(meeting)}
@@ -241,13 +298,13 @@ function MeetingsCalendarView({ currentDate, calendarView, setCalendarView, getC
 }
 
 interface MeetingsListViewProps {
-  groupedMeetings: Array<{ date: string; meetings: any[] }>
+  groupedMeetings: Array<{ date: string; meetings: MeetingData[] }>
   currentUserId: string | undefined
   selectedMeetings: Set<string>
   setSelectedMeetings: (meetings: Set<string>) => void
-  onEdit: (meeting: any) => void
-  onViewNotes: (meeting: any) => void
-  onView: (meeting: any) => void
+  onEdit: (meeting: MeetingData) => void
+  onViewNotes: (meeting: MeetingData) => void
+  onView: (meeting: MeetingData) => void
 }
 
 function MeetingsListView({ groupedMeetings, currentUserId, selectedMeetings, setSelectedMeetings, onEdit, onViewNotes, onView }: MeetingsListViewProps) {
@@ -259,7 +316,7 @@ function MeetingsListView({ groupedMeetings, currentUserId, selectedMeetings, se
         </div>
       ) : (
         <div className="space-y-4">
-          {groupedMeetings.map(({ date, meetings }: { date: string; meetings: any[] }) => (
+          {groupedMeetings.map(({ date, meetings }) => (
             <div key={date}>
               <div className="flex items-center gap-4 mb-3">
                 <h3 className="font-mono text-sm font-bold uppercase text-[var(--theme-primary)]">
@@ -269,7 +326,7 @@ function MeetingsListView({ groupedMeetings, currentUserId, selectedMeetings, se
               </div>
 
               <div className="space-y-2">
-                {meetings.map((meeting: any) => (
+                {meetings.map((meeting) => (
                   <div key={meeting._id} className="flex items-start gap-4 group">
                     <input
                       type="checkbox"
@@ -314,8 +371,8 @@ interface MeetingStats {
 
 interface MeetingsDashboardViewProps {
   stats: MeetingStats | null
-  upcomingMeetings: any[]
-  onMeetingClick: (meeting: any) => void
+  upcomingMeetings: MeetingData[]
+  onMeetingClick: (meeting: MeetingData) => void
   onQuickRSVP: (meetingId: string, status: 'accepted' | 'declined' | 'tentative') => Promise<void>
 }
 
@@ -347,7 +404,7 @@ function MeetingsDashboardView({ stats, upcomingMeetings, onMeetingClick, onQuic
               <p className="text-[var(--theme-foreground)]/60 font-mono text-xs uppercase text-center py-8">NO UPCOMING MEETINGS</p>
             ) : (
               <div className="space-y-3">
-                {upcomingMeetings.slice(0, 5).map((meeting: any) => (
+                {upcomingMeetings.slice(0, 5).map((meeting) => (
                   <button
                     type="button"
                     key={meeting._id}
@@ -639,7 +696,7 @@ export default function MeetingsPage() {
 
   // Group meetings by date for list view
   const groupedMeetings = useMemo(() => {
-    const groups = new Map<string, any[]>()
+    const groups = new Map<string, MeetingData[]>()
 
     filteredMeetings.forEach(meeting => {
       const date = format(new Date(meeting.startTime), 'yyyy-MM-dd')
@@ -702,21 +759,21 @@ export default function MeetingsPage() {
 
     try {
       for (const meetingId of selectedMeetings) {
-        await deleteMeeting({ meetingId: meetingId as any })
+        await deleteMeeting({ meetingId: meetingId as Id<"meetings"> })
       }
       toast.success(`Deleted ${selectedMeetings.size} meetings`)
       dispatch({ type: 'SET_SELECTED_MEETINGS', value: new Set() })
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete meetings')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete meetings')
     }
   }
 
   const handleQuickRSVP = async (meetingId: string, status: 'accepted' | 'declined' | 'tentative') => {
     try {
-      await respondToMeeting({ meetingId: meetingId as any, status })
+      await respondToMeeting({ meetingId: meetingId as Id<"meetings">, status })
       toast.success(`Meeting ${status}`)
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to respond')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to respond')
     }
   }
 
@@ -732,7 +789,7 @@ export default function MeetingsPage() {
     const todayCount = meetings.filter(m => isToday(new Date(m.startTime))).length
     const totalMinutes = meetings.reduce((acc, m) => acc + differenceInMinutes(new Date(m.endTime), new Date(m.startTime)), 0)
     const acceptedCount = meetings.filter(m => {
-      const userAttendee = m.attendees?.find((a: any) => a.userId === currentUser?._id)
+      const userAttendee = m.attendees?.find((a) => a.userId === currentUser?._id)
       return userAttendee?.status === 'accepted'
     }).length
 
@@ -744,7 +801,12 @@ export default function MeetingsPage() {
     }
   }, [meetings, currentUser])
 
+  if (workspaces === undefined || currentUser === undefined) {
+    return <LoadingSpinner size="lg" />
+  }
+
   return (
+    <ErrorBoundary>
     <div className="h-full flex flex-col p-4 bg-[var(--theme-background)]">
       <MeetingsHeader
         currentDate={currentDate}
@@ -771,7 +833,7 @@ export default function MeetingsPage() {
             setCalendarView={(view: CalendarView) => dispatch({ type: 'SET_CALENDAR_VIEW', value: view })}
             getCalendarDays={getCalendarDays}
             getMeetingsForDay={getMeetingsForDay}
-            onMeetingClick={(meeting: any) => dispatch({ type: 'SET_VIEWING_MEETING', value: meeting })}
+            onMeetingClick={(meeting) => dispatch({ type: 'SET_VIEWING_MEETING', value: meeting })}
           />
         )}
 
@@ -781,9 +843,9 @@ export default function MeetingsPage() {
             currentUserId={currentUser?._id}
             selectedMeetings={selectedMeetings}
             setSelectedMeetings={(meetings: Set<string>) => dispatch({ type: 'SET_SELECTED_MEETINGS', value: meetings })}
-            onEdit={(meeting: any) => dispatch({ type: 'SET_EDITING_MEETING', value: meeting })}
-            onViewNotes={(meeting: any) => dispatch({ type: 'SET_NOTES_MODAL_MEETING', value: meeting })}
-            onView={(meeting: any) => dispatch({ type: 'SET_VIEWING_MEETING', value: meeting })}
+            onEdit={(meeting) => dispatch({ type: 'SET_EDITING_MEETING', value: meeting })}
+            onViewNotes={(meeting) => dispatch({ type: 'SET_NOTES_MODAL_MEETING', value: meeting })}
+            onView={(meeting) => dispatch({ type: 'SET_VIEWING_MEETING', value: meeting })}
           />
         )}
 
@@ -791,7 +853,7 @@ export default function MeetingsPage() {
           <MeetingsDashboardView
             stats={stats}
             upcomingMeetings={upcomingMeetings || []}
-            onMeetingClick={(meeting: any) => dispatch({ type: 'SET_VIEWING_MEETING', value: meeting })}
+            onMeetingClick={(meeting) => dispatch({ type: 'SET_VIEWING_MEETING', value: meeting })}
             onQuickRSVP={handleQuickRSVP}
           />
         )}
@@ -855,6 +917,7 @@ export default function MeetingsPage() {
         />
       )}
     </div>
+    </ErrorBoundary>
   )
 }
 

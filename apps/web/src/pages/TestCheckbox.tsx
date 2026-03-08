@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import BrutalCheckbox from '../components/ui/BrutalCheckbox'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
+import BrutalCheckbox from '@/components/ui/BrutalCheckbox'
 
 export default function TestCheckbox() {
   const [checked1, setChecked1] = useState(false)
@@ -8,6 +9,7 @@ export default function TestCheckbox() {
   const [checked4, setChecked4] = useState(true)
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-[var(--theme-background-secondary)] p-[24px]">
       <div className="max-w-600px mx-auto">
         <h1 className="text-[20px] font-bold text-[var(--theme-foreground)] mb-[16px] uppercase">
@@ -121,5 +123,6 @@ export default function TestCheckbox() {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   )
 }

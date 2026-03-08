@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { HiOutlineChevronDown, HiOutlineChevronRight } from 'react-icons/hi'
-import BrutalSelect from '../../ui/BrutalSelect'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 
 // Style types
 export interface ElementStyle {

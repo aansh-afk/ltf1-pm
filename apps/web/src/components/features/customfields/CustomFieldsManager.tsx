@@ -3,7 +3,7 @@ import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
-import BrutalSelect from '../../ui/BrutalSelect'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 import { 
   HiOutlinePlus,
   HiOutlineTrash,

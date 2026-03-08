@@ -38,7 +38,7 @@ interface Task {
     text: string
     createdAt: number
   }>
-  customFields?: Record<string, any>
+  customFields?: Record<string, string | number | boolean | string[]>
 }
 
 interface Sprint {
@@ -69,8 +69,8 @@ interface Project {
     url: string
     defaultBranch: string
   }
-  settings?: Record<string, any>
-  customFields?: Record<string, any>
+  settings?: Record<string, string | number | boolean>
+  customFields?: Record<string, string | number | boolean | string[]>
   createdAt: number
   updatedAt: number
 }
@@ -429,10 +429,10 @@ export class ExcelExporter {
     const uniqueProjects = [...new Set(resources.map(r => r.projectId))]
     
     // Set up columns
-    const columns: any[] = [
+    const columns: Partial<ExcelJS.Column>[] = [
       { header: 'Resource', key: 'resource', width: 25 }
     ]
-    
+
     uniqueProjects.forEach(projectId => {
       const project = projects.find(p => p._id === projectId)
       columns.push({
@@ -441,7 +441,7 @@ export class ExcelExporter {
         width: 20
       })
     })
-    
+
     columns.push({ header: 'Total Allocation', key: 'total', width: 15 })
     worksheet.columns = columns
 
@@ -464,7 +464,7 @@ export class ExcelExporter {
     // Add data rows
     uniqueUsers.forEach((userId, index) => {
       const user = users.find(u => u._id === userId)
-      const rowData: any = {
+      const rowData: Record<string, string> = {
         resource: user?.name || userId
       }
       
@@ -699,7 +699,7 @@ export class ExcelExporter {
     })
 
     // Define columns dynamically based on custom field definitions
-    const columns: any[] = [
+    const columns: Partial<ExcelJS.Column>[] = [
       { header: 'Item ID', key: 'id', width: 20 },
       { header: 'Item Type', key: 'type', width: 15 },
       { header: 'Name/Title', key: 'name', width: 40 }
@@ -733,7 +733,7 @@ export class ExcelExporter {
 
     // Add data rows
     items.forEach((item, index) => {
-      const rowData: any = {
+      const rowData: Record<string, string> = {
         id: item._id,
         type: 'title' in item ? 'Task' : 'Project',
         name: 'title' in item ? item.title : item.name
@@ -822,7 +822,7 @@ export class ExcelExporter {
     })
 
     // Set up columns
-    const columns: any[] = [{ header: 'Week', key: 'week', width: 10 }]
+    const columns: Partial<ExcelJS.Column>[] = [{ header: 'Week', key: 'week', width: 10 }]
     const uniqueUsers = [...new Set(timeEntries.map(e => e.userId))]
     
     uniqueUsers.forEach(userId => {
@@ -853,7 +853,7 @@ export class ExcelExporter {
 
     // Add data rows
     Array.from(weeklySummary.entries()).forEach(([week, userData]) => {
-      const rowData: any = { week }
+      const rowData: Record<string, string> = { week }
       let weekTotal = 0
       
       uniqueUsers.forEach(userId => {
@@ -920,7 +920,7 @@ export class ExcelExporter {
     })
 
     // Set up columns
-    const columns: any[] = [{ header: 'Month', key: 'month', width: 15 }]
+    const columns: Partial<ExcelJS.Column>[] = [{ header: 'Month', key: 'month', width: 15 }]
     const uniqueUsers = [...new Set(resources.map(r => r.userId))]
     
     uniqueUsers.forEach(userId => {
@@ -950,7 +950,7 @@ export class ExcelExporter {
 
     // Add data rows
     Array.from(monthlyCapacity.entries()).forEach(([month, userData]) => {
-      const rowData: any = { month }
+      const rowData: Record<string, string> = { month }
       
       uniqueUsers.forEach(userId => {
         const allocation = userData.get(userId) || 0

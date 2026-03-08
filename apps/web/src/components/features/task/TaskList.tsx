@@ -1,6 +1,7 @@
 import { useState, memo, useCallback } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
+import type { Id } from "../../../../../../convex/_generated/dataModel";
 import {
   HiOutlineCheckCircle,
   HiOutlinePlay,
@@ -15,13 +16,29 @@ import { format } from "date-fns";
 import CreateTaskModal from "./CreateTaskModal";
 import BrutalCheckbox from "../../ui/BrutalCheckbox";
 
+interface TaskListItem {
+  _id: string;
+  title: string;
+  description?: string;
+  status: string;
+  priority: string;
+  type: string;
+  key?: string;
+  dueDate?: number;
+  labels?: string[];
+  assignees?: Array<{ _id: string; name: string }>;
+  reporter?: { name: string };
+  estimate?: { points?: number; hours?: number };
+  [key: string]: unknown;
+}
+
 interface TaskListProps {
-  tasks: any[];
+  tasks: TaskListItem[];
   projectId: string;
   onTaskUpdate?: () => void;
-  onTaskEdit?: (task: any) => void;
-  onTaskDelete?: (task: any) => void;
-  onTaskDuplicate?: (task: any) => void;
+  onTaskEdit?: (task: TaskListItem) => void;
+  onTaskDelete?: (task: TaskListItem) => void;
+  onTaskDuplicate?: (task: TaskListItem) => void;
 }
 
 // Status dot + label using CSS variable tokens
@@ -346,7 +363,7 @@ const TaskList = memo(function TaskList({
                     <div className="flex items-center gap-1 flex-wrap">
                       {task.assignees
                         .slice(0, 2)
-                        .map((assignee: any, index: number) => (
+                        .map((assignee: { _id: string; name: string }, index: number) => (
                           <div
                             key={assignee._id}
                             className="flex items-center gap-1"
@@ -508,7 +525,7 @@ const TaskList = memo(function TaskList({
         <CreateTaskModal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
-          projectId={projectId as any}
+          projectId={projectId}
           onSuccess={onTaskUpdate}
         />
       )}

@@ -1,5 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
+import { getCurrentUser } from "../lib/auth";
 
 /**
  * Combined dashboard query that fetches workspaces with counts and recent activities
@@ -23,16 +24,7 @@ export const getDashboardData = query({
     recentActivities: v.array(v.any()),
   }),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return { workspaces: [], recentActivities: [] };
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .unique();
-
+    const user = await getCurrentUser(ctx);
     if (!user) {
       return { workspaces: [], recentActivities: [] };
     }

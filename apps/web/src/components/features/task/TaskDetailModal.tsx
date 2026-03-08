@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import {
   HiOutlineX,
   HiOutlineClock,
@@ -9,7 +10,7 @@ import {
   HiOutlineFlag,
   HiOutlineTag
 } from 'react-icons/hi'
-import BrutalModal from '../../ui/BrutalModal'
+import BrutalModal from '@/components/ui/BrutalModal'
 import TimeTracker from './TimeTracker'
 import TaskTimeDisplay from './TaskTimeDisplay'
 import { formatDistanceToNow, format } from 'date-fns'
@@ -26,17 +27,17 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
 
   const task = useQuery(
     api.tasks.queries.getTask,
-    taskId ? { taskId: taskId as any } : 'skip'
+    taskId ? { taskId: taskId as Id<"tasks"> } : 'skip'
   )
 
   const timeEntries = useQuery(
     api.tasks.queries.getTaskTimeEntries,
-    taskId ? { taskId: taskId as any } : 'skip'
+    taskId ? { taskId: taskId as Id<"tasks"> } : 'skip'
   )
 
   const activeTimeEntry = useQuery(
     api.tasks.queries.getActiveTimeEntry,
-    taskId ? { taskId: taskId as any } : 'skip'
+    taskId ? { taskId: taskId as Id<"tasks"> } : 'skip'
   )
 
   if (!task) return null
@@ -107,7 +108,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'details' | 'time' | 'comments')}
               className={clsx(
                 'px-[12px] py-[8px] text-brutal-sm font-mono uppercase transition-colors',
                 'border-b-4 -mb-2px',
@@ -218,7 +219,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
               <div>
                 <h3 className="text-brutal-sm font-mono uppercase mb-[6px]">ACTIVE TIMER</h3>
                 <TimeTracker
-                  taskId={taskId}
+                  taskId={taskId as Id<"tasks">}
                   isRunning={!!activeTimeEntry}
                   currentDuration={totalTimeTracked}
                 />
@@ -229,7 +230,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
                 <div>
                   <h3 className="text-brutal-sm font-mono uppercase mb-[6px]">TIME ENTRIES</h3>
                   <div className="space-y-[4px]">
-                    {timeEntries.map((entry: any) => (
+                    {timeEntries.map((entry) => (
                       <div
                         key={entry._id}
                         className="p-[10px] bg-[var(--theme-background-secondary)]/5 border border-[var(--theme-border)]"

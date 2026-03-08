@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query } from "../_generated/server";
 import { Doc } from "../_generated/dataModel";
+import { getCurrentUser } from "../lib/auth";
 
 // Default profile for users without profiles
 function getDefaultProfile(): Partial<Doc<"developerProfiles">> {
@@ -86,14 +87,7 @@ export const getDeveloperProfile = query({
 // Get current user's profile
 export const getMyProfile = query({
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
+    const user = await getCurrentUser(ctx);
     if (!user) return null;
 
     // Call the handler logic directly

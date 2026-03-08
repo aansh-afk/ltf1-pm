@@ -26,7 +26,7 @@ interface Task {
   subtaskIds?: Id<"tasks">[]
   dependsOn?: Id<"tasks">[]
   blocks?: Id<"tasks">[]
-  customFields?: Record<string, any>
+  customFields?: Record<string, string | number | boolean | string[]>
 }
 
 interface Sprint {
@@ -85,7 +85,7 @@ export class CSVExporter {
   /**
    * Escape CSV value
    */
-  private escapeCSV(value: any): string {
+  private escapeCSV(value: unknown): string {
     if (value === null || value === undefined) {
       return ''
     }
@@ -109,7 +109,7 @@ export class CSVExporter {
   /**
    * Convert array of objects to CSV string
    */
-  private arrayToCSV(data: any[], headers?: string[]): string {
+  private arrayToCSV(data: Array<Record<string, unknown>>, headers?: string[]): string {
     if (data.length === 0) {
       return ''
     }
@@ -342,12 +342,12 @@ export class CSVExporter {
    * Export custom report with selected columns
    */
   exportCustomReport(
-    data: any[],
+    data: Array<Record<string, unknown>>,
     columns: Array<{ key: string; label: string }>
   ): string {
     const headers = columns.map(c => c.label)
     const mappedData = data.map(row => {
-      const mappedRow: any = {}
+      const mappedRow: Record<string, unknown> = {}
       columns.forEach(col => {
         mappedRow[col.label] = row[col.key]
       })

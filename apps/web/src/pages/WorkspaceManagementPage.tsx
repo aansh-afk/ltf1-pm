@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
+import type { Doc, Id } from '../../../../convex/_generated/dataModel'
 import {
   HiOutlineHome,
   HiOutlineCog,
@@ -33,7 +35,7 @@ import { toast } from 'react-hot-toast'
 interface WorkspaceTab {
   id: string
   label: string
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   count?: number
 }
 
@@ -43,17 +45,17 @@ export default function WorkspaceManagementPage() {
 
   const workspace = useQuery(
     api.workspaces.queries.getWorkspaceById,
-    workspaceId ? { workspaceId: workspaceId as any } : 'skip'
+    workspaceId ? { workspaceId: workspaceId as Id<"workspaces"> } : 'skip'
   )
 
   const members = useQuery(
     api.workspaces.queries.getWorkspaceMembers,
-    workspaceId ? { workspaceId: workspaceId as any } : 'skip'
+    workspaceId ? { workspaceId: workspaceId as Id<"workspaces"> } : 'skip'
   )
 
   const projects = useQuery(
     api.projects.queries.getWorkspaceProjects,
-    workspaceId ? { workspaceId: workspaceId as any } : 'skip'
+    workspaceId ? { workspaceId: workspaceId as Id<"workspaces"> } : 'skip'
   )
 
   if (workspace === undefined) {
@@ -179,8 +181,28 @@ export default function WorkspaceManagementPage() {
   )
 }
 
+// Type definitions for workspace management
+type WorkspaceResult = Doc<"workspaces"> & {
+  currentUserRole?: string
+  members: MemberWithUser[]
+}
+
+type MemberWithUser = Doc<"workspaceMembers"> & {
+  user: Doc<"users"> | null
+}
+
+type ProjectResult = Doc<"projects">
+
+interface OverviewTabProps {
+  workspace: WorkspaceResult
+  projects: ProjectResult[] | undefined
+  members: MemberWithUser[] | undefined
+  workspaceId: string | undefined
+  setActiveTab: (tab: string) => void
+}
+
 // Overview Tab Component
-function OverviewTab({ workspace, projects, members, workspaceId, setActiveTab }: any) {
+function OverviewTab({ workspace, projects, members, workspaceId, setActiveTab }: OverviewTabProps) {
   const stats = [
     { icon: HiOutlineFolder, label: 'Active Projects', value: projects?.length || 0, color: 'var(--theme-primary)', width: 'w-3/4' },
     { icon: HiOutlineUsers, label: 'Members', value: members?.length || 0, color: 'var(--theme-info)', width: 'w-1/2' },
@@ -299,7 +321,12 @@ function OverviewTab({ workspace, projects, members, workspaceId, setActiveTab }
 }
 
 // Projects Tab Component
-function ProjectsTab({ workspaceId, projects }: any) {
+interface ProjectsTabProps {
+  workspaceId: string
+  projects: ProjectResult[] | undefined
+}
+
+function ProjectsTab({ workspaceId, projects }: ProjectsTabProps) {
   const navigate = useNavigate()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
@@ -323,7 +350,7 @@ function ProjectsTab({ workspaceId, projects }: any) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {projects?.map((project: any) => (
+        {projects?.map((project) => (
           <div key={project._id} className="bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] p-4 group hover:border-[var(--theme-primary)] transition-colors">
             <div className="flex justify-between items-start mb-2">
               <h3 className="text-sm font-bold text-[var(--theme-foreground)] uppercase">{project.name}</h3>
@@ -370,7 +397,13 @@ function ProjectsTab({ workspaceId, projects }: any) {
 }
 
 // Members Tab Component
-function MembersTab({ workspaceId, members, workspace }: any) {
+interface MembersTabProps {
+  workspaceId: string
+  members: MemberWithUser[] | undefined
+  workspace: WorkspaceResult
+}
+
+function MembersTab({ workspaceId, members, workspace }: MembersTabProps) {
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'member' | 'admin' | 'viewer'>('member')
@@ -383,7 +416,7 @@ function MembersTab({ workspaceId, members, workspace }: any) {
   const removeMember = useMutation(api.workspaces.mutations.removeMember)
   const pendingInvitations = useQuery(
     api.workspaces.queries.getPendingInvitations,
-    workspaceId ? { workspaceId: workspaceId as any } : 'skip'
+    workspaceId ? { workspaceId: workspaceId as Id<"workspaces"> } : 'skip'
   )
 
   const handleInvite = async (e: React.FormEvent) => {
@@ -392,7 +425,7 @@ function MembersTab({ workspaceId, members, workspace }: any) {
     setIsInviting(true)
     try {
       const result = await inviteToWorkspace({
-        workspaceId: workspaceId as any,
+        workspaceId: workspaceId as Id<"workspaces">,
         email: inviteEmail.trim(),
         role: inviteRole,
       })
@@ -404,8 +437,9 @@ function MembersTab({ workspaceId, members, workspace }: any) {
       setInviteEmail('')
       setInviteRole('member')
       setShowInviteModal(false)
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to invite member')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to invite member'
+      toast.error(message)
     } finally {
       setIsInviting(false)
     }
@@ -414,27 +448,29 @@ function MembersTab({ workspaceId, members, workspace }: any) {
   const handleRoleChange = async (userId: string, newRole: 'member' | 'admin' | 'viewer') => {
     try {
       await updateMemberRole({
-        workspaceId: workspaceId as any,
-        userId: userId as any,
+        workspaceId: workspaceId as Id<"workspaces">,
+        userId: userId as Id<"users">,
         role: newRole,
       })
       toast.success('Member role updated')
       setEditingMemberId(null)
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update role')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to update role'
+      toast.error(message)
     }
   }
 
   const handleRemoveMember = async (userId: string) => {
     try {
       await removeMember({
-        workspaceId: workspaceId as any,
-        userId: userId as any,
+        workspaceId: workspaceId as Id<"workspaces">,
+        userId: userId as Id<"users">,
       })
       toast.success('Member removed from workspace')
       setConfirmRemoveId(null)
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to remove member')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to remove member'
+      toast.error(message)
     }
   }
 
@@ -464,7 +500,7 @@ function MembersTab({ workspaceId, members, workspace }: any) {
               </tr>
             </thead>
             <tbody>
-              {members?.map((member: any) => (
+              {members?.map((member) => (
                 <tr key={member.userId} className="border-b border-[var(--theme-border)]/50 hover:bg-[var(--theme-background-secondary)]/50 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
@@ -596,7 +632,7 @@ function MembersTab({ workspaceId, members, workspace }: any) {
                   </tr>
                 </thead>
                 <tbody>
-                  {pendingInvitations.map((inv: any) => (
+                  {pendingInvitations.map((inv) => (
                     <tr key={inv._id} className="border-b border-[var(--theme-border)]/50 hover:bg-[var(--theme-background-secondary)]/50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
@@ -752,7 +788,7 @@ function MembersTab({ workspaceId, members, workspace }: any) {
 }
 
 // Settings Tab Component
-function SettingsTab({ workspace }: any) {
+function SettingsTab({ workspace }: { workspace: WorkspaceResult }) {
   return (
     <div className="p-4 max-w-3xl">
       <div className="mb-4">
@@ -792,7 +828,7 @@ function SettingsTab({ workspace }: any) {
 }
 
 
-function BillingTab({ workspace }: any) {
+function BillingTab({ workspace }: { workspace: WorkspaceResult }) {
   return (
     <div className="p-4 flex flex-col items-center justify-center min-h-[50vh]">
       <div className="border-2 border-[var(--theme-border)] border-dashed p-8 text-center max-w-md">
@@ -808,8 +844,9 @@ function BillingTab({ workspace }: any) {
   )
 }
 
-function DangerTab({ workspace }: any) {
+function DangerTab({ workspace }: { workspace: WorkspaceResult }) {
   return (
+    <ErrorBoundary>
     <div className="p-4 max-w-3xl">
       <div className="mb-4">
         <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--theme-error)] inline-block mb-1">
@@ -835,5 +872,6 @@ function DangerTab({ workspace }: any) {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   )
 }
