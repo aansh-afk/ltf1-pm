@@ -3,6 +3,8 @@ import { v } from "convex/values";
 import { requirePermission } from "../auth/permissions";
 import { internal } from "../_generated/api";
 import { workspaceInvitation, memberRoleChanged, memberRemoved } from "../email/templates";
+import { getCurrentUserOrThrow } from "../lib/auth";
+import { workspaceRoleValidator } from "../lib/validators";
 
 export const createWorkspace = mutation({
   args: {
@@ -133,19 +135,7 @@ export const updateWorkspace = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     await requirePermission(ctx.db, user._id, args.workspaceId, "workspace.edit");
 
@@ -219,26 +209,14 @@ export const inviteToWorkspace = mutation({
   args: {
     workspaceId: v.id("workspaces"),
     email: v.string(),
-    role: v.union(v.literal("admin"), v.literal("member"), v.literal("viewer")),
+    role: workspaceRoleValidator,
   },
   returns: v.object({
     status: v.union(v.literal("added"), v.literal("invited")),
     email: v.string(),
   }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     await requirePermission(ctx.db, user._id, args.workspaceId, "workspace.invite");
 
@@ -373,22 +351,10 @@ export const updateMemberRole = mutation({
   args: {
     workspaceId: v.id("workspaces"),
     userId: v.id("users"),
-    role: v.union(v.literal("admin"), v.literal("member"), v.literal("viewer")),
+    role: workspaceRoleValidator,
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
+    const currentUser = await getCurrentUserOrThrow(ctx);
 
     await requirePermission(ctx.db, currentUser._id, args.workspaceId, "workspace.invite");
 
@@ -452,19 +418,7 @@ export const deleteWorkspace = mutation({
     workspaceId: v.id("workspaces"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const workspace = await ctx.db.get(args.workspaceId);
     if (!workspace) {
@@ -574,19 +528,7 @@ export const removeMember = mutation({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
+    const currentUser = await getCurrentUserOrThrow(ctx);
 
     await requirePermission(ctx.db, currentUser._id, args.workspaceId, "workspace.invite");
 

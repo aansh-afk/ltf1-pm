@@ -7,9 +7,9 @@ import type {
   ShortcutEventType,
   ModifierKey,
   Platform
-} from '../types/shortcuts'
-import { SPECIAL_KEYS, MODIFIER_SYMBOLS } from '../types/shortcuts'
-import { defaultShortcuts } from '../config/defaultShortcuts'
+} from '@/types/shortcuts'
+import { SPECIAL_KEYS, MODIFIER_SYMBOLS } from '@/types/shortcuts'
+import { defaultShortcuts } from '@/config/defaultShortcuts'
 
 export class ShortcutManager {
   private shortcuts: Map<string, Shortcut> = new Map()

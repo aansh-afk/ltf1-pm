@@ -13,27 +13,20 @@ import {
   taskCompleted,
   taskStatusChanged,
 } from "../email/templates";
+import { getCurrentUserOrThrow } from "../lib/auth";
+import {
+  taskStatusValidator,
+  taskPriorityValidator,
+  taskTypeValidator,
+} from "../lib/validators";
 
 export const createTask = mutation({
   args: {
     projectId: v.id("projects"),
     title: v.string(),
     description: v.optional(v.string()),
-    type: v.union(
-      v.literal("feature"),
-      v.literal("bug"),
-      v.literal("improvement"),
-      v.literal("task"),
-      v.literal("epic"),
-    ),
-    priority: v.optional(
-      v.union(
-        v.literal("urgent"),
-        v.literal("high"),
-        v.literal("medium"),
-        v.literal("low"),
-      ),
-    ),
+    type: taskTypeValidator,
+    priority: v.optional(taskPriorityValidator),
     assigneeIds: v.optional(v.array(v.id("users"))),
     labels: v.optional(v.array(v.string())),
     startDate: v.optional(v.number()),
@@ -47,19 +40,7 @@ export const createTask = mutation({
     parentTaskId: v.optional(v.id("tasks")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const project = await ctx.db.get(args.projectId);
     if (!project) {
@@ -173,24 +154,8 @@ export const updateTask = mutation({
     taskId: v.id("tasks"),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
-    status: v.optional(
-      v.union(
-        v.literal("backlog"),
-        v.literal("todo"),
-        v.literal("in_progress"),
-        v.literal("in_review"),
-        v.literal("done"),
-        v.literal("cancelled"),
-      ),
-    ),
-    priority: v.optional(
-      v.union(
-        v.literal("urgent"),
-        v.literal("high"),
-        v.literal("medium"),
-        v.literal("low"),
-      ),
-    ),
+    status: v.optional(taskStatusValidator),
+    priority: v.optional(taskPriorityValidator),
     assigneeIds: v.optional(v.array(v.id("users"))),
     labels: v.optional(v.array(v.string())),
     startDate: v.optional(v.number()),
@@ -203,19 +168,7 @@ export const updateTask = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const hasAccess = await canAccessTask(
       ctx.db,
@@ -492,19 +445,7 @@ export const deleteTask = mutation({
     taskId: v.id("tasks"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const hasAccess = await canAccessTask(
       ctx.db,
@@ -547,30 +488,11 @@ export const deleteTask = mutation({
 export const moveTask = mutation({
   args: {
     taskId: v.id("tasks"),
-    status: v.union(
-      v.literal("backlog"),
-      v.literal("todo"),
-      v.literal("in_progress"),
-      v.literal("in_review"),
-      v.literal("done"),
-      v.literal("cancelled"),
-    ),
+    status: taskStatusValidator,
     position: v.number(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const hasAccess = await canAccessTask(
       ctx.db,
@@ -603,19 +525,7 @@ export const startTimeTracking = mutation({
     taskId: v.id("tasks"),
   },
   handler: async (ctx, { taskId }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const task = await ctx.db.get(taskId);
     if (!task) {
@@ -636,7 +546,7 @@ export const startTimeTracking = mutation({
     const activeSession = await ctx.db
       .query("timeEntries")
       .withIndex("by_task_and_user", (q) =>
-        q.eq("taskId", taskId).eq("userId", identity.subject),
+        q.eq("taskId", taskId).eq("userId", user.clerkId),
       )
       .filter((q) => q.eq(q.field("endTime"), undefined))
       .first();
@@ -648,7 +558,7 @@ export const startTimeTracking = mutation({
     // Create new time entry
     const timeEntryId = await ctx.db.insert("timeEntries", {
       taskId,
-      userId: identity.subject,
+      userId: user.clerkId,
       startTime: Date.now(),
       description: `Working on: ${task.title}`,
       createdAt: Date.now(),
@@ -673,19 +583,7 @@ export const pauseTimeTracking = mutation({
     duration: v.number(),
   },
   handler: async (ctx, { taskId, duration }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const hasAccess = await canAccessTask(
       ctx.db,
@@ -701,7 +599,7 @@ export const pauseTimeTracking = mutation({
     const activeSession = await ctx.db
       .query("timeEntries")
       .withIndex("by_task_and_user", (q) =>
-        q.eq("taskId", taskId).eq("userId", identity.subject),
+        q.eq("taskId", taskId).eq("userId", user.clerkId),
       )
       .filter((q) => q.eq(q.field("endTime"), undefined))
       .first();
@@ -727,19 +625,7 @@ export const stopTimeTracking = mutation({
     duration: v.number(),
   },
   handler: async (ctx, { taskId, duration }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const hasAccess = await canAccessTask(
       ctx.db,
@@ -755,7 +641,7 @@ export const stopTimeTracking = mutation({
     const activeSession = await ctx.db
       .query("timeEntries")
       .withIndex("by_task_and_user", (q) =>
-        q.eq("taskId", taskId).eq("userId", identity.subject),
+        q.eq("taskId", taskId).eq("userId", user.clerkId),
       )
       .filter((q) => q.eq(q.field("endTime"), undefined))
       .first();
@@ -798,24 +684,8 @@ export const bulkUpdateTasks = mutation({
   args: {
     taskIds: v.array(v.id("tasks")),
     updates: v.object({
-      status: v.optional(
-        v.union(
-          v.literal("backlog"),
-          v.literal("todo"),
-          v.literal("in_progress"),
-          v.literal("in_review"),
-          v.literal("done"),
-          v.literal("cancelled"),
-        ),
-      ),
-      priority: v.optional(
-        v.union(
-          v.literal("urgent"),
-          v.literal("high"),
-          v.literal("medium"),
-          v.literal("low"),
-        ),
-      ),
+      status: v.optional(taskStatusValidator),
+      priority: v.optional(taskPriorityValidator),
       assigneeIds: v.optional(v.array(v.id("users"))),
       labels: v.optional(v.array(v.string())),
       sprintId: v.optional(v.id("sprints")),
@@ -830,14 +700,7 @@ export const bulkUpdateTasks = mutation({
   },
   returns: v.object({ updatedCount: v.number() }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) throw new Error("User not found");
+    const user = await getCurrentUserOrThrow(ctx);
 
     // Optional: server-side automatic workload rebalance
     if (args.autoRebalance) {
@@ -1050,14 +913,7 @@ export const bulkDeleteTasks = mutation({
   },
   returns: v.object({ deletedCount: v.number() }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) throw new Error("User not found");
+    const user = await getCurrentUserOrThrow(ctx);
 
     let deletedCount = 0;
     for (const taskId of args.taskIds) {

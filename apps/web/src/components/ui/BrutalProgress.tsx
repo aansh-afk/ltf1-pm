@@ -36,6 +36,11 @@ export default function BrutalProgress({
         </div>
       )}
       <div
+        role="progressbar"
+        aria-valuenow={Math.round(percentage)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={props['aria-label'] || 'Progress'}
         className={clsx(
           'relative h-24px bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] overflow-hidden',
           className

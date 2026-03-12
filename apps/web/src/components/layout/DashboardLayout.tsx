@@ -18,17 +18,17 @@ import {
   HiOutlineExclamationCircle
 } from 'react-icons/hi'
 import clsx from 'clsx'
-import { useResourceMonitor } from '../../hooks/useResourceMonitor'
-import { useCurrentWorkspace } from '../../hooks/useCurrentWorkspace'
-import { useAfkDetection } from '../../hooks/useAfkDetection'
-import { ProfileCompletionBanner } from '../features/profile/ProfileCompletionBanner'
-import { GitHubMonitor } from '../features/github/GitHubMonitor'
-import GlobalSearchModal from '../features/search/GlobalSearchModal'
-import WorkspaceMobileBlocker from '../common/WorkspaceMobileBlocker'
-import NotificationBell from '../common/NotificationBell'
-import FeedbackWidget from '../features/feedback/FeedbackWidget'
-import ShortcutHelp from '../shortcuts/ShortcutHelp'
-import { useEnsureUser } from '../../hooks/useEnsureUser'
+import { useResourceMonitor } from '@/hooks/useResourceMonitor'
+import { useCurrentWorkspace } from '@/hooks/useCurrentWorkspace'
+import { useAfkDetection } from '@/hooks/useAfkDetection'
+import { ProfileCompletionBanner } from '@/components/features/profile/ProfileCompletionBanner'
+import { GitHubMonitor } from '@/components/features/github/GitHubMonitor'
+import GlobalSearchModal from '@/components/features/search/GlobalSearchModal'
+import WorkspaceMobileBlocker from '@/components/common/WorkspaceMobileBlocker'
+import NotificationBell from '@/components/common/NotificationBell'
+import FeedbackWidget from '@/components/features/feedback/FeedbackWidget'
+import ShortcutHelp from '@/components/shortcuts/ShortcutHelp'
+import { useEnsureUser } from '@/hooks/useEnsureUser'
 
 
 // --- Sub-components ---

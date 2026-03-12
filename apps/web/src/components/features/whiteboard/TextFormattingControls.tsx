@@ -1,5 +1,5 @@
 import React from 'react'
-import BrutalSelect from '../../ui/BrutalSelect'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 import {
   HiOutlineCollection,
   HiOutlineSortAscending,

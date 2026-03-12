@@ -1,20 +1,12 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { hasPermission, hasProjectPermission } from "../auth/permissions";
+import { getCurrentUser, getCurrentUserOrThrow } from "../lib/auth";
 
 export const getWorkspaceProjects = query({
   args: { workspaceId: v.id("workspaces") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
+    const user = await getCurrentUser(ctx);
     if (!user) {
       return [];
     }
@@ -66,19 +58,7 @@ export const getWorkspaceProjects = query({
 export const getProject = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const project = await ctx.db.get(args.projectId);
     if (!project) {
@@ -105,15 +85,13 @@ export const getProject = query({
 
     const activeSprint = await ctx.db
       .query("sprints")
-      .withIndex("by_project", (q) => q.eq("projectId", project._id))
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .withIndex("by_project_and_status", (q) => q.eq("projectId", project._id).eq("status", "active"))
       .first();
 
     // Get project team members (not workspace members!)
     const projectMembers = await ctx.db
       .query("projectMembers")
-      .withIndex("by_project", (q) => q.eq("projectId", project._id))
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .withIndex("by_project_and_status", (q) => q.eq("projectId", project._id).eq("status", "active"))
       .collect();
 
     const memberUsers = await Promise.all(
@@ -145,16 +123,7 @@ export const getProjectsByStatus = query({
     ),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
+    const user = await getCurrentUser(ctx);
     if (!user) {
       return [];
     }
@@ -172,8 +141,7 @@ export const getProjectsByStatus = query({
 
     return await ctx.db
       .query("projects")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-      .filter((q) => q.eq(q.field("status"), args.status))
+      .withIndex("by_workspace_and_status", (q) => q.eq("workspaceId", args.workspaceId).eq("status", args.status))
       .collect();
   },
 });
@@ -183,16 +151,7 @@ export const getProjectsByStatus = query({
 export const getProjectTeamMembers = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
+    const user = await getCurrentUser(ctx);
     if (!user) {
       return [];
     }
@@ -210,8 +169,7 @@ export const getProjectTeamMembers = query({
 
     const projectMembers = await ctx.db
       .query("projectMembers")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .withIndex("by_project_and_status", (q) => q.eq("projectId", args.projectId).eq("status", "active"))
       .collect();
 
     const membersWithDetails = await Promise.all(
@@ -249,8 +207,7 @@ export const getProjectByInviteCode = query({
     // Get member count
     const memberCount = await ctx.db
       .query("projectMembers")
-      .withIndex("by_project", (q) => q.eq("projectId", project._id))
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .withIndex("by_project_and_status", (q) => q.eq("projectId", project._id).eq("status", "active"))
       .collect();
 
     return {
@@ -271,16 +228,7 @@ export const getProjectByInviteCode = query({
 export const getUserProjects = query({
   args: { userId: v.optional(v.id("users")) },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
+    const user = await getCurrentUser(ctx);
     if (!user) {
       return [];
     }
@@ -296,8 +244,7 @@ export const getUserProjects = query({
 
     const projectMemberships = await ctx.db
       .query("projectMembers")
-      .withIndex("by_user", (q) => q.eq("userId", targetUserId))
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .withIndex("by_user_and_status", (q) => q.eq("userId", targetUserId).eq("status", "active"))
       .collect();
 
     const projectsWithDetails = await Promise.all(
@@ -325,19 +272,7 @@ export const getUserProjects = query({
 export const getProjectInviteLink = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const hasAccess = await hasProjectPermission(
       ctx.db,

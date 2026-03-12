@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { requirePermission } from "../auth/permissions";
 import { internal } from "../_generated/api";
 import { meetingScheduled, meetingUpdated, meetingCancelled } from "../email/templates";
+import { getCurrentUserOrThrow } from "../lib/auth";
 
 export const createMeeting = mutation({
   args: {
@@ -36,19 +37,7 @@ export const createMeeting = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     await requirePermission(ctx.db, user._id, args.workspaceId, "meeting.create");
 
@@ -141,19 +130,7 @@ export const updateMeeting = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const meeting = await ctx.db.get(args.meetingId);
     if (!meeting) {
@@ -229,19 +206,7 @@ export const respondToMeeting = mutation({
     status: v.union(v.literal("accepted"), v.literal("declined"), v.literal("tentative")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const meeting = await ctx.db.get(args.meetingId);
     if (!meeting) {
@@ -286,19 +251,7 @@ export const addActionItem = mutation({
     assigneeId: v.optional(v.id("users")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const meeting = await ctx.db.get(args.meetingId);
     if (!meeting) {
@@ -337,19 +290,7 @@ export const convertActionItemToTask = mutation({
     taskPriority: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const meeting = await ctx.db.get(args.meetingId);
     if (!meeting) {
@@ -415,19 +356,7 @@ export const deleteMeeting = mutation({
     meetingId: v.id("meetings"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const meeting = await ctx.db.get(args.meetingId);
     if (!meeting) {

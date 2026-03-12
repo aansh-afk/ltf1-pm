@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
-import BrutalModal from '../../ui/BrutalModal'
-import BrutalInput from '../../ui/BrutalInput'
-import BrutalButton from '../../ui/BrutalButton'
+import BrutalModal from '@/components/ui/BrutalModal'
+import BrutalInput from '@/components/ui/BrutalInput'
+import BrutalButton from '@/components/ui/BrutalButton'
 
 interface CreateWorkspaceModalProps {
   isOpen: boolean

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { useNavigate, useLocation, type NavigateFunction } from 'react-router-dom'
@@ -22,13 +23,13 @@ import {
   HiOutlineChip,
   HiOutlineTerminal
 } from 'react-icons/hi'
-import DeveloperStatusIndicator from '../components/features/developer/DeveloperStatusIndicator'
-import { EditDeveloperProfileModal } from '../components/features/profile/EditDeveloperProfileModal'
-import { GitHubProfileSection } from '../components/features/profile/GitHubProfileSection'
-import BrutalCard from '../components/ui/BrutalCard'
-import BrutalButton from '../components/ui/BrutalButton'
-import BrutalBadge from '../components/ui/BrutalBadge'
-import { useProfileCompletion } from '../hooks/useProfileCompletion'
+import DeveloperStatusIndicator from '@/components/features/developer/DeveloperStatusIndicator'
+import { EditDeveloperProfileModal } from '@/components/features/profile/EditDeveloperProfileModal'
+import { GitHubProfileSection } from '@/components/features/profile/GitHubProfileSection'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalBadge from '@/components/ui/BrutalBadge'
+import { useProfileCompletion } from '@/hooks/useProfileCompletion'
 import { m } from 'framer-motion'
 
 const fadeUp = {
@@ -175,6 +176,7 @@ export default function MyProfilePage() {
   }
 
   return (
+    <ErrorBoundary>
     <m.div
       className="p-4 max-w-6xl mx-auto"
       initial="hidden"
@@ -374,5 +376,6 @@ export default function MyProfilePage() {
         />
       )}
     </m.div>
+    </ErrorBoundary>
   )
 }

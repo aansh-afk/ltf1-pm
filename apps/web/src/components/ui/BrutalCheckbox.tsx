@@ -1,4 +1,4 @@
-import { forwardRef, InputHTMLAttributes } from 'react'
+import { forwardRef, InputHTMLAttributes, useId } from 'react'
 import clsx from 'clsx'
 import { HiOutlineCheck, HiOutlineX } from 'react-icons/hi'
 
@@ -24,6 +24,13 @@ const BrutalCheckbox = forwardRef<HTMLInputElement, BrutalCheckboxProps>(({
   onChange,
   ...props
 }, ref) => {
+  const autoId = useId()
+  const errorId = `${autoId}-checkbox-error`
+  const descId = `${autoId}-checkbox-desc`
+  const describedBy = [
+    error ? errorId : null,
+    description ? descId : null,
+  ].filter(Boolean).join(' ') || undefined
   const sizeStyles = {
     sm: { width: '16px', height: '16px' },
     md: { width: '20px', height: '20px' },
@@ -71,6 +78,8 @@ const BrutalCheckbox = forwardRef<HTMLInputElement, BrutalCheckboxProps>(({
           disabled={disabled}
           checked={checked}
           onChange={onChange}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
           {...props}
         />
         
@@ -121,12 +130,12 @@ const BrutalCheckbox = forwardRef<HTMLInputElement, BrutalCheckboxProps>(({
               </span>
             )}
             {description && (
-              <span className="text-brutal-xs text-[var(--theme-foreground)]/60">
+              <span id={descId} className="text-brutal-xs text-[var(--theme-foreground)]/60">
                 {description}
               </span>
             )}
             {error && (
-              <span className="text-brutal-xs text-[var(--theme-error)] flex items-center gap-4px">
+              <span id={errorId} className="text-brutal-xs text-[var(--theme-error)] flex items-center gap-4px">
                 <HiOutlineX className="w-[12px] h-[12px]" />
                 {error}
               </span>

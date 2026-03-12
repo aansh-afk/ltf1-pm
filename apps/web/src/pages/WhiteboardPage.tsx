@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useParams } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
@@ -11,8 +12,9 @@ import {
   HiOutlineShare,
   HiOutlineChatAlt2,
   HiOutlinePencil,
+  HiOutlineTrash,
 } from 'react-icons/hi'
-import BrutalSelect from '../components/ui/BrutalSelect'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 import toast from 'react-hot-toast'
 import { m } from 'framer-motion'
 
@@ -44,8 +46,9 @@ export default function WhiteboardPage() {
     } : 'skip'
   )
 
-  // Create whiteboard mutation
+  // Mutations
   const createWhiteboard = useMutation(api.whiteboard.createWhiteboard)
+  const deleteWhiteboard = useMutation(api.whiteboard.deleteWhiteboard)
 
   const handleCreateWhiteboard = async () => {
     if (!currentWorkspace) return
@@ -70,9 +73,20 @@ export default function WhiteboardPage() {
   }
 
   const handleShare = () => {
-    // In a real app, this would open a modal with link/invite options
     navigator.clipboard.writeText(window.location.href)
     toast.success('Link copied to clipboard!')
+  }
+
+  const handleDeleteWhiteboard = async (e: React.MouseEvent, whiteboardId: Id<"whiteboards">, name: string) => {
+    e.stopPropagation()
+    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return
+
+    try {
+      await deleteWhiteboard({ whiteboardId })
+      toast.success('Whiteboard deleted')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete whiteboard')
+    }
   }
 
   if (!currentWorkspace) {
@@ -141,6 +155,7 @@ export default function WhiteboardPage() {
 
   // ── Listing view ──
   return (
+    <ErrorBoundary>
     <div className="p-4">
       {/* Page Header */}
       <m.div
@@ -224,7 +239,16 @@ export default function WhiteboardPage() {
 
               <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-[#6B7280] pt-3 border-t border-[#1F1F23]">
                 <span>{whiteboard.elements.length} elements</span>
-                <span>{whiteboard.collaborators.length} users</span>
+                <div className="flex items-center gap-2">
+                  <span>{whiteboard.collaborators.length} users</span>
+                  <button
+                    onClick={(e) => handleDeleteWhiteboard(e, whiteboard._id, whiteboard.name)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-[#EF4444] hover:bg-[#EF4444]/10 border border-transparent hover:border-[#EF4444]/30"
+                    aria-label={`Delete ${whiteboard.name}`}
+                  >
+                    <HiOutlineTrash className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </m.div>
           )
@@ -263,5 +287,6 @@ export default function WhiteboardPage() {
         )}
       </div>
     </div>
+    </ErrorBoundary>
   )
 }

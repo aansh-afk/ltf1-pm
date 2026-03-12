@@ -18,7 +18,7 @@ import SettingsSection from './SettingsSection'
 import BrutalCard from '@/components/ui/BrutalCard'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalBadge from '@/components/ui/BrutalBadge'
-import BrutalModal from '../../ui/BrutalModal'
+import BrutalModal from '@/components/ui/BrutalModal'
 
 type AIProvider = 'cerebras' | 'groq'
 

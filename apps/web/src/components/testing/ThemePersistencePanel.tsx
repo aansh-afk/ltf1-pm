@@ -7,8 +7,8 @@ import React, { useState, useEffect } from 'react'
 import { 
   useThemePersistenceValidation, 
   useThemePersistenceMonitoring 
-} from '../../hooks/useThemePersistenceValidation'
-import { useTheme } from '../../contexts/ThemeContext'
+} from '@/hooks/useThemePersistenceValidation'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface ThemePersistencePanelProps {
   className?: string

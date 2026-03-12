@@ -1,6 +1,8 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "./auth/permissions";
+import { getCurrentUserOrThrow } from "./lib/auth";
+import { teamRoleValidator } from "./lib/validators";
 
 export const createTeam = mutation({
     args: {
@@ -9,19 +11,7 @@ export const createTeam = mutation({
         description: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            throw new Error("Unauthorized");
-        }
-
-        const user = await ctx.db
-            .query("users")
-            .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-            .first();
-
-        if (!user) {
-            throw new Error("User not found");
-        }
+        const user = await getCurrentUserOrThrow(ctx);
 
         // Require workspace admin permission to create teams
         await requirePermission(ctx.db, user._id, args.workspaceId, "workspace.edit");
@@ -150,22 +140,10 @@ export const addTeamMember = mutation({
     args: {
         teamId: v.id("teams"),
         userId: v.id("users"),
-        role: v.union(v.literal("lead"), v.literal("member")),
+        role: teamRoleValidator,
     },
     handler: async (ctx, args) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            throw new Error("Unauthorized");
-        }
-
-        const currentUser = await ctx.db
-            .query("users")
-            .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-            .first();
-
-        if (!currentUser) {
-            throw new Error("User not found");
-        }
+        const currentUser = await getCurrentUserOrThrow(ctx);
 
         const team = await ctx.db.get(args.teamId);
         if (!team) {

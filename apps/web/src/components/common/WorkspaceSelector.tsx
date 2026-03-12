@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { HiOutlineChevronDown, HiOutlineOfficeBuilding, HiOutlineCheck } from 'react-icons/hi'
-import { useCurrentWorkspace } from '../../hooks/useCurrentWorkspace'
+import { useCurrentWorkspace } from '@/hooks/useCurrentWorkspace'
 import LoadingSpinner from './LoadingSpinner'
 import clsx from 'clsx'
 

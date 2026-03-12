@@ -59,23 +59,47 @@ interface WhiteboardCanvasProps {
     meetingId?: Id<'meetings'>
 }
 
+interface KonvaElementData {
+    shape?: string
+    text?: string
+    points?: number[]
+    url?: string
+    [key: string]: unknown
+}
+
+interface KonvaElementStyle {
+    fill?: string
+    stroke?: string
+    strokeWidth?: number
+    fontSize?: number
+    pointerLength?: number
+    pointerWidth?: number
+    opacity?: number
+    [key: string]: unknown
+}
+
 interface Element {
     id: string
     type: string
-    data: any
+    data: KonvaElementData
     position: { x: number; y: number }
     size: { width: number; height: number }
     rotation: number
-    style: any
+    style: KonvaElementStyle
     locked: boolean
     createdBy: Id<'users'>
 }
 
 // --- Helper Components ---
 
-const URLImage = ({ image, ...props }: any) => {
+interface URLImageProps {
+    image: { url: string }
+    [key: string]: unknown
+}
+
+const URLImage = ({ image, ...props }: URLImageProps) => {
     const [img] = useImage(image.url)
-    return <KonvaImage image={img} {...props} />
+    return <KonvaImage image={img} {...(props as Record<string, unknown>)} />
 }
 
 // --- Reducer ---
@@ -229,7 +253,7 @@ function WhiteboardToolbar({ activeTool, selectedIds, fileInputRef, onToolChange
 }
 
 interface WhiteboardPropertiesPanelProps {
-    onStyleUpdate: (styleUpdate: any) => void
+    onStyleUpdate: (styleUpdate: Partial<KonvaElementStyle>) => void
 }
 
 function WhiteboardPropertiesPanel({ onStyleUpdate }: WhiteboardPropertiesPanelProps) {
@@ -676,14 +700,14 @@ function useWhiteboardCanvas({ workspaceId, initialWhiteboardId, projectId, meet
                 await addElement({
                     whiteboardId,
                     element: { type: ELEMENT_TYPES.IMAGE, data: { url: base64 }, position: center,
-                        size: { width: 200, height: 200 }, rotation: 0, style: {} } as any
+                        size: { width: 200, height: 200 }, rotation: 0, style: {} } as Omit<Element, 'id' | 'locked' | 'createdBy'>
                 })
             }
             reader.readAsDataURL(file)
         }
     }
 
-    const updateSelectedStyle = async (styleUpdate: any) => {
+    const updateSelectedStyle = async (styleUpdate: Partial<KonvaElementStyle>) => {
         if (!whiteboardId || selectedIds.length === 0) return
         for (const id of selectedIds) {
             const element = elements.find(el => el.id === id)

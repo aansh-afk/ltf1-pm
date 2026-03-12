@@ -2,6 +2,7 @@ import { v } from "convex/values"
 import { mutation, query, action } from "./_generated/server"
 import { api } from "./_generated/api"
 import { Id } from "./_generated/dataModel"
+import { getCurrentUserOrThrow } from "./lib/auth"
 
 // Element types for the whiteboard
 export const ELEMENT_TYPES = {
@@ -34,19 +35,7 @@ export const createWhiteboard = mutation({
     public: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const whiteboardId = await ctx.db.insert("whiteboards", {
       workspaceId: args.workspaceId,
@@ -110,19 +99,7 @@ export const addElement = mutation({
     }),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const whiteboard = await ctx.db.get(args.whiteboardId)
     if (!whiteboard) {
@@ -184,19 +161,7 @@ export const updateElement = mutation({
     }),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const whiteboard = await ctx.db.get(args.whiteboardId)
     if (!whiteboard) {
@@ -246,19 +211,7 @@ export const deleteElement = mutation({
     elementId: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const whiteboard = await ctx.db.get(args.whiteboardId)
     if (!whiteboard) {
@@ -314,19 +267,7 @@ export const batchUpdateElements = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const whiteboard = await ctx.db.get(args.whiteboardId)
     if (!whiteboard) {
@@ -373,19 +314,7 @@ export const updateCursor = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const whiteboard = await ctx.db.get(args.whiteboardId)
     if (!whiteboard) {
@@ -426,19 +355,7 @@ export const createSnapshot = mutation({
     whiteboardId: v.id("whiteboards"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const whiteboard = await ctx.db.get(args.whiteboardId)
     if (!whiteboard) {
@@ -471,19 +388,7 @@ export const restoreSnapshot = mutation({
     snapshotId: v.id("whiteboardSnapshots"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const whiteboard = await ctx.db.get(args.whiteboardId)
     if (!whiteboard) {
@@ -526,19 +431,7 @@ export const getWhiteboards = query({
     meetingId: v.optional(v.id("meetings")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     let query = ctx.db
       .query("whiteboards")
@@ -586,19 +479,7 @@ export const getWhiteboard = query({
     whiteboardId: v.id("whiteboards"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const whiteboard = await ctx.db.get(args.whiteboardId)
     if (!whiteboard) {
@@ -743,19 +624,7 @@ export const cloneWhiteboard = mutation({
     name: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const original = await ctx.db.get(args.whiteboardId)
     if (!original) {
@@ -800,6 +669,41 @@ export const cloneWhiteboard = mutation({
     })
 
     return clonedId
+  },
+})
+
+// Delete a whiteboard (creator or workspace admin only)
+export const deleteWhiteboard = mutation({
+  args: {
+    whiteboardId: v.id("whiteboards"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx)
+
+    const whiteboard = await ctx.db.get(args.whiteboardId)
+    if (!whiteboard) {
+      throw new Error("Whiteboard not found")
+    }
+
+    // Only the creator can delete
+    if (whiteboard.createdBy !== user._id) {
+      throw new Error("Only the whiteboard creator can delete it")
+    }
+
+    // Delete associated snapshots
+    const snapshots = await ctx.db
+      .query("whiteboardSnapshots")
+      .withIndex("by_whiteboard", (q) => q.eq("whiteboardId", args.whiteboardId))
+      .collect()
+
+    for (const snapshot of snapshots) {
+      await ctx.db.delete(snapshot._id)
+    }
+
+    // Delete the whiteboard
+    await ctx.db.delete(args.whiteboardId)
+    return null
   },
 })
 

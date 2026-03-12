@@ -4,10 +4,10 @@
 import React, { useState } from 'react'
 import clsx from 'clsx'
 import { motion } from 'framer-motion'
-import { 
-  HiSparkles, 
-  HiLightningBolt, 
-  HiTrendingUp, 
+import {
+  HiSparkles,
+  HiLightningBolt,
+  HiTrendingUp,
   HiChartBar,
   HiClock,
   HiCurrencyDollar,
@@ -16,26 +16,89 @@ import {
   HiCheckCircle,
   HiXCircle
 } from 'react-icons/hi'
-import { useAIStats, useAIInsights, useAITaskSuggestions, useAIFeedback, useUserAISessions } from '../../hooks/useAI'
+import { useAIStats, useAIInsights, useAITaskSuggestions, useAIFeedback, useUserAISessions } from '@/hooks/useAI'
 import { AIInsightCard, AITaskSuggestionCard, AIStatsWidget } from './AIIndicator'
 import type { Id } from '../../../../../convex/_generated/dataModel'
+import type { IconType } from 'react-icons'
+
+/** AI stats shape returned from the query */
+interface AIStats {
+  totalSessions: number
+  totalTokens: number
+  totalCost: number
+  averageLatency: number
+  modelUsage: {
+    flash: number
+    flashLite: number
+  }
+  typeBreakdown: Record<string, number>
+}
+
+/** AI feedback summary shape */
+interface AIFeedbackSummary {
+  averageRating: number
+  helpfulPercentage: number
+  totalFeedback: number
+}
+
+/** AI insight shape */
+interface AIInsight {
+  _id: string
+  insightType: string
+  severity: string
+  title: string
+  description: string
+  recommendations: string[]
+}
+
+/** AI task suggestion shape */
+interface AITaskSuggestionDoc {
+  _id: string
+  suggestedTasks: Array<{
+    title: string
+    description: string
+    type: string
+    priority: string
+    estimate?: number
+    confidence: number
+  }>
+}
+
+/** AI session shape */
+interface AISession {
+  _id: string
+  type: string
+  model: string
+  cached: boolean
+  input: string
+  tokens: { total: number }
+  cost: number
+  latency: number
+  createdAt: number
+  feedback?: {
+    helpful: boolean
+    rating: number
+  }
+}
 
 interface AIAnalyticsDashboardProps {
   workspaceId: Id<'workspaces'>
   className?: string
 }
 
+type TabId = 'overview' | 'insights' | 'suggestions' | 'sessions'
+
 export function AIAnalyticsDashboard({ workspaceId, className }: AIAnalyticsDashboardProps) {
   const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month'>('day')
-  const [activeTab, setActiveTab] = useState<'overview' | 'insights' | 'suggestions' | 'sessions'>('overview')
-  
+  const [activeTab, setActiveTab] = useState<TabId>('overview')
+
   const { stats, loading: statsLoading } = useAIStats(workspaceId, timeRange)
   const { insights, loading: insightsLoading } = useAIInsights()
   const { suggestions, loading: suggestionsLoading } = useAITaskSuggestions()
   const { feedback, loading: feedbackLoading } = useAIFeedback(workspaceId)
   const { sessions, loading: sessionsLoading } = useUserAISessions(20)
 
-  const tabs = [
+  const tabs: Array<{ id: TabId; label: string; icon: IconType }> = [
     { id: 'overview', label: 'Overview', icon: HiChartBar },
     { id: 'insights', label: 'Insights', icon: HiLightningBolt },
     { id: 'suggestions', label: 'Suggestions', icon: HiSparkles },
@@ -52,7 +115,7 @@ export function AIAnalyticsDashboard({ workspaceId, className }: AIAnalyticsDash
             AI Analytics Dashboard
           </h2>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-400 uppercase">Time Range:</span>
           <div className="flex gap-1">
@@ -81,7 +144,7 @@ export function AIAnalyticsDashboard({ workspaceId, className }: AIAnalyticsDash
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={clsx(
                 'flex items-center gap-2 px-4 py-2 uppercase text-sm font-bold transition-colors',
                 activeTab === tab.id
@@ -99,31 +162,31 @@ export function AIAnalyticsDashboard({ workspaceId, className }: AIAnalyticsDash
       {/* Content */}
       <div className="min-h-[400px]">
         {activeTab === 'overview' && (
-          <OverviewTab 
-            stats={stats} 
-            feedback={feedback}
-            loading={statsLoading || feedbackLoading} 
+          <OverviewTab
+            stats={stats as AIStats | undefined}
+            feedback={feedback as AIFeedbackSummary | undefined}
+            loading={statsLoading || feedbackLoading}
           />
         )}
-        
+
         {activeTab === 'insights' && (
-          <InsightsTab 
-            insights={insights} 
-            loading={insightsLoading} 
+          <InsightsTab
+            insights={insights as AIInsight[]}
+            loading={insightsLoading}
           />
         )}
-        
+
         {activeTab === 'suggestions' && (
-          <SuggestionsTab 
-            suggestions={suggestions} 
-            loading={suggestionsLoading} 
+          <SuggestionsTab
+            suggestions={suggestions as AITaskSuggestionDoc[]}
+            loading={suggestionsLoading}
           />
         )}
-        
+
         {activeTab === 'sessions' && (
-          <SessionsTab 
-            sessions={sessions} 
-            loading={sessionsLoading} 
+          <SessionsTab
+            sessions={sessions as AISession[]}
+            loading={sessionsLoading}
           />
         )}
       </div>
@@ -132,7 +195,13 @@ export function AIAnalyticsDashboard({ workspaceId, className }: AIAnalyticsDash
 }
 
 // Overview Tab Component
-function OverviewTab({ stats, feedback, loading }: any) {
+interface OverviewTabProps {
+  stats: AIStats | undefined
+  feedback: AIFeedbackSummary | undefined
+  loading: boolean
+}
+
+function OverviewTab({ stats, feedback, loading }: OverviewTabProps) {
   if (loading) {
     return <LoadingState />
   }
@@ -179,15 +248,15 @@ function OverviewTab({ stats, feedback, loading }: any) {
       <div className="bg-gray-900 border-2 border-gray-700 p-4">
         <h3 className="text-yellow-400 font-bold uppercase mb-3">Model Distribution</h3>
         <div className="space-y-2">
-          <ModelUsageBar 
-            model="Gemini 2.5 Flash" 
-            count={stats.modelUsage.flash} 
+          <ModelUsageBar
+            model="Gemini 2.5 Flash"
+            count={stats.modelUsage.flash}
             total={stats.totalSessions}
             color="yellow"
           />
-          <ModelUsageBar 
-            model="Gemini 2.5 Flash Lite" 
-            count={stats.modelUsage.flashLite} 
+          <ModelUsageBar
+            model="Gemini 2.5 Flash Lite"
+            count={stats.modelUsage.flashLite}
             total={stats.totalSessions}
             color="green"
           />
@@ -199,12 +268,12 @@ function OverviewTab({ stats, feedback, loading }: any) {
         <h3 className="text-yellow-400 font-bold uppercase mb-3">Top Use Cases</h3>
         <div className="space-y-2">
           {Object.entries(stats.typeBreakdown)
-            .sort(([,a], [,b]) => (b as number) - (a as number))
+            .sort(([,a], [,b]) => b - a)
             .slice(0, 5)
             .map(([type, count]) => (
               <div key={type} className="flex items-center justify-between">
                 <span className="text-sm text-gray-300 font-mono">{type}</span>
-                <span className="text-white font-bold">{count as number}</span>
+                <span className="text-white font-bold">{count}</span>
               </div>
             ))}
         </div>
@@ -241,7 +310,12 @@ function OverviewTab({ stats, feedback, loading }: any) {
 }
 
 // Insights Tab Component
-function InsightsTab({ insights, loading }: any) {
+interface InsightsTabProps {
+  insights: AIInsight[]
+  loading: boolean
+}
+
+function InsightsTab({ insights, loading }: InsightsTabProps) {
   if (loading) {
     return <LoadingState />
   }
@@ -252,7 +326,7 @@ function InsightsTab({ insights, loading }: any) {
 
   return (
     <div className="space-y-4">
-      {insights.map((insight: any) => (
+      {insights.map((insight) => (
         <AIInsightCard
           key={insight._id}
           type={insight.insightType}
@@ -269,7 +343,12 @@ function InsightsTab({ insights, loading }: any) {
 }
 
 // Suggestions Tab Component
-function SuggestionsTab({ suggestions, loading }: any) {
+interface SuggestionsTabProps {
+  suggestions: AITaskSuggestionDoc[]
+  loading: boolean
+}
+
+function SuggestionsTab({ suggestions, loading }: SuggestionsTabProps) {
   if (loading) {
     return <LoadingState />
   }
@@ -280,9 +359,9 @@ function SuggestionsTab({ suggestions, loading }: any) {
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      {suggestions.map((suggestion: any) => (
+      {suggestions.map((suggestion) => (
         <div key={suggestion._id}>
-          {suggestion.suggestedTasks.map((task: any, index: number) => (
+          {suggestion.suggestedTasks.map((task, index: number) => (
             <AITaskSuggestionCard
               key={index}
               title={task.title}
@@ -302,7 +381,12 @@ function SuggestionsTab({ suggestions, loading }: any) {
 }
 
 // Sessions Tab Component
-function SessionsTab({ sessions, loading }: any) {
+interface SessionsTabProps {
+  sessions: AISession[]
+  loading: boolean
+}
+
+function SessionsTab({ sessions, loading }: SessionsTabProps) {
   if (loading) {
     return <LoadingState />
   }
@@ -313,8 +397,8 @@ function SessionsTab({ sessions, loading }: any) {
 
   return (
     <div className="space-y-2">
-      {sessions.map((session: any) => (
-        <div 
+      {sessions.map((session) => (
+        <div
           key={session._id}
           className="bg-gray-900 border border-gray-700 p-3 hover:border-yellow-400 transition-colors"
         >
@@ -364,7 +448,15 @@ function SessionsTab({ sessions, loading }: any) {
 }
 
 // Helper Components
-function MetricCard({ icon: Icon, label, value, trend, trendUp }: any) {
+interface MetricCardProps {
+  icon: IconType
+  label: string
+  value: string
+  trend?: string
+  trendUp?: boolean
+}
+
+function MetricCard({ icon: Icon, label, value, trend, trendUp }: MetricCardProps) {
   return (
     <div className="bg-gray-900 border-2 border-gray-700 p-4">
       <div className="flex items-center gap-2 mb-2">
@@ -386,9 +478,16 @@ function MetricCard({ icon: Icon, label, value, trend, trendUp }: any) {
   )
 }
 
-function ModelUsageBar({ model, count, total, color }: any) {
+interface ModelUsageBarProps {
+  model: string
+  count: number
+  total: number
+  color: 'yellow' | 'green'
+}
+
+function ModelUsageBar({ model, count, total, color }: ModelUsageBarProps) {
   const percentage = total > 0 ? (count / total) * 100 : 0
-  
+
   return (
     <div>
       <div className="flex items-center justify-between mb-1">

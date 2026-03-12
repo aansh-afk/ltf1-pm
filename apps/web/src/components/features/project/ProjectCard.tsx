@@ -2,10 +2,24 @@ import { Link } from 'react-router-dom'
 import { HiOutlineClipboardList, HiOutlineUser } from 'react-icons/hi'
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
-import BrutalProgress from '../../ui/BrutalProgress'
+import BrutalProgress from '@/components/ui/BrutalProgress'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
+
+interface ProjectData {
+  _id: Id<"projects">
+  _creationTime: number
+  name: string
+  key: string
+  description?: string
+  status: 'planning' | 'active' | 'on_hold' | 'completed' | 'archived'
+  updatedAt: number
+  lead?: { name: string } | null
+  taskStats?: { total: number; completed: number; inProgress: number }
+  activeSprint?: Record<string, unknown> | null
+}
 
 interface ProjectCardProps {
-  project: any
+  project: ProjectData
   workspaceId: string
   index: number
 }
@@ -22,8 +36,8 @@ export default function ProjectCard({ project, workspaceId, index }: ProjectCard
   const status = (project.status as string) || 'planning'
   const colors = statusColors[status] || statusColors.planning
 
-  const completionPercentage = project.taskStats?.total > 0
-    ? Math.round((project.taskStats.completed / project.taskStats.total) * 100)
+  const completionPercentage = (project.taskStats?.total ?? 0) > 0
+    ? Math.round(((project.taskStats?.completed ?? 0) / (project.taskStats?.total ?? 1)) * 100)
     : 0
 
   return (

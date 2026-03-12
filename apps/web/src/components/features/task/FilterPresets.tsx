@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { useUser } from '@clerk/clerk-react'
 import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import toast from 'react-hot-toast'
 import {
   HiOutlineBookmark,
@@ -225,7 +226,7 @@ function SavePresetForm({ presetName, onNameChange, onSave, onCancel }: SavePres
 }
 
 interface SavedPresetsRowProps {
-  presets: Array<{ _id: string; name: string; filters: any }>
+  presets: Array<{ _id: string; name: string; filters: unknown }>
   onApplyPreset: (filters: TaskFilters) => void
   onDeletePreset: (presetId: string) => void
 }
@@ -296,7 +297,7 @@ export default function FilterPresets({ workspaceId, currentFilters, onApplyPres
 
   const presets = useQuery(
     api.filterPresets.queries.getWorkspaceFilterPresets,
-    workspaceId ? { workspaceId: workspaceId as any } : 'skip'
+    workspaceId ? { workspaceId: workspaceId as Id<"workspaces"> } : 'skip'
   )
 
   const currentUser = useQuery(api.auth.users.getCurrentUser)
@@ -310,21 +311,23 @@ export default function FilterPresets({ workspaceId, currentFilters, onApplyPres
     try {
       await createPreset({
         name: presetName.trim(),
-        workspaceId: workspaceId as any,
+        workspaceId: workspaceId as Id<"workspaces">,
         filters: currentFilters
       })
       setPresetName('')
       setIsCreating(false)
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create preset')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to create preset'
+      toast.error(message)
     }
   }
 
   const handleDeletePreset = async (presetId: string) => {
     try {
-      await deletePreset({ presetId: presetId as any })
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete preset')
+      await deletePreset({ presetId: presetId as Id<"filterPresets"> })
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to delete preset'
+      toast.error(message)
     }
   }
 

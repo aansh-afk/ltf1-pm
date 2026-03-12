@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from 'react'
 import { HiOutlineClock, HiOutlineChat, HiOutlineDotsVertical, HiOutlinePencil, HiOutlineTrash, HiOutlineDuplicate, HiOutlineLink, HiOutlineInformationCircle } from 'react-icons/hi'
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
-import BrutalBadge from '../../ui/BrutalBadge'
-import BrutalCard from '../../ui/BrutalCard'
-import UserDisplay from '../user/UserDisplay'
+import BrutalBadge from '@/components/ui/BrutalBadge'
+import BrutalCard from '@/components/ui/BrutalCard'
+import UserDisplay from '@/components/features/user/UserDisplay'
 import toast from 'react-hot-toast'
 
 // --- Sub-components ---

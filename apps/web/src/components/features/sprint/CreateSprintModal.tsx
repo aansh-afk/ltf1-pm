@@ -3,7 +3,7 @@ import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
 import posthog from 'posthog-js'
-import BrutalModal from '../../ui/BrutalModal'
+import BrutalModal from '@/components/ui/BrutalModal'
 
 interface CreateSprintModalProps {
   isOpen: boolean

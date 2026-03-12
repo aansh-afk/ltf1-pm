@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import {
   HiOutlinePlay,
@@ -13,12 +14,31 @@ import {
 } from 'react-icons/hi'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
-import CreateTaskModal from '../task/CreateTaskModal'
+import CreateTaskModal from '@/components/features/task/CreateTaskModal'
+
+interface SprintTaskStats {
+  total: number
+  todo: number
+  inProgress: number
+  inReview: number
+  done: number
+}
+
+interface SprintData {
+  _id: Id<"sprints">
+  name: string
+  goal?: string
+  status: "planning" | "active" | "completed"
+  startDate: number
+  endDate: number
+  progress: number
+  taskStats: SprintTaskStats
+}
 
 interface SprintPlanningProps {
   projectId: string
-  sprints: any[]
-  currentSprint: any
+  sprints: SprintData[]
+  currentSprint: SprintData | null | undefined
 }
 
 const typeIcons: Record<string, string> = {
@@ -42,46 +62,49 @@ export default function SprintPlanning({ projectId, sprints, currentSprint }: Sp
 
   const backlogTasks = useQuery(
     api.sprints.queries.getBacklogTasks,
-    { projectId: projectId as any }
+    { projectId: projectId as Id<"projects"> }
   )
 
   const updateSprint = useMutation(api.sprints.mutations.updateSprint)
   const deleteSprint = useMutation(api.sprints.mutations.deleteSprint)
   const addTasksToSprint = useMutation(api.sprints.mutations.addTasksToSprint)
 
-  const handleStartSprint = async (sprintId: any) => {
+  const handleStartSprint = async (sprintId: Id<"sprints">) => {
     try {
       await updateSprint({ sprintId, status: 'active' })
       toast.success('Sprint started successfully!')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to start sprint')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to start sprint'
+      toast.error(message)
     }
   }
 
-  const handleDeleteSprint = async (sprintId: any) => {
+  const handleDeleteSprint = async (sprintId: Id<"sprints">) => {
     if (!confirm('Are you sure you want to delete this sprint?')) return
 
     try {
       await deleteSprint({ sprintId })
       toast.success('Sprint deleted successfully')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete sprint')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to delete sprint'
+      toast.error(message)
     }
   }
 
-  const handleAddToSprint = async (sprintId: any) => {
+  const handleAddToSprint = async (sprintId: Id<"sprints">) => {
     if (selectedTasks.size === 0) {
       toast.error('Select tasks to add to sprint')
       return
     }
 
     try {
-      const taskIds = Array.from(selectedTasks) as any[]
+      const taskIds = Array.from(selectedTasks) as Array<Id<"tasks">>
       await addTasksToSprint({ sprintId, taskIds })
       toast.success(`Added ${taskIds.length} tasks to sprint`)
       setSelectedTasks(new Set())
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to add tasks')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to add tasks'
+      toast.error(message)
     }
   }
 

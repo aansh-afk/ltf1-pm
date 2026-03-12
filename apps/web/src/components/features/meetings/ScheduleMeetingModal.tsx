@@ -1,6 +1,7 @@
 import { useEffect, useReducer } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
+import type { Id } from "../../../../../../convex/_generated/dataModel";
 import toast from "react-hot-toast";
 import BrutalModal from "../../ui/BrutalModal";
 import BrutalSelect from "../../ui/BrutalSelect";
@@ -15,13 +16,35 @@ import {
   HiOutlineRefresh,
 } from "react-icons/hi";
 
+interface ScheduleMeetingData {
+  _id: Id<"meetings">
+  title: string
+  description?: string
+  type: 'standup' | 'retrospective' | 'planning' | 'review' | 'custom'
+  startTime: number
+  endTime: number
+  location?: string
+  meetingUrl?: string
+  attendees?: Array<{ userId: Id<"users">; status: string }>
+  recurrence?: {
+    frequency: 'daily' | 'weekly' | 'monthly'
+    interval: number
+    endDate?: number
+  }
+  template?: {
+    agenda?: string[]
+    duration?: number
+    isRecurring: boolean
+  }
+}
+
 interface ScheduleMeetingModalProps {
   isOpen: boolean;
   onClose: () => void;
   projectId?: string;
   sprintId?: string;
   workspaceId: string;
-  meeting?: any; // For editing existing meeting
+  meeting?: ScheduleMeetingData;
   onSuccess?: () => void;
 }
 
@@ -36,7 +59,7 @@ const meetingTypes = [
 // --- Form State ---
 
 type MeetingFormAction =
-  | { type: "SET_FIELD"; field: string; value: any }
+  | { type: "SET_FIELD"; field: string; value: string | number | boolean | string[] }
   | { type: "RESET" }
   | { type: "POPULATE"; data: Partial<MeetingFormState> }
   | { type: "ADD_AGENDA" }
@@ -305,7 +328,7 @@ interface MeetingFormFieldsProps {
   meetingUrl: string;
   selectedAttendees: string[];
   attendeeOptions: Array<{ value: string; label: string; avatar?: string }>;
-  onFieldChange: (field: string, value: any) => void;
+  onFieldChange: (field: string, value: string | number | boolean | string[]) => void;
 }
 
 function MeetingFormFields({
@@ -516,7 +539,7 @@ export default function ScheduleMeetingModal({
   // Get workspace members for attendee selection
   const workspaceMembers = useQuery(
     api.workspaces.queries.getWorkspaceMembers,
-    workspaceId ? { workspaceId: workspaceId as any } : "skip",
+    workspaceId ? { workspaceId: workspaceId as Id<"workspaces"> } : "skip",
   );
 
   // Auto-populate from existing meeting if editing
@@ -529,7 +552,7 @@ export default function ScheduleMeetingModal({
         duration: Math.round((meeting.endTime - meeting.startTime) / 60000),
         location: meeting.location || "",
         meetingUrl: meeting.meetingUrl || "",
-        selectedAttendees: meeting.attendees?.map((a: any) => a.userId) || [],
+        selectedAttendees: meeting.attendees?.map((a) => a.userId as string) || [],
       };
 
       if (meeting.startTime) {
@@ -661,9 +684,9 @@ export default function ScheduleMeetingModal({
       } else {
         // Create new meeting
         await createMeeting({
-          workspaceId: workspaceId as any,
-          projectId: projectId ? (projectId as any) : undefined,
-          sprintId: sprintId ? (sprintId as any) : undefined,
+          workspaceId: workspaceId as Id<"workspaces">,
+          projectId: projectId ? (projectId as Id<"projects">) : undefined,
+          sprintId: sprintId ? (sprintId as Id<"sprints">) : undefined,
           title: title.trim(),
           description: description.trim() || undefined,
           type,
@@ -671,7 +694,7 @@ export default function ScheduleMeetingModal({
           endTime: endDateTime,
           location: location.trim() || undefined,
           meetingUrl: meetingUrl.trim() || undefined,
-          attendeeIds: selectedAttendees as any[],
+          attendeeIds: selectedAttendees as Id<"users">[],
           template,
           recurrence,
         });
@@ -680,8 +703,8 @@ export default function ScheduleMeetingModal({
       onSuccess?.();
       onClose();
       resetForm();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to schedule meeting");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to schedule meeting");
     } finally {
       formDispatch({ type: "SET_FIELD", field: "isCreating", value: false });
     }

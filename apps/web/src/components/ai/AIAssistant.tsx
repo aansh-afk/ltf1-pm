@@ -5,41 +5,48 @@ import React, { useState, useCallback } from 'react'
 import clsx from 'clsx'
 import { motion, AnimatePresence } from 'framer-motion'
 import { HiSparkles, HiLightningBolt, HiRefresh } from 'react-icons/hi'
-import { useAI } from '../../hooks/useAI'
+import { useAI } from '@/hooks/useAI'
 import { AISuggestion, AIIndicator } from './AIIndicator'
+
+/** A single AI suggestion with type, value, and confidence */
+interface AISuggestionItem {
+  type: 'title' | 'points' | 'priority' | 'labels' | 'message' | 'summary'
+  value: string | number | string[]
+  confidence: number
+}
 
 interface AIAssistantProps {
   context: 'task' | 'commit' | 'pr' | 'general'
   value?: string
-  onSuggestion?: (suggestion: any) => void
+  onSuggestion?: (suggestion: AISuggestionItem) => void
   className?: string
 }
 
-export function AIAssistant({ 
-  context, 
-  value = '', 
+export function AIAssistant({
+  context,
+  value = '',
   onSuggestion,
-  className 
+  className
 }: AIAssistantProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [suggestions, setSuggestions] = useState<AISuggestionItem[]>([])
   const [activeModel, setActiveModel] = useState<'flash' | 'flash-lite' | 'auto'>('auto')
-  
-  const { 
+
+  const {
     loading,
     suggestTaskTitle,
     estimateComplexity,
     suggestPriority,
     extractLabels,
     generateCommitMessage,
-    generatePRSummary 
+    generatePRSummary
   } = useAI()
 
   const generateSuggestions = useCallback(async () => {
     if (!value.trim()) return
 
     setSuggestions([])
-    const newSuggestions: any[] = []
+    const newSuggestions: AISuggestionItem[] = []
 
     try {
       if (context === 'task') {
@@ -71,29 +78,29 @@ export function AIAssistant({
     }
   }, [value, context, suggestTaskTitle, estimateComplexity, suggestPriority, extractLabels, generateCommitMessage, generatePRSummary])
 
-  const acceptSuggestion = useCallback((suggestion: any) => {
+  const acceptSuggestion = useCallback((suggestion: AISuggestionItem) => {
     if (onSuggestion) {
       onSuggestion(suggestion)
     }
     setIsOpen(false)
   }, [onSuggestion])
 
-  const formatSuggestionText = (suggestion: any) => {
+  const formatSuggestionText = (suggestion: AISuggestionItem): string => {
     switch (suggestion.type) {
       case 'title':
         return `Title: ${suggestion.value}`
       case 'points':
         return `Story Points: ${suggestion.value}`
       case 'priority':
-        return `Priority: ${suggestion.value.toUpperCase()}`
+        return `Priority: ${String(suggestion.value).toUpperCase()}`
       case 'labels':
-        return `Labels: ${suggestion.value.join(', ')}`
+        return `Labels: ${Array.isArray(suggestion.value) ? suggestion.value.join(', ') : suggestion.value}`
       case 'message':
-        return suggestion.value
+        return String(suggestion.value)
       case 'summary':
-        return suggestion.value
+        return String(suggestion.value)
       default:
-        return suggestion.value
+        return String(suggestion.value)
     }
   }
 
@@ -177,11 +184,14 @@ export function AIAssistant({
   )
 }
 
+/** The possible field suggestion value types */
+type FieldSuggestionValue = string | number | string[]
+
 interface AIFieldAssistantProps {
   fieldName: string
   fieldType: 'title' | 'description' | 'priority' | 'labels' | 'points'
   currentValue?: string
-  onApply: (value: any) => void
+  onApply: (value: FieldSuggestionValue) => void
   className?: string
 }
 
@@ -192,22 +202,22 @@ export function AIFieldAssistant({
   onApply,
   className
 }: AIFieldAssistantProps) {
-  const [suggestion, setSuggestion] = useState<any>(null)
+  const [suggestion, setSuggestion] = useState<FieldSuggestionValue | null>(null)
   const [showSuggestion, setShowSuggestion] = useState(false)
-  
-  const { 
+
+  const {
     loading,
     suggestTaskTitle,
     estimateComplexity,
     suggestPriority,
-    extractLabels 
+    extractLabels
   } = useAI()
 
   const generateFieldSuggestion = useCallback(async () => {
     if (!currentValue.trim()) return
 
     try {
-      let result: any
+      let result: FieldSuggestionValue
       switch (fieldType) {
         case 'title':
           result = await suggestTaskTitle(currentValue)
@@ -224,7 +234,7 @@ export function AIFieldAssistant({
         default:
           return
       }
-      
+
       setSuggestion(result)
       setShowSuggestion(true)
     } catch (error) {
@@ -233,24 +243,24 @@ export function AIFieldAssistant({
   }, [currentValue, fieldType, suggestTaskTitle, estimateComplexity, suggestPriority, extractLabels])
 
   const applySuggestion = useCallback(() => {
-    if (suggestion) {
+    if (suggestion !== null) {
       onApply(suggestion)
       setShowSuggestion(false)
     }
   }, [suggestion, onApply])
 
-  const formatSuggestion = () => {
-    if (!suggestion) return ''
-    
+  const formatSuggestion = (): string => {
+    if (suggestion === null) return ''
+
     switch (fieldType) {
       case 'labels':
-        return Array.isArray(suggestion) ? suggestion.join(', ') : suggestion
+        return Array.isArray(suggestion) ? suggestion.join(', ') : String(suggestion)
       case 'points':
         return `${suggestion} story points`
       case 'priority':
-        return suggestion.toUpperCase()
+        return String(suggestion).toUpperCase()
       default:
-        return suggestion
+        return String(suggestion)
     }
   }
 
@@ -274,7 +284,7 @@ export function AIFieldAssistant({
       </button>
 
       <AnimatePresence>
-        {showSuggestion && suggestion && (
+        {showSuggestion && suggestion !== null && (
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -322,11 +332,11 @@ export function AISmartInput({
 }: AISmartInputProps) {
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [selectedIndex, setSelectedIndex] = useState(-1)
-  
-  const { 
+
+  const {
     loading,
     suggestTaskTitle,
-    generateCommitMessage 
+    generateCommitMessage
   } = useAI()
 
   const generateSuggestion = useCallback(async () => {
@@ -341,7 +351,7 @@ export function AISmartInput({
       } else {
         return
       }
-      
+
       setSuggestions([suggestion])
     } catch (error) {
       console.error('Failed to generate suggestion:', error)

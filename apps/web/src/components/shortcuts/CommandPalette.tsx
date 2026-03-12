@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useShortcuts } from '../../contexts/ShortcutContext'
-import type { Command } from '../../types/shortcuts'
+import { useShortcuts } from '@/contexts/ShortcutContext'
+import type { Command } from '@/types/shortcuts'
 import clsx from 'clsx'
 
 // Minimal icons inline to avoid heavy icon imports

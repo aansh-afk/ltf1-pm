@@ -1,7 +1,8 @@
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { m, type Variants } from 'framer-motion'
-import PublicNavigation from '../components/common/PublicNavigation'
-import Footer from '../components/common/Footer'
-import { usePageTitle } from '../hooks/usePageTitle'
+import PublicNavigation from '@/components/common/PublicNavigation'
+import Footer from '@/components/common/Footer'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 /* ─── Card Data ─────────────────────────────────────────────── */
 
@@ -85,6 +86,7 @@ const arrowVariants: Variants = {
 export default function ContactPage() {
   usePageTitle('Contact — Get in Touch')
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-[#050505]">
       <PublicNavigation />
 
@@ -201,5 +203,6 @@ export default function ContactPage() {
 
       <Footer />
     </div>
+    </ErrorBoundary>
   )
 }

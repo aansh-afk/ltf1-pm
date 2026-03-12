@@ -1,4 +1,4 @@
-import { ReactNode, useState, useRef, useEffect } from 'react'
+import { ReactNode, useState, useRef, useEffect, useId } from 'react'
 import clsx from 'clsx'
 
 interface BrutalTooltipProps {
@@ -14,6 +14,7 @@ export default function BrutalTooltip({
   position = 'top',
   delay = 200 
 }: BrutalTooltipProps) {
+  const tooltipId = useId()
   const [isVisible, setIsVisible] = useState(false)
   const [coords, setCoords] = useState({ top: 0, left: 0 })
   const triggerRef = useRef<HTMLDivElement>(null)
@@ -88,6 +89,9 @@ export default function BrutalTooltip({
         ref={triggerRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onFocus={handleMouseEnter}
+        onBlur={handleMouseLeave}
+        aria-describedby={isVisible ? tooltipId : undefined}
         className="inline-block"
       >
         {children}
@@ -96,6 +100,7 @@ export default function BrutalTooltip({
       {isVisible && (
         <div
           ref={tooltipRef}
+          id={tooltipId}
           className={clsx(
             'brutal-tooltip fixed z-50 pointer-events-none',
             'animate-brutal-fade'

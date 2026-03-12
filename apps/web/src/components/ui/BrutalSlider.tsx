@@ -55,6 +55,11 @@ export default function BrutalSlider({
           value={value}
           onChange={(e) => !disabled && onChange(parseFloat(e.target.value))}
           disabled={disabled}
+          aria-valuenow={value}
+          aria-valuemin={min}
+          aria-valuemax={max}
+          aria-orientation="horizontal"
+          aria-label={label || 'Slider'}
           className={clsx(
             'w-full h-2 appearance-none cursor-pointer',
             'border-2 focus:outline-none',

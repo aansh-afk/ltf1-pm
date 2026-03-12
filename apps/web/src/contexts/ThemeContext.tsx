@@ -16,9 +16,9 @@ import {
   getGlobalTheme, 
   getGlobalThemeNames,
   generateCSSCustomProperties 
-} from '../themes/globalThemes'
-import type { GlobalTheme, ThemeName } from '../themes/themeTypes'
-import { themePerformanceOptimizer, ThemePerformanceUtils } from '../utils/themePerformance'
+} from '@/themes/globalThemes'
+import type { GlobalTheme, ThemeName } from '@/themes/themeTypes'
+import { themePerformanceOptimizer, ThemePerformanceUtils } from '@/utils/themePerformance'
 
 interface ThemeContextType {
   // Current theme state

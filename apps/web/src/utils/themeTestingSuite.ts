@@ -4,8 +4,8 @@
  * Validates visual consistency, accessibility, and performance
  */
 
-import { globalThemes, getGlobalTheme, generateCSSCustomProperties } from '../themes/globalThemes'
-import type { ThemeName } from '../themes/themeTypes'
+import { globalThemes, getGlobalTheme, generateCSSCustomProperties } from '@/themes/globalThemes'
+import type { ThemeName } from '@/themes/themeTypes'
 import { validateThemeAccessibility, type ThemeAccessibilityReport } from './accessibility'
 import { themePerformanceOptimizer } from './themePerformance'
 

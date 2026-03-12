@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation } from "../_generated/server";
 import { Id } from "../_generated/dataModel";
+import { getCurrentUserOrThrow } from "../lib/auth";
 
 // Calculate profile completeness
 function calculateCompleteness(profile: any): number {
@@ -108,15 +109,9 @@ export const updateDeveloperProfile = mutation({
     mentoringInterests: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
+    const user = await getCurrentUserOrThrow(ctx);
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user || user._id !== args.userId) throw new Error("Unauthorized");
+    if (user._id !== args.userId) throw new Error("Unauthorized");
 
     // Update user fields (name and bio)
     if (args.name !== undefined || args.bio !== undefined) {
@@ -228,15 +223,7 @@ export const updateStatus = mutation({
     statusMessage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) throw new Error("User not found");
+    const user = await getCurrentUserOrThrow(ctx);
 
     const profile = await ctx.db
       .query("developerProfiles")
@@ -273,15 +260,7 @@ export const updateTechStack = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) throw new Error("User not found");
+    const user = await getCurrentUserOrThrow(ctx);
 
     const profile = await ctx.db
       .query("developerProfiles")

@@ -1,3 +1,4 @@
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
@@ -51,6 +52,7 @@ export default function JoinProjectPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-[var(--theme-background-secondary)] flex items-center justify-center p-[16px]">
       <div className="w-full max-w-md">
         {/* Header */}
@@ -216,5 +218,6 @@ export default function JoinProjectPage() {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   )
 }

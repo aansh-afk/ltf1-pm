@@ -2,6 +2,7 @@ import { v } from "convex/values"
 import { mutation, query, action } from "./_generated/server"
 import { api, internal } from "./_generated/api"
 import { Id } from "./_generated/dataModel"
+import { getCurrentUserOrThrow } from "./lib/auth"
 
 // Create a video room
 export const createRoom = mutation({
@@ -26,19 +27,7 @@ export const createRoom = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const roomId = await ctx.db.insert("videoRooms", {
       workspaceId: args.workspaceId,
@@ -80,19 +69,7 @@ export const joinRoom = mutation({
     video: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const room = await ctx.db.get(args.roomId)
     if (!room) {
@@ -171,19 +148,7 @@ export const leaveRoom = mutation({
     roomId: v.id("videoRooms"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const room = await ctx.db.get(args.roomId)
     if (!room) {
@@ -230,19 +195,7 @@ export const updateMediaState = mutation({
     screen: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const room = await ctx.db.get(args.roomId)
     if (!room) {
@@ -272,19 +225,7 @@ export const muteParticipant = mutation({
     mute: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const room = await ctx.db.get(args.roomId)
     if (!room) {
@@ -316,19 +257,7 @@ export const removeParticipant = mutation({
     participantId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const room = await ctx.db.get(args.roomId)
     if (!room) {
@@ -359,19 +288,7 @@ export const startRecording = mutation({
     roomId: v.id("videoRooms"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const room = await ctx.db.get(args.roomId)
     if (!room) {
@@ -417,19 +334,7 @@ export const stopRecording = mutation({
     roomId: v.id("videoRooms"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const room = await ctx.db.get(args.roomId)
     if (!room) {
@@ -622,19 +527,7 @@ export const getInstantMeetingLink = mutation({
     workspaceId: v.id("workspaces"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     // Create instant room
     const roomId = await ctx.db.insert("videoRooms", {
@@ -682,19 +575,7 @@ export const scheduleMeeting = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
-      throw new Error("Unauthorized")
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first()
-
-    if (!user) {
-      throw new Error("User not found")
-    }
+    const user = await getCurrentUserOrThrow(ctx)
 
     const meeting = await ctx.db.get(args.meetingId)
     if (!meeting) {

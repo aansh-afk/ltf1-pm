@@ -1,4 +1,4 @@
-import { useShortcuts } from '../../contexts/ShortcutContext'
+import { useShortcuts } from '@/contexts/ShortcutContext'
 import clsx from 'clsx'
 
 interface ShortcutHintProps {

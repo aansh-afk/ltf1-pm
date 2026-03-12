@@ -1,6 +1,6 @@
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import type { ActiveTypeFilter, StateFilter, ActiveFilterChip } from './useGitHubCommandCenter';
-import BrutalSelect from '../../ui/BrutalSelect';
+import BrutalSelect from '@/components/ui/BrutalSelect';
 
 interface GitHubFilterBarProps {
   // Search

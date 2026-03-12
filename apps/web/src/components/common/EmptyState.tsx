@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import BrutalButton from '../ui/BrutalButton'
+import BrutalButton from '@/components/ui/BrutalButton'
 
 interface EmptyStateProps {
   icon?: ReactNode

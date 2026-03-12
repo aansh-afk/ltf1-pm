@@ -1,6 +1,7 @@
 import React, { useState, useReducer, useRef, useEffect, memo, useCallback } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import { m, AnimatePresence } from 'framer-motion'
 import { HiOutlinePlus } from 'react-icons/hi'
 import TaskCard from './TaskCard'
@@ -8,16 +9,25 @@ import CreateTaskModal from './CreateTaskModal'
 import TaskDetailModal from './TaskDetailModal'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
-import BrutalCard from '../../ui/BrutalCard'
-import BrutalButton from '../../ui/BrutalButton'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
+
+interface BoardTask {
+  _id: string
+  title: string
+  status: string
+  priority: string
+  position: number
+  [key: string]: unknown
+}
 
 interface TaskBoardProps {
-  tasks: any[]
+  tasks: BoardTask[]
   projectId: string
   onTaskUpdate?: () => void
-  onTaskEdit?: (task: any) => void
-  onTaskDelete?: (task: any) => void
-  onTaskDuplicate?: (task: any) => void
+  onTaskEdit?: (task: BoardTask) => void
+  onTaskDelete?: (task: BoardTask) => void
+  onTaskDuplicate?: (task: BoardTask) => void
   isCompact?: boolean
   onCompactToggle?: (isCompact: boolean) => void
 }
@@ -31,14 +41,14 @@ const columns = [
 ]
 
 interface DragState {
-  draggedTask: any
+  draggedTask: BoardTask | null
   hoveredColumn: string | null
   dropPosition: { column: string; index: number } | null
   draggedOverTask: string | null
 }
 
 type DragAction =
-  | { type: 'DRAG_START'; task: any }
+  | { type: 'DRAG_START'; task: BoardTask }
   | { type: 'SET_HOVERED_COLUMN'; column: string | null }
   | { type: 'SET_DROP_POSITION'; position: { column: string; index: number } | null }
   | { type: 'SET_DRAGGED_OVER_TASK'; taskId: string | null }
@@ -87,7 +97,7 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
     onCompactToggle?.(newValue)
   }, [isCompactView, onCompactToggle])
 
-  const handleDragStart = useCallback((e: React.DragEvent, task: any) => {
+  const handleDragStart = useCallback((e: React.DragEvent, task: BoardTask) => {
     dispatchDrag({ type: 'DRAG_START', task })
     e.dataTransfer.effectAllowed = 'move'
   }, [])
@@ -135,8 +145,8 @@ const TaskBoard = memo(function TaskBoard({ tasks, projectId, onTaskUpdate, onTa
 
     try {
       await moveTask({
-        taskId: drag.draggedTask._id,
-        status: newStatus as any,
+        taskId: drag.draggedTask._id as Id<"tasks">,
+        status: newStatus as "backlog" | "todo" | "in_progress" | "in_review" | "done" | "cancelled",
         position: targetPosition,
       })
 

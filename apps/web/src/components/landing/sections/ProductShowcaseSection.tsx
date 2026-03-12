@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { m, type Variants } from 'framer-motion'
-import ColoredPre from '../ascii/ColoredPre'
+import ColoredPre from '@/components/landing/ascii/ColoredPre'
 
 interface FeatureCard {
   slug: string
