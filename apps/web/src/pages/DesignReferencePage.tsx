@@ -1,21 +1,22 @@
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useReducer, useState, useCallback } from 'react'
-import { useTheme } from '../contexts/ThemeContext'
-import type { ThemeName } from '../themes/themeTypes'
-import BrutalButton from '../components/ui/BrutalButton'
-import BrutalCard from '../components/ui/BrutalCard'
-import BrutalBadge from '../components/ui/BrutalBadge'
-import BrutalToggle from '../components/ui/BrutalToggle'
-import BrutalAvatar from '../components/ui/BrutalAvatar'
-import BrutalCheckbox from '../components/ui/BrutalCheckbox'
-import BrutalProgress from '../components/ui/BrutalProgress'
-import BrutalSlider from '../components/ui/BrutalSlider'
-import BrutalInput from '../components/ui/BrutalInput'
-import BrutalSelect from '../components/ui/BrutalSelect'
-import BrutalModal from '../components/ui/BrutalModal'
-import BrutalTooltip from '../components/ui/BrutalTooltip'
-import BrutalNotification from '../components/ui/BrutalNotification'
-import BrutalTable from '../components/ui/BrutalTable'
-import MultiSelect from '../components/ui/MultiSelect'
+import { useTheme } from '@/contexts/ThemeContext'
+import type { ThemeName } from '@/themes/themeTypes'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalBadge from '@/components/ui/BrutalBadge'
+import BrutalToggle from '@/components/ui/BrutalToggle'
+import BrutalAvatar from '@/components/ui/BrutalAvatar'
+import BrutalCheckbox from '@/components/ui/BrutalCheckbox'
+import BrutalProgress from '@/components/ui/BrutalProgress'
+import BrutalSlider from '@/components/ui/BrutalSlider'
+import BrutalInput from '@/components/ui/BrutalInput'
+import BrutalSelect from '@/components/ui/BrutalSelect'
+import BrutalModal from '@/components/ui/BrutalModal'
+import BrutalTooltip from '@/components/ui/BrutalTooltip'
+import BrutalNotification from '@/components/ui/BrutalNotification'
+import BrutalTable from '@/components/ui/BrutalTable'
+import MultiSelect from '@/components/ui/MultiSelect'
 
 // ─────────────────────────────────────────────
 // Section heading helper
@@ -1493,6 +1494,7 @@ export default function DesignReferencePage() {
   const { toggle1, toggle2, toggle3, check1, check2, check3, sliderVal, modalOpen, modalSize, multiVal, selectPriority, selectStatus, selectTheme, activeSection } = state
 
   return (
+    <ErrorBoundary>
     <div className="flex min-h-screen bg-[var(--theme-background)]">
       <SidebarNav activeSection={activeSection} dispatch={dispatch} />
 
@@ -1523,5 +1525,6 @@ export default function DesignReferencePage() {
         <PageFooter />
       </main>
     </div>
+    </ErrorBoundary>
   )
 }

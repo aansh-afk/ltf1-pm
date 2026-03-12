@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { useUser } from '@clerk/clerk-react'
 import { m } from 'framer-motion'
-import { usePageTitle } from '../hooks/usePageTitle'
-import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
-import BrutalCard from '../components/ui/BrutalCard'
+import { usePageTitle } from '@/hooks/usePageTitle'
+import { useCurrentWorkspace } from '@/hooks/useCurrentWorkspace'
+import BrutalCard from '@/components/ui/BrutalCard'
 import {
   HiOutlineClock,
   HiOutlineChartBar,
@@ -220,6 +221,7 @@ export default function TimeReportPage() {
   const isLoading = !timeStats && clerkUserId !== ''
 
   return (
+    <ErrorBoundary>
     <div className="p-4 min-h-screen bg-[var(--theme-background)]">
       <div className="max-w-5xl mx-auto">
 
@@ -688,5 +690,6 @@ export default function TimeReportPage() {
         </m.div>
       </div>
     </div>
+    </ErrorBoundary>
   )
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useBugReporter } from '../../hooks/useBugReporter'
-import BugReporterModal from '../features/bug-reporter/BugReporterModal'
+import { useBugReporter } from '@/hooks/useBugReporter'
+import BugReporterModal from '@/components/features/bug-reporter/BugReporterModal'
 
 export default function BetaBanner() {
   const [dismissed, setDismissed] = useState(false)

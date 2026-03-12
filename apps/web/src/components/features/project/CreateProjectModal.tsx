@@ -3,8 +3,8 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
 import posthog from 'posthog-js'
-import BrutalModal from '../../ui/BrutalModal'
-import BrutalSelect from '../../ui/BrutalSelect'
+import BrutalModal from '@/components/ui/BrutalModal'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 
 interface CreateProjectModalProps {
   isOpen: boolean

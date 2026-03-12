@@ -1,8 +1,9 @@
 import { useState, useReducer, useMemo } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import { format, parseISO, startOfWeek, endOfWeek, addDays, startOfDay, endOfDay, addHours, isSameDay, isWithinInterval } from 'date-fns'
-import BrutalCalendar from '../../ui/BrutalCalendar'
+import BrutalCalendar from '@/components/ui/BrutalCalendar'
 import CreateTaskModal from './CreateTaskModal'
 import {
   HiOutlineExclamation,
@@ -15,8 +16,28 @@ import {
 } from 'react-icons/hi'
 import clsx from 'clsx'
 
+interface CalendarTask {
+  _id: Id<"tasks">
+  title: string
+  status: string
+  priority: string
+  dueDate?: number
+  startDate?: number
+  description?: string
+  [key: string]: unknown
+}
+
+interface TaskCalendarEvent {
+  id: string
+  title: string
+  date: Date
+  type: string
+  color: string
+  task: CalendarTask
+}
+
 interface TaskCalendarProps {
-  tasks: any[]
+  tasks: CalendarTask[]
   projectId: string
   onTaskUpdate: () => void
 }
@@ -39,7 +60,7 @@ const priorityIcons = {
 
 interface CalendarState {
   selectedDate: Date | null
-  selectedTask: any
+  selectedTask: CalendarTask | null
   isCreateModalOpen: boolean
   createModalDate: Date | null
   viewMode: 'month' | 'week' | 'day'
@@ -48,7 +69,7 @@ interface CalendarState {
 
 type CalendarAction =
   | { type: 'SET_SELECTED_DATE'; date: Date | null }
-  | { type: 'SET_SELECTED_TASK'; task: any }
+  | { type: 'SET_SELECTED_TASK'; task: CalendarTask | null }
   | { type: 'OPEN_CREATE_MODAL'; date: Date }
   | { type: 'CLOSE_CREATE_MODAL' }
   | { type: 'SET_VIEW_MODE'; mode: 'month' | 'week' | 'day' }
@@ -169,10 +190,10 @@ function CalendarControlsBar({ viewMode, currentDate, onPrevious, onNext, onToda
 
 interface SelectedDateInfoProps {
   selectedDate: Date
-  selectedDateTasks: any[]
-  selectedTask: any
+  selectedDateTasks: CalendarTask[]
+  selectedTask: CalendarTask | null
   onCreateTask: (date: Date) => void
-  onSelectTask: (task: any) => void
+  onSelectTask: (task: CalendarTask) => void
   onClearSelectedTask: () => void
   onCompleteTask: (taskId: string) => void
 }
@@ -298,9 +319,9 @@ function CalendarLegend() {
 interface WeekViewProps {
   weekDays: Date[]
   weekHours: number[]
-  getTasksForHourSlot: (date: Date, hour: number) => any[]
+  getTasksForHourSlot: (date: Date, hour: number) => CalendarTask[]
   onCreateTask: (date: Date) => void
-  onSelectTask: (task: any) => void
+  onSelectTask: (task: CalendarTask) => void
 }
 
 function WeekView({ weekDays, weekHours, getTasksForHourSlot, onCreateTask, onSelectTask }: WeekViewProps) {
@@ -381,9 +402,9 @@ function WeekView({ weekDays, weekHours, getTasksForHourSlot, onCreateTask, onSe
 interface DayViewProps {
   currentDate: Date
   weekHours: number[]
-  getTasksForHourSlot: (date: Date, hour: number) => any[]
+  getTasksForHourSlot: (date: Date, hour: number) => CalendarTask[]
   onCreateTask: (date: Date) => void
-  onSelectTask: (task: any) => void
+  onSelectTask: (task: CalendarTask) => void
 }
 
 function DayView({ currentDate, weekHours, getTasksForHourSlot, onCreateTask, onSelectTask }: DayViewProps) {
@@ -458,7 +479,7 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
 
   // Convert tasks to calendar events
   const calendarEvents = useMemo(() => {
-    const events = []
+    const events: TaskCalendarEvent[] = []
     
     // Add due dates
     tasks.forEach(task => {
@@ -505,16 +526,19 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
     dispatchCal({ type: 'SET_SELECTED_DATE', date })
   }
 
-  const handleEventClick = (event: any) => {
-    dispatchCal({ type: 'SET_SELECTED_TASK', task: event.task })
+  const handleEventClick = (event: { id: string; title: string; date: Date; type?: string; color?: string }) => {
+    const calEvent: TaskCalendarEvent | undefined = calendarEvents.find(e => e.id === event.id)
+    if (calEvent) {
+      dispatchCal({ type: 'SET_SELECTED_TASK', task: calEvent.task })
+    }
   }
 
   const handleCreateTask = (date: Date) => {
     dispatchCal({ type: 'OPEN_CREATE_MODAL', date })
   }
 
-  const handleTaskUpdate = async (taskId: string, updates: any) => {
-    await updateTask({ taskId: taskId as any, ...updates })
+  const handleTaskUpdate = async (taskId: string, updates: { status: "backlog" | "todo" | "in_progress" | "in_review" | "done" | "cancelled" }) => {
+    await updateTask({ taskId: taskId as Id<"tasks">, ...updates })
     onTaskUpdate()
   }
 
@@ -639,7 +663,7 @@ export default function TaskCalendar({ tasks, projectId, onTaskUpdate }: TaskCal
       <CreateTaskModal
         isOpen={cal.isCreateModalOpen}
         onClose={() => dispatchCal({ type: 'CLOSE_CREATE_MODAL' })}
-        projectId={projectId as any}
+        projectId={projectId}
         defaultDueDate={cal.createModalDate?.toISOString()}
       />
     </div>

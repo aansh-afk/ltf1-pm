@@ -10,8 +10,8 @@ import {
   HiOutlineSearch
 } from 'react-icons/hi'
 import clsx from 'clsx'
-import { ReviewerSuggestions } from '../profile/ReviewerSuggestions'
-import { ExpertiseSearchModal } from '../profile/ExpertiseSearchModal'
+import { ReviewerSuggestions } from '@/components/features/profile/ReviewerSuggestions'
+import { ExpertiseSearchModal } from '@/components/features/profile/ExpertiseSearchModal'
 
 interface TaskAssignmentHelperProps {
   workspaceId: Id<"workspaces">

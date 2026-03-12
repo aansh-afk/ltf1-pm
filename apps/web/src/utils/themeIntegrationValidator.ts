@@ -8,8 +8,8 @@ import { themeTestingSuite } from './themeTestingSuite'
 import { themePersistenceValidator, crossSessionValidator } from './themePersistenceValidator'
 import { themePerformanceOptimizer } from './themePerformance'
 import { validateAllThemes } from './validateThemeAccessibility'
-import { globalThemes } from '../themes/globalThemes'
-import type { ThemeName } from '../themes/themeTypes'
+import { globalThemes } from '@/themes/globalThemes'
+import type { ThemeName } from '@/themes/themeTypes'
 
 // Integration test result interfaces
 interface IntegrationTestModule {

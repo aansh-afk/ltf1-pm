@@ -12,8 +12,8 @@ import {
   HiOutlineClipboardCopy,
 } from 'react-icons/hi'
 import clsx from 'clsx'
-import DeveloperStatusIndicator from '../developer/DeveloperStatusIndicator'
-import BrutalModal from '../../ui/BrutalModal'
+import DeveloperStatusIndicator from '@/components/features/developer/DeveloperStatusIndicator'
+import BrutalModal from '@/components/ui/BrutalModal'
 
 interface ExpertiseSearchModalProps {
   isOpen: boolean

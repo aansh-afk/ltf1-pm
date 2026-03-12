@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
+import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
 import {
   HiOutlineCheck,
   HiOutlineX,
@@ -13,17 +14,37 @@ import {
   HiOutlineTrash,
   HiOutlineDuplicate
 } from 'react-icons/hi'
-import TaskCard from '../task/TaskCard'
+import TaskCard from '@/components/features/task/TaskCard'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 
+interface SprintTask {
+  _id: Id<"tasks">
+  title: string
+  key: string
+  status: string
+  type: string
+  priority: string
+  assigneeName?: string | null
+  assigneeNames?: string[]
+  estimate?: { points?: number }
+  dueDate?: number
+}
+
+interface SprintBoardSprint {
+  _id: Id<"sprints">
+  name: string
+  tasks?: SprintTask[]
+  [key: string]: unknown
+}
+
 interface SprintBoardProps {
-  sprint: any
+  sprint: SprintBoardSprint
   projectId?: string
-  tasks?: any[]
-  onTaskEdit?: (task: any) => void
-  onTaskDelete?: (task: any) => void
-  onTaskDuplicate?: (task: any) => void
+  tasks?: SprintTask[]
+  onTaskEdit?: (task: SprintTask) => void
+  onTaskDelete?: (task: SprintTask) => void
+  onTaskDuplicate?: (task: SprintTask) => void
 }
 
 const columns = [
@@ -50,7 +71,7 @@ const typeIcons: Record<string, string> = {
 
 export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTaskDelete, onTaskDuplicate }: SprintBoardProps) {
   const [tasksByStatus, setTasksByStatus] = useState(() => {
-    const grouped: Record<string, any[]> = {
+    const grouped: Record<string, SprintTask[]> = {
       todo: [],
       in_progress: [],
       in_review: [],
@@ -58,7 +79,7 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
     }
 
     const sprintTasks = tasks || sprint.tasks || []
-    sprintTasks.forEach((task: any) => {
+    sprintTasks.forEach((task: SprintTask) => {
       if (task.status === 'backlog') {
         grouped.todo.push(task)
       } else if (grouped[task.status]) {
@@ -73,7 +94,7 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
   const removeTaskFromSprint = useMutation(api.sprints.mutations.removeTaskFromSprint)
   const updateSprint = useMutation(api.sprints.mutations.updateSprint)
 
-  const handleDragEnd = async (result: any) => {
+  const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return
 
     const { source, destination, draggableId } = result
@@ -101,21 +122,23 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
     try {
       const newStatus = destination.droppableId === 'todo' ? 'backlog' : destination.droppableId
       await moveTask({
-        taskId: draggableId as any,
-        status: newStatus as any,
+        taskId: draggableId as Id<"tasks">,
+        status: newStatus as "backlog" | "todo" | "in_progress" | "in_review" | "done" | "cancelled",
         position: destination.index
       })
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to move task')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to move task'
+      toast.error(message)
       setTasksByStatus(tasksByStatus)
     }
   }
 
-  const handleRemoveFromSprint = async (taskId: any) => {
+  const handleRemoveFromSprint = async (taskId: Id<"tasks">) => {
     try {
       await removeTaskFromSprint({ taskId })
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to remove task')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to remove task'
+      toast.error(message)
     }
   }
 
@@ -131,8 +154,9 @@ export default function SprintBoard({ sprint, projectId, tasks, onTaskEdit, onTa
         status: 'completed'
       })
       toast.success('Sprint completed successfully!')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to complete sprint')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to complete sprint'
+      toast.error(message)
     }
   }
 

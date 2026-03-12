@@ -3,15 +3,15 @@
  * Validates theme persistence, state management, and cross-session consistency
  */
 
-import { globalThemes, getGlobalTheme } from '../themes/globalThemes'
-import type { ThemeName } from '../themes/themeTypes'
+import { globalThemes, getGlobalTheme } from '@/themes/globalThemes'
+import type { ThemeName, GlobalTheme } from '@/themes/themeTypes'
 
 // Persistence test interfaces
 interface PersistenceTestResult {
   testName: string
   passed: boolean
-  expected: any
-  actual: any
+  expected: string | null
+  actual: string | null
   error?: string
   duration: number
 }
@@ -650,14 +650,14 @@ export class ThemePersistenceValidator {
   private async detectIncognitoMode(): Promise<boolean> {
     try {
       // Test quota limitations (common in incognito)
-      const estimate = await (navigator as any).storage?.estimate?.()
-      return estimate && estimate.quota < 50 * 1024 * 1024 // Less than 50MB suggests incognito
+      const estimate = await navigator.storage?.estimate?.()
+      return !!estimate && (estimate.quota ?? Infinity) < 50 * 1024 * 1024 // Less than 50MB suggests incognito
     } catch {
       return false
     }
   }
   
-  private generateTestCSSProperties(theme: any): Record<string, string> {
+  private generateTestCSSProperties(theme: GlobalTheme): Record<string, string> {
     // Simplified version of CSS property generation for testing
     const props: Record<string, string> = {}
     

@@ -178,7 +178,9 @@ export default defineSchema({
     .index("by_project", ["projectId"])
     .index("by_user", ["userId"])
     .index("by_project_user", ["projectId", "userId"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_project_and_status", ["projectId", "status"])
+    .index("by_user_and_status", ["userId", "status"]),
 
   projectInvitations: defineTable({
     projectId: v.id("projects"),
@@ -268,6 +270,7 @@ export default defineSchema({
     .index("by_lead", ["leadId"])
     .index("by_status", ["status"])
     .index("by_invite_code", ["inviteCode"])
+    .index("by_workspace_and_status", ["workspaceId", "status"])
     .searchIndex("search_name", {
       searchField: "name",
       filterFields: ["workspaceId", "status"],
@@ -373,6 +376,7 @@ export default defineSchema({
   })
     .index("by_project", ["projectId"])
     .index("by_status", ["status"])
+    .index("by_project_and_status", ["projectId", "status"])
     .searchIndex("search_name", {
       searchField: "name",
       filterFields: ["projectId", "status"],
@@ -496,7 +500,8 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_and_workspace", ["userId", "workspaceId"])
-    .index("by_user_and_read", ["userId", "isRead"]),
+    .index("by_user_and_read", ["userId", "isRead"])
+    .index("by_user_and_workspace_and_read", ["userId", "workspaceId", "isRead"]),
 
   // GitHub OAuth
   githubOAuthStates: defineTable({
@@ -520,12 +525,29 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_github_id", ["githubId"]),
 
-  // Temporary permissive schema for migration - will be restored after user clears old data
-  activities: defineTable(v.any()).index("by_type", ["type", "timestamp"]),
+  activities: defineTable({
+    type: v.string(), // e.g. "task_created", "pr_merged", "member_joined", etc.
+    workspaceId: v.id("workspaces"),
+    projectId: v.optional(v.id("projects")),
+    // Actor (who performed the action) — optional for webhook-originated activities
+    actorId: v.optional(v.id("users")),
+    actorName: v.optional(v.string()),
+    // Target (what was acted upon)
+    targetType: v.optional(v.string()), // "task", "project", "sprint", "meeting", "user", "comment", "github"
+    targetId: v.optional(v.string()), // Polymorphic reference — may be any table's ID
+    targetName: v.optional(v.string()),
+    description: v.optional(v.string()),
+    metadata: v.optional(v.any()), // Truly dynamic: oldValue, newValue, assignedTo, timeSpent, extra, etc.
+    timestamp: v.optional(v.number()),
+  })
+    .index("by_type", ["type", "timestamp"])
+    .index("by_project", ["projectId", "timestamp"])
+    .index("by_workspace", ["workspaceId", "timestamp"])
+    .index("by_actor", ["actorId", "timestamp"]),
 
   timeEntries: defineTable({
     taskId: v.id("tasks"),
-    userId: v.string(), // Clerk user ID
+    userId: v.string(), // Clerk identity.subject — NOT a Convex Id<"users">, do not change to v.id("users")
     startTime: v.number(),
     endTime: v.optional(v.number()),
     duration: v.optional(v.number()), // In milliseconds
@@ -571,7 +593,8 @@ export default defineSchema({
   })
     .index("by_workspace", ["workspaceId"])
     .index("by_user", ["userId"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_user_and_status", ["userId", "status"]),
 
   // AI Sessions for tracking all AI interactions
   aiSessions: defineTable({
@@ -651,7 +674,8 @@ export default defineSchema({
     ])
     .index("by_insight_type", ["insightType"])
     .index("by_dismissed", ["dismissed"])
-    .index("by_created", ["createdAt"]),
+    .index("by_created", ["createdAt"])
+    .index("by_workspace_and_dismissed", ["workspaceId", "dismissed"]),
 
   filterPresets: defineTable({
     workspaceId: v.id("workspaces"),
@@ -1279,7 +1303,7 @@ export default defineSchema({
     incomingWebhookUrl: v.optional(v.string()),
     incomingWebhookChannel: v.optional(v.string()),
     scopes: v.array(v.string()),
-    userId: v.string(), // Clerk user ID who connected
+    userId: v.string(), // Clerk identity.subject — NOT a Convex Id<"users">, do not change to v.id("users") who connected
     active: v.boolean(),
     settings: v.optional(v.any()),
     createdAt: v.number(),

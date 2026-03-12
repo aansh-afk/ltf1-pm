@@ -21,16 +21,39 @@ import clsx from "clsx";
 import toast from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import type { Id } from "../../../../../../convex/_generated/dataModel";
 import LoadingSpinner from "../../common/LoadingSpinner";
 import AIDocumentationHub from "./AIDocumentationHub";
 import RepoBrowserPanel from "./RepoBrowserModal";
 
+interface TaskSummary {
+  _id: string;
+  title: string;
+  status: string;
+  priority?: string;
+  type?: string;
+}
+
+interface SprintSummary {
+  _id: string;
+  name: string;
+  status: string;
+  startDate?: number;
+  endDate?: number;
+}
+
+interface ProjectDetailsSummary {
+  name: string;
+  description?: string;
+  status?: string;
+}
+
 interface ProjectDocsHubProps {
   projectId: string;
   workspaceId: string;
-  tasks?: any[];
-  sprints?: any[];
-  projectDetails?: any;
+  tasks?: TaskSummary[];
+  sprints?: SprintSummary[];
+  projectDetails?: ProjectDetailsSummary;
 }
 
 type DocTab = "repo" | "ai";
@@ -191,9 +214,18 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+interface ProjectWithRepo {
+  repository?: {
+    owner: string;
+    name: string;
+    url: string;
+    defaultBranch: string;
+  };
+}
+
 interface DocsHeaderProps {
   hasRepo: boolean;
-  project: any;
+  project: ProjectWithRepo | null | undefined;
   effectiveTab: DocTab;
   onSetTab: (tab: DocTab) => void;
 }
@@ -258,7 +290,7 @@ function DocsHeader({
 
 interface DocContentViewerProps {
   selectedDoc: TreeNode | null;
-  project: any;
+  project: ProjectWithRepo | null | undefined;
   onCopyContent: () => void;
   onDownload: () => void;
 }
@@ -368,14 +400,14 @@ export default function ProjectDocsHub({
   const [syncing, setSyncing] = useState(false);
 
   const repoDocs = useQuery(api.integrations.github.docs.getRepoDocs, {
-    projectId: projectId as any,
+    projectId: projectId as Id<"projects">,
   });
 
   const fetchRepoDocs = useAction(api.integrations.github.docs.fetchRepoDocs);
 
   const project = useQuery(
     api.projects.queries.getProject,
-    projectId ? { projectId: projectId as any } : "skip",
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   const hasRepo = !!project?.repository;
@@ -415,7 +447,7 @@ export default function ProjectDocsHub({
   const handleSync = async () => {
     setSyncing(true);
     try {
-      const result = await fetchRepoDocs({ projectId: projectId as any });
+      const result = await fetchRepoDocs({ projectId: projectId as Id<"projects"> });
       if (result.success) {
         toast.success(result.message);
       } else {

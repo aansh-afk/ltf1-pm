@@ -9,6 +9,7 @@
  * 4. Redirect to CLI callback with token, userId, and email
  */
 
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useEffect, useReducer } from "react";
 import { useSearchParams, Navigate } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
@@ -239,6 +240,7 @@ export default function CLIAuthPage() {
 
   // Loading / authenticating state
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-[var(--theme-background)] flex items-center justify-center p-6">
       <div className="max-w-[400px] w-full animate-[fadeIn_.4s_ease-out]">
         <div className="bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] rounded-xl p-10 text-center">
@@ -257,5 +259,6 @@ export default function CLIAuthPage() {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

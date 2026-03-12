@@ -1,6 +1,7 @@
 import React, { useState, useMemo, memo, useCallback } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
 import {
   HiOutlineChevronUp,
   HiOutlineChevronDown,
@@ -11,13 +12,28 @@ import {
   HiOutlineClock
 } from 'react-icons/hi'
 import clsx from 'clsx'
-import BrutalSelect from '../../ui/BrutalSelect'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 import toast from 'react-hot-toast'
 import CreateTaskModal from './CreateTaskModal'
-import BrutalCheckbox from '../../ui/BrutalCheckbox'
+import BrutalCheckbox from '@/components/ui/BrutalCheckbox'
 
 interface TaskTableProps {
-  tasks: any[]
+  tasks: Array<{
+    _id: string
+    title: string
+    description?: string
+    status: string
+    priority: string
+    type: string
+    key?: string
+    dueDate?: number
+    startDate?: number
+    labels?: string[]
+    assigneeName?: string
+    estimate?: { points?: number; hours?: number }
+    createdAt: number
+    [key: string]: unknown
+  }>
   projectId: string
   onTaskUpdate?: () => void
   selectedIds?: Set<string>
@@ -171,24 +187,26 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate, sele
     effectiveOnSelectionChange(newSelected)
   }, [effectiveSelectedIds, effectiveOnSelectionChange])
 
-  const handleStatusChange = useCallback(async (taskId: any, newStatus: any) => {
+  const handleStatusChange = useCallback(async (taskId: Id<"tasks">, newStatus: string) => {
     try {
-      await updateTask({ taskId, status: newStatus })
+      await updateTask({ taskId, status: newStatus as "backlog" | "todo" | "in_progress" | "in_review" | "done" | "cancelled" })
       toast.success('Status updated')
       onTaskUpdate?.()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update status')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to update status'
+      toast.error(message)
     }
   }, [updateTask, onTaskUpdate])
 
-  const handleDeleteTask = useCallback(async (taskId: any) => {
+  const handleDeleteTask = useCallback(async (taskId: Id<"tasks">) => {
     try {
       await deleteTask({ taskId })
       toast.success('Task deleted')
       setShowContextMenu(null)
       onTaskUpdate?.()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete task')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to delete task'
+      toast.error(message)
     }
   }, [deleteTask, onTaskUpdate])
 
@@ -310,7 +328,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate, sele
                     <td className="px-3 py-2">
                       <BrutalSelect
                         value={task.status}
-                        onChange={(v) => handleStatusChange(task._id, v)}
+                        onChange={(v) => handleStatusChange(task._id as Id<"tasks">, v)}
                         options={Object.entries(statusLabels).map(([value, label]) => ({ value, label }))}
                         compact
                       />
@@ -395,7 +413,7 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate, sele
                           </button>
                           <div className="border-t border-[#2E2E35]" />
                           <button
-                            onClick={() => handleDeleteTask(task._id)}
+                            onClick={() => handleDeleteTask(task._id as Id<"tasks">)}
                             className="w-full px-3 py-1.5 text-left font-mono text-[10px] uppercase text-[#EF4444] hover:bg-[#EF4444] hover:text-[#F9FAFB] transition-colors flex items-center gap-2"
                           >
                             <HiOutlineTrash className="w-3.5 h-3.5" />

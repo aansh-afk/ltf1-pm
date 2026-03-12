@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, internalMutation, internalQuery, query } from "../../_generated/server";
 import { api, internal } from "../../_generated/api";
+import { getCurrentUser, getCurrentUserOrThrow } from "../../lib/auth";
 
 // Store GitHub OAuth state for CSRF protection
 export const createOAuthState = mutation({
@@ -267,14 +268,7 @@ export const getGitHubConnection = query({
   args: {},
   returns: v.union(v.any(), v.null()),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
+    const user = await getCurrentUser(ctx);
     if (!user) return null;
 
     const connection = await ctx.db
@@ -302,14 +296,7 @@ export const getGitHubConnectionInfo = query({
     v.null()
   ),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
+    const user = await getCurrentUser(ctx);
     if (!user) return null;
 
     const connection = await ctx.db
@@ -355,19 +342,7 @@ export const disconnectGitHub = mutation({
   args: {},
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     // Delete GitHub connection
     const connection = await ctx.db

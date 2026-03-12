@@ -1,6 +1,7 @@
 import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { Id } from "../_generated/dataModel";
+import { getCurrentUserOrThrow } from "../lib/auth";
 
 const sourceValidator = v.union(
   v.literal("slack"),
@@ -195,10 +196,7 @@ export const sendInternalMessage = mutation({
   },
   returns: v.id("commsMessages"),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const channel = await ctx.db.get(args.channelId);
     if (!channel) {
@@ -208,15 +206,9 @@ export const sendInternalMessage = mutation({
       throw new Error("Can only send messages to internal channels");
     }
 
-    // Look up user from identity
-    const users = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .collect();
-    const user = users[0];
-    const senderName = user?.name ?? identity.name ?? "Unknown";
-    const senderUserId: Id<"users"> | undefined = user?._id;
-    const senderAvatarUrl = user?.avatarUrl ?? (identity.pictureUrl as string | undefined);
+    const senderName = user.name ?? "Unknown";
+    const senderUserId: Id<"users"> = user._id;
+    const senderAvatarUrl = user.avatarUrl;
 
     const now = Date.now();
 

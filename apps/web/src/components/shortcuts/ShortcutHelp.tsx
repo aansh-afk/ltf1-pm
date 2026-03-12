@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
-import { useShortcuts } from '../../contexts/ShortcutContext'
-import type { ShortcutCategory } from '../../types/shortcuts'
-import { defaultShortcutGroups } from '../../config/defaultShortcuts'
+import { useShortcuts } from '@/contexts/ShortcutContext'
+import type { ShortcutCategory } from '@/types/shortcuts'
+import { defaultShortcutGroups } from '@/config/defaultShortcuts'
 import { 
   HiOutlineX,
   HiOutlineSearch,

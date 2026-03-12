@@ -1,6 +1,8 @@
 import { useState } from "react";
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import type { Id } from "../../../../convex/_generated/dataModel";
 import { m } from "framer-motion";
 import {
   HiOutlinePlay,
@@ -19,8 +21,8 @@ import SprintBoard from "@/components/features/sprint/SprintBoard";
 import SprintPlanning from "@/components/features/sprint/SprintPlanning";
 import BurndownChart from "@/components/features/sprint/BurndownChart";
 import AIInsightsPanel from "@/components/features/project/AIInsightsPanel";
-import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace";
-import BrutalSelect from "../components/ui/BrutalSelect";
+import { useCurrentWorkspace } from "@/hooks/useCurrentWorkspace";
+import BrutalSelect from "@/components/ui/BrutalSelect";
 import clsx from "clsx";
 
 // --- Sub-components ---
@@ -146,17 +148,17 @@ export default function SprintPage() {
 
   const projects = useQuery(
     api.projects.queries.getWorkspaceProjects,
-    currentWorkspaceId ? { workspaceId: currentWorkspaceId as any } : "skip",
+    currentWorkspaceId ? { workspaceId: currentWorkspaceId as Id<"workspaces"> } : "skip",
   );
 
   const sprints = useQuery(
     api.sprints.queries.getProjectSprints,
-    selectedProjectId ? { projectId: selectedProjectId as any } : "skip",
+    selectedProjectId ? { projectId: selectedProjectId as Id<"projects"> } : "skip",
   );
 
   const currentSprint = useQuery(
     api.sprints.queries.getCurrentSprint,
-    selectedProjectId ? { projectId: selectedProjectId as any } : "skip",
+    selectedProjectId ? { projectId: selectedProjectId as Id<"projects"> } : "skip",
   );
 
   if (workspaceLoading) {
@@ -244,10 +246,11 @@ export default function SprintPage() {
   }
 
   const currentWorkspace = workspaces?.find(
-    (w: any) => w?._id === currentWorkspaceId,
+    (w) => w?._id === currentWorkspaceId,
   );
 
   return (
+    <ErrorBoundary>
     <div className="p-4">
       {/* Header */}
       <m.div
@@ -278,7 +281,7 @@ export default function SprintPage() {
           <BrutalSelect
             value={selectedProjectId}
             onChange={(v) => setSelectedProjectId(v)}
-            options={projects.map((project: any) => ({
+            options={projects.map((project) => ({
               value: project._id,
               label: `${project.name} (${project.key})`,
             }))}
@@ -318,7 +321,7 @@ export default function SprintPage() {
             </div>
             <div className="p-4">
               <AIInsightsPanel
-                projectId={selectedProjectId as any}
+                projectId={selectedProjectId as Id<"projects">}
                 sprintId={currentSprint._id}
                 compact={false}
               />
@@ -406,5 +409,6 @@ export default function SprintPage() {
         projectId={selectedProjectId}
       />
     </div>
+    </ErrorBoundary>
   );
 }

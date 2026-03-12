@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import SlackIntegration from '@/components/features/slack/SlackIntegration'
@@ -21,6 +22,7 @@ export default function SlackPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="p-4 min-h-screen bg-[var(--theme-background)]">
       {/* Page Header */}
       <div className="mb-4">
@@ -35,5 +37,6 @@ export default function SlackPage() {
 
       <SlackIntegration workspaceId={currentWorkspace._id} />
     </div>
+    </ErrorBoundary>
   )
 }

@@ -1,6 +1,6 @@
 import { m } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import HeroTerminal from '../ascii/HeroTerminal'
+import HeroTerminal from '@/components/landing/ascii/HeroTerminal'
 
 export default function HeroSection() {
   // Removed — now links to /features page

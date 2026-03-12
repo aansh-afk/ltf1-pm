@@ -1,7 +1,9 @@
 import { useState } from "react";
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 import {
   HiOutlineOfficeBuilding,
   HiOutlineUserGroup,
@@ -15,10 +17,22 @@ import toast from "react-hot-toast";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import SettingsSection from "@/components/features/settings/SettingsSection";
 import MemberManagement from "@/components/features/workspace/MemberManagement";
-import { useSettingsState } from "../hooks/useSettingsState";
+import { useSettingsState } from "@/hooks/useSettingsState";
 import BrutalButton from "@/components/ui/BrutalButton";
 import BrutalCard from "@/components/ui/BrutalCard";
 import BrutalBadge from "@/components/ui/BrutalBadge";
+
+type WorkspaceWithRole = Doc<"workspaces"> & {
+  currentUserRole?: string
+  members: Array<Doc<"workspaceMembers"> & { user: Doc<"users"> | null }>
+}
+
+interface GeneralSettings {
+  name: string
+  slug: string
+  description: string
+  logoUrl: string
+}
 
 const tabs = [
   { id: "general", label: "GENERAL", icon: HiOutlineOfficeBuilding },
@@ -31,7 +45,7 @@ const tabs = [
 // ── Sub-components ──
 
 interface DangerZoneProps {
-  workspace: any;
+  workspace: WorkspaceWithRole;
   showDeleteConfirm: boolean;
   deleteConfirmText: string;
   onShowDelete: () => void;
@@ -211,18 +225,13 @@ function FeaturesTab({
 }
 
 interface GeneralTabProps {
-  generalSettings: {
-    name: string;
-    slug: string;
-    description: string;
-    logoUrl: string;
-  };
+  generalSettings: GeneralSettings;
   canEdit: boolean;
   canDelete: boolean;
-  workspace: any;
+  workspace: WorkspaceWithRole;
   showDeleteConfirm: boolean;
   deleteConfirmText: string;
-  onGeneralChange: (settings: any) => void;
+  onGeneralChange: (settings: GeneralSettings) => void;
   onShowDelete: () => void;
   onHideDelete: () => void;
   onDeleteConfirmTextChange: (text: string) => void;
@@ -586,9 +595,9 @@ function SaveIndicator({
 }
 
 interface WorkspaceSettingsContentProps {
-  workspace: any;
+  workspace: WorkspaceWithRole;
   workspaceId: string;
-  currentUser: any;
+  currentUser: Doc<"users">;
   memberRole: string | undefined;
 }
 
@@ -624,7 +633,7 @@ function WorkspaceSettingsContent({
     onSave: async (data) => {
       if (!workspaceId) return;
       await updateWorkspace({
-        workspaceId: workspaceId as any,
+        workspaceId: workspaceId as Id<"workspaces">,
         ...data,
       });
     },
@@ -646,7 +655,7 @@ function WorkspaceSettingsContent({
     onSave: async (data) => {
       if (!workspaceId) return;
       await updateWorkspace({
-        workspaceId: workspaceId as any,
+        workspaceId: workspaceId as Id<"workspaces">,
         settings: {
           ...workspace?.settings,
           features: {
@@ -668,11 +677,12 @@ function WorkspaceSettingsContent({
     }
 
     try {
-      await deleteWorkspace({ workspaceId: workspaceId as any });
+      await deleteWorkspace({ workspaceId: workspaceId as Id<"workspaces"> });
       toast.success("Workspace deleted successfully");
       navigate("/workspaces");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete workspace");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to delete workspace";
+      toast.error(message);
     }
   };
 
@@ -785,7 +795,7 @@ export default function WorkspaceSettingsPage() {
   // Queries
   const workspace = useQuery(
     api.workspaces.queries.getWorkspaceById,
-    workspaceId ? { workspaceId: workspaceId as any } : "skip",
+    workspaceId ? { workspaceId: workspaceId as Id<"workspaces"> } : "skip",
   );
   const currentUser = useQuery(api.auth.users.getOrCreateCurrentUser);
   const memberRole = workspace?.currentUserRole;
@@ -795,6 +805,7 @@ export default function WorkspaceSettingsPage() {
   }
 
   return (
+    <ErrorBoundary>
     <WorkspaceSettingsContent
       key={workspace._id}
       workspace={workspace}
@@ -802,5 +813,6 @@ export default function WorkspaceSettingsPage() {
       currentUser={currentUser}
       memberRole={memberRole}
     />
+    </ErrorBoundary>
   );
 }

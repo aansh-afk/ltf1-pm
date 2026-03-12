@@ -1,3 +1,4 @@
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useParams } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
@@ -16,8 +17,10 @@ export default function CustomFieldsPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-[var(--theme-background)]">
       <CustomFieldsManager workspaceId={currentWorkspace._id} />
     </div>
+    </ErrorBoundary>
   )
 }

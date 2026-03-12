@@ -1,6 +1,8 @@
 import { useReducer } from 'react'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
+import type { Id } from '../../../../convex/_generated/dataModel'
 import {
   HiOutlineSearch,
   HiOutlineUser,
@@ -22,12 +24,12 @@ import clsx from 'clsx'
 import BrutalCard from '@/components/ui/BrutalCard'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalBadge from '@/components/ui/BrutalBadge'
-import BrutalSelect from '../components/ui/BrutalSelect'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 import CreateSprintModal from '@/components/features/sprint/CreateSprintModal'
 import SprintBoard from '@/components/features/sprint/SprintBoard'
 import SprintPlanning from '@/components/features/sprint/SprintPlanning'
-import BurndownChart from '../components/features/sprint/BurndownChart'
-import VelocityChart from '../components/features/sprint/VelocityChart'
+import BurndownChart from '@/components/features/sprint/BurndownChart'
+import VelocityChart from '@/components/features/sprint/VelocityChart'
 import EmptyState from '@/components/common/EmptyState'
 import { m } from 'framer-motion'
 
@@ -163,8 +165,23 @@ function MembersFiltersBar({ searchQuery, selectedStatus, onSearchChange, onStat
   )
 }
 
+interface CurrentSprintData {
+  name: string
+  goal?: string
+  daysRemaining: number
+  progress: number
+  completedPoints: number
+  totalPoints: number
+  taskStats: {
+    todo: number
+    inProgress: number
+    inReview: number
+    done: number
+  }
+}
+
 interface CurrentSprintInfoCardProps {
-  currentSprint: any
+  currentSprint: CurrentSprintData
 }
 
 function CurrentSprintInfoCard({ currentSprint }: CurrentSprintInfoCardProps) {
@@ -244,12 +261,12 @@ export default function TeamPage() {
   // Queries
   const teamStatuses = useQuery(
     api.developers.queries.getWorkspaceStatuses,
-    currentWorkspace ? { workspaceId: currentWorkspace._id as any } : 'skip'
+    currentWorkspace ? { workspaceId: currentWorkspace._id as Id<"workspaces"> } : 'skip'
   )
 
   const projects = useQuery(
     api.projects.queries.getWorkspaceProjects,
-    currentWorkspace ? { workspaceId: currentWorkspace._id as any } : 'skip'
+    currentWorkspace ? { workspaceId: currentWorkspace._id as Id<"workspaces"> } : 'skip'
   )
 
   // Auto-select first project for sprints
@@ -259,12 +276,12 @@ export default function TeamPage() {
 
   const sprints = useQuery(
     api.sprints.queries.getProjectSprints,
-    selectedProjectId ? { projectId: selectedProjectId as any } : 'skip'
+    selectedProjectId ? { projectId: selectedProjectId as Id<"projects"> } : 'skip'
   )
 
   const currentSprint = useQuery(
     api.sprints.queries.getCurrentSprint,
-    selectedProjectId ? { projectId: selectedProjectId as any } : 'skip'
+    selectedProjectId ? { projectId: selectedProjectId as Id<"projects"> } : 'skip'
   )
 
   if (!currentWorkspace) {
@@ -365,7 +382,7 @@ export default function TeamPage() {
           <BrutalSelect
             value={selectedProjectId}
             onChange={(v) => dispatch({ type: 'UPDATE', field: 'selectedProjectId', value: v })}
-            options={projects?.map((project: any) => ({
+            options={projects?.map((project) => ({
               value: project._id,
               label: project.name,
             })) || []}
@@ -450,6 +467,7 @@ export default function TeamPage() {
   )
 
   return (
+    <ErrorBoundary>
     <div className="p-4">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
@@ -536,5 +554,6 @@ export default function TeamPage() {
         projectId={selectedProjectId}
       />
     </div>
+    </ErrorBoundary>
   )
 }

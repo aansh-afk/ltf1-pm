@@ -1,4 +1,4 @@
-import { ProjectActivity, TaskSuggestion, SprintRecommendation } from '../types/ai'
+import { ProjectActivity, TaskSuggestion, SprintRecommendation } from '@/types/ai'
 
 interface OpenRouterConfig {
   apiKey: string

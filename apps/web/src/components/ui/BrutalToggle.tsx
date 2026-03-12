@@ -40,6 +40,7 @@ export default function BrutalToggle({
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-label={label || 'Toggle'}
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={clsx(

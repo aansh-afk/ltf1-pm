@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import { HiOutlineUser, HiOutlineInformationCircle } from 'react-icons/hi'
-import BrutalAvatar from '../../ui/BrutalAvatar'
-import DeveloperStatusIndicator from '../developer/DeveloperStatusIndicator'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
+import BrutalAvatar from '@/components/ui/BrutalAvatar'
+import DeveloperStatusIndicator from '@/components/features/developer/DeveloperStatusIndicator'
 import UserProfileModal from './UserProfileModal'
 import clsx from 'clsx'
 
@@ -32,12 +33,12 @@ export default function UserDisplay({
   
   const user = useQuery(
     api.auth.users.getUserById,
-    userId ? { userId: userId as any } : 'skip'
+    userId ? { userId: userId as Id<"users"> } : 'skip'
   )
-  
+
   const profile = useQuery(
     api.developers.queries.getDeveloperProfile,
-    userId ? { userId: userId as any } : 'skip'
+    userId ? { userId: userId as Id<"users"> } : 'skip'
   )
 
   const handleClick = (e: React.MouseEvent) => {

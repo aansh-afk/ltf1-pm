@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import posthog from 'posthog-js'
-import BrutalModal from '../../ui/BrutalModal'
+import BrutalModal from '@/components/ui/BrutalModal'
 
 function getScoreColor(score: number): string {
   if (score <= 6) return '#EF4444' // detractor

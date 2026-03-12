@@ -1,6 +1,6 @@
-import { type RecordedStep } from '../../../hooks/useStepRecorder';
-import BrutalModal from '../../ui/BrutalModal';
-import { getCapturedErrors } from '../../../utils/consoleCapture';
+import { type RecordedStep } from '@/hooks/useStepRecorder';
+import BrutalModal from '@/components/ui/BrutalModal';
+import { getCapturedErrors } from '@/utils/consoleCapture';
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';
 

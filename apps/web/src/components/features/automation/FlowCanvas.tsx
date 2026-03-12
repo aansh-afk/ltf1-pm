@@ -9,6 +9,7 @@ import ReactFlow, {
   MarkerType,
   type Node,
   type Edge,
+  type Connection,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import {
@@ -26,7 +27,7 @@ import clsx from 'clsx'
 interface CustomNodeData {
   label: string
   description?: string
-  icon?: any
+  icon?: React.ComponentType<{ className?: string }>
 }
 
 // Custom node components
@@ -77,8 +78,31 @@ function ActionNode({ data }: { data: CustomNodeData }) {
   )
 }
 
+interface FlowCanvasWorkflowAction {
+  type: string
+  config?: Record<string, unknown> | unknown
+}
+
+interface FlowCanvasWorkflowCondition {
+  field: string
+  operator: string
+  value: unknown
+}
+
+interface FlowCanvasWorkflow {
+  _id: string
+  name: string
+  trigger: {
+    type: string
+    event?: string
+    schedule?: string
+  }
+  actions: FlowCanvasWorkflowAction[]
+  conditions?: FlowCanvasWorkflowCondition[]
+}
+
 interface FlowCanvasProps {
-  workflow?: any
+  workflow?: FlowCanvasWorkflow
   onSave?: (nodes: Node[], edges: Edge[]) => void
 }
 
@@ -97,13 +121,14 @@ function getTriggerIcon(type: string) {
   }
 }
 
-function getActionDescription(action: any) {
-  if (action.config?.title) return action.config.title
-  if (action.config?.message) return action.config.message
+function getActionDescription(action: FlowCanvasWorkflowAction) {
+  const config = action.config as Record<string, unknown> | undefined
+  if (config?.title) return String(config.title)
+  if (config?.message) return String(config.message)
   return 'Configure action'
 }
 
-function buildWorkflowGraph(wf: any): { nodes: Node[]; edges: Edge[] } {
+function buildWorkflowGraph(wf: FlowCanvasWorkflow | undefined): { nodes: Node[]; edges: Edge[] } {
   if (!wf) return { nodes: [], edges: [] }
 
   const newNodes: Node[] = []
@@ -128,7 +153,7 @@ function buildWorkflowGraph(wf: any): { nodes: Node[]; edges: Edge[] } {
 
   // Create condition nodes
   if (wf.conditions && wf.conditions.length > 0) {
-    wf.conditions.forEach((condition: any, index: number) => {
+    wf.conditions.forEach((condition: FlowCanvasWorkflowCondition, index: number) => {
       const conditionId = `condition-${index}`
       newNodes.push({
         id: conditionId,
@@ -154,7 +179,7 @@ function buildWorkflowGraph(wf: any): { nodes: Node[]; edges: Edge[] } {
 
   // Create action nodes
   if (wf.actions && wf.actions.length > 0) {
-    wf.actions.forEach((action: any, index: number) => {
+    wf.actions.forEach((action: FlowCanvasWorkflowAction, index: number) => {
       const actionId = `action-${index}`
       newNodes.push({
         id: actionId,
@@ -198,7 +223,7 @@ export default function FlowCanvas({ workflow, onSave }: FlowCanvasProps) {
 
   // Handle connection
   const onConnect = useCallback(
-    (params: any) => {
+    (params: Connection) => {
       setEdges((eds) =>
         addEdge(
           {

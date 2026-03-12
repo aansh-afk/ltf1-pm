@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { HiOutlinePlus, HiOutlineBriefcase, HiOutlineGlobeAlt } from 'react-icons/hi'
@@ -21,6 +22,7 @@ export default function WorkspacesPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
@@ -105,5 +107,6 @@ export default function WorkspacesPage() {
         onClose={() => setShowCreateModal(false)}
       />
     </div>
+    </ErrorBoundary>
   )
 }

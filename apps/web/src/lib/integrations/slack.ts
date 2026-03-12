@@ -30,6 +30,98 @@ export const SLACK_API_BASE = "https://slack.com/api";
 export const SLACK_OAUTH_URL = "https://slack.com/oauth/v2/authorize";
 export const SLACK_TOKEN_URL = "https://slack.com/api/oauth.v2.access";
 
+// Slack API response types
+interface SlackApiResponse {
+  ok: boolean
+  error?: string
+  [key: string]: unknown
+}
+
+interface SlackMessageResponse extends SlackApiResponse {
+  channel?: string
+  ts?: string
+  message?: {
+    text?: string
+    ts?: string
+  }
+}
+
+interface SlackUserInfoResponse extends SlackApiResponse {
+  user?: {
+    id: string
+    name: string
+    real_name?: string
+    profile?: {
+      email?: string
+      display_name?: string
+      image_48?: string
+    }
+  }
+}
+
+interface SlackChannelInfoResponse extends SlackApiResponse {
+  channel?: {
+    id: string
+    name: string
+    is_private?: boolean
+    topic?: { value: string }
+    purpose?: { value: string }
+    num_members?: number
+  }
+}
+
+interface SlackChannelListResponse extends SlackApiResponse {
+  channels?: Array<{
+    id: string
+    name: string
+    is_private?: boolean
+    num_members?: number
+  }>
+}
+
+interface SlackFileUploadResponse extends SlackApiResponse {
+  file?: {
+    id: string
+    name: string
+    url_private?: string
+  }
+}
+
+interface SlackConversationOpenResponse extends SlackApiResponse {
+  channel?: {
+    id: string
+  }
+}
+
+interface SlackOAuthTokenResponse extends SlackApiResponse {
+  access_token?: string
+  token_type?: string
+  scope?: string
+  team?: {
+    id: string
+    name: string
+  }
+  authed_user?: {
+    id: string
+    access_token?: string
+  }
+}
+
+// Slack block element types
+interface SlackBlockElement {
+  type: string
+  text?: {
+    type: "plain_text" | "mrkdwn"
+    text: string
+    emoji?: boolean
+  }
+  action_id?: string
+  url?: string
+  style?: "primary" | "danger"
+  multiline?: boolean
+  [key: string]: unknown
+}
+
 // Slack message formatting
 export interface SlackMessage {
   channel: string;
@@ -48,12 +140,17 @@ export interface SlackBlock {
     emoji?: boolean;
   };
   block_id?: string;
-  accessory?: any;
-  elements?: any[];
+  accessory?: SlackBlockElement;
+  elements?: SlackBlockElement[];
   fields?: Array<{
     type: "plain_text" | "mrkdwn";
     text: string;
   }>;
+  label?: {
+    type: "plain_text" | "mrkdwn";
+    text: string;
+  };
+  element?: SlackBlockElement;
 }
 
 export interface SlackAttachment {
@@ -89,7 +186,7 @@ export interface SlackEvent {
   thread_ts?: string;
   team?: string;
   event_ts?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Slack slash command
@@ -107,6 +204,33 @@ export interface SlackCommand {
   trigger_id: string;
 }
 
+// Task shape used in Slack message builders
+interface SlackTaskData {
+  _id?: string;
+  title: string;
+  description?: string;
+  priority?: string;
+  timeSpent?: number;
+}
+
+// Sprint shape used in Slack message builders
+interface SlackSprintData {
+  name: string;
+  startDate: number | string;
+  endDate: number | string;
+  goals?: string[];
+}
+
+// Meeting shape used in Slack message builders
+interface SlackMeetingData {
+  title: string;
+  startTime: number | string;
+  duration: number;
+  location?: string;
+  agenda?: string;
+  meetingUrl?: string;
+}
+
 // Slack client class
 export class SlackClient {
   private accessToken: string;
@@ -118,7 +242,7 @@ export class SlackClient {
   /**
    * Send a message to Slack
    */
-  async sendMessage(message: SlackMessage): Promise<any> {
+  async sendMessage(message: SlackMessage): Promise<SlackMessageResponse> {
     const response = await fetch(`${SLACK_API_BASE}/chat.postMessage`, {
       method: "POST",
       headers: {
@@ -132,7 +256,7 @@ export class SlackClient {
       throw new Error(`Slack API error: ${response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<SlackMessageResponse>;
   }
 
   /**
@@ -142,7 +266,7 @@ export class SlackClient {
     channel: string,
     ts: string,
     message: Partial<SlackMessage>,
-  ): Promise<any> {
+  ): Promise<SlackMessageResponse> {
     const response = await fetch(`${SLACK_API_BASE}/chat.update`, {
       method: "POST",
       headers: {
@@ -160,13 +284,13 @@ export class SlackClient {
       throw new Error(`Slack API error: ${response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<SlackMessageResponse>;
   }
 
   /**
    * Delete a Slack message
    */
-  async deleteMessage(channel: string, ts: string): Promise<any> {
+  async deleteMessage(channel: string, ts: string): Promise<SlackApiResponse> {
     const response = await fetch(`${SLACK_API_BASE}/chat.delete`, {
       method: "POST",
       headers: {
@@ -180,13 +304,13 @@ export class SlackClient {
       throw new Error(`Slack API error: ${response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<SlackApiResponse>;
   }
 
   /**
    * Get Slack user info
    */
-  async getUserInfo(userId: string): Promise<any> {
+  async getUserInfo(userId: string): Promise<SlackUserInfoResponse> {
     const response = await fetch(
       `${SLACK_API_BASE}/users.info?user=${userId}`,
       {
@@ -200,13 +324,13 @@ export class SlackClient {
       throw new Error(`Slack API error: ${response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<SlackUserInfoResponse>;
   }
 
   /**
    * Get Slack channel info
    */
-  async getChannelInfo(channelId: string): Promise<any> {
+  async getChannelInfo(channelId: string): Promise<SlackChannelInfoResponse> {
     const response = await fetch(
       `${SLACK_API_BASE}/conversations.info?channel=${channelId}`,
       {
@@ -220,13 +344,13 @@ export class SlackClient {
       throw new Error(`Slack API error: ${response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<SlackChannelInfoResponse>;
   }
 
   /**
    * List Slack channels
    */
-  async listChannels(): Promise<any> {
+  async listChannels(): Promise<SlackChannelListResponse> {
     const response = await fetch(
       `${SLACK_API_BASE}/conversations.list?types=public_channel,private_channel`,
       {
@@ -240,13 +364,13 @@ export class SlackClient {
       throw new Error(`Slack API error: ${response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<SlackChannelListResponse>;
   }
 
   /**
    * Create a Slack channel
    */
-  async createChannel(name: string, isPrivate: boolean = false): Promise<any> {
+  async createChannel(name: string, isPrivate: boolean = false): Promise<SlackChannelInfoResponse> {
     const response = await fetch(`${SLACK_API_BASE}/conversations.create`, {
       method: "POST",
       headers: {
@@ -263,13 +387,13 @@ export class SlackClient {
       throw new Error(`Slack API error: ${response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<SlackChannelInfoResponse>;
   }
 
   /**
    * Invite users to a channel
    */
-  async inviteToChannel(channelId: string, userIds: string[]): Promise<any> {
+  async inviteToChannel(channelId: string, userIds: string[]): Promise<SlackApiResponse> {
     const response = await fetch(`${SLACK_API_BASE}/conversations.invite`, {
       method: "POST",
       headers: {
@@ -286,7 +410,7 @@ export class SlackClient {
       throw new Error(`Slack API error: ${response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<SlackApiResponse>;
   }
 
   /**
@@ -297,7 +421,7 @@ export class SlackClient {
     file: File,
     title?: string,
     comment?: string,
-  ): Promise<any> {
+  ): Promise<SlackFileUploadResponse> {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("channels", channels.join(","));
@@ -316,13 +440,13 @@ export class SlackClient {
       throw new Error(`Slack API error: ${response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<SlackFileUploadResponse>;
   }
 
   /**
    * Open a direct message channel
    */
-  async openDM(userId: string): Promise<any> {
+  async openDM(userId: string): Promise<SlackConversationOpenResponse> {
     const response = await fetch(`${SLACK_API_BASE}/conversations.open`, {
       method: "POST",
       headers: {
@@ -338,7 +462,7 @@ export class SlackClient {
       throw new Error(`Slack API error: ${response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<SlackConversationOpenResponse>;
   }
 }
 
@@ -348,7 +472,7 @@ export class SlackMessageBuilder {
    * Build a task created notification
    */
   static taskCreated(
-    task: any,
+    task: SlackTaskData,
     projectName: string,
     creator: string,
   ): SlackMessage {
@@ -359,7 +483,7 @@ export class SlackMessageBuilder {
           type: "header",
           text: {
             type: "plain_text",
-            text: "📝 New Task Created",
+            text: "New Task Created",
             emoji: true,
           },
         },
@@ -414,7 +538,7 @@ export class SlackMessageBuilder {
    * Build a task completed notification
    */
   static taskCompleted(
-    task: any,
+    task: SlackTaskData,
     projectName: string,
     completedBy: string,
   ): SlackMessage {
@@ -425,7 +549,7 @@ export class SlackMessageBuilder {
           type: "header",
           text: {
             type: "plain_text",
-            text: "✅ Task Completed",
+            text: "Task Completed",
             emoji: true,
           },
         },
@@ -458,7 +582,7 @@ export class SlackMessageBuilder {
    * Build a sprint started notification
    */
   static sprintStarted(
-    sprint: any,
+    sprint: SlackSprintData,
     projectName: string,
     taskCount: number,
   ): SlackMessage {
@@ -469,7 +593,7 @@ export class SlackMessageBuilder {
           type: "header",
           text: {
             type: "plain_text",
-            text: "🚀 Sprint Started",
+            text: "Sprint Started",
             emoji: true,
           },
         },
@@ -498,7 +622,7 @@ export class SlackMessageBuilder {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `*Goals:*\n${sprint.goals?.join("\n• ") || "_No goals set_"}`,
+            text: `*Goals:*\n${sprint.goals?.join("\n") || "_No goals set_"}`,
           },
         },
       ],
@@ -508,7 +632,7 @@ export class SlackMessageBuilder {
   /**
    * Build a meeting reminder notification
    */
-  static meetingReminder(meeting: any, attendees: string[]): SlackMessage {
+  static meetingReminder(meeting: SlackMeetingData, attendees: string[]): SlackMessage {
     return {
       channel: "#general",
       blocks: [
@@ -516,7 +640,7 @@ export class SlackMessageBuilder {
           type: "header",
           text: {
             type: "plain_text",
-            text: "📅 Meeting Reminder",
+            text: "Meeting Reminder",
             emoji: true,
           },
         },
@@ -586,7 +710,7 @@ export class SlackMessageBuilder {
           type: "header",
           text: {
             type: "plain_text",
-            text: "☀️ Daily Standup",
+            text: "Daily Standup",
             emoji: true,
           },
         },
@@ -669,7 +793,7 @@ export function getSlackOAuthUrl(state: string): string {
 }
 
 // Exchange OAuth code for access token
-export async function exchangeSlackCode(code: string): Promise<any> {
+export async function exchangeSlackCode(code: string): Promise<SlackOAuthTokenResponse> {
   const response = await fetch(SLACK_TOKEN_URL, {
     method: "POST",
     headers: {
@@ -687,5 +811,5 @@ export async function exchangeSlackCode(code: string): Promise<any> {
     throw new Error(`Slack OAuth error: ${response.statusText}`);
   }
 
-  return response.json();
+  return response.json() as Promise<SlackOAuthTokenResponse>;
 }

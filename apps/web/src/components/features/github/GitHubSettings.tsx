@@ -7,7 +7,7 @@ import BrutalButton from '@/components/ui/BrutalButton';
 import BrutalCard from '@/components/ui/BrutalCard';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
-import SettingsSection from '../settings/SettingsSection';
+import SettingsSection from '@/components/features/settings/SettingsSection';
 
 interface GitHubSettingsProps {
   currentUser: any;

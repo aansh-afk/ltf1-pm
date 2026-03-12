@@ -5,9 +5,9 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { HiOutlineColorSwatch, HiOutlineX, HiOutlineAdjustments } from 'react-icons/hi'
-import { useTheme } from '../../contexts/ThemeContext'
-import { globalThemes } from '../../themes/globalThemes'
-import type { ThemeName } from '../../themes/themeTypes'
+import { useTheme } from '@/contexts/ThemeContext'
+import { globalThemes } from '@/themes/globalThemes'
+import type { ThemeName } from '@/themes/themeTypes'
 import clsx from 'clsx'
 
 interface ThemeSwitcherProps {

@@ -5,9 +5,11 @@ import React, {
   Suspense,
   useReducer,
 } from "react";
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import type { Id, Doc } from "../../../../convex/_generated/dataModel";
 import { useUser } from "@clerk/clerk-react";
 import {
   HiOutlineHome,
@@ -65,6 +67,99 @@ import BrutalBadge from "@/components/ui/BrutalBadge";
 import BrutalSelect from "../components/ui/BrutalSelect";
 import { m } from "framer-motion";
 
+// --- Shared types for project management page ---
+
+/** Task document from Convex, as returned by getProjectTasks */
+type TaskData = Doc<"tasks"> & { key?: string };
+
+/** Sprint document from Convex */
+type SprintData = Doc<"sprints">;
+
+/** Meeting document from Convex */
+type MeetingData = Doc<"meetings">;
+
+/** Team document from Convex */
+type TeamData = Doc<"teams">;
+
+/** Enriched member info returned by getProject query (user doc + project role) */
+interface MemberData {
+  _id: Id<"users">;
+  _creationTime: number;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  role?: string;
+  projectRole?: string;
+  joinedAt?: number;
+  lastSeenAt?: number;
+  userId?: Id<"users">;
+  [key: string]: unknown;
+}
+
+/** Enriched project as returned by getProject query (Doc<"projects"> spread with enrichments) */
+interface ProjectData {
+  _id: Id<"projects">;
+  _creationTime: number;
+  workspaceId: Id<"workspaces">;
+  name: string;
+  key: string;
+  description?: string;
+  leadId?: Id<"users">;
+  members?: (MemberData | null)[];
+  teamIds?: Id<"teams">[];
+  status: "planning" | "active" | "on_hold" | "completed" | "archived";
+  visibility: "public" | "private";
+  inviteCode?: string;
+  repository?: {
+    provider: "github" | "gitlab" | "bitbucket";
+    url: string;
+    name: string;
+    owner: string;
+    defaultBranch: string;
+    connectedAt: number;
+  };
+  settings?: {
+    taskPrefix?: string;
+    defaultAssigneeId?: Id<"users">;
+    workflowType?: "kanban" | "scrum" | "hybrid";
+  };
+  teamSettings?: {
+    maxMembers?: number;
+    allowSelfJoin?: boolean;
+    requireApproval?: boolean;
+    autoAssignLead?: boolean;
+  };
+  metadata?: {
+    color: string;
+    icon: string;
+    tags: string[];
+  };
+  lead?: Doc<"users"> | null;
+  tasks?: TaskData[];
+  activeSprint?: SprintData | null;
+  createdAt: number;
+  updatedAt: number;
+  [key: string]: unknown;
+}
+
+/** User document from Convex (currentUser) */
+type UserData = Doc<"users">;
+
+/** Computed member stats for team tab */
+interface MemberStatData extends MemberData {
+  tasksAssigned: number;
+  tasksCompleted: number;
+  tasksInProgress: number;
+  tasksBlocked: number;
+  tasksTodo: number;
+  tasksInReview: number;
+  pullRequests: number;
+  commits: number;
+  hoursTracked: number;
+  productivity: number;
+  lastActive: string;
+}
+
 type TabType =
   | "overview"
   | "tasks"
@@ -92,7 +187,7 @@ type PageAction =
   | { type: "TOGGLE_COMPACT_VIEW" }
   | { type: "SET_CONTEXT"; context: string | null }
   | { type: "OPEN_CREATE_TASK" }
-  | { type: "OPEN_EDIT_TASK"; task: any }
+  | { type: "OPEN_EDIT_TASK"; task: TaskData }
   | { type: "OPEN_CREATE_SPRINT" }
   | { type: "OPEN_PROJECT_INVITE" }
   | { type: "OPEN_SCHEDULE_MEETING" }
@@ -116,7 +211,7 @@ interface PageState {
   showScheduleMeetingModal: boolean;
   showExpertiseSearch: boolean;
   showExpertiseMatrix: boolean;
-  selectedTask: any;
+  selectedTask: TaskData | null;
   showAdvancedFilters: boolean;
   selectedSprintId: string | null;
   taskFilters: TaskFiltersType;
@@ -201,7 +296,7 @@ function pageReducer(state: PageState, action: PageAction): PageState {
   }
 }
 
-function isTaskBlocked(task: any, allTasks: any[]): boolean {
+function isTaskBlocked(task: TaskData, allTasks: TaskData[]): boolean {
   if (!task || task.status === "done" || task.status === "cancelled") {
     return false;
   }
@@ -211,8 +306,8 @@ function isTaskBlocked(task: any, allTasks: any[]): boolean {
     return false;
   }
 
-  return dependencies.some((depId: any) => {
-    const dependencyTask = allTasks.find((t: any) => t._id === depId);
+  return dependencies.some((depId: Id<"tasks">) => {
+    const dependencyTask = allTasks.find((t) => t._id === depId);
     return dependencyTask ? dependencyTask.status !== "done" : false;
   });
 }
@@ -220,9 +315,9 @@ function isTaskBlocked(task: any, allTasks: any[]): boolean {
 // --- Sub-components ---
 
 interface OverviewTabProps {
-  project: any;
-  allSprints: any[] | undefined;
-  tasks: any[] | undefined;
+  project: ProjectData;
+  allSprints: SprintData[] | undefined;
+  tasks: TaskData[] | undefined;
   healthCards: HealthCard[];
   getStatusColor: (status: string) => string;
 }
@@ -306,16 +401,16 @@ function OverviewTab({
                 {/* Sprint progress bar */}
                 {(() => {
                   const sprintTasks = (tasks || []).filter(
-                    (t: any) => t.sprintId === activeSprint._id,
+                    (t) => t.sprintId === activeSprint._id,
                   );
                   const total = sprintTasks.length;
                   const done = sprintTasks.filter(
-                    (t: any) => t.status === "done",
+                    (t) => t.status === "done",
                   ).length;
                   const inProgress = sprintTasks.filter(
-                    (t: any) => t.status === "in_progress",
+                    (t) => t.status === "in_progress",
                   ).length;
-                  const blocked = sprintTasks.filter((t: any) =>
+                  const blocked = sprintTasks.filter((t) =>
                     isTaskBlocked(t, tasks || []),
                   ).length;
                   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -412,8 +507,8 @@ function OverviewTab({
                   }
                 >
                   <SprintBurndownChart
-                    sprint={activeSprint}
-                    tasks={tasks || []}
+                    sprint={activeSprint as unknown as { _id: Id<"sprints">; name: string; startDate: string; endDate: string; totalPoints: number }}
+                    tasks={(tasks || []) as { _id: Id<"tasks">; points?: number; status: string; completedAt?: string; sprintId?: Id<"sprints"> }[]}
                     showPrediction={true}
                   />
                 </Suspense>
@@ -524,8 +619,8 @@ function OverviewTab({
 }
 
 interface MeetingsTabProps {
-  projectMeetings: any[] | undefined;
-  currentUserId: any;
+  projectMeetings: MeetingData[] | undefined;
+  currentUserId: Id<"users"> | undefined;
   onScheduleMeeting: () => void;
 }
 
@@ -585,7 +680,7 @@ function MeetingsTab({
           <>
             {/* Upcoming Meetings */}
             {projectMeetings.filter(
-              (meeting: any) => meeting.startTime > Date.now(),
+              (meeting) => meeting.startTime > Date.now(),
             ).length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -596,9 +691,9 @@ function MeetingsTab({
                 </div>
                 <div className="space-y-2">
                   {projectMeetings
-                    .filter((meeting: any) => meeting.startTime > Date.now())
+                    .filter((meeting) => meeting.startTime > Date.now())
                     .slice(0, 5)
-                    .map((meeting: any) => (
+                    .map((meeting) => (
                       <MeetingCard
                         key={meeting._id}
                         meeting={meeting}
@@ -617,7 +712,7 @@ function MeetingsTab({
 
             {/* Past Meetings */}
             {projectMeetings.filter(
-              (meeting: any) => meeting.endTime < Date.now(),
+              (meeting) => meeting.endTime < Date.now(),
             ).length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -628,9 +723,9 @@ function MeetingsTab({
                 </div>
                 <div className="space-y-2">
                   {projectMeetings
-                    .filter((meeting: any) => meeting.endTime < Date.now())
+                    .filter((meeting) => meeting.endTime < Date.now())
                     .slice(0, 3)
-                    .map((meeting: any) => (
+                    .map((meeting) => (
                       <MeetingCard
                         key={meeting._id}
                         meeting={meeting}
@@ -669,18 +764,18 @@ function MeetingsTab({
 }
 
 interface SettingsTabProps {
-  project: any;
-  availableTeams: any[] | undefined;
-  assignTeam: (args: { projectId: any; teamId: any }) => Promise<any>;
+  project: ProjectData;
+  availableTeams: TeamData[] | undefined;
+  assignTeam: (args: { projectId: Id<"projects">; teamId: Id<"teams"> }) => Promise<unknown>;
   updateProject: (args: {
-    projectId: any;
+    projectId: Id<"projects">;
     name?: string;
     description?: string;
     status?: string;
-    leadId?: any;
-  }) => Promise<any>;
-  deleteProject: (args: { projectId: any }) => Promise<any>;
-  members: any[] | undefined;
+    leadId?: Id<"users">;
+  }) => Promise<unknown>;
+  deleteProject: (args: { projectId: Id<"projects"> }) => Promise<unknown>;
+  members: MemberData[] | undefined;
   onNavigateBack: () => void;
 }
 
@@ -695,10 +790,10 @@ function SettingsTab({
 }: SettingsTabProps) {
   const [name, setName] = useState(project.name || "");
   const [description, setDescription] = useState(project.description || "");
-  const [workflowType, setWorkflowType] = useState(
+  const [workflowType, setWorkflowType] = useState<string>(
     project.settings?.workflowType || "kanban",
   );
-  const [status, setStatus] = useState(project.status || "active");
+  const [status, setStatus] = useState<string>(project.status || "active");
   const [leadId, setLeadId] = useState(project.leadId || "");
   const [saving, setSaving] = useState(false);
   const [archiving, setArchiving] = useState(false);
@@ -713,12 +808,12 @@ function SettingsTab({
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updates: any = { projectId: project._id };
+      const updates: { projectId: Id<"projects">; name?: string; description?: string; status?: string; leadId?: Id<"users"> } = { projectId: project._id };
       if (name !== project.name) updates.name = name;
       if (description !== project.description)
         updates.description = description;
       if (status !== project.status) updates.status = status;
-      if (leadId && leadId !== project.leadId) updates.leadId = leadId;
+      if (leadId && leadId !== project.leadId) updates.leadId = leadId as Id<"users">;
 
       await updateProject(updates);
       toast.success("Project settings saved");
@@ -845,8 +940,8 @@ function SettingsTab({
                 onChange={(v) => setLeadId(v)}
                 options={[
                   { value: "", label: "UNASSIGNED" },
-                  ...(members?.map((m: any) => ({
-                    value: m._id || m.userId,
+                  ...(members?.map((m) => ({
+                    value: m._id || m.userId || "",
                     label: (m.name || m.email || "Unknown").toUpperCase(),
                   })) || []),
                 ]}
@@ -913,7 +1008,7 @@ function SettingsTab({
                       try {
                         await assignTeam({
                           projectId: project._id,
-                          teamId: v as any,
+                          teamId: v as Id<"teams">,
                         });
                         toast.success("Team assigned successfully");
                       } catch (error) {
@@ -1071,7 +1166,7 @@ function TasksHeaderControls({
   taskFilters: TaskFiltersType;
   selectedSprintId: string | null;
   isCompactView: boolean;
-  allSprints: any[] | undefined;
+  allSprints: SprintData[] | undefined;
   dispatch: React.Dispatch<PageAction>;
 }) {
   return (
@@ -1286,14 +1381,14 @@ function TasksViewRenderer({
   handleDuplicateTask,
 }: {
   taskView: TaskViewType;
-  activeSprint: any;
-  filteredTasks: any[];
+  activeSprint: SprintData | null | undefined;
+  filteredTasks: TaskData[];
   projectId: string;
   workspaceId: string;
   dispatch: React.Dispatch<PageAction>;
-  handleEditTask: (task: any) => void;
-  handleDeleteTask: (task: any) => void;
-  handleDuplicateTask: (task: any) => void;
+  handleEditTask: (task: TaskData) => void;
+  handleDeleteTask: (task: TaskData) => void;
+  handleDuplicateTask: (task: TaskData) => void;
 }) {
   return (
     <>
@@ -1302,11 +1397,11 @@ function TasksViewRenderer({
           sprint={activeSprint}
           projectId={projectId}
           tasks={filteredTasks.filter(
-            (t: any) => t.sprintId === activeSprint._id,
-          )}
-          onTaskEdit={handleEditTask}
-          onTaskDelete={handleDeleteTask}
-          onTaskDuplicate={handleDuplicateTask}
+            (t) => t.sprintId === activeSprint._id,
+          ) as unknown as Parameters<typeof SprintBoard>[0]["tasks"]}
+          onTaskEdit={(task) => handleEditTask(task as unknown as TaskData)}
+          onTaskDelete={(task) => handleDeleteTask(task as unknown as TaskData)}
+          onTaskDuplicate={(task) => handleDuplicateTask(task as unknown as TaskData)}
         />
       )}
 
@@ -1322,25 +1417,25 @@ function TasksViewRenderer({
 
       {taskView === "list" && (
         <TaskList
-          tasks={filteredTasks}
+          tasks={filteredTasks as unknown as Parameters<typeof TaskList>[0]["tasks"]}
           projectId={projectId}
-          onTaskEdit={handleEditTask}
-          onTaskDelete={handleDeleteTask}
-          onTaskDuplicate={handleDuplicateTask}
+          onTaskEdit={(task) => handleEditTask(task as unknown as TaskData)}
+          onTaskDelete={(task) => handleDeleteTask(task as unknown as TaskData)}
+          onTaskDuplicate={(task) => handleDuplicateTask(task as unknown as TaskData)}
         />
       )}
 
       {taskView === "gantt" && (
         <GanttView
-          projectId={projectId as any}
-          workspaceId={workspaceId as any}
+          projectId={projectId as Id<"projects">}
+          workspaceId={workspaceId as Id<"workspaces">}
         />
       )}
 
       {taskView === "calendar" && (
         <CalendarView
-          projectId={projectId as any}
-          workspaceId={workspaceId as any}
+          projectId={projectId as Id<"projects">}
+          workspaceId={workspaceId as Id<"workspaces">}
         />
       )}
 
@@ -1368,20 +1463,20 @@ function TasksViewRenderer({
 // --- TasksTab (composed) ---
 
 interface TasksTabProps {
-  project: any;
+  project: ProjectData;
   workspaceId: string;
-  tasks: any[] | undefined;
-  allSprints: any[] | undefined;
-  activeSprint: any;
+  tasks: TaskData[] | undefined;
+  allSprints: SprintData[] | undefined;
+  activeSprint: SprintData | null | undefined;
   taskFilters: TaskFiltersType;
   taskView: TaskViewType;
   selectedSprintId: string | null;
   isCompactView: boolean;
   projectId: string;
   dispatch: React.Dispatch<PageAction>;
-  handleEditTask: (task: any) => void;
-  handleDeleteTask: (task: any) => void;
-  handleDuplicateTask: (task: any) => void;
+  handleEditTask: (task: TaskData) => void;
+  handleDeleteTask: (task: TaskData) => void;
+  handleDuplicateTask: (task: TaskData) => void;
 }
 
 function TasksTab({
@@ -1414,16 +1509,16 @@ function TasksTab({
 
   if (selectedSprintId && selectedSprintId !== "all") {
     filteredTasks = filteredTasks.filter(
-      (t: any) => t.sprintId === selectedSprintId,
+      (t) => t.sprintId === selectedSprintId,
     );
   } else if (selectedSprintId === null) {
-    filteredTasks = filteredTasks.filter((t: any) => !t.sprintId);
+    filteredTasks = filteredTasks.filter((t) => !t.sprintId);
   }
 
   if (taskFilters.search) {
     const searchLower = taskFilters.search.toLowerCase();
     filteredTasks = filteredTasks.filter(
-      (t: any) =>
+      (t) =>
         t.title?.toLowerCase().includes(searchLower) ||
         t.description?.toLowerCase().includes(searchLower) ||
         t.key?.toLowerCase().includes(searchLower),
@@ -1431,44 +1526,44 @@ function TasksTab({
   }
 
   if (taskFilters.status.length > 0) {
-    filteredTasks = filteredTasks.filter((t: any) =>
+    filteredTasks = filteredTasks.filter((t) =>
       taskFilters.status.includes(t.status),
     );
   }
 
   if (taskFilters.priority.length > 0) {
-    filteredTasks = filteredTasks.filter((t: any) =>
+    filteredTasks = filteredTasks.filter((t) =>
       taskFilters.priority.includes(t.priority),
     );
   }
 
   if (taskFilters.type.length > 0) {
-    filteredTasks = filteredTasks.filter((t: any) =>
+    filteredTasks = filteredTasks.filter((t) =>
       taskFilters.type.includes(t.type),
     );
   }
 
   if (taskFilters.assigneeIds.length > 0) {
     filteredTasks = filteredTasks.filter(
-      (t: any) =>
+      (t) =>
         (t.assigneeId && taskFilters.assigneeIds.includes(t.assigneeId)) ||
         (t.assigneeIds &&
-          t.assigneeIds.some((id: string) =>
-            taskFilters.assigneeIds.includes(id),
+          t.assigneeIds.some((id) =>
+            taskFilters.assigneeIds.includes(id as string),
           )),
     );
   }
 
   if (taskFilters.labels.length > 0) {
     filteredTasks = filteredTasks.filter(
-      (t: any) =>
+      (t) =>
         t.labels &&
         t.labels.some((label: string) => taskFilters.labels.includes(label)),
     );
   }
 
   if (taskFilters.dueDateRange.start || taskFilters.dueDateRange.end) {
-    filteredTasks = filteredTasks.filter((t: any) => {
+    filteredTasks = filteredTasks.filter((t) => {
       if (!t.dueDate) return false;
       const dueDate = new Date(t.dueDate);
       if (
@@ -1486,7 +1581,7 @@ function TasksTab({
   }
 
   if (taskFilters.hasTimeTracked !== undefined) {
-    filteredTasks = filteredTasks.filter((t: any) =>
+    filteredTasks = filteredTasks.filter((t) =>
       taskFilters.hasTimeTracked
         ? t.timeTracked && t.timeTracked > 0
         : !t.timeTracked || t.timeTracked === 0,
@@ -1495,24 +1590,24 @@ function TasksTab({
 
   if (taskFilters.isOverdue !== undefined && taskFilters.isOverdue) {
     filteredTasks = filteredTasks.filter(
-      (t: any) => t.dueDate && new Date(t.dueDate) < new Date(),
+      (t) => t.dueDate && new Date(t.dueDate) < new Date(),
     );
   }
 
   const sprintProgress = activeSprint
     ? (() => {
         const sprintTasks = filteredTasks.filter(
-          (t: any) => t.sprintId === activeSprint._id,
+          (t) => t.sprintId === activeSprint._id,
         );
         const totalTasks = sprintTasks.length;
         const completedTasks = sprintTasks.filter(
-          (t: any) => t.status === "done",
+          (t) => t.status === "done",
         ).length;
-        const blockedTasks = sprintTasks.filter((t: any) =>
+        const blockedTasks = sprintTasks.filter((t) =>
           isTaskBlocked(t, filteredTasks),
         ).length;
         const inReview = sprintTasks.filter(
-          (t: any) => t.status === "in_review",
+          (t) => t.status === "in_review",
         ).length;
         const percentage =
           totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -1662,7 +1757,7 @@ function WorkloadDistribution({
   teamTotals,
   dispatch,
 }: {
-  memberStats: any[];
+  memberStats: MemberStatData[];
   workloadMax: number;
   teamTotals: {
     totalTasks: number;
@@ -1670,7 +1765,7 @@ function WorkloadDistribution({
     inProgressTasks: number;
     avgProductivity: number;
   };
-  dispatch: React.Dispatch<any>;
+  dispatch: React.Dispatch<PageAction>;
 }) {
   return (
     <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
@@ -1713,7 +1808,7 @@ function WorkloadDistribution({
 
       <div className="p-4">
         <div className="space-y-2">
-          {memberStats.map((member: any) => {
+          {memberStats.map((member) => {
             const taskCount = member.tasksAssigned;
             const completionRate =
               member.tasksAssigned > 0
@@ -1789,6 +1884,9 @@ function WorkloadDistribution({
                               assigneeIds: [member._id],
                               labels: [],
                               dueDateRange: { start: null, end: null },
+                              createdDateRange: { start: null, end: null },
+                              hasTimeTracked: null,
+                              isOverdue: null,
                             },
                           });
                         }}
@@ -1810,6 +1908,9 @@ function WorkloadDistribution({
                               assigneeIds: [member._id],
                               labels: [],
                               dueDateRange: { start: null, end: null },
+                              createdDateRange: { start: null, end: null },
+                              hasTimeTracked: null,
+                              isOverdue: null,
                             },
                           });
                         }}
@@ -1942,11 +2043,11 @@ function WorkloadDistribution({
             </div>
           </div>
 
-          {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && (
+          {memberStats.filter((m) => m.tasksAssigned > 15).length > 0 && (
             <div className="flex items-center gap-2 p-2.5 mt-2 bg-[var(--theme-error)]/10 border-2 border-[var(--theme-error)]">
               <div className="w-2 h-2 bg-[var(--theme-error)] animate-pulse"></div>
               <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-error)] font-bold">
-                {memberStats.filter((m: any) => m.tasksAssigned > 15).length}{" "}
+                {memberStats.filter((m) => m.tasksAssigned > 15).length}{" "}
                 MEMBER(S) OVERLOADED - CONSIDER REDISTRIBUTING TASKS
               </span>
               <button className="ml-auto px-2 py-0.5 border-2 border-[var(--theme-error)] font-mono text-[10px] font-bold uppercase text-[var(--theme-error)] hover:bg-[var(--theme-error)] hover:text-[var(--theme-background)] transition-colors">
@@ -1968,11 +2069,11 @@ function TeamMembersGrid({
   updateMemberRole,
   dispatch,
 }: {
-  memberStats: any[];
+  memberStats: MemberStatData[];
   taskFilters: TaskFiltersType;
   projectId: string;
-  removeProjectMember: any;
-  updateMemberRole: any;
+  removeProjectMember: (args: { projectId: Id<"projects">; userId: Id<"users"> }) => Promise<unknown>;
+  updateMemberRole: (args: { projectId: Id<"projects">; userId: Id<"users">; role: string }) => Promise<unknown>;
   dispatch: React.Dispatch<PageAction>;
 }) {
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
@@ -2004,7 +2105,7 @@ function TeamMembersGrid({
         </div>
       </div>
 
-      {memberStats.map((member: any) => {
+      {memberStats.map((member) => {
         const prodColor =
           member.productivity >= 90
             ? "var(--theme-success)"
@@ -2109,14 +2210,14 @@ function TeamMembersGrid({
                           onClick={async () => {
                             try {
                               await updateMemberRole({
-                                projectId: projectId as any,
+                                projectId: projectId as Id<"projects">,
                                 userId: member._id,
                                 role,
                               });
                               toast.success(`Role updated to ${role}`);
-                            } catch (error: any) {
+                            } catch (error: unknown) {
                               toast.error(
-                                error.message || "Failed to update role",
+                                error instanceof Error ? error.message : "Failed to update role",
                               );
                             }
                             setRoleMenuId(null);
@@ -2142,12 +2243,12 @@ function TeamMembersGrid({
                     onClick={async () => {
                       try {
                         await removeProjectMember({
-                          projectId: projectId as any,
+                          projectId: projectId as Id<"projects">,
                           userId: member._id,
                         });
                         toast.success("Member removed");
-                      } catch (error: any) {
-                        toast.error(error.message || "Failed to remove member");
+                      } catch (error: unknown) {
+                        toast.error(error instanceof Error ? error.message : "Failed to remove member");
                       }
                       setConfirmRemoveId(null);
                     }}
@@ -2197,22 +2298,22 @@ function TeamQuickActions({
   bulkUpdateTasks,
   dispatch,
 }: {
-  project: any;
-  memberStats: any[];
+  project: ProjectData;
+  memberStats: MemberStatData[];
   teamTotals: {
     totalTasks: number;
     completedTasks: number;
     avgProductivity: number;
   };
-  bulkUpdateTasks: any;
+  bulkUpdateTasks: (args: { taskIds: Id<"tasks">[]; updates: Record<string, unknown>; autoRebalance?: { projectId: Id<"projects">; overloadedThreshold?: number; targetLoad?: number } }) => Promise<{ updatedCount: number }>;
   dispatch: React.Dispatch<PageAction>;
 }) {
   const [isRebalancing, setIsRebalancing] = useState(false);
   const overloadedCount = memberStats.filter(
-    (member: any) => member.tasksAssigned > 15,
+    (member) => member.tasksAssigned > 15,
   ).length;
   const idleCount = memberStats.filter(
-    (member: any) => member.tasksAssigned === 0,
+    (member) => member.tasksAssigned === 0,
   ).length;
 
   const runAutoRebalance = async (mode: "balanced" | "overloaded" | "idle") => {
@@ -2225,12 +2326,12 @@ function TeamQuickActions({
       const autoRebalanceArgs =
         mode === "overloaded"
           ? {
-              projectId: project._id as any,
+              projectId: project._id,
               overloadedThreshold: 15,
             }
           : mode === "idle"
             ? {
-                projectId: project._id as any,
+                projectId: project._id,
                 targetLoad: Math.max(
                   1,
                   Math.ceil(
@@ -2239,7 +2340,7 @@ function TeamQuickActions({
                 ),
               }
             : {
-                projectId: project._id as any,
+                projectId: project._id,
               };
 
       const result = await bulkUpdateTasks({
@@ -2256,8 +2357,8 @@ function TeamQuickActions({
       } else {
         toast("No eligible tasks found for automatic rebalance");
       }
-    } catch (error: any) {
-      toast.error(error?.message || "Automatic rebalance failed");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Automatic rebalance failed");
     } finally {
       setIsRebalancing(false);
     }
@@ -2351,7 +2452,7 @@ function TeamQuickActions({
                 totalTasks: teamTotals.totalTasks,
                 completedTasks: teamTotals.completedTasks,
                 avgProductivity: teamTotals.avgProductivity,
-                members: memberStats.map((m: any) => ({
+                members: memberStats.map((m) => ({
                   name: m.name,
                   role: m.role,
                   tasksAssigned: m.tasksAssigned,
@@ -2456,12 +2557,12 @@ function TeamQuickActions({
                 </button>
               )}
               {memberStats.filter(
-                (m: any) => m.productivity < 40 && m.tasksAssigned > 0,
+                (m) => m.productivity < 40 && m.tasksAssigned > 0,
               ).length > 0 && (
                 <div className="px-2.5 py-1 bg-[var(--theme-warning)]/20 border-2 border-[var(--theme-warning)] font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-warning)]">
                   {
                     memberStats.filter(
-                      (m: any) => m.productivity < 40 && m.tasksAssigned > 0,
+                      (m) => m.productivity < 40 && m.tasksAssigned > 0,
                     ).length
                   }{" "}
                   LOW VELOCITY
@@ -2478,14 +2579,14 @@ function TeamQuickActions({
 // --- TeamTab (composed) ---
 
 interface TeamTabProps {
-  project: any;
-  tasks: any[] | undefined;
+  project: ProjectData;
+  tasks: TaskData[] | undefined;
   taskFilters: TaskFiltersType;
   workspaceId: string;
   projectId: string;
-  bulkUpdateTasks: any;
-  removeProjectMember: any;
-  updateMemberRole: any;
+  bulkUpdateTasks: (args: { taskIds: Id<"tasks">[]; updates: Record<string, unknown>; autoRebalance?: { projectId: Id<"projects">; overloadedThreshold?: number; targetLoad?: number } }) => Promise<{ updatedCount: number }>;
+  removeProjectMember: (args: { projectId: Id<"projects">; userId: Id<"users"> }) => Promise<unknown>;
+  updateMemberRole: (args: { projectId: Id<"projects">; userId: Id<"users">; role: string }) => Promise<unknown>;
   dispatch: React.Dispatch<PageAction>;
 }
 
@@ -2503,9 +2604,9 @@ function TeamTab({
   const members = project?.members || [];
   const allTasks = tasks || [];
 
-  const memberStats = members.map((member: any) => {
+  const memberStats: MemberStatData[] = members.filter((m): m is MemberData => m !== null).map((member: MemberData) => {
     const memberTasks = allTasks.filter(
-      (task: any) =>
+      (task) =>
         task.assigneeId === member._id ||
         (task.assigneeIds && task.assigneeIds.includes(member._id)),
     );
@@ -2513,29 +2614,29 @@ function TeamTab({
     return {
       ...member,
       tasksAssigned: memberTasks.length,
-      tasksCompleted: memberTasks.filter((t: any) => t.status === "done")
+      tasksCompleted: memberTasks.filter((t) => t.status === "done")
         .length,
       tasksInProgress: memberTasks.filter(
-        (t: any) => t.status === "in_progress",
+        (t) => t.status === "in_progress",
       ).length,
-      tasksBlocked: memberTasks.filter((t: any) => isTaskBlocked(t, allTasks))
+      tasksBlocked: memberTasks.filter((t) => isTaskBlocked(t, allTasks))
         .length,
       tasksTodo: memberTasks.filter(
-        (t: any) => t.status === "todo" || t.status === "backlog",
+        (t) => t.status === "todo" || t.status === "backlog",
       ).length,
-      tasksInReview: memberTasks.filter((t: any) => t.status === "in_review")
+      tasksInReview: memberTasks.filter((t) => t.status === "in_review")
         .length,
       pullRequests: 0,
       commits: 0,
       hoursTracked:
         memberTasks.reduce(
-          (sum: number, t: any) => sum + (t.timeTracked || 0),
+          (sum: number, t: TaskData) => sum + (t.timeTracked || 0),
           0,
         ) / 3600000,
       productivity:
         memberTasks.length > 0
           ? Math.round(
-              (memberTasks.filter((t: any) => t.status === "done").length /
+              (memberTasks.filter((t) => t.status === "done").length /
                 memberTasks.length) *
                 100,
             )
@@ -2548,31 +2649,31 @@ function TeamTab({
 
   const workloadMax = Math.max(
     20,
-    ...memberStats.map((m: any) => m.tasksAssigned),
+    ...memberStats.map((m) => m.tasksAssigned),
   );
 
   const teamTotals = {
     totalTasks: memberStats.reduce(
-      (sum: number, m: any) => sum + m.tasksAssigned,
+      (sum: number, m: MemberStatData) => sum + m.tasksAssigned,
       0,
     ),
     completedTasks: memberStats.reduce(
-      (sum: number, m: any) => sum + m.tasksCompleted,
+      (sum: number, m: MemberStatData) => sum + m.tasksCompleted,
       0,
     ),
     inProgressTasks: memberStats.reduce(
-      (sum: number, m: any) => sum + m.tasksInProgress,
+      (sum: number, m: MemberStatData) => sum + m.tasksInProgress,
       0,
     ),
     hoursTracked: memberStats.reduce(
-      (sum: number, m: any) => sum + m.hoursTracked,
+      (sum: number, m: MemberStatData) => sum + m.hoursTracked,
       0,
     ),
     avgProductivity:
       memberStats.length > 0
         ? Math.round(
             memberStats.reduce(
-              (sum: number, m: any) => sum + m.productivity,
+              (sum: number, m: MemberStatData) => sum + m.productivity,
               0,
             ) / memberStats.length,
           )
@@ -2649,7 +2750,7 @@ function TeamTab({
 // --- Project Sidebar ---
 
 interface ProjectSidebarProps {
-  project: any;
+  project: ProjectData;
   workspaceId: string;
   activeTab: TabType;
   taskCount: number;
@@ -2797,11 +2898,11 @@ interface ProjectModalsProps {
   state: PageState;
   projectId: string;
   workspaceId: string;
-  project: any;
+  project: ProjectData;
   taskFilters: TaskFiltersType;
-  selectedTask: any;
+  selectedTask: TaskData | null;
   dispatch: React.Dispatch<PageAction>;
-  onDeleteTask: (task: any) => Promise<void>;
+  onDeleteTask: (task: TaskData) => Promise<void>;
 }
 
 function ProjectModals({
@@ -2874,11 +2975,11 @@ function ProjectModals({
       <ExpertiseSearchModal
         isOpen={state.showExpertiseSearch}
         onClose={() => dispatch({ type: "CLOSE_MODALS" })}
-        workspaceId={workspaceId as any}
+        workspaceId={workspaceId as Id<"workspaces">}
       />
       {state.showExpertiseMatrix && workspaceId && (
         <TeamExpertiseMatrix
-          workspaceId={workspaceId as any}
+          workspaceId={workspaceId as Id<"workspaces">}
           onClose={() => dispatch({ type: "CLOSE_MODALS" })}
           isModal={true}
         />
@@ -2892,31 +2993,31 @@ function ProjectModals({
 interface ProjectTabContentProps {
   activeTab: TabType;
   taskView: TaskViewType;
-  project: any;
+  project: ProjectData;
   workspaceId: string;
   projectId: string;
-  tasks: any[] | undefined;
-  allSprints: any[] | undefined;
-  activeSprint: any;
+  tasks: TaskData[] | undefined;
+  allSprints: SprintData[] | undefined;
+  activeSprint: SprintData | null | undefined;
   taskFilters: TaskFiltersType;
   selectedSprintId: string | null;
   isCompactView: boolean;
   healthCards: HealthCard[];
-  currentUser: any;
-  projectMeetings: any[] | undefined;
-  availableTeams: any[] | undefined;
-  assignTeam: any;
-  bulkUpdateTasks: any;
-  updateProject: any;
-  archiveProject: any;
-  removeProjectMember: any;
-  updateMemberRole: any;
-  members: any[] | undefined;
+  currentUser: UserData | null | undefined;
+  projectMeetings: MeetingData[] | undefined;
+  availableTeams: TeamData[] | undefined;
+  assignTeam: (args: { projectId: Id<"projects">; teamId: Id<"teams"> }) => Promise<unknown>;
+  bulkUpdateTasks: (args: { taskIds: Id<"tasks">[]; updates: Record<string, unknown>; autoRebalance?: { projectId: Id<"projects">; overloadedThreshold?: number; targetLoad?: number } }) => Promise<{ updatedCount: number }>;
+  updateProject: (args: { projectId: Id<"projects">; name?: string; description?: string; status?: string; leadId?: Id<"users"> }) => Promise<unknown>;
+  archiveProject: (args: { projectId: Id<"projects"> }) => Promise<unknown>;
+  removeProjectMember: (args: { projectId: Id<"projects">; userId: Id<"users"> }) => Promise<unknown>;
+  updateMemberRole: (args: { projectId: Id<"projects">; userId: Id<"users">; role: string }) => Promise<unknown>;
+  members: MemberData[] | undefined;
   dispatch: React.Dispatch<PageAction>;
   getStatusColor: (status: string) => string;
-  handleEditTask: (task: any) => void;
-  handleDeleteTask: (task: any) => Promise<void>;
-  handleDuplicateTask: (task: any) => Promise<void>;
+  handleEditTask: (task: TaskData) => void;
+  handleDeleteTask: (task: TaskData) => Promise<void>;
+  handleDuplicateTask: (task: TaskData) => Promise<void>;
   onNavigateBack: () => void;
 }
 
@@ -3013,7 +3114,7 @@ function ProjectTabContent({
         {activeTab === "github" && (
           <GitHubProjectTab
             project={project}
-            workspaceId={workspaceId as any}
+            workspaceId={workspaceId as Id<"workspaces">}
           />
         )}
         {activeTab === "meetings" && (
@@ -3062,7 +3163,7 @@ function ProjectTabContent({
 
 function useProjectShortcuts(
   activeTab: TabType,
-  selectedTask: any,
+  selectedTask: TaskData | null,
   currentContext: string | null,
   dispatch: React.Dispatch<PageAction>,
 ) {
@@ -3108,7 +3209,7 @@ function useProjectShortcuts(
         dispatch({
           type: "SET_CONTEXT",
           context:
-            currentContext === selectedTask.key ? null : selectedTask.key,
+            currentContext === selectedTask.key ? null : (selectedTask.key ?? null),
         });
         toast.success(
           currentContext === selectedTask.key
@@ -3188,7 +3289,7 @@ export default function ProjectManagementPage() {
   const createTask = useMutation(api.tasks.mutations.createTask);
   const assignTeam = useMutation(api.projects.mutations.assignTeam);
   const bulkUpdateTasks = useMutation(
-    api.tasks.mutations.bulkUpdateTasks as any,
+    api.tasks.mutations.bulkUpdateTasks,
   );
   const bulkDeleteTasks = useMutation(api.tasks.mutations.bulkDeleteTasks);
   const updateProject = useMutation(api.projects.mutations.updateProject);
@@ -3205,11 +3306,11 @@ export default function ProjectManagementPage() {
   );
 
   // Move task handlers to top level
-  const handleEditTask = (task: any) => {
+  const handleEditTask = (task: TaskData) => {
     dispatch({ type: "OPEN_EDIT_TASK", task });
   };
 
-  const handleDeleteTask = async (task: any) => {
+  const handleDeleteTask = async (task: TaskData) => {
     if (confirm(`Delete task "${task.title}"?`)) {
       try {
         await deleteTask({ taskId: task._id });
@@ -3220,7 +3321,7 @@ export default function ProjectManagementPage() {
     }
   };
 
-  const handleDuplicateTask = async (task: any) => {
+  const handleDuplicateTask = async (task: TaskData) => {
     try {
       await createTask({
         projectId: task.projectId,
@@ -3242,7 +3343,7 @@ export default function ProjectManagementPage() {
 
   const project = useQuery(
     api.projects.queries.getProject,
-    projectId ? { projectId: projectId as any } : "skip",
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   // Get current user from Convex
@@ -3254,7 +3355,7 @@ export default function ProjectManagementPage() {
   // Query tasks for this project - moved here to follow hooks rules
   const tasks = useQuery(
     api.tasks.queries.getProjectTasks,
-    projectId ? { projectId: projectId as any } : "skip",
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   // Cmd+A / Ctrl+A to select all visible tasks; Escape to clear selection
@@ -3278,25 +3379,25 @@ export default function ProjectManagementPage() {
   // Get current sprint for this project
   const activeSprint = useQuery(
     api.sprints.queries.getCurrentSprint,
-    projectId ? { projectId: projectId as any } : "skip",
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   // Get all sprints for this project
   const allSprints = useQuery(
     api.sprints.queries.getProjectSprints,
-    projectId ? { projectId: projectId as any } : "skip",
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   // Get project meetings
   const projectMeetings = useQuery(
     api.meetings.queries.getProjectMeetings,
-    projectId ? { projectId: projectId as any } : "skip",
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   // Get available teams
   const availableTeams = useQuery(
     api.teams.getTeams,
-    workspaceId ? { workspaceId: workspaceId as any } : "skip",
+    workspaceId ? { workspaceId: workspaceId as Id<"workspaces"> } : "skip",
   );
 
   useProjectShortcuts(activeTab, selectedTask, currentContext, dispatch);
@@ -3429,6 +3530,7 @@ export default function ProjectManagementPage() {
   const memberCount = project?.members?.length || 0;
 
   return (
+    <ErrorBoundary>
     <div className="h-screen bg-[var(--theme-background)] flex overflow-hidden">
       <ProjectSidebar
         project={project}
@@ -3461,11 +3563,11 @@ export default function ProjectManagementPage() {
         availableTeams={availableTeams}
         assignTeam={assignTeam}
         bulkUpdateTasks={bulkUpdateTasks}
-        updateProject={updateProject}
+        updateProject={(args) => updateProject(args as Parameters<typeof updateProject>[0])}
         archiveProject={archiveProject}
         removeProjectMember={removeProjectMember}
-        updateMemberRole={updateMemberRole}
-        members={project?.members}
+        updateMemberRole={(args) => updateMemberRole(args as Parameters<typeof updateMemberRole>[0])}
+        members={(project?.members?.filter((m) => m !== null) ?? undefined) as MemberData[] | undefined}
         dispatch={dispatch}
         getStatusColor={getStatusColor}
         handleEditTask={handleEditTask}
@@ -3485,19 +3587,19 @@ export default function ProjectManagementPage() {
       />
       <BulkActionBar
         selectedCount={selectedTaskIds.size}
-        selectedIds={Array.from(selectedTaskIds) as any}
+        selectedIds={Array.from(selectedTaskIds) as Id<"tasks">[]}
         onClearSelection={() => setSelectedTaskIds(new Set())}
         onStatusChange={async (status) => {
           await bulkUpdateTasks({
-            taskIds: Array.from(selectedTaskIds) as any,
-            updates: { status: status as any },
+            taskIds: Array.from(selectedTaskIds) as Id<"tasks">[],
+            updates: { status: status as "backlog" | "todo" | "in_progress" | "in_review" | "done" | "cancelled" },
           });
           setSelectedTaskIds(new Set());
         }}
         onPriorityChange={async (priority) => {
           await bulkUpdateTasks({
-            taskIds: Array.from(selectedTaskIds) as any,
-            updates: { priority: priority as any },
+            taskIds: Array.from(selectedTaskIds) as Id<"tasks">[],
+            updates: { priority: priority as "urgent" | "high" | "medium" | "low" },
           });
           setSelectedTaskIds(new Set());
         }}
@@ -3509,11 +3611,12 @@ export default function ProjectManagementPage() {
           )
             return;
           await bulkDeleteTasks({
-            taskIds: Array.from(selectedTaskIds) as any,
+            taskIds: Array.from(selectedTaskIds) as Id<"tasks">[],
           });
           setSelectedTaskIds(new Set());
         }}
       />
     </div>
+    </ErrorBoundary>
   );
 }

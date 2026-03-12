@@ -8,8 +8,8 @@ import {
   themeIntegrationValidator, 
   IntegrationTestingUtils,
   type SystemIntegrationResult 
-} from '../utils/themeIntegrationValidator'
-import { useTheme } from '../contexts/ThemeContext'
+} from '@/utils/themeIntegrationValidator'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface IntegrationValidationState {
   isRunning: boolean

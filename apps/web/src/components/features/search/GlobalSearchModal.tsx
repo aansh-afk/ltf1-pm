@@ -11,7 +11,7 @@ import {
   HiOutlineDocumentText
 } from 'react-icons/hi'
 import clsx from 'clsx'
-import BrutalModal from '../../ui/BrutalModal'
+import BrutalModal from '@/components/ui/BrutalModal'
 
 interface GlobalSearchModalProps {
   isOpen: boolean

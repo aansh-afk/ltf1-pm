@@ -12,7 +12,7 @@ export interface AIConfig {
   temperature?: number
 }
 
-export interface AIResponse<T = any> {
+export interface AIResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string
@@ -56,9 +56,69 @@ export interface CodeReviewSuggestion {
   confidence: number
 }
 
+/** Represents a task for assignment/estimation purposes */
+interface TaskInput {
+  title: string
+  description?: string
+  type?: string
+  labels?: string[]
+  attachments?: unknown[]
+  status?: string
+  priority?: number
+  timeSpent?: number
+  _id?: string
+}
+
+/** Represents a team member */
+interface TeamMember {
+  email: string
+  tasks?: TaskInput[]
+  hoursPerDay?: number
+}
+
+/** Represents a sprint */
+interface SprintInput {
+  endDate: number
+  startDate?: number
+  name?: string
+  goals?: string[]
+}
+
+/** Represents a pull request */
+interface PullRequestInput {
+  title?: string
+  description?: string
+  files?: string[]
+  diff?: string
+}
+
+/** Result of a natural language command */
+interface NLCommandResult {
+  action: string
+  entities: NLEntities
+}
+
+/** Entities extracted from natural language */
+interface NLEntities {
+  raw: string
+}
+
+/** Workload analysis for a team member */
+interface WorkloadAnalysis {
+  user: string
+  currentLoad: number
+  capacity: number
+  utilization: number
+  burnoutRisk: 'low' | 'medium' | 'high'
+  recommendations: string[]
+}
+
+/** Cache value type - union of all possible cached values */
+type CacheValue = TaskSuggestion
+
 class AIService {
   private config: AIConfig
-  private cache: Map<string, any> = new Map()
+  private cache: Map<string, CacheValue> = new Map()
 
   constructor(config?: AIConfig) {
     this.config = config || {
@@ -76,14 +136,14 @@ class AIService {
   async suggestTaskFromDescription(description: string): Promise<AIResponse<TaskSuggestion>> {
     const cacheKey = `task-suggestion:${description}`
     if (this.cache.has(cacheKey)) {
-      return { success: true, data: this.cache.get(cacheKey) }
+      return { success: true, data: this.cache.get(cacheKey) as TaskSuggestion }
     }
 
     try {
       const prompt = `
         Analyze this task description and provide structured task details:
         "${description}"
-        
+
         Return a JSON object with:
         - title: concise task title
         - description: detailed description
@@ -107,12 +167,13 @@ class AIService {
 
       this.cache.set(cacheKey, suggestion)
       return { success: true, data: suggestion, confidence: 0.85 }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { success: false, error: message }
     }
   }
 
-  async suggestAssignee(task: any, team: any[]): Promise<AIResponse<string[]>> {
+  async suggestAssignee(task: TaskInput, team: TeamMember[]): Promise<AIResponse<string[]>> {
     try {
       // Analyze task requirements and team capabilities
       const suggestions = team
@@ -125,17 +186,18 @@ class AIService {
         .map(s => s.user.email)
 
       return { success: true, data: suggestions, confidence: 0.78 }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { success: false, error: message }
     }
   }
 
-  async estimateTaskComplexity(task: any): Promise<AIResponse<number>> {
+  async estimateTaskComplexity(task: TaskInput): Promise<AIResponse<number>> {
     try {
       const factors = {
         titleLength: task.title.length,
         descriptionLength: (task.description || '').length,
-        hasAttachments: task.attachments?.length > 0,
+        hasAttachments: (task.attachments?.length ?? 0) > 0,
         type: task.type,
         labels: task.labels?.length || 0
       }
@@ -148,8 +210,9 @@ class AIService {
       if (factors.labels > 3) points += 1
 
       return { success: true, data: Math.min(points, 13), confidence: 0.72 }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { success: false, error: message }
     }
   }
 
@@ -157,12 +220,12 @@ class AIService {
   // SPRINT INTELLIGENCE
   // ============================================
 
-  async predictSprintCompletion(sprint: any, tasks: any[]): Promise<AIResponse<SprintPrediction>> {
+  async predictSprintCompletion(sprint: SprintInput, tasks: TaskInput[]): Promise<AIResponse<SprintPrediction>> {
     try {
       const velocity = this.calculateVelocity(tasks)
       const remainingWork = tasks.filter(t => t.status !== 'done').length
       const daysRemaining = this.calculateDaysRemaining(sprint)
-      
+
       const prediction: SprintPrediction = {
         completionDate: this.predictCompletionDate(velocity, remainingWork, daysRemaining),
         velocity,
@@ -172,18 +235,20 @@ class AIService {
       }
 
       return { success: true, data: prediction }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { success: false, error: message }
     }
   }
 
-  async optimizeSprintBacklog(availableTasks: any[], capacity: number): Promise<AIResponse<any[]>> {
+  async optimizeSprintBacklog(availableTasks: TaskInput[], capacity: number): Promise<AIResponse<TaskInput[]>> {
     try {
       // Knapsack problem: maximize value within capacity
       const optimized = this.knapsackOptimization(availableTasks, capacity)
       return { success: true, data: optimized, confidence: 0.88 }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { success: false, error: message }
     }
   }
 
@@ -191,7 +256,7 @@ class AIService {
   // CODE REVIEW INTELLIGENCE
   // ============================================
 
-  async suggestReviewer(pullRequest: any, team: any[]): Promise<AIResponse<CodeReviewSuggestion[]>> {
+  async suggestReviewer(pullRequest: PullRequestInput, team: TeamMember[]): Promise<AIResponse<CodeReviewSuggestion[]>> {
     try {
       const suggestions: CodeReviewSuggestion[] = team
         .map(member => ({
@@ -206,8 +271,9 @@ class AIService {
         .slice(0, 3)
 
       return { success: true, data: suggestions }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { success: false, error: message }
     }
   }
 
@@ -228,8 +294,9 @@ class AIService {
       `.trim()
 
       return { success: true, data: summary, confidence: 0.9 }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { success: false, error: message }
     }
   }
 
@@ -237,28 +304,29 @@ class AIService {
   // PREDICTIVE ANALYTICS
   // ============================================
 
-  async predictProjectCompletion(project: any, tasks: any[]): Promise<AIResponse<Date>> {
+  async predictProjectCompletion(project: { name?: string }, tasks: TaskInput[]): Promise<AIResponse<Date>> {
     try {
       const velocity = this.calculateProjectVelocity(tasks)
       const remainingWork = tasks.filter(t => t.status !== 'done').length
       const predictedDays = Math.ceil(remainingWork / velocity)
-      
+
       const completionDate = new Date()
       completionDate.setDate(completionDate.getDate() + predictedDays)
 
-      return { 
-        success: true, 
-        data: completionDate, 
+      return {
+        success: true,
+        data: completionDate,
         confidence: this.calculatePredictionConfidence(tasks)
       }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { success: false, error: message }
     }
   }
 
-  async analyzeTeamWorkload(team: any[]): Promise<AIResponse<any>> {
+  async analyzeTeamWorkload(team: TeamMember[]): Promise<AIResponse<WorkloadAnalysis[]>> {
     try {
-      const analysis = team.map(member => ({
+      const analysis: WorkloadAnalysis[] = team.map(member => ({
         user: member.email,
         currentLoad: this.calculateWorkload(member),
         capacity: this.estimateCapacity(member),
@@ -268,8 +336,9 @@ class AIService {
       }))
 
       return { success: true, data: analysis }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { success: false, error: message }
     }
   }
 
@@ -277,15 +346,16 @@ class AIService {
   // NATURAL LANGUAGE PROCESSING
   // ============================================
 
-  async processNaturalCommand(command: string): Promise<AIResponse<any>> {
+  async processNaturalCommand(command: string): Promise<AIResponse<NLCommandResult>> {
     try {
       const intent = this.detectIntent(command)
       const entities = this.extractEntities(command)
-      
+
       const result = await this.executeIntent(intent, entities)
       return { success: true, data: result }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { success: false, error: message }
     }
   }
 
@@ -294,13 +364,13 @@ class AIService {
       const docs = `
 /**
  * AIService - Core AI orchestration for LTF1
- * 
+ *
  * This service provides intelligent features including:
  * - Task suggestion and estimation
  * - Sprint prediction and optimization
  * - Code review assistance
  * - Team workload analysis
- * 
+ *
  * @example
  * const ai = new AIService()
  * const suggestion = await ai.suggestTaskFromDescription("Fix login bug")
@@ -308,8 +378,9 @@ class AIService {
       `.trim()
 
       return { success: true, data: docs }
-    } catch (error: any) {
-      return { success: false, error: error.message }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      return { success: false, error: message }
     }
   }
 
@@ -356,7 +427,7 @@ class AIService {
   private extractLabels(description: string): string[] {
     const labels: string[] = []
     const lower = description.toLowerCase()
-    
+
     if (lower.includes('frontend')) labels.push('frontend')
     if (lower.includes('backend')) labels.push('backend')
     if (lower.includes('api')) labels.push('api')
@@ -364,21 +435,21 @@ class AIService {
     if (lower.includes('ui') || lower.includes('ux')) labels.push('ui/ux')
     if (lower.includes('performance')) labels.push('performance')
     if (lower.includes('security')) labels.push('security')
-    
+
     return labels
   }
 
-  private calculateAssignmentScore(task: any, member: any): number {
+  private calculateAssignmentScore(task: TaskInput, member: TeamMember): number {
     // Simple scoring based on workload and expertise
     return Math.random() * 100 // Replace with actual calculation
   }
 
-  private calculateVelocity(tasks: any[]): number {
+  private calculateVelocity(tasks: TaskInput[]): number {
     const completedTasks = tasks.filter(t => t.status === 'done')
     return completedTasks.length / 7 // tasks per day
   }
 
-  private calculateDaysRemaining(sprint: any): number {
+  private calculateDaysRemaining(sprint: SprintInput): number {
     const now = Date.now()
     const end = sprint.endDate
     return Math.ceil((end - now) / (1000 * 60 * 60 * 24))
@@ -391,9 +462,9 @@ class AIService {
     return date
   }
 
-  private identifySprintRisks(sprint: any, tasks: any[]): Risk[] {
+  private identifySprintRisks(sprint: SprintInput, tasks: TaskInput[]): Risk[] {
     const risks: Risk[] = []
-    
+
     // Check velocity risk
     const velocity = this.calculateVelocity(tasks)
     if (velocity < 2) {
@@ -409,7 +480,7 @@ class AIService {
     return risks
   }
 
-  private generateSprintRecommendations(sprint: any, tasks: any[]): string[] {
+  private generateSprintRecommendations(sprint: SprintInput, tasks: TaskInput[]): string[] {
     return [
       'Focus on completing high-priority items first',
       'Consider daily check-ins to maintain momentum',
@@ -417,43 +488,43 @@ class AIService {
     ]
   }
 
-  private knapsackOptimization(tasks: any[], capacity: number): any[] {
+  private knapsackOptimization(tasks: TaskInput[], capacity: number): TaskInput[] {
     // Simple greedy algorithm (replace with dynamic programming)
     return tasks
       .sort((a, b) => (b.priority || 0) - (a.priority || 0))
       .slice(0, Math.floor(capacity / 3))
   }
 
-  private calculateProjectVelocity(tasks: any[]): number {
+  private calculateProjectVelocity(tasks: TaskInput[]): number {
     return 3 // tasks per day (simplified)
   }
 
-  private calculatePredictionConfidence(tasks: any[]): number {
+  private calculatePredictionConfidence(tasks: TaskInput[]): number {
     // More completed tasks = higher confidence
     const completionRate = tasks.filter(t => t.status === 'done').length / tasks.length
     return Math.min(0.5 + completionRate * 0.5, 0.95)
   }
 
-  private calculateWorkload(member: any): number {
+  private calculateWorkload(member: TeamMember): number {
     return Math.floor(Math.random() * 10) // Replace with actual calculation
   }
 
-  private estimateCapacity(member: any): number {
+  private estimateCapacity(member: TeamMember): number {
     return 8 // hours per day
   }
 
-  private calculateUtilization(member: any): number {
+  private calculateUtilization(member: TeamMember): number {
     return Math.random() * 100 // percentage
   }
 
-  private assessBurnoutRisk(member: any): 'low' | 'medium' | 'high' {
+  private assessBurnoutRisk(member: TeamMember): 'low' | 'medium' | 'high' {
     const util = this.calculateUtilization(member)
     if (util > 90) return 'high'
     if (util > 70) return 'medium'
     return 'low'
   }
 
-  private generateWorkloadRecommendations(member: any): string[] {
+  private generateWorkloadRecommendations(member: TeamMember): string[] {
     return ['Consider task redistribution', 'Schedule regular breaks']
   }
 
@@ -465,11 +536,11 @@ class AIService {
     return 'unknown'
   }
 
-  private extractEntities(command: string): any {
+  private extractEntities(command: string): NLEntities {
     return { raw: command }
   }
 
-  private async executeIntent(intent: string, entities: any): Promise<any> {
+  private async executeIntent(intent: string, entities: NLEntities): Promise<NLCommandResult> {
     switch (intent) {
       case 'create':
         return { action: 'create_task', entities }
@@ -480,22 +551,22 @@ class AIService {
     }
   }
 
-  private getReviewerReason(pr: any, member: any): string {
+  private getReviewerReason(pr: PullRequestInput, member: TeamMember): string {
     return 'Expert in this area with previous experience'
   }
 
-  private getExpertiseAreas(member: any): string[] {
+  private getExpertiseAreas(member: TeamMember): string[] {
     return ['React', 'TypeScript', 'Node.js']
   }
 
-  private checkAvailability(member: any): 'immediate' | 'soon' | 'busy' {
+  private checkAvailability(member: TeamMember): 'immediate' | 'soon' | 'busy' {
     const workload = this.calculateWorkload(member)
     if (workload < 5) return 'immediate'
     if (workload < 8) return 'soon'
     return 'busy'
   }
 
-  private calculateReviewerScore(pr: any, member: any): number {
+  private calculateReviewerScore(pr: PullRequestInput, member: TeamMember): number {
     return 0.5 + Math.random() * 0.5
   }
 }
