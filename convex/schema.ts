@@ -2099,6 +2099,31 @@ export default defineSchema({
     .index("by_sprint_and_date", ["sprintId", "date"])
     .index("by_project", ["projectId"]),
 
+  // Git Workflow Configs — per-project configurable git event → status mappings
+  gitWorkflowConfigs: defineTable({
+    projectId: v.id("projects"),
+    preset: v.union(
+      v.literal("agile"),
+      v.literal("kanban"),
+      v.literal("custom"),
+    ),
+    statusMappings: v.object({
+      branchCreated: v.optional(v.string()),
+      commitPushed: v.optional(v.string()),
+      prOpened: v.optional(v.string()),
+      prMerged: v.optional(v.string()),
+      prClosed: v.optional(v.string()),
+      prApproved: v.optional(v.string()),
+      prReviewRequested: v.optional(v.string()),
+    }),
+    conventionalCommits: v.object({
+      enabled: v.boolean(),
+      typeMappings: v.optional(v.record(v.string(), v.string())),
+    }),
+    branchPattern: v.optional(v.string()),
+    autoCompleteSprint: v.boolean(),
+  }).index("by_projectId", ["projectId"]),
+
   subscriptions: defineTable({
     workspaceId: v.id("workspaces"),
     polarCustomerId: v.string(),

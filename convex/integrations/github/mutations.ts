@@ -2,6 +2,18 @@ import { v } from "convex/values";
 import { mutation, internalMutation } from "../../_generated/server";
 import { internal } from "../../_generated/api";
 import { getCurrentUserOrThrow } from "../../lib/auth";
+import { Id } from "../../_generated/dataModel";
+
+// Task status union type matching the schema
+type TaskStatus = "backlog" | "todo" | "in_progress" | "in_review" | "done" | "cancelled";
+
+const VALID_TASK_STATUSES: ReadonlyArray<string> = [
+  "backlog", "todo", "in_progress", "in_review", "done", "cancelled",
+];
+
+function isValidTaskStatus(status: string): status is TaskStatus {
+  return VALID_TASK_STATUSES.includes(status);
+}
 
 // Connect a GitHub repository to a project
 export const connectRepositoryToProject = mutation({
@@ -350,33 +362,81 @@ export const linkPullRequestToTasks = internalMutation({
           );
 
           // Get action description and handle auto status transitions
+          // Look up the project's git workflow config for configurable status mappings
           let actionDescription = `${args.action} pull request #${args.pullRequest.number}`;
           let activityType: "task_completed" | "task_updated" | "task_status_changed" = "task_updated";
 
           if (args.action === "closed" && args.pullRequest.mergedAt) {
-            actionDescription = `merged pull request #${args.pullRequest.number} — task auto-completed`;
-            activityType = "task_completed";
-            // Update task status to done on merge
-            await ctx.db.patch(task._id, {
-              status: "done",
-              completedAt: Date.now(),
-              updatedAt: Date.now(),
-            });
-            console.log(`[PR Merge] Auto-transitioned task ${projectKey}-${taskNumber} to "done" via PR #${args.pullRequest.number}`);
+            // Look up configured status for prMerged event
+            const mergedStatus: string | null = await ctx.runQuery(
+              internal.gitWorkflow.queries.getEffectiveStatusMapping,
+              { projectId: project._id, gitEvent: "prMerged" },
+            );
+
+            if (mergedStatus && isValidTaskStatus(mergedStatus)) {
+              actionDescription = `merged pull request #${args.pullRequest.number} — task auto-transitioned to "${mergedStatus}"`;
+              activityType = mergedStatus === "done" ? "task_completed" : "task_status_changed";
+
+              const patchData: Record<string, unknown> = {
+                status: mergedStatus,
+                updatedAt: Date.now(),
+              };
+              if (mergedStatus === "done") {
+                patchData.completedAt = Date.now();
+              }
+              await ctx.db.patch(task._id, patchData);
+              console.log(`[PR Merge] Auto-transitioned task ${projectKey}-${taskNumber} to "${mergedStatus}" via PR #${args.pullRequest.number}`);
+
+              // Check if sprint should be auto-completed (Task 4)
+              const shouldAutoComplete: boolean = await ctx.runQuery(
+                internal.gitWorkflow.queries.getAutoCompleteSprintSetting,
+                { projectId: project._id },
+              );
+
+              if (shouldAutoComplete && task.sprintId) {
+                await ctx.runMutation(
+                  internal.gitWorkflow.mutations.checkAndAutoCompleteSprint,
+                  { taskId: task._id, projectId: project._id },
+                );
+              }
+            }
           } else if (
             (args.action === "opened" || args.action === "ready_for_review") &&
             !args.pullRequest.draft &&
             task.status !== "done" &&
             task.status !== "cancelled"
           ) {
-            // Move task to "in_review" when a non-draft PR is opened or marked ready
-            actionDescription = `opened pull request #${args.pullRequest.number} — task moved to review`;
-            activityType = "task_status_changed";
-            await ctx.db.patch(task._id, {
-              status: "in_review",
-              updatedAt: Date.now(),
-            });
-            console.log(`[PR Opened] Auto-transitioned task ${projectKey}-${taskNumber} to "in_review" via PR #${args.pullRequest.number}`);
+            // Look up configured status for prOpened event
+            const openedStatus: string | null = await ctx.runQuery(
+              internal.gitWorkflow.queries.getEffectiveStatusMapping,
+              { projectId: project._id, gitEvent: "prOpened" },
+            );
+
+            if (openedStatus && isValidTaskStatus(openedStatus)) {
+              actionDescription = `opened pull request #${args.pullRequest.number} — task moved to "${openedStatus}"`;
+              activityType = "task_status_changed";
+              await ctx.db.patch(task._id, {
+                status: openedStatus,
+                updatedAt: Date.now(),
+              });
+              console.log(`[PR Opened] Auto-transitioned task ${projectKey}-${taskNumber} to "${openedStatus}" via PR #${args.pullRequest.number}`);
+            }
+          } else if (args.action === "closed" && !args.pullRequest.mergedAt) {
+            // PR closed without merge — look up prClosed config
+            const closedStatus: string | null = await ctx.runQuery(
+              internal.gitWorkflow.queries.getEffectiveStatusMapping,
+              { projectId: project._id, gitEvent: "prClosed" },
+            );
+
+            if (closedStatus && isValidTaskStatus(closedStatus) && task.status !== "done" && task.status !== "cancelled") {
+              actionDescription = `closed pull request #${args.pullRequest.number} — task moved to "${closedStatus}"`;
+              activityType = "task_status_changed";
+              await ctx.db.patch(task._id, {
+                status: closedStatus,
+                updatedAt: Date.now(),
+              });
+              console.log(`[PR Closed] Auto-transitioned task ${projectKey}-${taskNumber} to "${closedStatus}" via PR #${args.pullRequest.number}`);
+            }
           }
 
           // Log activity with resolved user
