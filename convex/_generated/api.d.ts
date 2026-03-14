@@ -54,6 +54,8 @@ import type * as customFields from "../customFields.js";
 import type * as dashboard_queries from "../dashboard/queries.js";
 import type * as developers_mutations from "../developers/mutations.js";
 import type * as developers_queries from "../developers/queries.js";
+import type * as documents_aiTemplates from "../documents/aiTemplates.js";
+import type * as documents from "../documents.js";
 import type * as email_cronHelpers from "../email/cronHelpers.js";
 import type * as email_send from "../email/send.js";
 import type * as email_templates from "../email/templates.js";
@@ -180,6 +182,8 @@ declare const fullApi: ApiFromModules<{
   "dashboard/queries": typeof dashboard_queries;
   "developers/mutations": typeof developers_mutations;
   "developers/queries": typeof developers_queries;
+  "documents/aiTemplates": typeof documents_aiTemplates;
+  documents: typeof documents;
   "email/cronHelpers": typeof email_cronHelpers;
   "email/send": typeof email_send;
   "email/templates": typeof email_templates;
