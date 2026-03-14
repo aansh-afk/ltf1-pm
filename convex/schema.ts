@@ -1782,11 +1782,18 @@ export default defineSchema({
     createdBy: v.id("users"),
     createdAt: v.number(),
     updatedAt: v.number(),
+    // Document/Pages fields (additive — no migration needed)
+    content: v.optional(v.any()),
+    icon: v.optional(v.string()),
+    coverImage: v.optional(v.string()),
+    isArchived: v.optional(v.boolean()),
+    parentId: v.optional(v.id("whiteboards")),
   })
     .index("by_workspace", ["workspaceId"])
     .index("by_project", ["projectId"])
     .index("by_meeting", ["meetingId"])
-    .index("by_creator", ["createdBy"]),
+    .index("by_creator", ["createdBy"])
+    .index("by_parent", ["parentId"]),
 
   whiteboardSnapshots: defineTable({
     whiteboardId: v.id("whiteboards"),

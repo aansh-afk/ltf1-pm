@@ -301,10 +301,10 @@ export default function Footer() {
                   </li>
                   <li>
                     <Link
-                      to="/whiteboard"
+                      to="/pages"
                       className="text-sm font-['Inter',sans-serif] text-[#9CA3AF] hover:text-[#F9FAFB] transition-colors duration-200"
                     >
-                      Whiteboard
+                      Pages
                     </Link>
                   </li>
                 </>
