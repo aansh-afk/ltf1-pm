@@ -22,7 +22,6 @@ import {
   getRecentCommits,
   parseConventionalCommit,
   conventionalTypeToLabel,
-  type ConventionalCommitType,
 } from '../../lib/git.js';
 
 interface NotesOptions {
