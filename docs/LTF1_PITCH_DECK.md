@@ -193,7 +193,126 @@ AI Estimate: 2 story points
 
 ---
 
-## SLIDE 8: Beyond Git — Full Project Management
+## SLIDE 8: Configurable Git Workflows — No Other Tool Does This
+
+### Content
+- **Headline**: "Your workflow. Your rules. Per project."
+
+**Key message**: LTF1 is the ONLY PM tool with configurable git event → task status mappings. Not hardcoded. Not one-size-fits-all. Each project defines its own git workflow.
+
+**Visual: Workflow Configuration Panel**
+```
+┌─── GIT WORKFLOW CONFIG ── Project: backend-api ──────────┐
+│                                                           │
+│  PRESET: [Agile]  [Kanban]  [Custom]                     │
+│                                                           │
+│  ── STATUS MAPPINGS ──────────────────────────────────── │
+│  Branch created    →  [in_progress  ▾]                   │
+│  PR opened         →  [in_review    ▾]                   │
+│  PR merged         →  [done         ▾]                   │
+│  PR closed         →  [no change    ▾]                   │
+│  Commit pushed     →  [no change    ▾]                   │
+│                                                           │
+│  ── CONVENTIONAL COMMITS ─────────────────────────────── │
+│  [ON] Parse feat: fix: chore: refactor: test: docs:      │
+│  feat: → feature  |  fix: → bug  |  chore: → chore      │
+│                                                           │
+│  ── BRANCH PATTERN ───────────────────────────────────── │
+│  (feature|fix|hotfix)/[A-Z]+-\d+.*                       │
+│  ✓ feature/PROJ-142-add-dashboard                        │
+│  ✗ my-branch                                             │
+│                                                           │
+│  ── SPRINT AUTOMATION ────────────────────────────────── │
+│  [ON] Auto-complete sprint when all tasks merged          │
+│                                                           │
+└───────────────────────────────────────────────────────────┘
+```
+
+**What you can configure per project:**
+- Which git events trigger which status transitions
+- Conventional commit type → task type mapping
+- Branch naming pattern enforcement (with CLI pre-push hook)
+- Auto-complete sprint when all linked PRs merge
+- Workflow presets (Agile, Kanban, Custom)
+
+### Speaker Notes
+> "This is something no other project management tool offers. In Jira, the git integration is a plugin that does one thing: show commits in a sidebar. You can't configure what happens when a PR merges. In Linear, there's no git workflow configuration at all. In LTF1, every project gets its own git workflow config. You define which git events trigger which status transitions. Your backend team might use 'PR merged → done' while your frontend team uses 'PR merged → in_staging'. You enable conventional commit parsing so 'feat: add dashboard' automatically tags the task as a feature. You set a branch naming pattern that your CLI pre-push hook enforces. And you can turn on sprint auto-completion — when every task in the sprint has a merged PR, the sprint closes itself. This is configurable, per project, through the UI or the CLI."
+
+---
+
+## SLIDE 9: Terminal-First — The LTF1 CLI
+
+### Content
+- **Headline**: "Never leave your terminal"
+
+**LTF1 CLI — 16+ command categories, full CRUD, background daemon**
+
+```
+$ ltf task create "Fix auth timeout" --priority high --assign @sarah
+  ✓ Created PROJ-142: Fix auth timeout (assigned to sarah)
+
+$ ltf sprint status
+  Sprint 23 — 8/14 tasks done — 4 days remaining
+  ┌────────────────────────────────────────────────┐
+  │ done     ████████████░░░░░░░░░░░░░░  57%       │
+  │ review   ████░░░░░░░░░░░░░░░░░░░░░░  14%       │
+  │ progress ██████░░░░░░░░░░░░░░░░░░░░  21%       │
+  │ backlog  ██░░░░░░░░░░░░░░░░░░░░░░░░   7%       │
+  └────────────────────────────────────────────────┘
+
+$ ltf git status
+  Branch: feature/PROJ-142-fix-auth-timeout
+  Linked task: PROJ-142 (in_progress)
+  Commits: 3 ahead of main
+  Hooks: post-commit ✓  pre-push ✓
+
+$ ltf pr create
+  ✓ Generated PR: [PROJ-142] Fix auth timeout
+  ✓ Body auto-filled from task + commits
+  ✓ Opening GitHub...
+
+$ ltf release notes --sprint 23
+  ## Release Notes — Sprint 23
+  ### Features
+  - Add user dashboard (#142) — @sarah
+  ### Bug Fixes
+  - Fix auth timeout (#143) — @mike
+  3 contributors · 5 PRs · 23 commits
+
+$ ltf time start PROJ-142
+  ⏱ Timer started on PROJ-142: Fix auth timeout
+```
+
+**CLI Command Categories:**
+| Category | Commands | Description |
+|---|---|---|
+| `task` | create, list, view, update, done, assign, comment, delete, mine | Full task CRUD |
+| `sprint` | list, create, add, remove, status, backlog, close | Sprint lifecycle |
+| `git` | link, sync, status, hooks install/uninstall, config | Git workflow management |
+| `pr` | create | Auto-generate PR with task context |
+| `release` | notes | Generate release notes from merged PRs |
+| `time` | start, stop, log, report, status | Time tracking |
+| `ai` | suggest, analyze, describe, breakdown | AI assistance |
+| `daemon` | start, stop, status, logs | Background git watcher |
+| `notifications` | show, read | Notification management |
+| `auth` | login, logout, status | Authentication |
+| `workspace` | select, list | Workspace management |
+| `project` | select, list, detect, info | Project management |
+| `search` | (query) | Search tasks |
+| `config` | (settings) | Preferences |
+| `completions` | (shell) | Shell autocomplete |
+
+**Bonus: Full TUI (Terminal User Interface)**
+- React-based interactive terminal UI (via Ink)
+- Browse tasks, sprints, and boards without leaving the terminal
+- Real-time updates via Convex websocket
+
+### Speaker Notes
+> "Here's something neither Jira nor Linear can touch: a full CLI and TUI. LTF1 ships with a complete command-line interface — 16 command categories, full CRUD on tasks and sprints, time tracking, AI assistance, and a background daemon that watches your git activity. You can create tasks, check sprint status, generate release notes, and even create PRs with auto-filled descriptions — all without leaving your terminal. We also have a full Terminal User Interface built with Ink — it's a React-based interactive terminal app where you can browse your board, manage tasks, and see real-time updates. For developers who live in the terminal, this is a game-changer. Linear has a read-only CLI. Jira has nothing. LTF1 gives you full power from the command line."
+
+---
+
+## SLIDE 10: Beyond Git — Full Project Management
 
 ### Content
 - **Headline**: "Everything you need. Nothing you don't."
@@ -203,9 +322,9 @@ AI Estimate: 2 story points
 | Sprint Management | Task Management | Team Collaboration | Analytics |
 |---|---|---|---|
 | Sprint planning & goals | Kanban, List, Calendar, Table views | Real-time chat channels | Burndown charts |
-| Backlog management | Custom fields | Meeting scheduling | Velocity tracking |
+| Backlog management | Custom fields | Meeting scheduling | Git-based velocity |
 | Auto burndown charts | Bulk operations | Collaborative whiteboard | Cycle time metrics |
-| Velocity tracking | Labels, priorities, attachments | @mentions & comments | Time tracking reports |
+| Sprint auto-complete | Labels, priorities, attachments | @mentions & comments | Time tracking reports |
 
 **Additional features list:**
 - Workflow automation (cron triggers, conditional logic, multi-step actions)
@@ -216,13 +335,16 @@ AI Estimate: 2 story points
 - File attachments & storage
 - Developer profiles with skill tracking
 - Custom integrations via webhooks & API
+- PR review comments synced to task comments
+- Auto-generated release notes from merged PRs
+- Conventional commit parsing and task type tagging
 
 ### Speaker Notes
-> "But LTF1 isn't just a git integration layer. It's a complete project management platform. You get sprint management with auto-generated burndown charts. Task management with Kanban, list, calendar, and table views. Team collaboration with real-time chat, meetings, and a collaborative whiteboard. Workflow automation so you can set up triggers like 'when a task moves to Done, notify the product channel in Slack.' Time tracking for teams that bill clients. And because we're built for developers, everything is keyboard-accessible with a Cmd+K command palette. You don't need Jira AND Slack AND Notion AND a time tracker. LTF1 is one tool."
+> "LTF1 isn't just a git integration layer. It's a complete project management platform. Sprint management with auto-generated burndown charts — and sprints that auto-complete when all PRs merge. Task management with Kanban, list, calendar, and table views. Team collaboration with real-time chat, meetings, and a collaborative whiteboard. PR review comments from GitHub sync directly to task comments, so your code review discussions live alongside your task discussions. Release notes generate automatically from your merged PRs grouped by conventional commit type. Workflow automation. Time tracking. You don't need Jira AND Slack AND Notion AND a time tracker. LTF1 is one tool."
 
 ---
 
-## SLIDE 9: Integrations
+## SLIDE 11: Integrations (renumbered from 9)
 
 ### Content
 - **Headline**: "Connects to your existing stack"
@@ -290,16 +412,22 @@ AI Estimate: 2 story points
 | Capability | Jira | Linear | LTF1 |
 |---|---|---|---|
 | **Setup time** | 2-4 weeks | 1-2 days | 15 minutes |
-| **Git integration** | Marketplace plugin | Basic webhook | Native core |
-| **Auto task updates** | No | No | Yes - from git events |
+| **Git integration** | Marketplace plugin | Basic webhook | Native core architecture |
+| **Auto task updates** | No | No | Yes — from git events |
+| **Configurable git workflows** | No | No | Yes — per project |
+| **Conventional commit parsing** | No | No | Yes — auto-tags tasks |
+| **Sprint auto-complete on merge** | No | No | Yes |
+| **PR comment → task sync** | No | No | Yes — bidirectional |
+| **Release notes from PRs** | No | No | Yes — auto-generated |
+| **CLI / TUI** | No | Read-only CLI | Full CLI (16 cmds) + TUI + daemon |
+| **Git hooks integration** | No | No | Pre/post commit, pre-push |
+| **Branch naming enforcement** | No | No | Per-project regex patterns |
 | **Velocity source** | Manual story points | Manual story points | Actual git shipping data |
 | **Estimation** | Planning poker | Manual | AI from code diffs |
 | **Real-time sync** | No (polling) | Yes | Yes (<100ms) |
 | **Board accuracy** | ~60% stale | ~75% stale | ~99% auto-synced |
-| **Onboarding** | Training required | Intuitive | Push code, done |
-| **Customization** | Extreme (too much) | Moderate | Right-sized |
 | **Workflow automation** | Yes (complex) | Basic | Yes (cron + conditional) |
-| **Time tracking** | Plugin ($) | No | Built-in |
+| **Time tracking** | Plugin ($) | No | Built-in (CLI + web) |
 | **Whiteboard** | Confluence ($) | No | Built-in |
 | **Chat/Meetings** | No | No | Built-in |
 | **AI features** | Atlassian Intelligence ($) | No native | Built-in (100 free/mo) |
@@ -396,19 +524,23 @@ Total time: < 15 minutes
 - 536+ exported API functions
 - 111 backend modules
 - 23 authenticated pages
+- Full CLI with 16+ command categories + TUI
+- Background git daemon for real-time tracking
+- Configurable git workflows per project
+- Conventional commit parsing
+- PR comment syncing + release notes generation
 - Full mobile-responsive design
 - Active development with weekly releases
 
 **Roadmap highlights:**
-- Q2 2026: CLI + TUI tools, Bitbucket integration
-- Q2 2026: Google Calendar sync
+- Q2 2026: Bitbucket integration, Google Calendar sync
 - Q3 2026: VS Code / JetBrains extensions
 - Q3 2026: Mobile app (React Native)
 - Q4 2026: On-premise deployment option
 - Ongoing: AI improvements, new integrations
 
 ### Speaker Notes
-> "We're building in public and shipping fast. We're at v0.4.0 with over 536 API functions, 23 authenticated pages, and a complete full-stack product. We release weekly. On the roadmap — CLI and TUI tools for terminal-first developers, IDE extensions for VS Code and JetBrains, a mobile app, and an on-premise option for teams that need it. We're a developer tool built by developers, and we dogfood LTF1 to build LTF1."
+> "We're building in public and shipping fast. We're at v0.4.0 with over 536 API functions, a full CLI with 16 command categories, a TUI, a background git daemon, configurable git workflows, conventional commit parsing, and PR comment syncing. The CLI is already shipped — not on a roadmap. On the roadmap: IDE extensions for VS Code and JetBrains, a mobile app, and on-premise deployment. We dogfood LTF1 to build LTF1."
 
 ---
 
@@ -497,7 +629,7 @@ Copy the prompt below into ChatGPT, Claude, or any AI tool that can generate pre
 ---
 
 ```
-You are a world-class presentation designer. Create a 17-slide professional pitch deck for LTF1, a developer-first project management platform. The deck will be presented in a business meeting to engineering leadership at a potential customer company.
+You are a world-class presentation designer. Create a 19-slide professional pitch deck for LTF1, a developer-first project management platform. The deck will be presented in a business meeting to engineering leadership at a potential customer company. LTF1's core differentiator is being TRULY git-native — not just webhooks, but configurable git workflows, a full CLI/TUI, conventional commit parsing, PR comment syncing, and auto-generated release notes. No other PM tool does this.
 
 ## DESIGN SPECIFICATIONS
 
@@ -604,18 +736,51 @@ You are a world-class presentation designer. Create a 17-slide professional pitc
 - Big stat: "94% accuracy vs 47% industry average"
 - Speaker notes: "Instead of planning poker debates, LTF1's AI analyzes the actual code diff and estimates complexity automatically. 94% accuracy vs 47% industry average. Sprint planning goes from 2 hours to 20 minutes."
 
-**SLIDE 8 — FULL FEATURE SET**
+**SLIDE 8 — CONFIGURABLE GIT WORKFLOWS (KEY DIFFERENTIATOR)**
+- Headline: "Your workflow. Your rules. Per project."
+- THIS SLIDE IS CRITICAL — it shows what NO other PM tool offers
+- Left side: Terminal-style mockup of a Git Workflow Config panel showing:
+  - Preset selector: [Agile] [Kanban] [Custom]
+  - Status mapping rows: Branch created → in_progress, PR opened → in_review, PR merged → done, etc. (each with dropdown selectors)
+  - Conventional commit toggle with type mappings (feat: → feature, fix: → bug)
+  - Branch naming pattern with valid/invalid examples
+  - Sprint auto-complete toggle
+- Right side: Bullet list of what's configurable:
+  - Git event → task status mappings (per project)
+  - Conventional commit type → task type mapping
+  - Branch naming pattern enforcement
+  - Sprint auto-completion on all PRs merged
+  - Preset workflows (Agile, Kanban, Custom)
+- Bottom callout in green: "The ONLY PM tool with configurable git workflows"
+- Speaker notes: "This is something no other project management tool offers. In Jira, git integration is a plugin that shows commits in a sidebar. In Linear, there's no git workflow configuration at all. In LTF1, every project gets its own git workflow config. You define which git events trigger which status transitions. Your backend team might use 'PR merged → done' while your frontend team uses 'PR merged → in_staging'. You enable conventional commit parsing. You set branch naming patterns enforced by CLI hooks. And sprints auto-complete when all PRs merge. No hardcoded states. No one-size-fits-all. Per project."
+
+**SLIDE 9 — TERMINAL-FIRST: THE LTF1 CLI**
+- Headline: "Never leave your terminal"
+- THIS SLIDE showcases the CLI which neither Jira nor Linear has
+- Full-slide terminal mockup showing sequential CLI commands:
+  - `$ ltf task create "Fix auth timeout" --priority high --assign @sarah` → "Created PROJ-142"
+  - `$ ltf sprint status` → Progress bar showing 57% done, 4 days remaining
+  - `$ ltf git status` → Branch info, linked task, commit count, hooks status
+  - `$ ltf pr create` → "Generated PR with auto-filled body from task + commits"
+  - `$ ltf release notes --sprint 23` → Formatted changelog grouped by type
+  - `$ ltf time start PROJ-142` → Timer started
+- Bottom: Grid of 16 command categories (task, sprint, git, pr, release, time, ai, daemon, notifications, auth, workspace, project, search, config, completions) with brief descriptions
+- Callout: "Also includes: Full TUI (Terminal User Interface) + Background git daemon"
+- Comparison strip at very bottom: "Jira CLI: None | Linear CLI: Read-only | LTF1: Full CRUD + TUI + Daemon"
+- Speaker notes: "LTF1 ships with a full CLI — 16 command categories, full CRUD, time tracking, AI assistance, and a background daemon that watches your git activity. Create tasks, check sprint status, generate release notes, create PRs with auto-filled descriptions — all without leaving your terminal. Plus a full TUI built with React/Ink. Linear has a read-only CLI. Jira has nothing. LTF1 gives you full power from the command line."
+
+**SLIDE 10 — FULL FEATURE SET**
 - Headline: "Everything you need. Nothing you don't."
 - 4x4 feature grid with category headers: Sprint Management, Task Management, Team Collaboration, Analytics
-- Each cell has an icon and feature name
-- Below grid: horizontal scrolling feature strip with additional features (workflow automation, time tracking, notifications, keyboard shortcuts, RBAC, file storage, developer profiles, API)
-- Speaker notes: "LTF1 isn't just a git integration layer. It's a complete project management platform. Sprint management, Kanban/list/calendar views, chat, meetings, whiteboard, workflow automation, time tracking. You don't need Jira AND Slack AND Notion AND a time tracker. LTF1 is one tool."
+- Each cell has an icon and feature name. Include: Sprint auto-complete, Git-based velocity, PR comment sync, Release notes generation
+- Below grid: horizontal scrolling feature strip with additional features (workflow automation, time tracking, notifications, keyboard shortcuts, RBAC, file storage, developer profiles, API, conventional commits, branch enforcement)
+- Speaker notes: "LTF1 isn't just a git integration layer. It's a complete project management platform with sprint auto-completion, PR comment syncing, release notes generation, conventional commit parsing, workflow automation, time tracking, chat, meetings, whiteboard. One tool replaces Jira + Confluence + time tracker + Slack notifications."
 
-**SLIDE 9 — INTEGRATIONS**
+**SLIDE 11 — INTEGRATIONS**
 - Headline: "Connects to your existing stack"
-- Three columns: Git Providers (GitHub full, GitLab full, Bitbucket coming), Communication (Slack, Discord, Email), Coming Soon (Google Calendar, VS Code, CLI)
-- Below: GitHub integration depth callout with 6 bullet points
-- Speaker notes: "For GitHub, we're not just reading webhooks — we install as a GitHub App with full bidirectional sync. GitLab is fully supported. Our Git integration isn't an afterthought plugin. It's the core architecture."
+- Three columns: Git Providers (GitHub full, GitLab full, Bitbucket coming), Communication (Slack, Discord, Email), Developer Tools (CLI + TUI shipped, VS Code coming, Google Calendar coming)
+- Below: GitHub integration depth callout — App installation, webhook capture, bidirectional issue sync, PR comment sync, team sync, branch awareness
+- Speaker notes: "For GitHub, we install as a GitHub App with full bidirectional sync. PR review comments sync to task comments. GitLab is fully supported. And the CLI is already shipped — 16 command categories."
 
 **SLIDE 10 — ARCHITECTURE & SECURITY**
 - Headline: "Built on modern, real-time infrastructure"
@@ -624,28 +789,34 @@ You are a world-class presentation designer. Create a 17-slide professional pitc
 - Bottom: Performance stats — "<100ms real-time sync", "ACID transactions", "Automatic optimistic updates"
 - Speaker notes: "Convex gives us ACID transactions and sub-100ms real-time sync. Auth is SOC 2 compliant via Clerk. We support BYOK for AI features. This is production-grade infrastructure."
 
-**SLIDE 11 — HEAD-TO-HEAD COMPARISON**
+**SLIDE 13 — HEAD-TO-HEAD COMPARISON**
 - Headline: "The honest comparison"
 - THIS IS THE MOST IMPORTANT SLIDE. Full comparison table with ALL these rows:
   - Setup time: Jira 2-4 weeks | Linear 1-2 days | LTF1 15 minutes
-  - Git integration: Plugin | Basic webhook | Native core
-  - Auto task updates: No | No | Yes
-  - Velocity source: Manual points | Manual points | Git shipping data
-  - Estimation: Planning poker | Manual | AI from diffs
-  - Real-time sync: No (polling) | Yes | Yes (<100ms)
-  - Board accuracy: ~60% | ~75% | ~99%
-  - Time tracking: Plugin ($) | No | Built-in
-  - Whiteboard: Confluence ($) | No | Built-in
-  - Chat/Meetings: No | No | Built-in
-  - AI features: Atlassian Intelligence ($) | No | Built-in
+  - Git integration: Plugin | Basic webhook | Native core architecture
+  - Auto task updates: No (red) | No (red) | Yes (green)
+  - Configurable git workflows: No (red) | No (red) | Yes — per project (green)
+  - Conventional commit parsing: No | No | Yes — auto-tags tasks (green)
+  - Sprint auto-complete on merge: No | No | Yes (green)
+  - PR comment → task sync: No | No | Yes — bidirectional (green)
+  - Release notes from PRs: No | No | Yes — auto-generated (green)
+  - CLI / TUI: No (red) | Read-only CLI | Full CLI (16 cmds) + TUI + daemon (green)
+  - Git hooks integration: No | No | Pre/post commit, pre-push (green)
+  - Branch naming enforcement: No | No | Per-project regex (green)
+  - Velocity source: Manual points | Manual points | Git shipping data (green)
+  - Estimation: Planning poker | Manual | AI from diffs (green)
+  - Board accuracy: ~60% (red) | ~75% (amber) | ~99% (green)
+  - Time tracking: Plugin ($) | No | Built-in (CLI + web) (green)
+  - Whiteboard: Confluence ($) | No | Built-in (green)
+  - Chat/Meetings: No | No | Built-in (green)
+  - AI features: Atlassian Intelligence ($) | No | Built-in (green)
   - 10-user pricing: $81.50/mo | $80/mo | $0 Free / $150/mo Pro
   - 50-user pricing: $407.50/mo | $400/mo | $0 Free / $750/mo Pro
-  - Free tier: 10 users (limited) | No | 5 users (full)
-  - Open source: No | No | Yes
-- Use green highlighting for LTF1 wins, red for competitor weaknesses
-- Speaker notes: "This is the honest comparison. Board accuracy is the killer metric — Jira is ~60%, Linear ~75%, LTF1 is ~99%. And on pricing, when you factor in Confluence, Jira plugins, and Atlassian Intelligence, LTF1 Pro is actually cheaper for what you get."
+  - Open source: No | No | Yes (green)
+- Use green highlighting for LTF1 wins, red for competitor weaknesses. The git-native section (rows 3-11) should be visually grouped and labeled "GIT-NATIVE" on the left
+- Speaker notes: "This is the honest comparison — and look at the git-native section. Nine rows where LTF1 has green checkmarks and both Jira and Linear have nothing. Configurable git workflows, conventional commits, sprint auto-complete, PR comment sync, release notes, full CLI, git hooks, branch enforcement. Nobody else does any of this. And board accuracy is ~99% because the board updates itself. That's not a feature. That's a different category of tool."
 
-**SLIDE 12 — PRICING**
+**SLIDE 14 — PRICING**
 - Headline: "Simple, transparent pricing"
 - Two pricing cards side by side:
   - Open Source ($0, free forever) with feature list — white border
@@ -654,7 +825,7 @@ You are a world-class presentation designer. Create a 17-slide professional pitc
 - Bottom: "Enterprise? Contact us."
 - Speaker notes: "Two tiers. Open Source is free forever. Pro is $15/seat/month. During early access, everything is free. Billing starts at launch."
 
-**SLIDE 13 — MIGRATION**
+**SLIDE 15 — MIGRATION**
 - Headline: "Switch in minutes, not months"
 - 5-step numbered flow: Sign up (30s) → Create workspace (2min) → Connect repo (1 click) → Backfill (auto) → Push code (done)
 - "Total: < 15 minutes" in big green text
@@ -662,20 +833,20 @@ You are a world-class presentation designer. Create a 17-slide professional pitc
 - Coexistence callout: "Run alongside your current tool. Zero disruption."
 - Speaker notes: "15 minutes to set up. Run alongside Jira during evaluation. Zero workflow disruption. Try it for one sprint."
 
-**SLIDE 14 — TRACTION & ROADMAP**
+**SLIDE 16 — TRACTION & ROADMAP**
 - Headline: "Built in public, shipping fast"
 - Left: Current stats — v0.4.0, 536+ API functions, 111 modules, 23 pages, weekly releases
 - Right: Roadmap timeline — Q2 2026 (CLI, Bitbucket, Calendar), Q3 (IDE extensions, Mobile), Q4 (On-premise)
 - Speaker notes: "We're at v0.4.0 with 536 API functions and weekly releases. CLI, IDE extensions, mobile app, and on-premise deployment all on the roadmap."
 
-**SLIDE 15 — WHY NOW**
+**SLIDE 17 — WHY NOW**
 - Headline: "The market is ready"
 - Two columns:
   - Why now: AI is 10x-ing dev speed (PM is the bottleneck), remote teams need async tools, 100M+ GitHub devs, $31B market at 10.7% CAGR
   - Why us: Built from genuine frustration, Git-native from day 1, modern tech stack, open source core, community-driven
 - Speaker notes: "AI is changing how fast teams ship code. The bottleneck has shifted from writing code to managing the process around code. LTF1 removes that bottleneck."
 
-**SLIDE 16 — CALL TO ACTION**
+**SLIDE 18 — CALL TO ACTION**
 - Headline: "Let's run a pilot sprint"
 - 4-step proposal in large, clear text:
   1. 15-minute setup (we help live)
@@ -686,7 +857,7 @@ You are a world-class presentation designer. Create a 17-slide professional pitc
 - Discord link: https://discord.gg/jWMS6Pcr
 - Speaker notes: "Let's run a pilot sprint. 15 minutes to set up. Run alongside what you have. Measure the difference. Zero risk. I'll bet you a coffee your developers won't want to go back to manual ticket updates."
 
-**SLIDE 17 — APPENDIX: FAQ**
+**SLIDE 19 — APPENDIX: FAQ**
 - 7 Q&A pairs in clean two-column layout
 - Questions about: task detection, no-reference commits, customization, AI opt-in, data privacy/BYOK, self-hosting, pricing scale
 - Speaker notes: "These are the questions we get most often. The two big ones: data privacy — BYOK supported. Customization — status transitions are configurable per project."
@@ -699,7 +870,7 @@ You are a world-class presentation designer. Create a 17-slide professional pitc
 - Use monospace font (IBM Plex Mono) for all code, terminal output, and technical labels.
 - Use Inter for headlines and body text.
 - Aspect ratio: 16:9 widescreen
-- Total slides: 17
+- Total slides: 19
 - Each slide should be scannable in 3 seconds — don't overcrowd
 - Use the exact hex colors specified above
 - Tables should use #2E2E35 borders with no cell background (or very subtle #0A0A0A)
@@ -713,12 +884,16 @@ When presenting, hit these points hard:
 
 1. **"Zero manual updates"** — The #1 differentiator. Boards update from git events.
 2. **"Board accuracy"** — Jira ~60%, Linear ~75%, LTF1 ~99%. This is the killer stat.
-3. **"Real velocity"** — From shipping data, not story point guesses.
-4. **"15-minute setup"** — vs weeks for Jira.
-5. **"AI estimation"** — 94% accuracy vs 47% industry average.
-6. **"One tool"** — Replaces Jira + Confluence + time tracker + Slack notifications.
-7. **"Free during early access"** — Zero risk pilot.
-8. **"Open source core"** — Trust, transparency, no vendor lock-in.
+3. **"Configurable git workflows"** — NO other PM tool lets you configure git event → status mappings per project. This is unique.
+4. **"Full CLI + TUI"** — 16 command categories, background daemon, PR creation, release notes. Jira has nothing. Linear has read-only.
+5. **"Real velocity"** — From shipping data, not story point guesses.
+6. **"Conventional commits"** — Parsed, auto-tagged, grouped into release notes. Native support.
+7. **"Sprint auto-complete"** — When all tasks have merged PRs, sprint closes itself.
+8. **"PR comment sync"** — Code review discussions live on the task too. Bidirectional.
+9. **"AI estimation"** — 94% accuracy vs 47% industry average.
+10. **"One tool"** — Replaces Jira + Confluence + time tracker + Slack notifications.
+11. **"Free during early access"** — Zero risk pilot.
+12. **"Open source core"** — Trust, transparency, no vendor lock-in.
 
 # OBJECTION HANDLING CHEAT SHEET
 

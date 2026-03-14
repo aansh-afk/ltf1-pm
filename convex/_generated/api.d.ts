@@ -65,6 +65,8 @@ import type * as integrations_github_actions from "../integrations/github/action
 import type * as integrations_github_appSimple from "../integrations/github/appSimple.js";
 import type * as integrations_github_auth from "../integrations/github/auth.js";
 import type * as integrations_github_backfill from "../integrations/github/backfill.js";
+import type * as integrations_github_commentSync from "../integrations/github/commentSync.js";
+import type * as integrations_github_commitParsing from "../integrations/github/commitParsing.js";
 import type * as integrations_github_docs from "../integrations/github/docs.js";
 import type * as integrations_github_errors from "../integrations/github/errors.js";
 import type * as integrations_github_installationManagement from "../integrations/github/installationManagement.js";
@@ -80,6 +82,7 @@ import type * as integrations_github_projectQueries from "../integrations/github
 import type * as integrations_github_queries from "../integrations/github/queries.js";
 import type * as integrations_github_queryActions from "../integrations/github/queryActions.js";
 import type * as integrations_github_rateLimiter from "../integrations/github/rateLimiter.js";
+import type * as integrations_github_releaseNotes from "../integrations/github/releaseNotes.js";
 import type * as integrations_github_sync from "../integrations/github/sync.js";
 import type * as integrations_github_syncActions from "../integrations/github/syncActions.js";
 import type * as integrations_github_teamSync from "../integrations/github/teamSync.js";
@@ -186,6 +189,8 @@ declare const fullApi: ApiFromModules<{
   "integrations/github/appSimple": typeof integrations_github_appSimple;
   "integrations/github/auth": typeof integrations_github_auth;
   "integrations/github/backfill": typeof integrations_github_backfill;
+  "integrations/github/commentSync": typeof integrations_github_commentSync;
+  "integrations/github/commitParsing": typeof integrations_github_commitParsing;
   "integrations/github/docs": typeof integrations_github_docs;
   "integrations/github/errors": typeof integrations_github_errors;
   "integrations/github/installationManagement": typeof integrations_github_installationManagement;
@@ -201,6 +206,7 @@ declare const fullApi: ApiFromModules<{
   "integrations/github/queries": typeof integrations_github_queries;
   "integrations/github/queryActions": typeof integrations_github_queryActions;
   "integrations/github/rateLimiter": typeof integrations_github_rateLimiter;
+  "integrations/github/releaseNotes": typeof integrations_github_releaseNotes;
   "integrations/github/sync": typeof integrations_github_sync;
   "integrations/github/syncActions": typeof integrations_github_syncActions;
   "integrations/github/teamSync": typeof integrations_github_teamSync;
