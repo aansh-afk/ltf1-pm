@@ -44,7 +44,11 @@
     "sonner": "^2.0.7",
     "three": "^0.170.0",
     "use-image": "^1.1.4",
-    "zustand": "^4.4.7"
+    "zustand": "^4.4.7",
+    "@blocknote/core": "^0.24.2",
+    "@blocknote/react": "^0.24.2",
+    "@blocknote/mantine": "^0.24.2",
+    "@mantine/core": "^7.17.4"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
