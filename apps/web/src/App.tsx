@@ -54,6 +54,7 @@ const TeamPage = lazy(() => import("./pages/TeamPage"));
 const TeamsPage = lazy(() => import("./pages/TeamsPage"));
 const MyProfilePage = lazy(() => import("./pages/MyProfilePage"));
 const WhiteboardPage = lazy(() => import("./pages/WhiteboardPage"));
+const PagesPage = lazy(() => import("./pages/PagesPage"));
 const CustomFieldsPage = lazy(() => import("./pages/CustomFieldsPage"));
 const JoinProjectPage = lazy(() => import("./pages/JoinProjectPage"));
 const GitHubCallbackPage = lazy(() => import("./pages/GitHubCallbackPage"));
@@ -256,7 +257,8 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
             {/* Keeping existing TeamPage for now, might be redundant */}
             <Route path="sprints" element={<SprintPage />} />
             <Route path="settings" element={<SettingsPage />} />
-            <Route path="whiteboard" element={<WhiteboardPage />} />
+            <Route path="whiteboard" element={<Navigate to="/pages" replace />} />
+            <Route path="pages" element={<PagesPage />} />
             <Route path="custom-fields" element={<CustomFieldsPage />} />
             <Route path="time-report" element={<TimeReportPage />} />
             <Route path="admin/bugs" element={<AdminBugReportsPage />} />

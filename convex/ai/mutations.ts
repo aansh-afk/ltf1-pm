@@ -3,6 +3,8 @@
 
 import { v } from "convex/values";
 import { mutation } from "../_generated/server";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import { api } from "../_generated/api";
 
 // Track AI session (store AI interaction for analytics)
@@ -27,6 +29,7 @@ export const trackAISession = mutation({
     cached: v.boolean(),
   },
   handler: async (ctx, args) => {
+    // @ts-ignore — deep type instantiation
     const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {});
     if (!user) throw new Error("Not authenticated");
 
@@ -65,6 +68,7 @@ export const addAIFeedback = mutation({
     comment: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // @ts-ignore — deep type instantiation
     const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {});
     if (!user) throw new Error("Not authenticated");
 
@@ -115,6 +119,7 @@ export const createAIInsight = mutation({
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    // @ts-ignore — deep type instantiation
     const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {});
     if (!user) throw new Error("Not authenticated");
 
@@ -196,6 +201,7 @@ export const dismissAIInsight = mutation({
     actionTaken: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // @ts-ignore — deep type instantiation
     const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {});
     if (!user) throw new Error("Not authenticated");
 
@@ -245,6 +251,7 @@ export const createAITaskSuggestion = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    // @ts-ignore — deep type instantiation
     const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {});
     if (!user) throw new Error("Not authenticated");
 
@@ -277,6 +284,7 @@ export const updateAITaskStatus = mutation({
     status: v.union(v.literal("accepted"), v.literal("rejected")),
   },
   handler: async (ctx, args) => {
+    // @ts-ignore — deep type instantiation
     const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {});
     if (!user) throw new Error("Not authenticated");
 
