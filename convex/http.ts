@@ -258,6 +258,10 @@ http.route({
           await handleIssueCommentEvent(ctx, data);
           break;
 
+        case "pull_request_review_comment":
+          await handlePullRequestReviewCommentEvent(ctx, data);
+          break;
+
         default:
           console.log(`Unhandled webhook event: ${event}`);
       }
@@ -472,6 +476,51 @@ async function handleIssueCommentEvent(ctx: any, data: any) {
         updatedAt: comment.updated_at,
       },
       taskRefs,
+    });
+
+    // Also sync comment to linked tasks via commentSync
+    // Determine if this is on a PR (issues with pull_request key) or a plain issue
+    const isPR = !!issue.pull_request;
+    await ctx.runMutation(internal.integrations.github.commentSync.syncPRCommentToTask, {
+      repositoryFullName: repository.full_name,
+      prNumber: isPR ? issue.number : undefined,
+      issueNumber: issue.number,
+      commentBody: comment.body,
+      authorLogin: comment.user.login,
+      commentUrl: comment.html_url,
+      githubCommentId: comment.id,
+      commentType: "issue_comment",
+    });
+  }
+}
+
+async function handlePullRequestReviewCommentEvent(ctx: any, data: any) {
+  const { action, pull_request, comment, repository } = data;
+
+  if (action === "created") {
+    // Sync PR review comment to linked tasks
+    await ctx.runMutation(internal.integrations.github.commentSync.syncPRCommentToTask, {
+      repositoryFullName: repository.full_name,
+      prNumber: pull_request.number,
+      issueNumber: undefined,
+      commentBody: comment.body,
+      authorLogin: comment.user.login,
+      commentUrl: comment.html_url,
+      githubCommentId: comment.id,
+      commentType: "pr_review_comment",
+    });
+
+    // Log GitHub activity
+    await ctx.runMutation(internal.integrations.github.mutations.logGitHubActivity, {
+      type: "pr_review_comment",
+      repositoryFullName: repository.full_name,
+      actor: comment.user.login,
+      metadata: {
+        prNumber: pull_request.number,
+        prTitle: pull_request.title,
+        commentId: comment.id,
+        body: comment.body.substring(0, 500),
+      },
     });
   }
 }

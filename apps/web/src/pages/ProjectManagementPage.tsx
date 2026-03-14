@@ -57,6 +57,7 @@ import TeamActivityFeed from "@/components/features/activity/TeamActivityFeed";
 import { ExpertiseSearchModal } from "@/components/features/profile/ExpertiseSearchModal";
 import { TeamExpertiseMatrix } from "@/components/features/profile/TeamExpertiseMatrix";
 import ProjectDocsHub from "@/components/features/documentation/ProjectDocsHub";
+import GitWorkflowConfig from "@/components/features/git/GitWorkflowConfig";
 import type { TaskFilters as TaskFiltersType } from "@/components/features/task/TaskFilters";
 import { useTemporaryShortcut } from "@/contexts/ShortcutContext";
 import clsx from "clsx";
@@ -788,6 +789,7 @@ function SettingsTab({
   members,
   onNavigateBack,
 }: SettingsTabProps) {
+  const [settingsSubTab, setSettingsSubTab] = useState<"general" | "git_workflow">("general");
   const [name, setName] = useState(project.name || "");
   const [description, setDescription] = useState(project.description || "");
   const [workflowType, setWorkflowType] = useState<string>(
@@ -854,6 +856,42 @@ function SettingsTab({
         PROJECT SETTINGS
       </h2>
 
+      {/* Settings sub-tabs */}
+      <div className="flex gap-1 mb-4 border-b-2 border-[var(--theme-border)]">
+        <button
+          onClick={() => setSettingsSubTab("general")}
+          className={clsx(
+            "px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider transition-all duration-200",
+            "border-b-2 -mb-[2px]",
+            settingsSubTab === "general"
+              ? "border-[var(--theme-primary)] text-[var(--theme-primary)]"
+              : "border-transparent text-[var(--theme-foreground)]/50 hover:text-[var(--theme-foreground)]",
+          )}
+        >
+          General
+        </button>
+        <button
+          onClick={() => setSettingsSubTab("git_workflow")}
+          className={clsx(
+            "px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider transition-all duration-200",
+            "border-b-2 -mb-[2px] flex items-center gap-2",
+            settingsSubTab === "git_workflow"
+              ? "border-[#22C55E] text-[#22C55E]"
+              : "border-transparent text-[var(--theme-foreground)]/50 hover:text-[var(--theme-foreground)]",
+          )}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] shrink-0" />
+          Git Workflow
+        </button>
+      </div>
+
+      {/* Git Workflow sub-tab */}
+      {settingsSubTab === "git_workflow" && (
+        <GitWorkflowConfig projectId={project._id} />
+      )}
+
+      {/* General sub-tab (original settings content) */}
+      {settingsSubTab === "general" && (<>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* General Settings */}
         <div className="space-y-3">
@@ -1100,6 +1138,7 @@ function SettingsTab({
           {saving ? "SAVING..." : "SAVE CHANGES"}
         </BrutalButton>
       </div>
+      </>)}
     </div>
   );
 }

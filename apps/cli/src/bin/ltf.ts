@@ -18,6 +18,8 @@ import { registerSearchCommands } from "../commands/search/index.js";
 import { registerNotificationsCommands } from "../commands/notifications/index.js";
 import { registerConfigCommands } from "../commands/config/index.js";
 import { registerCompletionCommands } from "../commands/completions/index.js";
+import { registerReleaseCommands } from "../commands/release/index.js";
+import { registerPRCommands } from "../commands/pr/index.js";
 import output from "../lib/output.js";
 import { startDashboard } from "../tui/index.js";
 
@@ -48,6 +50,8 @@ registerSearchCommands(program);
 registerNotificationsCommands(program);
 registerConfigCommands(program);
 registerCompletionCommands(program);
+registerReleaseCommands(program);
+registerPRCommands(program);
 
 // Global options
 program
