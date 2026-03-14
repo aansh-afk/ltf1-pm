@@ -157,8 +157,8 @@ async function interactiveConfig(): Promise<void> {
   output.log(output.colors.muted('Configure how LTF integrates with your git workflow'));
   output.newline();
 
-  // Show current values and ask for changes
-  const answers = await inquirer.prompt([
+  // Step 1: Choose starting point
+  const { startFrom } = await inquirer.prompt([
     {
       type: 'list',
       name: 'startFrom',
@@ -171,92 +171,75 @@ async function interactiveConfig(): Promise<void> {
         })),
       ],
     },
+  ]);
+
+  // Determine defaults based on starting point
+  const base = startFrom === 'current' ? current : (PRESETS[startFrom]?.config || current);
+
+  // Step 2: Configure individual settings
+  const answers = await inquirer.prompt([
     {
       type: 'input',
       name: 'branchPattern',
       message: 'Branch naming pattern (regex):',
-      default: (ans: { startFrom: string }) => {
-        if (ans.startFrom === 'current') return current.branchPattern;
-        return PRESETS[ans.startFrom]?.config.branchPattern || DEFAULT_BRANCH_PATTERN;
-      },
+      default: base.branchPattern || DEFAULT_BRANCH_PATTERN,
     },
     {
       type: 'confirm',
       name: 'conventionalCommits',
       message: 'Enable conventional commit parsing?',
-      default: (ans: { startFrom: string }) => {
-        if (ans.startFrom === 'current') return current.conventionalCommits;
-        return PRESETS[ans.startFrom]?.config.conventionalCommits ?? true;
-      },
+      default: base.conventionalCommits ?? true,
     },
     {
       type: 'confirm',
       name: 'autoLinkTasks',
       message: 'Auto-link tasks from branch names?',
-      default: (ans: { startFrom: string }) => {
-        if (ans.startFrom === 'current') return current.autoLinkTasks;
-        return PRESETS[ans.startFrom]?.config.autoLinkTasks ?? true;
-      },
+      default: base.autoLinkTasks ?? true,
     },
     {
       type: 'confirm',
       name: 'autoTransitionOnCommit',
       message: 'Auto-transition task status on commits?',
-      default: (ans: { startFrom: string }) => {
-        if (ans.startFrom === 'current') return current.autoTransitionOnCommit;
-        return PRESETS[ans.startFrom]?.config.autoTransitionOnCommit ?? true;
-      },
+      default: base.autoTransitionOnCommit ?? true,
     },
     {
       type: 'confirm',
       name: 'autoTransitionOnMerge',
       message: 'Auto-complete tasks on merge to protected branch?',
-      default: (ans: { startFrom: string }) => {
-        if (ans.startFrom === 'current') return current.autoTransitionOnMerge;
-        return PRESETS[ans.startFrom]?.config.autoTransitionOnMerge ?? true;
-      },
+      default: base.autoTransitionOnMerge ?? true,
     },
     {
       type: 'input',
       name: 'protectedBranches',
       message: 'Protected branches (comma-separated):',
-      default: (ans: { startFrom: string }) => {
-        if (ans.startFrom === 'current') return current.protectedBranches?.join(', ');
-        return PRESETS[ans.startFrom]?.config.protectedBranches?.join(', ') || 'main';
-      },
+      default: base.protectedBranches?.join(', ') || 'main',
     },
     {
       type: 'input',
       name: 'defaultBaseBranch',
       message: 'Default base branch for PRs:',
-      default: (ans: { startFrom: string }) => {
-        if (ans.startFrom === 'current') return current.defaultBaseBranch;
-        return PRESETS[ans.startFrom]?.config.defaultBaseBranch || 'main';
-      },
+      default: base.defaultBaseBranch || 'main',
     },
     {
       type: 'confirm',
       name: 'prTemplate',
       message: 'Enable PR body template generation?',
-      default: (ans: { startFrom: string }) => {
-        if (ans.startFrom === 'current') return current.prTemplate;
-        return PRESETS[ans.startFrom]?.config.prTemplate ?? true;
-      },
+      default: base.prTemplate ?? true,
     },
   ]);
 
   const newConfig: GitWorkflowConfig = {
-    branchPattern: answers.branchPattern,
-    conventionalCommits: answers.conventionalCommits,
-    autoLinkTasks: answers.autoLinkTasks,
-    autoTransitionOnCommit: answers.autoTransitionOnCommit,
-    autoTransitionOnMerge: answers.autoTransitionOnMerge,
+    branchPattern: answers.branchPattern as string,
+    conventionalCommits: answers.conventionalCommits as boolean,
+    autoLinkTasks: answers.autoLinkTasks as boolean,
+    autoTransitionOnCommit: answers.autoTransitionOnCommit as boolean,
+    autoTransitionOnMerge: answers.autoTransitionOnMerge as boolean,
     protectedBranches: (answers.protectedBranches as string)
       .split(',')
       .map((b: string) => b.trim())
       .filter(Boolean),
-    defaultBaseBranch: answers.defaultBaseBranch,
-    prTemplate: answers.prTemplate,
+    defaultBaseBranch: answers.defaultBaseBranch as string,
+    prTemplate: answers.prTemplate as boolean,
   };
 
   setGitWorkflowConfig(newConfig);
