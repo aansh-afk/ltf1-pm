@@ -349,20 +349,39 @@ export const linkPullRequestToTasks = internalMutation({
             undefined
           );
 
-          // Get action description
+          // Get action description and handle auto status transitions
           let actionDescription = `${args.action} pull request #${args.pullRequest.number}`;
+          let activityType: "task_completed" | "task_updated" | "task_status_changed" = "task_updated";
+
           if (args.action === "closed" && args.pullRequest.mergedAt) {
-            actionDescription = `merged pull request #${args.pullRequest.number}`;
+            actionDescription = `merged pull request #${args.pullRequest.number} — task auto-completed`;
+            activityType = "task_completed";
             // Update task status to done on merge
             await ctx.db.patch(task._id, {
               status: "done",
               completedAt: Date.now(),
+              updatedAt: Date.now(),
             });
+            console.log(`[PR Merge] Auto-transitioned task ${projectKey}-${taskNumber} to "done" via PR #${args.pullRequest.number}`);
+          } else if (
+            (args.action === "opened" || args.action === "ready_for_review") &&
+            !args.pullRequest.draft &&
+            task.status !== "done" &&
+            task.status !== "cancelled"
+          ) {
+            // Move task to "in_review" when a non-draft PR is opened or marked ready
+            actionDescription = `opened pull request #${args.pullRequest.number} — task moved to review`;
+            activityType = "task_status_changed";
+            await ctx.db.patch(task._id, {
+              status: "in_review",
+              updatedAt: Date.now(),
+            });
+            console.log(`[PR Opened] Auto-transitioned task ${projectKey}-${taskNumber} to "in_review" via PR #${args.pullRequest.number}`);
           }
 
           // Log activity with resolved user
           await ctx.runMutation(internal.activities.mutations.logActivity, {
-            type: args.action === "closed" && args.pullRequest.mergedAt ? "task_completed" : "task_updated",
+            type: activityType,
             projectId: project._id,
             workspaceId: project.workspaceId,
             actorId: resolvedUser?.userId || null,

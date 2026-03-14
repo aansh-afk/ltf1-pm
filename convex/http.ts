@@ -11,6 +11,137 @@ http.route({
   handler: clerkWebhook,
 });
 
+// Polar.sh webhook handler for subscription billing events
+http.route({
+  path: "/webhooks/polar",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const payload = await request.text();
+      const signature = request.headers.get("webhook-id");
+      const timestamp = request.headers.get("webhook-timestamp");
+      const webhookSignature = request.headers.get("webhook-signature");
+
+      if (!signature || !timestamp || !webhookSignature) {
+        return new Response("Missing webhook headers", { status: 400 });
+      }
+
+      // Verify webhook signature using HMAC
+      const secret = process.env.POLAR_WEBHOOK_SECRET;
+      if (!secret) {
+        console.error("[Polar Webhook] Webhook secret not configured");
+        return new Response("Server configuration error", { status: 500 });
+      }
+
+      // Polar uses standard webhooks format: base64-decode the secret (strip "whsec_" prefix)
+      const secretBytes = secret.startsWith("whsec_") ? secret.slice(6) : secret;
+
+      const isValid = await ctx.runAction(
+        internal.billing.webhookVerify.verifyPolarSignature,
+        { payload, webhookId: signature, timestamp, signature: webhookSignature, secret: secretBytes },
+      );
+
+      if (!isValid) {
+        console.error("[Polar Webhook] Invalid signature");
+        return new Response("Invalid signature", { status: 401 });
+      }
+
+      const event = JSON.parse(payload);
+      const eventType = event.type;
+
+      console.log(`[Polar Webhook] Processing event: ${eventType}`);
+
+      switch (eventType) {
+        case "subscription.created": {
+          const sub = event.data;
+          const workspaceId = sub.metadata?.workspaceId;
+          if (!workspaceId) {
+            console.error("[Polar Webhook] No workspaceId in subscription metadata");
+            break;
+          }
+          await ctx.runMutation(internal.billing.mutations.createSubscription, {
+            workspaceId,
+            polarCustomerId: sub.customer_id || sub.customer?.id || "",
+            polarSubscriptionId: sub.id,
+            status: mapPolarStatus(sub.status),
+            plan: mapPolarPlan(sub),
+            seatCount: sub.metadata?.seatCount ? Number(sub.metadata.seatCount) : 999,
+            billingCycle: sub.recurring_interval === "year" ? "yearly" : "monthly",
+            currentPeriodStart: new Date(sub.current_period_start).getTime(),
+            currentPeriodEnd: new Date(sub.current_period_end).getTime(),
+          });
+          break;
+        }
+
+        case "subscription.updated": {
+          const sub = event.data;
+          await ctx.runMutation(internal.billing.mutations.updateSubscription, {
+            polarSubscriptionId: sub.id,
+            status: mapPolarStatus(sub.status),
+            plan: mapPolarPlan(sub),
+            seatCount: sub.metadata?.seatCount ? Number(sub.metadata.seatCount) : undefined,
+            billingCycle: sub.recurring_interval === "year" ? "yearly" : "monthly",
+            currentPeriodStart: sub.current_period_start
+              ? new Date(sub.current_period_start).getTime()
+              : undefined,
+            currentPeriodEnd: sub.current_period_end
+              ? new Date(sub.current_period_end).getTime()
+              : undefined,
+          });
+          break;
+        }
+
+        case "subscription.canceled":
+        case "subscription.cancelled": {
+          const sub = event.data;
+          await ctx.runMutation(internal.billing.mutations.cancelSubscription, {
+            polarSubscriptionId: sub.id,
+          });
+          break;
+        }
+
+        case "order.created": {
+          // Log order for auditing - no DB action needed for now
+          console.log(`[Polar Webhook] Order created: ${event.data.id}`);
+          break;
+        }
+
+        default:
+          console.log(`[Polar Webhook] Unhandled event type: ${eventType}`);
+      }
+
+      return new Response("OK", { status: 200 });
+    } catch (error) {
+      console.error("[Polar Webhook] Error:", error);
+      return new Response("Internal server error", { status: 500 });
+    }
+  }),
+});
+
+function mapPolarStatus(status: string): "active" | "trialing" | "past_due" | "cancelled" | "incomplete" {
+  const statusMap: Record<string, "active" | "trialing" | "past_due" | "cancelled" | "incomplete"> = {
+    active: "active",
+    trialing: "trialing",
+    past_due: "past_due",
+    canceled: "cancelled",
+    cancelled: "cancelled",
+    incomplete: "incomplete",
+    incomplete_expired: "incomplete",
+    unpaid: "past_due",
+  };
+  return statusMap[status] ?? "incomplete";
+}
+
+function mapPolarPlan(sub: any): "free" | "pro" | "enterprise" {
+  // Check metadata first, then try product name matching
+  if (sub.metadata?.plan) {
+    const plan = sub.metadata.plan;
+    if (plan === "pro" || plan === "enterprise") return plan;
+  }
+  // Default to pro for any paid subscription
+  return "pro";
+}
+
 // CLI token refresh endpoint — mints a fresh Convex JWT from a Clerk session
 http.route({
   path: "/api/cli-refresh",
