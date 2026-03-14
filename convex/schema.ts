@@ -2098,4 +2098,30 @@ export default defineSchema({
     .index("by_sprint", ["sprintId"])
     .index("by_sprint_and_date", ["sprintId", "date"])
     .index("by_project", ["projectId"]),
+
+  subscriptions: defineTable({
+    workspaceId: v.id("workspaces"),
+    polarCustomerId: v.string(),
+    polarSubscriptionId: v.string(),
+    status: v.union(
+      v.literal("active"),
+      v.literal("trialing"),
+      v.literal("past_due"),
+      v.literal("cancelled"),
+      v.literal("incomplete"),
+    ),
+    plan: v.union(
+      v.literal("free"),
+      v.literal("pro"),
+      v.literal("enterprise"),
+    ),
+    seatCount: v.number(),
+    billingCycle: v.union(v.literal("monthly"), v.literal("yearly")),
+    currentPeriodStart: v.number(),
+    currentPeriodEnd: v.number(),
+    cancelledAt: v.optional(v.number()),
+  })
+    .index("by_workspaceId", ["workspaceId"])
+    .index("by_polarSubscriptionId", ["polarSubscriptionId"])
+    .index("by_polarCustomerId", ["polarCustomerId"]),
 });

@@ -390,6 +390,56 @@ export const getRepositoryById = internalQuery({
   },
 });
 
+// Internal query to get project + installation info for backfill
+export const getProjectForBackfill = internalQuery({
+  args: {
+    projectId: v.id("projects"),
+  },
+  returns: v.union(
+    v.object({
+      projectId: v.id("projects"),
+      repositoryFullName: v.union(v.string(), v.null()),
+      installationId: v.union(v.number(), v.null()),
+    }),
+    v.null()
+  ),
+  handler: async (ctx, args) => {
+    const project = await ctx.db.get(args.projectId);
+    if (!project) return null;
+
+    let repositoryFullName: string | null = null;
+    let installationId: number | null = null;
+
+    if (project.repository?.url) {
+      repositoryFullName = project.repository.url
+        .replace("https://github.com/", "")
+        .replace(".git", "");
+
+      // Find the repository record to get installationId
+      const repo = await ctx.db
+        .query("githubRepositories")
+        .withIndex("by_full_name", (q) => q.eq("fullName", repositoryFullName!))
+        .first();
+
+      if (repo) {
+        installationId = repo.installationId;
+      } else {
+        // Fallback: check workspace installation
+        const workspace = await ctx.db.get(project.workspaceId);
+        if (workspace?.settings?.integrations?.githubInstallationId) {
+          installationId = workspace.settings.integrations.githubInstallationId;
+        }
+      }
+    }
+
+    return {
+      projectId: project._id,
+      repositoryFullName,
+      installationId,
+    };
+  },
+});
+
 // Debug query to check database state
 export const debugGitHubState = query({
   args: {},

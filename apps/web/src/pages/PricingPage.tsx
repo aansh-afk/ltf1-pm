@@ -6,6 +6,11 @@ import { HiOutlineSparkles } from 'react-icons/hi'
 import PublicNavigation from '@/components/common/PublicNavigation'
 import Footer from '@/components/common/Footer'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useAction } from 'convex/react'
+import { api } from '../../../../convex/_generated/api'
+import { useAuth } from '@clerk/clerk-react'
+import { useState, useCallback } from 'react'
+import toast from 'react-hot-toast'
 
 /* ─── Early Access Banner ────────────────────────────────────── */
 
@@ -215,7 +220,7 @@ function FooterNote() {
     >
       <HiOutlineSparkles className="w-3 h-3 text-[#6B7280] shrink-0 mt-0.5" />
       <p className="text-[10px] font-mono text-[#6B7280] leading-relaxed">
-        Stripe billing coming soon. During Early Access, all Pro features are available free.
+        Powered by Polar. During Early Access, all Pro features are available free.
       </p>
     </m.div>
   )
@@ -225,6 +230,28 @@ function FooterNote() {
 
 export default function PricingPage() {
   usePageTitle('Pricing — Simple, Transparent Plans')
+  const { isSignedIn } = useAuth()
+  const createCheckout = useAction(api.billing.actions.createCheckoutSession)
+  const [isCheckingOut, setIsCheckingOut] = useState(false)
+
+  const handleProCheckout = useCallback(async () => {
+    if (!isSignedIn) {
+      // Redirect to sign-up if not authenticated
+      window.location.href = '/sign-up?redirect=/pricing'
+      return
+    }
+    setIsCheckingOut(true)
+    try {
+      // For now, the user needs to go to workspace settings to upgrade
+      // since checkout requires a workspaceId
+      toast('Head to your Workspace Settings > Billing to upgrade to Pro.', { icon: '>' })
+    } catch {
+      toast.error('Something went wrong. Please try again.')
+    } finally {
+      setIsCheckingOut(false)
+    }
+  }, [isSignedIn])
+
   return (
     <ErrorBoundary>
     <div className="min-h-screen bg-[#050505]">
@@ -329,7 +356,18 @@ export default function PricingPage() {
                     </div>
 
                     {/* CTA */}
-                    {tier.cta.style === 'primary' ? (
+                    {tier.name === 'Pro' ? (
+                      <button
+                        onClick={() => {
+                          posthog.capture('pricing_cta_clicked', { tier: tier.name, label: tier.cta.label })
+                          handleProCheckout()
+                        }}
+                        disabled={isCheckingOut}
+                        className="w-full text-center bg-[#6366F1] text-white font-bold text-sm px-6 py-3 hover:bg-[#4F46E5] transition-colors disabled:opacity-50"
+                      >
+                        {isCheckingOut ? 'Loading...' : tier.cta.label}
+                      </button>
+                    ) : tier.cta.style === 'primary' ? (
                       <Link
                         to={tier.cta.to}
                         onClick={() => posthog.capture('pricing_cta_clicked', { tier: tier.name, label: tier.cta.label })}
