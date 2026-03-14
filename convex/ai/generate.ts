@@ -2,6 +2,8 @@
 
 import { v } from "convex/values";
 import { action } from "../_generated/server";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import { internal } from "../_generated/api";
 import type { AIConfig } from "./resolveConfig";
 
@@ -25,14 +27,13 @@ export const generate = action({
     if (!identity) throw new Error("Not authenticated");
 
     // Resolve which provider/model/key to use
-    const config: AIConfig | null = await ctx.runQuery(
-      internal.ai.resolveConfig.resolveAIConfig,
-      {
-        projectId: args.projectId,
-        functionCategory: args.functionCategory,
-        clerkUserId: identity.subject,
-      }
-    );
+    // @ts-ignore — deep type instantiation
+    const resolveRef = internal.ai.resolveConfig.resolveAIConfig;
+    const config: AIConfig | null = await ctx.runQuery(resolveRef, {
+      projectId: args.projectId,
+      functionCategory: args.functionCategory,
+      clerkUserId: identity.subject,
+    });
 
     if (!config) {
       throw new Error(
