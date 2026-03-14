@@ -20,6 +20,10 @@ import {
   parseTasksFromCommit,
   getRecentCommits,
   isGitRepo,
+  parseConventionalCommit,
+  conventionalTypeToLabel,
+  validateBranchName,
+  DEFAULT_BRANCH_PATTERN,
 } from '../../lib/git.js';
 
 interface TaskData {
@@ -85,6 +89,15 @@ async function handlePostCommit(): Promise<void> {
 
     const latestCommit = commits[0];
 
+    // Parse conventional commit format
+    const conventional = parseConventionalCommit(latestCommit.message);
+    if (conventional) {
+      const label = conventionalTypeToLabel(conventional.type);
+      const scopeStr = conventional.scope ? `(${conventional.scope})` : '';
+      const breakingStr = conventional.breaking ? ' [BREAKING]' : '';
+      console.log(`[LTF] Conventional commit: ${conventional.type}${scopeStr}${breakingStr} — ${label}`);
+    }
+
     // Parse task references from commit message
     const taskRefs = parseTasksFromCommit(latestCommit.message, context.projectKey);
     if (taskRefs.length === 0) {
@@ -113,6 +126,18 @@ async function handlePostCommit(): Promise<void> {
     const completesTask = /(?:closes?|fixes?|resolves?|completes?)\s+/i.test(latestCommit.message);
     const startsTask = /(?:starts?|begins?|working\s+on)\s+/i.test(latestCommit.message);
 
+    // Build mutation extras from conventional commit data
+    const commitMeta: Record<string, string> = {};
+    if (conventional) {
+      commitMeta.commitType = conventional.type;
+      if (conventional.scope) {
+        commitMeta.commitScope = conventional.scope;
+      }
+      if (conventional.breaking) {
+        commitMeta.commitBreaking = 'true';
+      }
+    }
+
     // Update task status based on commit message
     for (const ref of taskRefs) {
       const task = tasks.find(t => t.number === ref.number);
@@ -137,11 +162,13 @@ async function handlePostCommit(): Promise<void> {
             {
               taskId: task._id,
               status: newStatus,
+              ...commitMeta,
             }
           );
 
           // Output minimal info (visible in terminal if user is watching)
-          console.log(`[LTF] Task ${context.projectKey}-${task.number}: ${task.status} -> ${newStatus}`);
+          const typeTag = conventional ? ` [${conventional.type}]` : '';
+          console.log(`[LTF] Task ${context.projectKey}-${task.number}: ${task.status} -> ${newStatus}${typeTag}`);
         } catch (err) {
           console.error(`[LTF] Hook error: ${err instanceof Error ? err.message : String(err)}`);
         }
@@ -237,6 +264,19 @@ async function handlePrePush(_remote?: string, _url?: string): Promise<void> {
     const branch = await getCurrentBranch();
     if (!branch) {
       silentExit(0);
+    }
+
+    // Validate branch name against configured pattern (warn only, never block)
+    const skipBranches = ['main', 'master', 'develop', 'staging', 'production'];
+    if (!skipBranches.includes(branch)) {
+      // Use configured pattern or default
+      const branchPattern = DEFAULT_BRANCH_PATTERN;
+      const validation = validateBranchName(branch, branchPattern);
+      if (!validation.valid) {
+        console.log(`\n[LTF] Warning: Branch '${branch}' doesn't match project pattern '${validation.pattern}'`);
+        console.log(`      Expected format: (feature|fix|hotfix|bugfix|chore|refactor|release|docs)/PROJ-123-description`);
+        console.log('');
+      }
     }
 
     // Parse task from branch name

@@ -9,6 +9,7 @@ import { registerSyncCommand } from './sync.js';
 import { registerHooksCommand } from './hooks.js';
 import { registerStatusCommand } from './status.js';
 import { registerHookHandlerCommand } from './hook-handler.js';
+import { registerGitConfigCommand } from './config.js';
 
 /**
  * Register all git-related commands
@@ -24,6 +25,7 @@ export function registerGitCommands(program: Command): void {
   registerHooksCommand(gitCommand);
   registerStatusCommand(gitCommand);
   registerHookHandlerCommand(gitCommand);
+  registerGitConfigCommand(gitCommand);
 }
 
 export default registerGitCommands;
