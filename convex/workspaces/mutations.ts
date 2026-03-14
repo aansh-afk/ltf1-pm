@@ -5,6 +5,7 @@ import { internal } from "../_generated/api";
 import { workspaceInvitation, memberRoleChanged, memberRemoved } from "../email/templates";
 import { getCurrentUserOrThrow } from "../lib/auth";
 import { workspaceRoleValidator } from "../lib/validators";
+import { getWorkspaceSeatInfo } from "../billing/featureGates";
 
 export const createWorkspace = mutation({
   args: {
@@ -219,6 +220,20 @@ export const inviteToWorkspace = mutation({
     const user = await getCurrentUserOrThrow(ctx);
 
     await requirePermission(ctx.db, user._id, args.workspaceId, "workspace.invite");
+
+    // Enforce seat limits based on subscription plan
+    const seatInfo = await getWorkspaceSeatInfo(ctx.db, args.workspaceId);
+    if (!seatInfo.canAddMore) {
+      if (seatInfo.plan === "free") {
+        throw new Error(
+          `Free plan allows up to ${seatInfo.seatsAvailable} members. You currently have ${seatInfo.seatsUsed}. Upgrade to Pro for unlimited members.`,
+        );
+      } else {
+        throw new Error(
+          `Your ${seatInfo.plan} plan allows ${seatInfo.seatsAvailable} seats. You currently have ${seatInfo.seatsUsed}. Please add more seats to your subscription.`,
+        );
+      }
+    }
 
     const invitedUser = await ctx.db
       .query("users")
