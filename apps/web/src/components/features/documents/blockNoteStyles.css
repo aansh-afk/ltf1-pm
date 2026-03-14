@@ -1,7 +1,35 @@
 /* BlockNote Dark Brutalist Theme Overrides */
 
-/* Root editor container */
-.bn-container[data-color-scheme="dark"] {
+/* Kill every background on every BlockNote / Mantine wrapper */
+[class*="bn-"],
+[class*="bn-"] > *,
+[data-color-scheme],
+[data-color-scheme] > *,
+.bn-container,
+.bn-editor,
+.bn-block-group,
+.bn-block-outer,
+.ProseMirror,
+[class*="mantine"][class*="root"],
+[data-bn-color-scheme] {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* Re-apply backgrounds ONLY where needed (menus, toolbars) */
+.bn-container .bn-slash-menu,
+.bn-container .bn-suggestion-menu,
+.bn-container .bn-toolbar,
+.bn-container .bn-side-menu,
+.mantine-Menu-dropdown,
+.mantine-Popover-dropdown {
+  background: #0A0A0A !important;
+}
+
+/* Theme variables */
+.bn-container[data-color-scheme] {
   --bn-colors-editor-background: transparent;
   --bn-colors-editor-text: #F9FAFB;
   --bn-colors-menu-background: #0A0A0A;
@@ -12,20 +40,13 @@
   --bn-colors-selected-background: #1F1F23;
   --bn-colors-disabled-background: #0A0A0A;
   --bn-colors-disabled-text: #6B7280;
-  --bn-colors-shadow: rgba(0, 0, 0, 0.5);
+  --bn-colors-shadow: none;
   --bn-colors-border: #2E2E35;
   --bn-colors-side-menu: #6B7280;
   --bn-colors-highlights-gray-background: #1F1F23;
   --bn-colors-highlights-gray-text: #9CA3AF;
   --bn-font-family: 'Inter', sans-serif;
   --bn-border-radius: 0px;
-}
-
-/* Make the entire editor container seamless with the page */
-.bn-container,
-.bn-container > *,
-.bn-container .ProseMirror {
-  background: transparent !important;
 }
 
 /* Editor body */
