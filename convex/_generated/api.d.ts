@@ -60,6 +60,8 @@ import type * as email_templates from "../email/templates.js";
 import type * as feedback from "../feedback.js";
 import type * as filterPresets_mutations from "../filterPresets/mutations.js";
 import type * as filterPresets_queries from "../filterPresets/queries.js";
+import type * as gitWorkflow_mutations from "../gitWorkflow/mutations.js";
+import type * as gitWorkflow_queries from "../gitWorkflow/queries.js";
 import type * as http from "../http.js";
 import type * as integrations_github_actions from "../integrations/github/actions.js";
 import type * as integrations_github_appSimple from "../integrations/github/appSimple.js";
@@ -184,6 +186,8 @@ declare const fullApi: ApiFromModules<{
   feedback: typeof feedback;
   "filterPresets/mutations": typeof filterPresets_mutations;
   "filterPresets/queries": typeof filterPresets_queries;
+  "gitWorkflow/mutations": typeof gitWorkflow_mutations;
+  "gitWorkflow/queries": typeof gitWorkflow_queries;
   http: typeof http;
   "integrations/github/actions": typeof integrations_github_actions;
   "integrations/github/appSimple": typeof integrations_github_appSimple;
