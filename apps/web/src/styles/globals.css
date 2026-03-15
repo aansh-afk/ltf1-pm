@@ -15,6 +15,7 @@
     border-radius: 0 !important; /* 1.1 THE LAW OF ZERO RADIUS */
     font-family: 'IBM Plex Mono', monospace !important; /* 2.1 THE MONO DOCTRINE */
     box-sizing: border-box;
+    color-scheme: dark; /* Fix native inputs (date, select, scrollbars) for dark theme */
   }
   
   *::before,
@@ -338,8 +339,21 @@
     @apply focus:border-[var(--theme-border-focus)] px-16px py-8px;
     box-shadow: none;
     border-radius: 0 !important;
+    color-scheme: dark;
+    font-family: 'IBM Plex Mono', monospace;
   }
-  
+
+  /* Fix native date/time inputs in dark theme */
+  .brutal-input[type="date"],
+  .brutal-input[type="time"],
+  .brutal-input[type="datetime-local"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    color-scheme: dark;
+    color: var(--theme-foreground);
+  }
+
   .brutal-input:focus {
     box-shadow: var(--theme-box-shadow);
   }

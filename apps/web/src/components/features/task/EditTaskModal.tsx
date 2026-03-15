@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useReducer, useEffect } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
@@ -354,6 +354,14 @@ export default function EditTaskModal({
     task,
     deriveInitialState,
   );
+
+  // Re-initialize when a different task is loaded
+  useEffect(() => {
+    if (task && isOpen) {
+      dispatch({ type: "LOAD_TASK", payload: deriveInitialState(task) });
+    }
+  }, [task?._id, isOpen]);
+
   const {
     title,
     description,

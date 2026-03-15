@@ -268,7 +268,7 @@ interface TaskDateFieldsProps {
 }
 
 function TaskDateFields({ startDate, dueDate, isDisabled, onStartDateChange, onDueDateChange }: TaskDateFieldsProps) {
-  const inputClass = "w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+  const inputClass = "w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed [color-scheme:dark]"
   const labelClass = "block font-mono text-[11px] font-bold uppercase tracking-wider mb-[4px]"
   return (
     <div className="grid grid-cols-2 gap-[8px]">
