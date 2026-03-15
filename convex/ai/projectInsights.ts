@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { action, internalAction } from "../_generated/server";
-import { internal } from "../_generated/api";
+// @ts-ignore — deep type instantiation
+import { internal, api } from "../_generated/api";
 import { Id, Doc } from "../_generated/dataModel";
 
 // Generate AI insights for project health and sprint status
@@ -250,9 +251,6 @@ export const generateProjectInsights = action({
       }
     }
 
-    // Resolve API key: platform env vars (beta: all users get AI)
-    const userApiKey = process.env.CEREBRAS_API_KEY || process.env.GROQ_API_KEY;
-
     // Build the base insights result
     const baseInsights = {
       sprintHealth: {
@@ -266,60 +264,52 @@ export const generateProjectInsights = action({
       aiGenerated: false,
     };
 
-    if (!userApiKey) {
-      return baseInsights;
-    }
+    // Generate AI insights via the centralized generate action
+    const systemPrompt = `You are a project management expert. You analyze software project data and return insights as JSON.
 
-    // Generate AI insights
-    const prompt = `
-You are a project management expert analyzing a software project. Based on the following data, provide insights:
+Output ONLY valid JSON. No markdown. No code fences. No explanation.
 
-Project: ${analysisData.project.name}
-${
-  analysisData.sprint
-    ? `
-Current Sprint: ${analysisData.sprint.name}
-Progress: ${analysisData.sprint.progress.toFixed(1)}% tasks complete
-Time Elapsed: ${analysisData.sprint.daysElapsed} of ${analysisData.sprint.sprintDaysTotal} days (${analysisData.sprint.timeProgress.toFixed(0)}%)
-Days Remaining: ${analysisData.sprint.daysRemaining}
-`
-    : "No active sprint"
+Return a JSON object with these exact fields:
+{
+  "sprintHealth": {
+    "score": <number 0-100>,
+    "prediction": "<one of: on-track, at-risk, delayed>",
+    "confidence": <number 0.0-1.0>,
+    "suggestions": ["array of actionable suggestion strings"]
+  },
+  "teamInsights": {
+    "sentiment": "<one of: positive, neutral, concerned>",
+    "observations": ["array of observation strings about team performance"]
+  },
+  "recommendations": ["array of 3 specific actionable recommendation strings"]
 }
 
-Metrics:
-- Total Tasks: ${analysisData.metrics.totalTasks}
-- Completed: ${analysisData.metrics.completedTasks}
-- In Progress: ${analysisData.metrics.inProgressTasks}
-- Blocked: ${analysisData.metrics.blockedTasks}
-- Average Velocity: ${analysisData.metrics.avgVelocity.toFixed(1)} points/sprint
-- Current Velocity: ${analysisData.metrics.currentVelocity} points
+Start with { and end with }. No other text.`;
 
-Team (${analysisData.team.size} members):
-${analysisData.team.workload.map((m: any) => `- ${m.name}: ${m.tasksAssigned} tasks (${m.tasksCompleted} completed)`).join("\n")}
+    const prompt = `Project: ${analysisData.project.name}
+${analysisData.sprint ? `Sprint: ${analysisData.sprint.name} | Progress: ${analysisData.sprint.progress.toFixed(1)}% | Days remaining: ${analysisData.sprint.daysRemaining}` : "No active sprint"}
+Tasks: ${analysisData.metrics.totalTasks} total, ${analysisData.metrics.completedTasks} done, ${analysisData.metrics.inProgressTasks} in progress, ${analysisData.metrics.blockedTasks} blocked
+Velocity: ${analysisData.metrics.avgVelocity.toFixed(1)} avg, ${analysisData.metrics.currentVelocity} current
+Team (${analysisData.team.size}): ${analysisData.team.workload.map((m: any) => `${m.name}: ${m.tasksAssigned} tasks (${m.tasksCompleted} done)`).join(", ")}
+Risks: ${analysisData.risks.length > 0 ? analysisData.risks.map((r: any) => `[${r.severity}] ${r.message}`).join("; ") : "None"}
 
-Identified Risks:
-${analysisData.risks.length > 0 ? analysisData.risks.map((r: any) => `- [${r.severity.toUpperCase()}] ${r.message}`).join("\n") : "None identified"}
-
-Provide a JSON response with:
-1. sprintHealth: { score (0-100), prediction ("on-track", "at-risk", or "delayed"), confidence (0-1), suggestions (array of actionable suggestions) }
-2. teamInsights: { sentiment ("positive", "neutral", or "concerned"), observations (array of observations about team performance) }
-3. recommendations: Array of 3 specific actionable recommendations
-
-Response must be valid JSON only, no markdown or explanation.`;
+Return JSON insights.`;
 
     try {
-      const aiResponse = await ctx.runAction(
-        internal.internalQueries.generateWithAI,
-        {
+      const aiResult: { text: string; model: string; provider: "cerebras" | "groq" } =
+        await ctx.runAction(api.ai.generate.generate, {
           prompt,
-          model: "gpt-oss-120b",
-          complexity: "high",
+          systemPrompt,
+          functionCategory: "project_insights",
           temperature: 0.3,
-          apiKey: userApiKey,
-        },
-      );
+          maxTokens: 1500,
+        });
 
-      const aiInsights = JSON.parse(aiResponse);
+      let responseText = aiResult.text.trim();
+      if (responseText.startsWith("```")) {
+        responseText = responseText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+      }
+      const aiInsights = JSON.parse(responseText);
 
       return {
         ...aiInsights,
@@ -349,47 +339,61 @@ export const generateTasksFromDescription = action({
 
     if (!project) throw new Error("Project not found");
 
-    // Resolve API key: platform env vars (beta: all users get AI)
-    const userApiKey = process.env.CEREBRAS_API_KEY || process.env.GROQ_API_KEY;
+    const systemPrompt = `You are a technical project manager for a software development team. You break down feature requests into specific, actionable tasks.
 
-    if (!userApiKey) {
-      throw new Error(
-        "AI features require API key setup. Set CEREBRAS_API_KEY or GROQ_API_KEY in your Convex environment.",
-      );
-    }
+You output ONLY valid JSON. No markdown. No code fences. No explanation before or after.
 
-    const prompt = `
-You are a technical project manager. Break down the following feature request into specific, actionable tasks for a software development team.
+=== OUTPUT FORMAT ===
+Return a JSON object with a single "tasks" array. Each task object has EXACTLY these fields:
+{
+  "title": "string — clear, action-oriented title, max 100 characters",
+  "description": "string — detailed description of what needs to be done",
+  "type": "string — MUST be one of: task, feature, bug, improvement",
+  "priority": "string — MUST be one of: low, medium, high, urgent",
+  "estimatedPoints": "number — MUST be one of: 1, 2, 3, 5, 8, 13",
+  "suggestedAssigneeRole": "string — MUST be one of: frontend, backend, fullstack, devops, qa",
+  "dependencies": ["array of task title strings this depends on, can be empty []"],
+  "acceptanceCriteria": ["array of specific criteria strings that must be met"]
+}
 
-Project Context: ${project.name}
+=== RULES ===
+- Generate 3-8 tasks per request
+- Each task title must be unique and action-oriented (start with a verb: "Implement", "Create", "Add", "Fix", "Configure")
+- estimatedPoints must be a number (not a string): 1, 2, 3, 5, 8, or 13
+- type must be exactly one of: "task", "feature", "bug", "improvement" (lowercase)
+- priority must be exactly one of: "low", "medium", "high", "urgent" (lowercase)
+- suggestedAssigneeRole must be exactly one of: "frontend", "backend", "fullstack", "devops", "qa" (lowercase)
+- dependencies array references other task titles from the same list (use empty array [] if none)
+- acceptanceCriteria should have 2-5 specific, testable criteria per task
+
+=== EXAMPLE OUTPUT ===
+{"tasks":[{"title":"Create user registration API endpoint","description":"Build POST /api/auth/register endpoint with email, password, and name validation. Hash passwords with bcrypt. Return JWT token on success.","type":"feature","priority":"high","estimatedPoints":5,"suggestedAssigneeRole":"backend","dependencies":[],"acceptanceCriteria":["Accepts email, password, name in request body","Validates email format and password strength","Returns 201 with JWT token on success","Returns 400 with validation errors on invalid input","Passwords are hashed before storage"]},{"title":"Build registration form UI","description":"Create a responsive registration form with email, password, confirm password, and name fields. Client-side validation with error messages.","type":"feature","priority":"high","estimatedPoints":3,"suggestedAssigneeRole":"frontend","dependencies":["Create user registration API endpoint"],"acceptanceCriteria":["Form has all required fields","Client-side validation shows inline errors","Submit calls the registration API","Success redirects to dashboard","Loading state shown during submission"]}]}
+
+=== FINAL REMINDER ===
+Output ONLY the JSON object starting with { and ending with }. No text before or after.`;
+
+    const prompt = `Project: ${project.name}
 Feature Request: ${args.description}
 ${args.epicTitle ? `Epic Title: ${args.epicTitle}` : ""}
 
-Generate 3-8 specific tasks that would be needed to implement this feature. For each task provide:
-1. title: Clear, action-oriented title (max 100 chars)
-2. description: Detailed description of what needs to be done
-3. type: One of "task", "feature", "bug", "improvement"
-4. priority: One of "low", "medium", "high", "urgent"
-5. estimatedPoints: Story points estimate (1, 2, 3, 5, 8, or 13)
-6. suggestedAssigneeRole: One of "frontend", "backend", "fullstack", "devops", "qa"
-7. dependencies: Array of task titles this depends on (can be empty)
-8. acceptanceCriteria: Array of specific criteria that must be met
-
-Response must be a valid JSON object with a "tasks" array containing the task objects. No markdown or explanation.`;
+Break this into 3-8 specific development tasks. Return ONLY the JSON object.`;
 
     try {
-      const aiResponse = await ctx.runAction(
-        internal.internalQueries.generateWithAI,
-        {
+      const aiResult: { text: string; model: string; provider: "cerebras" | "groq" } =
+        await ctx.runAction(api.ai.generate.generate, {
           prompt,
-          model: "gpt-oss-120b",
-          complexity: "medium",
-          temperature: 0.7,
-          apiKey: userApiKey,
-        },
-      );
+          systemPrompt,
+          functionCategory: "task_generation",
+          temperature: 0.4,
+          maxTokens: 3000,
+        });
 
-      const result = JSON.parse(aiResponse);
+      let responseText = aiResult.text.trim();
+      if (responseText.startsWith("```")) {
+        responseText = responseText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+      }
+
+      const result = JSON.parse(responseText);
 
       return {
         tasks: result.tasks,
@@ -509,66 +513,43 @@ export const generateStandupSummary = action({
       );
     }
 
-    // Resolve API key: platform env vars (beta: all users get AI)
-    const userApiKey = process.env.CEREBRAS_API_KEY || process.env.GROQ_API_KEY;
+    // Generate AI-enhanced summary via centralized generate action
+    const standupSystemPrompt = `You are a standup meeting summarizer. You analyze daily activity data and return a concise summary as JSON.
 
-    if (!userApiKey) {
-      // Return basic summary without AI
-      return {
-        summary: summaryData,
-        narrative: `Today: ${summaryData.completed.tasks} tasks completed, ${summaryData.inProgress.tasks} in progress${blockedTasks.length > 0 ? `, ${blockedTasks.length} blocked` : ""}.`,
-        aiGenerated: false,
-      };
-    }
+Output ONLY valid JSON. No markdown. No code fences. No explanation.
 
-    // Generate AI-enhanced summary
-    const prompt = `
-Generate a concise daily standup summary for a software team based on this activity:
-
-Date: ${targetDate}
-
-Completed Today:
-- ${summaryData.completed.tasks} tasks
-- ${summaryData.completed.commits} commits
-- ${summaryData.completed.prsMerged} PRs merged
-
-In Progress:
-- ${summaryData.inProgress.tasks} tasks
-- ${summaryData.inProgress.prsInReview} PRs in review
-
-${
-  blockedTasks.length > 0
-    ? `
-Blockers (${blockedTasks.length}):
-${blockedTasks
-  .slice(0, 3)
-  .map((t: Doc<"tasks">) => `- ${t.title}`)
-  .join("\n")}
-`
-    : "No blockers"
+Return a JSON object with these exact fields:
+{
+  "narrative": "string — 2-3 sentence summary suitable for a standup meeting",
+  "keyAchievements": ["array of 2-3 notable accomplishment strings"],
+  "focusAreas": ["array of 2-3 things the team should focus on"],
+  "teamMood": "string — MUST be one of: energized, productive, normal, struggling"
 }
 
-Provide a JSON response with:
-1. narrative: A 2-3 sentence summary suitable for a standup meeting
-2. keyAchievements: Array of 2-3 notable accomplishments
-3. focusAreas: Array of 2-3 things the team should focus on
-4. teamMood: One of "energized", "productive", "normal", "struggling"
+Start with { and end with }. No other text.`;
 
-Response must be valid JSON only.`;
+    const standupPrompt = `Date: ${targetDate}
+Done: ${summaryData.completed.tasks} tasks, ${summaryData.completed.commits} commits, ${summaryData.completed.prsMerged} PRs merged
+In Progress: ${summaryData.inProgress.tasks} tasks, ${summaryData.inProgress.prsInReview} PRs in review
+${blockedTasks.length > 0 ? `Blocked (${blockedTasks.length}): ${blockedTasks.slice(0, 3).map((t: Doc<"tasks">) => t.title).join(", ")}` : "No blockers"}
+
+Return JSON standup summary.`;
 
     try {
-      const aiResponse = await ctx.runAction(
-        internal.internalQueries.generateWithAI,
-        {
-          prompt,
-          model: "gpt-oss-120b",
-          complexity: "low",
-          temperature: 0.5,
-          apiKey: userApiKey,
-        },
-      );
+      const aiResult: { text: string; model: string; provider: "cerebras" | "groq" } =
+        await ctx.runAction(api.ai.generate.generate, {
+          prompt: standupPrompt,
+          systemPrompt: standupSystemPrompt,
+          functionCategory: "standup_summary",
+          temperature: 0.4,
+          maxTokens: 800,
+        });
 
-      const aiSummary = JSON.parse(aiResponse);
+      let responseText = aiResult.text.trim();
+      if (responseText.startsWith("```")) {
+        responseText = responseText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+      }
+      const aiSummary = JSON.parse(responseText);
 
       return {
         summary: summaryData,
