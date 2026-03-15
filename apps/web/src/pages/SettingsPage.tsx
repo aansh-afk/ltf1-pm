@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import ErrorBoundary from '@/components/common/ErrorBoundary'
-import { useQuery, useMutation } from 'convex/react'
+import { useQuery, useMutation, useAction } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Doc, Id } from '../../../../convex/_generated/dataModel'
 import { useAuth } from '@clerk/clerk-react'
@@ -36,6 +36,62 @@ import BrutalCard from '@/components/ui/BrutalCard'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalBadge from '@/components/ui/BrutalBadge'
 import BrutalSelect from '@/components/ui/BrutalSelect'
+
+// ── Test Email Button ──
+
+function TestEmailButton() {
+  const sendTest = useAction(api.email.send.sendTestEmail)
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [result, setResult] = useState<{ message: string; resendId?: string } | null>(null)
+
+  const handleSend = async () => {
+    setStatus('sending')
+    setResult(null)
+    try {
+      const res = await sendTest({})
+      if (res.success) {
+        setStatus('sent')
+        setResult({ message: res.message, resendId: res.resendId })
+        toast.success(res.message)
+      } else {
+        setStatus('error')
+        setResult({ message: res.message })
+        toast.error(res.message)
+      }
+    } catch (err: any) {
+      setStatus('error')
+      setResult({ message: err.message || 'Failed to send test email' })
+      toast.error(err.message || 'Failed to send test email')
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <BrutalButton
+        variant="secondary"
+        size="sm"
+        onClick={handleSend}
+        disabled={status === 'sending'}
+        loading={status === 'sending'}
+      >
+        {status === 'sending' ? 'SENDING...' : status === 'sent' ? 'SENT — SEND AGAIN' : 'SEND TEST EMAIL'}
+      </BrutalButton>
+      {result && (
+        <div className={clsx(
+          "px-3 py-2 border font-mono text-[10px]",
+          status === 'sent'
+            ? "border-[var(--theme-success)]/30 bg-[var(--theme-success)]/5 text-[var(--theme-success)]"
+            : "border-[var(--theme-error)]/30 bg-[var(--theme-error)]/5 text-[var(--theme-error)]"
+        )}>
+          <p>{result.message}</p>
+          {result.resendId && (
+            <p className="mt-1 text-[var(--theme-foreground)]/30">Resend ID: {result.resendId}</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 type SettingsTab = 'profile' | 'developer' | 'accessibility' | 'notifications' | 'workspace' | 'github' | 'ai' | 'shortcuts'
 
@@ -309,6 +365,15 @@ function NotificationsTab({ preferences, setPreferences, onReset }: Notification
             Slack notifications are managed in the Slack integration settings.
           </p>
         </div>
+      </div>
+
+      {/* Test Email Delivery */}
+      <div className="p-4 border-2 border-[var(--theme-border)]">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)]/60 mb-2">Email Delivery Test</h3>
+        <p className="text-[11px] text-[var(--theme-foreground)]/40 mb-3 font-mono">
+          Send a test email to your account's email address to verify delivery.
+        </p>
+        <TestEmailButton />
       </div>
 
       <div className="space-y-4 p-4 border-2 border-[var(--theme-border)]">
