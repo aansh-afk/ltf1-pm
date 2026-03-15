@@ -35,24 +35,36 @@ export const getDocument = query({
 })
 
 // Get all documents for a workspace (top-level, non-archived)
+// Optionally filter by projectId
 export const getDocuments = query({
   args: {
     workspaceId: v.id("workspaces"),
+    projectId: v.optional(v.id("projects")),
   },
   returns: v.any(),
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx)
 
-    const docs = await ctx.db
-      .query("whiteboards")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-      .collect()
+    let docs
+    if (args.projectId) {
+      docs = await ctx.db
+        .query("whiteboards")
+        .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+        .collect()
+    } else {
+      docs = await ctx.db
+        .query("whiteboards")
+        .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+        .collect()
+    }
 
     // Filter: top-level (no parentId), not archived, accessible
     const filtered = docs.filter(
       (d) =>
         !d.parentId &&
         !d.isArchived &&
+        // If filtering by project, match projectId; if workspace-level, show null projectId pages
+        (args.projectId ? d.projectId === args.projectId : true) &&
         (d.public ||
           d.createdBy === user._id ||
           d.collaborators.some((c) => c.userId === user._id))
@@ -133,6 +145,7 @@ export const createDocument = mutation({
     name: v.string(),
     parentId: v.optional(v.id("whiteboards")),
     icon: v.optional(v.string()),
+    projectId: v.optional(v.id("projects")),
   },
   returns: v.id("whiteboards"),
   handler: async (ctx, args) => {
@@ -142,7 +155,7 @@ export const createDocument = mutation({
       workspaceId: args.workspaceId,
       name: args.name,
       description: undefined,
-      projectId: undefined,
+      projectId: args.projectId,
       meetingId: undefined,
       thumbnail: undefined,
       elements: [],
@@ -343,6 +356,7 @@ export const createDocumentFromTemplate = mutation({
     icon: v.optional(v.string()),
     content: v.any(),
     parentId: v.optional(v.id("whiteboards")),
+    projectId: v.optional(v.id("projects")),
   },
   returns: v.id("whiteboards"),
   handler: async (ctx, args) => {
@@ -352,7 +366,7 @@ export const createDocumentFromTemplate = mutation({
       workspaceId: args.workspaceId,
       name: args.name,
       description: undefined,
-      projectId: undefined,
+      projectId: args.projectId,
       meetingId: undefined,
       thumbnail: undefined,
       elements: [],
@@ -385,6 +399,7 @@ export const createDocumentFromTemplate = mutation({
 export const hasWelcomePage = query({
   args: {
     workspaceId: v.id("workspaces"),
+    projectId: v.optional(v.id("projects")),
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
@@ -394,6 +409,9 @@ export const hasWelcomePage = query({
       .query("whiteboards")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
       .collect()
+
+    // Only check for welcome page at workspace level (not per-project)
+    if (args.projectId) return true
 
     return docs.some(
       (d) => d.createdBy === user._id && d.name === "Welcome to Pages"

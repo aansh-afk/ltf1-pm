@@ -113,8 +113,40 @@ export default function BlockNoteEditor({
     }
   }, [editor])
 
+  // Nuke Mantine's runtime-injected backgrounds after mount
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = wrapperRef.current
+    if (!el) return
+    const strip = () => {
+      el.querySelectorAll<HTMLElement>("*").forEach((child) => {
+        const bg = getComputedStyle(child).backgroundColor
+        // If it's not transparent/rgba(0,0,0,0) and not a menu/toolbar, force it
+        if (
+          bg &&
+          bg !== "transparent" &&
+          bg !== "rgba(0, 0, 0, 0)" &&
+          !child.closest(".bn-suggestion-menu") &&
+          !child.closest(".bn-slash-menu") &&
+          !child.closest(".bn-toolbar") &&
+          !child.closest(".mantine-Menu-dropdown") &&
+          !child.closest(".mantine-Popover-dropdown")
+        ) {
+          child.style.setProperty("background", "transparent", "important")
+          child.style.setProperty("background-color", "transparent", "important")
+        }
+      })
+    }
+    // Run immediately + after Mantine CSS-in-JS injects
+    strip()
+    const timer = setTimeout(strip, 100)
+    const observer = new MutationObserver(strip)
+    observer.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: ["style", "class"] })
+    return () => { clearTimeout(timer); observer.disconnect() }
+  }, [])
+
   return (
-    <div className="min-h-[300px] w-full">
+    <div ref={wrapperRef} className="min-h-[300px] w-full bn-transparent-wrapper">
       {loadError && (
         <div className="mb-3 px-3 py-2 bg-[var(--theme-warning)]/10 border border-[var(--theme-warning)]/30 text-[11px] font-mono text-[var(--theme-warning)]">
           Content format was outdated and could not be loaded. Starting with a blank page — your new edits will save normally.

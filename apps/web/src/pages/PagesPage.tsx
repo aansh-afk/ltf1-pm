@@ -361,9 +361,11 @@ function formatRelativeTime(timestamp: number): string {
 
 function PageListView({
   workspaceId,
+  projectId,
   onSelectDocument,
 }: {
   workspaceId: Id<"workspaces">
+  projectId?: Id<"projects">
   onSelectDocument: (id: Id<"whiteboards">) => void
 }) {
   const [search, setSearch] = useState("")
@@ -371,8 +373,8 @@ function PageListView({
   const [showTemplates, setShowTemplates] = useState(false)
   const [showAIModal, setShowAIModal] = useState(false)
 
-  const documents = useQuery(api.documents.getDocuments, { workspaceId })
-  const hasWelcome = useQuery(api.documents.hasWelcomePage, { workspaceId })
+  const documents = useQuery(api.documents.getDocuments, { workspaceId, projectId })
+  const hasWelcome = useQuery(api.documents.hasWelcomePage, { workspaceId, projectId })
   const archivedDocs = useQuery(
     api.documents.getArchivedDocuments,
     showTrash ? { workspaceId } : "skip"
@@ -408,7 +410,7 @@ function PageListView({
   }, [hasWelcome, workspaceId, createFromTemplate])
 
   const handleCreate = async () => {
-    const id = await createDocument({ workspaceId, name: "Untitled" })
+    const id = await createDocument({ workspaceId, name: "Untitled", projectId })
     onSelectDocument(id)
   }
 
@@ -419,6 +421,7 @@ function PageListView({
       name: template.name,
       icon: template.icon,
       content: template.content,
+      projectId,
     })
     onSelectDocument(id)
     toast.success(`Created from "${template.name}" template`)
@@ -430,6 +433,7 @@ function PageListView({
       name,
       icon,
       content,
+      projectId,
     })
     onSelectDocument(id)
   }
@@ -808,7 +812,11 @@ function PageEditorView({
 
 // ── Main Page ────────────────────────────────────────
 
-export default function PagesPage() {
+interface PagesPageProps {
+  projectId?: Id<"projects">
+}
+
+export default function PagesPage({ projectId }: PagesPageProps = {}) {
   usePageTitle("Pages — LTF1")
   const { currentWorkspaceId } = useCurrentWorkspace()
   const [activeDocumentId, setActiveDocumentId] = useState<Id<"whiteboards"> | null>(null)
@@ -854,6 +862,7 @@ export default function PagesPage() {
   return (
     <PageListView
       workspaceId={currentWorkspaceId}
+      projectId={projectId}
       onSelectDocument={setActiveDocumentId}
     />
   )
