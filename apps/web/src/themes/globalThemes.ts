@@ -742,6 +742,19 @@ export const vercelTheme: GlobalTheme = {
 // EXPORTS
 // ─────────────────────────────────────────────
 
+import {
+  obsidianLightTheme,
+  vscodeLightTheme,
+  monokaiLightTheme,
+  solarizedLightTheme,
+  nordLightTheme,
+  onedarkLightTheme,
+  tokyonightLightTheme,
+  catppuccinLightTheme,
+  gruvboxLightTheme,
+  vercelLightTheme,
+} from './lightThemes'
+
 export const globalThemes: Record<ThemeName, GlobalTheme> = {
   obsidian: obsidianTheme,
   vscode: vscodeTheme,
@@ -753,6 +766,17 @@ export const globalThemes: Record<ThemeName, GlobalTheme> = {
   catppuccin: catppuccinTheme,
   gruvbox: gruvboxTheme,
   vercel: vercelTheme,
+  // Light variants
+  'obsidian-light': obsidianLightTheme,
+  'vscode-light': vscodeLightTheme,
+  'monokai-light': monokaiLightTheme,
+  'solarized-light': solarizedLightTheme,
+  'nord-light': nordLightTheme,
+  'onedark-light': onedarkLightTheme,
+  'tokyonight-light': tokyonightLightTheme,
+  'catppuccin-light': catppuccinLightTheme,
+  'gruvbox-light': gruvboxLightTheme,
+  'vercel-light': vercelLightTheme,
 }
 
 export const getGlobalTheme = (name: ThemeName): GlobalTheme => {
