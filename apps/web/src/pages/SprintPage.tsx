@@ -359,7 +359,7 @@ export default function SprintPage() {
           onClick={() => setViewMode("planning")}
         >
           <HiOutlineCalendar className="w-4 h-4" />
-          Planning
+          Backlog & Planning
         </button>
       </m.div>
 
@@ -390,14 +390,23 @@ export default function SprintPage() {
               No Active Sprint
             </h3>
             <p className="text-xs text-[var(--theme-foreground-tertiary)] mb-4 max-w-sm mx-auto">
-              Create and start a sprint to see the sprint board.
+              Create a sprint and move tasks into it, then start the sprint to see the board here.
+              Use the "Backlog & Planning" tab above to manage upcoming sprints.
             </p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-[var(--theme-primary)] text-white text-xs font-semibold border-2 border-[var(--theme-primary-active)] uppercase tracking-wider hover:bg-[var(--theme-primary-active)]"
-            >
-              Create Sprint
-            </button>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => setViewMode("planning")}
+                className="px-4 py-2 border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] text-xs font-semibold uppercase tracking-wider hover:border-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-foreground)] transition-colors"
+              >
+                Open Planning
+              </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-4 py-2 bg-[var(--theme-primary)] text-white text-xs font-semibold border-2 border-[var(--theme-primary-active)] uppercase tracking-wider hover:bg-[var(--theme-primary-active)]"
+              >
+                Create Sprint
+              </button>
+            </div>
           </div>
         )}
       </m.div>

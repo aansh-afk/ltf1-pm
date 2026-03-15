@@ -1265,7 +1265,7 @@ function TasksHeaderControls({
                 {view === "kanban"
                   ? "BOARD"
                   : view === "calendar"
-                    ? "CAL"
+                    ? "CALENDAR"
                     : view.toUpperCase()}
               </button>
             ),
