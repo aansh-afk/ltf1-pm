@@ -112,10 +112,11 @@ export function GitHubProjectTab({
               </div>
             ) : (
               <BrutalButton
+                variant="secondary"
+                size="sm"
                 onClick={() => setShowConnectRepoModal(true)}
-                className="h-[24px] px-[16px] bg-[var(--theme-background-tertiary)] text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)] text-brutal-sm font-bold tracking-wide [box-shadow:4px_4px_0px_var(--theme-shadow)] hover:[box-shadow:2px_2px_0px_var(--theme-shadow)]"
               >
-                <FaGithub className="mr-8px w-16px h-16px" />
+                <FaGithub className="mr-1 w-4 h-4" />
                 CONNECT REPOSITORY
               </BrutalButton>
             )}
@@ -179,21 +180,23 @@ export function GitHubProjectTab({
 
         <div className="flex items-center gap-[6px] shrink-0">
           <BrutalButton
+            variant="ghost"
+            size="sm"
             onClick={() => {
               navigator.clipboard.writeText(`git clone ${repository.url}.git`);
               toast.success("Clone URL copied");
             }}
-            className="h-[16px] px-[10px] text-brutal-xs bg-[var(--theme-background)] border border-[var(--theme-border)] text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
           >
-            <HiOutlineTerminal className="mr-[4px] w-[12px] h-[12px]" />
+            <HiOutlineTerminal className="mr-[4px] w-3 h-3" />
             CLONE
           </BrutalButton>
           <BrutalButton
+            variant="ghost"
+            size="sm"
             onClick={() => window.open(repository.url, "_blank")}
-            className="h-[16px] px-[10px] text-brutal-xs bg-[var(--theme-background)] border border-[var(--theme-border)] text-[var(--theme-foreground)] hover:bg-[var(--theme-background-secondary)]"
           >
-            <HiOutlineExternalLink className="mr-[4px] w-[12px] h-[12px]" />
-            VIEW ON GITHUB
+            <HiOutlineExternalLink className="mr-[4px] w-3 h-3" />
+            GITHUB
           </BrutalButton>
         </div>
       </div>
