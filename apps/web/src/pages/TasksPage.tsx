@@ -124,22 +124,23 @@ function TasksToolbar({
           {[
             { id: "board", icon: HiOutlineViewBoards, label: "BOARD" },
             { id: "list", icon: HiOutlineViewList, label: "LIST" },
-            { id: "calendar", icon: HiOutlineCalendar, label: "CAL" },
-            { id: "table", icon: HiOutlineViewGrid, label: "GRID" },
+            { id: "calendar", icon: HiOutlineCalendar, label: "CALENDAR" },
+            { id: "table", icon: HiOutlineViewGrid, label: "TABLE" },
           ].map((mode) => (
             <button
               key={mode.id}
               className={clsx(
-                "w-7 h-7 flex items-center justify-center transition-all",
+                "h-7 px-2 flex items-center gap-1 transition-all font-mono text-[9px] uppercase tracking-wider",
                 "border-r border-[var(--theme-border)] last:border-r-0",
                 viewMode === mode.id
-                  ? "bg-[var(--theme-primary)] text-white"
+                  ? "bg-[var(--theme-primary)] text-white font-bold"
                   : "text-[var(--theme-foreground-tertiary)] hover:text-[var(--theme-foreground)] hover:bg-[var(--theme-background-tertiary)]",
               )}
               onClick={() => onViewModeChange(mode.id as "board" | "list" | "calendar" | "table")}
               title={`${mode.label} View`}
             >
-              <mode.icon className="w-3.5 h-3.5" />
+              <mode.icon className="w-3 h-3" />
+              <span className="hidden sm:inline">{mode.label}</span>
             </button>
           ))}
         </div>
@@ -710,6 +711,31 @@ export default function TasksPage() {
           </button>
         </div>
       </div>
+
+      {/* Filter info bar — visible when filters are active */}
+      {hasActiveFilters && tasks !== undefined && (
+        <div className="flex items-center justify-between px-3 py-1.5 bg-[var(--theme-primary)]/5 border-b border-[var(--theme-primary)]/20 shrink-0">
+          <span className="font-mono text-[10px] text-[var(--theme-foreground-secondary)]">
+            SHOWING{" "}
+            <span className="text-[var(--theme-primary)] font-bold">
+              {tasks.length}
+            </span>{" "}
+            TASK{tasks.length !== 1 ? "S" : ""}
+            {getActiveFilterCount() > 0 && (
+              <> WITH <span className="text-[var(--theme-primary)] font-bold">{getActiveFilterCount()}</span> FILTER{getActiveFilterCount() !== 1 ? "S" : ""}</>
+            )}
+          </span>
+          <button
+            onClick={() => {
+              dispatch({ type: "SET_FILTERS", value: defaultFilters });
+              dispatch({ type: "SET_QUICK_SEARCH", value: "" });
+            }}
+            className="font-mono text-[9px] text-[var(--theme-error)] hover:text-[var(--theme-foreground)] transition-colors uppercase tracking-wider"
+          >
+            CLEAR ALL
+          </button>
+        </div>
+      )}
 
       {/* Task Content - Maximum area */}
       <div className="flex-1 min-h-0 p-2 overflow-hidden">
