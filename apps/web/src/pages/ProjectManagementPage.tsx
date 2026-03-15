@@ -35,7 +35,7 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import CreateTaskModal from "@/components/features/task/CreateTaskModal";
 import EditTaskModal from "@/components/features/task/EditTaskModal";
 import BulkActionBar from "@/components/features/task/BulkActionBar";
-import KanbanBoard from "@/components/features/kanban/KanbanBoard";
+import TaskBoard from "@/components/features/task/TaskBoard";
 import TaskList from "@/components/features/task/TaskList";
 import { GitHubProjectTab } from "@/components/features/github/GitHubProjectTab";
 import SprintBoard from "@/components/features/sprint/SprintBoard";
@@ -1448,7 +1448,7 @@ function TasksViewRenderer({
 
       {taskView === "kanban" && (
         <div className="flex-1 min-h-0">
-          <KanbanBoard
+          <TaskBoard
             tasks={filteredTasks}
             projectId={projectId}
             onTaskUpdate={() => {}}

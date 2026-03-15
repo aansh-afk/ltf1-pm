@@ -15,7 +15,7 @@ import {
 import BulkActionBar from "@/components/features/task/BulkActionBar";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import WorkspaceSelector from "@/components/common/WorkspaceSelector";
-import KanbanBoard from "@/components/features/kanban/KanbanBoard";
+import TaskBoard from "@/components/features/task/TaskBoard";
 import TaskList from "@/components/features/task/TaskList";
 import TaskCalendar from "@/components/features/task/TaskCalendar";
 import TaskTable from "@/components/features/task/TaskTable";
@@ -261,7 +261,7 @@ function TaskContentArea({
       </div>
       <div className="flex-1 min-h-0">
         {viewMode === "board" ? (
-          <KanbanBoard
+          <TaskBoard
             tasks={tasks}
             projectId={selectedProjectId}
             onTaskUpdate={() => {}}
