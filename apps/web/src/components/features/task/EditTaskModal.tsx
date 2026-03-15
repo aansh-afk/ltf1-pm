@@ -495,6 +495,7 @@ export default function EditTaskModal({
           {useSmartAssignment ? (
             <TaskAssignmentHelper
               workspaceId={project?.workspaceId as Id<"workspaces">}
+              projectId={task.projectId}
               currentAssignees={assigneeIds as Id<"users">[]}
               onAssigneeChange={(ids) =>
                 dispatch({ type: "SET_ASSIGNEE_IDS", value: ids })
@@ -505,6 +506,8 @@ export default function EditTaskModal({
                 .split(",")
                 .map((l) => l.trim())
                 .filter(Boolean)}
+              taskType={type}
+              priority={priority}
               mode="compact"
             />
           ) : (

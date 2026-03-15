@@ -36,9 +36,12 @@ interface TaskAssignmentSectionProps {
   estimateHours: string
   isCreating: boolean
   workspaceId: string | undefined
+  projectId: string
   title: string
   description: string
   labels: string
+  taskType: string
+  priority: string
   projectMembers: Array<{ _id: string; name: string; avatarUrl?: string }> | undefined
   onToggleSmartAssignment: () => void
   onAssigneeChange: (ids: string[]) => void
@@ -51,9 +54,12 @@ function TaskAssignmentSection({
   estimateHours,
   isCreating,
   workspaceId,
+  projectId,
   title,
   description,
   labels,
+  taskType,
+  priority,
   projectMembers,
   onToggleSmartAssignment,
   onAssigneeChange,
@@ -92,11 +98,14 @@ function TaskAssignmentSection({
         <>
           <TaskAssignmentHelper
             workspaceId={workspaceId as Id<"workspaces">}
+            projectId={projectId as Id<"projects">}
             currentAssignees={assigneeIds as Id<"users">[]}
             onAssigneeChange={onAssigneeChange}
             taskTitle={title}
             taskDescription={description}
             taskLabels={labels.split(',').map(l => l.trim()).filter(Boolean)}
+            taskType={taskType}
+            priority={priority}
             mode="compact"
           />
           <div>
@@ -571,9 +580,12 @@ export default function CreateTaskModal({
           estimateHours={estimateHours}
           isCreating={isCreating}
           workspaceId={project?.workspaceId}
+          projectId={projectId}
           title={title}
           description={description}
           labels={labels}
+          taskType={type}
+          priority={priority}
           projectMembers={project?.members}
           onToggleSmartAssignment={() => dispatch({ type: 'TOGGLE_SMART_ASSIGNMENT' })}
           onAssigneeChange={(ids) => dispatch({ type: 'SET_ASSIGNEE_IDS', value: ids })}

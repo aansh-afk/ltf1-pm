@@ -28,6 +28,8 @@ import type * as ai_projectInsights from "../ai/projectInsights.js";
 import type * as ai_providers from "../ai/providers.js";
 import type * as ai_queries from "../ai/queries.js";
 import type * as ai_resolveConfig from "../ai/resolveConfig.js";
+import type * as ai_taskAssignment from "../ai/taskAssignment.js";
+import type * as ai_taskAssignmentQueries from "../ai/taskAssignmentQueries.js";
 import type * as ai_usageLog from "../ai/usageLog.js";
 import type * as aiCredits_actions from "../aiCredits/actions.js";
 import type * as aiCredits_mutations from "../aiCredits/mutations.js";
@@ -156,6 +158,8 @@ declare const fullApi: ApiFromModules<{
   "ai/providers": typeof ai_providers;
   "ai/queries": typeof ai_queries;
   "ai/resolveConfig": typeof ai_resolveConfig;
+  "ai/taskAssignment": typeof ai_taskAssignment;
+  "ai/taskAssignmentQueries": typeof ai_taskAssignmentQueries;
   "ai/usageLog": typeof ai_usageLog;
   "aiCredits/actions": typeof aiCredits_actions;
   "aiCredits/mutations": typeof aiCredits_mutations;
