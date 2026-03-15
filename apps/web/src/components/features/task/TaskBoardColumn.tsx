@@ -1,10 +1,10 @@
 import React, { memo } from "react";
 import { HiOutlinePlus } from "react-icons/hi";
 import clsx from "clsx";
-import KanbanCard from "./KanbanCard";
+import TaskCard from "./TaskCard";
 import { AnimatePresence, m } from "framer-motion";
 
-interface KanbanTask {
+interface BoardTask {
   _id: string;
   title: string;
   status: string;
@@ -12,30 +12,30 @@ interface KanbanTask {
   [key: string]: unknown;
 }
 
-interface KanbanColumnProps {
+interface TaskBoardColumnProps {
   id: string;
   title: string;
-  tasks: KanbanTask[];
+  tasks: BoardTask[];
   colorVar: string;
   isCompact?: boolean;
-  onTaskEdit?: (task: KanbanTask) => void;
+  onTaskEdit?: (task: BoardTask) => void;
   onTaskDelete?: (taskId: string) => void;
-  onTaskDuplicate?: (task: KanbanTask) => void;
+  onTaskDuplicate?: (task: BoardTask) => void;
   onViewDetails?: (taskId: string) => void;
   onAddTask?: (status: string) => void;
-  draggedTask?: KanbanTask | null;
+  draggedTask?: BoardTask | null;
   hoveredColumn?: string | null;
   dropPosition?: { column: string; index: number } | null;
   onDragOver?: (e: React.DragEvent) => void;
   onDragLeave?: () => void;
   onDrop?: (e: React.DragEvent) => void;
-  onDragStart?: (e: React.DragEvent, task: KanbanTask) => void;
+  onDragStart?: (e: React.DragEvent, task: BoardTask) => void;
   onDragOverTask?: (e: React.DragEvent, taskId: string, index: number) => void;
   columnRef?: (el: HTMLDivElement | null) => void;
   hasOverflow?: boolean;
 }
 
-const KanbanColumn = memo(function KanbanColumn({
+const TaskBoardColumn = memo(function TaskBoardColumn({
   id,
   title,
   tasks,
@@ -56,7 +56,7 @@ const KanbanColumn = memo(function KanbanColumn({
   onDragOverTask,
   columnRef,
   hasOverflow,
-}: KanbanColumnProps) {
+}: TaskBoardColumnProps) {
   const taskCount = tasks.length;
   const isHovered = hoveredColumn === id && draggedTask;
 
@@ -157,7 +157,7 @@ const KanbanColumn = memo(function KanbanColumn({
                   }
                   className="cursor-move"
                 >
-                  <KanbanCard
+                  <TaskCard
                     task={task}
                     isCompact={isCompact}
                     onEdit={onTaskEdit}
@@ -226,4 +226,4 @@ const KanbanColumn = memo(function KanbanColumn({
   );
 });
 
-export default KanbanColumn;
+export default TaskBoardColumn;
