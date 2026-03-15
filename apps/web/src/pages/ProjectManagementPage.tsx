@@ -57,6 +57,7 @@ import TeamActivityFeed from "@/components/features/activity/TeamActivityFeed";
 import { ExpertiseSearchModal } from "@/components/features/profile/ExpertiseSearchModal";
 import { TeamExpertiseMatrix } from "@/components/features/profile/TeamExpertiseMatrix";
 import ProjectDocsHub from "@/components/features/documentation/ProjectDocsHub";
+import PagesPage from "@/pages/PagesPage";
 import GitWorkflowConfig from "@/components/features/git/GitWorkflowConfig";
 import type { TaskFilters as TaskFiltersType } from "@/components/features/task/TaskFilters";
 import { useTemporaryShortcut } from "@/contexts/ShortcutContext";
@@ -168,6 +169,7 @@ type TabType =
   | "github"
   | "meetings"
   | "docs"
+  | "pages"
   | "logs"
   | "settings";
 
@@ -3174,6 +3176,9 @@ function ProjectTabContent({
             projectDetails={project}
           />
         )}
+        {activeTab === "pages" && (
+          <PagesPage projectId={projectId} />
+        )}
         {activeTab === "logs" && (
           <TeamActivityFeed
             projectId={projectId}
@@ -3470,6 +3475,11 @@ export default function ProjectManagementPage() {
     {
       id: "docs",
       label: "DOCS",
+      icon: <HiOutlineDocumentText className="w-14px h-14px" />,
+    },
+    {
+      id: "pages",
+      label: "PAGES",
       icon: <HiOutlineDocumentText className="w-14px h-14px" />,
     },
     {
