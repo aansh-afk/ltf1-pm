@@ -674,6 +674,33 @@ function PageEditorView({
 
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [titleValue, setTitleValue] = useState("")
+  const [showCollabPanel, setShowCollabPanel] = useState(false)
+  const [hasExternalChanges, setHasExternalChanges] = useState(false)
+  const collabRef = useRef<HTMLDivElement>(null)
+
+  // Track version to detect external changes
+  const lastKnownVersionRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (!doc) return
+    if (lastKnownVersionRef.current === null) {
+      lastKnownVersionRef.current = doc.version
+    } else if (doc.version > lastKnownVersionRef.current + 1) {
+      // Version jumped by more than our own save — someone else edited
+      setHasExternalChanges(true)
+    }
+    lastKnownVersionRef.current = doc.version
+  }, [doc?.version])
+
+  // Close collab panel on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (collabRef.current && !collabRef.current.contains(e.target as Node)) {
+        setShowCollabPanel(false)
+      }
+    }
+    if (showCollabPanel) document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [showCollabPanel])
 
   const handleTitleClick = () => {
     if (doc) {
@@ -710,6 +737,13 @@ function PageEditorView({
     [debouncedSave]
   )
 
+  const handleReloadContent = () => {
+    setHasExternalChanges(false)
+    // Navigate away and back to force re-render with fresh content
+    onNavigate(null)
+    setTimeout(() => onNavigate(documentId), 50)
+  }
+
   // Keyboard shortcut: Escape to go back
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -718,6 +752,14 @@ function PageEditorView({
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [onBack])
+
+  // Determine other active collaborators (not self)
+  const otherCollaborators = collaborators.filter(
+    (c: any) => c.user && doc?.creator && c.userId !== doc.createdBy
+  )
+  const selfCollaborator = collaborators.find(
+    (c: any) => doc?.creator && c.userId === doc.createdBy
+  )
 
   if (!doc) {
     return (
@@ -732,6 +774,28 @@ function PageEditorView({
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      {/* External changes banner */}
+      <AnimatePresence>
+        {hasExternalChanges && (
+          <m.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="bg-[var(--theme-info)]/10 border-b border-[var(--theme-info)]/30 px-4 py-2 flex items-center justify-between shrink-0"
+          >
+            <span className="text-[11px] font-mono text-[var(--theme-info)]">
+              Someone else updated this page. Reload to see their changes.
+            </span>
+            <button
+              onClick={handleReloadContent}
+              className="text-[10px] font-mono font-bold text-[var(--theme-info)] border border-[var(--theme-info)]/40 px-2 py-0.5 hover:bg-[var(--theme-info)]/20 transition-colors"
+            >
+              RELOAD
+            </button>
+          </m.div>
+        )}
+      </AnimatePresence>
+
       {/* Top bar */}
       <div className="h-[44px] border-b border-[var(--theme-border)] flex items-center px-4 gap-3 shrink-0 bg-[var(--theme-background-secondary)]">
         <button
@@ -750,26 +814,79 @@ function PageEditorView({
 
         <SaveStatusIndicator status={saveStatus} />
 
-        {/* Collaborator avatars */}
-        {collaborators.length > 1 && (
-          <div className="flex items-center -space-x-1.5 ml-2">
-            {collaborators.slice(0, 4).map((c: any) => (
-              <div
-                key={c.userId}
-                className="w-5 h-5 rounded-full border-2 border-[var(--theme-background-secondary)] text-[7px] flex items-center justify-center font-mono font-bold"
-                style={{ backgroundColor: c.color }}
-                title={c.user?.name}
-              >
-                {c.user?.name?.[0]?.toUpperCase() || "?"}
-              </div>
-            ))}
-            {collaborators.length > 4 && (
-              <span className="text-[10px] font-mono text-[var(--theme-foreground)]/30 ml-2">
-                +{collaborators.length - 4}
-              </span>
+        {/* Collaborators section — always visible */}
+        <div className="relative" ref={collabRef}>
+          <button
+            onClick={() => setShowCollabPanel(!showCollabPanel)}
+            className="flex items-center gap-1.5 px-2 py-1 border border-[var(--theme-border)] hover:border-[var(--theme-foreground)]/30 transition-colors"
+          >
+            {/* Avatars */}
+            <div className="flex items-center -space-x-1">
+              {collaborators.slice(0, 3).map((c: any) => (
+                <div
+                  key={c.userId}
+                  className="w-4.5 h-4.5 rounded-full border border-[var(--theme-background-secondary)] text-[7px] flex items-center justify-center font-mono font-bold relative"
+                  style={{ backgroundColor: c.color, width: 18, height: 18 }}
+                >
+                  {c.user?.name?.[0]?.toUpperCase() || "?"}
+                  {/* Green dot for active users */}
+                  <span className="absolute -bottom-px -right-px w-1.5 h-1.5 bg-[var(--theme-success)] rounded-full border border-[var(--theme-background-secondary)]" />
+                </div>
+              ))}
+            </div>
+            <span className="text-[10px] font-mono text-[var(--theme-foreground)]/40">
+              {collaborators.length === 1
+                ? "ONLY YOU"
+                : `${collaborators.length} VIEWING`}
+            </span>
+            {otherCollaborators.length > 0 && (
+              <span className="w-1.5 h-1.5 bg-[var(--theme-success)] rounded-full animate-pulse" />
             )}
-          </div>
-        )}
+          </button>
+
+          {/* Collaboration panel dropdown */}
+          {showCollabPanel && (
+            <div className="absolute right-0 top-full mt-1 z-50 w-[260px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">
+              <div className="px-3 py-2 border-b border-[var(--theme-border)]">
+                <span className="text-[10px] font-mono text-[var(--theme-foreground)]/40 tracking-wider">
+                  ACTIVE ON THIS PAGE
+                </span>
+              </div>
+              <div className="py-1">
+                {collaborators.length === 0 ? (
+                  <p className="px-3 py-2 text-[11px] font-mono text-[var(--theme-foreground)]/30">
+                    No one else is viewing
+                  </p>
+                ) : (
+                  collaborators.map((c: any) => (
+                    <div key={c.userId} className="flex items-center gap-2 px-3 py-1.5 hover:bg-[var(--theme-hover)]">
+                      <div
+                        className="w-5 h-5 rounded-full text-[8px] flex items-center justify-center font-mono font-bold relative"
+                        style={{ backgroundColor: c.color }}
+                      >
+                        {c.user?.name?.[0]?.toUpperCase() || "?"}
+                        <span className="absolute -bottom-px -right-px w-1.5 h-1.5 bg-[var(--theme-success)] rounded-full border border-[var(--theme-background)]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-mono text-[var(--theme-foreground)] truncate">
+                          {c.user?.name || "Unknown"}
+                        </p>
+                        <p className="text-[9px] font-mono text-[var(--theme-foreground)]/30">
+                          {c.userId === doc.createdBy ? "OWNER" : "COLLABORATOR"} — ACTIVE
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="px-3 py-2 border-t border-[var(--theme-border)]">
+                <p className="text-[9px] font-mono text-[var(--theme-foreground)]/20 leading-relaxed">
+                  All workspace members with access can view and edit this page. Changes auto-save and sync via Convex subscriptions.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Editor area */}
@@ -807,11 +924,19 @@ function PageEditorView({
               </h1>
             )}
 
-            {/* Meta info */}
-            <p className="text-[11px] font-mono text-[var(--theme-foreground)]/20 mt-2">
-              Last edited {formatRelativeTime(doc.updatedAt)}
-              {doc.creator?.name && ` by ${doc.creator.name}`}
-            </p>
+            {/* Meta info + live collaborators */}
+            <div className="flex items-center gap-3 mt-2">
+              <p className="text-[11px] font-mono text-[var(--theme-foreground)]/20">
+                Last edited {formatRelativeTime(doc.updatedAt)}
+                {doc.creator?.name && ` by ${doc.creator.name}`}
+              </p>
+              {otherCollaborators.length > 0 && (
+                <span className="text-[10px] font-mono text-[var(--theme-success)] flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-[var(--theme-success)] rounded-full animate-pulse" />
+                  {otherCollaborators.map((c: any) => c.user?.name?.split(" ")[0]).join(", ")} editing
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Block Editor */}
