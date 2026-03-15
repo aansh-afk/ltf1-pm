@@ -43,16 +43,40 @@ Guidelines:
 export const generateTemplate = action({
   args: {
     prompt: v.string(),
+    projectId: v.optional(v.id("projects")),
   },
   returns: v.any(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
+    // Build repo context if projectId is provided
+    let repoContextBlock = "";
+    if (args.projectId) {
+      try {
+        const repo: any = await ctx.runQuery(
+          api.integrations.github.queries.getProjectRepository,
+          { projectId: args.projectId }
+        );
+        if (repo) {
+          const parts: Array<string> = [];
+          if (repo.language) parts.push(`Primary language: ${repo.language}`);
+          if (repo.description) parts.push(`Repo description: ${repo.description}`);
+          if (repo.topics && repo.topics.length > 0) parts.push(`Topics/tags: ${repo.topics.join(", ")}`);
+          if (repo.fullName) parts.push(`Repository: ${repo.fullName}`);
+          if (parts.length > 0) {
+            repoContextBlock = `\n\nProject GitHub context (use this to tailor the template to the project's tech stack and domain):\n${parts.join("\n")}`;
+          }
+        }
+      } catch {
+        // If repo lookup fails, continue without context
+      }
+    }
+
     // Use the existing AI generate action which handles key resolution + fallback
     const result: { text: string; model: string; provider: "cerebras" | "groq" } =
       await ctx.runAction(api.ai.generate.generate, {
-        prompt: `Create a document template for: ${args.prompt}\n\nReturn ONLY the JSON array of blocks.`,
+        prompt: `Create a document template for: ${args.prompt}${repoContextBlock}\n\nReturn ONLY the JSON array of blocks.`,
         systemPrompt: TEMPLATE_SYSTEM_PROMPT,
         functionCategory: "template_generation",
         temperature: 0.7,
