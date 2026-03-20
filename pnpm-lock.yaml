@@ -311,6 +311,12 @@ importers:
       '@react-three/postprocessing':
         specifier: ^2.19.1
         version: 2.19.1(@react-three/fiber@8.18.0)(@types/three@0.180.0)(react@18.3.1)(three@0.170.0)
+      '@remotion/player':
+        specifier: ^4.0.436
+        version: 4.0.436(react-dom@18.3.1)(react@18.3.1)
+      '@remotion/transitions':
+        specifier: ^4.0.436
+        version: 4.0.436(react-dom@18.3.1)(react@18.3.1)
       '@types/lodash':
         specifier: ^4.17.21
         version: 4.17.21
@@ -380,6 +386,9 @@ importers:
       remark-gfm:
         specifier: ^4.0.1
         version: 4.0.1
+      remotion:
+        specifier: ^4.0.436
+        version: 4.0.436(react-dom@18.3.1)(react@18.3.1)
       simple-peer:
         specifier: ^9.11.1
         version: 9.11.1
@@ -5050,6 +5059,45 @@ packages:
   /@remix-run/router@1.23.0:
     resolution: {integrity: sha512-O3rHJzAQKamUz1fvE0Qaw0xSFqsA/yafi2iqeE0pvdFtCO1viYx8QL6f3Ln/aCCTLxs68SLf0KPM9eSeM8yBnA==}
     engines: {node: '>=14.0.0'}
+    dev: false
+
+  /@remotion/paths@4.0.436:
+    resolution: {integrity: sha512-XDwDovjBUYkhWRAJgjk+F+lDsDBFuExvo5pPcNgNVvUluFAuH7/S0FbnecoX0xATkddReQimIgDisrr22+fdxg==}
+    dev: false
+
+  /@remotion/player@4.0.436(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-k0jofmt9UDBnpp0Zo24PcfVRvTHXFPk5wdwX8DnxhPw/N30956R2Kf+FgARpD9cB29aRmLqO//X1mdhoe2GAJA==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      remotion: 4.0.436(react-dom@18.3.1)(react@18.3.1)
+    dev: false
+
+  /@remotion/shapes@4.0.436(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-ZBUUXeDGIN6PrxvEWOFb/CMQgOGKjjIG4F60quTMdVkdt5wTxIzK+vyb48/QBnU6Xnz7nqA3UnJVu3KlFZV5PA==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+    dependencies:
+      '@remotion/paths': 4.0.436
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    dev: false
+
+  /@remotion/transitions@4.0.436(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-Hky3ngBkuoUhjKNvMngytf4fEMVKzbY4xSjqlokRhGpmoOWiuKkg3TiuO8nOOoggSfPIyNmqNX5HgHCPbF6f+Q==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+    dependencies:
+      '@remotion/paths': 4.0.436
+      '@remotion/shapes': 4.0.436(react-dom@18.3.1)(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      remotion: 4.0.436(react-dom@18.3.1)(react@18.3.1)
     dev: false
 
   /@rolldown/pluginutils@1.0.0-beta.27:
@@ -14937,6 +14985,16 @@ packages:
       '@types/mdast': 4.0.4
       mdast-util-to-markdown: 2.1.2
       unified: 11.0.5
+    dev: false
+
+  /remotion@4.0.436(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-VCENxMQLXNqK0bh/2tm2avOeWM1s2nNXOU5XG/d5oC0vBmaKna27x8NP1+0t7zjjr5v9olqD3G9qYdpjy/o/WQ==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
     dev: false
 
   /remove-trailing-slash@0.1.1:
