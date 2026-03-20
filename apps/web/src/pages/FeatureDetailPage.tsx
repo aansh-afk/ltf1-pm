@@ -4,6 +4,7 @@ import { m, type Variants } from 'framer-motion'
 import PublicNavigation from '@/components/common/PublicNavigation'
 import Footer from '@/components/common/Footer'
 import ColoredPre from '@/components/landing/ascii/ColoredPre'
+import FeaturePlayer from '@/components/remotion/FeaturePlayer'
 
 /* ─── Types ─────────────────────────────────────────────────── */
 
@@ -527,17 +528,13 @@ export default function FeatureDetailPage() {
             </p>
           </m.div>
 
-          {/* Hero ASCII */}
+          {/* Hero — Remotion animation */}
           <m.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="bg-[#0A0A0A] border-2 border-[#2E2E35] p-4 md:p-6 overflow-x-auto"
           >
-            <ColoredPre
-              text={feature.heroAscii}
-              className="font-mono text-[11px] md:text-xs text-[#6B7280] leading-relaxed whitespace-pre select-none"
-            />
+            <FeaturePlayer slug={feature.slug} />
           </m.div>
         </div>
       </section>
