@@ -196,10 +196,10 @@ export default function SprintPlanningAnimation() {
       style={{
         backgroundColor: BG,
         fontFamily: FONT,
-        padding: '28px 32px',
+        padding: '20px 24px',
         display: 'flex',
         flexDirection: 'column',
-        gap: 12,
+        gap: 8,
         overflow: 'hidden',
       }}
     >
@@ -209,13 +209,14 @@ export default function SprintPlanningAnimation() {
           display: 'flex',
           alignItems: 'center',
           gap: 12,
+          flexShrink: 0,
           opacity: headerOpacity,
           transform: `translateY(${headerY}px)`,
         }}
       >
         <span
           style={{
-            fontSize: 16,
+            fontSize: 14,
             color: TEXT_PRIMARY,
             fontWeight: 700,
             letterSpacing: 2,
@@ -259,6 +260,7 @@ export default function SprintPlanningAnimation() {
           display: 'flex',
           gap: 10,
           alignItems: 'stretch',
+          flexShrink: 0,
         }}
       >
         {capacityCards.map((member) => (
@@ -330,7 +332,7 @@ export default function SprintPlanningAnimation() {
         >
           <span
             style={{
-              fontSize: 28,
+              fontSize: 22,
               color: CYAN,
               fontWeight: 700,
             }}
@@ -562,8 +564,9 @@ export default function SprintPlanningAnimation() {
       {/* ── AI REASONING TICKER ── */}
       <div
         style={{
-          height: 34,
-          minHeight: 34,
+          height: 28,
+          minHeight: 28,
+          flexShrink: 0,
           background: BG_SURFACE,
           border: `2px solid ${BORDER}`,
           display: 'flex',
@@ -634,6 +637,7 @@ export default function SprintPlanningAnimation() {
           display: 'flex',
           alignItems: 'center',
           gap: 20,
+          flexShrink: 0,
           borderTop: `2px solid ${BORDER}`,
           paddingTop: 10,
         }}
@@ -706,7 +710,7 @@ export default function SprintPlanningAnimation() {
         >
           <span
             style={{
-              fontSize: 20,
+              fontSize: 16,
               color: GREEN,
               fontWeight: 700,
             }}
@@ -735,7 +739,7 @@ export default function SprintPlanningAnimation() {
         >
           <span
             style={{
-              fontSize: 20,
+              fontSize: 16,
               color: GREEN,
               fontWeight: 700,
             }}
