@@ -39,8 +39,8 @@ function GaugeRing({
   fps: number;
   startFrame: number;
 }) {
-  const size = 100;
-  const strokeW = 8;
+  const size = 60;
+  const strokeW = 5;
   const r = (size - strokeW) / 2;
   const circ = 2 * Math.PI * r;
   const targetOffset = circ * (1 - value / 100);
@@ -95,10 +95,10 @@ function GaugeRing({
       </svg>
       <div
         style={{
-          fontSize: 28,
+          fontSize: 16,
           fontWeight: 700,
           color,
-          marginTop: 6,
+          marginTop: 4,
           ...F,
         }}
       >
@@ -106,11 +106,11 @@ function GaugeRing({
       </div>
       <div
         style={{
-          fontSize: 13,
+          fontSize: 10,
           color: '#6B7280',
           textTransform: 'uppercase',
           letterSpacing: '0.06em',
-          marginTop: 4,
+          marginTop: 2,
           opacity: labelOpacity,
           ...F,
         }}
@@ -119,10 +119,10 @@ function GaugeRing({
       </div>
       <div
         style={{
-          fontSize: 16,
+          fontSize: 11,
           fontWeight: 700,
           color,
-          marginTop: 6,
+          marginTop: 4,
           opacity: deltaOpacity,
           transform: `scale(${deltaScale})`,
           ...F,
@@ -252,7 +252,9 @@ export default function TechDebtAnimation() {
     <AbsoluteFill
       style={{
         backgroundColor: '#050505',
-        padding: '36px 48px',
+        padding: '20px 28px',
+        display: 'flex',
+        flexDirection: 'column' as const,
         ...F,
       }}
     >
@@ -268,7 +270,7 @@ export default function TechDebtAnimation() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <span
             style={{
-              fontSize: 36,
+              fontSize: 20,
               fontWeight: 700,
               color: '#EF4444',
               opacity: warningPulse,
@@ -279,7 +281,7 @@ export default function TechDebtAnimation() {
           </span>
           <span
             style={{
-              fontSize: 32,
+              fontSize: 18,
               fontWeight: 700,
               color: '#F9FAFB',
               letterSpacing: '0.08em',
@@ -299,7 +301,7 @@ export default function TechDebtAnimation() {
         </div>
         <span
           style={{
-            fontSize: 20,
+            fontSize: 13,
             fontWeight: 700,
             color: '#06B6D4',
             letterSpacing: '0.06em',
@@ -312,7 +314,7 @@ export default function TechDebtAnimation() {
       </div>
 
       {/* === SCAN BAR === */}
-      <div style={{ opacity: scanBarOpacity, marginBottom: 18 }}>
+      <div style={{ opacity: scanBarOpacity, marginBottom: 10 }}>
         <div
           style={{
             width: '100%',
@@ -365,8 +367,8 @@ export default function TechDebtAnimation() {
         style={{
           display: 'flex',
           justifyContent: 'space-between',
-          gap: 24,
-          marginBottom: 24,
+          gap: 12,
+          marginBottom: 12,
           opacity: gaugesOpacity,
         }}
       >
@@ -430,7 +432,7 @@ export default function TechDebtAnimation() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 12,
-                  padding: '8px 12px',
+                  padding: '6px 10px',
                   marginBottom: 6,
                   backgroundColor: '#111111',
                   border: `2px solid ${card.critBorderColor}`,

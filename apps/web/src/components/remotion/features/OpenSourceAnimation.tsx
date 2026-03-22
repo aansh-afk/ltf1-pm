@@ -76,11 +76,6 @@ export default function OpenSourceAnimation() {
   const starDisplay = starCount < 2400 ? formatNumber(Math.max(2380, starCount)) : '2,400';
 
   // === FRAME 90-100: Divider ===
-  const dividerWidth = interpolate(frame, [90, 100], [0, 100], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-
   // === FRAME 100-180: Docker typing ===
   const dockerCmd = '$ docker compose up -d';
   const dockerTyped = typeText(dockerCmd, frame, 104, 0.8);
@@ -95,338 +90,166 @@ export default function OpenSourceAnimation() {
         ...mono,
         backgroundColor: BG,
         color: TEXT_PRIMARY,
-        padding: '28px 36px',
+        padding: '20px 28px',
         overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      {/* === SECTION 1: Title + Badge + Stars (0-30) === */}
-      {frame >= 0 && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 28,
-            left: 36,
-            right: 36,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            opacity: titleOpacity,
-            transform: `translateY(${titleY}px)`,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <span
-              style={{
-                fontSize: 28,
-                fontWeight: 700,
-                letterSpacing: '-0.5px',
-                color: TEXT_PRIMARY,
-              }}
-            >
-              OPEN SOURCE
-            </span>
-            <div
-              style={{
-                transform: `scale(${badgeScale})`,
-                backgroundColor: SURFACE,
-                border: `2px solid ${BORDER}`,
-                padding: '4px 12px',
-                fontSize: 13,
-                fontWeight: 600,
-                color: GREEN,
-                letterSpacing: '0.5px',
-              }}
-            >
-              AGPL-3.0
-            </div>
-          </div>
+      {/* === HEADER === */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 12,
+          opacity: titleOpacity,
+          transform: `translateY(${titleY}px)`,
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 20, fontWeight: 700, color: TEXT_PRIMARY }}>
+            OPEN SOURCE
+          </span>
           <div
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              opacity: starOpacity,
-              fontSize: 14,
-              color: AMBER,
+              transform: `scale(${badgeScale})`,
+              backgroundColor: SURFACE,
+              border: `2px solid ${BORDER}`,
+              padding: '3px 10px',
+              fontSize: 12,
+              fontWeight: 600,
+              color: GREEN,
             }}
           >
-            <span style={{ fontSize: 18 }}>&#9733;</span>
-            <span style={{ fontWeight: 600 }}>{starDisplay}</span>
+            AGPL-3.0
           </div>
         </div>
-      )}
-
-      {/* === SECTION 2: License features (30-90) === */}
-      {frame >= 30 && (
         <div
           style={{
-            position: 'absolute',
-            top: 76,
-            left: 36,
-            right: 36,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            opacity: starOpacity,
+            fontSize: 13,
+            color: AMBER,
           }}
         >
-          {licenseRows.map((row, i) => {
-            const rowStart = 30 + i * 10;
-            const rowOpacity = interpolate(frame, [rowStart, rowStart + 8], [0, 1], {
-              extrapolateLeft: 'clamp',
-              extrapolateRight: 'clamp',
-            });
-            const rowX = interpolate(frame, [rowStart, rowStart + 8], [-60, 0], {
-              extrapolateLeft: 'clamp',
-              extrapolateRight: 'clamp',
-            });
-
-            return (
-              <div
-                key={row.label}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  marginBottom: 6,
-                  opacity: rowOpacity,
-                  transform: `translateX(${rowX}px)`,
-                  fontSize: 13,
-                }}
-              >
-                <span style={{ color: GREEN, fontWeight: 700, fontSize: 15 }}>+</span>
-                <span style={{ color: TEXT_SECONDARY, minWidth: 80 }}>{row.label}</span>
-                <span style={{ color: TEXT_TERTIARY }}>—</span>
-                <span style={{ color: TEXT_PRIMARY, fontWeight: 500 }}>{row.value}</span>
-              </div>
-            );
-          })}
+          <span style={{ fontSize: 16 }}>&#9733;</span>
+          <span style={{ fontWeight: 600 }}>{starDisplay}</span>
         </div>
-      )}
+      </div>
 
-      {/* === SECTION 3: Divider (90-100) === */}
-      {frame >= 90 && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 220,
-            left: 36,
-            right: 36,
-          }}
-        >
-          <div
-            style={{
-              height: 2,
-              backgroundColor: BORDER,
-              width: `${dividerWidth}%`,
-            }}
-          />
-        </div>
-      )}
-
-      {/* === SECTION 4: Self-host deployment demo (100-180) === */}
-      {frame >= 100 && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 234,
-            left: 36,
-            right: 36,
-          }}
-        >
-          {/* Terminal prompt */}
-          <div style={{ fontSize: 13, marginBottom: 10, display: 'flex', alignItems: 'center' }}>
-            <span style={{ color: GREEN }}>{dockerTyped}</span>
-            {frame < 130 && (
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: 7,
-                  height: 15,
-                  backgroundColor: GREEN,
-                  marginLeft: 2,
-                  opacity: frame % 16 < 8 ? 1 : 0,
-                }}
-              />
-            )}
+      {/* === TWO COLUMNS: License + Deploy === */}
+      <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0 }}>
+        {/* LEFT: License features */}
+        <div style={{ flex: 1, border: `2px solid ${BORDER}`, backgroundColor: CARD, padding: '12px 14px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: TEXT_TERTIARY, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+            WHAT YOU GET
           </div>
-
-          {/* Service rows */}
-          {frame >= 122 &&
-            services.map((svc, i) => {
-              const svcStart = 124 + i * 10;
-              const svcOpacity = interpolate(frame, [svcStart, svcStart + 4], [0, 1], {
+          <div style={{ flex: 1 }}>
+            {licenseRows.map((row, i) => {
+              const rowStart = 30 + i * 10;
+              const rowOpacity = interpolate(frame, [rowStart, rowStart + 8], [0, 1], {
                 extrapolateLeft: 'clamp',
                 extrapolateRight: 'clamp',
               });
+              const rowX = interpolate(frame, [rowStart, rowStart + 8], [-40, 0], {
+                extrapolateLeft: 'clamp',
+                extrapolateRight: 'clamp',
+              });
+              return (
+                <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, opacity: rowOpacity, transform: `translateX(${rowX}px)`, fontSize: 12 }}>
+                  <span style={{ color: GREEN, fontWeight: 700, fontSize: 14 }}>+</span>
+                  <span style={{ color: TEXT_SECONDARY, minWidth: 70 }}>{row.label}</span>
+                  <span style={{ color: TEXT_PRIMARY, fontWeight: 500 }}>{row.value}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* RIGHT: Deploy terminal */}
+        <div style={{ flex: 1, border: `2px solid ${BORDER}`, backgroundColor: CARD, padding: '12px 14px', display: 'flex', flexDirection: 'column', opacity: interpolate(frame, [90, 100], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }) }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: TEXT_TERTIARY, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+            SELF-HOST
+          </div>
+          {/* Docker command */}
+          <div style={{ fontSize: 12, marginBottom: 8, display: 'flex', alignItems: 'center' }}>
+            <span style={{ color: GREEN }}>{dockerTyped}</span>
+            {frame >= 100 && frame < 130 && (
+              <span style={{ display: 'inline-block', width: 7, height: 14, backgroundColor: GREEN, marginLeft: 2, opacity: frame % 16 < 8 ? 1 : 0 }} />
+            )}
+          </div>
+
+          {/* Services */}
+          <div style={{ flex: 1 }}>
+            {services.map((svc, i) => {
+              const svcStart = 124 + i * 10;
+              const svcOpacity = interpolate(frame, [svcStart, svcStart + 4], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
               const elapsed = frame - svcStart;
               const isDone = elapsed >= 12;
-              const spinnerIdx = frame % 4;
-              const spinnerChar = spinnerChars[spinnerIdx];
-
               const statusColor = isDone ? GREEN : AMBER;
               const statusText = isDone ? 'running' : 'starting...';
-              const statusIcon = isDone ? '+' : spinnerChar;
-
+              const statusIcon = isDone ? '+' : spinnerChars[frame % 4];
               return (
-                <div
-                  key={svc.name}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    marginBottom: 5,
-                    opacity: svcOpacity,
-                    fontSize: 12,
-                  }}
-                >
-                  <span
-                    style={{
-                      color: statusColor,
-                      fontWeight: 700,
-                      width: 14,
-                      textAlign: 'center',
-                      fontSize: 14,
-                    }}
-                  >
-                    {statusIcon}
-                  </span>
-                  <span style={{ color: TEXT_PRIMARY, minWidth: 110 }}>
-                    {svc.name}
-                    {svc.port && (
-                      <span style={{ color: TEXT_TERTIARY }}> {svc.port}</span>
-                    )}
-                  </span>
+                <div key={svc.name} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, opacity: svcOpacity, fontSize: 12 }}>
+                  <span style={{ color: statusColor, fontWeight: 700, width: 12, textAlign: 'center', fontSize: 13 }}>{statusIcon}</span>
+                  <span style={{ color: TEXT_PRIMARY, minWidth: 100 }}>{svc.name}{svc.port && <span style={{ color: TEXT_TERTIARY }}> {svc.port}</span>}</span>
                   <span style={{ color: statusColor, fontSize: 11 }}>{statusText}</span>
                 </div>
               );
             })}
+          </div>
 
-          {/* Ready message */}
+          {/* Ready */}
           {frame >= 172 && (
-            <div style={{ marginTop: 8, fontSize: 12 }}>
-              <span style={{ color: GREEN }}>
-                {typeText('ready at localhost:3000', frame, 172, 0.7)}
-              </span>
-              {frame < 190 && (
-                <span
-                  style={{
-                    display: 'inline-block',
-                    width: 7,
-                    height: 13,
-                    backgroundColor: GREEN,
-                    marginLeft: 2,
-                    opacity: frame % 16 < 8 ? 1 : 0,
-                  }}
-                />
-              )}
+            <div style={{ fontSize: 12, marginTop: 4 }}>
+              <span style={{ color: GREEN }}>{typeText('ready at localhost:3000', frame, 172, 0.7)}</span>
             </div>
           )}
         </div>
-      )}
+      </div>
 
-      {/* === SECTION 5: Community stats (180-240) === */}
-      {frame >= 180 && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 400,
-            left: 36,
-            right: 36,
-            display: 'flex',
-            gap: 16,
-          }}
-        >
-          {communityStats.map((stat, i) => {
-            const cardStart = 180 + i * 8;
-            const cardScale = spring({
-              frame: frame - cardStart,
-              fps,
-              config: { damping: 14, stiffness: 180 },
-            });
-            const cardOpacity = interpolate(frame, [cardStart, cardStart + 6], [0, 1], {
-              extrapolateLeft: 'clamp',
-              extrapolateRight: 'clamp',
-            });
+      {/* === COMMUNITY STATS === */}
+      <div style={{ display: 'flex', gap: 10, marginTop: 10, flexShrink: 0 }}>
+        {communityStats.map((stat, i) => {
+          const cardStart = 180 + i * 8;
+          const cardScale = spring({ frame: frame - cardStart, fps, config: { damping: 14, stiffness: 180 } });
+          const cardOpacity = interpolate(frame, [cardStart, cardStart + 6], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+          let displayValue: string;
+          if (stat.target !== null) {
+            const counted = countUp(stat.target, frame, cardStart, 30);
+            displayValue = formatNumber(counted) + (stat.suffix || '');
+          } else {
+            displayValue = stat.display || '';
+          }
+          return (
+            <div key={stat.label} style={{ flex: 1, backgroundColor: SURFACE, border: `2px solid ${BORDER}`, padding: '8px 10px', transform: `scale(${cardScale})`, opacity: cardOpacity, textAlign: 'center' }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: stat.color, marginBottom: 2 }}>{displayValue}</div>
+              <div style={{ fontSize: 9, color: TEXT_TERTIARY, textTransform: 'uppercase', letterSpacing: '1px' }}>{stat.label}</div>
+            </div>
+          );
+        })}
+      </div>
 
-            let displayValue: string;
-            if (stat.target !== null) {
-              const counted = countUp(stat.target, frame, cardStart, 30);
-              displayValue = formatNumber(counted) + (stat.suffix || '');
-            } else {
-              displayValue = stat.display || '';
-            }
-
-            return (
-              <div
-                key={stat.label}
-                style={{
-                  flex: 1,
-                  backgroundColor: CARD,
-                  border: `2px solid ${BORDER}`,
-                  padding: '12px 14px',
-                  transform: `scale(${cardScale})`,
-                  opacity: cardOpacity,
-                  textAlign: 'center',
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 700,
-                    color: stat.color,
-                    marginBottom: 4,
-                  }}
-                >
-                  {displayValue}
-                </div>
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: TEXT_TERTIARY,
-                    textTransform: 'uppercase',
-                    letterSpacing: '1px',
-                  }}
-                >
-                  {stat.label}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* === SECTION 6: Tagline (240-270) === */}
+      {/* === TAGLINE === */}
       {frame >= 240 && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 28,
-            left: 36,
-            right: 36,
-            textAlign: 'center',
-            fontSize: 15,
-            color: TEXT_SECONDARY,
-          }}
-        >
+        <div style={{ textAlign: 'center', fontSize: 13, color: TEXT_SECONDARY, marginTop: 8, flexShrink: 0 }}>
           {taglineParts.map((part, i) => {
             const partStart = taglineStartFrames[i];
             const typed = typeText(part, frame, partStart, 0.8);
-            const showSep = i < taglineParts.length - 1 && frame >= taglineStartFrames[i + 1];
-
+            const showSep = i < taglineParts.length - 1 && typed.length === part.length;
             return (
               <span key={part}>
                 <span style={{ color: TEXT_PRIMARY, fontWeight: 500 }}>{typed}</span>
-                {showSep && (
-                  <span style={{ color: TEXT_TERTIARY, margin: '0 10px' }}>&middot;</span>
-                )}
-                {!showSep && i < taglineParts.length - 1 && typed.length === part.length && (
-                  <span style={{ color: TEXT_TERTIARY, margin: '0 10px' }}>&middot;</span>
-                )}
+                {showSep && <span style={{ color: TEXT_TERTIARY, margin: '0 8px' }}>&middot;</span>}
               </span>
             );
           })}
         </div>
       )}
-
-      {/* === SECTION 7: Hold (270-300) === */}
-      {/* No-op: everything stays visible for loop hold */}
     </AbsoluteFill>
   );
 }

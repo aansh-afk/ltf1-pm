@@ -195,8 +195,10 @@ export default function VelocityAnimation() {
       style={{
         ...F,
         backgroundColor: BG,
-        padding: 32,
+        padding: '20px 28px',
         boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column' as const,
       }}
     >
       {/* ─── HEADER ─── */}
@@ -205,7 +207,7 @@ export default function VelocityAnimation() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 20,
+          marginBottom: 12,
           opacity: headerOpacity,
         }}
       >
@@ -247,8 +249,8 @@ export default function VelocityAnimation() {
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: 8,
-          marginBottom: 20,
+          gap: 6,
+          marginBottom: 12,
         }}
       >
         {metricBarData.map((m) => (
@@ -259,7 +261,7 @@ export default function VelocityAnimation() {
               alignItems: 'center',
               gap: 12,
               opacity: m.rowOpacity,
-              height: 32,
+              height: 24,
             }}
           >
             {/* Label */}
@@ -279,7 +281,7 @@ export default function VelocityAnimation() {
             <div
               style={{
                 flex: 1,
-                height: 24,
+                height: 16,
                 backgroundColor: CARD,
                 border: `2px solid ${BORDER}`,
                 borderRadius: 0,
@@ -334,7 +336,9 @@ export default function VelocityAnimation() {
         style={{
           display: 'flex',
           gap: 12,
-          marginBottom: 20,
+          marginBottom: 12,
+          flex: 1,
+          minHeight: 0,
         }}
       >
         {/* Chart panel */}
@@ -362,7 +366,7 @@ export default function VelocityAnimation() {
 
           <svg
             width="100%"
-            height={140}
+            height={100}
             viewBox={`0 0 ${CHART_X + CHART_W + 30} ${CHART_Y + CHART_H + 30}`}
             style={{ display: 'block' }}
           >

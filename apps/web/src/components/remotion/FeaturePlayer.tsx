@@ -82,6 +82,7 @@ export default function FeaturePlayer({ slug, className = '' }: FeaturePlayerPro
           autoPlay
           style={{
             width: '100%',
+            aspectRatio: '16/9',
           }}
           controls={false}
         />

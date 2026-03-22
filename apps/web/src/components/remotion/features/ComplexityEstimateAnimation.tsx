@@ -102,7 +102,7 @@ export default function ComplexityEstimateAnimation() {
   });
 
   // Gauge 1: complexity (67%)
-  const gauge1Size = 60;
+  const gauge1Size = 48;
   const gauge1R = (gauge1Size - 4) / 2;
   const gauge1Circ = 2 * Math.PI * gauge1R;
   const gauge1Target = gauge1Circ * (1 - 0.67);
@@ -112,7 +112,7 @@ export default function ComplexityEstimateAnimation() {
   });
 
   // Gauge 2: confidence (94%)
-  const gauge2Size = 60;
+  const gauge2Size = 48;
   const gauge2R = (gauge2Size - 4) / 2;
   const gauge2Circ = 2 * Math.PI * gauge2R;
   const gauge2Target = gauge2Circ * (1 - 0.94);
@@ -141,9 +141,11 @@ export default function ComplexityEstimateAnimation() {
         ...FONT,
         backgroundColor: '#050505',
         color: '#9CA3AF',
-        padding: '24px 28px',
+        padding: '20px 24px',
         boxSizing: 'border-box',
         opacity: endFade,
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       {/* HEADER */}
@@ -190,7 +192,7 @@ export default function ComplexityEstimateAnimation() {
       </div>
 
       {/* MAIN TWO-COLUMN */}
-      <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0 }}>
+      <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0, overflow: 'hidden' }}>
         {/* LEFT PANEL -- Code Diff */}
         <div
           style={{
@@ -518,6 +520,7 @@ export default function ComplexityEstimateAnimation() {
       </div>
 
       {/* BOTTOM ESTIMATE BAR (phase 4) */}
+      {frame >= 180 && (
       <div
         style={{
           display: 'flex',
@@ -527,6 +530,7 @@ export default function ComplexityEstimateAnimation() {
           marginTop: 12,
           paddingTop: 10,
           borderTop: '2px solid #2E2E35',
+          flexShrink: 0,
         }}
       >
         {/* Left gauge -- Complexity 67% */}
@@ -573,7 +577,7 @@ export default function ComplexityEstimateAnimation() {
           <div style={{ lineHeight: 1 }}>
             <span
               style={{
-                fontSize: 36,
+                fontSize: 28,
                 fontWeight: 700,
                 color: '#F9FAFB',
                 display: 'inline-block',
@@ -650,6 +654,7 @@ export default function ComplexityEstimateAnimation() {
           </div>
         </div>
       </div>
+      )}
     </AbsoluteFill>
   );
 }

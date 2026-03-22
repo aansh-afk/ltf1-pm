@@ -48,19 +48,19 @@ export default function TeamManagementAnimation() {
   const arrowProgress = interpolate(frame, [240, 258], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' });
 
   return (
-    <AbsoluteFill style={{ ...FONT, backgroundColor: '#050505', padding: '24px 32px', fontSize: 11, color: '#9CA3AF' }}>
+    <AbsoluteFill style={{ ...FONT, backgroundColor: '#050505', padding: '20px 24px', fontSize: 11, color: '#9CA3AF', overflow: 'hidden' }}>
 
       {/* ── HEADER ── */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 8,
         opacity: headerOpacity,
         transform: `translateY(${headerY}px)`,
       }}>
         <span style={{
-          fontSize: 18,
+          fontSize: 14,
           fontWeight: 700,
           color: '#F9FAFB',
           textTransform: 'uppercase',
@@ -84,7 +84,7 @@ export default function TeamManagementAnimation() {
       </div>
 
       {/* ── MEMBER ROWS ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
         {MEMBERS.map((member, i) => {
           const rowStart = 30 + i * 10;
           const rowOpacity = interpolate(frame, [rowStart, rowStart + 12], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' });
@@ -107,13 +107,13 @@ export default function TeamManagementAnimation() {
                 gap: 10,
                 opacity: rowOpacity,
                 transform: `translateX(${rowX}px)`,
-                height: 36,
+                height: 30,
               }}
             >
               {/* Avatar */}
               <div style={{
-                width: 32,
-                height: 32,
+                width: 26,
+                height: 26,
                 backgroundColor: '#111111',
                 border: '2px solid #2E2E35',
                 display: 'flex',
@@ -142,7 +142,7 @@ export default function TeamManagementAnimation() {
               </span>
 
               {/* Segmented workload bar */}
-              <div style={{ display: 'flex', gap: 2, width: 200, height: 14, flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: 2, width: 160, height: 14, flexShrink: 0 }}>
                 {Array.from({ length: member.max }).map((_, si) => {
                   const segStart = rowStart + 8 + si * 3;
                   const segFill = interpolate(frame, [segStart, segStart + 4], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' });
@@ -206,7 +206,7 @@ export default function TeamManagementAnimation() {
         <div style={{
           display: 'flex',
           gap: 12,
-          marginBottom: 14,
+          marginBottom: 8,
           opacity: statsOpacity,
           transform: `translateY(${statsY}px)`,
         }}>
@@ -225,7 +225,7 @@ export default function TeamManagementAnimation() {
                 }}
               >
                 <div style={{
-                  fontSize: 22,
+                  fontSize: 16,
                   fontWeight: 700,
                   color: stat.color,
                   lineHeight: 1.2,
@@ -249,7 +249,7 @@ export default function TeamManagementAnimation() {
 
       {/* ── BLOCKERS DETECTED ── */}
       {frame >= 140 && (
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 8 }}>
           {/* Blocker header */}
           <div style={{
             display: 'flex',
@@ -362,85 +362,42 @@ export default function TeamManagementAnimation() {
       )}
 
       {/* ── SUGGESTION BAR ── */}
-      {frame >= 220 && (
-        <div style={{
-          opacity: suggestionOpacity,
-          transform: `translateY(${suggestionY}px)`,
-          border: '2px solid #F59E0B',
-          backgroundColor: '#111111',
-          padding: '10px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 0,
-          position: 'relative',
-        }}>
-          <span style={{ color: '#F59E0B', fontWeight: 700, fontSize: 12 }}>SUGGESTION: </span>
-          <span style={{ color: '#F9FAFB', fontSize: 12 }}>&nbsp;move TSK-94 from </span>
-          <span style={{ color: '#06B6D4', fontWeight: 700, fontSize: 12 }}>&nbsp;@ada</span>
-          <span style={{ color: '#F9FAFB', fontSize: 12 }}>&nbsp;</span>
-          {/* Animated arrow */}
-          <svg width="32" height="14" viewBox="0 0 32 14" style={{ flexShrink: 0 }}>
-            <line
-              x1="0"
-              y1="7"
-              x2={arrowProgress * 24}
-              y2="7"
-              stroke="#F59E0B"
-              strokeWidth="2"
-            />
-            {arrowProgress > 0.8 && (
-              <>
-                <line x1="20" y1="3" x2="26" y2="7" stroke="#F59E0B" strokeWidth="2" />
-                <line x1="20" y1="11" x2="26" y2="7" stroke="#F59E0B" strokeWidth="2" />
-              </>
-            )}
-          </svg>
-          <span style={{ color: '#06B6D4', fontWeight: 700, fontSize: 12 }}>&nbsp;@eve</span>
-          <span style={{ color: '#6B7280', fontSize: 12 }}>&nbsp;(8pts free)</span>
-        </div>
-      )}
-
-      {/* ── REBALANCE ARROW OVERLAY (drawn between @ada row and @eve row) ── */}
-      {frame >= 240 && (
-        <svg
-          width="960"
-          height="540"
-          viewBox="0 0 960 540"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            pointerEvents: 'none',
-          }}
-        >
-          {/* Arrow from @ada row area to @eve row area */}
-          {(() => {
-            // @ada row is index 0, @eve row is index 2
-            // Approximate Y positions based on layout: header ~50px, rows start ~66px, each row ~42px
-            const adaY = 24 + 40 + 0 * 42 + 18; // row center
-            const eveY = 24 + 40 + 2 * 42 + 18;
-            const startX = 520; // right side of bars
-            const endX = 520;
-            const curveX = 560;
-
-            const pathLength = Math.abs(eveY - adaY) + 80;
-            const dashOffset = interpolate(frame, [240, 258], [pathLength, 0], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' });
-
-            return (
-              <path
-                d={`M ${startX} ${adaY} C ${curveX} ${adaY}, ${curveX} ${eveY}, ${endX} ${eveY}`}
-                fill="none"
-                stroke="#F59E0B"
-                strokeWidth="2"
-                strokeDasharray={pathLength}
-                strokeDashoffset={dashOffset}
-                opacity={0.7}
-              />
-            );
-          })()}
+      <div style={{
+        opacity: suggestionOpacity,
+        transform: `translateY(${suggestionY}px)`,
+        border: '2px solid #F59E0B',
+        backgroundColor: '#111111',
+        padding: '8px 12px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 0,
+        flexShrink: 0,
+      }}>
+        <span style={{ color: '#F59E0B', fontWeight: 700, fontSize: 12 }}>SUGGESTION: </span>
+        <span style={{ color: '#F9FAFB', fontSize: 12 }}>&nbsp;move TSK-94 from </span>
+        <span style={{ color: '#06B6D4', fontWeight: 700, fontSize: 12 }}>&nbsp;@ada</span>
+        <span style={{ color: '#F9FAFB', fontSize: 12 }}>&nbsp;</span>
+        {/* Animated arrow */}
+        <svg width="32" height="14" viewBox="0 0 32 14" style={{ flexShrink: 0 }}>
+          <line
+            x1="0"
+            y1="7"
+            x2={arrowProgress * 24}
+            y2="7"
+            stroke="#F59E0B"
+            strokeWidth="2"
+          />
+          {arrowProgress > 0.8 && (
+            <>
+              <line x1="20" y1="3" x2="26" y2="7" stroke="#F59E0B" strokeWidth="2" />
+              <line x1="20" y1="11" x2="26" y2="7" stroke="#F59E0B" strokeWidth="2" />
+            </>
+          )}
         </svg>
-      )}
+        <span style={{ color: '#06B6D4', fontWeight: 700, fontSize: 12 }}>&nbsp;@eve</span>
+        <span style={{ color: '#6B7280', fontSize: 12 }}>&nbsp;(8pts free)</span>
+      </div>
     </AbsoluteFill>
   );
 }
