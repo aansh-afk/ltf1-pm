@@ -639,7 +639,7 @@ const projects = await Promise.all(
 
 The current team management system in LTF1 is **FUNDAMENTALLY BROKEN** and requires immediate architectural changes. The implementation confuses workspace-level developer directories with actual project teams, completely missing the core concept of project-specific team management.
 
-**The codebase cannot be considered production-ready** until these critical team management features are properly implemented. The user's requirement for UUID-based project joining is just the tip of the iceberg - the entire team management foundation needs to be rebuilt.
+**The codebase cannot be considered production-ready** until these critical team management features are properly implemented. The user's requirement for UUID-based project joining is just the tip of the LTF1 - the entire team management foundation needs to be rebuilt.
 
 This audit has identified **67 critical issues**, **23 missing core features**, and **12 security vulnerabilities** related to team functionality. Immediate action is required to make this system viable for real-world use.
 

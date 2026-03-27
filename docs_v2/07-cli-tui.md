@@ -1,8 +1,8 @@
-# CLI & TUI Reference — iceberg-pm
+# CLI & TUI Reference — ltf1-pm
 
 ## Overview
 
-The iceberg CLI (`ltf`) provides two interfaces:
+The LTF1 CLI (`ltf`) provides two interfaces:
 1. **CLI**: Traditional command-line commands for scripting, CI/CD, and quick operations
 2. **TUI**: Full-screen terminal UI for interactive project management without leaving your editor
 

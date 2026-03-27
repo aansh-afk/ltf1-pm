@@ -32,7 +32,7 @@ export default function LoginScreen() {
   // OAuth configuration
   const discovery = AuthSession.useAutoDiscovery('https://accounts.google.com')
   const redirectUri = AuthSession.makeRedirectUri({
-    scheme: 'iceberg',
+    scheme: 'LTF1',
   })
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
@@ -124,7 +124,7 @@ export default function LoginScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.gradientHeader}
         >
-          <Text style={styles.logo}>ICEBERG</Text>
+          <Text style={styles.logo}>LTF1</Text>
           <Text style={styles.tagline}>Project Management System</Text>
         </LinearGradient>
 

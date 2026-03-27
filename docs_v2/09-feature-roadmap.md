@@ -203,7 +203,7 @@ AI-powered sprint planning.
 ### 2.3 Code Diff Viewer
 **Priority**: P1 | **Effort**: Large | **Impact**: Medium
 
-Render PR diffs inside iceberg (web + TUI).
+Render PR diffs inside LTF1 (web + TUI).
 
 **Web**: Syntax-highlighted diff viewer in task detail modal or dedicated PR page. Show additions/deletions with context. Agent comments inline (e.g., "This change satisfies requirement X from task PROJ-123").
 

@@ -1,6 +1,6 @@
 # Frontend Audit — Web Application
 
-Component-by-component quality assessment of the iceberg web application.
+Component-by-component quality assessment of the LTF1 web application.
 
 ---
 

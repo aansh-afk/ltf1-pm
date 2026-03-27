@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * LTF CLI - Terminal interface for iceberg project management
+ * LTF CLI - Terminal interface for LTF1 project management
  *
  * Main entry point that sets up Commander.js and registers all commands.
  */
@@ -28,7 +28,7 @@ const program = new Command();
 // CLI metadata
 program
   .name("ltf")
-  .description("LTF CLI - Terminal interface for iceberg project management")
+  .description("LTF CLI - Terminal interface for LTF1 project management")
   .version("0.1.0")
   .configureOutput({
     // Custom error handling

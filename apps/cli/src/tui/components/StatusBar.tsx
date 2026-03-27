@@ -21,7 +21,7 @@ const CONNECTION_INDICATORS: Record<string, { dot: string; color: string }> = {
 };
 
 export function StatusBar({
-  path = '~/iceberg-l:feature/cli-dashboard',
+  path = '~/LTF1-l:feature/cli-dashboard',
   email = 'user@example.com',
   version = 'v0.1.0',
   connectionStatus,

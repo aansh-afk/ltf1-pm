@@ -22,7 +22,7 @@ const ACTIVITY = [
 ]
 
 const WORKSPACES = [
-  { name: 'Iceberg Core', members: 5, projects: 4 },
+  { name: 'LTF1 Core', members: 5, projects: 4 },
   { name: 'Mobile App', members: 3, projects: 2 },
 ]
 
@@ -205,7 +205,7 @@ function MiniTasks() {
           </div>
           <span className="text-[#2E2E35]">/</span>
           <div className="text-[7px] font-mono uppercase text-[#6B7280]">
-            Iceberg Core
+            LTF1 Core
           </div>
         </div>
         <div className="flex items-center gap-1">

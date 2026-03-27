@@ -1,4 +1,4 @@
-# Technical Architecture — iceberg-pm
+# Technical Architecture — ltf1-pm
 
 ## System Overview
 
@@ -71,7 +71,7 @@
 ## Monorepo Structure
 
 ```
-iceberg-L/
+ltf1/
 ├── apps/
 │   ├── web/                    # React + Vite web application
 │   │   ├── src/

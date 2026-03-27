@@ -1,13 +1,13 @@
 # LTF CLI
 
-> Terminal interface for iceberg project management platform
+> Terminal interface for LTF1 project management platform
 
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
 
 ## Overview
 
-The LTF CLI provides a powerful terminal interface for developers to interact with the iceberg project management platform. It enables:
+The LTF CLI provides a powerful terminal interface for developers to interact with the LTF1 project management platform. It enables:
 
 - **Task Management**: Create, view, update, and complete tasks without leaving your terminal
 - **Sprint Operations**: Monitor sprint progress, add tasks, view burndown charts
@@ -115,7 +115,7 @@ interface CLIConfig {
 
 Provides consistent, beautiful terminal output with colors, tables, and spinners.
 
-**Color Palette** (matches iceberg brand):
+**Color Palette** (matches LTF1 brand):
 - `primary` - Yellow (#FCD34D)
 - `success` - Green
 - `error` - Red

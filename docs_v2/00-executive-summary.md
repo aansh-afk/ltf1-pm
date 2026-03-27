@@ -1,8 +1,8 @@
-# Executive Summary — iceberg-pm (LTF1)
+# Executive Summary — ltf1-pm (LTF1)
 
 ## What This Is
 
-iceberg-pm is a **git-native, agent-ready project management platform** built for developers who ship code, not developers who update tickets. The platform spans three surfaces — web app, terminal TUI, and CLI — unified by a real-time Convex backend, Clerk authentication, and a dark brutalist design language.
+ltf1-pm is a **git-native, agent-ready project management platform** built for developers who ship code, not developers who update tickets. The platform spans three surfaces — web app, terminal TUI, and CLI — unified by a real-time Convex backend, Clerk authentication, and a dark brutalist design language.
 
 **Version**: 0.5.0 (Early Access Beta)
 **License**: AGPL-3.0 (open source, self-hostable)
@@ -47,9 +47,9 @@ Linear announced their "Next" vision on March 24, 2026 — a fundamental shift f
 
 **Their stats**: 75% of enterprise workspaces have coding agents. Agents author 25% of new issues. Agent work grew 5x in 3 months.
 
-### What This Means for iceberg
+### What This Means for LTF1
 
-Linear is building for **PM-driven teams in browsers**. iceberg can own **developer-driven teams in terminals**. But the agent architecture is non-negotiable — without it, iceberg is a traditional PM tool competing with Linear's agent-augmented platform.
+Linear is building for **PM-driven teams in browsers**. LTF1 can own **developer-driven teams in terminals**. But the agent architecture is non-negotiable — without it, LTF1 is a traditional PM tool competing with Linear's agent-augmented platform.
 
 **The play**: Agent-native dev workspace that lives in your terminal. Linear owns the browser. We own the terminal. The agent layer fills the moat.
 
@@ -64,7 +64,7 @@ Build the context → rules → agent pipeline into Convex. Triage incoming work
 `ltf agent triage`, `ltf agent suggest`, `ltf skill run`. Make the terminal THE place where developers interact with AI agents for project management.
 
 ### P2: Code Intelligence
-Connect to repositories beyond tracking. Index code, understand functions, link code entities to tasks. Enable agents to answer "what does X do?" from within iceberg.
+Connect to repositories beyond tracking. Index code, understand functions, link code entities to tasks. Enable agents to answer "what does X do?" from within LTF1.
 
 ### P3: Sharpen the Product
 Cut features that add overhead (meetings scheduler, time tracking reports). Lean into automation over process. The promise is "zero manual updates" — every feature should reduce friction, not add it.

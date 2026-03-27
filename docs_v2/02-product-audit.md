@@ -1,4 +1,4 @@
-# Product Audit — iceberg-pm
+# Product Audit — ltf1-pm
 
 Complete audit of every feature across all three surfaces (web, TUI, backend).
 
@@ -135,7 +135,7 @@ Every feature is rated on:
 - Repository documentation fetching
 - Webhook event processing (push, PR, issue, review)
 - Developer GitHub stats sync (PRs, reviews, languages)
-- GitHub user → iceberg user mapping
+- GitHub user → LTF1 user mapping
 
 **Cron Jobs**: Issue sync (1 min), team sync (1 hr), repo sync (15 min), stats sync (30 min)
 

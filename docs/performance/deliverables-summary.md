@@ -9,7 +9,7 @@ A comprehensive styling panel with stroke, fill, and opacity controls has been s
 ## Deliverables
 
 ### 1. StylePropertiesPanel Component
-**File**: `/home/aansh/LTF1/iceberg-L/apps/web/src/components/features/whiteboard/StylePropertiesPanel.tsx`
+**File**: `/home/aansh/LTF1/LTF1-L/apps/web/src/components/features/whiteboard/StylePropertiesPanel.tsx`
 
 **Complete standalone styling panel** with:
 - **3 Collapsible Sections**: STROKE, FILL, BACKGROUND
@@ -37,7 +37,7 @@ A comprehensive styling panel with stroke, fill, and opacity controls has been s
   - Responsive and accessible
 
 ### 2. SVGPatterns Component
-**File**: `/home/aansh/LTF1/iceberg-L/apps/web/src/components/features/whiteboard/SVGPatterns.tsx`
+**File**: `/home/aansh/LTF1/LTF1-L/apps/web/src/components/features/whiteboard/SVGPatterns.tsx`
 
 **SVG pattern definitions and helper functions**:
 - **Pattern Definitions**: 4 patterns × 8 color variants = 32 total patterns
@@ -52,7 +52,7 @@ A comprehensive styling panel with stroke, fill, and opacity controls has been s
 - **Performance**: Patterns defined once, reused via URL references
 
 ### 3. Integration Guide
-**File**: `/home/aansh/LTF1/iceberg-L/STYLING_PANEL_INTEGRATION.md`
+**File**: `/home/aansh/LTF1/LTF1-L/STYLING_PANEL_INTEGRATION.md`
 
 **Step-by-step integration instructions** for WhiteboardCanvas.tsx:
 - Import statements
@@ -63,7 +63,7 @@ A comprehensive styling panel with stroke, fill, and opacity controls has been s
 - Component placement
 
 ### 4. Complete Summary
-**File**: `/home/aansh/LTF1/iceberg-L/STYLING_SYSTEM_SUMMARY.md`
+**File**: `/home/aansh/LTF1/LTF1-L/STYLING_SYSTEM_SUMMARY.md`
 
 **Comprehensive documentation** covering:
 - Component architecture
@@ -76,7 +76,7 @@ A comprehensive styling panel with stroke, fill, and opacity controls has been s
 - Future enhancements
 
 ### 5. Final Integration Instructions
-**File**: `/home/aansh/LTF1/iceberg-L/FINAL_INTEGRATION_INSTRUCTIONS.md`
+**File**: `/home/aansh/LTF1/LTF1-L/FINAL_INTEGRATION_INSTRUCTIONS.md`
 
 **Specific instructions** for integrating with existing PropertiesPanel:
 - Two integration options
@@ -347,12 +347,12 @@ url(#pattern-zigzag-FF0000)     // Red zigzag
 ## Quick Reference
 
 ### Files Created
-1. `/home/aansh/LTF1/iceberg-L/apps/web/src/components/features/whiteboard/StylePropertiesPanel.tsx`
-2. `/home/aansh/LTF1/iceberg-L/apps/web/src/components/features/whiteboard/SVGPatterns.tsx`
-3. `/home/aansh/LTF1/iceberg-L/STYLING_PANEL_INTEGRATION.md`
-4. `/home/aansh/LTF1/iceberg-L/STYLING_SYSTEM_SUMMARY.md`
-5. `/home/aansh/LTF1/iceberg-L/FINAL_INTEGRATION_INSTRUCTIONS.md`
-6. `/home/aansh/LTF1/iceberg-L/DELIVERABLES_SUMMARY.md` (this file)
+1. `/home/aansh/LTF1/LTF1-L/apps/web/src/components/features/whiteboard/StylePropertiesPanel.tsx`
+2. `/home/aansh/LTF1/LTF1-L/apps/web/src/components/features/whiteboard/SVGPatterns.tsx`
+3. `/home/aansh/LTF1/LTF1-L/STYLING_PANEL_INTEGRATION.md`
+4. `/home/aansh/LTF1/LTF1-L/STYLING_SYSTEM_SUMMARY.md`
+5. `/home/aansh/LTF1/LTF1-L/FINAL_INTEGRATION_INSTRUCTIONS.md`
+6. `/home/aansh/LTF1/LTF1-L/DELIVERABLES_SUMMARY.md` (this file)
 
 ### Key Concepts
 - **StylePropertiesPanel**: Standalone styling panel (optional)

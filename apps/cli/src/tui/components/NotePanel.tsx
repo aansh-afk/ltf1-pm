@@ -14,7 +14,7 @@ interface NotePanelProps {
 }
 
 export function NotePanel({
-  workspace = 'Iceberg',
+  workspace = 'LTF1',
   project = 'ICE-Web',
   lead = 'Aansh',
   content,

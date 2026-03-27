@@ -1,4 +1,4 @@
-# Landing Page & Marketing Analysis — iceberg-pm
+# Landing Page & Marketing Analysis — ltf1-pm
 
 ## Current Positioning
 
@@ -240,16 +240,16 @@ Landing → Features/Pricing → Sign Up (Clerk) → Onboarding (3 steps) → Da
 ## Competitive Messaging
 
 ### vs Linear
-> "Linear is building agents for PMs in browsers. iceberg is building agents for devs in terminals. Same vision, different user."
+> "Linear is building agents for PMs in browsers. LTF1 is building agents for devs in terminals. Same vision, different user."
 
 ### vs Jira
-> "Jira was designed when teams updated tickets manually. iceberg was designed when code updates tickets automatically."
+> "Jira was designed when teams updated tickets manually. LTF1 was designed when code updates tickets automatically."
 
 ### vs GitHub Issues
-> "GitHub Issues tracks what you file. iceberg tracks what you ship."
+> "GitHub Issues tracks what you file. LTF1 tracks what you ship."
 
 ### vs Plane
-> "Plane is open source Jira. iceberg is the next generation."
+> "Plane is open source Jira. LTF1 is the next generation."
 
 ---
 

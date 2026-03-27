@@ -222,7 +222,7 @@ For >50,000 elements, consider WebGL rendering.
 ## Files Structure
 
 ```
-/home/aansh/LTF1/iceberg-L/
+/home/aansh/LTF1/LTF1-L/
 ├── apps/web/src/components/features/whiteboard/
 │   ├── WhiteboardCanvas.tsx                  # Main component (needs integration)
 │   ├── utils/

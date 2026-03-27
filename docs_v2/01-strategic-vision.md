@@ -1,16 +1,16 @@
-# Strategic Vision — iceberg-pm
+# Strategic Vision — ltf1-pm
 
 ## The Shift
 
 The project management industry is undergoing a phase transition. Linear's "Next" announcement (March 2026) is the signal: **the era of manual issue tracking is ending**. The next generation of PM tools will be agent-native — systems where AI agents autonomously create, triage, assign, and resolve work alongside human developers.
 
-iceberg-pm was built with the right instincts: git-native, developer-first, terminal-accessible. But the product must now evolve from **"automated PM tool"** to **"agent-native dev workspace."**
+ltf1-pm was built with the right instincts: git-native, developer-first, terminal-accessible. But the product must now evolve from **"automated PM tool"** to **"agent-native dev workspace."**
 
 ---
 
 ## Vision Statement
 
-> iceberg is the agent-native dev workspace where your terminal, your code, and your AI work from the same context to ship software without overhead.
+> LTF1 is the agent-native dev workspace where your terminal, your code, and your AI work from the same context to ship software without overhead.
 
 ### What This Means
 
@@ -33,15 +33,15 @@ iceberg-pm was built with the right instincts: git-native, developer-first, term
 | **GitHub Issues/Projects** | Devs | Browser + CLI | Copilot integration | Minimal PM features, no sprint mgmt |
 | **Plane** | Devs | Browser | Basic AI | No CLI, limited agent vision |
 | **Shortcut** | Small teams | Browser | Minimal AI | No dev tooling |
-| **iceberg** | Devs who ship | Terminal + Browser | Agent-native (building) | Early stage, small team |
+| **LTF1** | Devs who ship | Terminal + Browser | Agent-native (building) | Early stage, small team |
 
-### Where iceberg Wins
+### Where LTF1 Wins
 
 **Position**: The agent-native PM for developers who live in terminals.
 
-Linear is building for teams where PMs drive the process through a browser. iceberg is building for teams where developers drive the process through their terminal and their code.
+Linear is building for teams where PMs drive the process through a browser. LTF1 is building for teams where developers drive the process through their terminal and their code.
 
-| Linear's World | iceberg's World |
+| Linear's World | LTF1's World |
 |---------------|----------------|
 | PM creates issues in browser | Dev pushes code, issues update themselves |
 | Agent works through Linear UI | Agent works through terminal + git hooks |
@@ -64,7 +64,7 @@ Everything that matters about a project lives in one unified system that both hu
 - **Velocity**: How fast the team ships (from actual git data, not estimates)
 - **Team**: Who knows what, who's available, who's best for this task
 
-**Current state**: iceberg has tasks, code (via GitHub), and team data. Missing: decisions as first-class entities, spec-to-task linking, code indexing beyond commit parsing.
+**Current state**: LTF1 has tasks, code (via GitHub), and team data. Missing: decisions as first-class entities, spec-to-task linking, code indexing beyond commit parsing.
 
 ### Pillar 2: Rules Layer
 
@@ -83,7 +83,7 @@ Teams codify their workflows as reusable patterns that agents follow:
   - Agent can assign but human approves
   - Agent can suggest priority but not override urgent
 
-**Current state**: iceberg has an automation system (trigger → action) but no skills system, no agent permissions, limited auto-triage.
+**Current state**: LTF1 has an automation system (trigger → action) but no skills system, no agent permissions, limited auto-triage.
 
 ### Pillar 3: Agent Layer
 
@@ -95,7 +95,7 @@ AI agents that operate within the context and rules to do work autonomously:
 - **Code Agent**: Reviews PRs against task requirements, suggests fixes
 - **Insight Agent**: Surfaces risks, anomalies, and opportunities from project data
 
-**Current state**: iceberg has basic AI (task suggestions, insights, developer matching). These are utility functions, not agents. They need to become autonomous workers with context awareness.
+**Current state**: LTF1 has basic AI (task suggestions, insights, developer matching). These are utility functions, not agents. They need to become autonomous workers with context awareness.
 
 ---
 

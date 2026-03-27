@@ -218,7 +218,7 @@
 ## Files Created
 
 ```
-/home/aansh/LTF1/iceberg-L/
+/home/aansh/LTF1/LTF1-L/
 ├── apps/web/src/components/features/whiteboard/
 │   ├── utils/
 │   │   ├── spatialIndex.ts                   # 250 lines - Viewport culling

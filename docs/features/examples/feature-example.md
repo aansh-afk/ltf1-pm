@@ -131,8 +131,8 @@ export const create = mutation({
 ```tsx
 // apps/web/src/features/tasks/hooks/use-tasks.ts
 import { useQuery, useMutation } from 'convex/react'
-import { api } from '@iceberg/backend'
-import { CreateTaskInput } from '@iceberg/types'
+import { api } from '@ltf1/backend'
+import { CreateTaskInput } from '@ltf1/types'
 import { toast } from 'react-hot-toast'
 
 export function useTasks(projectId: string) {
@@ -165,7 +165,7 @@ export function useCreateTask() {
 ## 4. Feature Components
 ```tsx
 // apps/web/src/features/tasks/components/task-list.tsx
-import { Task } from '@iceberg/types'
+import { Task } from '@ltf1/types'
 import { TaskCard } from './task-card'
 import { EmptyState } from '@/shared/components/common/empty-state'
 
@@ -205,7 +205,7 @@ export function TaskList({ tasks, isLoading }: TaskListProps) {
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { CreateTaskInput } from '@iceberg/types'
+import { CreateTaskInput } from '@ltf1/types'
 import { Button } from '@/shared/components/ui/button'
 import { useCreateTask } from '../hooks/use-tasks'
 

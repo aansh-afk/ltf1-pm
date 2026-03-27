@@ -7,7 +7,7 @@ I've created a comprehensive styling panel system with stroke, fill, and opacity
 ## Files Created
 
 ### 1. StylePropertiesPanel.tsx
-**Location**: `/home/aansh/LTF1/iceberg-L/apps/web/src/components/features/whiteboard/StylePropertiesPanel.tsx`
+**Location**: `/home/aansh/LTF1/LTF1-L/apps/web/src/components/features/whiteboard/StylePropertiesPanel.tsx`
 
 **Features**:
 - **Collapsible Sections**: STROKE, FILL, BACKGROUND with expand/collapse functionality
@@ -34,7 +34,7 @@ I've created a comprehensive styling panel system with stroke, fill, and opacity
 - **Real-Time Updates**: Changes apply immediately via batch updates
 
 ### 2. SVGPatterns.tsx
-**Location**: `/home/aansh/LTF1/iceberg-L/apps/web/src/components/features/whiteboard/SVGPatterns.tsx`
+**Location**: `/home/aansh/LTF1/LTF1-L/apps/web/src/components/features/whiteboard/SVGPatterns.tsx`
 
 **Features**:
 - **SVG Pattern Definitions**: Reusable patterns for fill styles
@@ -50,7 +50,7 @@ I've created a comprehensive styling panel system with stroke, fill, and opacity
 - **SVGPatterns Component**: Renders all pattern definitions in SVG `<defs>`
 
 ### 3. Integration Guide
-**Location**: `/home/aansh/LTF1/iceberg-L/STYLING_PANEL_INTEGRATION.md`
+**Location**: `/home/aansh/LTF1/LTF1-L/STYLING_PANEL_INTEGRATION.md`
 
 Complete step-by-step integration instructions for WhiteboardCanvas.tsx.
 

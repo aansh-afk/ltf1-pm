@@ -65,7 +65,7 @@ This document provides a comprehensive overview of LTF1's technical architecture
 ## Project Structure
 
 ```
-iceberg-L/
+LTF1-L/
 ├── apps/
 │   └── web/                    # React frontend application
 │       ├── src/

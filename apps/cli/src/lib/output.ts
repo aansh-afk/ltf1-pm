@@ -9,7 +9,7 @@ import ora, { type Ora } from 'ora';
 import boxen from 'boxen';
 import figures from 'figures';
 
-// Color palette matching the iceberg brand
+// Color palette matching the LTF1 brand
 export const colors = {
   primary: chalk.yellow,
   secondary: chalk.gray,
