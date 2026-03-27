@@ -4,7 +4,7 @@ import LegalLayout from "@/components/legal/LegalLayout";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
 const COMPANY_NAME = "Vividverseglobal";
-const CONTACT_EMAIL = "Aansh.Naidu@vividverseglobal.com";
+const CONTACT_EMAIL = "icloud.comnuaym@gmail.com";
 const EFFECTIVE_DATE = "1 January 2026";
 
 export default function TermsPage() {
