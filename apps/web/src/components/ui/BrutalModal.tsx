@@ -1,16 +1,17 @@
-import { ReactNode, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
-import { m, AnimatePresence } from 'framer-motion'
-import clsx from 'clsx'
-import { HiOutlineX } from 'react-icons/hi'
+import { useEffect, useId, useRef } from "react";
+import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { m, AnimatePresence } from "framer-motion";
+import clsx from "clsx";
+import { HiOutlineX } from "react-icons/hi";
 
 interface BrutalModalProps {
-  isOpen: boolean
-  onClose: () => void
-  title?: string
-  children: ReactNode
-  size?: 'sm' | 'md' | 'lg' | 'xl'
-  showCloseButton?: boolean
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children: ReactNode;
+  size?: "sm" | "md" | "lg" | "xl";
+  showCloseButton?: boolean;
 }
 
 export default function BrutalModal({
@@ -18,68 +19,78 @@ export default function BrutalModal({
   onClose,
   title,
   children,
-  size = 'md',
+  size = "md",
   showCloseButton = true,
 }: BrutalModalProps) {
-  const modalRef = useRef<HTMLDivElement>(null)
-  const previousActiveElement = useRef<HTMLElement | null>(null)
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+  const autoId = useId();
+  const titleId = `${autoId}-modal-title`;
+  const bodyId = `${autoId}-modal-body`;
 
   // Handle ESC key and focus trap
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-        return
+      if (e.key === "Escape") {
+        onClose();
+        return;
       }
-      
+
       // Tab key for focus trap
-      if (e.key === 'Tab' && modalRef.current) {
+      if (e.key === "Tab" && modalRef.current) {
         const focusableElements = modalRef.current.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        )
-        const firstElement = focusableElements[0] as HTMLElement
-        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
-        
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[
+          focusableElements.length - 1
+        ] as HTMLElement;
+
         if (e.shiftKey && document.activeElement === firstElement) {
-          e.preventDefault()
-          lastElement?.focus()
+          e.preventDefault();
+          lastElement?.focus();
         } else if (!e.shiftKey && document.activeElement === lastElement) {
-          e.preventDefault()
-          firstElement?.focus()
+          e.preventDefault();
+          firstElement?.focus();
         }
       }
-    }
-    
+    };
+
     if (isOpen) {
-      previousActiveElement.current = document.activeElement as HTMLElement
-      document.addEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = 'hidden'
-      
+      previousActiveElement.current = document.activeElement as HTMLElement;
+      document.addEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "hidden";
+
       // Focus first focusable element after modal opens
       setTimeout(() => {
-        const firstFocusable = modalRef.current?.querySelector(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        ) as HTMLElement
-        firstFocusable?.focus()
-      }, 100)
+        const preferredFocusable = modalRef.current?.querySelector(
+          'input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [contenteditable="true"], [role="textbox"]',
+        ) as HTMLElement | null;
+
+        const fallbackFocusable = modalRef.current?.querySelector(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) as HTMLElement | null;
+
+        (preferredFocusable || fallbackFocusable)?.focus();
+      }, 100);
     }
-    
+
     return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = 'unset'
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "unset";
       // Restore focus to previous element
-      if (!isOpen && previousActiveElement.current) {
-        previousActiveElement.current.focus()
+      if (previousActiveElement.current) {
+        previousActiveElement.current.focus();
       }
-    }
-  }, [isOpen, onClose])
+    };
+  }, [isOpen, onClose]);
 
   const sizes = {
-    sm: 'max-w-[400px]',
-    md: 'max-w-[600px]',
-    lg: 'max-w-[800px]',
-    xl: 'max-w-[1200px]',
-  }
+    sm: "max-w-[400px]",
+    md: "max-w-[600px]",
+    lg: "max-w-[800px]",
+    xl: "max-w-[1200px]",
+  };
 
   const modalContent = (
     <AnimatePresence>
@@ -103,11 +114,11 @@ export default function BrutalModal({
               right: 0,
               top: 0,
               bottom: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '16px',
-              pointerEvents: 'none'
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "16px",
+              pointerEvents: "none",
             }}
           >
             {/* MODAL CONTENT - handles animation */}
@@ -117,59 +128,59 @@ export default function BrutalModal({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className={clsx(
-                'relative',
-                'w-full',
-                sizes[size]
-              )}
-              style={{ 
-                pointerEvents: 'auto',
-                maxHeight: 'calc(100vh - 32px)',
-                overflow: 'auto'
+              className={clsx("relative", "w-full", sizes[size])}
+              style={{
+                pointerEvents: "auto",
+                maxHeight: "calc(100vh - 32px)",
+                overflow: "auto",
               }}
               role="dialog"
               aria-modal="true"
-              aria-labelledby={title ? "modal-title" : undefined}
+              aria-labelledby={title ? titleId : undefined}
+              aria-describedby={bodyId}
             >
               <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] shadow-[var(--theme-box-shadow-hover)]">
-              {/* HEADER */}
-              {(title || showCloseButton) && (
-                <div className="px-[16px] py-[10px] border-b border-[var(--theme-border)] flex items-center justify-between">
-                  {title && (
-                    <h2 id="modal-title" className="text-[14px] font-bold uppercase">{title.toUpperCase()}</h2>
-                  )}
-                  {showCloseButton && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onClose()
-                      }}
-                      className="ml-auto p-[4px] hover:bg-[var(--theme-hover)] transition-colors"
-                      type="button"
-                      aria-label="Close modal"
-                    >
-                      <HiOutlineX className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              )}
+                {/* HEADER */}
+                {(title || showCloseButton) && (
+                  <div className="px-[16px] py-[10px] border-b border-[var(--theme-border)] flex items-center justify-between">
+                    {title && (
+                      <h2
+                        id={titleId}
+                        className="text-[14px] font-bold uppercase"
+                      >
+                        {title.toUpperCase()}
+                      </h2>
+                    )}
+                    {showCloseButton && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onClose();
+                        }}
+                        className="ml-auto p-[4px] hover:bg-[var(--theme-hover)] transition-colors"
+                        type="button"
+                        aria-label="Close modal"
+                      >
+                        <HiOutlineX className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
 
-              {/* CONTENT */}
-              <div className="p-[16px]">
-                {children}
+                {/* CONTENT */}
+                <div id={bodyId} className="p-[16px]">{children}</div>
               </div>
-            </div>
             </m.div>
           </div>
         </>
       )}
     </AnimatePresence>
-  )
+  );
 
   // Render the modal at the document root using portal
-  if (typeof document !== 'undefined') {
-    return createPortal(modalContent, document.body)
+  if (typeof document !== "undefined") {
+    return createPortal(modalContent, document.body);
   }
 
-  return modalContent
+  return modalContent;
 }

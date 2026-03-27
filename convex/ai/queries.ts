@@ -20,8 +20,8 @@ export const getUserAISessions = query({
     if (args.type) {
       return await ctx.db
         .query("aiSessions")
-        .withIndex("by_type", (q) => q.eq("type", args.type!))
-        .filter((q) => q.eq(q.field("userId"), user._id))
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .filter((q) => q.eq(q.field("type"), args.type!))
         .order("desc")
         .take(limit)
     }
@@ -165,8 +165,7 @@ export const getActiveInsights = query({
     
     const insights: any[] = await ctx.db
       .query("aiInsights")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", member.workspaceId))
-      .filter((q) => q.eq(q.field("dismissed"), false))
+      .withIndex("by_workspace_and_dismissed", (q) => q.eq("workspaceId", member.workspaceId).eq("dismissed", false))
       .collect()
     
     return insights.filter((insight: any) => 
@@ -184,8 +183,7 @@ export const getPendingAITasks = query({
 
     return await ctx.db
       .query("aiTasks")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("status"), "pending"))
+      .withIndex("by_user_and_status", (q) => q.eq("userId", user._id).eq("status", "pending"))
       .order("desc")
       .take(10)
   },

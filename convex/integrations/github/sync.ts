@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, internalMutation, internalQuery } from "../../_generated/server";
 import { internal } from "../../_generated/api";
+import { getCurrentUserOrThrow } from "../../lib/auth";
 
 // Note: GitHub sync actions that require Node.js APIs are in syncActions.ts
 
@@ -41,19 +42,7 @@ export const triggerManualStatsSync = mutation({
   args: {},
   returns: v.object({ success: v.boolean(), message: v.string() }),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     // Get their GitHub connection
     const connection = await ctx.db

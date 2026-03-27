@@ -1,7 +1,9 @@
 import { useState } from "react";
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 import {
   HiOutlineOfficeBuilding,
   HiOutlineUserGroup,
@@ -15,10 +17,22 @@ import toast from "react-hot-toast";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import SettingsSection from "@/components/features/settings/SettingsSection";
 import MemberManagement from "@/components/features/workspace/MemberManagement";
-import { useSettingsState } from "../hooks/useSettingsState";
+import { useSettingsState } from "@/hooks/useSettingsState";
 import BrutalButton from "@/components/ui/BrutalButton";
 import BrutalCard from "@/components/ui/BrutalCard";
 import BrutalBadge from "@/components/ui/BrutalBadge";
+
+type WorkspaceWithRole = Doc<"workspaces"> & {
+  currentUserRole?: string
+  members: Array<Doc<"workspaceMembers"> & { user: Doc<"users"> | null }>
+}
+
+interface GeneralSettings {
+  name: string
+  slug: string
+  description: string
+  logoUrl: string
+}
 
 const tabs = [
   { id: "general", label: "GENERAL", icon: HiOutlineOfficeBuilding },
@@ -31,7 +45,7 @@ const tabs = [
 // ── Sub-components ──
 
 interface DangerZoneProps {
-  workspace: any;
+  workspace: WorkspaceWithRole;
   showDeleteConfirm: boolean;
   deleteConfirmText: string;
   onShowDelete: () => void;
@@ -211,18 +225,13 @@ function FeaturesTab({
 }
 
 interface GeneralTabProps {
-  generalSettings: {
-    name: string;
-    slug: string;
-    description: string;
-    logoUrl: string;
-  };
+  generalSettings: GeneralSettings;
   canEdit: boolean;
   canDelete: boolean;
-  workspace: any;
+  workspace: WorkspaceWithRole;
   showDeleteConfirm: boolean;
   deleteConfirmText: string;
-  onGeneralChange: (settings: any) => void;
+  onGeneralChange: (settings: GeneralSettings) => void;
   onShowDelete: () => void;
   onHideDelete: () => void;
   onDeleteConfirmTextChange: (text: string) => void;
@@ -426,113 +435,205 @@ function IntegrationsTab({ canEdit }: IntegrationsTabProps) {
   );
 }
 
-interface BillingTabProps {}
+interface BillingTabProps {
+  workspaceId: string;
+  canEdit: boolean;
+}
 
-function BillingTab(_props: BillingTabProps) {
+function BillingTab({ workspaceId, canEdit }: BillingTabProps) {
+  const subscriptionStatus = useQuery(
+    api.billing.queries.getSubscriptionStatus,
+    { workspaceId: workspaceId as Id<"workspaces"> },
+  );
+  const createCheckout = useAction(api.billing.actions.createCheckoutSession);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  const handleUpgrade = async () => {
+    setIsUpgrading(true);
+    try {
+      const { checkoutUrl } = await createCheckout({
+        workspaceId: workspaceId as Id<"workspaces">,
+        plan: "pro",
+        billingCycle: "monthly",
+      });
+      window.location.href = checkoutUrl;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to create checkout";
+      toast.error(message);
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
+
+  const isPro = subscriptionStatus?.plan === "pro" || subscriptionStatus?.plan === "enterprise";
+  const isActive = subscriptionStatus?.status === "active" || subscriptionStatus?.status === "trialing";
+
   return (
     <SettingsSection
       title="SUBSCRIPTION & BILLING"
       description="Manage your workspace subscription"
     >
-      {/* Beta notice */}
+      {/* Current plan */}
       <BrutalCard
         variant="neon"
         className="p-5 mb-4 border-[var(--theme-primary)]/40"
       >
-        <div className="flex items-start gap-3 mb-4">
-          <span className="text-[10px] font-mono text-[var(--theme-primary)] uppercase tracking-widest border border-[var(--theme-primary)]/30 px-2 py-1 shrink-0 mt-0.5">
-            Beta
-          </span>
-          <div>
-            <p className="text-sm font-bold uppercase mb-1 text-[var(--theme-foreground)]">
-              EVERYTHING IS FREE RIGHT NOW
-            </p>
-            <p className="text-xs font-mono text-[var(--theme-foreground)]/60 leading-relaxed">
-              We're actively building LTF1 and shipping in public. While we're
-              in beta, all Pro &amp; Enterprise features are unlocked for your
-              workspace at no cost. Billing will start when the app officially
-              launches.
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start gap-3">
+            <span className="text-[10px] font-mono text-[var(--theme-primary)] uppercase tracking-widest border border-[var(--theme-primary)]/30 px-2 py-1 shrink-0 mt-0.5">
+              {isPro && isActive ? "Pro" : "Free"}
+            </span>
+            <div>
+              <p className="text-sm font-bold uppercase mb-1 text-[var(--theme-foreground)]">
+                {isPro && isActive ? "PRO PLAN" : "FREE PLAN"}
+              </p>
+              <p className="text-xs font-mono text-[var(--theme-foreground)]/60 leading-relaxed">
+                {isPro && isActive
+                  ? "You have access to all Pro features."
+                  : "Upgrade to Pro for unlimited members, AI credits, and advanced features."}
+              </p>
+            </div>
+          </div>
+          {subscriptionStatus?.status && subscriptionStatus.status !== "none" && (
+            <BrutalBadge
+              variant={
+                subscriptionStatus.status === "active" ? "success"
+                  : subscriptionStatus.status === "past_due" ? "warning"
+                  : subscriptionStatus.status === "cancelled" ? "error"
+                  : "default"
+              }
+            >
+              {subscriptionStatus.status.toUpperCase()}
+            </BrutalBadge>
+          )}
+        </div>
+
+        {/* Seat usage */}
+        {subscriptionStatus && (
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-mono text-[var(--theme-foreground)]/50 uppercase tracking-widest">
+                Seat Usage
+              </span>
+              <span className="text-xs font-mono text-[var(--theme-foreground)]/70">
+                {subscriptionStatus.seatsUsed} / {subscriptionStatus.seatsAvailable === 999 ? "Unlimited" : subscriptionStatus.seatsAvailable}
+              </span>
+            </div>
+            <div className="w-full h-2 bg-[var(--theme-border)] overflow-hidden">
+              <div
+                className="h-full bg-[var(--theme-primary)] transition-all duration-300"
+                style={{
+                  width: `${Math.min(100, (subscriptionStatus.seatsUsed / (subscriptionStatus.seatsAvailable === 999 ? subscriptionStatus.seatsUsed || 1 : subscriptionStatus.seatsAvailable)) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Billing details for Pro */}
+        {isPro && isActive && subscriptionStatus && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            {subscriptionStatus.billingCycle && (
+              <div className="p-3 border border-[var(--theme-border)]">
+                <p className="text-[10px] font-mono text-[var(--theme-foreground)]/50 uppercase mb-1">
+                  Billing Cycle
+                </p>
+                <p className="text-sm font-mono font-bold text-[var(--theme-foreground)]">
+                  {subscriptionStatus.billingCycle === "yearly" ? "YEARLY" : "MONTHLY"}
+                </p>
+              </div>
+            )}
+            {subscriptionStatus.currentPeriodEnd && (
+              <div className="p-3 border border-[var(--theme-border)]">
+                <p className="text-[10px] font-mono text-[var(--theme-foreground)]/50 uppercase mb-1">
+                  Next Renewal
+                </p>
+                <p className="text-sm font-mono font-bold text-[var(--theme-foreground)]">
+                  {new Date(subscriptionStatus.currentPeriodEnd).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Cancelled notice */}
+        {subscriptionStatus?.status === "cancelled" && subscriptionStatus.cancelledAt && (
+          <div className="p-3 border border-[var(--theme-error)] bg-[var(--theme-error)]/5 mb-4">
+            <p className="text-xs font-mono text-[var(--theme-error)]">
+              Subscription cancelled on{" "}
+              {new Date(subscriptionStatus.cancelledAt).toLocaleDateString()}.
+              {subscriptionStatus.currentPeriodEnd && (
+                <> Access continues until {new Date(subscriptionStatus.currentPeriodEnd).toLocaleDateString()}.</>
+              )}
             </p>
           </div>
-        </div>
+        )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
-          {[
-            "Unlimited team members",
-            "Unlimited AI credits",
-            "Advanced analytics",
-            "SSO / SAML",
-            "Audit logs",
-            "BYOK (Bring Your Own Key)",
-            "Custom webhooks",
-            "Priority support",
-          ].map((feature) => (
-            <div
-              key={feature}
-              className="flex items-center gap-2 text-xs font-mono"
+        {/* Action buttons */}
+        <div className="flex flex-wrap gap-3">
+          {!isPro && canEdit && (
+            <BrutalButton
+              variant="primary"
+              onClick={handleUpgrade}
+              disabled={isUpgrading}
             >
-              <span className="text-[var(--theme-primary)]">+</span>
-              <span className="text-[var(--theme-foreground)]/70">
-                {feature}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <div className="border-t border-[var(--theme-border)] pt-3">
-          <p className="text-[10px] font-mono text-[var(--theme-foreground)]/40 leading-relaxed">
-            Your workspace is on the{" "}
-            <span className="text-[var(--theme-primary)] font-bold">
-              BETA PLAN
-            </span>
-            . No credit card required. No surprise charges. We'll notify you
-            well in advance before any billing goes live.
-          </p>
+              {isUpgrading ? "LOADING..." : "UPGRADE TO PRO"}
+            </BrutalButton>
+          )}
+          {isPro && isActive && subscriptionStatus?.polarCustomerId && (
+            <BrutalButton
+              variant="secondary"
+              onClick={() => {
+                window.open("https://polar.sh/settings/subscriptions", "_blank");
+              }}
+            >
+              MANAGE SUBSCRIPTION
+            </BrutalButton>
+          )}
         </div>
       </BrutalCard>
 
-      {/* What's coming */}
-      <BrutalCard className="p-4">
-        <p className="text-[10px] font-mono text-[var(--theme-foreground)]/40 uppercase tracking-widest mb-3">
-          Coming at Launch
-        </p>
-        <div className="space-y-2">
-          {[
-            {
-              tier: "Open Source",
-              price: "$0",
-              note: "Free forever — up to 5 members, 100 AI credits/month",
-            },
-            {
-              tier: "Pro",
-              price: "$12/user/mo",
-              note: "Unlimited members, unlimited AI, advanced features",
-            },
-            {
-              tier: "Enterprise",
-              price: "Custom",
-              note: "On-premise, custom SLA, dedicated support",
-            },
-          ].map((item) => (
-            <div
-              key={item.tier}
-              className="flex items-start justify-between gap-4 text-xs font-mono"
-            >
-              <div>
-                <span className="text-[var(--theme-foreground)] font-bold">
-                  {item.tier}
-                </span>
-                <span className="text-[var(--theme-foreground)]/40 ml-2">
-                  — {item.note}
+      {/* Pro features list */}
+      {!isPro && (
+        <BrutalCard className="p-4">
+          <p className="text-[10px] font-mono text-[var(--theme-foreground)]/40 uppercase tracking-widest mb-3">
+            Pro Features
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {[
+              "Unlimited team members",
+              "Unlimited AI credits",
+              "Advanced analytics",
+              "SSO / SAML",
+              "Audit logs",
+              "BYOK (Bring Your Own Key)",
+              "Custom webhooks",
+              "Priority support",
+            ].map((feature) => (
+              <div
+                key={feature}
+                className="flex items-center gap-2 text-xs font-mono"
+              >
+                <span className="text-[var(--theme-primary)]">+</span>
+                <span className="text-[var(--theme-foreground)]/70">
+                  {feature}
                 </span>
               </div>
-              <span className="text-[var(--theme-foreground)]/60 shrink-0">
-                {item.price}
-              </span>
-            </div>
-          ))}
-        </div>
-      </BrutalCard>
+            ))}
+          </div>
+        </BrutalCard>
+      )}
+
+      {/* Powered by Polar */}
+      <div className="mt-4 text-center">
+        <p className="text-[10px] font-mono text-[var(--theme-foreground)]/30">
+          Billing powered by Polar
+        </p>
+      </div>
     </SettingsSection>
   );
 }
@@ -586,9 +687,9 @@ function SaveIndicator({
 }
 
 interface WorkspaceSettingsContentProps {
-  workspace: any;
+  workspace: WorkspaceWithRole;
   workspaceId: string;
-  currentUser: any;
+  currentUser: Doc<"users">;
   memberRole: string | undefined;
 }
 
@@ -624,7 +725,7 @@ function WorkspaceSettingsContent({
     onSave: async (data) => {
       if (!workspaceId) return;
       await updateWorkspace({
-        workspaceId: workspaceId as any,
+        workspaceId: workspaceId as Id<"workspaces">,
         ...data,
       });
     },
@@ -646,7 +747,7 @@ function WorkspaceSettingsContent({
     onSave: async (data) => {
       if (!workspaceId) return;
       await updateWorkspace({
-        workspaceId: workspaceId as any,
+        workspaceId: workspaceId as Id<"workspaces">,
         settings: {
           ...workspace?.settings,
           features: {
@@ -668,11 +769,12 @@ function WorkspaceSettingsContent({
     }
 
     try {
-      await deleteWorkspace({ workspaceId: workspaceId as any });
+      await deleteWorkspace({ workspaceId: workspaceId as Id<"workspaces"> });
       toast.success("Workspace deleted successfully");
       navigate("/workspaces");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete workspace");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to delete workspace";
+      toast.error(message);
     }
   };
 
@@ -761,7 +863,9 @@ function WorkspaceSettingsContent({
             <IntegrationsTab canEdit={canEdit} />
           )}
 
-          {activeTab === "billing" && <BillingTab />}
+          {activeTab === "billing" && (
+            <BillingTab workspaceId={workspaceId} canEdit={canEdit} />
+          )}
         </div>
 
         <SaveIndicator
@@ -785,7 +889,7 @@ export default function WorkspaceSettingsPage() {
   // Queries
   const workspace = useQuery(
     api.workspaces.queries.getWorkspaceById,
-    workspaceId ? { workspaceId: workspaceId as any } : "skip",
+    workspaceId ? { workspaceId: workspaceId as Id<"workspaces"> } : "skip",
   );
   const currentUser = useQuery(api.auth.users.getOrCreateCurrentUser);
   const memberRole = workspace?.currentUserRole;
@@ -795,6 +899,7 @@ export default function WorkspaceSettingsPage() {
   }
 
   return (
+    <ErrorBoundary>
     <WorkspaceSettingsContent
       key={workspace._id}
       workspace={workspace}
@@ -802,5 +907,6 @@ export default function WorkspaceSettingsPage() {
       currentUser={currentUser}
       memberRole={memberRole}
     />
+    </ErrorBoundary>
   );
 }

@@ -1,0 +1,256 @@
+/* BlockNote Dark Brutalist Theme Overrides */
+
+/* Kill every background on every BlockNote / Mantine wrapper */
+[class*="bn-"],
+[class*="bn-"] > *,
+[data-color-scheme],
+[data-color-scheme] > *,
+.bn-container,
+.bn-editor,
+.bn-block-group,
+.bn-block-outer,
+.ProseMirror,
+[class*="mantine"][class*="root"],
+[data-bn-color-scheme] {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* Re-apply backgrounds ONLY where needed (menus, toolbars) */
+.bn-container .bn-slash-menu,
+.bn-container .bn-suggestion-menu,
+.bn-container .bn-toolbar,
+.bn-container .bn-side-menu,
+.mantine-Menu-dropdown,
+.mantine-Popover-dropdown {
+  background: #0A0A0A !important;
+}
+
+/* Theme variables */
+.bn-container[data-color-scheme] {
+  --bn-colors-editor-background: transparent;
+  --bn-colors-editor-text: #F9FAFB;
+  --bn-colors-menu-background: #0A0A0A;
+  --bn-colors-menu-text: #F9FAFB;
+  --bn-colors-tooltip-background: #111111;
+  --bn-colors-tooltip-text: #F9FAFB;
+  --bn-colors-hovered-background: #111111;
+  --bn-colors-selected-background: #1F1F23;
+  --bn-colors-disabled-background: #0A0A0A;
+  --bn-colors-disabled-text: #6B7280;
+  --bn-colors-shadow: none;
+  --bn-colors-border: #2E2E35;
+  --bn-colors-side-menu: #6B7280;
+  --bn-colors-highlights-gray-background: #1F1F23;
+  --bn-colors-highlights-gray-text: #9CA3AF;
+  --bn-font-family: 'Inter', sans-serif;
+  --bn-border-radius: 0px;
+}
+
+/* Editor body */
+.bn-editor {
+  font-family: 'Inter', sans-serif;
+  color: #F9FAFB;
+  padding: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Block content */
+.bn-block-content {
+  font-size: 15px;
+  line-height: 1.7;
+  padding: 2px 0;
+}
+
+/* Headings */
+.bn-block-content[data-content-type="heading"] [data-level="1"] {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 24px;
+  margin-bottom: 4px;
+}
+
+.bn-block-content[data-content-type="heading"] [data-level="2"] {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-top: 20px;
+  margin-bottom: 4px;
+}
+
+.bn-block-content[data-content-type="heading"] [data-level="3"] {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 16px;
+  margin-bottom: 4px;
+}
+
+/* Code blocks */
+.bn-block-content[data-content-type="codeBlock"] pre,
+.bn-block-content code {
+  font-family: 'IBM Plex Mono', monospace;
+  background: #0A0A0A;
+  border: 1px solid #2E2E35;
+  border-radius: 0px;
+}
+
+/* Inline code */
+.bn-inline-content code {
+  font-family: 'IBM Plex Mono', monospace;
+  background: #1F1F23;
+  border: 1px solid #2E2E35;
+  border-radius: 0px;
+  padding: 1px 4px;
+  font-size: 0.9em;
+  color: #6366F1;
+}
+
+/* Blockquote */
+.bn-block-content[data-content-type="quote"] {
+  border-left: 3px solid #6366F1;
+  padding-left: 16px;
+  color: #9CA3AF;
+  font-style: italic;
+}
+
+/* Divider / horizontal rule */
+.bn-block-content[data-content-type="horizontalRule"] hr {
+  border: none;
+  border-top: 2px solid #2E2E35;
+  margin: 16px 0;
+}
+
+/* Checkboxes */
+.bn-block-content[data-content-type="checkListItem"] input[type="checkbox"] {
+  accent-color: #6366F1;
+  border: 2px solid #2E2E35;
+  border-radius: 0px;
+  width: 16px;
+  height: 16px;
+}
+
+/* Slash menu / dropdown */
+.bn-container .bn-slash-menu,
+.bn-container .bn-suggestion-menu {
+  background: #0A0A0A;
+  border: 2px solid #2E2E35;
+  border-radius: 0px;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.bn-container .bn-slash-menu .bn-suggestion-menu-item,
+.bn-container .bn-suggestion-menu .bn-suggestion-menu-item {
+  border-radius: 0px;
+  padding: 8px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+}
+
+.bn-container .bn-slash-menu .bn-suggestion-menu-item:hover,
+.bn-container .bn-suggestion-menu .bn-suggestion-menu-item:hover,
+.bn-container .bn-slash-menu .bn-suggestion-menu-item[aria-selected="true"],
+.bn-container .bn-suggestion-menu .bn-suggestion-menu-item[aria-selected="true"] {
+  background: #111111;
+}
+
+/* Toolbar */
+.bn-container .bn-toolbar {
+  background: #0A0A0A;
+  border: 2px solid #2E2E35;
+  border-radius: 0px;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
+  padding: 4px;
+}
+
+.bn-container .bn-toolbar button {
+  border-radius: 0px;
+  color: #9CA3AF;
+}
+
+.bn-container .bn-toolbar button:hover {
+  background: #111111;
+  color: #F9FAFB;
+}
+
+.bn-container .bn-toolbar button[data-active="true"] {
+  background: #1F1F23;
+  color: #6366F1;
+}
+
+/* Side menu (drag handle) */
+.bn-container .bn-side-menu {
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+
+.bn-container .bn-side-menu:hover {
+  opacity: 1;
+}
+
+/* Placeholder text */
+.bn-block-content .bn-inline-content[data-placeholder]::before {
+  color: #6B7280;
+  font-style: italic;
+}
+
+/* Links */
+.bn-inline-content a {
+  color: #6366F1;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.bn-inline-content a:hover {
+  color: #4F46E5;
+}
+
+/* Table of contents / nested lists */
+.bn-block-content ul,
+.bn-block-content ol {
+  padding-left: 24px;
+}
+
+.bn-block-content li {
+  margin: 2px 0;
+}
+
+/* Callout blocks */
+.bn-block-content[data-content-type="callout"] {
+  background: #0A0A0A;
+  border: 2px solid #2E2E35;
+  border-radius: 0px;
+  padding: 12px 16px;
+}
+
+/* Selection highlight */
+.bn-editor ::selection {
+  background: rgba(99, 102, 241, 0.3);
+}
+
+/* Mantine overrides for BlockNote menus */
+.mantine-Menu-dropdown,
+.mantine-Popover-dropdown {
+  background: #0A0A0A !important;
+  border: 2px solid #2E2E35 !important;
+  border-radius: 0px !important;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5) !important;
+}
+
+.mantine-Menu-item {
+  border-radius: 0px !important;
+  font-family: 'Inter', sans-serif !important;
+  color: #F9FAFB !important;
+}
+
+.mantine-Menu-item:hover,
+.mantine-Menu-item[data-hovered] {
+  background: #111111 !important;
+}

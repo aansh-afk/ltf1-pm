@@ -56,6 +56,9 @@ export default function BrutalNotification({
       animate={{ opacity: 1, x: 0, y: 0 }}
       exit={{ opacity: 0, x: 100, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
+      role={type === 'error' || type === 'warning' ? 'alert' : 'status'}
+      aria-live={type === 'error' ? 'assertive' : 'polite'}
+      aria-atomic="true"
       className={clsx(
         'border-2 shadow-brutal-lg p-[10px] min-w-[300px] max-w-[500px]',
         'bg-[var(--theme-background)]',
@@ -77,6 +80,7 @@ export default function BrutalNotification({
         {onClose && (
           <button
             onClick={onClose}
+            aria-label="Close notification"
             className="p-4px hover:bg-[var(--theme-background-secondary)] transition-colors text-[var(--theme-foreground)]"
           >
             <HiOutlineXCircle className="w-5 h-5" />

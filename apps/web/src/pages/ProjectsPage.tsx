@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { HiOutlinePlus, HiOutlineFolder, HiOutlineGlobeAlt, HiOutlineTerminal, HiOutlineChip } from 'react-icons/hi'
@@ -6,7 +7,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner'
 import WorkspaceSelector from '@/components/common/WorkspaceSelector'
 import CreateProjectModal from '@/components/features/project/CreateProjectModal'
 import ProjectCard from '@/components/features/project/ProjectCard'
-import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
+import { useCurrentWorkspace } from '@/hooks/useCurrentWorkspace'
 import BrutalButton from '@/components/ui/BrutalButton'
 import { m } from 'framer-motion'
 
@@ -75,6 +76,7 @@ export default function ProjectsPage() {
   const currentWorkspace = workspaces?.find(w => w._id === currentWorkspaceId)
 
   return (
+    <ErrorBoundary>
     <div className="p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
@@ -169,5 +171,6 @@ export default function ProjectsPage() {
         workspaceId={currentWorkspaceId}
       />
     </div>
+    </ErrorBoundary>
   )
 }

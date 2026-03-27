@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import { HiOutlineUser, HiOutlineMail, HiOutlineCalendar, HiOutlineCode, HiOutlineClock, HiOutlineLocationMarker, HiOutlineGlobeAlt, HiOutlineLink, HiOutlineBadgeCheck } from 'react-icons/hi'
-import BrutalAvatar from '../../ui/BrutalAvatar'
-import BrutalModal from '../../ui/BrutalModal'
-import DeveloperStatusIndicator from '../developer/DeveloperStatusIndicator'
-import BrutalBadge from '../../ui/BrutalBadge'
-import LoadingSpinner from '../../common/LoadingSpinner'
+import type { Id } from '../../../../../../convex/_generated/dataModel'
+import BrutalAvatar from '@/components/ui/BrutalAvatar'
+import BrutalModal from '@/components/ui/BrutalModal'
+import DeveloperStatusIndicator from '@/components/features/developer/DeveloperStatusIndicator'
+import BrutalBadge from '@/components/ui/BrutalBadge'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
 import { formatDistanceToNow } from 'date-fns'
 import clsx from 'clsx'
 
@@ -222,8 +223,8 @@ interface UserProfileModalProps {
 export default function UserProfileModal({ isOpen, onClose, userId }: UserProfileModalProps) {
   const [activeTab, setActiveTab] = useState<'profile' | 'activity' | 'skills'>('profile')
 
-  const user = useQuery(api.auth.users.getUserById, userId ? { userId: userId as any } : 'skip')
-  const profile = useQuery(api.developers.queries.getDeveloperProfile, userId ? { userId: userId as any } : 'skip')
+  const user = useQuery(api.auth.users.getUserById, userId ? { userId: userId as Id<"users"> } : 'skip')
+  const profile = useQuery(api.developers.queries.getDeveloperProfile, userId ? { userId: userId as Id<"users"> } : 'skip')
 
   return (
     <BrutalModal isOpen={isOpen} onClose={onClose} title="USER PROFILE" size="lg">
@@ -289,7 +290,7 @@ export default function UserProfileModal({ isOpen, onClose, userId }: UserProfil
                 ].map(tab => (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
+                    onClick={() => setActiveTab(tab.id as 'profile' | 'activity' | 'skills')}
                     className={clsx(
                       'flex items-center gap-[8px] px-[12px] py-[8px] text-brutal-sm font-mono uppercase',
                       'border-r-2 border-[var(--theme-border)] transition-colors',

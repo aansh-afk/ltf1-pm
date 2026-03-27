@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
-import { 
+import {
   HiOutlineUser,
   HiOutlineUserAdd,
   HiOutlineLightBulb,
@@ -10,16 +10,20 @@ import {
   HiOutlineSearch
 } from 'react-icons/hi'
 import clsx from 'clsx'
-import { ReviewerSuggestions } from '../profile/ReviewerSuggestions'
-import { ExpertiseSearchModal } from '../profile/ExpertiseSearchModal'
+import { ReviewerSuggestions } from '@/components/features/profile/ReviewerSuggestions'
+import { ExpertiseSearchModal } from '@/components/features/profile/ExpertiseSearchModal'
+import TaskAssignmentSuggestions from '@/components/features/ai/TaskAssignmentSuggestions'
 
 interface TaskAssignmentHelperProps {
   workspaceId: Id<"workspaces">
+  projectId?: Id<"projects">
   currentAssignees?: Id<"users">[]
   onAssigneeChange: (assigneeIds: Id<"users">[]) => void
   taskTitle?: string
   taskDescription?: string
   taskLabels?: string[]
+  taskType?: string
+  priority?: string
   mode?: 'compact' | 'full'
 }
 
@@ -28,11 +32,14 @@ const EMPTY_LABELS: string[] = []
 
 export function TaskAssignmentHelper({
   workspaceId,
+  projectId,
   currentAssignees = EMPTY_ASSIGNEES,
   onAssigneeChange,
   taskTitle = '',
   taskDescription = '',
   taskLabels = EMPTY_LABELS,
+  taskType,
+  priority,
   mode = 'full'
 }: TaskAssignmentHelperProps) {
   const [showExpertiseSearch, setShowExpertiseSearch] = useState(false)
@@ -100,6 +107,21 @@ export function TaskAssignmentHelper({
             FIND EXPERT
           </button>
         </div>
+
+        {/* AI-powered assignment suggestions */}
+        {projectId && (
+          <TaskAssignmentSuggestions
+            projectId={projectId}
+            taskTitle={taskTitle}
+            taskDescription={taskDescription}
+            taskType={taskType}
+            priority={priority}
+            labels={taskLabels}
+            currentAssignees={currentAssignees as string[]}
+            onAssign={(userId) => handleSelectReviewer(userId)}
+            compact
+          />
+        )}
 
         {allTechnologies.length > 0 && (
           <ReviewerSuggestions
@@ -222,7 +244,21 @@ export function TaskAssignmentHelper({
         </div>
       </div>
 
-      {/* Assignment Suggestions */}
+      {/* AI-powered Assignment Suggestions */}
+      {projectId && (
+        <TaskAssignmentSuggestions
+          projectId={projectId}
+          taskTitle={taskTitle}
+          taskDescription={taskDescription}
+          taskType={taskType}
+          priority={priority}
+          labels={taskLabels}
+          currentAssignees={currentAssignees as string[]}
+          onAssign={(userId) => handleSelectReviewer(userId)}
+        />
+      )}
+
+      {/* Rule-based Assignment Suggestions */}
       {allTechnologies.length > 0 && (
         <ReviewerSuggestions
           technologies={allTechnologies}

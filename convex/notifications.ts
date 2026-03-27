@@ -1,5 +1,6 @@
 import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+import { getCurrentUser, getCurrentUserOrThrow } from "./lib/auth";
 
 export const getNotifications = query({
   args: {
@@ -27,12 +28,7 @@ export const getNotifications = query({
     })
   ),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
+    const user = await getCurrentUser(ctx);
     if (!user) return [];
     return await ctx.db
       .query("notifications")
@@ -48,19 +44,13 @@ export const getUnreadCount = query({
   args: { workspaceId: v.id("workspaces") },
   returns: v.number(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return 0;
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
+    const user = await getCurrentUser(ctx);
     if (!user) return 0;
     const unread = await ctx.db
       .query("notifications")
-      .withIndex("by_user_and_workspace", (q) =>
-        q.eq("userId", user._id).eq("workspaceId", args.workspaceId)
+      .withIndex("by_user_and_workspace_and_read", (q) =>
+        q.eq("userId", user._id).eq("workspaceId", args.workspaceId).eq("isRead", false)
       )
-      .filter((q) => q.eq(q.field("isRead"), false))
       .collect();
     return unread.length;
   },
@@ -70,16 +60,11 @@ export const markAsRead = mutation({
   args: { notificationId: v.id("notifications") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
+    const user = await getCurrentUserOrThrow(ctx);
     const notification = await ctx.db.get(args.notificationId);
     if (!notification) throw new Error("Notification not found");
     // Verify the notification belongs to this user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user || notification.userId !== user._id)
+    if (notification.userId !== user._id)
       throw new Error("Access denied");
     await ctx.db.patch(args.notificationId, { isRead: true });
     return null;
@@ -90,19 +75,12 @@ export const markAllAsRead = mutation({
   args: { workspaceId: v.id("workspaces") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) throw new Error("User not found");
+    const user = await getCurrentUserOrThrow(ctx);
     const unread = await ctx.db
       .query("notifications")
-      .withIndex("by_user_and_workspace", (q) =>
-        q.eq("userId", user._id).eq("workspaceId", args.workspaceId)
+      .withIndex("by_user_and_workspace_and_read", (q) =>
+        q.eq("userId", user._id).eq("workspaceId", args.workspaceId).eq("isRead", false)
       )
-      .filter((q) => q.eq(q.field("isRead"), false))
       .collect();
     for (const n of unread) {
       await ctx.db.patch(n._id, { isRead: true });

@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
+import { getCurrentUserOrThrow } from "./lib/auth";
 
 async function requireAuthenticatedUserMatch(
   ctx: any,
@@ -11,13 +12,7 @@ async function requireAuthenticatedUserMatch(
     throw new Error("Unauthorized");
   }
 
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", identity.subject))
-    .first();
-  if (!user) {
-    throw new Error("User not found");
-  }
+  const user = await getCurrentUserOrThrow(ctx);
 
   if (identity.subject !== requestedUserId) {
     throw new Error("Not authorized");
@@ -456,13 +451,7 @@ export const approveTimeEntries = mutation({
       throw new Error("Unauthorized");
     }
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     if (args.timeEntryIds.length === 0) {
       return { success: true, count: 0 };

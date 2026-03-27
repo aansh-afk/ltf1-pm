@@ -1,8 +1,9 @@
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
-import { useEnsureUser } from "../hooks/useEnsureUser";
+import { useEnsureUser } from "@/hooks/useEnsureUser";
 
 type Status = "new" | "triaged" | "in_progress" | "resolved" | "closed";
 type Severity = "critical" | "high" | "medium" | "low";
@@ -205,6 +206,7 @@ export default function AdminBugReportsPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div style={{ padding: "32px 24px", maxWidth: 1200, margin: "0 auto" }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
@@ -318,5 +320,6 @@ export default function AdminBugReportsPage() {
         )}
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

@@ -1,19 +1,22 @@
-import { useReducer } from 'react'
-import BrutalButton from '../components/ui/BrutalButton'
-import BrutalCard from '../components/ui/BrutalCard'
-import BrutalBadge from '../components/ui/BrutalBadge'
-import BrutalToggle from '../components/ui/BrutalToggle'
-import BrutalAvatar from '../components/ui/BrutalAvatar'
-import BrutalCheckbox from '../components/ui/BrutalCheckbox'
-import BrutalProgress from '../components/ui/BrutalProgress'
-import BrutalSlider from '../components/ui/BrutalSlider'
-import BrutalInput from '../components/ui/BrutalInput'
-import BrutalSelect from '../components/ui/BrutalSelect'
-import BrutalModal from '../components/ui/BrutalModal'
-import BrutalTooltip from '../components/ui/BrutalTooltip'
-import BrutalNotification from '../components/ui/BrutalNotification'
-import BrutalTable from '../components/ui/BrutalTable'
-import MultiSelect from '../components/ui/MultiSelect'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
+import { useReducer, useState, useCallback } from 'react'
+import { useTheme } from '@/contexts/ThemeContext'
+import type { ThemeName } from '@/themes/themeTypes'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalBadge from '@/components/ui/BrutalBadge'
+import BrutalToggle from '@/components/ui/BrutalToggle'
+import BrutalAvatar from '@/components/ui/BrutalAvatar'
+import BrutalCheckbox from '@/components/ui/BrutalCheckbox'
+import BrutalProgress from '@/components/ui/BrutalProgress'
+import BrutalSlider from '@/components/ui/BrutalSlider'
+import BrutalInput from '@/components/ui/BrutalInput'
+import BrutalSelect from '@/components/ui/BrutalSelect'
+import BrutalModal from '@/components/ui/BrutalModal'
+import BrutalTooltip from '@/components/ui/BrutalTooltip'
+import BrutalNotification from '@/components/ui/BrutalNotification'
+import BrutalTable from '@/components/ui/BrutalTable'
+import MultiSelect from '@/components/ui/MultiSelect'
 
 // ─────────────────────────────────────────────
 // Section heading helper
@@ -150,6 +153,9 @@ type DemoState = {
   modalOpen: boolean
   modalSize: 'sm' | 'md' | 'lg' | 'xl'
   multiVal: string[]
+  selectPriority: string
+  selectStatus: string
+  selectTheme: string
   activeSection: string
 }
 
@@ -164,6 +170,9 @@ type DemoAction =
   | { type: 'OPEN_MODAL'; size: 'sm' | 'md' | 'lg' | 'xl' }
   | { type: 'CLOSE_MODAL' }
   | { type: 'SET_MULTI'; value: string[] }
+  | { type: 'SET_SELECT_PRIORITY'; value: string }
+  | { type: 'SET_SELECT_STATUS'; value: string }
+  | { type: 'SET_SELECT_THEME'; value: string }
   | { type: 'SET_SECTION'; value: string }
 
 const initialDemoState: DemoState = {
@@ -172,6 +181,9 @@ const initialDemoState: DemoState = {
   sliderVal: 60,
   modalOpen: false, modalSize: 'md',
   multiVal: ['react', 'typescript'],
+  selectPriority: 'medium',
+  selectStatus: '',
+  selectTheme: 'obsidian',
   activeSection: 'colors',
 }
 
@@ -187,6 +199,9 @@ function demoReducer(state: DemoState, action: DemoAction): DemoState {
     case 'OPEN_MODAL': return { ...state, modalOpen: true, modalSize: action.size }
     case 'CLOSE_MODAL': return { ...state, modalOpen: false }
     case 'SET_MULTI': return { ...state, multiVal: action.value }
+    case 'SET_SELECT_PRIORITY': return { ...state, selectPriority: action.value }
+    case 'SET_SELECT_STATUS': return { ...state, selectStatus: action.value }
+    case 'SET_SELECT_THEME': return { ...state, selectTheme: action.value }
     case 'SET_SECTION': return { ...state, activeSection: action.value }
     default: return state
   }
@@ -439,28 +454,69 @@ function ShadowsSection() {
   )
 }
 
+const ANIMATIONS = [
+  { cls: 'animate-brutal-fade', label: 'brutal-fade', demo: 'FADE IN' },
+  { cls: 'animate-brutal-pulse', label: 'brutal-pulse', demo: '■ PULSE' },
+  { cls: 'animate-spin', label: 'spin', demo: '↻' },
+  { cls: 'animate-pulse', label: 'pulse', demo: 'PULSE' },
+  { cls: 'animate-bounce', label: 'bounce', demo: '↕ BOUNCE' },
+  { cls: 'animate-glitch', label: 'glitch', demo: 'GLITCH' },
+  { cls: 'animate-cursor-blink', label: 'cursor-blink', demo: '█' },
+]
+
+function AnimationCard({ cls, label, demo }: { cls: string; label: string; demo: string }) {
+  const [playing, setPlaying] = useState(true)
+  const [key, setKey] = useState(0)
+
+  const replay = useCallback(() => {
+    setPlaying(false)
+    // Force remount to restart animation
+    requestAnimationFrame(() => {
+      setKey((k) => k + 1)
+      setPlaying(true)
+    })
+  }, [])
+
+  return (
+    <button
+      type="button"
+      onClick={replay}
+      className="text-left border-2 border-[var(--theme-border)] p-4 flex flex-col items-center gap-2 transition-all duration-250 ease-in-out hover:border-[var(--theme-primary)] hover:-translate-y-[2px] cursor-pointer group"
+    >
+      <div
+        key={key}
+        className={`font-mono text-sm font-bold text-[var(--theme-primary)] ${playing ? cls : ''}`}
+      >
+        {demo}
+      </div>
+      <span className="font-mono text-[9px] uppercase tracking-wider text-[var(--theme-foreground)]/40 group-hover:text-[var(--theme-foreground)]/60">
+        {label}
+      </span>
+      <span className="font-mono text-[8px] uppercase tracking-widest text-[var(--theme-foreground)]/20 group-hover:text-[var(--theme-primary)]">
+        ▶ REPLAY
+      </span>
+    </button>
+  )
+}
+
+function AnimationGrid() {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {ANIMATIONS.map((a) => (
+        <AnimationCard key={a.cls} {...a} />
+      ))}
+    </div>
+  )
+}
+
 function AnimationsSection() {
   return (
     <section>
       <SectionHeading id="animations" label="Animations & Keyframes" />
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {[
-          { cls: 'animate-brutal-fade', label: 'brutal-fade', demo: 'FADE IN' },
-          { cls: 'animate-brutal-pulse', label: 'brutal-pulse', demo: '■ PULSE' },
-          { cls: 'animate-spin', label: 'spin', demo: '↻' },
-          { cls: 'animate-pulse', label: 'pulse', demo: 'PULSE' },
-          { cls: 'animate-bounce', label: 'bounce', demo: '↕ BOUNCE' },
-          { cls: 'animate-glitch', label: 'glitch', demo: 'GLITCH' },
-          { cls: 'animate-cursor-blink', label: 'cursor-blink', demo: '█' },
-        ].map((a) => (
-          <DemoBlock key={a.cls} className="flex flex-col items-center gap-2">
-            <div className={`font-mono text-sm font-bold text-[var(--theme-primary)] ${a.cls}`}>
-              {a.demo}
-            </div>
-            <Label>{a.label}</Label>
-          </DemoBlock>
-        ))}
-      </div>
+      <p className="font-mono text-xs text-[var(--theme-foreground)]/50 mb-4">
+        Click any animation to replay it.
+      </p>
+      <AnimationGrid />
 
       <SubHeading label="Transition Timing" />
       <DemoBlock className="space-y-3">
@@ -611,7 +667,9 @@ function InputsSection() {
   )
 }
 
-function SelectSection() {
+function SelectSection({ selectPriority, selectStatus, selectTheme, dispatch }: {
+  selectPriority: string; selectStatus: string; selectTheme: string; dispatch: React.Dispatch<DemoAction>
+}) {
   return (
     <section>
       <SectionHeading id="select" label="Select" />
@@ -621,6 +679,8 @@ function SelectSection() {
           <DemoBlock>
             <BrutalSelect
               label="Priority"
+              value={selectPriority}
+              onChange={(v) => dispatch({ type: 'SET_SELECT_PRIORITY', value: v })}
               options={[
                 { value: 'low', label: 'Low' },
                 { value: 'medium', label: 'Medium' },
@@ -635,7 +695,9 @@ function SelectSection() {
           <DemoBlock>
             <BrutalSelect
               label="Status"
-              error="Please select a status"
+              value={selectStatus}
+              onChange={(v) => dispatch({ type: 'SET_SELECT_STATUS', value: v })}
+              error={!selectStatus ? 'Please select a status' : undefined}
               options={[
                 { value: 'active', label: 'Active' },
                 { value: 'inactive', label: 'Inactive' },
@@ -649,6 +711,8 @@ function SelectSection() {
           <DemoBlock>
             <BrutalSelect
               label="Theme"
+              value={selectTheme}
+              onChange={(v) => dispatch({ type: 'SET_SELECT_THEME', value: v })}
               helperText="Applied globally across the app"
               options={[
                 { value: 'obsidian', label: 'Obsidian' },
@@ -1211,53 +1275,70 @@ function TooltipsSection() {
 }
 
 function ThemesSection() {
+  const { themeName, setTheme } = useTheme()
+
+  const themes: Array<{ name: string; key: ThemeName; bg: string; fg: string; accent: string; desc: string }> = [
+    { name: 'OBSIDIAN', key: 'obsidian', bg: '#0B0B0F', fg: '#E4E4E8', accent: '#6366F1', desc: 'LTF1 signature — deep dark indigo' },
+    { name: 'VS CODE', key: 'vscode', bg: '#1E1E1E', fg: '#D4D4D4', accent: '#569CD6', desc: 'The editor that defined a generation' },
+    { name: 'MONOKAI', key: 'monokai', bg: '#272822', fg: '#F8F8F2', accent: '#A6E22E', desc: 'Sublime Text OG — vivid contrast' },
+    { name: 'SOLARIZED', key: 'solarized', bg: '#002B36', fg: '#839496', accent: '#268BD2', desc: 'Scientific precision — eye comfort' },
+    { name: 'NORD', key: 'nord', bg: '#2E3440', fg: '#D8DEE9', accent: '#88C0D0', desc: 'Arctic minimal — clean northern light' },
+    { name: 'GRUVBOX', key: 'gruvbox', bg: '#282828', fg: '#EBDBB2', accent: '#FABD2F', desc: 'Retro groove — warm and timeless' },
+    { name: 'ONE DARK', key: 'onedark', bg: '#282C34', fg: '#ABB2BF', accent: '#61AFEF', desc: 'Atom classic — balanced contrast' },
+    { name: 'TOKYO NIGHT', key: 'tokyonight', bg: '#1A1B26', fg: '#C0CAF5', accent: '#7AA2F7', desc: 'Neon city — electric midnight' },
+    { name: 'CATPPUCCIN', key: 'catppuccin', bg: '#1E1E2E', fg: '#CDD6F4', accent: '#CBA6F7', desc: 'Pastel comfort — soothing pastels' },
+    { name: 'VERCEL', key: 'vercel', bg: '#000000', fg: '#EDEDED', accent: '#FFFFFF', desc: 'Ship fast — minimal monochrome' },
+  ]
+
   return (
     <section>
       <SectionHeading id="themes" label="Themes" />
-      <SubHeading label="9 Developer Themes" />
+      <SubHeading label="10 Developer Themes" />
       <p className="font-mono text-xs text-[var(--theme-foreground)]/50 mb-4">
-        Change theme from{' '}
-        <a href="/settings" className="text-[var(--theme-primary)] underline">Settings → Appearance</a>
+        Click a theme to apply it instantly.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[
-          { name: 'OBSIDIAN', bg: '#0B0B0F', fg: '#E4E4E8', accent: '#6366F1', desc: 'LTF1 signature — deep dark indigo' },
-          { name: 'VS CODE', bg: '#1E1E1E', fg: '#D4D4D4', accent: '#569CD6', desc: 'The editor that defined a generation' },
-          { name: 'DRACULA', bg: '#282A36', fg: '#F8F8F2', accent: '#BD93F9', desc: 'Nocturnal hacker aesthetic' },
-          { name: 'GRUVBOX', bg: '#282828', fg: '#EBDBB2', accent: '#FABD2F', desc: 'Retro groove — warm and timeless' },
-          { name: 'NORD', bg: '#2E3440', fg: '#D8DEE9', accent: '#88C0D0', desc: 'Arctic minimal — clean northern light' },
-          { name: 'MONOKAI', bg: '#272822', fg: '#F8F8F2', accent: '#A6E22E', desc: 'Sublime Text OG — vivid contrast' },
-          { name: 'SOLARIZED', bg: '#002B36', fg: '#839496', accent: '#268BD2', desc: 'Scientific precision — eye comfort' },
-          { name: 'CYBERPUNK', bg: '#0D001A', fg: '#FF2D78', accent: '#FF2D78', desc: 'Neural interface — digital dystopia' },
-          { name: 'BRUTALIST', bg: '#FFFFFF', fg: '#000000', accent: '#FFFF00', desc: 'Raw brutalism — maximum contrast' },
-        ].map((theme) => (
-          <div
-            key={theme.name}
-            className="border-2 overflow-hidden"
-            style={{ borderColor: theme.accent + '60' }}
-          >
-            {/* Preview strip */}
-            <div className="h-16 flex items-end p-3" style={{ backgroundColor: theme.bg }}>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-none" style={{ backgroundColor: theme.accent }} />
-                <span className="font-mono text-[10px] font-bold" style={{ color: theme.fg }}>
-                  {theme.name}
-                </span>
+        {themes.map((theme) => {
+          const isActive = themeName === theme.key
+          return (
+            <button
+              key={theme.key}
+              type="button"
+              onClick={() => setTheme(theme.key)}
+              className={`text-left border-2 overflow-hidden transition-all duration-250 ease-in-out group ${
+                isActive
+                  ? 'border-[var(--theme-primary)] -translate-y-[2px] shadow-[3px_3px_0px_rgba(0,0,0,0.4)]'
+                  : 'border-[var(--theme-border)] hover:border-[var(--theme-primary)] hover:-translate-y-[2px]'
+              }`}
+            >
+              {/* Preview strip */}
+              <div className="h-16 flex items-end p-3 relative" style={{ backgroundColor: theme.bg }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-none" style={{ backgroundColor: theme.accent }} />
+                  <span className="font-mono text-[10px] font-bold" style={{ color: theme.fg }}>
+                    {theme.name}
+                  </span>
+                </div>
+                {isActive && (
+                  <span className="absolute top-2 right-2 font-mono text-[8px] font-bold uppercase tracking-widest text-[#22C55E]">
+                    ACTIVE
+                  </span>
+                )}
               </div>
-            </div>
-            {/* Palette dots */}
-            <div className="flex" style={{ backgroundColor: theme.bg }}>
-              {[theme.bg, theme.fg, theme.accent, '#22C55E', '#EF4444'].map((c) => (
-                <div key={c} className="flex-1 h-3" style={{ backgroundColor: c }} />
-              ))}
-            </div>
-            {/* Description */}
-            <div className="p-3 bg-[var(--theme-background-secondary)]">
-              <div className="font-mono text-[9px] text-[var(--theme-foreground)]/40">{theme.desc}</div>
-            </div>
-          </div>
-        ))}
+              {/* Palette strip */}
+              <div className="flex" style={{ backgroundColor: theme.bg }}>
+                {[theme.bg, theme.fg, theme.accent, '#22C55E', '#EF4444'].map((c, i) => (
+                  <div key={i} className="flex-1 h-3" style={{ backgroundColor: c }} />
+                ))}
+              </div>
+              {/* Description */}
+              <div className="p-3 bg-[var(--theme-background-secondary)]">
+                <div className="font-mono text-[9px] text-[var(--theme-foreground)]/40">{theme.desc}</div>
+              </div>
+            </button>
+          )
+        })}
       </div>
 
       <SubHeading label="Current Theme Preview" />
@@ -1410,9 +1491,10 @@ function PageFooter() {
 
 export default function DesignReferencePage() {
   const [state, dispatch] = useReducer(demoReducer, initialDemoState)
-  const { toggle1, toggle2, toggle3, check1, check2, check3, sliderVal, modalOpen, modalSize, multiVal, activeSection } = state
+  const { toggle1, toggle2, toggle3, check1, check2, check3, sliderVal, modalOpen, modalSize, multiVal, selectPriority, selectStatus, selectTheme, activeSection } = state
 
   return (
+    <ErrorBoundary>
     <div className="flex min-h-screen bg-[var(--theme-background)]">
       <SidebarNav activeSection={activeSection} dispatch={dispatch} />
 
@@ -1425,7 +1507,7 @@ export default function DesignReferencePage() {
         <AnimationsSection />
         <ButtonsSection />
         <InputsSection />
-        <SelectSection />
+        <SelectSection selectPriority={selectPriority} selectStatus={selectStatus} selectTheme={selectTheme} dispatch={dispatch} />
         <MultiSelectSection multiVal={multiVal} dispatch={dispatch} />
         <CardsSection />
         <BadgesSection />
@@ -1443,5 +1525,6 @@ export default function DesignReferencePage() {
         <PageFooter />
       </main>
     </div>
+    </ErrorBoundary>
   )
 }

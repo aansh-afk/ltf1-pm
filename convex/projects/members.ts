@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query } from "../_generated/server";
+import { getCurrentUserOrThrow } from "../lib/auth";
 
 export const getProjectMembers = query({
   args: {
@@ -20,10 +21,7 @@ export const getProjectMembers = query({
     }),
   ),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
+    await getCurrentUserOrThrow(ctx);
 
     const project = await ctx.db.get(args.projectId);
     if (!project) {

@@ -5,6 +5,7 @@ import type { Id } from '../../../../../../convex/_generated/dataModel'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalInput from '@/components/ui/BrutalInput'
 import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 import { PDFGenerator } from '@/lib/export/pdfGenerator'
 import { ExcelExporter } from '@/lib/export/excel'
 import { CSVExporter, downloadCSV } from '@/lib/export/csv'
@@ -14,7 +15,7 @@ interface ReportWidget {
   id: string
   type: 'chart' | 'table' | 'metric' | 'list' | 'timeline'
   dataSource: 'tasks' | 'sprints' | 'projects' | 'timeEntries' | 'users'
-  filters?: Record<string, any>
+  filters?: Record<string, string | number | boolean>
   columns?: string[]
   aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max'
   groupBy?: string
@@ -172,8 +173,8 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({ workspaceId, projectId })
   const addWidget = useCallback((type: string, dataSource: string) => {
     const newWidget: ReportWidget = {
       id: `widget-${Date.now()}`,
-      type: type as any,
-      dataSource: dataSource as any,
+      type: type as ReportWidget['type'],
+      dataSource: dataSource as ReportWidget['dataSource'],
       position: { x: Math.random() * 500, y: Math.random() * 300 },
       size: { width: 300, height: 200 },
       title: `New ${type}`
@@ -382,16 +383,17 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({ workspaceId, projectId })
           {scheduleEnabled && (
             <div className="mt-4 grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Frequency</label>
-                <select
+                <BrutalSelect
+                  label="Frequency"
                   value={scheduleFrequency}
-                  onChange={(e) => setScheduleFrequency(e.target.value as any)}
-                  className="w-full px-3 py-2 border border-black rounded-none"
-                >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </select>
+                  onChange={(v) => setScheduleFrequency(v as 'daily' | 'weekly' | 'monthly')}
+                  options={[
+                    { value: 'daily', label: 'Daily' },
+                    { value: 'weekly', label: 'Weekly' },
+                    { value: 'monthly', label: 'Monthly' },
+                  ]}
+                  fullWidth
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Time</label>
@@ -455,8 +457,8 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({ workspaceId, projectId })
               onDragStart={(e) => {
                 const newWidget: ReportWidget = {
                   id: `widget-${Date.now()}`,
-                  type: widget.type as any,
-                  dataSource: widget.dataSources[0] as any,
+                  type: widget.type as ReportWidget['type'],
+                  dataSource: widget.dataSources[0] as ReportWidget['dataSource'],
                   position: { x: 0, y: 0 },
                   size: { width: 300, height: 200 },
                   title: widget.label

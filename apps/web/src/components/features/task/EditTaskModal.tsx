@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useReducer, useEffect } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
@@ -11,13 +11,33 @@ import {
   HiOutlineLightBulb,
 } from "react-icons/hi";
 import clsx from "clsx";
+import BrutalSelect from "../../ui/BrutalSelect";
 import MultiSelect from "../../ui/MultiSelect";
 import { TaskAssignmentHelper } from "../task/TaskAssignmentHelper";
+
+interface EditableTask {
+  _id: Id<"tasks">;
+  projectId: Id<"projects">;
+  title: string;
+  description?: string;
+  type: string;
+  priority: string;
+  status: string;
+  assigneeIds?: string[];
+  assigneeId?: string;
+  labels?: string[];
+  estimate?: { points?: number; hours?: number };
+  startDate?: number;
+  dueDate?: number;
+  number?: number;
+  project?: { key: string; workspaceId?: Id<"workspaces">; members?: Array<{ user: { _id: string; name?: string; email?: string; avatarUrl?: string } }> };
+  [key: string]: unknown;
+}
 
 interface EditTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  task: any;
+  task: EditableTask;
   onDelete?: () => void;
 }
 
@@ -156,92 +176,52 @@ function TaskFormFields({
 
       {/* Type and Priority */}
       <div className="grid grid-cols-2 gap-[8px]">
-        <div className="space-y-[4px]">
-          <label
-            htmlFor="type"
-            className="text-xs font-mono uppercase tracking-wider"
-          >
-            TYPE
-          </label>
-          <select
-            id="type"
-            value={type}
-            onChange={(e) =>
-              dispatch({
-                type: "UPDATE",
-                field: "type",
-                value: e.target.value as any,
-              })
-            }
-            className="brutal-input"
-          >
-            {typeOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <BrutalSelect
+          id="type"
+          label="TYPE"
+          value={type}
+          onChange={(v) =>
+            dispatch({
+              type: "UPDATE",
+              field: "type",
+              value: v as EditTaskState["type"],
+            })
+          }
+          options={typeOptions}
+          fullWidth
+        />
 
-        <div className="space-y-[4px]">
-          <label
-            htmlFor="priority"
-            className="text-xs font-mono uppercase tracking-wider"
-          >
-            PRIORITY
-          </label>
-          <select
-            id="priority"
-            value={priority}
-            onChange={(e) =>
-              dispatch({
-                type: "UPDATE",
-                field: "priority",
-                value: e.target.value as any,
-              })
-            }
-            className="brutal-input"
-          >
-            {priorityOptions.map((opt) => (
-              <option
-                key={opt.value}
-                value={opt.value}
-                className={opt.className}
-              >
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <BrutalSelect
+          id="priority"
+          label="PRIORITY"
+          value={priority}
+          onChange={(v) =>
+            dispatch({
+              type: "UPDATE",
+              field: "priority",
+              value: v as EditTaskState["priority"],
+            })
+          }
+          options={priorityOptions}
+          fullWidth
+        />
       </div>
 
       {/* Status */}
-      <div className="space-y-[4px]">
-        <label
-          htmlFor="status"
-          className="text-xs font-mono uppercase tracking-wider"
-        >
-          STATUS
-        </label>
-        <select
-          id="status"
-          value={status}
-          onChange={(e) =>
-            dispatch({
-              type: "UPDATE",
-              field: "status",
-              value: e.target.value as any,
-            })
-          }
-          className="brutal-input"
-        >
-          {statusOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      <BrutalSelect
+        id="status"
+        label="STATUS"
+        value={status}
+        onChange={(v) =>
+          dispatch({
+            type: "UPDATE",
+            field: "status",
+            value: v as EditTaskState["status"],
+          })
+        }
+        options={statusOptions}
+        fullWidth
+      />
     </>
   );
 }
@@ -333,7 +313,7 @@ function TaskDatesEstimate({
   );
 }
 
-function deriveInitialState(task: any): EditTaskState {
+function deriveInitialState(task: EditableTask | null): EditTaskState {
   if (!task) return initialEditState;
 
   let taskAssigneeIds: string[] = [];
@@ -346,9 +326,9 @@ function deriveInitialState(task: any): EditTaskState {
   return {
     title: task.title || "",
     description: task.description || "",
-    type: task.type || "task",
-    priority: task.priority || "medium",
-    status: task.status || "todo",
+    type: (task.type || "task") as EditTaskState["type"],
+    priority: (task.priority || "medium") as EditTaskState["priority"],
+    status: (task.status || "todo") as EditTaskState["status"],
     assigneeIds: taskAssigneeIds,
     labels: task.labels?.join(", ") || "",
     estimateHours: task.estimate?.hours?.toString() || "",
@@ -374,6 +354,14 @@ export default function EditTaskModal({
     task,
     deriveInitialState,
   );
+
+  // Re-initialize when a different task is loaded
+  useEffect(() => {
+    if (task && isOpen) {
+      dispatch({ type: "LOAD_TASK", payload: deriveInitialState(task) });
+    }
+  }, [task?._id, isOpen]);
+
   const {
     title,
     description,
@@ -409,10 +397,9 @@ export default function EditTaskModal({
         taskId: task._id,
         title: title.trim(),
         description: description.trim() || undefined,
-        type,
         priority,
-        status,
-        assigneeIds: assigneeIds.length > 0 ? assigneeIds : undefined,
+        status: status as "backlog" | "todo" | "in_progress" | "in_review" | "done" | "cancelled",
+        assigneeIds: assigneeIds.length > 0 ? (assigneeIds as Id<"users">[]) : undefined,
         labels: labels
           ? labels
               .split(",")
@@ -428,8 +415,9 @@ export default function EditTaskModal({
 
       toast.success("Task updated successfully!");
       onClose();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update task");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to update task";
+      toast.error(message);
     } finally {
       dispatch({ type: "SET_IS_UPDATING", value: false });
     }
@@ -515,6 +503,7 @@ export default function EditTaskModal({
           {useSmartAssignment ? (
             <TaskAssignmentHelper
               workspaceId={project?.workspaceId as Id<"workspaces">}
+              projectId={task.projectId}
               currentAssignees={assigneeIds as Id<"users">[]}
               onAssigneeChange={(ids) =>
                 dispatch({ type: "SET_ASSIGNEE_IDS", value: ids })
@@ -525,18 +514,22 @@ export default function EditTaskModal({
                 .split(",")
                 .map((l) => l.trim())
                 .filter(Boolean)}
+              taskType={type}
+              priority={priority}
               mode="compact"
             />
           ) : (
             <MultiSelect
               options={
-                project?.members?.map((member: any) => ({
-                  value: member.user._id,
-                  label:
-                    member.user.name?.toUpperCase() ||
-                    member.user.email?.toUpperCase(),
-                  avatarUrl: member.user.avatarUrl,
-                })) || []
+                (project?.members ?? [])
+                  .filter((member): member is NonNullable<typeof member> => member != null)
+                  .map((member) => ({
+                    value: member._id,
+                    label:
+                      member.name?.toUpperCase() ||
+                      member.email?.toUpperCase(),
+                    avatarUrl: member.avatarUrl,
+                  }))
               }
               value={assigneeIds}
               onChange={(ids) =>

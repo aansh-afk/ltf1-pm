@@ -1,4 +1,5 @@
 import React from 'react'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 import {
   HiOutlineCollection,
   HiOutlineSortAscending,
@@ -51,36 +52,28 @@ export function TextFormattingControls({
       <h3 className="text-white font-bold uppercase text-sm mb-3">TEXT FORMAT</h3>
 
       {/* Font Size */}
-      <div className="space-y-2">
-        <label className="text-white text-xs uppercase block">Font Size</label>
-        <select
-          value={fontSize}
-          onChange={(e) => onFontSizeChange(Number(e.target.value))}
-          className="w-full bg-black text-white border-2 border-white p-2 font-mono uppercase cursor-pointer hover:bg-white/10"
-        >
-          {FONT_SIZES.map((size) => (
-            <option key={size} value={size}>
-              {size}PX
-            </option>
-          ))}
-        </select>
-      </div>
+      <BrutalSelect
+        label="Font Size"
+        value={String(fontSize)}
+        onChange={(v) => onFontSizeChange(Number(v))}
+        options={FONT_SIZES.map((size) => ({
+          value: String(size),
+          label: `${size}PX`,
+        }))}
+        fullWidth
+      />
 
       {/* Font Family */}
-      <div className="space-y-2">
-        <label className="text-white text-xs uppercase block">Font Family</label>
-        <select
-          value={fontFamily}
-          onChange={(e) => onFontFamilyChange(e.target.value)}
-          className="w-full bg-black text-white border-2 border-white p-2 font-mono uppercase cursor-pointer hover:bg-white/10"
-        >
-          {FONT_FAMILIES.map((font) => (
-            <option key={font.value} value={font.value}>
-              {font.name.toUpperCase()}
-            </option>
-          ))}
-        </select>
-      </div>
+      <BrutalSelect
+        label="Font Family"
+        value={fontFamily}
+        onChange={(v) => onFontFamilyChange(v)}
+        options={FONT_FAMILIES.map((font) => ({
+          value: font.value,
+          label: font.name.toUpperCase(),
+        }))}
+        fullWidth
+      />
 
       {/* Text Style */}
       <div className="space-y-2">

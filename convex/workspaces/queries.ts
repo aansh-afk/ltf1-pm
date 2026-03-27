@@ -1,20 +1,12 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { hasPermission } from "../auth/permissions";
+import { getCurrentUser, getCurrentUserOrThrow } from "../lib/auth";
 
 export const getUserWorkspaces = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
+    const user = await getCurrentUser(ctx);
     if (!user) {
       return [];
     }
@@ -57,19 +49,7 @@ export const getUserWorkspaces = query({
 export const getWorkspaceById = query({
   args: { workspaceId: v.id("workspaces") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const hasAccess = await hasPermission(
       ctx.db,
@@ -120,19 +100,7 @@ export const getWorkspaceById = query({
 export const getWorkspaceMembers = query({
   args: { workspaceId: v.id("workspaces") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const hasAccess = await hasPermission(
       ctx.db,
@@ -167,19 +135,7 @@ export const getWorkspaceMembers = query({
 export const getWorkspaceStats = query({
   args: { workspaceId: v.id("workspaces") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const hasAccess = await hasPermission(
       ctx.db,
@@ -223,7 +179,7 @@ export const getWorkspaceStats = query({
 
     const allActivities = await ctx.db
       .query("activities")
-      .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
       .collect();
       
     const recentActivities = allActivities.filter(a => {

@@ -14,7 +14,18 @@ export const ThemeNames = {
   TOKYONIGHT: 'tokyonight',
   CATPPUCCIN: 'catppuccin',
   GRUVBOX: 'gruvbox',
-  VERCEL: 'vercel'
+  VERCEL: 'vercel',
+  // Light variants
+  OBSIDIAN_LIGHT: 'obsidian-light',
+  VSCODE_LIGHT: 'vscode-light',
+  MONOKAI_LIGHT: 'monokai-light',
+  SOLARIZED_LIGHT: 'solarized-light',
+  NORD_LIGHT: 'nord-light',
+  ONEDARK_LIGHT: 'onedark-light',
+  TOKYONIGHT_LIGHT: 'tokyonight-light',
+  CATPPUCCIN_LIGHT: 'catppuccin-light',
+  GRUVBOX_LIGHT: 'gruvbox-light',
+  VERCEL_LIGHT: 'vercel-light',
 } as const
 
 // Create the ThemeName type from the values

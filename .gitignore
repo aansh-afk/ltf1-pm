@@ -84,3 +84,47 @@ temp_asset_download_placement_folder/
 AGENT_TEAM_PROMPT.md
 MVP_AUDIT_REPORT.md
 VERCEL_AUDIT_REPORT.md
+AUDIT_REPORT.md
+SHIP_AUDIT*.md
+*_PROMPT.md
+convex_rules.txt
+
+# Internal planning docs
+docs/planning/claude-execution-plan.md
+docs/planning/agent-team-prompt.md
+docs/planning/ui-overhaul-prompt.md
+docs/planning/density-migration-prompt.md
+docs/planning/migration-tool-design.md
+docs/reports/final-integration-instructions.md
+docs/features/cli/CLI-AUDIT.md
+
+# Claude Code local config
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+.agents/
+
+# Internal PRD and competitive analysis
+docs/planning/LTF1-PRD*.md
+docs/planning/competitive-analysis.md
+docs/reports/mvp-audit-report.md
+
+# Internal deliverable docs in source
+**/TEXT_SYSTEM_DELIVERABLES.md
+**/TEXT_SYSTEM_INTEGRATION_GUIDE.md
+
+# Competitive/security analysis (keep local only)
+docs_v2/10-competitive-analysis.md
+docs_v2/11-security-audit.md
+
+# Setup docs with production credentials
+docs/setup/vercel-env-setup.md
+docs/setup/clerk-production-setup.md
+docs/setup/convex-clerk-setup.md
+docs/deployment/domain-setup.md
+docs/deployment/ltf1-dev-migration.md
+docs/deployment/vercel-audit-report.md
+docs/COST_ANALYSIS.md
+
+# Remotion dev project
+my-video/

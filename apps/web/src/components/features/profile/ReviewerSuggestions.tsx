@@ -15,7 +15,7 @@ import {
   HiOutlineExclamationCircle
 } from 'react-icons/hi'
 import clsx from 'clsx'
-import DeveloperStatusIndicator from '../developer/DeveloperStatusIndicator'
+import DeveloperStatusIndicator from '@/components/features/developer/DeveloperStatusIndicator'
 
 // --- Sub-components ---
 

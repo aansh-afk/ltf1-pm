@@ -16,6 +16,7 @@ import clsx from 'clsx'
 import { m, AnimatePresence } from 'framer-motion'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalModal from '@/components/ui/BrutalModal'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 
 interface EditDeveloperProfileModalProps {
   userId: Id<"users">
@@ -177,27 +178,26 @@ function BasicInfoTabPanel({ formData, dispatch }: BasicInfoTabPanelProps) {
           />
         </div>
         <div>
-          <label htmlFor="edit-profile-timezone" className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
-            TIMEZONE
-          </label>
-          <select
+          <BrutalSelect
             id="edit-profile-timezone"
+            label="TIMEZONE"
             value={formData.timezone}
-            onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'timezone', value: e.target.value })}
-            className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-          >
-            <option value="">SELECT_TIMEZONE</option>
-            <option value="UTC">UTC</option>
-            <option value="America/New_York">Eastern Time</option>
-            <option value="America/Chicago">Central Time</option>
-            <option value="America/Denver">Mountain Time</option>
-            <option value="America/Los_Angeles">Pacific Time</option>
-            <option value="Europe/London">London</option>
-            <option value="Europe/Paris">Paris</option>
-            <option value="Asia/Tokyo">Tokyo</option>
-            <option value="Asia/Shanghai">Shanghai</option>
-            <option value="Asia/Kolkata">Mumbai</option>
-          </select>
+            onChange={(v) => dispatch({ type: 'UPDATE_FORM', field: 'timezone', value: v })}
+            placeholder="SELECT_TIMEZONE"
+            options={[
+              { value: 'UTC', label: 'UTC' },
+              { value: 'America/New_York', label: 'Eastern Time' },
+              { value: 'America/Chicago', label: 'Central Time' },
+              { value: 'America/Denver', label: 'Mountain Time' },
+              { value: 'America/Los_Angeles', label: 'Pacific Time' },
+              { value: 'Europe/London', label: 'London' },
+              { value: 'Europe/Paris', label: 'Paris' },
+              { value: 'Asia/Tokyo', label: 'Tokyo' },
+              { value: 'Asia/Shanghai', label: 'Shanghai' },
+              { value: 'Asia/Kolkata', label: 'Mumbai' },
+            ]}
+            fullWidth
+          />
         </div>
       </m.div>
 
@@ -496,20 +496,19 @@ function PreferencesTabPanel({ formData, dispatch }: PreferencesTabPanelProps) {
       {/* Communication Preferences */}
       <SectionHeader label="COMMS.config" />
       <m.div variants={staggerItem}>
-        <label htmlFor="edit-profile-comms" className="block font-mono text-xs font-bold uppercase mb-2 text-[var(--theme-foreground-secondary)]">
-          PREFERRED COMMUNICATION METHOD
-        </label>
-        <select
+        <BrutalSelect
           id="edit-profile-comms"
+          label="PREFERRED COMMUNICATION METHOD"
           value={formData.communicationPrefs}
-          onChange={(e) => dispatch({ type: 'UPDATE_FORM', field: 'communicationPrefs', value: e.target.value })}
-          className="w-full p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] rounded-lg font-mono text-sm text-[var(--theme-foreground)] focus:border-[var(--theme-primary)] outline-none transition-colors"
-        >
-          <option value="email">EMAIL</option>
-          <option value="slack">SLACK</option>
-          <option value="teams">TEAMS</option>
-          <option value="discord">DISCORD</option>
-        </select>
+          onChange={(v) => dispatch({ type: 'UPDATE_FORM', field: 'communicationPrefs', value: v })}
+          options={[
+            { value: 'email', label: 'EMAIL' },
+            { value: 'slack', label: 'SLACK' },
+            { value: 'teams', label: 'TEAMS' },
+            { value: 'discord', label: 'DISCORD' },
+          ]}
+          fullWidth
+        />
       </m.div>
 
       <SectionDivider />

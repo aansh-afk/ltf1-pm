@@ -1,5 +1,6 @@
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import type { ActiveTypeFilter, StateFilter, ActiveFilterChip } from './useGitHubCommandCenter';
+import BrutalSelect from '@/components/ui/BrutalSelect';
 
 interface GitHubFilterBarProps {
   // Search
@@ -108,58 +109,58 @@ export default function GitHubFilterBar({
       {/* Row 3: Advanced Filters */}
       <div className="flex items-center gap-[6px] flex-wrap">
         {/* State dropdown */}
-        <select
+        <BrutalSelect
           value={stateFilter}
-          onChange={(e) => onStateChange(e.target.value as StateFilter)}
-          className="px-[8px] py-[5px] font-mono text-brutal-xs bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)] border border-[var(--theme-border)] cursor-pointer hover:border-primary-brutalist transition-colors"
-        >
-          <option value="all">All states</option>
-          <option value="open">Open</option>
-          <option value="closed">Closed</option>
-          {showMergedDraft && <option value="merged">Merged</option>}
-          {showMergedDraft && <option value="draft">Draft</option>}
-        </select>
+          onChange={(v) => onStateChange(v as StateFilter)}
+          options={[
+            { value: 'all', label: 'All states' },
+            { value: 'open', label: 'Open' },
+            { value: 'closed', label: 'Closed' },
+            ...(showMergedDraft ? [
+              { value: 'merged', label: 'Merged' },
+              { value: 'draft', label: 'Draft' },
+            ] : []),
+          ]}
+          compact
+        />
 
         {/* Branch dropdown */}
         {showBranch && availableBranches.length > 0 && (
-          <select
+          <BrutalSelect
             value={branchFilter}
-            onChange={(e) => onBranchChange(e.target.value)}
-            className="px-[8px] py-[5px] font-mono text-brutal-xs bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)] border border-[var(--theme-border)] cursor-pointer hover:border-primary-brutalist transition-colors max-w-[160px]"
-          >
-            <option value="all">All branches</option>
-            {availableBranches.map(b => (
-              <option key={b} value={b}>{b}</option>
-            ))}
-          </select>
+            onChange={(v) => onBranchChange(v)}
+            options={[
+              { value: 'all', label: 'All branches' },
+              ...availableBranches.map(b => ({ value: b, label: b })),
+            ]}
+            compact
+          />
         )}
 
         {/* Author dropdown */}
         {availableAuthors.length > 0 && (
-          <select
+          <BrutalSelect
             value={authorFilter}
-            onChange={(e) => onAuthorChange(e.target.value)}
-            className="px-[8px] py-[5px] font-mono text-brutal-xs bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)] border border-[var(--theme-border)] cursor-pointer hover:border-primary-brutalist transition-colors max-w-[160px]"
-          >
-            <option value="all">All authors</option>
-            {availableAuthors.map(a => (
-              <option key={a} value={a}>{a}</option>
-            ))}
-          </select>
+            onChange={(v) => onAuthorChange(v)}
+            options={[
+              { value: 'all', label: 'All authors' },
+              ...availableAuthors.map(a => ({ value: a, label: a })),
+            ]}
+            compact
+          />
         )}
 
         {/* Label dropdown */}
         {showLabels && availableLabels.length > 0 && (
-          <select
+          <BrutalSelect
             value={labelFilter}
-            onChange={(e) => onLabelChange(e.target.value)}
-            className="px-[8px] py-[5px] font-mono text-brutal-xs bg-[var(--theme-background-secondary)] text-[var(--theme-foreground)] border border-[var(--theme-border)] cursor-pointer hover:border-primary-brutalist transition-colors max-w-[160px]"
-          >
-            <option value="all">All labels</option>
-            {availableLabels.map(l => (
-              <option key={l} value={l}>{l}</option>
-            ))}
-          </select>
+            onChange={(v) => onLabelChange(v)}
+            options={[
+              { value: 'all', label: 'All labels' },
+              ...availableLabels.map(l => ({ value: l, label: l })),
+            ]}
+            compact
+          />
         )}
       </div>
 

@@ -1,25 +1,14 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
 import { hasPermission } from "../auth/permissions";
+import { getCurrentUserOrThrow } from "../lib/auth";
 
 export const getProjectSprints = query({
   args: {
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const project = await ctx.db.get(args.projectId);
     if (!project) {
@@ -77,19 +66,7 @@ export const getCurrentSprint = query({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const project = await ctx.db.get(args.projectId);
     if (!project) {
@@ -103,8 +80,7 @@ export const getCurrentSprint = query({
 
     const activeSprint = await ctx.db
       .query("sprints")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .withIndex("by_project_and_status", (q) => q.eq("projectId", args.projectId).eq("status", "active"))
       .first();
 
     if (!activeSprint) {
@@ -179,19 +155,7 @@ export const getSprintById = query({
     sprintId: v.id("sprints"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const sprint = await ctx.db.get(args.sprintId);
     if (!sprint) {
@@ -268,19 +232,7 @@ export const getBacklogTasks = query({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const project = await ctx.db.get(args.projectId);
     if (!project) {

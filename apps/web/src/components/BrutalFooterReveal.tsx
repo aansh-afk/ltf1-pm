@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, cloneElement, isValidElement } from 'react'
 import { motion } from 'framer-motion'
 import { HalftoneCanvas } from './HalftoneCanvas'
-import { useScrollReveal } from '../hooks/useScrollReveal'
+import { useScrollReveal } from '@/hooks/useScrollReveal'
 
 interface BrutalFooterRevealProps {
   children: React.ReactNode

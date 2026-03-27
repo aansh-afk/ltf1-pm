@@ -1,6 +1,7 @@
 import { useReducer } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
+import type { Doc, Id } from '../../../../../../convex/_generated/dataModel'
 import {
   HiOutlineUserAdd,
   HiOutlineTrash,
@@ -11,10 +12,21 @@ import {
 } from 'react-icons/hi'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
-import BrutalModal from '../../ui/BrutalModal'
+import BrutalModal from '@/components/ui/BrutalModal'
+import BrutalSelect from '@/components/ui/BrutalSelect'
+
+type MemberWithUser = Doc<"workspaceMembers"> & {
+  user: Doc<"users"> | null
+}
+
+type WorkspaceWithMembers = Doc<"workspaces"> & {
+  currentUserRole?: string
+  currentUserId?: Id<"users">
+  members: MemberWithUser[]
+}
 
 interface MemberManagementProps {
-  workspace: any
+  workspace: WorkspaceWithMembers
   currentUserRole?: string
   canManageMembers: boolean
 }
@@ -31,7 +43,7 @@ type MemberManagementState = {
   inviteEmail: string
   inviteRole: 'admin' | 'member' | 'viewer'
   isInviting: boolean
-  selectedMember: any
+  selectedMember: MemberWithUser | null
   showRemoveConfirm: boolean
 }
 
@@ -84,14 +96,15 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
       dispatch({ type: 'UPDATE', field: 'inviteEmail', value: '' })
       dispatch({ type: 'UPDATE', field: 'inviteRole', value: 'member' })
       dispatch({ type: 'UPDATE', field: 'showInviteModal', value: false })
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to invite member')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to invite member'
+      toast.error(message)
     } finally {
       dispatch({ type: 'UPDATE', field: 'isInviting', value: false })
     }
   }
 
-  const handleRoleChange = async (userId: any, newRole: 'admin' | 'member' | 'viewer') => {
+  const handleRoleChange = async (userId: Id<"users">, newRole: 'admin' | 'member' | 'viewer') => {
     try {
       await updateMemberRole({
         workspaceId: workspace._id,
@@ -99,8 +112,9 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
         role: newRole
       })
       toast.success('Role updated successfully')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update role')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to update role'
+      toast.error(message)
     }
   }
 
@@ -115,8 +129,9 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
       toast.success('Member removed successfully')
       dispatch({ type: 'UPDATE', field: 'selectedMember', value: null })
       dispatch({ type: 'UPDATE', field: 'showRemoveConfirm', value: false })
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to remove member')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to remove member'
+      toast.error(message)
     }
   }
 
@@ -151,7 +166,7 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
           <div className="col-span-2">ACTIONS</div>
         </div>
 
-        {workspace.members?.map((member: any) => {
+        {workspace.members?.map((member) => {
           const RoleIcon = roleConfig[member.role as keyof typeof roleConfig].icon
           const isCurrentUser = member.user?._id === workspace.currentUserId
 
@@ -188,18 +203,16 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
               {/* Role */}
               <div className="col-span-3">
                 {canManageMembers && member.role !== 'owner' ? (
-                  <select
+                  <BrutalSelect
                     value={member.role}
-                    onChange={(e) => handleRoleChange(member.userId, e.target.value as any)}
-                    aria-label={`Role for ${member.user?.name || 'member'}`}
-                    className="px-[8px] py-6px bg-[var(--theme-background)] border-2 border-[var(--theme-border)]
-                             font-mono text-brutal-xs uppercase
-                             focus:border-primary-brutalist focus:outline-none transition-colors"
-                  >
-                    <option value="admin">ADMIN</option>
-                    <option value="member">MEMBER</option>
-                    <option value="viewer">VIEWER</option>
-                  </select>
+                    onChange={(v) => handleRoleChange(member.userId, v as 'admin' | 'member' | 'viewer')}
+                    options={[
+                      { value: 'admin', label: 'ADMIN' },
+                      { value: 'member', label: 'MEMBER' },
+                      { value: 'viewer', label: 'VIEWER' },
+                    ]}
+                    compact
+                  />
                 ) : (
                   <div className={clsx(
                     "inline-flex items-center gap-4px px-[4px] py-4px",
@@ -259,19 +272,18 @@ export default function MemberManagement({ workspace, currentUserRole, canManage
           </div>
 
           <div>
-            <label htmlFor="invite-role" className="block text-brutal-sm mb-[4px]">ROLE</label>
-            <select
+            <BrutalSelect
               id="invite-role"
+              label="ROLE"
               value={inviteRole}
-              onChange={(e) => dispatch({ type: 'UPDATE', field: 'inviteRole', value: e.target.value as 'admin' | 'member' | 'viewer' })}
-              className="w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] 
-                       font-mono text-brutal-md uppercase
-                       focus:border-primary-brutalist focus:outline-none transition-colors"
-            >
-              <option value="admin">ADMIN - Can manage workspace and members</option>
-              <option value="member">MEMBER - Can create and edit content</option>
-              <option value="viewer">VIEWER - Can only view content</option>
-            </select>
+              onChange={(v) => dispatch({ type: 'UPDATE', field: 'inviteRole', value: v as 'admin' | 'member' | 'viewer' })}
+              options={[
+                { value: 'admin', label: 'ADMIN - Can manage workspace and members' },
+                { value: 'member', label: 'MEMBER - Can create and edit content' },
+                { value: 'viewer', label: 'VIEWER - Can only view content' },
+              ]}
+              fullWidth
+            />
           </div>
 
           <div className="flex justify-end gap-[8px]">

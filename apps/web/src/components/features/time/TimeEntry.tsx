@@ -6,6 +6,7 @@ import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalInput from '@/components/ui/BrutalInput'
 import BrutalCard from '@/components/ui/BrutalCard'
 import BrutalModal from '@/components/ui/BrutalModal'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 import { Plus, Edit2, Trash2, Check, X, Clock, Calendar, DollarSign } from 'lucide-react'
 import { useUser } from '@clerk/clerk-react'
 
@@ -116,21 +117,18 @@ export const TimeEntryForm: React.FC<TimeEntryFormProps> = ({
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Task Selection */}
         <div>
-          <label className="block text-sm font-medium mb-2">Task *</label>
-          <select
+          <BrutalSelect
+            label="Task *"
             value={selectedTaskId}
-            onChange={(e) => setSelectedTaskId(e.target.value as Id<"tasks">)}
-            className="w-full px-3 py-2 border-2 border-black focus:outline-none focus:ring-2 focus:ring-black"
-            required
+            onChange={(v) => setSelectedTaskId(v as Id<"tasks">)}
+            placeholder="Select a task..."
             disabled={!!taskId}
-          >
-            <option value="">Select a task...</option>
-            {tasks?.map(task => (
-              <option key={task._id} value={task._id}>
-                #{task.number} - {task.title}
-              </option>
-            ))}
-          </select>
+            options={tasks?.map(task => ({
+              value: task._id,
+              label: `#${task.number} - ${task.title}`,
+            })) || []}
+            fullWidth
+          />
         </div>
 
         {/* Date */}

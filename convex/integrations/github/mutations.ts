@@ -1,6 +1,19 @@
 import { v } from "convex/values";
 import { mutation, internalMutation } from "../../_generated/server";
 import { internal } from "../../_generated/api";
+import { getCurrentUserOrThrow } from "../../lib/auth";
+import { Id } from "../../_generated/dataModel";
+
+// Task status union type matching the schema
+type TaskStatus = "backlog" | "todo" | "in_progress" | "in_review" | "done" | "cancelled";
+
+const VALID_TASK_STATUSES: ReadonlyArray<string> = [
+  "backlog", "todo", "in_progress", "in_review", "done", "cancelled",
+];
+
+function isValidTaskStatus(status: string): status is TaskStatus {
+  return VALID_TASK_STATUSES.includes(status);
+}
 
 // Connect a GitHub repository to a project
 export const connectRepositoryToProject = mutation({
@@ -10,15 +23,7 @@ export const connectRepositoryToProject = mutation({
   },
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) throw new Error("User not found");
+    const user = await getCurrentUserOrThrow(ctx);
 
     const project = await ctx.db.get(args.projectId);
     if (!project) throw new Error("Project not found");
@@ -356,20 +361,87 @@ export const linkPullRequestToTasks = internalMutation({
             undefined
           );
 
-          // Get action description
+          // Get action description and handle auto status transitions
+          // Look up the project's git workflow config for configurable status mappings
           let actionDescription = `${args.action} pull request #${args.pullRequest.number}`;
+          let activityType: "task_completed" | "task_updated" | "task_status_changed" = "task_updated";
+
           if (args.action === "closed" && args.pullRequest.mergedAt) {
-            actionDescription = `merged pull request #${args.pullRequest.number}`;
-            // Update task status to done on merge
-            await ctx.db.patch(task._id, {
-              status: "done",
-              completedAt: Date.now(),
-            });
+            // Look up configured status for prMerged event
+            const mergedStatus: string | null = await ctx.runQuery(
+              internal.gitWorkflow.queries.getEffectiveStatusMapping,
+              { projectId: project._id, gitEvent: "prMerged" },
+            );
+
+            if (mergedStatus && isValidTaskStatus(mergedStatus)) {
+              actionDescription = `merged pull request #${args.pullRequest.number} — task auto-transitioned to "${mergedStatus}"`;
+              activityType = mergedStatus === "done" ? "task_completed" : "task_status_changed";
+
+              const patchData: Record<string, unknown> = {
+                status: mergedStatus,
+                updatedAt: Date.now(),
+              };
+              if (mergedStatus === "done") {
+                patchData.completedAt = Date.now();
+              }
+              await ctx.db.patch(task._id, patchData);
+              console.log(`[PR Merge] Auto-transitioned task ${projectKey}-${taskNumber} to "${mergedStatus}" via PR #${args.pullRequest.number}`);
+
+              // Check if sprint should be auto-completed (Task 4)
+              const shouldAutoComplete: boolean = await ctx.runQuery(
+                internal.gitWorkflow.queries.getAutoCompleteSprintSetting,
+                { projectId: project._id },
+              );
+
+              if (shouldAutoComplete && task.sprintId) {
+                await ctx.runMutation(
+                  internal.gitWorkflow.mutations.checkAndAutoCompleteSprint,
+                  { taskId: task._id, projectId: project._id },
+                );
+              }
+            }
+          } else if (
+            (args.action === "opened" || args.action === "ready_for_review") &&
+            !args.pullRequest.draft &&
+            task.status !== "done" &&
+            task.status !== "cancelled"
+          ) {
+            // Look up configured status for prOpened event
+            const openedStatus: string | null = await ctx.runQuery(
+              internal.gitWorkflow.queries.getEffectiveStatusMapping,
+              { projectId: project._id, gitEvent: "prOpened" },
+            );
+
+            if (openedStatus && isValidTaskStatus(openedStatus)) {
+              actionDescription = `opened pull request #${args.pullRequest.number} — task moved to "${openedStatus}"`;
+              activityType = "task_status_changed";
+              await ctx.db.patch(task._id, {
+                status: openedStatus,
+                updatedAt: Date.now(),
+              });
+              console.log(`[PR Opened] Auto-transitioned task ${projectKey}-${taskNumber} to "${openedStatus}" via PR #${args.pullRequest.number}`);
+            }
+          } else if (args.action === "closed" && !args.pullRequest.mergedAt) {
+            // PR closed without merge — look up prClosed config
+            const closedStatus: string | null = await ctx.runQuery(
+              internal.gitWorkflow.queries.getEffectiveStatusMapping,
+              { projectId: project._id, gitEvent: "prClosed" },
+            );
+
+            if (closedStatus && isValidTaskStatus(closedStatus) && task.status !== "done" && task.status !== "cancelled") {
+              actionDescription = `closed pull request #${args.pullRequest.number} — task moved to "${closedStatus}"`;
+              activityType = "task_status_changed";
+              await ctx.db.patch(task._id, {
+                status: closedStatus,
+                updatedAt: Date.now(),
+              });
+              console.log(`[PR Closed] Auto-transitioned task ${projectKey}-${taskNumber} to "${closedStatus}" via PR #${args.pullRequest.number}`);
+            }
           }
 
           // Log activity with resolved user
           await ctx.runMutation(internal.activities.mutations.logActivity, {
-            type: args.action === "closed" && args.pullRequest.mergedAt ? "task_completed" : "task_updated",
+            type: activityType,
             projectId: project._id,
             workspaceId: project.workspaceId,
             actorId: resolvedUser?.userId || null,

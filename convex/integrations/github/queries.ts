@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, internalQuery } from "../../_generated/server";
+import { getCurrentUserOrThrow } from "../../lib/auth";
 
 // Get GitHub installations for a workspace (supports multi-installation)
 export const getWorkspaceInstallations = query({
@@ -8,15 +9,7 @@ export const getWorkspaceInstallations = query({
   },
   returns: v.array(v.any()),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) throw new Error("User not found");
+    const user = await getCurrentUserOrThrow(ctx);
 
     // Check workspace membership
     const membership = await ctx.db
@@ -394,6 +387,56 @@ export const getRepositoryById = internalQuery({
   returns: v.union(v.any(), v.null()),
   handler: async (ctx, args) => {
     return await ctx.db.get(args.repositoryId);
+  },
+});
+
+// Internal query to get project + installation info for backfill
+export const getProjectForBackfill = internalQuery({
+  args: {
+    projectId: v.id("projects"),
+  },
+  returns: v.union(
+    v.object({
+      projectId: v.id("projects"),
+      repositoryFullName: v.union(v.string(), v.null()),
+      installationId: v.union(v.number(), v.null()),
+    }),
+    v.null()
+  ),
+  handler: async (ctx, args) => {
+    const project = await ctx.db.get(args.projectId);
+    if (!project) return null;
+
+    let repositoryFullName: string | null = null;
+    let installationId: number | null = null;
+
+    if (project.repository?.url) {
+      repositoryFullName = project.repository.url
+        .replace("https://github.com/", "")
+        .replace(".git", "");
+
+      // Find the repository record to get installationId
+      const repo = await ctx.db
+        .query("githubRepositories")
+        .withIndex("by_full_name", (q) => q.eq("fullName", repositoryFullName!))
+        .first();
+
+      if (repo) {
+        installationId = repo.installationId;
+      } else {
+        // Fallback: check workspace installation
+        const workspace = await ctx.db.get(project.workspaceId);
+        if (workspace?.settings?.integrations?.githubInstallationId) {
+          installationId = workspace.settings.integrations.githubInstallationId;
+        }
+      }
+    }
+
+    return {
+      projectId: project._id,
+      repositoryFullName,
+      installationId,
+    };
   },
 });
 

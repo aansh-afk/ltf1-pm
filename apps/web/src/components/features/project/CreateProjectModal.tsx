@@ -3,7 +3,8 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import toast from 'react-hot-toast'
 import posthog from 'posthog-js'
-import BrutalModal from '../../ui/BrutalModal'
+import BrutalModal from '@/components/ui/BrutalModal'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 
 interface CreateProjectModalProps {
   isOpen: boolean
@@ -169,23 +170,19 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
 
         {/* WORKFLOW TYPE */}
         <div>
-          <label htmlFor="create-project-workflow" className="block text-xs font-semibold uppercase tracking-wider text-[var(--theme-foreground-tertiary)] mb-1.5">
-            Workflow Type
-          </label>
-          <select
+          <BrutalSelect
             id="create-project-workflow"
-            className="w-full px-3 py-2 bg-[var(--theme-background-card,#111111)] border-2 border-[var(--theme-border)]
-                     font-mono text-sm text-[var(--theme-foreground)] uppercase
-                     focus:border-[var(--theme-primary)] focus:outline-none
-                     disabled:opacity-50 disabled:cursor-not-allowed"
+            label="Workflow Type"
             value={workflowType}
-            onChange={(e) => dispatch({ type: 'UPDATE', field: 'workflowType', value: e.target.value as 'kanban' | 'scrum' | 'hybrid' })}
+            onChange={(v) => dispatch({ type: 'UPDATE', field: 'workflowType', value: v as 'kanban' | 'scrum' | 'hybrid' })}
             disabled={isCreating}
-          >
-            <option value="kanban">KANBAN (CONTINUOUS FLOW)</option>
-            <option value="scrum">SCRUM (SPRINT-BASED)</option>
-            <option value="hybrid">HYBRID (MIX OF BOTH)</option>
-          </select>
+            options={[
+              { value: 'kanban', label: 'KANBAN (CONTINUOUS FLOW)' },
+              { value: 'scrum', label: 'SCRUM (SPRINT-BASED)' },
+              { value: 'hybrid', label: 'HYBRID (MIX OF BOTH)' },
+            ]}
+            fullWidth
+          />
         </div>
 
         {/* ACTIONS */}

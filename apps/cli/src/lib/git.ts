@@ -366,6 +366,151 @@ export async function uninstallHooks(): Promise<void> {
   }
 }
 
+/**
+ * Conventional commit types recognized by the parser
+ */
+export const CONVENTIONAL_COMMIT_TYPES = [
+  'feat', 'fix', 'chore', 'refactor', 'test', 'docs',
+  'perf', 'ci', 'style', 'build',
+] as const;
+
+export type ConventionalCommitType = typeof CONVENTIONAL_COMMIT_TYPES[number];
+
+/**
+ * Parsed conventional commit information
+ */
+export interface ConventionalCommit {
+  type: ConventionalCommitType;
+  scope?: string;
+  breaking: boolean;
+  description: string;
+  raw: string;
+}
+
+/**
+ * Parse a commit message for conventional commit format
+ * Supports:
+ * - feat: description
+ * - fix(scope): description
+ * - feat!: breaking change
+ * - fix(auth)!: scoped breaking change
+ *
+ * Returns null if the message doesn't match conventional commit format.
+ */
+export function parseConventionalCommit(message: string): ConventionalCommit | null {
+  // Pattern: type[(scope)][!]: description
+  const pattern = /^(feat|fix|chore|refactor|test|docs|perf|ci|style|build)(?:\(([^)]+)\))?(!)?\s*:\s*(.+)/i;
+  const match = message.match(pattern);
+
+  if (!match) {
+    return null;
+  }
+
+  const type = match[1].toLowerCase() as ConventionalCommitType;
+
+  // Validate the type is in our known list
+  if (!CONVENTIONAL_COMMIT_TYPES.includes(type)) {
+    return null;
+  }
+
+  return {
+    type,
+    scope: match[2] || undefined,
+    breaking: match[3] === '!',
+    description: match[4].trim(),
+    raw: message,
+  };
+}
+
+/**
+ * Map conventional commit type to a task-friendly label
+ */
+export function conventionalTypeToLabel(type: ConventionalCommitType): string {
+  const labels: Record<ConventionalCommitType, string> = {
+    feat: 'Feature',
+    fix: 'Bug Fix',
+    chore: 'Chore',
+    refactor: 'Refactor',
+    test: 'Test',
+    docs: 'Documentation',
+    perf: 'Performance',
+    ci: 'CI/CD',
+    style: 'Style',
+    build: 'Build',
+  };
+  return labels[type];
+}
+
+/**
+ * Get commits in a date range or between refs
+ */
+export async function getCommitsInRange(options: {
+  from?: string;
+  to?: string;
+  fromDate?: string;
+  toDate?: string;
+}): Promise<
+  Array<{
+    hash: string;
+    message: string;
+    author: string;
+    date: Date;
+  }>
+> {
+  try {
+    const git = getGit();
+    const logOptions: Record<string, unknown> = {};
+
+    if (options.from && options.to) {
+      logOptions.from = options.from;
+      logOptions.to = options.to;
+    }
+
+    if (options.fromDate) {
+      logOptions['--after'] = options.fromDate;
+    }
+
+    if (options.toDate) {
+      logOptions['--before'] = options.toDate;
+    }
+
+    const log = await git.log(logOptions);
+    return log.all.map((commit) => ({
+      hash: commit.hash,
+      message: commit.message,
+      author: commit.author_name,
+      date: new Date(commit.date),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Validate a branch name against a pattern
+ * Returns an object indicating whether the branch matches and the pattern used.
+ */
+export function validateBranchName(
+  branchName: string,
+  pattern: string,
+): { valid: boolean; pattern: string } {
+  try {
+    const regex = new RegExp(pattern);
+    return {
+      valid: regex.test(branchName),
+      pattern,
+    };
+  } catch {
+    // Invalid regex pattern - treat as always valid
+    return { valid: true, pattern };
+  }
+}
+
+/**
+ * Default branch naming pattern for validation
+ */
+export const DEFAULT_BRANCH_PATTERN = '(feature|fix|hotfix|bugfix|chore|refactor|release|docs)/[A-Z]+-\\d+.*';
+
 export default {
   getGit,
   isGitRepo,
@@ -382,4 +527,10 @@ export default {
   areHooksInstalled,
   installHooks,
   uninstallHooks,
+  parseConventionalCommit,
+  conventionalTypeToLabel,
+  getCommitsInRange,
+  validateBranchName,
+  CONVENTIONAL_COMMIT_TYPES,
+  DEFAULT_BRANCH_PATTERN,
 };

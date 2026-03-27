@@ -3,6 +3,8 @@ import { v } from "convex/values";
 import { requirePermission } from "../auth/permissions";
 import { internal } from "../_generated/api";
 import { sprintStarted, sprintCompleted } from "../email/templates";
+import { getCurrentUserOrThrow } from "../lib/auth";
+import { sprintStatusValidator } from "../lib/validators";
 
 export const createSprint = mutation({
   args: {
@@ -13,19 +15,7 @@ export const createSprint = mutation({
     endDate: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const project = await ctx.db.get(args.projectId);
     if (!project) {
@@ -81,22 +71,10 @@ export const updateSprint = mutation({
     goal: v.optional(v.string()),
     startDate: v.optional(v.string()),
     endDate: v.optional(v.string()),
-    status: v.optional(v.union(v.literal("planning"), v.literal("active"), v.literal("completed"))),
+    status: v.optional(sprintStatusValidator),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const sprint = await ctx.db.get(args.sprintId);
     if (!sprint) {
@@ -118,8 +96,7 @@ export const updateSprint = mutation({
       if (args.status === "active") {
         const activeSprints = await ctx.db
           .query("sprints")
-          .withIndex("by_project", (q) => q.eq("projectId", sprint.projectId))
-          .filter((q) => q.eq(q.field("status"), "active"))
+          .withIndex("by_project_and_status", (q) => q.eq("projectId", sprint.projectId).eq("status", "active"))
           .collect();
         
         if (activeSprints.length > 0 && activeSprints[0]._id !== args.sprintId) {
@@ -246,19 +223,7 @@ export const deleteSprint = mutation({
     sprintId: v.id("sprints"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const sprint = await ctx.db.get(args.sprintId);
     if (!sprint) {
@@ -310,19 +275,7 @@ export const addTasksToSprint = mutation({
     taskIds: v.array(v.id("tasks")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const sprint = await ctx.db.get(args.sprintId);
     if (!sprint) {
@@ -371,19 +324,7 @@ export const removeTaskFromSprint = mutation({
     taskId: v.id("tasks"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const task = await ctx.db.get(args.taskId);
     if (!task) {

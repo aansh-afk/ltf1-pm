@@ -1,3 +1,4 @@
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
@@ -27,8 +28,9 @@ import {
 } from 'react-icons/hi'
 import clsx from 'clsx'
 import { formatDistanceToNow } from 'date-fns'
-import DeveloperStatusIndicator from '../components/features/developer/DeveloperStatusIndicator'
-import { EditDeveloperProfileModal } from '../components/features/profile/EditDeveloperProfileModal'
+import BrutalSelect from '@/components/ui/BrutalSelect'
+import DeveloperStatusIndicator from '@/components/features/developer/DeveloperStatusIndicator'
+import { EditDeveloperProfileModal } from '@/components/features/profile/EditDeveloperProfileModal'
 
 // --- Sub-components ---
 
@@ -554,6 +556,7 @@ export default function DeveloperProfilePage() {
   ] as const
 
   return (
+    <ErrorBoundary>
     <div className="space-y-[12px]">
       {/* Profile Header */}
       <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
@@ -608,17 +611,17 @@ export default function DeveloperProfilePage() {
                     showLabel={true}
                   />
                   {isOwnProfile && (
-                    <select
+                    <BrutalSelect
                       value={profile.status?.current || 'available'}
-                      onChange={(e) => handleStatusChange(e.target.value)}
-                      aria-label="Developer status"
-                      className="brutal-input text-xs px-8px py-4px"
-                    >
-                      <option value="available">AVAILABLE</option>
-                      <option value="busy">BUSY</option>
-                      <option value="away">AWAY</option>
-                      <option value="dnd">DO NOT DISTURB</option>
-                    </select>
+                      onChange={(v) => handleStatusChange(v)}
+                      options={[
+                        { value: 'available', label: 'AVAILABLE' },
+                        { value: 'busy', label: 'BUSY' },
+                        { value: 'away', label: 'AWAY' },
+                        { value: 'dnd', label: 'DO NOT DISTURB' },
+                      ]}
+                      compact
+                    />
                   )}
                 </div>
 
@@ -710,5 +713,6 @@ export default function DeveloperProfilePage() {
         />
       )}
     </div>
+    </ErrorBoundary>
   )
 }

@@ -29,6 +29,7 @@ import {
 import BrutalCard from '@/components/ui/BrutalCard'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalBadge from '@/components/ui/BrutalBadge'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 
@@ -371,20 +372,18 @@ function SlackStandupConfigTab({ standupSettings, onSettingsChange, slackChannel
           </div>
 
           <div>
-            <label htmlFor="standup-target-channel" className="text-xs font-bold uppercase mb-2 block text-[var(--theme-foreground)]/60">Target Channel</label>
-            <select
+            <BrutalSelect
               id="standup-target-channel"
+              label="Target Channel"
               value={standupSettings.channel}
-              onChange={(e) => onSettingsChange({ ...standupSettings, channel: e.target.value })}
-              className="w-full p-3 bg-[var(--theme-background)] text-[var(--theme-foreground)] border-2 border-[var(--theme-border)] font-mono focus:border-[var(--theme-primary)] outline-none"
-            >
-              <option value="">SELECT_CHANNEL</option>
-              {slackChannels?.map(channel => (
-                <option key={channel.channelId} value={channel.channelId}>
-                  #{channel.channelName}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => onSettingsChange({ ...standupSettings, channel: v })}
+              placeholder="SELECT_CHANNEL"
+              options={slackChannels?.map(channel => ({
+                value: channel.channelId,
+                label: `#${channel.channelName}`,
+              })) || []}
+              fullWidth
+            />
           </div>
 
           <div>
@@ -463,33 +462,34 @@ function SlackAddChannelModal({ newChannel, onNewChannelChange, projects, onAdd,
           </div>
 
           <div>
-            <label htmlFor="new-channel-type" className="text-xs font-bold uppercase mb-1 block">Channel Type</label>
-            <select
+            <BrutalSelect
               id="new-channel-type"
+              label="Channel Type"
               value={newChannel.channelType}
-              onChange={(e) => onNewChannelChange({ ...newChannel, channelType: e.target.value as 'general' | 'project' | 'alerts' })}
-              className="w-full p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
-            >
-              <option value="general">GENERAL</option>
-              <option value="project">PROJECT</option>
-              <option value="alerts">ALERTS</option>
-            </select>
+              onChange={(v) => onNewChannelChange({ ...newChannel, channelType: v as 'general' | 'project' | 'alerts' })}
+              options={[
+                { value: 'general', label: 'GENERAL' },
+                { value: 'project', label: 'PROJECT' },
+                { value: 'alerts', label: 'ALERTS' },
+              ]}
+              fullWidth
+            />
           </div>
 
           {newChannel.channelType === 'project' && (
             <div>
-              <label htmlFor="new-channel-project" className="text-xs font-bold uppercase mb-1 block">Project Link</label>
-              <select
+              <BrutalSelect
                 id="new-channel-project"
+                label="Project Link"
                 value={newChannel.projectId || ''}
-                onChange={(e) => onNewChannelChange({ ...newChannel, projectId: e.target.value as Id<'projects'> })}
-                className="w-full p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
-              >
-                <option value="">SELECT_PROJECT</option>
-                {projects?.map(project => (
-                  <option key={project._id} value={project._id}>{project.name}</option>
-                ))}
-              </select>
+                onChange={(v) => onNewChannelChange({ ...newChannel, projectId: v as Id<'projects'> })}
+                placeholder="SELECT_PROJECT"
+                options={projects?.map(project => ({
+                  value: project._id,
+                  label: project.name,
+                })) || []}
+                fullWidth
+              />
             </div>
           )}
 

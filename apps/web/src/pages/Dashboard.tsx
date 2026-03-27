@@ -1,11 +1,12 @@
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useMemo } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { m } from 'framer-motion'
-import { useProfileCompletion } from '../hooks/useProfileCompletion'
-import { useCurrentWorkspace } from '../hooks/useCurrentWorkspace'
+import { useProfileCompletion } from '@/hooks/useProfileCompletion'
+import { useCurrentWorkspace } from '@/hooks/useCurrentWorkspace'
 import { Link } from 'react-router-dom'
-import { usePageTitle } from '../hooks/usePageTitle'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import {
   HiOutlineBriefcase,
   HiOutlineClipboardList,
@@ -17,8 +18,9 @@ import {
   HiOutlineTerminal,
   HiOutlineChevronRight,
 } from 'react-icons/hi'
-import BrutalCard from '../components/ui/BrutalCard'
-import BrutalButton from '../components/ui/BrutalButton'
+import BrutalCard from '@/components/ui/BrutalCard'
+import BrutalButton from '@/components/ui/BrutalButton'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
 
 const STAT_ICONS = [
   { label: 'WORKSPACES', icon: HiOutlineBriefcase, color: 'var(--theme-info)' },
@@ -57,7 +59,12 @@ export default function Dashboard() {
     return STAT_ICONS.map((s, i) => ({ ...s, value: values[i] }))
   }, [workspaces, meetings])
 
+  if (dashboardData === undefined) {
+    return <LoadingSpinner size="lg" />
+  }
+
   return (
+    <ErrorBoundary>
     <div className="p-4 min-h-screen bg-[var(--theme-background)]">
       {/* HEADER SECTION */}
       <div className="mb-4 flex items-start justify-between">
@@ -257,5 +264,6 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   )
 }

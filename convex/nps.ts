@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { getCurrentUser, getCurrentUserOrThrow } from "./lib/auth";
 
 export const submitNpsSurvey = mutation({
   args: {
@@ -8,18 +9,7 @@ export const submitNpsSurvey = mutation({
   },
   returns: v.id("npsSurveys"),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .unique();
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     return await ctx.db.insert("npsSurveys", {
       userId: user._id,
@@ -34,18 +24,7 @@ export const dismissNpsSurvey = mutation({
   args: {},
   returns: v.id("npsSurveys"),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .unique();
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     return await ctx.db.insert("npsSurveys", {
       userId: user._id,
@@ -60,15 +39,7 @@ export const hasCompletedNps = query({
   args: {},
   returns: v.boolean(),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return false;
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .unique();
+    const user = await getCurrentUser(ctx);
     if (!user) {
       return false;
     }

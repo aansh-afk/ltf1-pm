@@ -178,7 +178,9 @@ export default defineSchema({
     .index("by_project", ["projectId"])
     .index("by_user", ["userId"])
     .index("by_project_user", ["projectId", "userId"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_project_and_status", ["projectId", "status"])
+    .index("by_user_and_status", ["userId", "status"]),
 
   projectInvitations: defineTable({
     projectId: v.id("projects"),
@@ -268,6 +270,7 @@ export default defineSchema({
     .index("by_lead", ["leadId"])
     .index("by_status", ["status"])
     .index("by_invite_code", ["inviteCode"])
+    .index("by_workspace_and_status", ["workspaceId", "status"])
     .searchIndex("search_name", {
       searchField: "name",
       filterFields: ["workspaceId", "status"],
@@ -373,6 +376,7 @@ export default defineSchema({
   })
     .index("by_project", ["projectId"])
     .index("by_status", ["status"])
+    .index("by_project_and_status", ["projectId", "status"])
     .searchIndex("search_name", {
       searchField: "name",
       filterFields: ["projectId", "status"],
@@ -496,7 +500,8 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_and_workspace", ["userId", "workspaceId"])
-    .index("by_user_and_read", ["userId", "isRead"]),
+    .index("by_user_and_read", ["userId", "isRead"])
+    .index("by_user_and_workspace_and_read", ["userId", "workspaceId", "isRead"]),
 
   // GitHub OAuth
   githubOAuthStates: defineTable({
@@ -520,12 +525,29 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_github_id", ["githubId"]),
 
-  // Temporary permissive schema for migration - will be restored after user clears old data
-  activities: defineTable(v.any()).index("by_type", ["type", "timestamp"]),
+  activities: defineTable({
+    type: v.string(), // e.g. "task_created", "pr_merged", "member_joined", etc.
+    workspaceId: v.id("workspaces"),
+    projectId: v.optional(v.id("projects")),
+    // Actor (who performed the action) — optional for webhook-originated activities
+    actorId: v.optional(v.id("users")),
+    actorName: v.optional(v.string()),
+    // Target (what was acted upon)
+    targetType: v.optional(v.string()), // "task", "project", "sprint", "meeting", "user", "comment", "github"
+    targetId: v.optional(v.string()), // Polymorphic reference — may be any table's ID
+    targetName: v.optional(v.string()),
+    description: v.optional(v.string()),
+    metadata: v.optional(v.any()), // Truly dynamic: oldValue, newValue, assignedTo, timeSpent, extra, etc.
+    timestamp: v.optional(v.number()),
+  })
+    .index("by_type", ["type", "timestamp"])
+    .index("by_project", ["projectId", "timestamp"])
+    .index("by_workspace", ["workspaceId", "timestamp"])
+    .index("by_actor", ["actorId", "timestamp"]),
 
   timeEntries: defineTable({
     taskId: v.id("tasks"),
-    userId: v.string(), // Clerk user ID
+    userId: v.string(), // Clerk identity.subject — NOT a Convex Id<"users">, do not change to v.id("users")
     startTime: v.number(),
     endTime: v.optional(v.number()),
     duration: v.optional(v.number()), // In milliseconds
@@ -571,7 +593,8 @@ export default defineSchema({
   })
     .index("by_workspace", ["workspaceId"])
     .index("by_user", ["userId"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_user_and_status", ["userId", "status"]),
 
   // AI Sessions for tracking all AI interactions
   aiSessions: defineTable({
@@ -583,6 +606,8 @@ export default defineSchema({
     model: v.union(
       v.literal("gemini-2.5-flash"),
       v.literal("gemini-2.5-flash-lite"),
+      v.literal("gpt-oss-120b"),
+      v.literal("gpt-oss-20b"),
     ),
     tokens: v.object({
       input: v.number(),
@@ -641,9 +666,16 @@ export default defineSchema({
   })
     .index("by_workspace", ["workspaceId"])
     .index("by_target", ["targetType", "targetId"])
+    .index("by_workspace_and_target_and_insight_type", [
+      "workspaceId",
+      "targetType",
+      "targetId",
+      "insightType",
+    ])
     .index("by_insight_type", ["insightType"])
     .index("by_dismissed", ["dismissed"])
-    .index("by_created", ["createdAt"]),
+    .index("by_created", ["createdAt"])
+    .index("by_workspace_and_dismissed", ["workspaceId", "dismissed"]),
 
   filterPresets: defineTable({
     workspaceId: v.id("workspaces"),
@@ -1075,10 +1107,7 @@ export default defineSchema({
   aiProviderKeys: defineTable({
     scope: v.union(v.literal("user"), v.literal("project")),
     scopeId: v.string(), // clerkId for user, projectId string for project
-    provider: v.union(
-      v.literal("cerebras"),
-      v.literal("groq"),
-    ),
+    provider: v.union(v.literal("cerebras"), v.literal("groq")),
     encryptedApiKey: v.string(),
     displayName: v.optional(v.string()),
     defaultModel: v.optional(v.string()),
@@ -1100,10 +1129,7 @@ export default defineSchema({
       v.record(
         v.string(),
         v.object({
-          provider: v.union(
-            v.literal("cerebras"),
-            v.literal("groq"),
-          ),
+          provider: v.union(v.literal("cerebras"), v.literal("groq")),
           model: v.string(),
         }),
       ),
@@ -1277,7 +1303,7 @@ export default defineSchema({
     incomingWebhookUrl: v.optional(v.string()),
     incomingWebhookChannel: v.optional(v.string()),
     scopes: v.array(v.string()),
-    userId: v.string(), // Clerk user ID who connected
+    userId: v.string(), // Clerk identity.subject — NOT a Convex Id<"users">, do not change to v.id("users") who connected
     active: v.boolean(),
     settings: v.optional(v.any()),
     createdAt: v.number(),
@@ -1756,11 +1782,18 @@ export default defineSchema({
     createdBy: v.id("users"),
     createdAt: v.number(),
     updatedAt: v.number(),
+    // Document/Pages fields (additive — no migration needed)
+    content: v.optional(v.any()),
+    icon: v.optional(v.string()),
+    coverImage: v.optional(v.string()),
+    isArchived: v.optional(v.boolean()),
+    parentId: v.optional(v.id("whiteboards")),
   })
     .index("by_workspace", ["workspaceId"])
     .index("by_project", ["projectId"])
     .index("by_meeting", ["meetingId"])
-    .index("by_creator", ["createdBy"]),
+    .index("by_creator", ["createdBy"])
+    .index("by_parent", ["parentId"]),
 
   whiteboardSnapshots: defineTable({
     whiteboardId: v.id("whiteboards"),
@@ -2034,7 +2067,11 @@ export default defineSchema({
     screenshotIds: v.array(v.id("_storage")),
     recordedSteps: v.array(
       v.object({
-        type: v.union(v.literal("click"), v.literal("input"), v.literal("navigation")),
+        type: v.union(
+          v.literal("click"),
+          v.literal("input"),
+          v.literal("navigation"),
+        ),
         target: v.string(),
         value: v.optional(v.string()),
         url: v.string(),
@@ -2068,4 +2105,55 @@ export default defineSchema({
     .index("by_sprint", ["sprintId"])
     .index("by_sprint_and_date", ["sprintId", "date"])
     .index("by_project", ["projectId"]),
+
+  // Git Workflow Configs — per-project configurable git event → status mappings
+  gitWorkflowConfigs: defineTable({
+    projectId: v.id("projects"),
+    preset: v.union(
+      v.literal("agile"),
+      v.literal("kanban"),
+      v.literal("custom"),
+    ),
+    statusMappings: v.object({
+      branchCreated: v.optional(v.string()),
+      commitPushed: v.optional(v.string()),
+      prOpened: v.optional(v.string()),
+      prMerged: v.optional(v.string()),
+      prClosed: v.optional(v.string()),
+      prApproved: v.optional(v.string()),
+      prReviewRequested: v.optional(v.string()),
+    }),
+    conventionalCommits: v.object({
+      enabled: v.boolean(),
+      typeMappings: v.optional(v.record(v.string(), v.string())),
+    }),
+    branchPattern: v.optional(v.string()),
+    autoCompleteSprint: v.boolean(),
+  }).index("by_projectId", ["projectId"]),
+
+  subscriptions: defineTable({
+    workspaceId: v.id("workspaces"),
+    polarCustomerId: v.string(),
+    polarSubscriptionId: v.string(),
+    status: v.union(
+      v.literal("active"),
+      v.literal("trialing"),
+      v.literal("past_due"),
+      v.literal("cancelled"),
+      v.literal("incomplete"),
+    ),
+    plan: v.union(
+      v.literal("free"),
+      v.literal("pro"),
+      v.literal("enterprise"),
+    ),
+    seatCount: v.number(),
+    billingCycle: v.union(v.literal("monthly"), v.literal("yearly")),
+    currentPeriodStart: v.number(),
+    currentPeriodEnd: v.number(),
+    cancelledAt: v.optional(v.number()),
+  })
+    .index("by_workspaceId", ["workspaceId"])
+    .index("by_polarSubscriptionId", ["polarSubscriptionId"])
+    .index("by_polarCustomerId", ["polarCustomerId"]),
 });

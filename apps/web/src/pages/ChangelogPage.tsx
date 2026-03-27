@@ -1,8 +1,9 @@
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { m, AnimatePresence } from 'framer-motion'
 import { useState, useRef, useEffect, useCallback } from 'react'
-import PublicNavigation from '../components/common/PublicNavigation'
-import Footer from '../components/common/Footer'
-import { usePageTitle } from '../hooks/usePageTitle'
+import PublicNavigation from '@/components/common/PublicNavigation'
+import Footer from '@/components/common/Footer'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -29,6 +30,23 @@ interface Release {
 }
 
 const RELEASES: Release[] = [
+  {
+    version: '0.5.0',
+    date: 'Mar 15, 2026',
+    tag: 'PAGES',
+    tagColor: '#6366F1',
+    summary: 'Notion-like block editor replacing Whiteboard. Create, edit, and organize rich documents with slash commands, drag-and-drop blocks, and real-time collaboration.',
+    changes: [
+      { type: 'feat', platform: 'web', text: 'Pages — full block editor with 10 block types: paragraph, heading (h1-h3), bullet list, numbered list, toggle list, to-do/checkbox, quote, divider, code block, callout' },
+      { type: 'feat', platform: 'web', text: 'Slash commands (/) to insert any block type, drag-and-drop block reordering, and inline formatting (bold, italic, underline, strikethrough, code, link, color)' },
+      { type: 'feat', platform: 'web', text: 'Page management: create, rename, delete, archive, restore, nested sub-pages with tree sidebar' },
+      { type: 'feat', platform: 'web', text: 'Emoji page icons with picker, debounced auto-save (1.5s), save status indicator' },
+      { type: 'feat', platform: 'web', text: 'Multi-user presence indicators on active pages via Convex subscriptions' },
+      { type: 'feat', platform: 'api', text: 'Document backend: create, update content/metadata, archive, restore, permanent delete, child documents, search' },
+      { type: 'feat', platform: 'web', text: 'Dark brutalist editor theme: 0px radius, hard shadows, #050505 bg, Inter/IBM Plex Mono fonts' },
+      { type: 'fix', platform: 'web', text: '/whiteboard route now redirects to /pages — sidebar updated from WHITEBOARD to PAGES' },
+    ],
+  },
   {
     version: '0.4.0',
     date: 'Feb 22, 2026',
@@ -278,6 +296,7 @@ export default function ChangelogPage() {
   usePageTitle('Changelog — LTF1')
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-[#050505]">
       <PublicNavigation />
       <MobileVersionIndicator />
@@ -435,5 +454,6 @@ export default function ChangelogPage() {
 
       <Footer />
     </div>
+    </ErrorBoundary>
   )
 }

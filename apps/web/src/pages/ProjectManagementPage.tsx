@@ -1,7 +1,15 @@
-import React, { useState, useEffect, useCallback, Suspense, useReducer } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  Suspense,
+  useReducer,
+} from "react";
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import type { Id, Doc } from "../../../../convex/_generated/dataModel";
 import { useUser } from "@clerk/clerk-react";
 import {
   HiOutlineHome,
@@ -13,31 +21,21 @@ import {
   HiOutlineTerminal,
   HiOutlineCog,
   HiOutlineExclamationCircle,
-  HiOutlineCheckCircle,
-  HiOutlineXCircle,
   HiOutlineClock,
-  HiOutlineBeaker,
-  HiOutlineDatabase,
   HiOutlineLightningBolt,
   HiOutlineChartBar,
   HiOutlinePlus,
   HiOutlineFilter,
   HiOutlineViewGrid,
-  HiOutlineViewList,
-  HiOutlinePlay,
-  HiOutlinePause,
   HiOutlineChip,
-  HiOutlineUser,
-  HiOutlineDotsVertical,
   HiOutlineArrowRight,
-  HiOutlineChat,
   HiOutlineSearch,
 } from "react-icons/hi";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import CreateTaskModal from "@/components/features/task/CreateTaskModal";
 import EditTaskModal from "@/components/features/task/EditTaskModal";
 import BulkActionBar from "@/components/features/task/BulkActionBar";
-import KanbanBoard from "@/components/features/kanban/KanbanBoard";
+import TaskBoard from "@/components/features/task/TaskBoard";
 import TaskList from "@/components/features/task/TaskList";
 import { GitHubProjectTab } from "@/components/features/github/GitHubProjectTab";
 import SprintBoard from "@/components/features/sprint/SprintBoard";
@@ -47,17 +45,11 @@ import ScheduleMeetingModal from "@/components/features/meetings/ScheduleMeeting
 import MeetingCard from "@/components/features/meetings/MeetingCard";
 import ProjectInviteModal from "@/components/features/project/ProjectInviteModal";
 import UserDisplay from "@/components/features/user/UserDisplay";
-import DeveloperTimeline from "@/components/features/project/DeveloperTimeline";
 const SprintBurndownChart = React.lazy(
   () => import("@/components/features/project/SprintBurndownChart"),
 );
-const TaskDistributionCharts = React.lazy(
-  () => import("@/components/features/project/TaskDistributionCharts"),
-);
 import AIInsightsPanel from "@/components/features/project/AIInsightsPanel";
 import GitHubStyleHeatmap from "@/components/features/project/GitHubStyleHeatmap";
-import SmartTaskGenerator from "@/components/features/project/SmartTaskGenerator";
-import DailyStandupSummary from "@/components/features/project/DailyStandupSummary";
 import GanttView from "@/components/features/project/GanttView";
 import CalendarView from "@/components/features/project/CalendarView";
 import NaturalLanguageTaskCreator from "@/components/features/ai/NaturalLanguageTaskCreator";
@@ -65,15 +57,110 @@ import TeamActivityFeed from "@/components/features/activity/TeamActivityFeed";
 import { ExpertiseSearchModal } from "@/components/features/profile/ExpertiseSearchModal";
 import { TeamExpertiseMatrix } from "@/components/features/profile/TeamExpertiseMatrix";
 import ProjectDocsHub from "@/components/features/documentation/ProjectDocsHub";
+import PagesPage from "@/pages/PagesPage";
+import GitWorkflowConfig from "@/components/features/git/GitWorkflowConfig";
 import type { TaskFilters as TaskFiltersType } from "@/components/features/task/TaskFilters";
 import { useTemporaryShortcut } from "@/contexts/ShortcutContext";
 import clsx from "clsx";
 import toast from "react-hot-toast";
 import { formatDistanceToNow } from "date-fns";
-import BrutalCard from "@/components/ui/BrutalCard";
 import BrutalButton from "@/components/ui/BrutalButton";
 import BrutalBadge from "@/components/ui/BrutalBadge";
+import BrutalSelect from "../components/ui/BrutalSelect";
 import { m } from "framer-motion";
+
+// --- Shared types for project management page ---
+
+/** Task document from Convex, as returned by getProjectTasks */
+type TaskData = Doc<"tasks"> & { key?: string };
+
+/** Sprint document from Convex */
+type SprintData = Doc<"sprints">;
+
+/** Meeting document from Convex */
+type MeetingData = Doc<"meetings">;
+
+/** Team document from Convex */
+type TeamData = Doc<"teams">;
+
+/** Enriched member info returned by getProject query (user doc + project role) */
+interface MemberData {
+  _id: Id<"users">;
+  _creationTime: number;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  role?: string;
+  projectRole?: string;
+  joinedAt?: number;
+  lastSeenAt?: number;
+  userId?: Id<"users">;
+  [key: string]: unknown;
+}
+
+/** Enriched project as returned by getProject query (Doc<"projects"> spread with enrichments) */
+interface ProjectData {
+  _id: Id<"projects">;
+  _creationTime: number;
+  workspaceId: Id<"workspaces">;
+  name: string;
+  key: string;
+  description?: string;
+  leadId?: Id<"users">;
+  members?: (MemberData | null)[];
+  teamIds?: Id<"teams">[];
+  status: "planning" | "active" | "on_hold" | "completed" | "archived";
+  visibility: "public" | "private";
+  inviteCode?: string;
+  repository?: {
+    provider: "github" | "gitlab" | "bitbucket";
+    url: string;
+    name: string;
+    owner: string;
+    defaultBranch: string;
+    connectedAt: number;
+  };
+  settings?: {
+    taskPrefix?: string;
+    defaultAssigneeId?: Id<"users">;
+    workflowType?: "kanban" | "scrum" | "hybrid";
+  };
+  teamSettings?: {
+    maxMembers?: number;
+    allowSelfJoin?: boolean;
+    requireApproval?: boolean;
+    autoAssignLead?: boolean;
+  };
+  metadata?: {
+    color: string;
+    icon: string;
+    tags: string[];
+  };
+  lead?: Doc<"users"> | null;
+  tasks?: TaskData[];
+  activeSprint?: SprintData | null;
+  createdAt: number;
+  updatedAt: number;
+  [key: string]: unknown;
+}
+
+/** User document from Convex (currentUser) */
+type UserData = Doc<"users">;
+
+/** Computed member stats for team tab */
+interface MemberStatData extends MemberData {
+  tasksAssigned: number;
+  tasksCompleted: number;
+  tasksInProgress: number;
+  tasksBlocked: number;
+  tasksTodo: number;
+  tasksInReview: number;
+  pullRequests: number;
+  commits: number;
+  hoursTracked: number;
+  productivity: number;
+  lastActive: string;
+}
 
 type TabType =
   | "overview"
@@ -82,6 +169,7 @@ type TabType =
   | "github"
   | "meetings"
   | "docs"
+  | "pages"
   | "logs"
   | "settings";
 
@@ -102,7 +190,7 @@ type PageAction =
   | { type: "TOGGLE_COMPACT_VIEW" }
   | { type: "SET_CONTEXT"; context: string | null }
   | { type: "OPEN_CREATE_TASK" }
-  | { type: "OPEN_EDIT_TASK"; task: any }
+  | { type: "OPEN_EDIT_TASK"; task: TaskData }
   | { type: "OPEN_CREATE_SPRINT" }
   | { type: "OPEN_PROJECT_INVITE" }
   | { type: "OPEN_SCHEDULE_MEETING" }
@@ -126,7 +214,7 @@ interface PageState {
   showScheduleMeetingModal: boolean;
   showExpertiseSearch: boolean;
   showExpertiseMatrix: boolean;
-  selectedTask: any;
+  selectedTask: TaskData | null;
   showAdvancedFilters: boolean;
   selectedSprintId: string | null;
   taskFilters: TaskFiltersType;
@@ -157,8 +245,8 @@ const pageInitialState: PageState = {
     labels: [],
     dueDateRange: { start: null, end: null },
     createdDateRange: { start: null, end: null },
-    hasTimeTracked: undefined,
-    isOverdue: undefined,
+    hasTimeTracked: null,
+    isOverdue: null,
   },
 };
 
@@ -211,12 +299,28 @@ function pageReducer(state: PageState, action: PageAction): PageState {
   }
 }
 
+function isTaskBlocked(task: TaskData, allTasks: TaskData[]): boolean {
+  if (!task || task.status === "done" || task.status === "cancelled") {
+    return false;
+  }
+
+  const dependencies = task.dependencies ?? [];
+  if (!Array.isArray(dependencies) || dependencies.length === 0) {
+    return false;
+  }
+
+  return dependencies.some((depId: Id<"tasks">) => {
+    const dependencyTask = allTasks.find((t) => t._id === depId);
+    return dependencyTask ? dependencyTask.status !== "done" : false;
+  });
+}
+
 // --- Sub-components ---
 
 interface OverviewTabProps {
-  project: any;
-  allSprints: any[] | undefined;
-  tasks: any[] | undefined;
+  project: ProjectData;
+  allSprints: SprintData[] | undefined;
+  tasks: TaskData[] | undefined;
   healthCards: HealthCard[];
   getStatusColor: (status: string) => string;
 }
@@ -300,17 +404,17 @@ function OverviewTab({
                 {/* Sprint progress bar */}
                 {(() => {
                   const sprintTasks = (tasks || []).filter(
-                    (t: any) => t.sprintId === activeSprint._id,
+                    (t) => t.sprintId === activeSprint._id,
                   );
                   const total = sprintTasks.length;
                   const done = sprintTasks.filter(
-                    (t: any) => t.status === "done",
+                    (t) => t.status === "done",
                   ).length;
                   const inProgress = sprintTasks.filter(
-                    (t: any) => t.status === "in_progress",
+                    (t) => t.status === "in_progress",
                   ).length;
-                  const blocked = sprintTasks.filter(
-                    (t: any) => t.status === "blocked" || t.isBlocked,
+                  const blocked = sprintTasks.filter((t) =>
+                    isTaskBlocked(t, tasks || []),
                   ).length;
                   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
@@ -406,8 +510,8 @@ function OverviewTab({
                   }
                 >
                   <SprintBurndownChart
-                    sprint={activeSprint}
-                    tasks={tasks || []}
+                    sprint={activeSprint as unknown as { _id: Id<"sprints">; name: string; startDate: string; endDate: string; totalPoints: number }}
+                    tasks={(tasks || []) as { _id: Id<"tasks">; points?: number; status: string; completedAt?: string; sprintId?: Id<"sprints"> }[]}
                     showPrediction={true}
                   />
                 </Suspense>
@@ -518,8 +622,8 @@ function OverviewTab({
 }
 
 interface MeetingsTabProps {
-  projectMeetings: any[] | undefined;
-  currentUserId: any;
+  projectMeetings: MeetingData[] | undefined;
+  currentUserId: Id<"users"> | undefined;
   onScheduleMeeting: () => void;
 }
 
@@ -579,7 +683,7 @@ function MeetingsTab({
           <>
             {/* Upcoming Meetings */}
             {projectMeetings.filter(
-              (meeting: any) => meeting.startTime > Date.now(),
+              (meeting) => meeting.startTime > Date.now(),
             ).length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -590,9 +694,9 @@ function MeetingsTab({
                 </div>
                 <div className="space-y-2">
                   {projectMeetings
-                    .filter((meeting: any) => meeting.startTime > Date.now())
+                    .filter((meeting) => meeting.startTime > Date.now())
                     .slice(0, 5)
-                    .map((meeting: any) => (
+                    .map((meeting) => (
                       <MeetingCard
                         key={meeting._id}
                         meeting={meeting}
@@ -611,7 +715,7 @@ function MeetingsTab({
 
             {/* Past Meetings */}
             {projectMeetings.filter(
-              (meeting: any) => meeting.endTime < Date.now(),
+              (meeting) => meeting.endTime < Date.now(),
             ).length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -622,9 +726,9 @@ function MeetingsTab({
                 </div>
                 <div className="space-y-2">
                   {projectMeetings
-                    .filter((meeting: any) => meeting.endTime < Date.now())
+                    .filter((meeting) => meeting.endTime < Date.now())
                     .slice(0, 3)
-                    .map((meeting: any) => (
+                    .map((meeting) => (
                       <MeetingCard
                         key={meeting._id}
                         meeting={meeting}
@@ -663,22 +767,133 @@ function MeetingsTab({
 }
 
 interface SettingsTabProps {
-  project: any;
-  availableTeams: any[] | undefined;
-  assignTeam: (args: { projectId: any; teamId: any }) => Promise<any>;
+  project: ProjectData;
+  availableTeams: TeamData[] | undefined;
+  assignTeam: (args: { projectId: Id<"projects">; teamId: Id<"teams"> }) => Promise<unknown>;
+  updateProject: (args: {
+    projectId: Id<"projects">;
+    name?: string;
+    description?: string;
+    status?: string;
+    leadId?: Id<"users">;
+  }) => Promise<unknown>;
+  deleteProject: (args: { projectId: Id<"projects"> }) => Promise<unknown>;
+  members: MemberData[] | undefined;
+  onNavigateBack: () => void;
 }
 
 function SettingsTab({
   project,
   availableTeams,
   assignTeam,
+  updateProject,
+  deleteProject,
+  members,
+  onNavigateBack,
 }: SettingsTabProps) {
+  const [settingsSubTab, setSettingsSubTab] = useState<"general" | "git_workflow">("general");
+  const [name, setName] = useState(project.name || "");
+  const [description, setDescription] = useState(project.description || "");
+  const [workflowType, setWorkflowType] = useState<string>(
+    project.settings?.workflowType || "kanban",
+  );
+  const [status, setStatus] = useState<string>(project.status || "active");
+  const [leadId, setLeadId] = useState(project.leadId || "");
+  const [saving, setSaving] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+
+  const hasChanges =
+    name !== (project.name || "") ||
+    description !== (project.description || "") ||
+    status !== (project.status || "active") ||
+    leadId !== (project.leadId || "");
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updates: { projectId: Id<"projects">; name?: string; description?: string; status?: string; leadId?: Id<"users"> } = { projectId: project._id };
+      if (name !== project.name) updates.name = name;
+      if (description !== project.description)
+        updates.description = description;
+      if (status !== project.status) updates.status = status;
+      if (leadId && leadId !== project.leadId) updates.leadId = leadId as Id<"users">;
+
+      await updateProject(updates);
+      toast.success("Project settings saved");
+    } catch (error) {
+      toast.error("Failed to save project settings");
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setName(project.name || "");
+    setDescription(project.description || "");
+    setWorkflowType(project.settings?.workflowType || "kanban");
+    setStatus(project.status || "active");
+    setLeadId(project.leadId || "");
+  };
+
+  const handleArchive = async () => {
+    setArchiving(true);
+    try {
+      await deleteProject({ projectId: project._id });
+      toast.success("Project archived");
+      onNavigateBack();
+    } catch (error) {
+      toast.error("Failed to archive project");
+      console.error(error);
+    } finally {
+      setArchiving(false);
+      setShowArchiveConfirm(false);
+    }
+  };
+
   return (
     <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)] p-4">
       <h2 className="text-xs font-semibold font-bold uppercase mb-3">
         PROJECT SETTINGS
       </h2>
 
+      {/* Settings sub-tabs */}
+      <div className="flex gap-1 mb-4 border-b-2 border-[var(--theme-border)]">
+        <button
+          onClick={() => setSettingsSubTab("general")}
+          className={clsx(
+            "px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider transition-all duration-200",
+            "border-b-2 -mb-[2px]",
+            settingsSubTab === "general"
+              ? "border-[var(--theme-primary)] text-[var(--theme-primary)]"
+              : "border-transparent text-[var(--theme-foreground)]/50 hover:text-[var(--theme-foreground)]",
+          )}
+        >
+          General
+        </button>
+        <button
+          onClick={() => setSettingsSubTab("git_workflow")}
+          className={clsx(
+            "px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider transition-all duration-200",
+            "border-b-2 -mb-[2px] flex items-center gap-2",
+            settingsSubTab === "git_workflow"
+              ? "border-[#22C55E] text-[#22C55E]"
+              : "border-transparent text-[var(--theme-foreground)]/50 hover:text-[var(--theme-foreground)]",
+          )}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] shrink-0" />
+          Git Workflow
+        </button>
+      </div>
+
+      {/* Git Workflow sub-tab */}
+      {settingsSubTab === "git_workflow" && (
+        <GitWorkflowConfig projectId={project._id} />
+      )}
+
+      {/* General sub-tab (original settings content) */}
+      {settingsSubTab === "general" && (<>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* General Settings */}
         <div className="space-y-3">
@@ -695,7 +910,8 @@ function SettingsTab({
                 <input
                   id="project-settings-name"
                   type="text"
-                  defaultValue={project.name}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-['IBM_Plex_Mono',monospace] text-xs"
                 />
               </div>
@@ -708,7 +924,8 @@ function SettingsTab({
                 </label>
                 <textarea
                   id="project-settings-description"
-                  defaultValue={project.description}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-['IBM_Plex_Mono',monospace] text-xs resize-none"
                 />
@@ -734,27 +951,60 @@ function SettingsTab({
             </div>
           </div>
 
+          {/* Project Status */}
+          <div>
+            <h3 className="text-xs font-bold uppercase mb-2">STATUS</h3>
+            <div className="space-y-2">
+              <BrutalSelect
+                label="PROJECT STATUS"
+                value={status}
+                onChange={(v) => setStatus(v)}
+                options={[
+                  { value: "planning", label: "PLANNING" },
+                  { value: "active", label: "ACTIVE" },
+                  { value: "on_hold", label: "ON HOLD" },
+                  { value: "completed", label: "COMPLETED" },
+                ]}
+                fullWidth
+              />
+            </div>
+          </div>
+
+          {/* Project Lead */}
+          <div>
+            <h3 className="text-xs font-bold uppercase mb-2">PROJECT LEAD</h3>
+            <div className="space-y-2">
+              <BrutalSelect
+                label="LEAD"
+                value={leadId}
+                onChange={(v) => setLeadId(v)}
+                options={[
+                  { value: "", label: "UNASSIGNED" },
+                  ...(members?.map((m) => ({
+                    value: m._id || m.userId || "",
+                    label: (m.name || m.email || "Unknown").toUpperCase(),
+                  })) || []),
+                ]}
+                fullWidth
+              />
+            </div>
+          </div>
+
           {/* Workflow Settings */}
           <div>
             <h3 className="text-xs font-bold uppercase mb-2">WORKFLOW</h3>
             <div className="space-y-2">
-              <div>
-                <label
-                  htmlFor="project-settings-workflow-type"
-                  className="block text-xs uppercase mb-1"
-                >
-                  WORKFLOW TYPE
-                </label>
-                <select
-                  id="project-settings-workflow-type"
-                  defaultValue={project.settings?.workflowType || "kanban"}
-                  className="w-full px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-['IBM_Plex_Mono',monospace] text-xs"
-                >
-                  <option value="kanban">KANBAN</option>
-                  <option value="scrum">SCRUM</option>
-                  <option value="hybrid">HYBRID</option>
-                </select>
-              </div>
+              <BrutalSelect
+                label="WORKFLOW TYPE"
+                value={workflowType}
+                onChange={(v) => setWorkflowType(v)}
+                options={[
+                  { value: "kanban", label: "KANBAN" },
+                  { value: "scrum", label: "SCRUM" },
+                  { value: "hybrid", label: "HYBRID" },
+                ]}
+                fullWidth
+              />
             </div>
           </div>
         </div>
@@ -791,69 +1041,106 @@ function SettingsTab({
               </div>
 
               <div className="flex gap-2">
-                <select
-                  id="project-settings-assigned-teams"
-                  className="flex-1 px-2.5 py-2 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-['IBM_Plex_Mono',monospace] text-xs"
-                  onChange={async (e) => {
-                    if (e.target.value) {
+                <BrutalSelect
+                  value=""
+                  onChange={async (v) => {
+                    if (v) {
                       try {
                         await assignTeam({
                           projectId: project._id,
-                          teamId: e.target.value as any,
+                          teamId: v as Id<"teams">,
                         });
                         toast.success("Team assigned successfully");
                       } catch (error) {
                         toast.error("Failed to assign team");
                         console.error(error);
                       }
-                      e.target.value = "";
                     }
                   }}
-                >
-                  <option value="">SELECT TEAM TO ASSIGN...</option>
-                  {availableTeams
-                    ?.filter((t) => !project.teamIds?.includes(t._id))
-                    .map((team) => (
-                      <option key={team._id} value={team._id}>
-                        {team.name}
-                      </option>
-                    ))}
-                </select>
+                  options={[
+                    { value: "", label: "SELECT TEAM TO ASSIGN..." },
+                    ...(availableTeams
+                      ?.filter((t) => !project.teamIds?.includes(t._id))
+                      .map((team) => ({
+                        value: team._id,
+                        label: team.name,
+                      })) || []),
+                  ]}
+                  fullWidth
+                />
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Danger Zone */}
-        <div className="space-y-3">
-          <div>
-            <h3 className="text-xs font-bold uppercase mb-2 text-[var(--theme-error)]">
-              DANGER ZONE
-            </h3>
-            <div className="border-2 border-[var(--theme-error)] p-2.5">
-              <h4 className="text-xs font-bold uppercase mb-1.5">
-                ARCHIVE PROJECT
-              </h4>
-              <p className="text-xs text-[var(--theme-foreground)]/80 mb-2">
-                Archive this project. It will be hidden from the workspace but
-                data will be preserved.
-              </p>
-              <BrutalButton variant="danger" size="sm">
-                ARCHIVE PROJECT
-              </BrutalButton>
+          {/* Danger Zone */}
+          <div className="mt-6 space-y-3">
+            <div>
+              <h3 className="text-xs font-bold uppercase mb-2 text-[var(--theme-error)]">
+                DANGER ZONE
+              </h3>
+              <div className="border-2 border-[var(--theme-error)] p-2.5">
+                <h4 className="text-xs font-bold uppercase mb-1.5">
+                  ARCHIVE PROJECT
+                </h4>
+                <p className="text-xs text-[var(--theme-foreground)]/80 mb-2">
+                  Archive this project. It will be hidden from the workspace but
+                  data will be preserved.
+                </p>
+                {showArchiveConfirm ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[var(--theme-error)] font-bold">
+                      Are you sure?
+                    </span>
+                    <BrutalButton
+                      variant="danger"
+                      size="sm"
+                      onClick={handleArchive}
+                      disabled={archiving}
+                    >
+                      {archiving ? "ARCHIVING..." : "YES, ARCHIVE"}
+                    </BrutalButton>
+                    <BrutalButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowArchiveConfirm(false)}
+                    >
+                      CANCEL
+                    </BrutalButton>
+                  </div>
+                ) : (
+                  <BrutalButton
+                    variant="danger"
+                    size="sm"
+                    onClick={() => setShowArchiveConfirm(true)}
+                  >
+                    ARCHIVE PROJECT
+                  </BrutalButton>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <div className="flex justify-end gap-3 mt-4 pt-4 border-t-2 border-[var(--theme-border)]">
-        <BrutalButton variant="ghost" size="sm">
+        <BrutalButton
+          variant="ghost"
+          size="sm"
+          onClick={handleCancel}
+          disabled={!hasChanges}
+        >
           CANCEL
         </BrutalButton>
-        <BrutalButton variant="primary" size="sm">
-          SAVE CHANGES
+        <BrutalButton
+          variant="primary"
+          size="sm"
+          onClick={handleSave}
+          disabled={!hasChanges || saving}
+        >
+          {saving ? "SAVING..." : "SAVE CHANGES"}
         </BrutalButton>
       </div>
+      </>)}
     </div>
   );
 }
@@ -920,7 +1207,7 @@ function TasksHeaderControls({
   taskFilters: TaskFiltersType;
   selectedSprintId: string | null;
   isCompactView: boolean;
-  allSprints: any[] | undefined;
+  allSprints: SprintData[] | undefined;
   dispatch: React.Dispatch<PageAction>;
 }) {
   return (
@@ -936,29 +1223,24 @@ function TasksHeaderControls({
         </button>
 
         {/* Sprint Selector */}
-        <select
+        <BrutalSelect
           value={selectedSprintId || "all"}
-          onChange={(e) =>
+          onChange={(v) =>
             dispatch({
               type: "SET_SPRINT_ID",
-              sprintId:
-                e.target.value === "all"
-                  ? "all"
-                  : e.target.value === "backlog"
-                    ? null
-                    : e.target.value,
+              sprintId: v === "all" ? "all" : v === "backlog" ? null : v,
             })
           }
-          className="h-[32px] px-3 bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-['IBM_Plex_Mono',monospace] text-xs uppercase focus:border-[var(--theme-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary)] focus:ring-offset-1 focus:ring-offset-[var(--theme-background)] transition-colors cursor-pointer"
-        >
-          <option value="all">ALL SPRINTS</option>
-          <option value="backlog">BACKLOG</option>
-          {allSprints?.map((sprint) => (
-            <option key={sprint._id} value={sprint._id}>
-              {sprint.name} {sprint.status === "active" ? "(Active)" : ""}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "all", label: "ALL SPRINTS" },
+            { value: "backlog", label: "BACKLOG" },
+            ...(allSprints?.map((sprint) => ({
+              value: sprint._id,
+              label: `${sprint.name} ${sprint.status === "active" ? "(Active)" : ""}`,
+            })) || []),
+          ]}
+          compact
+        />
 
         {/* View Mode Selector */}
         <div
@@ -983,7 +1265,7 @@ function TasksHeaderControls({
                 {view === "kanban"
                   ? "BOARD"
                   : view === "calendar"
-                    ? "CAL"
+                    ? "CALENDAR"
                     : view.toUpperCase()}
               </button>
             ),
@@ -1140,14 +1422,14 @@ function TasksViewRenderer({
   handleDuplicateTask,
 }: {
   taskView: TaskViewType;
-  activeSprint: any;
-  filteredTasks: any[];
+  activeSprint: SprintData | null | undefined;
+  filteredTasks: TaskData[];
   projectId: string;
   workspaceId: string;
   dispatch: React.Dispatch<PageAction>;
-  handleEditTask: (task: any) => void;
-  handleDeleteTask: (task: any) => void;
-  handleDuplicateTask: (task: any) => void;
+  handleEditTask: (task: TaskData) => void;
+  handleDeleteTask: (task: TaskData) => void;
+  handleDuplicateTask: (task: TaskData) => void;
 }) {
   return (
     <>
@@ -1156,17 +1438,17 @@ function TasksViewRenderer({
           sprint={activeSprint}
           projectId={projectId}
           tasks={filteredTasks.filter(
-            (t: any) => t.sprintId === activeSprint._id,
-          )}
-          onTaskEdit={handleEditTask}
-          onTaskDelete={handleDeleteTask}
-          onTaskDuplicate={handleDuplicateTask}
+            (t) => t.sprintId === activeSprint._id,
+          ) as unknown as Parameters<typeof SprintBoard>[0]["tasks"]}
+          onTaskEdit={(task) => handleEditTask(task as unknown as TaskData)}
+          onTaskDelete={(task) => handleDeleteTask(task as unknown as TaskData)}
+          onTaskDuplicate={(task) => handleDuplicateTask(task as unknown as TaskData)}
         />
       )}
 
       {taskView === "kanban" && (
         <div className="flex-1 min-h-0">
-          <KanbanBoard
+          <TaskBoard
             tasks={filteredTasks}
             projectId={projectId}
             onTaskUpdate={() => {}}
@@ -1176,20 +1458,26 @@ function TasksViewRenderer({
 
       {taskView === "list" && (
         <TaskList
-          tasks={filteredTasks}
+          tasks={filteredTasks as unknown as Parameters<typeof TaskList>[0]["tasks"]}
           projectId={projectId}
-          onTaskEdit={handleEditTask}
-          onTaskDelete={handleDeleteTask}
-          onTaskDuplicate={handleDuplicateTask}
+          onTaskEdit={(task) => handleEditTask(task as unknown as TaskData)}
+          onTaskDelete={(task) => handleDeleteTask(task as unknown as TaskData)}
+          onTaskDuplicate={(task) => handleDuplicateTask(task as unknown as TaskData)}
         />
       )}
 
       {taskView === "gantt" && (
-        <GanttView projectId={projectId} workspaceId={workspaceId} />
+        <GanttView
+          projectId={projectId as Id<"projects">}
+          workspaceId={workspaceId as Id<"workspaces">}
+        />
       )}
 
       {taskView === "calendar" && (
-        <CalendarView projectId={projectId} workspaceId={workspaceId} />
+        <CalendarView
+          projectId={projectId as Id<"projects">}
+          workspaceId={workspaceId as Id<"workspaces">}
+        />
       )}
 
       {taskView === "sprint" && !activeSprint && (
@@ -1216,20 +1504,20 @@ function TasksViewRenderer({
 // --- TasksTab (composed) ---
 
 interface TasksTabProps {
-  project: any;
+  project: ProjectData;
   workspaceId: string;
-  tasks: any[] | undefined;
-  allSprints: any[] | undefined;
-  activeSprint: any;
+  tasks: TaskData[] | undefined;
+  allSprints: SprintData[] | undefined;
+  activeSprint: SprintData | null | undefined;
   taskFilters: TaskFiltersType;
   taskView: TaskViewType;
   selectedSprintId: string | null;
   isCompactView: boolean;
   projectId: string;
   dispatch: React.Dispatch<PageAction>;
-  handleEditTask: (task: any) => void;
-  handleDeleteTask: (task: any) => void;
-  handleDuplicateTask: (task: any) => void;
+  handleEditTask: (task: TaskData) => void;
+  handleDeleteTask: (task: TaskData) => void;
+  handleDuplicateTask: (task: TaskData) => void;
 }
 
 function TasksTab({
@@ -1262,16 +1550,16 @@ function TasksTab({
 
   if (selectedSprintId && selectedSprintId !== "all") {
     filteredTasks = filteredTasks.filter(
-      (t: any) => t.sprintId === selectedSprintId,
+      (t) => t.sprintId === selectedSprintId,
     );
   } else if (selectedSprintId === null) {
-    filteredTasks = filteredTasks.filter((t: any) => !t.sprintId);
+    filteredTasks = filteredTasks.filter((t) => !t.sprintId);
   }
 
   if (taskFilters.search) {
     const searchLower = taskFilters.search.toLowerCase();
     filteredTasks = filteredTasks.filter(
-      (t: any) =>
+      (t) =>
         t.title?.toLowerCase().includes(searchLower) ||
         t.description?.toLowerCase().includes(searchLower) ||
         t.key?.toLowerCase().includes(searchLower),
@@ -1279,44 +1567,44 @@ function TasksTab({
   }
 
   if (taskFilters.status.length > 0) {
-    filteredTasks = filteredTasks.filter((t: any) =>
+    filteredTasks = filteredTasks.filter((t) =>
       taskFilters.status.includes(t.status),
     );
   }
 
   if (taskFilters.priority.length > 0) {
-    filteredTasks = filteredTasks.filter((t: any) =>
+    filteredTasks = filteredTasks.filter((t) =>
       taskFilters.priority.includes(t.priority),
     );
   }
 
   if (taskFilters.type.length > 0) {
-    filteredTasks = filteredTasks.filter((t: any) =>
+    filteredTasks = filteredTasks.filter((t) =>
       taskFilters.type.includes(t.type),
     );
   }
 
   if (taskFilters.assigneeIds.length > 0) {
     filteredTasks = filteredTasks.filter(
-      (t: any) =>
+      (t) =>
         (t.assigneeId && taskFilters.assigneeIds.includes(t.assigneeId)) ||
         (t.assigneeIds &&
-          t.assigneeIds.some((id: string) =>
-            taskFilters.assigneeIds.includes(id),
+          t.assigneeIds.some((id) =>
+            taskFilters.assigneeIds.includes(id as string),
           )),
     );
   }
 
   if (taskFilters.labels.length > 0) {
     filteredTasks = filteredTasks.filter(
-      (t: any) =>
+      (t) =>
         t.labels &&
         t.labels.some((label: string) => taskFilters.labels.includes(label)),
     );
   }
 
   if (taskFilters.dueDateRange.start || taskFilters.dueDateRange.end) {
-    filteredTasks = filteredTasks.filter((t: any) => {
+    filteredTasks = filteredTasks.filter((t) => {
       if (!t.dueDate) return false;
       const dueDate = new Date(t.dueDate);
       if (
@@ -1334,7 +1622,7 @@ function TasksTab({
   }
 
   if (taskFilters.hasTimeTracked !== undefined) {
-    filteredTasks = filteredTasks.filter((t: any) =>
+    filteredTasks = filteredTasks.filter((t) =>
       taskFilters.hasTimeTracked
         ? t.timeTracked && t.timeTracked > 0
         : !t.timeTracked || t.timeTracked === 0,
@@ -1343,24 +1631,24 @@ function TasksTab({
 
   if (taskFilters.isOverdue !== undefined && taskFilters.isOverdue) {
     filteredTasks = filteredTasks.filter(
-      (t: any) => t.dueDate && new Date(t.dueDate) < new Date(),
+      (t) => t.dueDate && new Date(t.dueDate) < new Date(),
     );
   }
 
   const sprintProgress = activeSprint
     ? (() => {
         const sprintTasks = filteredTasks.filter(
-          (t: any) => t.sprintId === activeSprint._id,
+          (t) => t.sprintId === activeSprint._id,
         );
         const totalTasks = sprintTasks.length;
         const completedTasks = sprintTasks.filter(
-          (t: any) => t.status === "done",
+          (t) => t.status === "done",
         ).length;
-        const blockedTasks = sprintTasks.filter(
-          (t: any) => t.status === "blocked" || t.isBlocked,
+        const blockedTasks = sprintTasks.filter((t) =>
+          isTaskBlocked(t, filteredTasks),
         ).length;
         const inReview = sprintTasks.filter(
-          (t: any) => t.status === "in_review",
+          (t) => t.status === "in_review",
         ).length;
         const percentage =
           totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -1510,7 +1798,7 @@ function WorkloadDistribution({
   teamTotals,
   dispatch,
 }: {
-  memberStats: any[];
+  memberStats: MemberStatData[];
   workloadMax: number;
   teamTotals: {
     totalTasks: number;
@@ -1518,7 +1806,7 @@ function WorkloadDistribution({
     inProgressTasks: number;
     avgProductivity: number;
   };
-  dispatch: React.Dispatch<any>;
+  dispatch: React.Dispatch<PageAction>;
 }) {
   return (
     <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
@@ -1561,7 +1849,7 @@ function WorkloadDistribution({
 
       <div className="p-4">
         <div className="space-y-2">
-          {memberStats.map((member: any) => {
+          {memberStats.map((member) => {
             const taskCount = member.tasksAssigned;
             const completionRate =
               member.tasksAssigned > 0
@@ -1637,6 +1925,9 @@ function WorkloadDistribution({
                               assigneeIds: [member._id],
                               labels: [],
                               dueDateRange: { start: null, end: null },
+                              createdDateRange: { start: null, end: null },
+                              hasTimeTracked: null,
+                              isOverdue: null,
                             },
                           });
                         }}
@@ -1658,6 +1949,9 @@ function WorkloadDistribution({
                               assigneeIds: [member._id],
                               labels: [],
                               dueDateRange: { start: null, end: null },
+                              createdDateRange: { start: null, end: null },
+                              hasTimeTracked: null,
+                              isOverdue: null,
                             },
                           });
                         }}
@@ -1790,11 +2084,11 @@ function WorkloadDistribution({
             </div>
           </div>
 
-          {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0 && (
+          {memberStats.filter((m) => m.tasksAssigned > 15).length > 0 && (
             <div className="flex items-center gap-2 p-2.5 mt-2 bg-[var(--theme-error)]/10 border-2 border-[var(--theme-error)]">
               <div className="w-2 h-2 bg-[var(--theme-error)] animate-pulse"></div>
               <span className="font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-error)] font-bold">
-                {memberStats.filter((m: any) => m.tasksAssigned > 15).length}{" "}
+                {memberStats.filter((m) => m.tasksAssigned > 15).length}{" "}
                 MEMBER(S) OVERLOADED - CONSIDER REDISTRIBUTING TASKS
               </span>
               <button className="ml-auto px-2 py-0.5 border-2 border-[var(--theme-error)] font-mono text-[10px] font-bold uppercase text-[var(--theme-error)] hover:bg-[var(--theme-error)] hover:text-[var(--theme-background)] transition-colors">
@@ -1811,12 +2105,20 @@ function WorkloadDistribution({
 function TeamMembersGrid({
   memberStats,
   taskFilters,
+  projectId,
+  removeProjectMember,
+  updateMemberRole,
   dispatch,
 }: {
-  memberStats: any[];
+  memberStats: MemberStatData[];
   taskFilters: TaskFiltersType;
+  projectId: string;
+  removeProjectMember: (args: { projectId: Id<"projects">; userId: Id<"users"> }) => Promise<unknown>;
+  updateMemberRole: (args: { projectId: Id<"projects">; userId: Id<"users">; role: string }) => Promise<unknown>;
   dispatch: React.Dispatch<PageAction>;
 }) {
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [roleMenuId, setRoleMenuId] = useState<string | null>(null);
   return (
     <div className="border-2 border-[var(--theme-border)] bg-[var(--theme-background)] divide-y-2 divide-[var(--theme-border)]">
       {/* Column header */}
@@ -1844,7 +2146,7 @@ function TeamMembersGrid({
         </div>
       </div>
 
-      {memberStats.map((member: any) => {
+      {memberStats.map((member) => {
         const prodColor =
           member.productivity >= 90
             ? "var(--theme-success)"
@@ -1930,15 +2232,86 @@ function TeamMembersGrid({
               >
                 TASKS
               </button>
-              <button
-                onClick={() => {
-                  dispatch({ type: "OPEN_CREATE_TASK" });
-                  toast("Creating task for " + (member.name || "team member"));
-                }}
-                className="px-2 py-1 border border-[var(--theme-border)] font-mono text-[9px] font-bold uppercase text-[var(--theme-foreground)]/50 hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] transition-colors"
-              >
-                ASSIGN
-              </button>
+              {/* Role dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() =>
+                    setRoleMenuId(roleMenuId === member._id ? null : member._id)
+                  }
+                  className="px-2 py-1 border border-[var(--theme-border)] font-mono text-[9px] font-bold uppercase text-[var(--theme-foreground)]/50 hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] transition-colors"
+                >
+                  ROLE
+                </button>
+                {roleMenuId === member._id && (
+                  <div className="absolute right-0 top-full mt-1 z-50 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] shadow-[4px_4px_0px_var(--theme-shadow)] min-w-[120px]">
+                    {(["lead", "member", "contributor", "viewer"] as const).map(
+                      (role) => (
+                        <button
+                          key={role}
+                          onClick={async () => {
+                            try {
+                              await updateMemberRole({
+                                projectId: projectId as Id<"projects">,
+                                userId: member._id,
+                                role,
+                              });
+                              toast.success(`Role updated to ${role}`);
+                            } catch (error: unknown) {
+                              toast.error(
+                                error instanceof Error ? error.message : "Failed to update role",
+                              );
+                            }
+                            setRoleMenuId(null);
+                          }}
+                          className={clsx(
+                            "w-full text-left px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-wider hover:bg-[var(--theme-primary)] hover:text-[var(--theme-background)] transition-colors",
+                            (member.role || "member") === role
+                              ? "text-[var(--theme-primary)] bg-[var(--theme-primary)]/10"
+                              : "text-[var(--theme-foreground)]/60",
+                          )}
+                        >
+                          {role}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Remove member */}
+              {confirmRemoveId === member._id ? (
+                <div className="flex items-center gap-0.5">
+                  <button
+                    onClick={async () => {
+                      try {
+                        await removeProjectMember({
+                          projectId: projectId as Id<"projects">,
+                          userId: member._id,
+                        });
+                        toast.success("Member removed");
+                      } catch (error: unknown) {
+                        toast.error(error instanceof Error ? error.message : "Failed to remove member");
+                      }
+                      setConfirmRemoveId(null);
+                    }}
+                    className="px-2 py-1 border border-[var(--theme-error)] bg-[var(--theme-error)] font-mono text-[9px] font-bold uppercase text-[var(--theme-background)] hover:opacity-80 transition-colors"
+                  >
+                    YES
+                  </button>
+                  <button
+                    onClick={() => setConfirmRemoveId(null)}
+                    className="px-2 py-1 border border-[var(--theme-border)] font-mono text-[9px] font-bold uppercase text-[var(--theme-foreground)]/50 hover:border-[var(--theme-foreground)] transition-colors"
+                  >
+                    NO
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmRemoveId(member._id)}
+                  className="px-2 py-1 border border-[var(--theme-border)] font-mono text-[9px] font-bold uppercase text-[var(--theme-foreground)]/50 hover:border-[var(--theme-error)] hover:text-[var(--theme-error)] transition-colors"
+                >
+                  REMOVE
+                </button>
+              )}
             </div>
           </div>
         );
@@ -1948,7 +2321,7 @@ function TeamMembersGrid({
       <button
         type="button"
         className="w-full flex items-center gap-2 px-3 py-2.5 border-dashed hover:bg-[var(--theme-background-secondary)]/30 transition-colors group"
-        onClick={() => dispatch({ type: "SET_TAB", tab: "team" })}
+        onClick={() => dispatch({ type: "OPEN_PROJECT_INVITE" })}
       >
         <HiOutlinePlus className="w-3.5 h-3.5 text-[var(--theme-foreground)]/30 group-hover:text-[var(--theme-primary)] transition-colors" />
         <span className="font-mono text-[10px] font-bold uppercase text-[var(--theme-foreground)]/30 group-hover:text-[var(--theme-primary)] transition-colors tracking-wider">
@@ -1963,17 +2336,75 @@ function TeamQuickActions({
   project,
   memberStats,
   teamTotals,
+  bulkUpdateTasks,
   dispatch,
 }: {
-  project: any;
-  memberStats: any[];
+  project: ProjectData;
+  memberStats: MemberStatData[];
   teamTotals: {
     totalTasks: number;
     completedTasks: number;
     avgProductivity: number;
   };
+  bulkUpdateTasks: (args: { taskIds: Id<"tasks">[]; updates: Record<string, unknown>; autoRebalance?: { projectId: Id<"projects">; overloadedThreshold?: number; targetLoad?: number } }) => Promise<{ updatedCount: number }>;
   dispatch: React.Dispatch<PageAction>;
 }) {
+  const [isRebalancing, setIsRebalancing] = useState(false);
+  const overloadedCount = memberStats.filter(
+    (member) => member.tasksAssigned > 15,
+  ).length;
+  const idleCount = memberStats.filter(
+    (member) => member.tasksAssigned === 0,
+  ).length;
+
+  const runAutoRebalance = async (mode: "balanced" | "overloaded" | "idle") => {
+    if (isRebalancing || !project?._id) {
+      return;
+    }
+
+    setIsRebalancing(true);
+    try {
+      const autoRebalanceArgs =
+        mode === "overloaded"
+          ? {
+              projectId: project._id,
+              overloadedThreshold: 15,
+            }
+          : mode === "idle"
+            ? {
+                projectId: project._id,
+                targetLoad: Math.max(
+                  1,
+                  Math.ceil(
+                    teamTotals.totalTasks / Math.max(memberStats.length, 1),
+                  ),
+                ),
+              }
+            : {
+                projectId: project._id,
+              };
+
+      const result = await bulkUpdateTasks({
+        taskIds: [],
+        updates: {},
+        autoRebalance: autoRebalanceArgs,
+      });
+
+      if (result.updatedCount > 0) {
+        toast.success(
+          `Auto-rebalanced ${result.updatedCount} task${result.updatedCount === 1 ? "" : "s"}`,
+        );
+        dispatch({ type: "SET_TAB", tab: "tasks" });
+      } else {
+        toast("No eligible tasks found for automatic rebalance");
+      }
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Automatic rebalance failed");
+    } finally {
+      setIsRebalancing(false);
+    }
+  };
+
   return (
     <div className="bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
       <div className="px-4 py-2.5 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]">
@@ -2012,30 +2443,21 @@ function TeamQuickActions({
 
           {/* BULK REASSIGN */}
           <button
-            onClick={() => {
-              const overloadedMembers = memberStats.filter(
-                (m: any) => m.tasksAssigned > 15,
-              );
-              if (overloadedMembers.length > 0) {
-                console.log(
-                  "Opening bulk reassign for overloaded members:",
-                  overloadedMembers,
-                );
-              } else {
-                console.log("Opening general bulk reassign modal");
-              }
-            }}
+            onClick={() => runAutoRebalance("balanced")}
+            disabled={isRebalancing}
             className={clsx(
               "group flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] border-2 font-mono transition-colors cursor-pointer hover:shadow-[3px_3px_0px_var(--theme-shadow)] hover:translate-x-[-1px] hover:translate-y-[-1px]",
-              memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0
+              overloadedCount > 0
                 ? "border-[var(--theme-warning)] bg-[var(--theme-warning)]/10 hover:bg-[var(--theme-warning)]/20"
                 : "border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:border-[var(--theme-primary)] hover:bg-[var(--theme-background)]",
+              isRebalancing &&
+                "opacity-60 cursor-not-allowed hover:translate-x-0 hover:translate-y-0 hover:shadow-none",
             )}
           >
             <div
               className={clsx(
                 "flex items-center justify-center w-7 h-7 border-2",
-                memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0
+                overloadedCount > 0
                   ? "border-[var(--theme-warning)] bg-[var(--theme-warning)]"
                   : "border-[var(--theme-border)] bg-[var(--theme-background)]",
               )}
@@ -2043,8 +2465,7 @@ function TeamQuickActions({
               <HiOutlineUserGroup
                 className={clsx(
                   "w-3.5 h-3.5",
-                  memberStats.filter((m: any) => m.tasksAssigned > 15).length >
-                    0
+                  overloadedCount > 0
                     ? "text-[var(--theme-background)]"
                     : "text-[var(--theme-primary)]",
                 )}
@@ -2052,11 +2473,11 @@ function TeamQuickActions({
             </div>
             <div className="text-center">
               <div className="font-mono text-[10px] font-bold uppercase">
-                BULK REASSIGN
+                {isRebalancing ? "REBALANCING..." : "BULK REASSIGN"}
               </div>
               <div className="font-mono text-[9px] text-[var(--theme-foreground)]/40 mt-0.5 uppercase">
-                {memberStats.filter((m: any) => m.tasksAssigned > 15).length > 0
-                  ? `${memberStats.filter((m: any) => m.tasksAssigned > 15).length} OVERLOADED`
+                {overloadedCount > 0
+                  ? `${overloadedCount} OVERLOADED`
                   : "BALANCE WORKLOAD"}
               </div>
             </div>
@@ -2072,7 +2493,7 @@ function TeamQuickActions({
                 totalTasks: teamTotals.totalTasks,
                 completedTasks: teamTotals.completedTasks,
                 avgProductivity: teamTotals.avgProductivity,
-                members: memberStats.map((m: any) => ({
+                members: memberStats.map((m) => ({
                   name: m.name,
                   role: m.role,
                   tasksAssigned: m.tasksAssigned,
@@ -2110,7 +2531,7 @@ function TeamQuickActions({
 
           {/* TEAM SETTINGS */}
           <button
-            onClick={() => console.log("Opening team settings modal")}
+            onClick={() => dispatch({ type: "SET_TAB", tab: "settings" })}
             className="group flex flex-col items-center justify-center gap-2 p-3 min-h-[80px] border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] hover:border-[var(--theme-primary)] hover:bg-[var(--theme-background)] font-mono transition-colors cursor-pointer hover:shadow-[3px_3px_0px_var(--theme-shadow)] hover:translate-x-[-1px] hover:translate-y-[-1px]"
           >
             <div className="flex items-center justify-center w-7 h-7 border-2 border-[var(--theme-border)] bg-[var(--theme-background)] group-hover:border-[var(--theme-primary)]">
@@ -2154,37 +2575,35 @@ function TeamQuickActions({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              {memberStats.filter((m: any) => m.tasksAssigned > 15).length >
-                0 && (
+              {overloadedCount > 0 && (
                 <button
-                  onClick={() =>
-                    console.log("Quick balancing overloaded members")
-                  }
+                  onClick={() => runAutoRebalance("overloaded")}
+                  disabled={isRebalancing}
                   className="px-2.5 py-1 bg-[var(--theme-error)]/20 border-2 border-[var(--theme-error)] font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-error)] hover:bg-[var(--theme-error)] hover:text-[var(--theme-background)]"
                 >
-                  BALANCE{" "}
-                  {memberStats.filter((m: any) => m.tasksAssigned > 15).length}{" "}
-                  OVERLOADED
+                  {isRebalancing
+                    ? "REBALANCING..."
+                    : `BALANCE ${overloadedCount} OVERLOADED`}
                 </button>
               )}
-              {memberStats.filter((m: any) => m.tasksAssigned === 0).length >
-                0 && (
+              {idleCount > 0 && (
                 <button
-                  onClick={() => console.log("Assigning tasks to idle members")}
+                  onClick={() => runAutoRebalance("idle")}
+                  disabled={isRebalancing}
                   className="px-2.5 py-1 bg-[var(--theme-info)]/20 border-2 border-[var(--theme-info)] font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-info)] hover:bg-[var(--theme-info)] hover:text-[var(--theme-background)]"
                 >
-                  ASSIGN TO{" "}
-                  {memberStats.filter((m: any) => m.tasksAssigned === 0).length}{" "}
-                  IDLE
+                  {isRebalancing
+                    ? "ASSIGNING..."
+                    : `ASSIGN TO ${idleCount} IDLE`}
                 </button>
               )}
               {memberStats.filter(
-                (m: any) => m.productivity < 40 && m.tasksAssigned > 0,
+                (m) => m.productivity < 40 && m.tasksAssigned > 0,
               ).length > 0 && (
                 <div className="px-2.5 py-1 bg-[var(--theme-warning)]/20 border-2 border-[var(--theme-warning)] font-['IBM_Plex_Mono',monospace] text-[10px] text-[var(--theme-warning)]">
                   {
                     memberStats.filter(
-                      (m: any) => m.productivity < 40 && m.tasksAssigned > 0,
+                      (m) => m.productivity < 40 && m.tasksAssigned > 0,
                     ).length
                   }{" "}
                   LOW VELOCITY
@@ -2201,11 +2620,14 @@ function TeamQuickActions({
 // --- TeamTab (composed) ---
 
 interface TeamTabProps {
-  project: any;
-  tasks: any[] | undefined;
+  project: ProjectData;
+  tasks: TaskData[] | undefined;
   taskFilters: TaskFiltersType;
   workspaceId: string;
   projectId: string;
+  bulkUpdateTasks: (args: { taskIds: Id<"tasks">[]; updates: Record<string, unknown>; autoRebalance?: { projectId: Id<"projects">; overloadedThreshold?: number; targetLoad?: number } }) => Promise<{ updatedCount: number }>;
+  removeProjectMember: (args: { projectId: Id<"projects">; userId: Id<"users"> }) => Promise<unknown>;
+  updateMemberRole: (args: { projectId: Id<"projects">; userId: Id<"users">; role: string }) => Promise<unknown>;
   dispatch: React.Dispatch<PageAction>;
 }
 
@@ -2215,14 +2637,17 @@ function TeamTab({
   taskFilters,
   workspaceId,
   projectId,
+  bulkUpdateTasks,
+  removeProjectMember,
+  updateMemberRole,
   dispatch,
 }: TeamTabProps) {
   const members = project?.members || [];
   const allTasks = tasks || [];
 
-  const memberStats = members.map((member: any) => {
+  const memberStats: MemberStatData[] = members.filter((m): m is MemberData => m !== null).map((member: MemberData) => {
     const memberTasks = allTasks.filter(
-      (task: any) =>
+      (task) =>
         task.assigneeId === member._id ||
         (task.assigneeIds && task.assigneeIds.includes(member._id)),
     );
@@ -2230,30 +2655,29 @@ function TeamTab({
     return {
       ...member,
       tasksAssigned: memberTasks.length,
-      tasksCompleted: memberTasks.filter((t: any) => t.status === "done")
+      tasksCompleted: memberTasks.filter((t) => t.status === "done")
         .length,
       tasksInProgress: memberTasks.filter(
-        (t: any) => t.status === "in_progress",
+        (t) => t.status === "in_progress",
       ).length,
-      tasksBlocked: memberTasks.filter(
-        (t: any) => t.status === "blocked" || t.isBlocked,
-      ).length,
+      tasksBlocked: memberTasks.filter((t) => isTaskBlocked(t, allTasks))
+        .length,
       tasksTodo: memberTasks.filter(
-        (t: any) => t.status === "todo" || t.status === "backlog",
+        (t) => t.status === "todo" || t.status === "backlog",
       ).length,
-      tasksInReview: memberTasks.filter((t: any) => t.status === "in_review")
+      tasksInReview: memberTasks.filter((t) => t.status === "in_review")
         .length,
       pullRequests: 0,
       commits: 0,
       hoursTracked:
         memberTasks.reduce(
-          (sum: number, t: any) => sum + (t.timeTracked || 0),
+          (sum: number, t: TaskData) => sum + (t.timeTracked || 0),
           0,
         ) / 3600000,
       productivity:
         memberTasks.length > 0
           ? Math.round(
-              (memberTasks.filter((t: any) => t.status === "done").length /
+              (memberTasks.filter((t) => t.status === "done").length /
                 memberTasks.length) *
                 100,
             )
@@ -2266,31 +2690,31 @@ function TeamTab({
 
   const workloadMax = Math.max(
     20,
-    ...memberStats.map((m: any) => m.tasksAssigned),
+    ...memberStats.map((m) => m.tasksAssigned),
   );
 
   const teamTotals = {
     totalTasks: memberStats.reduce(
-      (sum: number, m: any) => sum + m.tasksAssigned,
+      (sum: number, m: MemberStatData) => sum + m.tasksAssigned,
       0,
     ),
     completedTasks: memberStats.reduce(
-      (sum: number, m: any) => sum + m.tasksCompleted,
+      (sum: number, m: MemberStatData) => sum + m.tasksCompleted,
       0,
     ),
     inProgressTasks: memberStats.reduce(
-      (sum: number, m: any) => sum + m.tasksInProgress,
+      (sum: number, m: MemberStatData) => sum + m.tasksInProgress,
       0,
     ),
     hoursTracked: memberStats.reduce(
-      (sum: number, m: any) => sum + m.hoursTracked,
+      (sum: number, m: MemberStatData) => sum + m.hoursTracked,
       0,
     ),
     avgProductivity:
       memberStats.length > 0
         ? Math.round(
             memberStats.reduce(
-              (sum: number, m: any) => sum + m.productivity,
+              (sum: number, m: MemberStatData) => sum + m.productivity,
               0,
             ) / memberStats.length,
           )
@@ -2340,6 +2764,9 @@ function TeamTab({
       <TeamMembersGrid
         memberStats={memberStats}
         taskFilters={taskFilters}
+        projectId={projectId}
+        removeProjectMember={removeProjectMember}
+        updateMemberRole={updateMemberRole}
         dispatch={dispatch}
       />
 
@@ -2354,6 +2781,7 @@ function TeamTab({
         project={project}
         memberStats={memberStats}
         teamTotals={teamTotals}
+        bulkUpdateTasks={bulkUpdateTasks}
         dispatch={dispatch}
       />
     </div>
@@ -2363,7 +2791,7 @@ function TeamTab({
 // --- Project Sidebar ---
 
 interface ProjectSidebarProps {
-  project: any;
+  project: ProjectData;
   workspaceId: string;
   activeTab: TabType;
   taskCount: number;
@@ -2511,11 +2939,11 @@ interface ProjectModalsProps {
   state: PageState;
   projectId: string;
   workspaceId: string;
-  project: any;
+  project: ProjectData;
   taskFilters: TaskFiltersType;
-  selectedTask: any;
+  selectedTask: TaskData | null;
   dispatch: React.Dispatch<PageAction>;
-  onDeleteTask: (task: any) => Promise<void>;
+  onDeleteTask: (task: TaskData) => Promise<void>;
 }
 
 function ProjectModals({
@@ -2588,11 +3016,11 @@ function ProjectModals({
       <ExpertiseSearchModal
         isOpen={state.showExpertiseSearch}
         onClose={() => dispatch({ type: "CLOSE_MODALS" })}
-        workspaceId={workspaceId}
+        workspaceId={workspaceId as Id<"workspaces">}
       />
       {state.showExpertiseMatrix && workspaceId && (
         <TeamExpertiseMatrix
-          workspaceId={workspaceId}
+          workspaceId={workspaceId as Id<"workspaces">}
           onClose={() => dispatch({ type: "CLOSE_MODALS" })}
           isModal={true}
         />
@@ -2606,25 +3034,32 @@ function ProjectModals({
 interface ProjectTabContentProps {
   activeTab: TabType;
   taskView: TaskViewType;
-  project: any;
+  project: ProjectData;
   workspaceId: string;
   projectId: string;
-  tasks: any[] | undefined;
-  allSprints: any[] | undefined;
-  activeSprint: any;
+  tasks: TaskData[] | undefined;
+  allSprints: SprintData[] | undefined;
+  activeSprint: SprintData | null | undefined;
   taskFilters: TaskFiltersType;
   selectedSprintId: string | null;
   isCompactView: boolean;
   healthCards: HealthCard[];
-  currentUser: any;
-  projectMeetings: any[] | undefined;
-  availableTeams: any[] | undefined;
-  assignTeam: any;
+  currentUser: UserData | null | undefined;
+  projectMeetings: MeetingData[] | undefined;
+  availableTeams: TeamData[] | undefined;
+  assignTeam: (args: { projectId: Id<"projects">; teamId: Id<"teams"> }) => Promise<unknown>;
+  bulkUpdateTasks: (args: { taskIds: Id<"tasks">[]; updates: Record<string, unknown>; autoRebalance?: { projectId: Id<"projects">; overloadedThreshold?: number; targetLoad?: number } }) => Promise<{ updatedCount: number }>;
+  updateProject: (args: { projectId: Id<"projects">; name?: string; description?: string; status?: string; leadId?: Id<"users"> }) => Promise<unknown>;
+  archiveProject: (args: { projectId: Id<"projects"> }) => Promise<unknown>;
+  removeProjectMember: (args: { projectId: Id<"projects">; userId: Id<"users"> }) => Promise<unknown>;
+  updateMemberRole: (args: { projectId: Id<"projects">; userId: Id<"users">; role: string }) => Promise<unknown>;
+  members: MemberData[] | undefined;
   dispatch: React.Dispatch<PageAction>;
   getStatusColor: (status: string) => string;
-  handleEditTask: (task: any) => void;
-  handleDeleteTask: (task: any) => Promise<void>;
-  handleDuplicateTask: (task: any) => Promise<void>;
+  handleEditTask: (task: TaskData) => void;
+  handleDeleteTask: (task: TaskData) => Promise<void>;
+  handleDuplicateTask: (task: TaskData) => Promise<void>;
+  onNavigateBack: () => void;
 }
 
 function ProjectTabContent({
@@ -2644,11 +3079,18 @@ function ProjectTabContent({
   projectMeetings,
   availableTeams,
   assignTeam,
+  bulkUpdateTasks,
+  updateProject,
+  archiveProject,
+  removeProjectMember,
+  updateMemberRole,
+  members,
   dispatch,
   getStatusColor,
   handleEditTask,
   handleDeleteTask,
   handleDuplicateTask,
+  onNavigateBack,
 }: ProjectTabContentProps) {
   return (
     <main
@@ -2704,13 +3146,16 @@ function ProjectTabContent({
             taskFilters={taskFilters}
             workspaceId={workspaceId}
             projectId={projectId}
+            bulkUpdateTasks={bulkUpdateTasks}
+            removeProjectMember={removeProjectMember}
+            updateMemberRole={updateMemberRole}
             dispatch={dispatch}
           />
         )}
         {activeTab === "github" && (
           <GitHubProjectTab
             project={project}
-            workspaceId={workspaceId as any}
+            workspaceId={workspaceId as Id<"workspaces">}
           />
         )}
         {activeTab === "meetings" && (
@@ -2731,6 +3176,9 @@ function ProjectTabContent({
             projectDetails={project}
           />
         )}
+        {activeTab === "pages" && (
+          <PagesPage projectId={projectId} />
+        )}
         {activeTab === "logs" && (
           <TeamActivityFeed
             projectId={projectId}
@@ -2744,6 +3192,10 @@ function ProjectTabContent({
             project={project}
             availableTeams={availableTeams}
             assignTeam={assignTeam}
+            updateProject={updateProject}
+            deleteProject={archiveProject}
+            members={members}
+            onNavigateBack={onNavigateBack}
           />
         )}
       </m.div>
@@ -2755,7 +3207,7 @@ function ProjectTabContent({
 
 function useProjectShortcuts(
   activeTab: TabType,
-  selectedTask: any,
+  selectedTask: TaskData | null,
   currentContext: string | null,
   dispatch: React.Dispatch<PageAction>,
 ) {
@@ -2801,7 +3253,7 @@ function useProjectShortcuts(
         dispatch({
           type: "SET_CONTEXT",
           context:
-            currentContext === selectedTask.key ? null : selectedTask.key,
+            currentContext === selectedTask.key ? null : (selectedTask.key ?? null),
         });
         toast.success(
           currentContext === selectedTask.key
@@ -2870,18 +3322,9 @@ export default function ProjectManagementPage() {
   const {
     activeTab,
     taskView,
-    showMyTasks,
     isCompactView,
     currentContext,
-    showCreateTaskModal,
-    showEditTaskModal,
-    showCreateSprintModal,
-    showProjectInviteModal,
-    showScheduleMeetingModal,
-    showExpertiseSearch,
-    showExpertiseMatrix,
     selectedTask,
-    showAdvancedFilters,
     selectedSprintId,
     taskFilters,
   } = state;
@@ -2889,17 +3332,29 @@ export default function ProjectManagementPage() {
   const deleteTask = useMutation(api.tasks.mutations.deleteTask);
   const createTask = useMutation(api.tasks.mutations.createTask);
   const assignTeam = useMutation(api.projects.mutations.assignTeam);
-  const bulkUpdateTasks = useMutation(api.tasks.mutations.bulkUpdateTasks);
+  const bulkUpdateTasks = useMutation(
+    api.tasks.mutations.bulkUpdateTasks,
+  );
   const bulkDeleteTasks = useMutation(api.tasks.mutations.bulkDeleteTasks);
+  const updateProject = useMutation(api.projects.mutations.updateProject);
+  const archiveProject = useMutation(api.projects.mutations.deleteProject);
+  const removeProjectMember = useMutation(
+    api.projects.mutations.removeProjectMember,
+  );
+  const updateMemberRole = useMutation(
+    api.projects.mutations.updateProjectMemberRole,
+  );
 
-  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Move task handlers to top level
-  const handleEditTask = (task: any) => {
+  const handleEditTask = (task: TaskData) => {
     dispatch({ type: "OPEN_EDIT_TASK", task });
   };
 
-  const handleDeleteTask = async (task: any) => {
+  const handleDeleteTask = async (task: TaskData) => {
     if (confirm(`Delete task "${task.title}"?`)) {
       try {
         await deleteTask({ taskId: task._id });
@@ -2910,7 +3365,7 @@ export default function ProjectManagementPage() {
     }
   };
 
-  const handleDuplicateTask = async (task: any) => {
+  const handleDuplicateTask = async (task: TaskData) => {
     try {
       await createTask({
         projectId: task.projectId,
@@ -2932,7 +3387,7 @@ export default function ProjectManagementPage() {
 
   const project = useQuery(
     api.projects.queries.getProject,
-    projectId ? { projectId: projectId as any } : "skip",
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   // Get current user from Convex
@@ -2944,55 +3399,49 @@ export default function ProjectManagementPage() {
   // Query tasks for this project - moved here to follow hooks rules
   const tasks = useQuery(
     api.tasks.queries.getProjectTasks,
-    projectId ? { projectId: projectId as any } : "skip",
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   // Cmd+A / Ctrl+A to select all visible tasks; Escape to clear selection
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "a") {
         const tag = (document.activeElement as HTMLElement)?.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
         e.preventDefault();
         const allIds = tasks?.map((t) => t._id) ?? [];
         setSelectedTaskIds(new Set(allIds));
       }
-      if (e.key === 'Escape' && selectedTaskIds.size > 0) {
+      if (e.key === "Escape" && selectedTaskIds.size > 0) {
         setSelectedTaskIds(new Set());
       }
     };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [tasks, selectedTaskIds.size]);
 
   // Get current sprint for this project
   const activeSprint = useQuery(
     api.sprints.queries.getCurrentSprint,
-    projectId ? { projectId: projectId as any } : "skip",
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   // Get all sprints for this project
   const allSprints = useQuery(
     api.sprints.queries.getProjectSprints,
-    projectId ? { projectId: projectId as any } : "skip",
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   // Get project meetings
   const projectMeetings = useQuery(
     api.meetings.queries.getProjectMeetings,
-    projectId ? { projectId: projectId as any } : "skip",
-  );
-
-  // Get project team members
-  const team = useQuery(
-    api.projects.members.getProjectMembers,
-    projectId ? { projectId: projectId as any } : "skip",
+    projectId ? { projectId: projectId as Id<"projects"> } : "skip",
   );
 
   // Get available teams
   const availableTeams = useQuery(
     api.teams.getTeams,
-    workspaceId ? { workspaceId: workspaceId as any } : "skip",
+    workspaceId ? { workspaceId: workspaceId as Id<"workspaces"> } : "skip",
   );
 
   useProjectShortcuts(activeTab, selectedTask, currentContext, dispatch);
@@ -3026,6 +3475,11 @@ export default function ProjectManagementPage() {
     {
       id: "docs",
       label: "DOCS",
+      icon: <HiOutlineDocumentText className="w-14px h-14px" />,
+    },
+    {
+      id: "pages",
+      label: "PAGES",
       icon: <HiOutlineDocumentText className="w-14px h-14px" />,
     },
     {
@@ -3064,22 +3518,30 @@ export default function ProjectManagementPage() {
     );
   }
 
+  const allTasks = tasks ?? [];
+  const completedCount = allTasks.filter((t) => t.status === "done").length;
+  const inProgressCount = allTasks.filter(
+    (t) => t.status === "in_progress",
+  ).length;
+  const blockerCount = allTasks.filter((task) =>
+    isTaskBlocked(task, allTasks),
+  ).length;
+  const activeSprintCount =
+    allSprints?.filter((s) => s.status === "active")?.length ?? 0;
+
   // Real health data based on project statistics
   const healthCards: HealthCard[] = [
     {
       title: "TOTAL TASKS",
       status: tasks && tasks.length > 0 ? "success" : "info",
       value: tasks?.length || 0,
-      subtitle: `${tasks?.filter((t) => t.status === "done").length || 0} completed`,
+      subtitle: `${completedCount} completed`,
       icon: <HiOutlineClipboardList className="w-20px h-20px" />,
     },
     {
       title: "IN PROGRESS",
-      status:
-        tasks?.filter((t) => t.status === "in_progress").length > 5
-          ? "warning"
-          : "info",
-      value: tasks?.filter((t) => t.status === "in_progress").length || 0,
+      status: inProgressCount > 5 ? "warning" : "info",
+      value: inProgressCount,
       subtitle: "Active work",
       icon: <HiOutlineClock className="w-20px h-20px" />,
     },
@@ -3087,20 +3549,14 @@ export default function ProjectManagementPage() {
       title: "SPRINTS",
       status: allSprints && allSprints.length > 0 ? "success" : "info",
       value: allSprints?.length || 0,
-      subtitle: `${allSprints?.filter((s) => s.status === "active").length || 0} active`,
+      subtitle: `${activeSprintCount} active`,
       icon: <HiOutlineLightningBolt className="w-20px h-20px" />,
     },
     {
       title: "BLOCKERS",
-      status:
-        tasks?.filter((t) => t.status === "blocked").length > 0
-          ? "error"
-          : "success",
-      value: tasks?.filter((t) => t.status === "blocked").length || 0,
-      subtitle:
-        tasks?.filter((t) => t.status === "blocked").length > 0
-          ? "Critical issues"
-          : "No blockers",
+      status: blockerCount > 0 ? "error" : "success",
+      value: blockerCount,
+      subtitle: blockerCount > 0 ? "Critical issues" : "No blockers",
       icon: <HiOutlineExclamationCircle className="w-20px h-20px" />,
     },
   ];
@@ -3120,10 +3576,10 @@ export default function ProjectManagementPage() {
     }
   };
 
-  const blockerCount = tasks?.filter((t) => t.status === "blocked").length || 0;
   const memberCount = project?.members?.length || 0;
 
   return (
+    <ErrorBoundary>
     <div className="h-screen bg-[var(--theme-background)] flex overflow-hidden">
       <ProjectSidebar
         project={project}
@@ -3155,11 +3611,18 @@ export default function ProjectManagementPage() {
         projectMeetings={projectMeetings}
         availableTeams={availableTeams}
         assignTeam={assignTeam}
+        bulkUpdateTasks={bulkUpdateTasks}
+        updateProject={(args) => updateProject(args as Parameters<typeof updateProject>[0])}
+        archiveProject={archiveProject}
+        removeProjectMember={removeProjectMember}
+        updateMemberRole={(args) => updateMemberRole(args as Parameters<typeof updateMemberRole>[0])}
+        members={(project?.members?.filter((m) => m !== null) ?? undefined) as MemberData[] | undefined}
         dispatch={dispatch}
         getStatusColor={getStatusColor}
         handleEditTask={handleEditTask}
         handleDeleteTask={handleDeleteTask}
         handleDuplicateTask={handleDuplicateTask}
+        onNavigateBack={() => navigate(`/workspace/${workspaceId}`)}
       />
       <ProjectModals
         state={state}
@@ -3173,28 +3636,36 @@ export default function ProjectManagementPage() {
       />
       <BulkActionBar
         selectedCount={selectedTaskIds.size}
-        selectedIds={Array.from(selectedTaskIds) as any}
+        selectedIds={Array.from(selectedTaskIds) as Id<"tasks">[]}
         onClearSelection={() => setSelectedTaskIds(new Set())}
         onStatusChange={async (status) => {
           await bulkUpdateTasks({
-            taskIds: Array.from(selectedTaskIds) as any,
-            updates: { status },
+            taskIds: Array.from(selectedTaskIds) as Id<"tasks">[],
+            updates: { status: status as "backlog" | "todo" | "in_progress" | "in_review" | "done" | "cancelled" },
           });
           setSelectedTaskIds(new Set());
         }}
         onPriorityChange={async (priority) => {
           await bulkUpdateTasks({
-            taskIds: Array.from(selectedTaskIds) as any,
-            updates: { priority },
+            taskIds: Array.from(selectedTaskIds) as Id<"tasks">[],
+            updates: { priority: priority as "urgent" | "high" | "medium" | "low" },
           });
           setSelectedTaskIds(new Set());
         }}
         onDelete={async () => {
-          if (!window.confirm(`Delete ${selectedTaskIds.size} task${selectedTaskIds.size === 1 ? '' : 's'}?`)) return;
-          await bulkDeleteTasks({ taskIds: Array.from(selectedTaskIds) as any });
+          if (
+            !window.confirm(
+              `Delete ${selectedTaskIds.size} task${selectedTaskIds.size === 1 ? "" : "s"}?`,
+            )
+          )
+            return;
+          await bulkDeleteTasks({
+            taskIds: Array.from(selectedTaskIds) as Id<"tasks">[],
+          });
           setSelectedTaskIds(new Set());
         }}
       />
     </div>
+    </ErrorBoundary>
   );
 }

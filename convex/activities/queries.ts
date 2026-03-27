@@ -1,6 +1,7 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
-import { Id } from "../_generated/dataModel";
+import { Doc } from "../_generated/dataModel";
+import { getCurrentUserOrThrow, getCurrentUser } from "../lib/auth";
 
 // Get activities for a specific project
 export const getProjectActivities = query({
@@ -9,19 +10,7 @@ export const getProjectActivities = query({
     limit: v.optional(v.number())
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     // Check if user has access to the project
     const projectMember = await ctx.db
@@ -35,7 +24,7 @@ export const getProjectActivities = query({
 
     const activities = await ctx.db
       .query("activities")
-      .filter((q) => q.eq(q.field("projectId"), args.projectId))
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .order("desc")
       .take(args.limit || 50);
 
@@ -47,9 +36,9 @@ export const getProjectActivities = query({
           ...activity,
           actor: actor ? {
             _id: actor._id,
-            name: (actor as any).name || 'Unknown',
-            email: (actor as any).email || 'unknown@example.com',
-            avatarUrl: (actor as any).avatarUrl || null
+            name: actor.name || 'Unknown',
+            email: actor.email || 'unknown@example.com',
+            avatarUrl: actor.avatarUrl || null
           } : null
         };
       })
@@ -68,19 +57,7 @@ export const getWorkspaceActivities = query({
     types: v.optional(v.array(v.string()))
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     // Check if user is a member of the workspace
     const workspaceMember = await ctx.db
@@ -94,29 +71,23 @@ export const getWorkspaceActivities = query({
 
     let activities = await ctx.db
       .query("activities")
-      .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
       .order("desc")
       .take(args.limit || 50);
-
-    // Filter activities to only include those with proper structure
-    activities = activities.filter(activity => 
-      activity && typeof activity === 'object' && (activity as any).type
-    );
 
     // Apply time range filter if specified
     if (args.timeRangeHours) {
       const now = Date.now();
       const cutoffTime = now - (args.timeRangeHours * 60 * 60 * 1000);
       activities = activities.filter(activity => {
-        const timestamp = (activity as any).timestamp;
-        return timestamp && timestamp >= cutoffTime;
+        return activity.timestamp != null && activity.timestamp >= cutoffTime;
       });
     }
 
     // Filter by activity types if specified
     if (args.types && args.types.length > 0) {
-      activities = activities.filter(activity => 
-        args.types!.includes((activity as any).type)
+      activities = activities.filter(activity =>
+        args.types!.includes(activity.type)
       );
     }
 
@@ -125,19 +96,19 @@ export const getWorkspaceActivities = query({
       activities.map(async (activity) => {
         const actor = activity.actorId ? await ctx.db.get(activity.actorId) : null;
         const project = activity.projectId ? await ctx.db.get(activity.projectId) : null;
-        
+
         return {
           ...activity,
           actor: actor ? {
             _id: actor._id,
-            name: (actor as any).name || 'Unknown',
-            email: (actor as any).email || 'unknown@example.com',
-            avatarUrl: (actor as any).avatarUrl || null
+            name: actor.name || 'Unknown',
+            email: actor.email || 'unknown@example.com',
+            avatarUrl: actor.avatarUrl || null
           } : null,
           project: project ? {
             _id: project._id,
-            name: (project as any).name || 'Unknown Project',
-            key: (project as any).key || 'UNK'
+            name: project.name || 'Unknown Project',
+            key: project.key || 'UNK'
           } : null
         };
       })
@@ -156,25 +127,14 @@ export const getRecentTeamActivity = query({
     timeRangeHours: v.optional(v.number())
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
+    const user = await getCurrentUser(ctx);
+    if (!user) return [];
 
     // Check project access
     const projectMember = await ctx.db
       .query("projectMembers")
       .withIndex("by_project_user", (q) => q.eq("projectId", args.projectId).eq("userId", user._id))
-      .first(); 
+      .first();
 
     if (!projectMember) {
       return [];
@@ -183,29 +143,23 @@ export const getRecentTeamActivity = query({
     // Get activities for the project
     let activities = await ctx.db
       .query("activities")
-      .filter((q) => q.eq(q.field("projectId"), args.projectId))
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .order("desc")
       .take(args.limit || 100);
-
-    // Filter activities to only include those with proper structure
-    activities = activities.filter(activity => 
-      activity && typeof activity === 'object' && (activity as any).type
-    );
 
     // Apply time range filter if specified
     if (args.timeRangeHours) {
       const now = Date.now();
       const cutoffTime = now - (args.timeRangeHours * 60 * 60 * 1000);
       activities = activities.filter(activity => {
-        const timestamp = (activity as any).timestamp;
-        return timestamp && timestamp >= cutoffTime;
+        return activity.timestamp != null && activity.timestamp >= cutoffTime;
       });
     }
-    
+
     // Filter by activity types if specified
     if (args.types && args.types.length > 0) {
-      activities = activities.filter(activity => 
-        args.types!.includes((activity as any).type)
+      activities = activities.filter(activity =>
+        args.types!.includes(activity.type)
       );
     }
 
@@ -217,9 +171,9 @@ export const getRecentTeamActivity = query({
           ...activity,
           actor: actor ? {
             _id: actor._id,
-            name: (actor as any).name || 'Unknown',
-            email: (actor as any).email || 'unknown@example.com',
-            avatarUrl: (actor as any).avatarUrl || null
+            name: actor.name || 'Unknown',
+            email: actor.email || 'unknown@example.com',
+            avatarUrl: actor.avatarUrl || null
           } : null
         };
       })
@@ -237,19 +191,7 @@ export const getActivityStats = query({
     timeRange: v.optional(v.union(v.literal("24h"), v.literal("7d"), v.literal("30d")))
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     // Check workspace access
     const workspaceMember = await ctx.db
@@ -271,32 +213,25 @@ export const getActivityStats = query({
     const range = timeRanges[args.timeRange || "7d"];
     const startTime = now - range;
 
-    // Get activities
-    let query = ctx.db
+    // Get activities using index
+    const activities = await ctx.db
       .query("activities")
-      .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId));
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+      .collect();
 
-    if (args.projectId) {
-      query = query.filter((q) => q.eq(q.field("projectId"), args.projectId));
-    }
-
-    const activities = await query.collect();
-
-    // Filter by time and proper structure
+    // Filter by time, project, and proper structure
     const filteredActivities = activities.filter(activity => {
-      if (!activity || typeof activity !== 'object') return false;
-      const timestamp = (activity as any).timestamp;
-      return timestamp && timestamp >= startTime;
+      if (args.projectId && activity.projectId !== args.projectId) return false;
+      return activity.timestamp != null && activity.timestamp >= startTime;
     });
 
     // Calculate statistics
     const activityCounts: Record<string, number> = {};
     const userActivityCounts: Record<string, number> = {};
-    
+
     for (const activity of filteredActivities) {
-      const activityType = (activity as any).type;
-      if (activityType) {
-        activityCounts[activityType] = (activityCounts[activityType] || 0) + 1;
+      if (activity.type) {
+        activityCounts[activity.type] = (activityCounts[activity.type] || 0) + 1;
       }
       if (activity.actorId) {
         userActivityCounts[activity.actorId] = (userActivityCounts[activity.actorId] || 0) + 1;
@@ -319,19 +254,7 @@ export const getTeamActivityDashboard = query({
     projectId: v.optional(v.id("projects"))
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     // Check workspace access
     const workspaceMember = await ctx.db
@@ -344,36 +267,29 @@ export const getTeamActivityDashboard = query({
     }
 
     // Get recent activities
-    let query = ctx.db
+    const activities = await ctx.db
       .query("activities")
-      .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
       .order("desc")
       .take(20);
 
-    const activities = await query;
-
-    // Filter and enrich activities
-    const validActivities = activities.filter(activity => 
-      activity && typeof activity === 'object' && (activity as any).type
-    );
-
     const enrichedActivities = await Promise.all(
-      validActivities.map(async (activity) => {
+      activities.map(async (activity) => {
         const actor = activity.actorId ? await ctx.db.get(activity.actorId) : null;
         const project = activity.projectId ? await ctx.db.get(activity.projectId) : null;
-        
+
         return {
           ...activity,
           actor: actor ? {
             _id: actor._id,
-            name: (actor as any).name || 'Unknown',
-            email: (actor as any).email || 'unknown@example.com',
-            avatarUrl: (actor as any).avatarUrl || null
+            name: actor.name || 'Unknown',
+            email: actor.email || 'unknown@example.com',
+            avatarUrl: actor.avatarUrl || null
           } : null,
           project: project ? {
             _id: project._id,
-            name: (project as any).name || 'Unknown Project',
-            key: (project as any).key || 'UNK'
+            name: project.name || 'Unknown Project',
+            key: project.key || 'UNK'
           } : null
         };
       })
@@ -390,19 +306,8 @@ export const getDashboardActivities = query({
     timeRangeHours: v.optional(v.number())
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
+    const user = await getCurrentUser(ctx);
+    if (!user) return [];
 
     // Get all workspaces the user is a member of
     const workspaceMemberships = await ctx.db
@@ -419,32 +324,31 @@ export const getDashboardActivities = query({
     const timeRange = args.timeRangeHours || 168; // Default to last week
     const cutoffTime = Date.now() - (timeRange * 60 * 60 * 1000);
 
-    // Fetch activities from all workspaces
-    const allActivities: any[] = [];
+    // Fetch activities from all workspaces using index
+    const allActivities: Array<Doc<"activities">> = [];
     for (const workspaceId of workspaceIds) {
       const activities = await ctx.db
         .query("activities")
-        .filter((q) => q.eq(q.field("workspaceId"), workspaceId))
+        .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
         .order("desc")
         .take(limit);
-      
+
       allActivities.push(...activities);
     }
 
     // Sort by timestamp and filter
     const sortedActivities = allActivities
       .filter(activity => {
-        if (!activity || typeof activity !== 'object') return false;
-        const timestamp = (activity as any).timestamp;
-        const type = (activity as any).type;
-        
+        const timestamp = activity.timestamp;
+        const type = activity.type;
+
         // Filter out low-priority activities for dashboard
         const lowPriorityTypes = ['task_commented', 'task_time_started', 'task_time_stopped'];
         if (lowPriorityTypes.includes(type)) return false;
-        
-        return timestamp && timestamp >= cutoffTime;
+
+        return timestamp != null && timestamp >= cutoffTime;
       })
-      .sort((a, b) => ((b as any).timestamp || 0) - ((a as any).timestamp || 0))
+      .sort((a, b) => ((b.timestamp || 0) - (a.timestamp || 0)))
       .slice(0, limit);
 
     // Enrich activities with related data
@@ -453,19 +357,19 @@ export const getDashboardActivities = query({
         const actor = activity.actorId ? await ctx.db.get(activity.actorId) : null;
         const project = activity.projectId ? await ctx.db.get(activity.projectId) : null;
         const workspace = await ctx.db.get(activity.workspaceId);
-        
+
         // Get task details if it's a task activity
         let task = null;
-        if ((activity as any).targetType === 'task' && (activity as any).targetId) {
+        if (activity.targetType === 'task' && activity.targetId) {
           try {
-            task = await ctx.db.get((activity as any).targetId as any);
+            task = await ctx.db.get(activity.targetId as any);
           } catch (e) {
             // Task might have been deleted
           }
         }
 
         // Format the activity for dashboard display
-        const activityType = (activity as any).type;
+        const activityType = activity.type;
         let formattedAction = '';
         let formattedTarget = '';
         let icon = '';
@@ -474,72 +378,72 @@ export const getDashboardActivities = query({
         switch (activityType) {
           case 'task_completed':
             formattedAction = 'COMPLETED TASK';
-            formattedTarget = task ? `#${(task as any).key || (activity as any).targetId}` : (activity as any).targetName || 'Unknown';
+            formattedTarget = task ? `#${(task as any).key || activity.targetId}` : activity.targetName || 'Unknown';
             icon = 'check';
             color = '#00FF00';
             break;
           case 'task_created':
             formattedAction = 'CREATED TASK';
-            formattedTarget = task ? `#${(task as any).key || (activity as any).targetId}` : (activity as any).targetName || 'Unknown';
+            formattedTarget = task ? `#${(task as any).key || activity.targetId}` : activity.targetName || 'Unknown';
             icon = 'plus';
             color = '#00FFFF';
             break;
           case 'task_assigned':
             formattedAction = 'ASSIGNED TASK';
-            formattedTarget = task ? `#${(task as any).key || (activity as any).targetId}` : (activity as any).targetName || 'Unknown';
+            formattedTarget = task ? `#${(task as any).key || activity.targetId}` : activity.targetName || 'Unknown';
             icon = 'user';
             color = '#FF00FF';
             break;
           case 'sprint_started':
             formattedAction = 'STARTED SPRINT';
-            formattedTarget = (activity as any).targetName || 'Sprint';
+            formattedTarget = activity.targetName || 'Sprint';
             icon = 'play';
             color = '#FFFF00';
             break;
           case 'sprint_completed':
             formattedAction = 'COMPLETED SPRINT';
-            formattedTarget = (activity as any).targetName || 'Sprint';
+            formattedTarget = activity.targetName || 'Sprint';
             icon = 'flag';
             color = '#00FF00';
             break;
           case 'pr_merged':
             formattedAction = 'MERGED PR';
-            formattedTarget = `#${(activity as any).targetId || 'PR'}`;
+            formattedTarget = `#${activity.targetId || 'PR'}`;
             icon = 'git-merge';
             color = '#00FFFF';
             break;
           case 'commit_pushed':
             formattedAction = 'PUSHED COMMIT';
-            formattedTarget = (activity as any).targetName || 'main';
+            formattedTarget = activity.targetName || 'main';
             icon = 'git-commit';
             color = '#FFFF00';
             break;
           case 'meeting_scheduled':
             formattedAction = 'SCHEDULED MEETING';
-            formattedTarget = (activity as any).targetName || 'Meeting';
+            formattedTarget = activity.targetName || 'Meeting';
             icon = 'calendar';
             color = '#FF00FF';
             break;
           case 'member_joined':
             formattedAction = 'JOINED';
-            formattedTarget = workspace ? (workspace as any).name : 'Workspace';
+            formattedTarget = workspace ? workspace.name : 'Workspace';
             icon = 'user-plus';
             color = '#00FF00';
             break;
           default:
             formattedAction = activityType ? activityType.replace(/_/g, ' ').toUpperCase() : 'ACTIVITY';
-            formattedTarget = (activity as any).targetName || '';
+            formattedTarget = activity.targetName || '';
             icon = 'activity';
             color = '#FFFFFF';
         }
 
         // Calculate time ago
-        const timestamp = (activity as any).timestamp || Date.now();
+        const timestamp = activity.timestamp || Date.now();
         const now = Date.now();
         const diffMs = now - timestamp;
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
         const diffMinutes = Math.floor(diffMs / (1000 * 60));
-        
+
         let timeAgo = '';
         if (diffMinutes < 1) {
           timeAgo = 'JUST NOW';
@@ -556,19 +460,19 @@ export const getDashboardActivities = query({
           ...activity,
           actor: actor ? {
             _id: actor._id,
-            name: (actor as any).name || 'Unknown',
-            email: (actor as any).email || 'unknown@example.com',
-            avatarUrl: (actor as any).avatarUrl || null,
-            initials: ((actor as any).name || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+            name: actor.name || 'Unknown',
+            email: actor.email || 'unknown@example.com',
+            avatarUrl: actor.avatarUrl || null,
+            initials: (actor.name || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
           } : null,
           project: project ? {
             _id: project._id,
-            name: (project as any).name || 'Unknown Project',
-            key: (project as any).key || 'UNK'
+            name: project.name || 'Unknown Project',
+            key: project.key || 'UNK'
           } : null,
           workspace: workspace ? {
             _id: workspace._id,
-            name: (workspace as any).name || 'Unknown Workspace'
+            name: workspace.name || 'Unknown Workspace'
           } : null,
           formattedAction,
           formattedTarget,

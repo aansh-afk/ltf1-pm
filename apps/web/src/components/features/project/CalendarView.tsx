@@ -17,6 +17,7 @@ import {
   HiOutlineExclamation
 } from 'react-icons/hi'
 import clsx from 'clsx'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 import { 
   format, 
   startOfMonth, 
@@ -44,6 +45,22 @@ interface CalendarViewProps {
   workspaceId: Id<"workspaces">
 }
 
+interface CalendarEventData {
+  _id: string
+  title?: string
+  name?: string
+  status?: string
+  priority?: string
+  dueDate?: number
+  startDate?: number
+  startTime?: number
+  endTime?: number
+  endDate?: number
+  assigneeIds?: Id<"users">[]
+  milestone?: boolean
+  [key: string]: unknown
+}
+
 interface CalendarEvent {
   id: string
   title: string
@@ -55,7 +72,7 @@ interface CalendarEvent {
   assigneeIds?: Id<"users">[]
   color: string
   icon?: JSX.Element
-  data: any
+  data: CalendarEventData
 }
 
 type ViewType = 'month' | 'week' | 'day' | 'agenda'
@@ -82,7 +99,7 @@ type CalendarAction =
   | { type: 'SET_VIEW'; view: ViewType }
   | { type: 'SET_FILTER'; filter: 'all' | 'tasks' | 'meetings' | 'sprints' }
   | { type: 'OPEN_CREATE_TASK' }
-  | { type: 'OPEN_EDIT_TASK'; task: any }
+  | { type: 'OPEN_EDIT_TASK'; task: CalendarEventData }
   | { type: 'OPEN_SCHEDULE_MEETING' }
   | { type: 'SELECT_EVENT'; event: CalendarEvent | null }
   | { type: 'CLOSE_MODALS' }
@@ -95,7 +112,7 @@ interface CalendarState {
   showCreateTaskModal: boolean
   showEditTaskModal: boolean
   showScheduleMeetingModal: boolean
-  selectedTask: any
+  selectedTask: CalendarEventData | null
   selectedEvent: CalendarEvent | null
 }
 
@@ -399,17 +416,17 @@ function CalendarHeader({ currentDate, viewType, filterType, onNavigateMonth, on
       {/* Actions */}
       <div className="flex items-center gap-[4px]">
         {/* Filter */}
-        <select
+        <BrutalSelect
           value={filterType}
-          onChange={(e) => onSetFilter(e.target.value as any)}
-          aria-label="Filter event type"
-          className="px-[8px] py-6px text-xs font-bold bg-transparent border-2 border-[var(--theme-border)] outline-none"
-        >
-          <option value="all">ALL EVENTS</option>
-          <option value="tasks">TASKS ONLY</option>
-          <option value="meetings">MEETINGS ONLY</option>
-          <option value="sprints">SPRINTS ONLY</option>
-        </select>
+          onChange={(v) => onSetFilter(v as 'all' | 'tasks' | 'meetings' | 'sprints')}
+          options={[
+            { value: 'all', label: 'ALL EVENTS' },
+            { value: 'tasks', label: 'TASKS ONLY' },
+            { value: 'meetings', label: 'MEETINGS ONLY' },
+            { value: 'sprints', label: 'SPRINTS ONLY' },
+          ]}
+          compact
+        />
 
         <button
           onClick={onCreateTask}
@@ -570,7 +587,13 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
   
   // Navigate calendar
   const navigateMonth = (direction: 'prev' | 'next') => {
-    dispatch({ type: 'SET_DATE', date: direction === 'prev' ? subMonths(currentDate, 1) : addMonths(currentDate, 1) })
+    if (state.viewType === 'week') {
+      dispatch({ type: 'SET_DATE', date: addDays(currentDate, direction === 'prev' ? -7 : 7) })
+    } else if (state.viewType === 'day') {
+      dispatch({ type: 'SET_DATE', date: addDays(currentDate, direction === 'prev' ? -1 : 1) })
+    } else {
+      dispatch({ type: 'SET_DATE', date: direction === 'prev' ? subMonths(currentDate, 1) : addMonths(currentDate, 1) })
+    }
   }
 
   const goToToday = () => {
@@ -632,32 +655,126 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
             onEventClick={handleEventClick}
           />
         )}
-        {viewType === 'week' && (
-          <div className="text-center py-[24px] text-[var(--theme-foreground)]/60">
-            WEEK VIEW COMING SOON
-          </div>
-        )}
-        {viewType === 'day' && (
-          <div className="text-center py-[24px] text-[var(--theme-foreground)]/60">
-            DAY VIEW COMING SOON
-          </div>
-        )}
+        {viewType === 'week' && (() => {
+          const weekStart = startOfWeek(currentDate)
+          const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+          return (
+            <div className="border-2 border-[var(--theme-border)]">
+              {/* Week header */}
+              <div className="grid grid-cols-7 border-b-2 border-[var(--theme-border)]">
+                {weekDays.map(day => (
+                  <div
+                    key={day.toISOString()}
+                    className={clsx(
+                      "p-2 text-center border-r border-[var(--theme-border)] last:border-r-0 font-mono text-[10px] uppercase",
+                      isToday(day) ? "bg-[var(--theme-primary)] text-[var(--theme-background)] font-bold" : "bg-[var(--theme-background-secondary)]"
+                    )}
+                  >
+                    <div>{format(day, 'EEE')}</div>
+                    <div className="text-sm font-bold">{format(day, 'd')}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Week body */}
+              <div className="grid grid-cols-7 min-h-[400px]">
+                {weekDays.map(day => {
+                  const dayEvents = getEventsForDay(day)
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className="border-r border-[var(--theme-border)] last:border-r-0 p-1 cursor-pointer hover:bg-[var(--theme-hover)]"
+                      onClick={() => handleDayClick(day)}
+                    >
+                      {dayEvents.map(event => (
+                        <button
+                          key={event.id}
+                          onClick={(e) => { e.stopPropagation(); handleEventClick(event) }}
+                          className={clsx(
+                            "w-full text-left p-1 mb-1 border border-[var(--theme-border)] text-[10px] font-mono truncate hover:opacity-80",
+                            event.color
+                          )}
+                          title={event.title}
+                        >
+                          {event.icon && <span className="mr-0.5">{event.icon}</span>}
+                          {event.title}
+                        </button>
+                      ))}
+                      {dayEvents.length === 0 && (
+                        <span className="text-[9px] font-mono text-[var(--theme-foreground)]/20">+</span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
+        {viewType === 'day' && (() => {
+          const dayEvents = getEventsForDay(currentDate)
+          return (
+            <div className="border-2 border-[var(--theme-border)]">
+              <div className={clsx(
+                "p-3 border-b-2 border-[var(--theme-border)] font-mono text-sm uppercase font-bold",
+                isToday(currentDate) ? "bg-[var(--theme-primary)] text-[var(--theme-background)]" : "bg-[var(--theme-background-secondary)]"
+              )}>
+                {format(currentDate, 'EEEE, MMMM d, yyyy')}
+                {isToday(currentDate) && <span className="ml-2 text-[10px] opacity-80">TODAY</span>}
+              </div>
+              <div className="p-3 min-h-[400px]">
+                {dayEvents.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="font-mono text-xs text-[var(--theme-foreground)]/40 mb-3">No events on this day</p>
+                    <button
+                      onClick={() => { dispatch({ type: 'SELECT_DATE', date: currentDate }); dispatch({ type: 'OPEN_CREATE_TASK' }) }}
+                      className="px-3 py-1.5 bg-[var(--theme-primary)] text-[var(--theme-background)] font-mono text-xs uppercase font-bold"
+                    >
+                      + NEW TASK
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {dayEvents.map(event => (
+                      <button
+                        key={event.id}
+                        onClick={() => handleEventClick(event)}
+                        className={clsx(
+                          "w-full text-left p-3 border-2 border-[var(--theme-border)] hover:border-[var(--theme-primary)] transition-colors",
+                          event.color
+                        )}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          {event.icon}
+                          <span className="font-mono text-xs font-bold uppercase">{event.title}</span>
+                        </div>
+                        <div className="flex items-center gap-2 font-mono text-[10px] text-[var(--theme-foreground)]/60">
+                          <span>{format(event.date, 'h:mm a')}</span>
+                          {event.type && <span className="uppercase border border-[var(--theme-border)] px-1">{event.type}</span>}
+                          {event.priority && <span className="uppercase">{event.priority}</span>}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        })()}
       </div>
       
       {/* Modals */}
-      {showCreateTaskModal && (
-        <CreateTaskModal
-          projectId={projectId}
-          initialData={selectedDate ? { dueDate: selectedDate.toISOString() } : undefined}
-          onClose={() => {
-            dispatch({ type: 'CLOSE_MODALS' })
-            dispatch({ type: 'SELECT_DATE', date: null })
-          }}
-        />
-      )}
-      
-      {showEditTaskModal && selectedTask && (
+      <CreateTaskModal
+        isOpen={showCreateTaskModal}
+        projectId={projectId}
+        defaultDueDate={selectedDate ? selectedDate.toISOString() : undefined}
+        onClose={() => {
+          dispatch({ type: 'CLOSE_MODALS' })
+          dispatch({ type: 'SELECT_DATE', date: null })
+        }}
+      />
+
+      {selectedTask && (
         <EditTaskModal
+          isOpen={showEditTaskModal}
           task={selectedTask}
           onClose={() => {
             dispatch({ type: 'CLOSE_MODALS' })
@@ -665,14 +782,13 @@ export default function CalendarView({ projectId, workspaceId }: CalendarViewPro
           }}
         />
       )}
-      
-      {showScheduleMeetingModal && (
-        <ScheduleMeetingModal
-          workspaceId={workspaceId}
-          projectId={projectId}
-          onClose={() => dispatch({ type: 'CLOSE_MODALS' })}
-        />
-      )}
+
+      <ScheduleMeetingModal
+        isOpen={showScheduleMeetingModal}
+        workspaceId={workspaceId}
+        projectId={projectId}
+        onClose={() => dispatch({ type: 'CLOSE_MODALS' })}
+      />
     </div>
   )
 }

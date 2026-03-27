@@ -32,6 +32,7 @@ export default defineConfig(({ mode }) => {
           'clerk': ['@clerk/clerk-react'],
           'convex': ['convex', 'convex/react'],
           'animation': ['framer-motion'],
+          'blocknote': ['@blocknote/core', '@blocknote/react', '@blocknote/mantine'],
         },
       },
     },

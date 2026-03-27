@@ -2,8 +2,8 @@ import { useState, useCallback } from 'react';
 import { useMutation } from 'convex/react';
 import { useUser } from '@clerk/clerk-react';
 import { api } from '../../../../convex/_generated/api';
-import { getCapturedErrors } from '../utils/consoleCapture';
-import { captureScreenshot } from '../utils/screenshotCapture';
+import { getCapturedErrors } from '@/utils/consoleCapture';
+import { captureScreenshot } from '@/utils/screenshotCapture';
 import { useStepRecorder, type RecordedStep } from './useStepRecorder';
 import type { Id } from '../../../../convex/_generated/dataModel';
 

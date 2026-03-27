@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { HiOutlineChevronDown, HiOutlineChevronRight } from 'react-icons/hi'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 
 // Style types
 export interface ElementStyle {
@@ -152,24 +153,12 @@ interface DropdownProps {
 
 function Dropdown({ value, onChange, options }: DropdownProps) {
   return (
-    <select
+    <BrutalSelect
       value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full bg-black border-2 border-white text-white font-mono text-xs p-2 uppercase cursor-pointer focus:border-cyan-400 focus:outline-none appearance-none"
-      style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='square' stroke-linejoin='miter' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'right 0.5rem center',
-        backgroundSize: '1.5rem',
-        paddingRight: '2.5rem'
-      }}
-    >
-      {options.map(option => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+      onChange={onChange}
+      options={options}
+      fullWidth
+    />
   )
 }
 

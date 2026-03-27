@@ -22,6 +22,7 @@ import {
   HiOutlineHand
 } from 'react-icons/hi'
 import { HiVideoCamera } from 'react-icons/hi2'
+import BrutalSelect from '@/components/ui/BrutalSelect'
 
 // Video camera slash icon component (since HiOutlineVideoCameraSlash doesn't exist in hi package)
 const VideoCameraSlashIcon = ({ className }: { className?: string }) => (
@@ -625,16 +626,17 @@ export default function VideoRooms({ workspaceId, meetingId }: VideoRoomsProps) 
               </div>
 
               <div>
-                <label className="text-white text-sm">Room Type</label>
-                <select
+                <BrutalSelect
+                  label="Room Type"
                   value={newRoomSettings.type}
-                  onChange={(e) => setNewRoomSettings(prev => ({ ...prev, type: e.target.value as any }))}
-                  className="w-full p-2 bg-black text-white border-2 border-white font-mono"
-                >
-                  <option value="instant">Instant</option>
-                  <option value="meeting">Meeting</option>
-                  <option value="persistent">Persistent</option>
-                </select>
+                  onChange={(v) => setNewRoomSettings(prev => ({ ...prev, type: v as any }))}
+                  options={[
+                    { value: 'instant', label: 'Instant' },
+                    { value: 'meeting', label: 'Meeting' },
+                    { value: 'persistent', label: 'Persistent' },
+                  ]}
+                  fullWidth
+                />
               </div>
 
               <div className="space-y-2">

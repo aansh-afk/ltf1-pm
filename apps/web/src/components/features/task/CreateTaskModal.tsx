@@ -4,11 +4,11 @@ import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
 import toast from 'react-hot-toast'
 import posthog from 'posthog-js'
-import BrutalModal from '../../ui/BrutalModal'
-import BrutalButton from '../../ui/BrutalButton'
-import BrutalToggle from '../../ui/BrutalToggle'
-import MultiSelect from '../../ui/MultiSelect'
-import { TaskAssignmentHelper } from '../task/TaskAssignmentHelper'
+import BrutalModal from '@/components/ui/BrutalModal'
+import BrutalButton from '@/components/ui/BrutalButton'
+import BrutalToggle from '@/components/ui/BrutalToggle'
+import MultiSelect from '@/components/ui/MultiSelect'
+import { TaskAssignmentHelper } from '@/components/features/task/TaskAssignmentHelper'
 import { HiOutlineLightBulb } from 'react-icons/hi'
 
 // --- Type & Priority chip data ---
@@ -36,9 +36,12 @@ interface TaskAssignmentSectionProps {
   estimateHours: string
   isCreating: boolean
   workspaceId: string | undefined
+  projectId: string
   title: string
   description: string
   labels: string
+  taskType: string
+  priority: string
   projectMembers: Array<{ _id: string; name: string; avatarUrl?: string }> | undefined
   onToggleSmartAssignment: () => void
   onAssigneeChange: (ids: string[]) => void
@@ -51,9 +54,12 @@ function TaskAssignmentSection({
   estimateHours,
   isCreating,
   workspaceId,
+  projectId,
   title,
   description,
   labels,
+  taskType,
+  priority,
   projectMembers,
   onToggleSmartAssignment,
   onAssigneeChange,
@@ -92,11 +98,14 @@ function TaskAssignmentSection({
         <>
           <TaskAssignmentHelper
             workspaceId={workspaceId as Id<"workspaces">}
+            projectId={projectId as Id<"projects">}
             currentAssignees={assigneeIds as Id<"users">[]}
             onAssigneeChange={onAssigneeChange}
             taskTitle={title}
             taskDescription={description}
             taskLabels={labels.split(',').map(l => l.trim()).filter(Boolean)}
+            taskType={taskType}
+            priority={priority}
             mode="compact"
           />
           <div>
@@ -259,7 +268,7 @@ interface TaskDateFieldsProps {
 }
 
 function TaskDateFields({ startDate, dueDate, isDisabled, onStartDateChange, onDueDateChange }: TaskDateFieldsProps) {
-  const inputClass = "w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+  const inputClass = "w-full px-[10px] py-[8px] bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed [color-scheme:dark]"
   const labelClass = "block font-mono text-[11px] font-bold uppercase tracking-wider mb-[4px]"
   return (
     <div className="grid grid-cols-2 gap-[8px]">
@@ -571,9 +580,12 @@ export default function CreateTaskModal({
           estimateHours={estimateHours}
           isCreating={isCreating}
           workspaceId={project?.workspaceId}
+          projectId={projectId}
           title={title}
           description={description}
           labels={labels}
+          taskType={type}
+          priority={priority}
           projectMembers={project?.members}
           onToggleSmartAssignment={() => dispatch({ type: 'TOGGLE_SMART_ASSIGNMENT' })}
           onAssigneeChange={(ids) => dispatch({ type: 'SET_ASSIGNEE_IDS', value: ids })}

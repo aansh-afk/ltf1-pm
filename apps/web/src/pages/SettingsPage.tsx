@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { useQuery, useMutation } from 'convex/react'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
+import { useQuery, useMutation, useAction } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
+import type { Doc, Id } from '../../../../convex/_generated/dataModel'
 import { useAuth } from '@clerk/clerk-react'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
@@ -20,28 +22,143 @@ import {
   HiOutlineRefresh
 } from 'react-icons/hi'
 import { FaGithub } from 'react-icons/fa'
-import BrutalToggle from '../components/ui/BrutalToggle'
-import BrutalSlider from '../components/ui/BrutalSlider'
-import SettingsSection from '../components/features/settings/SettingsSection'
-import { useSettingsState } from '../hooks/useSettingsState'
-import { EditDeveloperProfileModal } from '../components/features/profile/EditDeveloperProfileModal'
-import DeveloperStatusIndicator from '../components/features/developer/DeveloperStatusIndicator'
-import { GitHubSettingsTab } from '../components/features/settings/GitHubSettingsTab'
+import BrutalToggle from '@/components/ui/BrutalToggle'
+import BrutalSlider from '@/components/ui/BrutalSlider'
+import SettingsSection from '@/components/features/settings/SettingsSection'
+import { useSettingsState } from '@/hooks/useSettingsState'
+import { EditDeveloperProfileModal } from '@/components/features/profile/EditDeveloperProfileModal'
+import DeveloperStatusIndicator from '@/components/features/developer/DeveloperStatusIndicator'
+import { GitHubSettingsTab } from '@/components/features/settings/GitHubSettingsTab'
 import ShortcutSettings from './settings/ShortcutSettings'
-import ThemeSwitcher from '../components/theme/ThemeSwitcher'
-import AISettingsTab from '../components/features/settings/AISettingsTab'
+import ThemeSwitcher from '@/components/theme/ThemeSwitcher'
+import AISettingsTab from '@/components/features/settings/AISettingsTab'
 import BrutalCard from '@/components/ui/BrutalCard'
 import BrutalButton from '@/components/ui/BrutalButton'
 import BrutalBadge from '@/components/ui/BrutalBadge'
+import BrutalSelect from '@/components/ui/BrutalSelect'
+
+// ── Test Email Button ──
+
+function TestEmailButton() {
+  const sendTest = useAction(api.email.send.sendTestEmail)
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [result, setResult] = useState<{ message: string; resendId?: string } | null>(null)
+
+  const handleSend = async () => {
+    setStatus('sending')
+    setResult(null)
+    try {
+      const res = await sendTest({})
+      if (res.success) {
+        setStatus('sent')
+        setResult({ message: res.message, resendId: res.resendId })
+        toast.success(res.message)
+      } else {
+        setStatus('error')
+        setResult({ message: res.message })
+        toast.error(res.message)
+      }
+    } catch (err: any) {
+      setStatus('error')
+      setResult({ message: err.message || 'Failed to send test email' })
+      toast.error(err.message || 'Failed to send test email')
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <BrutalButton
+        variant="secondary"
+        size="sm"
+        onClick={handleSend}
+        disabled={status === 'sending'}
+        loading={status === 'sending'}
+      >
+        {status === 'sending' ? 'SENDING...' : status === 'sent' ? 'SENT — SEND AGAIN' : 'SEND TEST EMAIL'}
+      </BrutalButton>
+      {result && (
+        <div className={clsx(
+          "px-3 py-2 border font-mono text-[10px]",
+          status === 'sent'
+            ? "border-[var(--theme-success)]/30 bg-[var(--theme-success)]/5 text-[var(--theme-success)]"
+            : "border-[var(--theme-error)]/30 bg-[var(--theme-error)]/5 text-[var(--theme-error)]"
+        )}>
+          <p>{result.message}</p>
+          {result.resendId && (
+            <p className="mt-1 text-[var(--theme-foreground)]/30">Resend ID: {result.resendId}</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 type SettingsTab = 'profile' | 'developer' | 'accessibility' | 'notifications' | 'workspace' | 'github' | 'ai' | 'shortcuts'
 
+// ── Type Definitions ──
+
+interface ProfileData {
+  name: string
+  bio: string
+  avatarUrl: string
+  githubUsername: string
+}
+
+interface NotificationTypes {
+  task_assigned?: boolean
+  task_unassigned?: boolean
+  task_comment?: boolean
+  task_mention?: boolean
+  sprint_started?: boolean
+  sprint_completed?: boolean
+  member_joined?: boolean
+  workspace_invitation?: boolean
+}
+
+interface NotificationPrefs {
+  email: boolean
+  push: boolean
+  slack: boolean
+  types?: NotificationTypes
+  [key: string]: boolean | NotificationTypes | undefined
+}
+
+interface AccessibilityPrefs {
+  fontScale: number
+  lineHeight: number
+  letterSpacing: string
+  reducedMotion: boolean
+  highContrast: boolean
+  focusWidth: number
+}
+
+interface DefaultsPrefs {
+  projectView: string
+  taskPriority: string
+  taskType: string
+  autoAssignSelf: boolean
+}
+
+interface UserPreferences {
+  notifications: NotificationPrefs
+  accessibility: AccessibilityPrefs
+  defaults: DefaultsPrefs
+  defaultWorkspaceId?: Id<"workspaces"> | undefined
+}
+
+interface TechEntry {
+  name: string
+  level: string
+}
+
 // ── Sub-components ──
 
+type StateUpdater<T> = T | ((prev: T) => T)
+
 interface ProfileTabProps {
-  profileData: { name: string; bio: string; avatarUrl: string; githubUsername: string }
+  profileData: ProfileData
   authEmail: string
-  setProfileData: (updater: (prev: any) => any) => void
+  setProfileData: (updater: StateUpdater<ProfileData>) => void
   onReset: () => void
 }
 
@@ -122,8 +239,8 @@ function ProfileTab({ profileData, authEmail, setProfileData, onReset }: Profile
 }
 
 interface AccessibilityTabProps {
-  preferences: any
-  setPreferences: (updater: (prev: any) => any) => void
+  preferences: UserPreferences
+  setPreferences: (updater: StateUpdater<UserPreferences>) => void
   onReset: () => void
 }
 
@@ -170,22 +287,20 @@ function AccessibilityTab({ preferences, setPreferences, onReset }: Accessibilit
             unit="x"
           />
 
-          <div>
-            <label htmlFor="settings-letter-spacing" className="block text-xs font-bold uppercase mb-2">Letter Spacing</label>
-            <select
-              id="settings-letter-spacing"
-              value={preferences.accessibility?.letterSpacing || 'normal'}
-              onChange={(e) => setPreferences(prev => ({
-                ...prev,
-                accessibility: { ...prev.accessibility!, letterSpacing: e.target.value }
-              }))}
-              className="w-full p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
-            >
-              <option value="normal">Normal</option>
-              <option value="wide">Wide</option>
-              <option value="extra-wide">Extra Wide</option>
-            </select>
-          </div>
+          <BrutalSelect
+            label="Letter Spacing"
+            value={preferences.accessibility?.letterSpacing || 'normal'}
+            onChange={(v) => setPreferences(prev => ({
+              ...prev,
+              accessibility: { ...prev.accessibility!, letterSpacing: v }
+            }))}
+            options={[
+              { value: 'normal', label: 'Normal' },
+              { value: 'wide', label: 'Wide' },
+              { value: 'extra-wide', label: 'Extra Wide' },
+            ]}
+            fullWidth
+          />
 
           <BrutalToggle
             label="Reduce Motion"
@@ -211,8 +326,8 @@ function AccessibilityTab({ preferences, setPreferences, onReset }: Accessibilit
 }
 
 interface NotificationsTabProps {
-  preferences: any
-  setPreferences: (updater: (prev: any) => any) => void
+  preferences: UserPreferences
+  setPreferences: (updater: StateUpdater<UserPreferences>) => void
   onReset: () => void
 }
 
@@ -250,6 +365,15 @@ function NotificationsTab({ preferences, setPreferences, onReset }: Notification
             Slack notifications are managed in the Slack integration settings.
           </p>
         </div>
+      </div>
+
+      {/* Test Email Delivery */}
+      <div className="p-4 border-2 border-[var(--theme-border)]">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)]/60 mb-2">Email Delivery Test</h3>
+        <p className="text-[11px] text-[var(--theme-foreground)]/40 mb-3 font-mono">
+          Send a test email to your account's email address to verify delivery.
+        </p>
+        <TestEmailButton />
       </div>
 
       <div className="space-y-4 p-4 border-2 border-[var(--theme-border)]">
@@ -356,9 +480,23 @@ function NotificationsTab({ preferences, setPreferences, onReset }: Notification
 }
 
 interface DeveloperTabProps {
-  currentUser: any
-  developerProfile: any
+  currentUser: Doc<"users">
+  developerProfile: DeveloperProfileResult | null | undefined
   onEditProfile: () => void
+}
+
+interface DeveloperProfileData {
+  role?: string
+  timezone?: string
+  technologies?: TechEntry[]
+  status?: string
+  statusMessage?: string
+  [key: string]: unknown
+}
+
+type DeveloperProfileResult = Doc<"users"> & {
+  profile: DeveloperProfileData | null
+  hasProfile?: boolean
 }
 
 function DeveloperTab({ currentUser, developerProfile, onEditProfile }: DeveloperTabProps) {
@@ -398,7 +536,7 @@ function DeveloperTab({ currentUser, developerProfile, onEditProfile }: Develope
             <span className="block text-xs font-bold uppercase mb-2 text-[var(--theme-foreground)]/60">Skills & Technologies</span>
             <div className="flex flex-wrap gap-2">
               {developerProfile.profile?.technologies && developerProfile.profile.technologies.length > 0 ? (
-                developerProfile.profile.technologies.map((tech: any) => (
+                developerProfile.profile.technologies.map((tech: TechEntry) => (
                   <BrutalBadge key={tech.name} variant="outline" className="text-xs">
                     {tech.name} [{tech.level}]
                   </BrutalBadge>
@@ -442,8 +580,8 @@ function DeveloperTab({ currentUser, developerProfile, onEditProfile }: Develope
 }
 
 interface WorkspaceTabProps {
-  preferences: any
-  setPreferences: (updater: (prev: any) => any) => void
+  preferences: UserPreferences
+  setPreferences: (updater: StateUpdater<UserPreferences>) => void
 }
 
 function WorkspaceTab({ preferences, setPreferences }: WorkspaceTabProps) {
@@ -454,40 +592,36 @@ function WorkspaceTab({ preferences, setPreferences }: WorkspaceTabProps) {
       </div>
 
       <div className="space-y-6 p-4 border-2 border-[var(--theme-border)]">
-        <div>
-          <label htmlFor="settings-default-project-view" className="block text-xs font-bold uppercase mb-2">Default Project View</label>
-          <select
-            id="settings-default-project-view"
-            value={preferences.defaults?.projectView || 'kanban'}
-            onChange={(e) => setPreferences(prev => ({
-              ...prev,
-              defaults: { ...prev.defaults!, projectView: e.target.value as any }
-            }))}
-            className="w-full p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
-          >
-            <option value="kanban">Kanban Board</option>
-            <option value="list">List View</option>
-            <option value="timeline">Timeline</option>
-          </select>
-        </div>
+        <BrutalSelect
+          label="Default Project View"
+          value={preferences.defaults?.projectView || 'kanban'}
+          onChange={(v) => setPreferences(prev => ({
+            ...prev,
+            defaults: { ...prev.defaults, projectView: v }
+          }))}
+          options={[
+            { value: 'kanban', label: 'Kanban Board' },
+            { value: 'list', label: 'List View' },
+            { value: 'timeline', label: 'Timeline' },
+          ]}
+          fullWidth
+        />
 
-        <div>
-          <label htmlFor="settings-default-task-priority" className="block text-xs font-bold uppercase mb-2">Default Task Priority</label>
-          <select
-            id="settings-default-task-priority"
-            value={preferences.defaults?.taskPriority || 'medium'}
-            onChange={(e) => setPreferences(prev => ({
-              ...prev,
-              defaults: { ...prev.defaults!, taskPriority: e.target.value as any }
-            }))}
-            className="w-full p-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm focus:border-[var(--theme-primary)] outline-none"
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
-          </select>
-        </div>
+        <BrutalSelect
+          label="Default Task Priority"
+          value={preferences.defaults?.taskPriority || 'medium'}
+          onChange={(v) => setPreferences(prev => ({
+            ...prev,
+            defaults: { ...prev.defaults, taskPriority: v }
+          }))}
+          options={[
+            { value: 'low', label: 'Low' },
+            { value: 'medium', label: 'Medium' },
+            { value: 'high', label: 'High' },
+            { value: 'urgent', label: 'Urgent' },
+          ]}
+          fullWidth
+        />
 
         <BrutalToggle
           label="Auto-assign me to new tasks"
@@ -502,7 +636,7 @@ function WorkspaceTab({ preferences, setPreferences }: WorkspaceTabProps) {
   )
 }
 
-const TABS: { id: SettingsTab; label: string; icon: React.ComponentType<any> }[] = [
+const TABS: { id: SettingsTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'profile', label: 'Profile', icon: HiOutlineUser },
   { id: 'developer', label: 'Developer', icon: HiOutlineCode },
   { id: 'accessibility', label: 'Display', icon: HiOutlineEye },
@@ -555,13 +689,13 @@ interface SettingsSidebarProps {
 
 interface SettingsContentProps {
   activeTab: SettingsTab
-  profileData: { name: string; bio: string; avatarUrl: string; githubUsername: string }
+  profileData: ProfileData
   authEmail: string
-  setProfileData: (updater: (prev: any) => any) => void
-  preferences: any
-  setPreferences: (updater: (prev: any) => any) => void
-  currentUser: any
-  developerProfile: any
+  setProfileData: (updater: StateUpdater<ProfileData>) => void
+  preferences: UserPreferences
+  setPreferences: (updater: StateUpdater<UserPreferences>) => void
+  currentUser: Doc<"users">
+  developerProfile: DeveloperProfileResult | null | undefined
   onResetProfile: () => void
   onResetAccessibility: () => void
   onResetNotifications: () => void
@@ -636,7 +770,7 @@ function SettingsSidebar({ activeTab, onTabChange }: SettingsSidebarProps) {
 }
 
 interface SettingsPageContentProps {
-  currentUser: any
+  currentUser: Doc<"users">
 }
 
 function SettingsPageContent({ currentUser }: SettingsPageContentProps) {
@@ -683,7 +817,7 @@ function SettingsPageContent({ currentUser }: SettingsPageContentProps) {
     isSaving: isSavingPreferences,
     hasUnsavedChanges: hasUnsavedPreferences,
     forceSave: forceSavePreferences
-  } = useSettingsState({
+  } = useSettingsState<UserPreferences>({
     defaultValue: {
       notifications: {
         email: true,
@@ -711,13 +845,13 @@ function SettingsPageContent({ currentUser }: SettingsPageContentProps) {
     },
     onSave: async (data) => {
       try {
-        const cleanedData: any = { ...data }
-        if (!cleanedData.defaultWorkspaceId) {
-          delete cleanedData.defaultWorkspaceId
-        }
+        const { defaultWorkspaceId, ...rest } = data
+        const cleanedData = defaultWorkspaceId
+          ? { ...rest, defaultWorkspaceId }
+          : rest
         await updatePreferences({ preferences: cleanedData })
         toast.success('Preferences saved')
-      } catch (error: any) {
+      } catch (error: unknown) {
         throw error
       }
     }
@@ -734,8 +868,9 @@ function SettingsPageContent({ currentUser }: SettingsPageContentProps) {
     try {
       await updateProfile(resetData)
       toast.success('Profile reset')
-    } catch (error: any) {
-      toast.error(`Reset failed: ${error.message || 'Unknown error'}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      toast.error(`Reset failed: ${message}`)
     }
   }
 
@@ -755,8 +890,9 @@ function SettingsPageContent({ currentUser }: SettingsPageContentProps) {
     try {
       await updatePreferences({ preferences: resetPrefs })
       toast.success('Display settings reset')
-    } catch (error: any) {
-      toast.error(`Reset failed: ${error.message || 'Unknown error'}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      toast.error(`Reset failed: ${message}`)
     }
   }
 
@@ -783,8 +919,9 @@ function SettingsPageContent({ currentUser }: SettingsPageContentProps) {
     try {
       await updatePreferences({ preferences: resetPrefs })
       toast.success('Notifications reset')
-    } catch (error: any) {
-      toast.error(`Reset failed: ${error.message || 'Unknown error'}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      toast.error(`Reset failed: ${message}`)
     }
   }
 
@@ -846,11 +983,13 @@ export default function SettingsPage() {
 }
 
 // Helper component for section headers if needed
-function HiOutlineCog(props: any) {
+function HiOutlineCog(props: React.SVGProps<SVGSVGElement>) {
   return (
+    <ErrorBoundary>
     <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" {...props}>
       <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
       <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
     </svg>
+    </ErrorBoundary>
   )
 }

@@ -1,3 +1,4 @@
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import React, { useEffect, useRef, useReducer, type MutableRefObject } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAction } from 'convex/react';
@@ -114,6 +115,7 @@ export default function GitHubCallbackPage() {
   }, [searchParams, navigate, handleCallback]);
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-obsidian-black flex items-center justify-center p-[16px]">
       <BrutalCard className="max-w-md w-full p-[24px] text-center">
         <div className="mb-[12px]">
@@ -166,5 +168,6 @@ export default function GitHubCallbackPage() {
         )}
       </BrutalCard>
     </div>
+    </ErrorBoundary>
   );
 }

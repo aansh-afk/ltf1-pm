@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react'
-import { PerformanceMonitor } from '../utils/performanceUtils'
+import { PerformanceMonitor } from '@/components/features/whiteboard/utils/performanceUtils'
 
 interface PerformanceOverlayProps {
   monitor: PerformanceMonitor

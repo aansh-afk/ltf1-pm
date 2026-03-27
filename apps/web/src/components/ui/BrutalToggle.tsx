@@ -16,20 +16,23 @@ export default function BrutalToggle({
   size = 'md'
 }: BrutalToggleProps) {
   const sizes = {
-    sm: { width: 'w-10', height: 'h-5', thumb: 'w-4 h-4', translate: 'translate-x-5' },
-    md: { width: 'w-14', height: 'h-7', thumb: 'w-6 h-6', translate: 'translate-x-7' },
-    lg: { width: 'w-18', height: 'h-9', thumb: 'w-8 h-8', translate: 'translate-x-9' },
+    sm: { track: 'w-9 h-[18px]', thumb: 'h-3 w-3', off: 'left-[3px]', on: 'left-[21px]' },
+    md: { track: 'w-11 h-[22px]', thumb: 'h-3.5 w-3.5', off: 'left-[3px]', on: 'left-[27px]' },
+    lg: { track: 'w-14 h-7', thumb: 'h-4.5 w-4.5', off: 'left-[4px]', on: 'left-[34px]' },
   }
 
-  const sizeConfig = sizes[size]
+  const s = sizes[size]
 
   return (
     <label className={clsx(
-      'flex items-center gap-3 cursor-pointer',
-      disabled && 'cursor-not-allowed opacity-50'
+      'inline-flex items-center gap-3',
+      disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer group'
     )}>
       {label && (
-        <span className="text-sm font-bold uppercase tracking-wider font-mono">
+        <span className={clsx(
+          'text-sm font-semibold uppercase tracking-wider font-mono transition-colors duration-250',
+          checked ? 'text-[#F9FAFB]' : 'text-[#9CA3AF]'
+        )}>
           {label}
         </span>
       )}
@@ -37,26 +40,27 @@ export default function BrutalToggle({
         type="button"
         role="switch"
         aria-checked={checked}
-        onClick={() => !disabled && onChange(!checked)}
+        aria-label={label || 'Toggle'}
+        disabled={disabled}
+        onClick={() => onChange(!checked)}
         className={clsx(
-          'relative inline-flex items-center transition-colors duration-200',
-          sizeConfig.width,
-          sizeConfig.height,
-          'border-2 border-[var(--theme-border)]',
-          checked ? 'bg-[var(--theme-primary)]' : 'bg-[var(--theme-background-secondary)]',
-          disabled && 'cursor-not-allowed'
+          'relative inline-flex items-center rounded-md transition-all duration-250 ease-in-out',
+          'border-2 focus-visible:outline-none',
+          s.track,
+          checked
+            ? 'bg-[#6366F1] border-[#6366F1]'
+            : 'bg-[#111111] border-[#2E2E35]',
+          !disabled && 'group-hover:border-[#6366F1] group-hover:-translate-y-[2px]',
+          !disabled && 'focus-visible:border-[#6366F1]',
         )}
       >
         <span
           className={clsx(
-            'absolute transition-all duration-200',
-            sizeConfig.thumb,
-            'border-2 border-[var(--theme-border)]',
-            checked ? 'bg-[var(--theme-foreground)]' : 'bg-[var(--theme-disabled)]'
+            'absolute top-1/2 -translate-y-1/2 rounded transition-all duration-250 ease-in-out',
+            s.thumb,
+            checked ? 'bg-[#F9FAFB]' : 'bg-[#6B7280]',
+            checked ? s.on : s.off,
           )}
-          style={{
-            transform: checked ? `translateX(${size === 'sm' ? '20px' : size === 'md' ? '28px' : '36px'})` : 'translateX(2px)'
-          }}
         />
       </button>
     </label>

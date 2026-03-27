@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../../../../../../convex/_generated/api';
+import type { Doc } from '../../../../../../convex/_generated/dataModel';
 import {
   FaGithub,
   FaCheckCircle,
@@ -17,11 +18,30 @@ import SettingsSection from './SettingsSection';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 
+// --- Types ---
+
+interface GitHubStats {
+  username?: string
+  totalPRs?: number
+  totalReviews?: number
+  avgReviewTime?: number
+  languages?: Array<{ name: string; percentage: number }>
+  lastSynced?: number
+  isStale?: boolean
+}
+
+interface GitHubInstallation {
+  _id: string
+  accountName: string
+  accountType: string
+  installationId: number
+}
+
 // --- Sub-components ---
 
 interface ConnectionStatusCardProps {
   isConnected: boolean
-  githubStats: any
+  githubStats: GitHubStats | null | undefined
   isSyncing: boolean
   onSync: () => void
   onDisconnect: () => void
@@ -121,7 +141,7 @@ function ConnectionStatusCard({ isConnected, githubStats, isSyncing, onSync, onD
 
 interface GitHubAppInstallSectionProps {
   hasInstallations: boolean
-  installations: any[] | undefined
+  installations: GitHubInstallation[] | undefined
   onInstallApp: () => void
 }
 
@@ -159,7 +179,7 @@ function GitHubAppInstallSection({ hasInstallations, installations, onInstallApp
         </BrutalButton>
       ) : (
         <div className="space-y-3">
-          {installations?.map((installation: any) => (
+          {installations?.map((installation) => (
             <div key={installation._id} className="flex items-center justify-between p-3 bg-[var(--theme-background)] border-2 border-[var(--theme-border)]">
               <div>
                 <p className="font-mono text-sm font-bold">{installation.accountName}</p>
@@ -235,20 +255,27 @@ function FeaturesGrid() {
 // --- Main Component ---
 
 interface GitHubSettingsTabProps {
-  currentUser: any;
+  currentUser?: Doc<"users">;
 }
 
 export function GitHubSettingsTab({ currentUser }: GitHubSettingsTabProps) {
   const [isSyncing, setIsSyncing] = useState(false);
 
+  // Fallback: query for current user if not provided via props
+  const queriedUser = useQuery(
+    api.auth.users.getCurrentUser,
+    currentUser ? 'skip' : {}
+  );
+  const resolvedUser = currentUser ?? queriedUser;
+
   // Get GitHub stats
   const githubStats = useQuery(
     api.integrations.github.queries.getDeveloperGitHubStats,
-    currentUser ? { userId: currentUser._id } : 'skip'
-  );
+    resolvedUser ? { userId: resolvedUser._id } : 'skip'
+  ) as GitHubStats | null | undefined;
 
   // Get user's GitHub installations
-  const installations = useQuery(api.integrations.github.auth.getUserInstallations);
+  const installations = useQuery(api.integrations.github.auth.getUserInstallations) as GitHubInstallation[] | undefined;
 
   // Mutations
   const linkGitHubAccount = useMutation(api.integrations.github.auth.linkGitHubAccount);
