@@ -26,7 +26,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/vividverseglobal/iceberg",
+    "url": "https://github.com/aansh-afk/ltf1-pm",
     "directory": "apps/cli"
   },
   "dependencies": {
