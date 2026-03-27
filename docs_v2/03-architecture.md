@@ -532,7 +532,7 @@ process.stdout.write('\x1b[?1049l');   // Leave alternate screen
 | Component | Host | URL |
 |-----------|------|-----|
 | Web App | Vercel | ltf1.dev |
-| Convex Backend | Convex Cloud | tangible-butterfly-366.convex.cloud |
+| Convex Backend | Convex Cloud | your-deployment.convex.cloud |
 | Auth | Clerk Cloud | clerk.com |
 | Email | Resend | resend.com |
 | Billing | Polar.sh | polar.sh |

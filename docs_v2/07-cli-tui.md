@@ -428,7 +428,7 @@ This approach eliminates React component overhead and maps directly to terminal 
   },
   "server": {
     "webUrl": "https://ltf1.dev",
-    "convexUrl": "https://tangible-butterfly-366.convex.cloud"
+    "convexUrl": "https://your-deployment.convex.cloud"
   },
   "daemon": {
     "enabled": false,
