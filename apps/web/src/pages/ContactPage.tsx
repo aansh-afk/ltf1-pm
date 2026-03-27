@@ -21,7 +21,7 @@ const primaryCards: ContactCard[] = [
     title: 'Sales',
     description: 'Speak to our team about plans, pricing, enterprise contracts, or request a demo.',
     linkLabel: 'Talk to sales',
-    href: 'mailto:Aansh.Naidu@vividverseglobal.com?subject=Sales%20Inquiry',
+    href: 'mailto:icloud.comnuaym@gmail.com?subject=Sales%20Inquiry',
     external: false,
   },
   {
@@ -29,7 +29,7 @@ const primaryCards: ContactCard[] = [
     title: 'Help & support',
     description: 'Ask product questions, report problems, or leave feedback.',
     linkLabel: 'Contact support',
-    href: 'mailto:Aansh.Naidu@vividverseglobal.com?subject=Support%20Request',
+    href: 'mailto:icloud.comnuaym@gmail.com?subject=Support%20Request',
     external: false,
   },
 ]
@@ -47,8 +47,8 @@ const secondaryCards: ContactCard[] = [
     icon: '@',
     title: 'General communication',
     description: 'For other queries, please get in touch with us via email.',
-    linkLabel: 'Aansh.Naidu@vividverseglobal.com',
-    href: 'mailto:Aansh.Naidu@vividverseglobal.com',
+    linkLabel: 'icloud.comnuaym@gmail.com',
+    href: 'mailto:icloud.comnuaym@gmail.com',
     external: false,
   },
   {

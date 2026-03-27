@@ -3,7 +3,7 @@ import LegalLayout from "@/components/legal/LegalLayout";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
 const EFFECTIVE_DATE = "1 January 2026";
-const CONTACT_EMAIL = "Aansh.Naidu@vividverseglobal.com";
+const CONTACT_EMAIL = "icloud.comnuaym@gmail.com";
 
 export default function AcceptableUsePage() {
   usePageTitle("Acceptable Use Policy");
