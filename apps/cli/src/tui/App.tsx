@@ -27,6 +27,10 @@ import { useGitPage } from './pages/Git.js';
 import { useSearchPage } from './pages/Search.js';
 import { useNotificationsPage } from './pages/Notifications.js';
 import { useHelpPage } from './pages/Help.js';
+import { useAgentPage } from './pages/Agent.js';
+import { useSkillsPage } from './pages/Skills.js';
+import { useProjectsPage } from './pages/Projects.js';
+import { useSettingsPage } from './pages/Settings.js';
 import { useTimeTracking } from './hooks/useTimeTracking.js';
 import { useNotifications } from './hooks/useNotifications.js';
 import { login, refreshToken } from '../lib/auth.js';
@@ -232,6 +236,10 @@ export function App({ initialView = 'dashboard' }: AppProps) {
   const searchRows = useSearchPage({ width: W, height: H, isActive: view === 'search' });
   const notificationsRows = useNotificationsPage({ width: W, height: H, isActive: view === 'notifications' });
   const helpRows = useHelpPage({ width: W, height: H, isActive: view === 'help' });
+  const agentRows = useAgentPage({ width: W, height: H, isActive: view === 'agent' });
+  const skillsRows = useSkillsPage({ width: W, height: H, isActive: view === 'skills' });
+  const projectsRows = useProjectsPage({ width: W, height: H, isActive: view === 'projects' });
+  const settingsRows = useSettingsPage({ width: W, height: H, isActive: view === 'settings' });
   const { activeTimer: _activeTimer, elapsed: _elapsed } = useTimeTracking();
   const { unreadCount } = useNotifications();
 
@@ -370,12 +378,10 @@ export function App({ initialView = 'dashboard' }: AppProps) {
       case 'search':        return <LegacyRows rows={searchRows} />;
       case 'notifications': return <LegacyRows rows={notificationsRows} />;
       case 'help':          return <LegacyRows rows={helpRows} />;
-
-      // New stub pages (teammates will fill these in)
-      case 'agent':    return <StubPage name="Agent" />;
-      case 'skills':   return <StubPage name="Skills" />;
-      case 'projects': return <StubPage name="Projects" />;
-      case 'settings': return <StubPage name="Settings" />;
+      case 'agent':         return <LegacyRows rows={agentRows} />;
+      case 'skills':        return <LegacyRows rows={skillsRows} />;
+      case 'projects':      return <LegacyRows rows={projectsRows} />;
+      case 'settings':      return <LegacyRows rows={settingsRows} />;
 
       default:         return <StubPage name={view} />;
     }

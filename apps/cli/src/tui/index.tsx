@@ -44,19 +44,9 @@ export async function startDashboard() {
   // Enable mouse tracking
   process.stdout.write(MOUSE_ENABLE);
 
-  // Prevent ink's full-screen clear from causing background flicker.
+  // Let Ink's clear sequence run normally — this fixes the ghost text bug
+  // where old content stays on screen when the rendered height shrinks.
   const origWrite = process.stdout.write;
-  const stdout = process.stdout;
-  process.stdout.write = function (
-    this: typeof stdout,
-    chunk: unknown,
-    ...args: unknown[]
-  ): boolean {
-    if (typeof chunk === 'string' && chunk.includes(INK_CLEAR_TERMINAL)) {
-      chunk = chunk.replace(INK_CLEAR_TERMINAL, CURSOR_HOME);
-    }
-    return (origWrite as Function).apply(this, [chunk, ...args]);
-  } as typeof process.stdout.write;
 
   // Cleanup function to restore terminal
   const cleanup = () => {

@@ -5,7 +5,7 @@
 
 export const theme = {
   // Backgrounds
-  bg: '#0A0A0A',
+  bg: '#000000',
   surface: '#111111',
   card: '#1A1A1A',
 
