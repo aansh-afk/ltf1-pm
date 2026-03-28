@@ -10,7 +10,7 @@ interface CreateProjectModalProps {
   isOpen: boolean
   onClose: () => void
   workspaceId: string
-  onSuccess?: () => void
+  onSuccess?: (projectId?: string) => void
 }
 
 type CreateProjectState = {
@@ -67,7 +67,7 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
     dispatch({ type: 'UPDATE', field: 'isCreating', value: true })
 
     try {
-      await createProject({
+      const createdId = await createProject({
         workspaceId,
         name: name.trim(),
         key: key.trim().toUpperCase(),
@@ -78,7 +78,7 @@ export default function CreateProjectModal({ isOpen, onClose, workspaceId, onSuc
       posthog.capture('project_created', { workflow_type: workflowType, has_description: !!description.trim() })
       toast.success('Project created successfully!')
       dispatch({ type: 'RESET' })
-      onSuccess?.()
+      onSuccess?.(createdId)
       onClose()
     } catch (error: any) {
       posthog.capture('project_creation_failed', { error: error.message })

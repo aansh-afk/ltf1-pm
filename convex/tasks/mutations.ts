@@ -2,7 +2,6 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import {
   canAccessTask,
-  getTaskProject,
   requirePermission,
 } from "../auth/permissions";
 import { internal } from "../_generated/api";

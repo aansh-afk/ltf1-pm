@@ -9,7 +9,7 @@ import BrutalButton from '@/components/ui/BrutalButton'
 interface CreateWorkspaceModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess?: () => void
+  onSuccess?: (workspaceId?: string) => void
 }
 
 export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: CreateWorkspaceModalProps) {
@@ -41,11 +41,11 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: Cre
     setIsCreating(true)
     
     try {
-      await createWorkspace({
+      const createdId = await createWorkspace({
         name: name.trim(),
         description: description.trim() || undefined,
       })
-      
+
       toast.success('WORKSPACE CREATED', {
         style: {
           background: 'var(--theme-success)',
@@ -60,7 +60,7 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onSuccess }: Cre
       })
       setName('')
       setDescription('')
-      onSuccess?.()
+      onSuccess?.(createdId)
       onClose()
     } catch (error: any) {
       toast.error(`ERROR: ${error.message || 'CREATION FAILED'}`.toUpperCase(), {

@@ -15,9 +15,13 @@ import {
   HiOutlineSearch,
   HiOutlineDocumentText,
   HiOutlineRefresh,
-  HiOutlineExclamationCircle
+  HiOutlineExclamationCircle,
+  HiOutlineInbox,
 } from 'react-icons/hi'
 import clsx from 'clsx'
+import { useQuery } from 'convex/react'
+import { api } from '../../../../../convex/_generated/api'
+import type { Id } from '../../../../../convex/_generated/dataModel'
 import { useResourceMonitor } from '@/hooks/useResourceMonitor'
 import { useCurrentWorkspace } from '@/hooks/useCurrentWorkspace'
 import { useAfkDetection } from '@/hooks/useAfkDetection'
@@ -134,6 +138,7 @@ const NAV_ITEMS = [
   { path: '/workspaces', label: 'WORKSPACES', icon: HiOutlineBriefcase },
   { path: '/projects', label: 'PROJECTS', icon: HiOutlineFolder },
   { path: '/tasks', label: 'TASKS', icon: HiOutlineClipboardList },
+  { path: '/triage', label: 'TRIAGE', icon: HiOutlineInbox },
   { path: '/team', label: 'TEAM', icon: HiOutlineUserGroup },
   { path: '/sprints', label: 'SPRINTS', icon: HiOutlineRefresh },
   { path: '/pages', label: 'PAGES', icon: HiOutlineDocumentText },
@@ -152,6 +157,14 @@ export default function DashboardLayout() {
 
   const { stats, formatMemory } = useResourceMonitor()
   const { currentWorkspaceId } = useCurrentWorkspace()
+
+  const triageStats = useQuery(
+    api.agent.queries.getTriageStats,
+    currentWorkspaceId
+      ? { workspaceId: currentWorkspaceId as Id<"workspaces"> }
+      : 'skip',
+  )
+  const triagePendingCount = triageStats?.pendingCount ?? 0
 
   useAfkDetection({
     afkTimeout: 5 * 60 * 1000,
@@ -261,6 +274,15 @@ export default function DashboardLayout() {
                       {item.label}
                     </span>
                   </div>
+                  {/* Triage pending count badge */}
+                  {item.path === '/triage' && triagePendingCount > 0 && isExpanded && (
+                    <span className="ml-auto px-[5px] py-[1px] text-[9px] font-bold font-mono bg-[var(--theme-warning)] text-[var(--theme-background)] leading-tight">
+                      {triagePendingCount}
+                    </span>
+                  )}
+                  {item.path === '/triage' && triagePendingCount > 0 && !isExpanded && (
+                    <span className="absolute top-[2px] right-[4px] w-[6px] h-[6px] bg-[var(--theme-warning)] rounded-full" />
+                  )}
                 </div>
 
                 {/* Tooltip for collapsed state */}

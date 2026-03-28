@@ -2,10 +2,12 @@ import { useState } from 'react'
 import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
+import type { Id } from '../../../../convex/_generated/dataModel'
 import { HiOutlinePlus, HiOutlineFolder, HiOutlineGlobeAlt, HiOutlineTerminal, HiOutlineChip } from 'react-icons/hi'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import WorkspaceSelector from '@/components/common/WorkspaceSelector'
 import CreateProjectModal from '@/components/features/project/CreateProjectModal'
+import ProjectOnboardingWizard from '@/components/features/projects/ProjectOnboardingWizard'
 import ProjectCard from '@/components/features/project/ProjectCard'
 import { useCurrentWorkspace } from '@/hooks/useCurrentWorkspace'
 import BrutalButton from '@/components/ui/BrutalButton'
@@ -13,6 +15,8 @@ import { m } from 'framer-motion'
 
 export default function ProjectsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [newProjectId, setNewProjectId] = useState<Id<"projects"> | null>(null)
   const { currentWorkspaceId, isLoading: workspaceLoading, hasWorkspaceContext, workspaces } = useCurrentWorkspace()
 
   const projects = useQuery(
@@ -169,7 +173,28 @@ export default function ProjectsPage() {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         workspaceId={currentWorkspaceId}
+        onSuccess={(projectId) => {
+          if (projectId && currentWorkspaceId) {
+            setNewProjectId(projectId as Id<"projects">)
+            setShowOnboarding(true)
+          }
+        }}
       />
+
+      {showOnboarding && newProjectId && currentWorkspaceId && (
+        <ProjectOnboardingWizard
+          projectId={newProjectId}
+          workspaceId={currentWorkspaceId as Id<"workspaces">}
+          onComplete={() => {
+            setShowOnboarding(false)
+            setNewProjectId(null)
+          }}
+          onSkip={() => {
+            setShowOnboarding(false)
+            setNewProjectId(null)
+          }}
+        />
+      )}
     </div>
     </ErrorBoundary>
   )

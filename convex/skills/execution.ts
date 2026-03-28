@@ -248,9 +248,9 @@ export const executeSkill = action({
     }
 
     // Fetch the skill
-    const skill: any = await ctx.runQuery(api.skills.queries.getSkillById, {
+    const skill = await ctx.runQuery(api.skills.queries.getSkillById, {
       skillId: args.skillId,
-    });
+    }) as any;
     if (!skill) {
       throw new Error("Skill not found");
     }

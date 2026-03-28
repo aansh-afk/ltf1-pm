@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../../../../../convex/_generated/api";
 import {
   HiOutlineDotsVertical,
   HiOutlinePencil,
@@ -66,8 +68,14 @@ export default function TaskCard({
   onViewDetails,
 }: TaskCardProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const [showSuggestionTip, setShowSuggestionTip] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const triageSuggestion = useQuery(
+    api.agent.queries.getTriageSuggestionForTask,
+    task._id ? { taskId: task._id } : "skip"
+  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -240,6 +248,65 @@ export default function TaskCard({
         <h4 className="font-mono text-xs font-bold leading-snug text-[var(--theme-foreground)] break-words line-clamp-2">
           {task.title}
         </h4>
+
+        {/* Agent Triage Badge */}
+        {triageSuggestion && triageSuggestion.status === "pending" && (
+          <div
+            className="relative"
+            onMouseEnter={() => setShowSuggestionTip(true)}
+            onMouseLeave={() => setShowSuggestionTip(false)}
+          >
+            <span
+              className="inline-flex items-center gap-1 px-1.5 py-px text-[9px] font-mono font-bold uppercase tracking-wider border"
+              style={{
+                color: "#F59E0B",
+                backgroundColor: "rgba(245, 158, 11, 0.1)",
+                borderColor: "rgba(245, 158, 11, 0.3)",
+              }}
+            >
+              AGENT
+            </span>
+            {showSuggestionTip && (
+              <div
+                className="absolute left-0 top-full mt-1 z-50 p-1.5 min-w-[160px] border-2 text-[9px] font-mono"
+                style={{
+                  backgroundColor: "var(--theme-background)",
+                  borderColor: "rgba(245, 158, 11, 0.4)",
+                  boxShadow: "4px 4px 0px var(--theme-shadow)",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {triageSuggestion.suggestedType && (
+                  <div className="text-[var(--theme-foreground-secondary)]">
+                    Type: <span style={{ color: "#F59E0B" }}>{triageSuggestion.suggestedType}</span>
+                  </div>
+                )}
+                {triageSuggestion.suggestedPriority && (
+                  <div className="text-[var(--theme-foreground-secondary)]">
+                    Priority: <span style={{ color: "#F59E0B" }}>{triageSuggestion.suggestedPriority}</span>
+                  </div>
+                )}
+                {triageSuggestion.confidence != null && (
+                  <div className="text-[var(--theme-foreground-tertiary)]">
+                    Confidence: {Math.round(triageSuggestion.confidence * 100)}%
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+        {triageSuggestion && triageSuggestion.status === "auto_applied" && (
+          <span
+            className="inline-flex items-center gap-1 px-1.5 py-px text-[9px] font-mono font-bold uppercase tracking-wider border"
+            style={{
+              color: "var(--theme-success)",
+              backgroundColor: "rgba(34, 197, 94, 0.1)",
+              borderColor: "rgba(34, 197, 94, 0.3)",
+            }}
+          >
+            AUTO-TRIAGED
+          </span>
+        )}
 
         {/* Labels */}
         {!isCompact && task.labels && task.labels.length > 0 && (
