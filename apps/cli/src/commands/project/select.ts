@@ -3,7 +3,6 @@
  * Stores the selected project in CLI config for subsequent commands
  */
 
-// @ts-expect-error - inquirer types resolved from monorepo root
 import inquirer from 'inquirer';
 import { requireAuth } from '../../lib/auth.js';
 import { getAuthenticatedClient, query } from '../../lib/convex.js';

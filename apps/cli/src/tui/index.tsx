@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
  * LTF1 TUI Dashboard Entry Point
- * Full-screen terminal application with black background
+ * Full-screen terminal application with mouse support
  */
 
-import React from 'react';
 import { render } from 'ink';
+import { MouseProvider } from '@zenobius/ink-mouse';
 import { App } from './App.js';
 
 // ANSI escape codes for terminal control
@@ -16,6 +16,10 @@ const CLEAR_SCREEN = `${ESC}[2J`;
 const CURSOR_HOME = `${ESC}[H`;
 const CURSOR_HIDE = `${ESC}[?25l`;
 const CURSOR_SHOW = `${ESC}[?25h`;
+
+// Mouse tracking: SGR extended mode (works in most modern terminals)
+const MOUSE_ENABLE = `${ESC}[?1003h${ESC}[?1006h`;
+const MOUSE_DISABLE = `${ESC}[?1003l${ESC}[?1006l`;
 
 // Ink's clearTerminal sequence: erase screen + erase scrollback + cursor home.
 // When output height >= terminal rows, ink writes this before every frame,
@@ -37,14 +41,14 @@ export async function startDashboard() {
   process.stdout.write(CURSOR_HOME);
   process.stdout.write(CURSOR_HIDE);
 
+  // Enable mouse tracking
+  process.stdout.write(MOUSE_ENABLE);
+
   // Prevent ink's full-screen clear from causing background flicker.
-  // When ink's rendered output fills the terminal, it calls clearTerminal
-  // (erase screen + erase scrollback + cursor home) before writing each frame.
-  // This flashes the default background. We intercept stdout.write and replace
-  // the clearTerminal sequence with cursor-home only, so content is overwritten
-  // in-place without any visible flash.
   const origWrite = process.stdout.write;
+  const stdout = process.stdout;
   process.stdout.write = function (
+    this: typeof stdout,
     chunk: unknown,
     ...args: unknown[]
   ): boolean {
@@ -57,6 +61,7 @@ export async function startDashboard() {
   // Cleanup function to restore terminal
   const cleanup = () => {
     process.stdout.write = origWrite;
+    process.stdout.write(MOUSE_DISABLE);
     process.stdout.write(CURSOR_SHOW);
     process.stdout.write(ALTERNATE_SCREEN_OFF);
   };
@@ -73,9 +78,14 @@ export async function startDashboard() {
   });
 
   try {
-    const { waitUntilExit } = render(<App />, {
-      patchConsole: false,
-    });
+    const { waitUntilExit } = render(
+      <MouseProvider>
+        <App />
+      </MouseProvider>,
+      {
+        patchConsole: false,
+      },
+    );
     await waitUntilExit();
   } finally {
     cleanup();

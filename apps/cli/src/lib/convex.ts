@@ -4,7 +4,7 @@
  */
 
 import { ConvexHttpClient } from 'convex/browser';
-import type { FunctionReference, FunctionArgs, FunctionReturnType } from 'convex/server';
+import type { FunctionReference } from 'convex/server';
 import { makeFunctionReference } from 'convex/server';
 import { getAuth, isAuthenticated } from './config.js';
 import output from './output.js';
@@ -111,6 +111,27 @@ export const api = {
       getCurrentUser: makeFunctionReference<'query'>('auth/users:getCurrentUser'),
     },
   },
+  agent: {
+    queries: {
+      getTriageQueue: makeFunctionReference<'query'>('agent/queries:getTriageQueue'),
+      getTriageStats: makeFunctionReference<'query'>('agent/queries:getTriageStats'),
+      getAgentActivityFeed: makeFunctionReference<'query'>('agent/queries:getAgentActivityFeed'),
+    },
+    mutations: {
+      acceptTriageSuggestion: makeFunctionReference<'mutation'>('agent/triageMutations:acceptTriageSuggestion'),
+      rejectTriageSuggestion: makeFunctionReference<'mutation'>('agent/triageMutations:rejectTriageSuggestion'),
+    },
+  },
+  skills: {
+    queries: {
+      getUserSkills: makeFunctionReference<'query'>('skills/queries:getUserSkills'),
+      getSkillLibrary: makeFunctionReference<'query'>('skills/queries:getSkillLibrary'),
+    },
+    mutations: {
+      toggleSkill: makeFunctionReference<'mutation'>('skills/mutations:toggleSkill'),
+      runSkill: makeFunctionReference<'mutation'>('skills/mutations:runSkill'),
+    },
+  },
 };
 
 // Convex deployment URL - should match the web app
@@ -189,15 +210,19 @@ export function getConvexUrl(): string {
 
 /**
  * Type-safe query helper with error handling
- * Uses proper function references from the Convex API
+ * Supports both FunctionReference objects and string paths.
+ * When using a string path, specify the expected return type as the generic parameter.
  */
-export async function query<Query extends FunctionReference<'query'>>(
+export async function query<T = unknown>(
   client: ConvexHttpClient,
-  functionReference: Query,
-  args: FunctionArgs<Query>
-): Promise<FunctionReturnType<Query>> {
+  functionReference: FunctionReference<'query'> | string,
+  args?: Record<string, unknown>
+): Promise<T> {
   try {
-    return await client.query(functionReference, args);
+    const ref = typeof functionReference === 'string'
+      ? makeFunctionReference<'query'>(functionReference)
+      : functionReference;
+    return await client.query(ref, args ?? {}) as T;
   } catch (err) {
     const errorMsg = getErrorMessage(err);
     if (errorMsg.includes('Unauthenticated')) {
@@ -210,15 +235,19 @@ export async function query<Query extends FunctionReference<'query'>>(
 
 /**
  * Type-safe mutation helper with error handling
- * Uses proper function references from the Convex API
+ * Supports both FunctionReference objects and string paths.
+ * When using a string path, specify the expected return type as the generic parameter.
  */
-export async function mutation<Mutation extends FunctionReference<'mutation'>>(
+export async function mutation<T = unknown>(
   client: ConvexHttpClient,
-  functionReference: Mutation,
-  args: FunctionArgs<Mutation>
-): Promise<FunctionReturnType<Mutation>> {
+  functionReference: FunctionReference<'mutation'> | string,
+  args?: Record<string, unknown>
+): Promise<T> {
   try {
-    return await client.mutation(functionReference, args);
+    const ref = typeof functionReference === 'string'
+      ? makeFunctionReference<'mutation'>(functionReference)
+      : functionReference;
+    return await client.mutation(ref, args ?? {}) as T;
   } catch (err) {
     const errorMsg = getErrorMessage(err);
     if (errorMsg.includes('Unauthenticated')) {
@@ -231,15 +260,19 @@ export async function mutation<Mutation extends FunctionReference<'mutation'>>(
 
 /**
  * Type-safe action helper with error handling
- * Uses proper function references from the Convex API
+ * Supports both FunctionReference objects and string paths.
+ * When using a string path, specify the expected return type as the generic parameter.
  */
-export async function action<Action extends FunctionReference<'action'>>(
+export async function action<T = unknown>(
   client: ConvexHttpClient,
-  functionReference: Action,
-  args: FunctionArgs<Action>
-): Promise<FunctionReturnType<Action>> {
+  functionReference: FunctionReference<'action'> | string,
+  args?: Record<string, unknown>
+): Promise<T> {
   try {
-    return await client.action(functionReference, args);
+    const ref = typeof functionReference === 'string'
+      ? makeFunctionReference<'action'>(functionReference)
+      : functionReference;
+    return await client.action(ref, args ?? {}) as T;
   } catch (err) {
     const errorMsg = getErrorMessage(err);
     if (errorMsg.includes('Unauthenticated')) {

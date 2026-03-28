@@ -288,28 +288,17 @@ export async function loginWithBrowser(): Promise<AuthConfig> {
 
         server.close();
 
-        // Parse JWT exp claim for real expiry (fallback to 1 hour)
-        let expiresAt = Date.now() + 60 * 60 * 1000;
-        try {
-          const parts = token.split(".");
-          if (parts.length === 3) {
-            const payload = JSON.parse(
-              Buffer.from(parts[1], "base64url").toString(),
-            );
-            if (payload.exp) {
-              expiresAt = payload.exp * 1000;
-            }
-          }
-        } catch {
-          // fallback already set
-        }
+        // Clerk JWTs are short-lived (~60s) but the session lasts ~7 days.
+        // Store the session expiry (7 days) for CLI persistence, not the JWT exp.
+        // The short-lived JWT will be refreshed silently via sessionId.
+        const sessionExpiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
 
         const authConfig: AuthConfig = {
           token,
           tokenType: "clerk",
           userId: userId || undefined,
           email: email || undefined,
-          expiresAt,
+          expiresAt: sessionExpiresAt,
           sessionId: sessionId || undefined,
         };
 
@@ -426,21 +415,9 @@ export async function refreshToken(): Promise<boolean> {
       return false;
     }
 
-    // Parse JWT exp claim for real expiry
-    let expiresAt = Date.now() + 60 * 60 * 1000;
-    try {
-      const parts = data.token.split(".");
-      if (parts.length === 3) {
-        const payload = JSON.parse(
-          Buffer.from(parts[1], "base64url").toString(),
-        );
-        if (payload.exp) {
-          expiresAt = payload.exp * 1000;
-        }
-      }
-    } catch {
-      // fallback already set
-    }
+    // Extend session expiry by 7 days on each successful refresh.
+    // The JWT itself is short-lived (~60s) but the CLI session persists.
+    const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
 
     // Update stored auth with fresh token (preserve sessionId)
     setAuth({
@@ -467,7 +444,9 @@ export function logout(): void {
 }
 
 /**
- * Get current auth status
+ * Get current auth status.
+ * Does NOT clear auth on expiry — callers should use refreshToken()
+ * to silently obtain a new JWT before giving up.
  */
 export function getAuthStatus(): {
   authenticated: boolean;
@@ -475,6 +454,7 @@ export function getAuthStatus(): {
   email?: string;
   userId?: string;
   expiresAt?: Date;
+  expired?: boolean;
 } {
   const auth = getAuth();
 
@@ -482,30 +462,47 @@ export function getAuthStatus(): {
     return { authenticated: false };
   }
 
-  // Check expiration
-  if (auth.expiresAt && auth.expiresAt < Date.now()) {
+  const expired = !!(auth.expiresAt && auth.expiresAt < Date.now());
+
+  // If the session has expired AND there's no sessionId to refresh with,
+  // clear auth. Otherwise keep it — the caller can try refreshToken().
+  if (expired && !auth.sessionId) {
     clearAuth();
     return { authenticated: false };
   }
 
   return {
-    authenticated: true,
+    authenticated: !expired,
     type: auth.tokenType,
     email: auth.email,
     userId: auth.userId,
     expiresAt: auth.expiresAt ? new Date(auth.expiresAt) : undefined,
+    expired,
   };
 }
 
 /**
- * Ensure user is authenticated, exit if not
+ * Ensure user is authenticated, attempting silent refresh if needed.
+ * Exits the process if authentication cannot be restored.
  */
-export function requireAuth(): void {
+export async function requireAuth(): Promise<void> {
   const status = getAuthStatus();
-  if (!status.authenticated) {
-    output.error("Not authenticated", "Run `ltf auth login` to authenticate");
-    process.exit(1);
+
+  if (status.authenticated) {
+    return;
   }
+
+  // If we have a sessionId we can try a silent refresh
+  const auth = getAuth();
+  if (auth?.sessionId) {
+    const refreshed = await refreshToken();
+    if (refreshed) {
+      return;
+    }
+  }
+
+  output.error("Not authenticated", "Run `ltf auth login` to authenticate");
+  process.exit(1);
 }
 
 export default {

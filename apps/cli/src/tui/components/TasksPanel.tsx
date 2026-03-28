@@ -2,7 +2,6 @@
  * Tasks Panel Component
  */
 
-import React from 'react';
 import { Box, Text } from 'ink';
 import { theme } from '../styles/theme.js';
 

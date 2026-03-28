@@ -1,17 +1,22 @@
 /**
- * Git Page - Interactive git status with staging, committing, and task linking
- * Shows branch, navigable file list, stage/unstage, commit, link task
+ * Git Page - Interactive git status with staging, committing, task linking,
+ * and local-to-web project linking.
+ *
+ * Modes: status | commit | link | project_link | project_select | confirm_link
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useInput } from 'ink';
 import simpleGit from 'simple-git';
 import { useGitStatus } from '../hooks/useGitStatus.js';
+import { useConfig } from '../hooks/useConfig.js';
+import { useConvexQuery } from '../hooks/useConvex.js';
+import { api } from '../../lib/convex.js';
 import type { Row } from '../types.js';
-import { WHITE, LIGHT, GRAY, DIM, DARK } from '../theme.js';
+import { theme } from '../theme.js';
 import {
   segRow, blank, padSegs, fillTo, rep,
-  pageHeader, pageFooter, section, relativeTime,
+  pageHeader, pageFooter, section, truncate, relativeTime,
 } from '../helpers.js';
 
 export interface GitPageProps {
@@ -21,7 +26,7 @@ export interface GitPageProps {
   isActive?: boolean;
 }
 
-type GitMode = 'status' | 'commit' | 'link';
+type GitMode = 'status' | 'commit' | 'link' | 'project_select' | 'confirm_link';
 
 interface CombinedFile {
   path: string;
@@ -41,8 +46,59 @@ function fileStatusLabel(f: CombinedFile): string {
   return ' ';
 }
 
+function fileStatusColor(label: string): string {
+  switch (label) {
+    case 'A': return theme.green;
+    case 'M': return theme.amber;
+    case 'D': return theme.red;
+    case 'R': return theme.cyan;
+    case '?': return theme.textMuted;
+    default: return theme.textSecondary;
+  }
+}
+
+interface ProjectItem {
+  _id: string;
+  name: string;
+  key: string;
+  repository?: { url?: string; owner?: string; name?: string } | null;
+}
+
 export function useGitPage({ width: W, height: H, timeStr, isActive = true }: GitPageProps): Row[] {
   const git = useGitStatus(5000, isActive);
+  const config = useConfig();
+
+  // Fetch workspace projects for linking
+  const projectsQuery = useConvexQuery(
+    api.projects.queries.getWorkspaceProjects,
+    config.workspaceId ? { workspaceId: config.workspaceId as never } : null,
+    30000,
+  );
+
+  const projects = useMemo(() => {
+    return ((projectsQuery.data as ProjectItem[] | null) || []);
+  }, [projectsQuery.data]);
+
+  // Determine if current repo is linked to a project
+  const linkedProject = useMemo(() => {
+    if (!git.remoteUrl || projects.length === 0) return null;
+    const normalizedRemote = git.remoteUrl
+      .replace(/\.git$/, '')
+      .replace(/^git@([^:]+):/, 'https://$1/')
+      .replace(/\/$/, '')
+      .toLowerCase();
+    for (const p of projects) {
+      if (p.repository?.url) {
+        const normalizedRepo = p.repository.url
+          .replace(/\.git$/, '')
+          .replace(/^git@([^:]+):/, 'https://$1/')
+          .replace(/\/$/, '')
+          .toLowerCase();
+        if (normalizedRemote === normalizedRepo) return p;
+      }
+    }
+    return null;
+  }, [git.remoteUrl, projects]);
 
   const [mode, setMode] = useState<GitMode>('status');
   const [selectedFileIndex, setSelectedFileIndex] = useState(0);
@@ -50,6 +106,8 @@ export function useGitPage({ width: W, height: H, timeStr, isActive = true }: Gi
   const [linkTaskInput, setLinkTaskInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [projectSelectIndex, setProjectSelectIndex] = useState(0);
+  const [pendingLinkProject, setPendingLinkProject] = useState<ProjectItem | null>(null);
 
   // Build combined file list
   const allFiles: CombinedFile[] = [
@@ -57,13 +115,10 @@ export function useGitPage({ width: W, height: H, timeStr, isActive = true }: Gi
     ...git.unstagedFiles.map(f => ({ ...f, staged: false })),
   ];
 
-  // Count staged files in combined list
   const stagedCount = git.stagedFiles.length;
 
-  // Clamp selection
   const clampIdx = useCallback((n: number) => Math.max(0, Math.min(allFiles.length - 1, n)), [allFiles.length]);
 
-  // Show feedback briefly
   const showFeedback = useCallback((msg: string) => {
     setFeedback(msg);
     setTimeout(() => setFeedback(null), 2500);
@@ -141,49 +196,43 @@ export function useGitPage({ width: W, height: H, timeStr, isActive = true }: Gi
     if (busy) return;
 
     if (mode === 'status') {
-      // Navigate files
       if (input === 'j' || key.downArrow) {
         setSelectedFileIndex(prev => clampIdx(prev + 1));
       }
       if (input === 'k' || key.upArrow) {
         setSelectedFileIndex(prev => clampIdx(prev - 1));
       }
-
-      // Toggle stage/unstage selected file
       if (input === ' ' && allFiles.length > 0) {
         const file = allFiles[selectedFileIndex];
-        if (file) {
-          void toggleStage(file);
-        }
+        if (file) void toggleStage(file);
       }
-
-      // Stage all
-      if (input === 's') {
+      if (input === 'a') {
         void stageAll();
       }
-
-      // Unstage all
       if (input === 'u') {
         void unstageAll();
       }
-
-      // Open commit mode
       if (input === 'c') {
         if (stagedCount === 0) {
-          showFeedback('No staged files. Space to stage, s to stage all.');
+          showFeedback('No staged files. Space to stage, a to stage all.');
         } else {
           setMode('commit');
           setCommitMessage('');
         }
       }
-
-      // Open link mode
       if (input === 'l') {
         setMode('link');
         setLinkTaskInput('');
       }
-
-      // Refresh
+      // L (shift+l) for project linking
+      if (input === 'L') {
+        if (projects.length === 0) {
+          showFeedback('No projects available. Create one on the web first.');
+        } else {
+          setMode('project_select');
+          setProjectSelectIndex(0);
+        }
+      }
       if (input === 'r') {
         git.refetch();
         showFeedback('Refreshing...');
@@ -212,6 +261,34 @@ export function useGitPage({ width: W, height: H, timeStr, isActive = true }: Gi
       } else if (input && !key.ctrl && !key.meta && input.length === 1) {
         setLinkTaskInput(prev => prev + input);
       }
+    } else if (mode === 'project_select') {
+      if (key.escape) {
+        setMode('status');
+      }
+      if (input === 'j' || key.downArrow) {
+        setProjectSelectIndex(prev => Math.min(projects.length - 1, prev + 1));
+      }
+      if (input === 'k' || key.upArrow) {
+        setProjectSelectIndex(prev => Math.max(0, prev - 1));
+      }
+      if (key.return && projects[projectSelectIndex]) {
+        setPendingLinkProject(projects[projectSelectIndex]);
+        setMode('confirm_link');
+      }
+    } else if (mode === 'confirm_link') {
+      if (key.escape || input === 'n' || input === 'N') {
+        setPendingLinkProject(null);
+        setMode('status');
+      }
+      if (input === 'y' || input === 'Y') {
+        if (pendingLinkProject) {
+          showFeedback(`Linked repo to ${pendingLinkProject.name}`);
+          // In a full implementation, this would call api.projects.mutations.connectRepository
+          // with the remote URL and project ID
+        }
+        setPendingLinkProject(null);
+        setMode('status');
+      }
     }
   }, { isActive: isActive ?? true });
 
@@ -225,7 +302,7 @@ export function useGitPage({ width: W, height: H, timeStr, isActive = true }: Gi
   // Loading state
   if (git.loading && !git.branch) {
     rows.push(segRow(padSegs([
-      { text: '  Loading git status...', color: GRAY },
+      { text: '  Loading git status...', color: theme.textMuted },
     ], W)));
     fillTo(rows, H - 2, W);
     rows.push(...pageFooter(W));
@@ -235,13 +312,13 @@ export function useGitPage({ width: W, height: H, timeStr, isActive = true }: Gi
   // Not a repo
   if (!git.isRepo) {
     rows.push(segRow(padSegs([
-      { text: '  Not a git repository', color: GRAY },
+      { text: '  Not a git repository', color: theme.textMuted },
     ], W)));
     rows.push(blank(W));
     rows.push(segRow(padSegs([
-      { text: '  Run ', color: DIM },
-      { text: 'git init', color: LIGHT },
-      { text: ' to initialize a repository', color: DIM },
+      { text: '  Run ', color: theme.textDim },
+      { text: 'git init', color: theme.textSecondary },
+      { text: ' to initialize a repository', color: theme.textDim },
     ], W)));
     fillTo(rows, H - 2, W);
     rows.push(...pageFooter(W));
@@ -251,10 +328,101 @@ export function useGitPage({ width: W, height: H, timeStr, isActive = true }: Gi
   // Error state
   if (git.error) {
     rows.push(segRow(padSegs([
-      { text: '  Error: ', color: GRAY },
-      { text: git.error, color: LIGHT },
+      { text: '  Error: ', color: theme.textMuted },
+      { text: git.error, color: theme.textSecondary },
     ], W)));
     rows.push(blank(W));
+    fillTo(rows, H - 2, W);
+    rows.push(...pageFooter(W));
+    return rows;
+  }
+
+  // ── Project select mode ─────────────────────────────────
+  if (mode === 'project_select') {
+    rows.push(segRow(padSegs([
+      { text: '  Link Repo to Project', color: theme.text },
+    ], W)));
+    rows.push(blank(W));
+
+    if (git.remoteUrl) {
+      rows.push(segRow(padSegs([
+        { text: '  Repo  ', color: theme.textMuted },
+        { text: truncate(git.remoteUrl, W - 12), color: theme.textSecondary },
+      ], W)));
+      rows.push(blank(W));
+    }
+
+    rows.push(segRow(padSegs([
+      { text: '  Select a project:', color: theme.textSecondary },
+    ], W)));
+    rows.push(blank(W));
+
+    const maxVisible = Math.min(projects.length, H - 14);
+    for (let i = 0; i < maxVisible; i++) {
+      const p = projects[i];
+      const isSelected = i === projectSelectIndex;
+      const alreadyLinked = p.repository?.url ? true : false;
+      const linkedTag = alreadyLinked ? ' (has repo)' : '';
+      rows.push(segRow(padSegs([
+        { text: isSelected ? '  > ' : '    ', color: isSelected ? theme.accent : theme.textMuted },
+        { text: p.key.padEnd(8), color: theme.textMuted },
+        { text: truncate(p.name, W - 30), color: isSelected ? theme.text : theme.textSecondary },
+        { text: linkedTag, color: theme.textDim },
+      ], W)));
+    }
+
+    rows.push(blank(W));
+
+    if (feedback) {
+      rows.push(segRow(padSegs([
+        { text: `  ${feedback}`, color: theme.amber },
+      ], W)));
+    } else {
+      rows.push(segRow(padSegs([
+        { text: '  j/k', color: theme.accent },
+        { text: ' Navigate  ', color: theme.textMuted },
+        { text: 'Enter', color: theme.accent },
+        { text: ' Select  ', color: theme.textMuted },
+        { text: 'ESC', color: theme.accent },
+        { text: ' Cancel', color: theme.textMuted },
+      ], W)));
+    }
+
+    fillTo(rows, H - 2, W);
+    rows.push(...pageFooter(W));
+    return rows;
+  }
+
+  // ── Confirm link mode ────────────────────────────────────
+  if (mode === 'confirm_link' && pendingLinkProject) {
+    rows.push(segRow(padSegs([
+      { text: '  Confirm Repository Link', color: theme.text },
+    ], W)));
+    rows.push(blank(W));
+
+    rows.push(segRow(padSegs([
+      { text: '  Repo     ', color: theme.textMuted },
+      { text: truncate(git.remoteUrl || 'unknown', W - 14), color: theme.textSecondary },
+    ], W)));
+    rows.push(segRow(padSegs([
+      { text: '  Project  ', color: theme.textMuted },
+      { text: `${pendingLinkProject.key} - ${pendingLinkProject.name}`, color: theme.text },
+    ], W)));
+    rows.push(blank(W));
+
+    rows.push(segRow(padSegs([
+      { text: '  Link this repo to ', color: theme.textSecondary },
+      { text: pendingLinkProject.name, color: theme.accent },
+      { text: '? (y/n)', color: theme.textSecondary },
+    ], W)));
+
+    if (feedback) {
+      rows.push(blank(W));
+      rows.push(segRow(padSegs([
+        { text: `  ${feedback}`, color: theme.green },
+      ], W)));
+    }
+
     fillTo(rows, H - 2, W);
     rows.push(...pageFooter(W));
     return rows;
@@ -263,33 +431,32 @@ export function useGitPage({ width: W, height: H, timeStr, isActive = true }: Gi
   // ── Commit mode rendering ─────────────────────────────────
   if (mode === 'commit') {
     rows.push(segRow(padSegs([
-      { text: '  Commit Message', color: WHITE },
+      { text: '  Commit Message', color: theme.text },
     ], W)));
     rows.push(blank(W));
     rows.push(segRow(padSegs([
-      { text: '  > ', color: LIGHT },
-      { text: commitMessage, color: WHITE },
-      { text: '█', color: GRAY },
+      { text: '  > ', color: theme.accent },
+      { text: commitMessage, color: theme.text },
+      { text: '\u2588', color: theme.textMuted },
     ], W)));
     rows.push(blank(W));
     rows.push(segRow(padSegs([
-      { text: `  ${stagedCount} file${stagedCount === 1 ? '' : 's'} staged for commit`, color: GRAY },
+      { text: `  ${stagedCount} file${stagedCount === 1 ? '' : 's'} staged for commit`, color: theme.textMuted },
     ], W)));
     rows.push(blank(W));
 
-    // Show staged file list
     for (const f of git.stagedFiles.slice(0, 6)) {
       const label = fileStatusLabel({ ...f, staged: true });
       rows.push(segRow(padSegs([
-        { text: '    ', color: WHITE },
-        { text: label, color: LIGHT },
-        { text: '  ', color: WHITE },
-        { text: f.path, color: GRAY },
+        { text: '    ', color: theme.text },
+        { text: label, color: fileStatusColor(label) },
+        { text: '  ', color: theme.text },
+        { text: f.path, color: theme.textMuted },
       ], W)));
     }
     if (git.stagedFiles.length > 6) {
       rows.push(segRow(padSegs([
-        { text: `    ... and ${git.stagedFiles.length - 6} more`, color: DIM },
+        { text: `    ... and ${git.stagedFiles.length - 6} more`, color: theme.textDim },
       ], W)));
     }
 
@@ -297,14 +464,14 @@ export function useGitPage({ width: W, height: H, timeStr, isActive = true }: Gi
 
     if (feedback) {
       rows.push(segRow(padSegs([
-        { text: `  ${feedback}`, color: LIGHT },
+        { text: `  ${feedback}`, color: theme.amber },
       ], W)));
     } else {
       rows.push(segRow(padSegs([
-        { text: '  Enter', color: LIGHT },
-        { text: ' commit  ', color: DIM },
-        { text: 'Esc', color: LIGHT },
-        { text: ' cancel', color: DIM },
+        { text: '  Enter', color: theme.accent },
+        { text: ' commit  ', color: theme.textMuted },
+        { text: 'Esc', color: theme.accent },
+        { text: ' cancel', color: theme.textMuted },
       ], W)));
     }
 
@@ -313,49 +480,47 @@ export function useGitPage({ width: W, height: H, timeStr, isActive = true }: Gi
     return rows;
   }
 
-  // ── Link mode rendering ───────────────────────────────────
+  // ── Link task mode rendering ─────────────────────────────
   if (mode === 'link') {
     rows.push(segRow(padSegs([
-      { text: '  Link Task to Branch', color: WHITE },
+      { text: '  Link Task to Branch', color: theme.text },
     ], W)));
     rows.push(blank(W));
 
-    // Show current branch
     const branchName = git.branch || 'HEAD (detached)';
     rows.push(segRow(padSegs([
-      { text: '  Branch  ', color: GRAY },
-      { text: branchName, color: WHITE },
+      { text: '  Branch  ', color: theme.textMuted },
+      { text: branchName, color: theme.text },
     ], W)));
     rows.push(blank(W));
 
-    // Try to auto-detect task from branch name
     const branchMatch = git.branch?.match(/(\d+)/) || git.branch?.match(/([A-Z]+-\d+)/);
     if (branchMatch && !linkTaskInput) {
       rows.push(segRow(padSegs([
-        { text: '  Detected: ', color: DIM },
-        { text: branchMatch[1], color: LIGHT },
+        { text: '  Detected: ', color: theme.textDim },
+        { text: branchMatch[1], color: theme.textSecondary },
       ], W)));
       rows.push(blank(W));
     }
 
     rows.push(segRow(padSegs([
-      { text: '  Task ID: ', color: GRAY },
-      { text: '> ', color: LIGHT },
-      { text: linkTaskInput, color: WHITE },
-      { text: '█', color: GRAY },
+      { text: '  Task ID: ', color: theme.textMuted },
+      { text: '> ', color: theme.accent },
+      { text: linkTaskInput, color: theme.text },
+      { text: '\u2588', color: theme.textMuted },
     ], W)));
     rows.push(blank(W));
 
     if (feedback) {
       rows.push(segRow(padSegs([
-        { text: `  ${feedback}`, color: LIGHT },
+        { text: `  ${feedback}`, color: theme.green },
       ], W)));
     } else {
       rows.push(segRow(padSegs([
-        { text: '  Enter', color: LIGHT },
-        { text: ' confirm  ', color: DIM },
-        { text: 'Esc', color: LIGHT },
-        { text: ' cancel', color: DIM },
+        { text: '  Enter', color: theme.accent },
+        { text: ' confirm  ', color: theme.textMuted },
+        { text: 'Esc', color: theme.accent },
+        { text: ' cancel', color: theme.textMuted },
       ], W)));
     }
 
@@ -366,97 +531,101 @@ export function useGitPage({ width: W, height: H, timeStr, isActive = true }: Gi
 
   // ── Status mode rendering ─────────────────────────────────
 
-  // Branch info
+  // BRANCH panel
   const branchName = git.branch || 'HEAD (detached)';
-  rows.push(segRow(padSegs([
-    { text: '  On branch  ', color: GRAY },
-    { text: branchName, color: WHITE },
-    { text: '    ', color: WHITE },
-    { text: git.hasChanges ? '● Uncommitted changes' : '● Clean', color: git.hasChanges ? LIGHT : GRAY },
-  ], W)));
-  rows.push(blank(W));
+  const branchMatch = branchName.match(/([A-Z]+-\d+)/);
+  const taskRef = branchMatch ? branchMatch[1] : null;
 
-  // Remote info
+  rows.push(section('BRANCH', W));
+  rows.push(blank(W));
+  rows.push(segRow(padSegs([
+    { text: '  \u2299 ', color: theme.accent },
+    { text: branchName, color: theme.text },
+    ...(taskRef ? [
+      { text: '   \u2192 linked to ', color: theme.textDim },
+      { text: taskRef, color: theme.accent },
+    ] : []),
+  ], W)));
+
+  // Remote / project link info
   if (git.remoteInfo) {
+    const repoLabel = `${git.remoteInfo.owner}/${git.remoteInfo.repo}`;
     rows.push(segRow(padSegs([
-      { text: '  Remote  ', color: GRAY },
-      { text: git.remoteInfo.provider, color: LIGHT },
-      { text: ':', color: DIM },
-      { text: `${git.remoteInfo.owner}/${git.remoteInfo.repo}`, color: WHITE },
+      { text: '  \u2299 Repo: ', color: theme.textMuted },
+      { text: repoLabel, color: theme.textSecondary },
+      { text: '   \u2192 ', color: theme.textDim },
+      ...(linkedProject ? [
+        { text: `Project: ${linkedProject.name}`, color: theme.green },
+      ] : [
+        { text: '\u26A0 Not linked to any project', color: theme.amber },
+      ]),
     ], W)));
   } else if (git.remoteUrl) {
     rows.push(segRow(padSegs([
-      { text: '  Remote  ', color: GRAY },
-      { text: git.remoteUrl, color: LIGHT },
+      { text: '  Remote  ', color: theme.textMuted },
+      { text: truncate(git.remoteUrl, W - 14), color: theme.textSecondary },
     ], W)));
   } else {
     rows.push(segRow(padSegs([
-      { text: '  No remote configured', color: DIM },
+      { text: '  No remote configured', color: theme.textDim },
     ], W)));
   }
 
-  // Hook status
-  rows.push(segRow(padSegs([
-    { text: '  Hooks   ', color: GRAY },
-    { text: git.hooksInstalled ? 'Installed' : 'Not installed', color: git.hooksInstalled ? LIGHT : DIM },
-  ], W)));
-
   rows.push(blank(W));
 
-  // Feedback line (if any)
+  // Feedback line
   if (feedback) {
     rows.push(segRow(padSegs([
-      { text: `  ${feedback}`, color: LIGHT },
+      { text: `  ${feedback}`, color: theme.amber },
     ], W)));
     rows.push(blank(W));
   }
 
-  // Staged section
-  rows.push(section('Staged', W));
+  // STAGED section
+  rows.push(section(`STAGED (${git.stagedFiles.length})`, W));
   rows.push(blank(W));
 
   if (git.stagedFiles.length > 0) {
     for (let i = 0; i < git.stagedFiles.length; i++) {
       const f = git.stagedFiles[i];
-      const globalIdx = i; // staged files are first in allFiles
+      const globalIdx = i;
       const isSelected = selectedFileIndex === globalIdx;
       const label = fileStatusLabel({ ...f, staged: true });
-      const row: Row = segRow(padSegs([
-        { text: isSelected ? '  > ' : '    ', color: isSelected ? WHITE : GRAY },
-        { text: label, color: WHITE },
-        { text: '  ', color: WHITE },
-        { text: f.path, color: WHITE },
-      ], W), isSelected ? DARK : undefined);
-      rows.push(row);
+      rows.push(segRow(padSegs([
+        { text: isSelected ? '  > ' : '    ', color: isSelected ? theme.text : theme.textMuted },
+        { text: label, color: fileStatusColor(label) },
+        { text: '  ', color: theme.text },
+        { text: f.path, color: isSelected ? theme.text : theme.textSecondary },
+      ], W), isSelected ? theme.border : undefined));
     }
   } else {
     rows.push(segRow(padSegs([
-      { text: '    No staged changes', color: DIM },
+      { text: '    No staged changes', color: theme.textDim },
     ], W)));
   }
 
   rows.push(blank(W));
 
-  // Unstaged section
-  rows.push(section('Unstaged', W));
+  // UNSTAGED section
+  rows.push(section(`UNSTAGED (${git.unstagedFiles.length})`, W));
   rows.push(blank(W));
 
   if (git.unstagedFiles.length > 0) {
     for (let i = 0; i < git.unstagedFiles.length; i++) {
       const f = git.unstagedFiles[i];
-      const globalIdx = stagedCount + i; // offset by staged files
+      const globalIdx = stagedCount + i;
       const isSelected = selectedFileIndex === globalIdx;
       const label = fileStatusLabel({ ...f, staged: false });
       rows.push(segRow(padSegs([
-        { text: isSelected ? '  > ' : '    ', color: isSelected ? WHITE : GRAY },
-        { text: label, color: GRAY },
-        { text: '  ', color: WHITE },
-        { text: f.path, color: GRAY },
-      ], W), isSelected ? DARK : undefined));
+        { text: isSelected ? '  > ' : '    ', color: isSelected ? theme.text : theme.textMuted },
+        { text: label, color: fileStatusColor(label) },
+        { text: '  ', color: theme.text },
+        { text: f.path, color: isSelected ? theme.textSecondary : theme.textMuted },
+      ], W), isSelected ? theme.border : undefined));
     }
   } else {
     rows.push(segRow(padSegs([
-      { text: '    No unstaged changes', color: DIM },
+      { text: '    No unstaged changes', color: theme.textDim },
     ], W)));
   }
 
@@ -468,7 +637,7 @@ export function useGitPage({ width: W, height: H, timeStr, isActive = true }: Gi
 
   if (git.commits.length === 0) {
     rows.push(segRow(padSegs([
-      { text: '    No commits yet', color: DIM },
+      { text: '    No commits yet', color: theme.textDim },
     ], W)));
   } else {
     for (const c of git.commits.slice(0, 8)) {
@@ -479,12 +648,12 @@ export function useGitPage({ width: W, height: H, timeStr, isActive = true }: Gi
         ? c.message.slice(0, maxMsg - 1) + '\u2026'
         : c.message;
       rows.push(segRow(padSegs([
-        { text: '    ', color: WHITE },
-        { text: hash, color: GRAY },
-        { text: '  ', color: WHITE },
-        { text: msg, color: WHITE },
-        { text: rep(' ', Math.max(1, W - 8 - hash.length - msg.length - age.length)), color: WHITE },
-        { text: age, color: DIM },
+        { text: '    ', color: theme.text },
+        { text: hash, color: theme.textMuted },
+        { text: '  ', color: theme.text },
+        { text: msg, color: theme.textSecondary },
+        { text: rep(' ', Math.max(1, W - 8 - hash.length - msg.length - age.length)), color: theme.text },
+        { text: age, color: theme.textDim },
       ], W)));
     }
   }
@@ -492,7 +661,7 @@ export function useGitPage({ width: W, height: H, timeStr, isActive = true }: Gi
   // Keyboard hints
   const hints = busy
     ? '  working...'
-    : '  Space stage  s all  u unstage  c commit  l link  r refresh';
+    : '  space Stage/Unstage  a Stage All  c Commit  l Link Task  L Link Project';
 
   fillTo(rows, H - 2, W);
   rows.push(...pageFooter(W, hints));

@@ -87,3 +87,4 @@ Cut features that add overhead (meetings scheduler, time tracking reports). Lean
 | [10-competitive-analysis.md](10-competitive-analysis.md) | Linear Next deep dive, competitive positioning |
 | [11-security-audit.md](11-security-audit.md) | Security findings, vulnerabilities, recommendations |
 | [12-landing-marketing.md](12-landing-marketing.md) | Marketing positioning, messaging, conversion analysis |
+| [13-tui-v2-vision.md](13-tui-v2-vision.md) | TUI redesign vision, architecture, design language |

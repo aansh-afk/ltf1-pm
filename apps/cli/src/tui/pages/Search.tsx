@@ -1,6 +1,6 @@
 /**
- * Search Page - Full-text search across tasks with live filtering
- * Loads all project tasks and filters client-side as user types
+ * Search Page - Global search across tasks, projects, and sprints
+ * Uses globalSearch API for cross-entity searching with type indicators
  */
 
 import { useState, useMemo, useCallback } from 'react';
@@ -8,9 +8,8 @@ import { useInput } from 'ink';
 import { useConfig } from '../hooks/useConfig.js';
 import { useConvexQuery } from '../hooks/useConvex.js';
 import { api } from '../../lib/convex.js';
-import type { Row, Task } from '../types.js';
-import { WHITE, LIGHT, GRAY, DIM } from '../theme.js';
-import { STATUS_ICONS, STATUS_COLORS } from '../theme.js';
+import type { Row } from '../types.js';
+import { theme } from '../theme.js';
 import {
   segRow, blank, padSegs, fillTo, rep,
   pageHeader, pageFooter, truncate,
@@ -22,26 +21,101 @@ export interface SearchPageProps {
   isActive: boolean;
 }
 
+interface SearchResult {
+  id: string;
+  type: 'task' | 'project' | 'sprint';
+  title: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  url: string;
+  createdAt: number;
+}
+
+function typeIcon(type: string): string {
+  switch (type) {
+    case 'task': return '\u2610';
+    case 'sprint': return '\u27F3';
+    case 'project': return '\u25B9';
+    default: return '\u25CB';
+  }
+}
+
+function typeColor(type: string): string {
+  switch (type) {
+    case 'task': return theme.accent;
+    case 'sprint': return theme.cyan;
+    case 'project': return theme.purple;
+    default: return theme.textMuted;
+  }
+}
+
+function typeLabel(type: string): string {
+  switch (type) {
+    case 'task': return 'task';
+    case 'sprint': return 'sprint';
+    case 'project': return 'project';
+    default: return type;
+  }
+}
+
 export function useSearchPage({ width: W, height: H, isActive }: SearchPageProps): Row[] {
   const config = useConfig();
-
-  const tasksQuery = useConvexQuery(
-    api.tasks.queries.getProjectTasks,
-    config.projectId ? { projectId: config.projectId as never } : null,
-    10000,
-  );
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const results = useMemo(() => {
-    const all = (tasksQuery.data as Task[] | null) || [];
-    if (!searchQuery.trim()) return all.slice(0, 20);
-    const q = searchQuery.toLowerCase();
-    return all.filter(t => t.title.toLowerCase().includes(q));
-  }, [tasksQuery.data, searchQuery]);
+  // Use globalSearch API when query is non-empty
+  const searchArgs = useMemo(() => {
+    if (!searchQuery.trim() || !config.workspaceId) return null;
+    return {
+      query: searchQuery.trim(),
+      filters: {
+        workspace: config.workspaceId as never,
+        ...(config.projectId ? { project: config.projectId as never } : {}),
+      },
+      limit: 20,
+    };
+  }, [searchQuery, config.workspaceId, config.projectId]);
 
-  const visibleRows = H - 10;
+  const searchResults = useConvexQuery(
+    api.search.queries.globalSearch,
+    searchArgs,
+    5000,
+  );
+
+  // Fall back to local task search when no global query
+  const tasksQuery = useConvexQuery(
+    api.tasks.queries.getProjectTasks,
+    !searchQuery.trim() && config.projectId ? { projectId: config.projectId as never } : null,
+    10000,
+  );
+
+  const results: SearchResult[] = useMemo(() => {
+    if (searchQuery.trim() && searchResults.data) {
+      return (searchResults.data as SearchResult[]) || [];
+    }
+    // Show recent tasks when no search query
+    const tasks = (tasksQuery.data as Array<{
+      _id: string;
+      title: string;
+      status: string;
+      priority?: string;
+      number: number;
+      _creationTime: number;
+    }> | null) || [];
+    return tasks.slice(0, 20).map(t => ({
+      id: t._id,
+      type: 'task' as const,
+      title: t.title,
+      status: t.status,
+      priority: t.priority,
+      url: '',
+      createdAt: t._creationTime,
+    }));
+  }, [searchQuery, searchResults.data, tasksQuery.data]);
+
+  const visibleRows = H - 12;
 
   const clampIndex = useCallback(
     (n: number) => Math.max(0, Math.min(results.length - 1, n)),
@@ -51,7 +125,6 @@ export function useSearchPage({ width: W, height: H, isActive }: SearchPageProps
   useInput((input, key) => {
     if (!isActive) return;
 
-    // Navigation
     if ((input === 'j' || key.downArrow) && !key.ctrl) {
       setSelectedIndex(prev => clampIndex(prev + 1));
       return;
@@ -61,19 +134,17 @@ export function useSearchPage({ width: W, height: H, isActive }: SearchPageProps
       return;
     }
 
-    // Escape clears search (parent handles page switch)
     if (key.escape) {
       setSearchQuery('');
       setSelectedIndex(0);
       return;
     }
 
-    // Enter on selected result (flash for now)
     if (key.return) {
+      // Navigate to selected result (handled by parent in future)
       return;
     }
 
-    // Typing into search
     if (key.backspace || key.delete) {
       setSearchQuery(prev => prev.slice(0, -1));
       setSelectedIndex(0);
@@ -91,80 +162,87 @@ export function useSearchPage({ width: W, height: H, isActive }: SearchPageProps
   rows.push(...pageHeader('Search', '', W));
   rows.push(blank(W));
 
-  // Search input
+  // Search input panel
   rows.push(segRow(padSegs([
-    { text: '  / ', color: LIGHT },
-    { text: searchQuery, color: WHITE },
-    { text: '\u2588', color: GRAY },
-    { text: rep(' ', Math.max(0, W - 6 - searchQuery.length)), color: WHITE },
+    { text: '  \uD83D\uDD0D \u2502 ', color: theme.textMuted },
+    { text: searchQuery || '', color: theme.text },
+    { text: '\u2588', color: theme.textMuted },
+    { text: rep(' ', Math.max(0, W - 8 - searchQuery.length)), color: theme.text },
   ], W)));
   rows.push(blank(W));
 
   if (!config.hasContext) {
     rows.push(segRow(padSegs([
-      { text: '  No project selected', color: GRAY },
+      { text: '  No project selected', color: theme.textMuted },
     ], W)));
     rows.push(blank(W));
     rows.push(segRow(padSegs([
-      { text: '  Run ', color: DIM },
-      { text: 'ltf project select', color: LIGHT },
-      { text: ' to choose a project', color: DIM },
+      { text: '  Run ', color: theme.textDim },
+      { text: 'ltf project select', color: theme.textSecondary },
+      { text: ' to choose a project', color: theme.textDim },
     ], W)));
     fillTo(rows, H - 2, W);
     rows.push(...pageFooter(W, 'ESC Back'));
     return rows;
   }
 
-  if (tasksQuery.loading && !tasksQuery.data) {
+  const isLoading = searchQuery.trim() ? searchResults.loading : tasksQuery.loading;
+  if (isLoading && results.length === 0) {
     rows.push(segRow(padSegs([
-      { text: '  Loading tasks...', color: GRAY },
+      { text: '  Searching...', color: theme.textMuted },
     ], W)));
     fillTo(rows, H - 2, W);
-    rows.push(...pageFooter(W, 'ESC Back'));
+    rows.push(...pageFooter(W, 'ESC Clear'));
     return rows;
   }
 
-  // Results count
+  // Results header
+  const resultLabel = searchQuery.trim()
+    ? `RESULTS (${results.length})`
+    : `RECENT TASKS (${results.length})`;
   rows.push(segRow(padSegs([
-    { text: `  ${results.length} result${results.length !== 1 ? 's' : ''}`, color: DIM },
-    { text: searchQuery.trim() ? ` for "${truncate(searchQuery, 30)}"` : '', color: DIM },
+    { text: '  ', color: theme.textDim },
+    { text: resultLabel, color: theme.textSecondary },
+    { text: '  ' + rep('\u2500', W - resultLabel.length - 6), color: theme.border },
   ], W)));
   rows.push(blank(W));
 
   if (results.length === 0) {
     rows.push(segRow(padSegs([
-      { text: '  No matching tasks found', color: GRAY },
+      { text: '  No results found', color: theme.textMuted },
     ], W)));
     fillTo(rows, H - 2, W);
-    rows.push(...pageFooter(W, 'ESC Back'));
+    rows.push(...pageFooter(W, 'ESC Clear'));
     return rows;
   }
 
   // Result list
   const visible = results.slice(0, visibleRows);
   for (let i = 0; i < visible.length; i++) {
-    const t = visible[i];
-    const icon = STATUS_ICONS[t.status] || '\u25CB';
-    const iconColor = STATUS_COLORS[t.status] || GRAY;
-    const key = config.projectKey ? `${config.projectKey}-${t.number}` : `#${t.number}`;
-    const maxTitle = W - 16 - key.length;
-    const title = truncate(t.title, maxTitle);
+    const r = visible[i];
+    const icon = typeIcon(r.type);
+    const tColor = typeColor(r.type);
+    const tLabel = typeLabel(r.type).padEnd(8);
     const isSelected = i === selectedIndex;
+    const maxTitle = W - 22 - tLabel.length;
+    const title = truncate(r.title, maxTitle);
 
     if (isSelected) {
       rows.push({
         segments: padSegs([
-          { text: `  \u25B8 ${icon} ${key}  ${title}`, color: '#000000' },
+          { text: `  \u25B8 ${icon} `, color: theme.text },
+          { text: title, color: theme.text },
+          { text: rep(' ', Math.max(1, maxTitle - title.length + 2)), color: theme.text },
+          { text: tLabel, color: tColor },
         ], W),
-        bgColor: WHITE,
+        bgColor: theme.border,
       });
     } else {
       rows.push(segRow(padSegs([
-        { text: '    ', color: WHITE },
-        { text: icon + ' ', color: iconColor },
-        { text: key, color: GRAY },
-        { text: '  ', color: WHITE },
-        { text: title, color: LIGHT },
+        { text: `    ${icon} `, color: tColor },
+        { text: title, color: theme.textSecondary },
+        { text: rep(' ', Math.max(1, maxTitle - title.length + 2)), color: theme.text },
+        { text: tLabel, color: theme.textDim },
       ], W)));
     }
   }
@@ -172,11 +250,11 @@ export function useSearchPage({ width: W, height: H, isActive }: SearchPageProps
   if (results.length > visibleRows) {
     rows.push(blank(W));
     rows.push(segRow(padSegs([
-      { text: `  Showing ${visible.length} of ${results.length}`, color: DIM },
+      { text: `  Showing ${visible.length} of ${results.length}`, color: theme.textDim },
     ], W)));
   }
 
   fillTo(rows, H - 2, W);
-  rows.push(...pageFooter(W, 'J/K Nav  Enter Select  ESC Back'));
+  rows.push(...pageFooter(W, '\u23CE Select  \u2191\u2193 Navigate  ESC Clear'));
   return rows;
 }

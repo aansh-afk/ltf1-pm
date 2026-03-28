@@ -131,9 +131,13 @@ export function clearAuth(): void {
 export function isAuthenticated(): boolean {
   const auth = getAuth();
   if (!auth?.token) return false;
+  // Don't clear auth on expiry — the session may still be refreshable
+  // via sessionId. Let the caller (requireAuth) handle refresh logic.
   if (auth.expiresAt && auth.expiresAt < Date.now()) {
-    clearAuth();
-    return false;
+    // If there's a sessionId, the session is still potentially valid
+    // (just needs a JWT refresh). Only consider truly unauthenticated
+    // if there's no refresh path.
+    return !!auth.sessionId;
   }
   return true;
 }
