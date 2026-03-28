@@ -15,27 +15,33 @@ import clsx from 'clsx'
 import BrutalSelect from '@/components/ui/BrutalSelect'
 import toast from 'react-hot-toast'
 import CreateTaskModal from './CreateTaskModal'
+import TaskDetailModal from './TaskDetailModal'
 import BrutalCheckbox from '@/components/ui/BrutalCheckbox'
 
+interface TaskTableTask {
+  _id: string
+  title: string
+  description?: string
+  status: string
+  priority: string
+  type: string
+  key?: string
+  dueDate?: number
+  startDate?: number
+  labels?: string[]
+  assigneeName?: string
+  estimate?: { points?: number; hours?: number }
+  createdAt: number
+  [key: string]: unknown
+}
+
 interface TaskTableProps {
-  tasks: Array<{
-    _id: string
-    title: string
-    description?: string
-    status: string
-    priority: string
-    type: string
-    key?: string
-    dueDate?: number
-    startDate?: number
-    labels?: string[]
-    assigneeName?: string
-    estimate?: { points?: number; hours?: number }
-    createdAt: number
-    [key: string]: unknown
-  }>
+  tasks: TaskTableTask[]
   projectId: string
   onTaskUpdate?: () => void
+  onTaskEdit?: (task: TaskTableTask) => void
+  onTaskDelete?: (task: TaskTableTask) => void
+  onTaskDuplicate?: (task: TaskTableTask) => void
   selectedIds?: Set<string>
   onSelectionChange?: (ids: Set<string>) => void
 }
@@ -108,7 +114,7 @@ const columns: Column[] = [
   { key: 'actions', label: '', width: 'w-10' }
 ]
 
-const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate, selectedIds, onSelectionChange }: TaskTableProps) {
+const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate, onTaskEdit, onTaskDelete, onTaskDuplicate, selectedIds, onSelectionChange }: TaskTableProps) {
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set())
 
   // Use external selection state if provided, otherwise fall back to internal state
@@ -120,9 +126,12 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate, sele
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
   const [showContextMenu, setShowContextMenu] = useState<string | null>(null)
+  const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
 
   const updateTask = useMutation(api.tasks.mutations.updateTask)
   const deleteTask = useMutation(api.tasks.mutations.deleteTask)
+  const bulkUpdate = useMutation(api.tasks.mutations.bulkUpdateTasks)
+  const bulkDelete = useMutation(api.tasks.mutations.bulkDeleteTasks)
 
   const handleSort = useCallback((column: string) => {
     if (sortBy === column) {
@@ -210,6 +219,50 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate, sele
     }
   }, [deleteTask, onTaskUpdate])
 
+  const handleEditTask = useCallback((task: TaskTableTask) => {
+    setShowContextMenu(null)
+    onTaskEdit?.(task)
+  }, [onTaskEdit])
+
+  const handleDuplicateTask = useCallback((task: TaskTableTask) => {
+    setShowContextMenu(null)
+    onTaskDuplicate?.(task)
+  }, [onTaskDuplicate])
+
+  const handleLogTime = useCallback((taskId: string) => {
+    setShowContextMenu(null)
+    setDetailTaskId(taskId)
+  }, [])
+
+  const handleBulkStatusUpdate = useCallback(async () => {
+    const ids = Array.from(effectiveSelectedIds) as Id<"tasks">[]
+    if (ids.length === 0) return
+    try {
+      await bulkUpdate({ taskIds: ids, updates: { status: 'in_progress' as const } })
+      toast.success(`${ids.length} task(s) updated`)
+      effectiveOnSelectionChange(new Set())
+      onTaskUpdate?.()
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to update tasks'
+      toast.error(message)
+    }
+  }, [effectiveSelectedIds, bulkUpdate, effectiveOnSelectionChange, onTaskUpdate])
+
+  const handleBulkDelete = useCallback(async () => {
+    const ids = Array.from(effectiveSelectedIds) as Id<"tasks">[]
+    if (ids.length === 0) return
+    if (!confirm(`Delete ${ids.length} task(s)? This cannot be undone.`)) return
+    try {
+      await bulkDelete({ taskIds: ids })
+      toast.success(`${ids.length} task(s) deleted`)
+      effectiveOnSelectionChange(new Set())
+      onTaskUpdate?.()
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to delete tasks'
+      toast.error(message)
+    }
+  }, [effectiveSelectedIds, bulkDelete, effectiveOnSelectionChange, onTaskUpdate])
+
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return '-'
     const date = new Date(dateStr)
@@ -225,13 +278,16 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate, sele
             {effectiveSelectedIds.size} TASKS SELECTED
           </span>
           <div className="flex gap-2">
-            <button className="px-2 py-1 text-[10px] font-mono uppercase bg-[#0A0A0A] text-[#6366F1] border-2 border-[#2E2E35] hover:border-[#6366F1] transition-colors">
-              ASSIGN
+            <button
+              onClick={handleBulkStatusUpdate}
+              className="px-2 py-1 text-[10px] font-mono uppercase bg-[#0A0A0A] text-[#6366F1] border-2 border-[#2E2E35] hover:border-[#6366F1] transition-colors"
+            >
+              MOVE TO IN PROGRESS
             </button>
-            <button className="px-2 py-1 text-[10px] font-mono uppercase bg-[#0A0A0A] text-[#6366F1] border-2 border-[#2E2E35] hover:border-[#6366F1] transition-colors">
-              UPDATE STATUS
-            </button>
-            <button className="px-2 py-1 text-[10px] font-mono uppercase bg-[#EF4444] text-[#F9FAFB] border-2 border-[#EF4444] hover:bg-[#DC2626] transition-colors">
+            <button
+              onClick={handleBulkDelete}
+              className="px-2 py-1 text-[10px] font-mono uppercase bg-[#EF4444] text-[#F9FAFB] border-2 border-[#EF4444] hover:bg-[#DC2626] transition-colors"
+            >
               DELETE
             </button>
           </div>
@@ -385,27 +441,21 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate, sele
                       {showContextMenu === task._id && (
                         <div className="absolute right-0 top-full mt-1 bg-[#0A0A0A] border-2 border-[#2E2E35] z-50 min-w-[140px] shadow-[4px_4px_0px_#000000]">
                           <button
-                            onClick={() => {
-                              setShowContextMenu(null)
-                            }}
+                            onClick={() => handleEditTask(task)}
                             className="w-full px-3 py-1.5 text-left font-mono text-[10px] uppercase text-[#9CA3AF] hover:bg-[#111111] hover:text-[#F9FAFB] transition-colors flex items-center gap-2"
                           >
                             <HiOutlinePencil className="w-3.5 h-3.5" />
                             EDIT
                           </button>
                           <button
-                            onClick={() => {
-                              setShowContextMenu(null)
-                            }}
+                            onClick={() => handleDuplicateTask(task)}
                             className="w-full px-3 py-1.5 text-left font-mono text-[10px] uppercase text-[#9CA3AF] hover:bg-[#111111] hover:text-[#F9FAFB] transition-colors flex items-center gap-2"
                           >
                             <HiOutlineDuplicate className="w-3.5 h-3.5" />
                             DUPLICATE
                           </button>
                           <button
-                            onClick={() => {
-                              setShowContextMenu(null)
-                            }}
+                            onClick={() => handleLogTime(task._id)}
                             className="w-full px-3 py-1.5 text-left font-mono text-[10px] uppercase text-[#9CA3AF] hover:bg-[#111111] hover:text-[#F9FAFB] transition-colors flex items-center gap-2"
                           >
                             <HiOutlineClock className="w-3.5 h-3.5" />
@@ -478,6 +528,15 @@ const TaskTable = memo(function TaskTable({ tasks, projectId, onTaskUpdate, sele
         projectId={projectId}
         onSuccess={onTaskUpdate}
       />
+
+      {/* Task Detail Modal (for Log Time) */}
+      {detailTaskId && (
+        <TaskDetailModal
+          isOpen={!!detailTaskId}
+          onClose={() => setDetailTaskId(null)}
+          taskId={detailTaskId}
+        />
+      )}
     </div>
   )
 })
