@@ -50,6 +50,10 @@ export const EVENT_TYPES = {
   // Custom Field Events
   CUSTOM_FIELD_UPDATED: "custom_field.updated",
 
+  // Skill / Agent Events
+  SKILL_COMPLETED: "skill.completed",
+  TRIAGE_COMPLETED: "triage.completed",
+
   // Integration Events
   GITLAB_ISSUE_CREATED: "gitlab.issue_created",
   GITLAB_MR_OPENED: "gitlab.mr_opened",

@@ -100,6 +100,13 @@ export const createTask = mutation({
       metadata: undefined,
     });
 
+    // Schedule agent triage
+    await ctx.scheduler.runAfter(0, internal.agent.triage.triageTask, {
+      taskId,
+      workspaceId: project.workspaceId,
+      projectId: args.projectId,
+    });
+
     // Send notifications to all assignees
     if (args.assigneeIds && args.assigneeIds.length > 0) {
       for (const assigneeId of args.assigneeIds) {

@@ -79,6 +79,7 @@ export default defineSchema({
         meetings: v.boolean(),
         timeTracking: v.boolean(),
       }),
+      triageMode: v.optional(v.union(v.literal("auto"), v.literal("review"), v.literal("off"))),
       integrations: v.optional(
         v.object({
           githubToken: v.optional(v.string()),
@@ -2156,4 +2157,63 @@ export default defineSchema({
     .index("by_workspaceId", ["workspaceId"])
     .index("by_polarSubscriptionId", ["polarSubscriptionId"])
     .index("by_polarCustomerId", ["polarCustomerId"]),
+
+  // Agent triage suggestions
+  triageSuggestions: defineTable({
+    taskId: v.id("tasks"),
+    workspaceId: v.id("workspaces"),
+    projectId: v.id("projects"),
+    suggestedType: v.optional(v.string()),
+    suggestedPriority: v.optional(v.string()),
+    suggestedAssigneeIds: v.optional(v.array(v.id("users"))),
+    suggestedLabels: v.optional(v.array(v.string())),
+    suggestedSprintId: v.optional(v.id("sprints")),
+    duplicateOfTaskId: v.optional(v.id("tasks")),
+    confidence: v.number(),
+    reasoning: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("rejected"), v.literal("partial"), v.literal("auto_applied")),
+    reviewedBy: v.optional(v.id("users")),
+    reviewedAt: v.optional(v.number()),
+    autoApplied: v.optional(v.boolean()),
+  })
+    .index("by_taskId", ["taskId"])
+    .index("by_workspaceId_and_status", ["workspaceId", "status"])
+    .index("by_projectId", ["projectId"]),
+
+  // Agent activity log
+  agentActivities: defineTable({
+    workspaceId: v.id("workspaces"),
+    type: v.union(v.literal("triage"), v.literal("skill_run"), v.literal("auto_assign"), v.literal("insight"), v.literal("skill_auto_apply")),
+    taskId: v.optional(v.id("tasks")),
+    skillId: v.optional(v.id("skills")),
+    description: v.string(),
+    metadata: v.optional(v.any()),
+  })
+    .index("by_workspaceId", ["workspaceId"]),
+
+  // Skills
+  skills: defineTable({
+    workspaceId: v.id("workspaces"),
+    name: v.string(),
+    displayName: v.string(),
+    description: v.string(),
+    trigger: v.union(v.literal("manual"), v.literal("auto"), v.literal("both")),
+    conditions: v.optional(v.object({
+      taskTypes: v.optional(v.array(v.string())),
+      keywords: v.optional(v.array(v.string())),
+      sources: v.optional(v.array(v.string())),
+    })),
+    actions: v.array(v.object({
+      type: v.string(),
+      config: v.any(),
+    })),
+    createdBy: v.id("users"),
+    isActive: v.boolean(),
+    isBuiltIn: v.optional(v.boolean()),
+    isPublished: v.optional(v.boolean()),
+    usageCount: v.optional(v.number()),
+  })
+    .index("by_workspaceId", ["workspaceId"])
+    .index("by_workspaceId_and_name", ["workspaceId", "name"])
+    .index("by_isPublished", ["isPublished"]),
 });
