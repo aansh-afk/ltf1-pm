@@ -344,12 +344,11 @@ func (m Model) View() tea.View {
 		content = pm.View()
 	}
 
-	// Constrain content width and center
+	// Constrain content width — NO Background (tea.View.BackgroundColor handles it)
 	contentStyle := lipgloss.NewStyle().
 		Width(contentWidth).
 		Height(contentHeight).
-		MaxWidth(theme.ContentMaxWidth).
-		Background(theme.BgBase)
+		MaxWidth(theme.ContentMaxWidth)
 
 	renderedContent := contentStyle.Render(content)
 
@@ -383,7 +382,6 @@ func (m Model) View() tea.View {
 	sections = append(sections, statusbar)
 
 	fullView := lipgloss.NewStyle().
-		Background(theme.BgBase).
 		Width(m.width).
 		Height(m.height).
 		Render(strings.Join(sections, "\n"))

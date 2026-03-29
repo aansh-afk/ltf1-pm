@@ -5,7 +5,6 @@ import "charm.land/lipgloss/v2"
 // Shell chrome styles
 
 var TopBarStyle = lipgloss.NewStyle().
-	Background(BgSurface).
 	Padding(1, 2).
 	BorderStyle(lipgloss.NormalBorder()).
 	BorderBottom(true).
@@ -18,7 +17,6 @@ var SidebarStyle = lipgloss.NewStyle().
 	BorderForeground(BorderSubtle)
 
 var StatusBarStyle = lipgloss.NewStyle().
-	Background(BgSurface).
 	BorderStyle(lipgloss.NormalBorder()).
 	BorderTop(true).
 	BorderForeground(BorderSubtle)
