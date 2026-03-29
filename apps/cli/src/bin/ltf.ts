@@ -25,7 +25,49 @@ import { registerSkillCommands } from "../commands/skill/index.js";
 import { registerUpdateCommand } from "../commands/update.js";
 import output from "../lib/output.js";
 import { checkForUpdate } from "../lib/updater.js";
-import { startDashboard } from "../tui/index.js";
+import { execFileSync, execFile } from "child_process";
+import { existsSync } from "fs";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
+
+function launchGoTUI() {
+  // Look for the Go TUI binary in several locations
+  const candidates = [
+    // Development: built in apps/tui/
+    resolve(process.cwd(), "apps/tui/ltf-tui"),
+    // Installed globally alongside the CLI
+    resolve(dirname(fileURLToPath(import.meta.url)), "../../tui/ltf-tui"),
+    // In PATH
+    "ltf-tui",
+  ];
+
+  for (const bin of candidates) {
+    try {
+      if (bin === "ltf-tui" || existsSync(bin)) {
+        execFileSync(bin, { stdio: "inherit" });
+        return;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  // Fallback: try `go run` from the apps/tui directory
+  const tuiDir = resolve(process.cwd(), "apps/tui");
+  if (existsSync(resolve(tuiDir, "main.go"))) {
+    console.log("Building TUI from source...");
+    try {
+      execFileSync("go", ["run", "main.go"], { cwd: tuiDir, stdio: "inherit" });
+      return;
+    } catch {
+      // fall through
+    }
+  }
+
+  console.error("Go TUI binary not found. Build it first:");
+  console.error("  cd apps/tui && go build -o ltf-tui .");
+  process.exit(1);
+}
 
 const program = new Command();
 
@@ -72,7 +114,7 @@ program
   .alias("d")
   .description("Launch the interactive TUI dashboard")
   .action(async () => {
-    await startDashboard();
+    launchGoTUI();
   });
 
 // Handle unknown commands
@@ -98,7 +140,7 @@ program.action(async () => {
   }
 
   // Launch the TUI dashboard
-  await startDashboard();
+  launchGoTUI();
 });
 
 // Parse and execute
