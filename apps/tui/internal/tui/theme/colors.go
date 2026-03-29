@@ -24,6 +24,7 @@ var (
 	TextSecondary = lipgloss.Color("#9CA3AF")
 	TextMuted     = lipgloss.Color("#6B7280")
 	TextDim       = lipgloss.Color("#444444")
+	MapDim        = lipgloss.Color("#333333")
 )
 
 // Backgrounds

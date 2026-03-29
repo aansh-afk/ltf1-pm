@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/api"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/components"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
@@ -102,12 +101,11 @@ func (p *skillsPage) View() string {
 		// Active indicator
 		activeIndicator := theme.SymDotEmpty
 		if skill.IsActive {
-			activeIndicator = lipgloss.NewStyle().Foreground(theme.Green).Render(theme.SymDot)
+			activeIndicator = theme.SuccessTextStyle.Render(theme.SymDot)
 		}
 
 		// Trigger type badge
-		triggerStyle := lipgloss.NewStyle().Foreground(theme.Purple)
-		triggerBadge := triggerStyle.Render(skill.Trigger)
+		triggerBadge := theme.SkillTextStyle.Render(skill.Trigger)
 
 		title := activeIndicator + " " + skill.DisplayName
 		meta := triggerBadge

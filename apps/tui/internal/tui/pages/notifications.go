@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/api"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/components"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
@@ -102,7 +101,7 @@ func (p *notificationsPage) View() string {
 		// Read/unread indicator
 		dot := theme.SymDotEmpty
 		if !n.IsRead {
-			dot = lipgloss.NewStyle().Foreground(theme.Indigo).Render(theme.SymDot)
+			dot = theme.ColorTextStyle(theme.Indigo).Render(theme.SymDot)
 		}
 
 		title := dot + " " + n.Title

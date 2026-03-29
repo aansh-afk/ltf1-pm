@@ -1,6 +1,11 @@
 package theme
 
-import "charm.land/lipgloss/v2"
+import (
+	"image/color"
+	"strings"
+
+	"charm.land/lipgloss/v2"
+)
 
 // Shell chrome styles
 
@@ -88,6 +93,120 @@ var TextMutedStyle = lipgloss.NewStyle().
 var TextDimStyle = lipgloss.NewStyle().
 	Foreground(TextDim)
 
+var AccentTextStyle = lipgloss.NewStyle().
+	Foreground(Indigo).
+	Bold(true)
+
+var SuccessTextStyle = lipgloss.NewStyle().
+	Foreground(Green)
+
+var ErrorTextStyle = lipgloss.NewStyle().
+	Foreground(Red)
+
+var WarningTextStyle = lipgloss.NewStyle().
+	Foreground(Amber)
+
+var SuccessBoldStyle = lipgloss.NewStyle().
+	Foreground(Green).
+	Bold(true)
+
+var WarningBoldStyle = lipgloss.NewStyle().
+	Foreground(Amber).
+	Bold(true)
+
+var BrandTextStyle = lipgloss.NewStyle().
+	Foreground(TextPrimary).
+	Bold(true)
+
+var SubtitleTextStyle = lipgloss.NewStyle().
+	Foreground(TextMuted)
+
+var LoginMapStyle = lipgloss.NewStyle().
+	Foreground(MapDim)
+
+var FieldLabelStyle = lipgloss.NewStyle().
+	Foreground(TextMuted).
+	Width(20)
+
+var FieldValueStyle = lipgloss.NewStyle().
+	Foreground(TextPrimary)
+
+var SidebarSelectedMarkerStyle = lipgloss.NewStyle().
+	Foreground(Indigo).
+	Bold(true)
+
+var SidebarActiveMarkerStyle = lipgloss.NewStyle().
+	Foreground(TextDim)
+
+var SidebarSelectedStyle = lipgloss.NewStyle().
+	Foreground(Indigo).
+	Bold(true)
+
+var SidebarActiveStyle = lipgloss.NewStyle().
+	Foreground(TextSecondary).
+	Bold(true)
+
+var SidebarInactiveStyle = lipgloss.NewStyle().
+	Foreground(TextMuted)
+
+var SkillTextStyle = lipgloss.NewStyle().
+	Foreground(Purple)
+
+var TopBarContextStyle = lipgloss.NewStyle().
+	Foreground(TextMuted)
+
+var StatusBarBranchStyle = lipgloss.NewStyle().
+	Foreground(Green)
+
+var StatusBarPathStyle = lipgloss.NewStyle().
+	Foreground(TextDim)
+
+var StatusBarAccentStyle = lipgloss.NewStyle().
+	Foreground(Indigo)
+
+var ModalTitleStyle = lipgloss.NewStyle().
+	Bold(true).
+	Foreground(TextPrimary).
+	MarginBottom(1)
+
+var ModalBodyStyle = lipgloss.NewStyle().
+	Foreground(TextSecondary)
+
+var ModalHintStyle = lipgloss.NewStyle().
+	Foreground(TextMuted).
+	MarginTop(1)
+
+var ListItemTitleSelectedStyle = lipgloss.NewStyle().
+	Bold(true).
+	Foreground(TextPrimary)
+
+var ListItemMetaSelectedStyle = lipgloss.NewStyle().
+	Foreground(TextSecondary)
+
+var ListItemTitleStyle = lipgloss.NewStyle().
+	Foreground(TextSecondary)
+
+var ListItemMetaStyle = lipgloss.NewStyle().
+	Foreground(TextMuted)
+
+var InputPromptStyle = lipgloss.NewStyle().
+	Foreground(Indigo)
+
+var InputTextStyle = lipgloss.NewStyle().
+	Foreground(TextPrimary)
+
+var InputPlaceholderStyle = lipgloss.NewStyle().
+	Foreground(TextDim)
+
+var InputBlurredPromptStyle = lipgloss.NewStyle().
+	Foreground(TextMuted)
+
+var InputBlurredTextStyle = lipgloss.NewStyle().
+	Foreground(TextSecondary)
+
+var KeyColumnStyle = lipgloss.NewStyle().
+	Width(8)
+
 // Badge base
 
 var BadgeStyle = lipgloss.NewStyle().
@@ -101,3 +220,55 @@ var KeyHintKey = lipgloss.NewStyle().
 
 var KeyHintDesc = lipgloss.NewStyle().
 	Foreground(TextMuted)
+
+func ColorTextStyle(c color.Color) lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(c)
+}
+
+func ColorBoldStyle(c color.Color) lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(c).Bold(true)
+}
+
+func WidthStyle(width int) lipgloss.Style {
+	return lipgloss.NewStyle().Width(width)
+}
+
+func EmptyStateStyle(width int) lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(TextMuted).
+		Align(lipgloss.Center).
+		Width(width)
+}
+
+func OffsetStyle(left, top int) lipgloss.Style {
+	return lipgloss.NewStyle().
+		PaddingLeft(left).
+		PaddingTop(top)
+}
+
+// FillBackground pads the rendered output to the full terminal size and applies
+// the base background color to every cell.
+func FillBackground(content string, width, height int) string {
+	if width <= 0 || height <= 0 {
+		return content
+	}
+
+	lines := strings.Split(content, "\n")
+	if len(lines) > height {
+		lines = lines[:height]
+	}
+	for len(lines) < height {
+		lines = append(lines, "")
+	}
+
+	lineStyle := lipgloss.NewStyle().Width(width)
+	for i, line := range lines {
+		lines[i] = lineStyle.Render(line)
+	}
+
+	return lipgloss.NewStyle().
+		Background(BgBase).
+		Width(width).
+		Height(height).
+		Render(strings.Join(lines, "\n"))
+}

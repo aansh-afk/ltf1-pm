@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/api"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/components"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
@@ -104,9 +103,9 @@ func (p *projectsPage) View() string {
 	}
 
 	for i, proj := range p.projects {
-		meta := lipgloss.NewStyle().Foreground(theme.TextMuted).Render(proj.Key)
+		meta := theme.TextMutedStyle.Render(proj.Key)
 		if proj.ID == p.activeID {
-			meta += "  " + lipgloss.NewStyle().Foreground(theme.Green).Render(theme.SymDot + " active")
+			meta += "  " + theme.SuccessTextStyle.Render(theme.SymDot+" active")
 		}
 		b.WriteString(components.RenderListItem(proj.Name, meta, i == p.cursor) + "\n")
 	}

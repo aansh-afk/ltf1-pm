@@ -22,8 +22,8 @@ func main() {
 
 	// Create Convex client only if authenticated
 	var client *api.ConvexClient
-	if config != nil && api.IsAuthenticated(config) {
-		client = api.NewClient("", api.GetToken(config))
+	if config != nil && api.HasUsableAuth(config) {
+		client = api.NewClient("", config)
 	}
 
 	m := tui.NewModel(client, config)

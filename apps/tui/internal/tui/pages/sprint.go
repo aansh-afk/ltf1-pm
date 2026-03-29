@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/api"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/components"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
@@ -97,11 +96,9 @@ func (p *sprintPage) View() string {
 
 	// Sprint header
 	b.WriteString(theme.SectionHeader.Render("SPRINT") + "\n")
-	nameStyle := lipgloss.NewStyle().Foreground(theme.TextPrimary).Bold(true)
-	b.WriteString(nameStyle.Render(p.sprint.Name) + "\n")
+	b.WriteString(theme.BrandTextStyle.Render(p.sprint.Name) + "\n")
 
-	statusStyle := lipgloss.NewStyle().Foreground(theme.Amber)
-	b.WriteString(statusStyle.Render(p.sprint.Status) + "\n\n")
+	b.WriteString(theme.WarningTextStyle.Render(p.sprint.Status) + "\n\n")
 
 	// Filter tasks for this sprint
 	var sprintTasks []api.Task
@@ -165,8 +162,7 @@ func (p *sprintPage) View() string {
 			continue
 		}
 
-		sectionStyle := lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true)
-		b.WriteString(sectionStyle.Render(g.label) + "\n")
+		b.WriteString(theme.AccentTextStyle.Render(g.label) + "\n")
 		for _, t := range groupTasks {
 			b.WriteString(components.RenderListItem(t.Title, components.PriorityBadge(t.Priority), false) + "\n")
 		}

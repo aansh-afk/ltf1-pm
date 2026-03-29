@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
 
@@ -43,28 +42,21 @@ func (p *helpPage) View() string {
 		keys  [][2]string
 	}{
 		{
-			title: "NAVIGATION (global)",
+			title: "SIDEBAR",
 			keys: [][2]string{
-				{"d", "Dashboard"},
-				{"t", "Tasks"},
-				{"s", "Sprint"},
-				{"a", "Agent (or accept on Agent page)"},
-				{"g", "Git"},
-				{"p", "Projects"},
-				{"k", "Skills (or up on list pages)"},
-				{"/", "Search"},
-				{"n", "Notifications"},
-				{",", "Settings"},
-				{"?", "Help"},
+				{"j/k", "Move between pages"},
+				{"enter", "Open selected page"},
+				{"right/l", "Open selected page"},
+				{"d t s a ...", "Jump sidebar selection by key"},
+				{"q", "Quit"},
 			},
 		},
 		{
-			title: "ACTIONS (global)",
+			title: "PAGE FOCUS",
 			keys: [][2]string{
-				{"r", "Refresh (or reject on Agent page)"},
+				{"esc", "Return focus to sidebar"},
+				{"r", "Refresh current page"},
 				{"q", "Quit"},
-				{"esc", "Back / Cancel"},
-				{"enter", "Select / Confirm"},
 			},
 		},
 		{
@@ -95,20 +87,13 @@ func (p *helpPage) View() string {
 
 	keyStyle := theme.KeyHintKey
 	descStyle := theme.KeyHintDesc
-	sectionStyle := lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true)
-
 	var b strings.Builder
 	b.WriteString(header + "\n\n")
 
-	colWidth := p.width / 2
-	if colWidth < 30 {
-		colWidth = p.width
-	}
-
 	for i, group := range groups {
-		b.WriteString(sectionStyle.Render(group.title) + "\n")
+		b.WriteString(theme.AccentTextStyle.Render(group.title) + "\n")
 		for _, kv := range group.keys {
-			key := keyStyle.Render(lipgloss.NewStyle().Width(8).Render(kv[0]))
+			key := keyStyle.Render(theme.KeyColumnStyle.Render(kv[0]))
 			desc := descStyle.Render(kv[1])
 			b.WriteString("  " + key + " " + desc + "\n")
 		}

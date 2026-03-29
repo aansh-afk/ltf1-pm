@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/api"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/components"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
@@ -84,7 +83,7 @@ func (p *dashboardPage) SetSize(w, h int) {
 }
 
 func (p *dashboardPage) ShortHelp() string {
-	return "r refresh  d dashboard"
+	return "r refresh"
 }
 
 func (p *dashboardPage) KeyBinds() []string {
@@ -104,8 +103,7 @@ func (p *dashboardPage) View() string {
 	// Active Sprint section
 	b.WriteString(theme.SectionHeader.Render("ACTIVE SPRINT") + "\n")
 	if p.data.Sprint != nil {
-		nameStyle := lipgloss.NewStyle().Foreground(theme.TextPrimary).Bold(true)
-		b.WriteString(nameStyle.Render(p.data.Sprint.Name) + "\n")
+		b.WriteString(theme.BrandTextStyle.Render(p.data.Sprint.Name) + "\n")
 
 		// Calculate progress from tasks
 		total := 0
@@ -159,8 +157,7 @@ func (p *dashboardPage) View() string {
 		}
 		for i := 0; i < limit; i++ {
 			a := p.data.Activity[i]
-			typeStyle := lipgloss.NewStyle().Foreground(theme.Amber)
-			b.WriteString("  " + typeStyle.Render(a.Type) + " " +
+			b.WriteString("  " + theme.WarningTextStyle.Render(a.Type) + " " +
 				theme.TextSecondaryStyle.Render(a.Description) + "\n")
 		}
 	}

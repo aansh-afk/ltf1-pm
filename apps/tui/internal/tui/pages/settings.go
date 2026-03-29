@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/api"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
@@ -77,16 +76,12 @@ func (p *settingsPage) View() string {
 
 	b.WriteString(theme.SectionHeader.Render("SETTINGS") + "\n\n")
 
-	labelStyle := lipgloss.NewStyle().Foreground(theme.TextMuted).Width(20)
-	valueStyle := lipgloss.NewStyle().Foreground(theme.TextPrimary)
-
 	row := func(label, value string) {
-		b.WriteString(labelStyle.Render(label) + valueStyle.Render(value) + "\n")
+		b.WriteString(theme.FieldLabelStyle.Render(label) + theme.FieldValueStyle.Render(value) + "\n")
 	}
 
 	// Connection info
-	sectionStyle := lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true)
-	b.WriteString(sectionStyle.Render("CONNECTION") + "\n")
+	b.WriteString(theme.AccentTextStyle.Render("CONNECTION") + "\n")
 
 	if p.config != nil {
 		row("Email", p.config.Auth.Email)
@@ -94,33 +89,30 @@ func (p *settingsPage) View() string {
 		row("Project", p.config.Context.ProjectName)
 
 		if api.IsAuthenticated(p.config) {
-			row("Status", lipgloss.NewStyle().Foreground(theme.Green).Render("Authenticated"))
+			row("Status", theme.SuccessTextStyle.Render("Authenticated"))
+		} else if api.CanRefreshSession(p.config) {
+			row("Status", theme.WarningTextStyle.Render("Refreshing on demand"))
 		} else {
-			row("Status", lipgloss.NewStyle().Foreground(theme.Red).Render("Token expired"))
+			row("Status", theme.ErrorTextStyle.Render("Token expired"))
 		}
 	} else {
-		row("Status", lipgloss.NewStyle().Foreground(theme.Red).Render("Not configured"))
+		row("Status", theme.ErrorTextStyle.Render("Not configured"))
 	}
 
 	b.WriteString("\n")
 
 	// Version info
-	b.WriteString(sectionStyle.Render("VERSION") + "\n")
+	b.WriteString(theme.AccentTextStyle.Render("VERSION") + "\n")
 	row("TUI", "v0.8.0")
 	b.WriteString("\n\n")
 
 	// Actions
-	b.WriteString(sectionStyle.Render("ACTIONS") + "\n")
+	b.WriteString(theme.AccentTextStyle.Render("ACTIONS") + "\n")
 	for i, item := range p.items {
 		if i == p.cursor {
-			b.WriteString(lipgloss.NewStyle().
-				Foreground(theme.Red).
-				Bold(true).
-				Render(theme.SymBar+" "+item) + "\n")
+			b.WriteString(theme.ErrorTextStyle.Bold(true).Render(theme.SymBar+" "+item) + "\n")
 		} else {
-			b.WriteString(lipgloss.NewStyle().
-				Foreground(theme.TextMuted).
-				Render("  "+item) + "\n")
+			b.WriteString(theme.TextMutedStyle.Render("  "+item) + "\n")
 		}
 	}
 

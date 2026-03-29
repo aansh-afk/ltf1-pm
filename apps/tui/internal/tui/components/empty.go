@@ -7,14 +7,9 @@ import (
 
 // EmptyState renders a centered empty state with a symbol and message.
 func EmptyState(message string, width, height int) string {
-	style := lipgloss.NewStyle().
-		Foreground(theme.TextMuted).
-		Align(lipgloss.Center).
-		Width(width)
-
 	content := theme.SymDotEmpty + "\n" + message
 
-	rendered := style.Render(content)
+	rendered := theme.EmptyStateStyle(width).Render(content)
 
 	// Vertical centering
 	lines := lipgloss.Height(rendered)
@@ -23,8 +18,7 @@ func EmptyState(message string, width, height int) string {
 		padTop = 0
 	}
 
-	return lipgloss.NewStyle().
-		PaddingTop(padTop).
+	return theme.OffsetStyle(0, padTop).
 		Width(width).
 		Render(rendered)
 }

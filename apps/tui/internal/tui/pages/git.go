@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/components"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
@@ -119,8 +118,7 @@ func (p *gitPage) View() string {
 
 	// Branch info
 	b.WriteString(theme.SectionHeader.Render("GIT") + "\n")
-	branchStyle := lipgloss.NewStyle().Foreground(theme.Green).Bold(true)
-	b.WriteString(branchStyle.Render(p.branch) + "\n\n")
+	b.WriteString(theme.SuccessBoldStyle.Render(p.branch) + "\n\n")
 
 	if len(p.files) == 0 {
 		b.WriteString(theme.TextMutedStyle.Render("Working tree clean") + "\n")
@@ -136,8 +134,7 @@ func (p *gitPage) View() string {
 		}
 		hasStagedFiles = true
 		statusColor := gitStatusColor(f.Status)
-		statusStyle := lipgloss.NewStyle().Foreground(statusColor).Bold(true)
-		meta := statusStyle.Render(f.Status)
+		meta := theme.ColorBoldStyle(statusColor).Render(f.Status)
 		b.WriteString(components.RenderListItem(f.Path, meta, i == p.cursor) + "\n")
 	}
 	if !hasStagedFiles {
@@ -154,8 +151,7 @@ func (p *gitPage) View() string {
 		}
 		hasUnstagedFiles = true
 		statusColor := gitStatusColor(f.Status)
-		statusStyle := lipgloss.NewStyle().Foreground(statusColor).Bold(true)
-		meta := statusStyle.Render(f.Status)
+		meta := theme.ColorBoldStyle(statusColor).Render(f.Status)
 		b.WriteString(components.RenderListItem(f.Path, meta, i == p.cursor) + "\n")
 	}
 	if !hasUnstagedFiles {

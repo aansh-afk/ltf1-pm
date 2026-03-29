@@ -4,7 +4,6 @@ import (
 	"image/color"
 	"strings"
 
-	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
 
@@ -26,8 +25,8 @@ func StatusBadge(status string) string {
 		c = theme.TextMuted
 	}
 
-	dot := lipgloss.NewStyle().Foreground(c).Render(theme.SymDot)
-	label := lipgloss.NewStyle().Foreground(c).Render(status)
+	dot := theme.ColorTextStyle(c).Render(theme.SymDot)
+	label := theme.ColorTextStyle(c).Render(status)
 	return dot + " " + label
 }
 
@@ -47,5 +46,5 @@ func PriorityBadge(priority string) string {
 		c = theme.TextMuted
 	}
 
-	return lipgloss.NewStyle().Foreground(c).Bold(true).Render(priority)
+	return theme.ColorBoldStyle(c).Render(priority)
 }

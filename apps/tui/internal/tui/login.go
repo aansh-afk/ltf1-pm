@@ -3,7 +3,6 @@ package tui
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -25,7 +24,7 @@ var WorldMapArt string
 type LoginState int
 
 const (
-	LoginIdle    LoginState = iota
+	LoginIdle LoginState = iota
 	LoginWaiting
 	LoginSuccess
 	LoginError
@@ -80,8 +79,6 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 			targetW = 40
 		}
 
-		dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#333333"))
-
 		if mapWidth > targetW {
 			// Center crop each line
 			for _, l := range mapLines {
@@ -89,11 +86,11 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 					start := (len(l) - targetW) / 2
 					l = l[start : start+targetW]
 				}
-				lines = append(lines, centerLine(dimStyle.Render(l), width))
+				lines = append(lines, centerLine(theme.LoginMapStyle.Render(l), width))
 			}
 		} else {
 			for _, l := range mapLines {
-				lines = append(lines, centerLine(dimStyle.Render(l), width))
+				lines = append(lines, centerLine(theme.LoginMapStyle.Render(l), width))
 			}
 		}
 	}
@@ -101,11 +98,11 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 	lines = append(lines, "")
 
 	// Logo
-	logo := lipgloss.NewStyle().Foreground(theme.TextPrimary).Bold(true).Render("ltf1")
+	logo := theme.BrandTextStyle.Render("ltf1")
 	lines = append(lines, centerLine(logo, width))
 
 	// Subtitle
-	sub := lipgloss.NewStyle().Foreground(theme.TextMuted).Render("Legion Task Framework")
+	sub := theme.SubtitleTextStyle.Render("Legion Task Framework")
 	lines = append(lines, centerLine(sub, width))
 	lines = append(lines, "")
 	lines = append(lines, "")
@@ -114,20 +111,20 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 	var statusLine string
 	switch state {
 	case LoginIdle:
-		key := lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true).Render("Enter")
-		statusLine = lipgloss.NewStyle().Foreground(theme.TextSecondary).Render("Press ") + key + lipgloss.NewStyle().Foreground(theme.TextSecondary).Render(" to authenticate")
+		key := theme.AccentTextStyle.Render("Enter")
+		statusLine = theme.TextSecondaryStyle.Render("Press ") + key + theme.TextSecondaryStyle.Render(" to authenticate")
 	case LoginWaiting:
-		statusLine = lipgloss.NewStyle().Foreground(theme.Amber).Render(theme.SymDot + " Waiting for browser...")
+		statusLine = theme.WarningTextStyle.Render(theme.SymDot + " Waiting for browser...")
 	case LoginSuccess:
-		statusLine = lipgloss.NewStyle().Foreground(theme.Green).Render(theme.SymCheck + " Authenticated")
+		statusLine = theme.SuccessTextStyle.Render(theme.SymCheck + " Authenticated")
 	case LoginError:
-		statusLine = lipgloss.NewStyle().Foreground(theme.Red).Render(theme.SymCross + " " + errMsg)
+		statusLine = theme.ErrorTextStyle.Render(theme.SymCross + " " + errMsg)
 	}
 	lines = append(lines, centerLine(statusLine, width))
 
 	if state == LoginError {
 		lines = append(lines, "")
-		retry := lipgloss.NewStyle().Foreground(theme.TextDim).Render("Press Enter to retry")
+		retry := theme.TextDimStyle.Render("Press Enter to retry")
 		lines = append(lines, centerLine(retry, width))
 	}
 
@@ -135,7 +132,7 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 	lines = append(lines, "")
 
 	// Bottom
-	bottom := lipgloss.NewStyle().Foreground(theme.TextDim).Render("v0.8.0    [q] quit")
+	bottom := theme.TextDimStyle.Render("v0.8.0    [q] quit")
 	lines = append(lines, centerLine(bottom, width))
 
 	// Calculate vertical centering
@@ -234,14 +231,13 @@ func saveAuthConfig(config *api.AuthConfig) error {
 	dir := path[:strings.LastIndex(path, "/")]
 	os.MkdirAll(dir, 0755)
 
-	// Preserve existing context (workspace/project) if re-authenticating
+	// Preserve existing context (workspace/project) if re-authenticating.
 	existing, err := api.LoadAuthConfig()
 	if err == nil && existing != nil {
 		config.Context = existing.Context
 	}
 
-	data, _ := json.MarshalIndent(config, "", "  ")
-	return os.WriteFile(path, data, 0600)
+	return api.SaveAuthConfig(config)
 }
 
 func openBrowser(u string) {

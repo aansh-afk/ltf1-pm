@@ -37,22 +37,10 @@ func (m ModalModel) View(width, height int) string {
 		return ""
 	}
 
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(theme.TextPrimary).
-		MarginBottom(1)
-
-	bodyStyle := lipgloss.NewStyle().
-		Foreground(theme.TextSecondary)
-
-	hintStyle := lipgloss.NewStyle().
-		Foreground(theme.TextMuted).
-		MarginTop(1)
-
-	content := titleStyle.Render(m.Title) + "\n" +
-		bodyStyle.Render(m.Body)
+	content := theme.ModalTitleStyle.Render(m.Title) + "\n" +
+		theme.ModalBodyStyle.Render(m.Body)
 	if m.Hints != "" {
-		content += "\n" + hintStyle.Render(m.Hints)
+		content += "\n" + theme.ModalHintStyle.Render(m.Hints)
 	}
 
 	box := theme.ModalStyle.Render(content)
@@ -70,8 +58,5 @@ func (m ModalModel) View(width, height int) string {
 		padTop = 0
 	}
 
-	return lipgloss.NewStyle().
-		PaddingLeft(padLeft).
-		PaddingTop(padTop).
-		Render(box)
+	return theme.OffsetStyle(padLeft, padTop).Render(box)
 }

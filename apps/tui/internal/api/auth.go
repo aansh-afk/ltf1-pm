@@ -115,13 +115,56 @@ func GetToken(cfg *AuthConfig) string {
 	return cfg.Auth.Token
 }
 
-// SaveContext merges workspace/project context into the existing config file and returns the updated config.
-func SaveContext(ctx ProjectInfo) (*AuthConfig, error) {
-	path, err := configPath()
-	if err != nil {
-		return nil, fmt.Errorf("config path: %w", err)
+// CanRefreshSession reports whether the stored auth can mint a fresh Clerk JWT.
+func CanRefreshSession(cfg *AuthConfig) bool {
+	if cfg == nil {
+		return false
+	}
+	return cfg.Auth.TokenType == "clerk" && cfg.Auth.SessionID != ""
+}
+
+// HasUsableAuth reports whether the app has enough auth state to start and
+// either call the API immediately or silently refresh before retrying.
+func HasUsableAuth(cfg *AuthConfig) bool {
+	if cfg == nil {
+		return false
+	}
+	if cfg.Auth.Token == "" && !CanRefreshSession(cfg) {
+		return false
+	}
+	return IsAuthenticated(cfg) || CanRefreshSession(cfg)
+}
+
+// SaveAuthConfig writes the full auth config to disk.
+func SaveAuthConfig(cfg *AuthConfig) error {
+	if cfg == nil {
+		return fmt.Errorf("nil config")
 	}
 
+	path, err := configPath()
+	if err != nil {
+		return fmt.Errorf("config path: %w", err)
+	}
+
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal config: %w", err)
+	}
+
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("create config dir: %w", err)
+	}
+
+	if err := os.WriteFile(path, data, 0600); err != nil {
+		return fmt.Errorf("write config: %w", err)
+	}
+
+	return nil
+}
+
+// SaveContext merges workspace/project context into the existing config file and returns the updated config.
+func SaveContext(ctx ProjectInfo) (*AuthConfig, error) {
 	cfg, err := LoadAuthConfig()
 	if err != nil {
 		return nil, fmt.Errorf("load config: %w", err)
@@ -129,18 +172,8 @@ func SaveContext(ctx ProjectInfo) (*AuthConfig, error) {
 
 	cfg.Context = ctx
 
-	data, err := json.MarshalIndent(cfg, "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("marshal config: %w", err)
-	}
-
-	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return nil, fmt.Errorf("create config dir: %w", err)
-	}
-
-	if err := os.WriteFile(path, data, 0600); err != nil {
-		return nil, fmt.Errorf("write config: %w", err)
+	if err := SaveAuthConfig(cfg); err != nil {
+		return nil, err
 	}
 
 	return cfg, nil

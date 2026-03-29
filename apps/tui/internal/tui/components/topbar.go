@@ -20,27 +20,20 @@ func NewTopBar() TopBarModel {
 
 // View renders the top bar.
 func (t TopBarModel) View() string {
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(theme.TextPrimary)
-
-	contextStyle := lipgloss.NewStyle().
-		Foreground(theme.TextMuted)
-
-	left := titleStyle.Render("LTF1")
+	left := theme.BrandTextStyle.Render("LTF1")
 	if t.Workspace != "" {
 		ctx := t.Workspace
 		if t.Project != "" {
 			ctx += " / " + t.Project
 		}
-		left += "  " + contextStyle.Render(ctx)
+		left += "  " + theme.TopBarContextStyle.Render(ctx)
 	}
 
 	dotColor := theme.Red
 	if t.Connected {
 		dotColor = theme.Green
 	}
-	right := lipgloss.NewStyle().Foreground(dotColor).Render(theme.SymDot)
+	right := theme.ColorTextStyle(dotColor).Render(theme.SymDot)
 
 	// Calculate gap
 	leftWidth := lipgloss.Width(left)
@@ -50,7 +43,7 @@ func (t TopBarModel) View() string {
 		gap = 1
 	}
 
-	row := left + lipgloss.NewStyle().Width(gap).Render("") + right
+	row := left + theme.WidthStyle(gap).Render("") + right
 
 	return theme.TopBarStyle.Width(t.Width).Render(row)
 }

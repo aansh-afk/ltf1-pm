@@ -3,7 +3,6 @@ package components
 import (
 	"strings"
 
-	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
 
@@ -39,38 +38,88 @@ var NavGroups = [][]NavItem{
 
 // SidebarModel holds sidebar state.
 type SidebarModel struct {
-	Active string
-	Height int
+	Active   string
+	Selected string
+	Focused  bool
+	Height   int
 }
 
 // NewSidebar creates a new sidebar with a default active item.
 func NewSidebar() SidebarModel {
-	return SidebarModel{Active: "d"}
+	return SidebarModel{Active: "d", Selected: "d", Focused: true}
 }
 
 // SetActive changes the active navigation item.
 func (s *SidebarModel) SetActive(key string) {
 	s.Active = key
+	if s.Selected == "" {
+		s.Selected = key
+	}
+}
+
+// SetSelected changes the currently highlighted sidebar item.
+func (s *SidebarModel) SetSelected(key string) {
+	s.Selected = key
+}
+
+// SyncSelectionToActive resets the highlighted item to the active page.
+func (s *SidebarModel) SyncSelectionToActive() {
+	s.Selected = s.Active
+}
+
+// SelectedKey returns the currently highlighted sidebar key.
+func (s SidebarModel) SelectedKey() string {
+	if s.Selected != "" {
+		return s.Selected
+	}
+	return s.Active
+}
+
+// Move changes the highlighted sidebar item by delta.
+func (s *SidebarModel) Move(delta int) {
+	keys := navKeys()
+	if len(keys) == 0 {
+		return
+	}
+
+	current := 0
+	selected := s.SelectedKey()
+	for i, key := range keys {
+		if key == selected {
+			current = i
+			break
+		}
+	}
+
+	next := current + delta
+	if next < 0 {
+		next = 0
+	}
+	if next >= len(keys) {
+		next = len(keys) - 1
+	}
+	s.Selected = keys[next]
 }
 
 // View renders the sidebar.
 func (s SidebarModel) View() string {
 	var b strings.Builder
 
-	activeStyle := lipgloss.NewStyle().
-		Foreground(theme.Indigo).
-		Bold(true)
-
-	inactiveStyle := lipgloss.NewStyle().
-		Foreground(theme.TextMuted)
-
 	for gi, group := range NavGroups {
 		for _, item := range group {
-			if item.Key == s.Active {
-				b.WriteString(theme.SymBar + " " + activeStyle.Render(item.Label))
-			} else {
-				b.WriteString("  " + inactiveStyle.Render(item.Label))
+			marker := " "
+			labelStyle := theme.SidebarInactiveStyle
+
+			switch {
+			case s.Focused && item.Key == s.SelectedKey():
+				marker = theme.SidebarSelectedMarkerStyle.Render(theme.SymBar)
+				labelStyle = theme.SidebarSelectedStyle
+			case item.Key == s.Active:
+				marker = theme.SidebarActiveMarkerStyle.Render(theme.SymDot)
+				labelStyle = theme.SidebarActiveStyle
 			}
+
+			b.WriteString(marker + " " + labelStyle.Render(item.Label))
 			b.WriteString("\n")
 		}
 		if gi < len(NavGroups)-1 {
@@ -87,4 +136,14 @@ func (s SidebarModel) View() string {
 	}
 
 	return theme.SidebarStyle.Height(s.Height).Render(content)
+}
+
+func navKeys() []string {
+	keys := make([]string, 0, len(NavGroups)*4)
+	for _, group := range NavGroups {
+		for _, item := range group {
+			keys = append(keys, item.Key)
+		}
+	}
+	return keys
 }

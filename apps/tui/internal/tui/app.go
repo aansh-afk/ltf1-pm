@@ -48,18 +48,18 @@ type projectsLoadedMsg struct {
 
 // Model is the root Bubble Tea model.
 type Model struct {
-	width, height int
-	page          pages.Page
-	prevPage      pages.Page // for back navigation
-	pageModels    map[pages.Page]pages.PageModel
-	sidebar       components.SidebarModel
-	topbar        components.TopBarModel
-	statusbar     components.StatusBarModel
-	toast         *components.ToastModel
-	client        *api.ConvexClient
-	config        *api.AuthConfig
-	connected     bool
-	inputMode     bool
+	width, height  int
+	page           pages.Page
+	prevPage       pages.Page // for back navigation
+	pageModels     map[pages.Page]pages.PageModel
+	sidebar        components.SidebarModel
+	sidebarFocused bool
+	topbar         components.TopBarModel
+	statusbar      components.StatusBarModel
+	toast          *components.ToastModel
+	client         *api.ConvexClient
+	config         *api.AuthConfig
+	connected      bool
 	// Login flow
 	authenticated bool
 	loginState    LoginState
@@ -76,7 +76,7 @@ type Model struct {
 // NewModel creates the root model.
 func NewModel(client *api.ConvexClient, config *api.AuthConfig) Model {
 	connected := client != nil
-	authenticated := config != nil && api.IsAuthenticated(config) && client != nil
+	authenticated := config != nil && api.HasUsableAuth(config) && client != nil
 
 	topbar := components.NewTopBar()
 	topbar.Connected = connected
@@ -98,17 +98,18 @@ func NewModel(client *api.ConvexClient, config *api.AuthConfig) Model {
 	}
 
 	m := Model{
-		page:          pages.PageDashboard,
-		pageModels:    make(map[pages.Page]pages.PageModel),
-		sidebar:       components.NewSidebar(),
-		topbar:        topbar,
-		statusbar:     statusbar,
-		client:        client,
-		config:        config,
-		connected:     connected,
-		authenticated: authenticated,
-		loginState:    LoginIdle,
-		appState:      appState,
+		page:           pages.PageDashboard,
+		pageModels:     make(map[pages.Page]pages.PageModel),
+		sidebar:        components.NewSidebar(),
+		sidebarFocused: true,
+		topbar:         topbar,
+		statusbar:      statusbar,
+		client:         client,
+		config:         config,
+		connected:      connected,
+		authenticated:  authenticated,
+		loginState:     LoginIdle,
+		appState:       appState,
 	}
 
 	// Get workspace/project IDs from config
@@ -141,13 +142,7 @@ func (m Model) Init() tea.Cmd {
 		return fetchWorkspaces(m.client)
 	}
 	if m.appState == StateReady {
-		var cmds []tea.Cmd
-		for _, pm := range m.pageModels {
-			if cmd := pm.Init(); cmd != nil {
-				cmds = append(cmds, cmd)
-			}
-		}
-		return tea.Batch(cmds...)
+		return m.initPage(m.page)
 	}
 	return nil
 }
@@ -180,7 +175,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Create Convex client with new token
 		convexURL := api.GetConvexURL(m.config)
-		m.client = api.NewClient(convexURL, m.config.Auth.Token)
+		m.client = api.NewClient(convexURL, m.config)
 		m.connected = true
 		m.topbar.Connected = true
 
@@ -272,123 +267,46 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		// If in input mode, Escape exits input mode.
-		// All other keys go to the active page (for text input).
-		if m.inputMode {
-			key := msg.String()
-			if key == "esc" {
-				m.inputMode = false
-				// Also delegate esc to the page so it can unfocus input
-				if pm, ok := m.pageModels[m.page]; ok {
-					newPM, cmd := pm.Update(msg)
-					m.pageModels[m.page] = newPM
-					if cmd != nil {
-						cmds = append(cmds, cmd)
-					}
-				}
-				return m, tea.Batch(cmds...)
-			}
-			// q still quits even in input mode (Ctrl+C is safer for forms)
-			if key == "ctrl+c" {
-				return m, tea.Quit
-			}
-			// Delegate to active page for text input
-			if pm, ok := m.pageModels[m.page]; ok {
-				newPM, cmd := pm.Update(msg)
-				m.pageModels[m.page] = newPM
-				if cmd != nil {
-					cmds = append(cmds, cmd)
-				}
-			}
-			return m, tea.Batch(cmds...)
-		}
-
 		key := msg.String()
 
-		// q and ctrl+c always quit regardless of page
 		if key == "q" || key == "ctrl+c" {
 			return m, tea.Quit
 		}
 
-		// Esc = go back to previous page (or dashboard if no history)
-		if key == "esc" {
-			if m.page != pages.PageDashboard {
-				if m.prevPage != m.page {
-					m.switchPage(m.prevPage)
-				} else {
-					m.switchPage(pages.PageDashboard)
-				}
-				return m, nil
+		if key == "r" {
+			if cmd := m.initPage(m.page); cmd != nil {
+				cmds = append(cmds, cmd)
 			}
+			return m, tea.Batch(cmds...)
 		}
 
-		// Check if the current page claims this key.
-		// If so, delegate to the page instead of global nav.
-		pageClaims := false
-		if pm, ok := m.pageModels[m.page]; ok {
-			for _, bind := range pm.KeyBinds() {
-				if bind == key {
-					pageClaims = true
-					break
-				}
-			}
-		}
-
-		if pageClaims {
-			// Page gets priority for this key
-			if pm, ok := m.pageModels[m.page]; ok {
-				newPM, cmd := pm.Update(msg)
-				m.pageModels[m.page] = newPM
-				if cmd != nil {
+		if m.sidebarFocused {
+			switch key {
+			case "j", "down":
+				m.sidebar.Move(1)
+			case "k", "up":
+				m.sidebar.Move(-1)
+			case "enter", "right", "l":
+				if cmd := m.enterSelectedPage(); cmd != nil {
 					cmds = append(cmds, cmd)
+				}
+			default:
+				if p, ok := pageFromSidebarKey(key); ok {
+					m.sidebar.SetSelected(sidebarKeyForPage(p))
 				}
 			}
 			return m, tea.Batch(cmds...)
 		}
 
-		// Global key handling — only reached if page doesn't claim the key
-		switch key {
-		case "d":
-			m.switchPage(pages.PageDashboard)
-		case "t":
-			m.switchPage(pages.PageTasks)
-		case "s":
-			m.switchPage(pages.PageSprint)
-		case "a":
-			m.switchPage(pages.PageAgent)
-		case "g":
-			m.switchPage(pages.PageGit)
-		case "p":
-			m.switchPage(pages.PageProjects)
-		case "k":
-			m.switchPage(pages.PageSkills)
-		case "/":
-			m.switchPage(pages.PageSearch)
-			// Search page focuses its input via Init() — no need to set inputMode here
-			// User can press Esc to unfocus and navigate away
-		case "n":
-			m.switchPage(pages.PageNotifications)
-		case ",":
-			m.switchPage(pages.PageSettings)
-		case "?":
-			m.switchPage(pages.PageHelp)
-		case "r":
-			// Refresh current page
-			if pm, ok := m.pageModels[m.page]; ok {
-				cmd := pm.Init()
-				if cmd != nil {
-					cmds = append(cmds, cmd)
-				}
+		if key == "esc" {
+			if cmd := m.focusSidebar(); cmd != nil {
+				cmds = append(cmds, cmd)
 			}
-		default:
-			// Delegate unclaimed keys to active page
-			if pm, ok := m.pageModels[m.page]; ok {
-				newPM, cmd := pm.Update(msg)
-				m.pageModels[m.page] = newPM
-				if cmd != nil {
-					cmds = append(cmds, cmd)
-				}
-			}
+			return m, tea.Batch(cmds...)
+		}
+
+		if cmd := m.updatePage(m.page, msg); cmd != nil {
+			cmds = append(cmds, cmd)
 		}
 		return m, tea.Batch(cmds...)
 	}
@@ -402,11 +320,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	// Delegate non-key messages to active page
-	if pm, ok := m.pageModels[m.page]; ok {
-		newPM, cmd := pm.Update(msg)
-		m.pageModels[m.page] = newPM
-		if cmd != nil {
+	// Broadcast non-key messages to all pages so page-scoped async messages are
+	// never dropped by the shell.
+	if m.appState == StateReady {
+		if cmd := m.updateAllPages(msg); cmd != nil {
 			cmds = append(cmds, cmd)
 		}
 	}
@@ -433,6 +350,10 @@ func (m Model) handleSelectorKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "enter":
 		if m.appState == StateSelectWorkspace && len(m.workspaces) > 0 {
 			m.selectedWS = m.workspaces[m.selectorCursor]
+			if m.selectedWS.ID == "" {
+				m.selectorError = "Selected workspace is missing an _id"
+				return m, nil
+			}
 			m.appState = StateSelectProject
 			m.selectorCursor = 0
 			m.selectorError = ""
@@ -441,6 +362,10 @@ func (m Model) handleSelectorKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		if m.appState == StateSelectProject && len(m.projects) > 0 {
 			selectedProj := m.projects[m.selectorCursor]
+			if selectedProj.ID == "" {
+				m.selectorError = "Selected project is missing an _id"
+				return m, nil
+			}
 
 			// Save context to config
 			ctx := api.ProjectInfo{
@@ -513,10 +438,16 @@ func (m *Model) reinitPages() tea.Cmd {
 	m.pageModels[pages.PageTasks] = pages.NewTasksPage(m.client, wsID, projID)
 	m.pageModels[pages.PageSprint] = pages.NewSprintPage(m.client, wsID, projID)
 	m.pageModels[pages.PageAgent] = pages.NewAgentPage(m.client, wsID, projID)
+	m.pageModels[pages.PageGit] = pages.NewGitPage()
 	m.pageModels[pages.PageProjects] = pages.NewProjectsPage(m.client, wsID, projID)
 	m.pageModels[pages.PageSkills] = pages.NewSkillsPage(m.client, wsID, projID)
+	m.pageModels[pages.PageSearch] = pages.NewSearchPage(m.client)
 	m.pageModels[pages.PageNotifications] = pages.NewNotificationsPage(m.client, wsID, projID)
 	m.pageModels[pages.PageSettings] = pages.NewSettingsPage(m.config)
+	m.pageModels[pages.PageHelp] = pages.NewHelpPage()
+
+	m.sidebarFocused = true
+	m.sidebar.SyncSelectionToActive()
 
 	// Resize all pages
 	contentWidth, contentHeight := m.contentSize()
@@ -524,46 +455,44 @@ func (m *Model) reinitPages() tea.Cmd {
 		pm.SetSize(contentWidth, contentHeight)
 	}
 
-	// Init ALL pages so they fetch their data
-	var cmds []tea.Cmd
-	for _, pm := range m.pageModels {
-		if cmd := pm.Init(); cmd != nil {
-			cmds = append(cmds, cmd)
-		}
-	}
-	return tea.Batch(cmds...)
+	return m.initPage(m.page)
 }
 
 // View renders the full app layout.
 func (m Model) View() tea.View {
 	if m.width == 0 || m.height == 0 {
-		return tea.NewView("")
+		v := tea.NewView("")
+		v.AltScreen = true
+		v.MouseMode = tea.MouseModeCellMotion
+		return v
 	}
 
 	switch m.appState {
 	case StateLogin:
-		v := tea.NewView(renderLoginScreen(m.loginState, m.loginError, m.width, m.height))
-		v.BackgroundColor = theme.BgBase
+		v := tea.NewView(theme.FillBackground(renderLoginScreen(m.loginState, m.loginError, m.width, m.height), m.width, m.height))
 		v.AltScreen = true
+		v.MouseMode = tea.MouseModeCellMotion
 		return v
 
 	case StateSelectWorkspace:
-		v := tea.NewView(m.renderWorkspaceSelector())
-		v.BackgroundColor = theme.BgBase
+		v := tea.NewView(theme.FillBackground(m.renderWorkspaceSelector(), m.width, m.height))
 		v.AltScreen = true
+		v.MouseMode = tea.MouseModeCellMotion
 		return v
 
 	case StateSelectProject:
-		v := tea.NewView(m.renderProjectSelector())
-		v.BackgroundColor = theme.BgBase
+		v := tea.NewView(theme.FillBackground(m.renderProjectSelector(), m.width, m.height))
 		v.AltScreen = true
+		v.MouseMode = tea.MouseModeCellMotion
 		return v
 	}
 
 	// StateReady — full dashboard
 	topbar := m.topbar.View()
 	statusbar := m.statusbar.View()
-	sidebar := m.sidebar.View()
+	sidebarModel := m.sidebar
+	sidebarModel.Focused = m.sidebarFocused
+	sidebar := sidebarModel.View()
 
 	// Content area
 	contentWidth, contentHeight := m.contentSize()
@@ -573,7 +502,6 @@ func (m Model) View() tea.View {
 		content = pm.View()
 	}
 
-	// Constrain content width — NO Background (tea.View.BackgroundColor handles it)
 	contentStyle := lipgloss.NewStyle().
 		Width(contentWidth).
 		Height(contentHeight).
@@ -592,10 +520,19 @@ func (m Model) View() tea.View {
 
 	// Help hints at bottom of content
 	helpHint := ""
-	if pm, ok := m.pageModels[m.page]; ok {
+	if m.sidebarFocused {
+		helpHint = strings.Join([]string{
+			theme.KeyHintKey.Render("j/k") + theme.KeyHintDesc.Render(" navigate"),
+			theme.KeyHintKey.Render("enter") + theme.KeyHintDesc.Render(" open"),
+			theme.KeyHintKey.Render("r") + theme.KeyHintDesc.Render(" refresh"),
+			theme.KeyHintKey.Render("q") + theme.KeyHintDesc.Render(" quit"),
+		}, "    ")
+	} else if pm, ok := m.pageModels[m.page]; ok {
 		h := pm.ShortHelp()
 		if h != "" {
-			helpHint = theme.TextDimStyle.Render(h)
+			helpHint = theme.TextDimStyle.Render(h + "  esc sidebar")
+		} else {
+			helpHint = theme.KeyHintKey.Render("esc") + theme.KeyHintDesc.Render(" sidebar")
 		}
 	}
 
@@ -610,13 +547,7 @@ func (m Model) View() tea.View {
 	}
 	sections = append(sections, statusbar)
 
-	fullView := lipgloss.NewStyle().
-		Width(m.width).
-		Height(m.height).
-		Render(strings.Join(sections, "\n"))
-
-	v := tea.NewView(fullView)
-	v.BackgroundColor = theme.BgBase
+	v := tea.NewView(theme.FillBackground(strings.Join(sections, "\n"), m.width, m.height))
 	v.AltScreen = true
 	v.MouseMode = tea.MouseModeCellMotion
 	return v
@@ -630,7 +561,7 @@ func (m Model) renderWorkspaceSelector() string {
 // renderProjectSelector renders the centered project picker.
 func (m Model) renderProjectSelector() string {
 	return m.renderSelector(
-		fmt.Sprintf("SELECT PROJECT  %s", lipgloss.NewStyle().Foreground(theme.TextMuted).Render(m.selectedWS.Name)),
+		fmt.Sprintf("SELECT PROJECT  %s", theme.SubtitleTextStyle.Render(m.selectedWS.Name)),
 		m.projectNames(),
 		m.selectorCursor,
 		m.selectorError,
@@ -642,27 +573,24 @@ func (m Model) renderSelector(title string, items []string, cursor int, errMsg s
 	var lines []string
 
 	// Title
-	titleStyle := lipgloss.NewStyle().Foreground(theme.TextPrimary).Bold(true)
-	lines = append(lines, titleStyle.Render(title))
+	lines = append(lines, theme.BrandTextStyle.Render(title))
 	lines = append(lines, "")
 
 	if errMsg != "" {
-		errStyle := lipgloss.NewStyle().Foreground(theme.Red)
-		lines = append(lines, errStyle.Render(theme.SymCross+" "+errMsg))
+		lines = append(lines, theme.ErrorTextStyle.Render(theme.SymCross+" "+errMsg))
 		lines = append(lines, "")
-		retryHint := lipgloss.NewStyle().Foreground(theme.TextDim).Render("Press r to retry")
+		retryHint := theme.TextDimStyle.Render("Press r to retry")
 		lines = append(lines, retryHint)
 	} else if len(items) == 0 {
-		loadingStyle := lipgloss.NewStyle().Foreground(theme.Amber)
-		lines = append(lines, loadingStyle.Render(theme.SymDot+" Loading..."))
+		lines = append(lines, theme.WarningTextStyle.Render(theme.SymDot+" Loading..."))
 	} else {
 		for i, item := range items {
 			if i == cursor {
-				indicator := lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true).Render(theme.SymArrowRight)
-				name := lipgloss.NewStyle().Foreground(theme.TextPrimary).Bold(true).Render(" " + item)
+				indicator := theme.AccentTextStyle.Render(theme.SymArrowRight)
+				name := theme.BrandTextStyle.Render(" " + item)
 				lines = append(lines, indicator+name)
 			} else {
-				name := lipgloss.NewStyle().Foreground(theme.TextMuted).Render("  " + item)
+				name := theme.TextMutedStyle.Render("  " + item)
 				lines = append(lines, name)
 			}
 		}
@@ -673,19 +601,15 @@ func (m Model) renderSelector(title string, items []string, cursor int, errMsg s
 	// Footer hints
 	hintParts := []string{}
 	hintParts = append(hintParts,
-		lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true).Render("j/k")+
-			lipgloss.NewStyle().Foreground(theme.TextDim).Render(" navigate"))
+		theme.KeyHintKey.Render("j/k")+theme.KeyHintDesc.Render(" navigate"))
 	hintParts = append(hintParts,
-		lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true).Render("enter")+
-			lipgloss.NewStyle().Foreground(theme.TextDim).Render(" select"))
+		theme.KeyHintKey.Render("enter")+theme.KeyHintDesc.Render(" select"))
 	if m.appState == StateSelectProject {
 		hintParts = append(hintParts,
-			lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true).Render("esc")+
-				lipgloss.NewStyle().Foreground(theme.TextDim).Render(" back"))
+			theme.KeyHintKey.Render("esc")+theme.KeyHintDesc.Render(" back"))
 	}
 	hintParts = append(hintParts,
-		lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true).Render("q")+
-			lipgloss.NewStyle().Foreground(theme.TextDim).Render(" quit"))
+		theme.KeyHintKey.Render("q")+theme.KeyHintDesc.Render(" quit"))
 
 	lines = append(lines, strings.Join(hintParts, "    "))
 
@@ -761,6 +685,9 @@ func fetchWorkspaces(client *api.ConvexClient) tea.Cmd {
 
 		result := make([]workspaceItem, len(items))
 		for i, item := range items {
+			if item.ID == "" {
+				return workspacesLoadedMsg{Err: fmt.Errorf("workspace response missing _id for %q", item.Name)}
+			}
 			result[i] = workspaceItem{ID: item.ID, Name: item.Name}
 		}
 		return workspacesLoadedMsg{Items: result}
@@ -792,6 +719,9 @@ func fetchProjects(client *api.ConvexClient, workspaceID string) tea.Cmd {
 
 		result := make([]projectItem, len(items))
 		for i, item := range items {
+			if item.ID == "" {
+				return projectsLoadedMsg{Err: fmt.Errorf("project response missing _id for %q", item.Name)}
+			}
 			result[i] = projectItem{ID: item.ID, Key: item.Key, Name: item.Name}
 		}
 		return projectsLoadedMsg{Items: result}
@@ -802,25 +732,126 @@ func fetchProjects(client *api.ConvexClient, workspaceID string) tea.Cmd {
 func (m *Model) switchPage(p pages.Page) {
 	m.prevPage = m.page
 	m.page = p
-	m.inputMode = false
 
-	// Map page to sidebar key
-	keyMap := map[pages.Page]string{
-		pages.PageDashboard:     "d",
-		pages.PageTasks:         "t",
-		pages.PageSprint:        "s",
-		pages.PageAgent:         "a",
-		pages.PageGit:           "g",
-		pages.PageProjects:      "p",
-		pages.PageSkills:        "k",
-		pages.PageSearch:        "/",
-		pages.PageNotifications: "n",
-		pages.PageSettings:      ",",
-		pages.PageHelp:          "?",
+	if key := sidebarKeyForPage(p); key != "" {
+		m.sidebar.SetActive(key)
+		m.sidebar.SetSelected(key)
+	}
+}
+
+func (m *Model) initPage(p pages.Page) tea.Cmd {
+	if pm, ok := m.pageModels[p]; ok {
+		return pm.Init()
+	}
+	return nil
+}
+
+func (m *Model) updatePage(p pages.Page, msg tea.Msg) tea.Cmd {
+	pm, ok := m.pageModels[p]
+	if !ok {
+		return nil
 	}
 
-	if key, ok := keyMap[p]; ok {
-		m.sidebar.SetActive(key)
+	newPM, cmd := pm.Update(msg)
+	m.pageModels[p] = newPM
+	return cmd
+}
+
+func (m *Model) updateAllPages(msg tea.Msg) tea.Cmd {
+	var cmds []tea.Cmd
+	for page := range m.pageModels {
+		if cmd := m.updatePage(page, msg); cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+	}
+	return tea.Batch(cmds...)
+}
+
+func (m *Model) focusSidebar() tea.Cmd {
+	if m.sidebarFocused {
+		return nil
+	}
+
+	m.sidebarFocused = true
+	m.sidebar.SyncSelectionToActive()
+	return m.updatePage(m.page, pages.PageBlurredMsg{})
+}
+
+func (m *Model) enterSelectedPage() tea.Cmd {
+	page, ok := pageFromSidebarKey(m.sidebar.SelectedKey())
+	if !ok {
+		return nil
+	}
+
+	m.switchPage(page)
+	m.sidebarFocused = false
+
+	var cmds []tea.Cmd
+	if cmd := m.initPage(m.page); cmd != nil {
+		cmds = append(cmds, cmd)
+	}
+	if cmd := m.updatePage(m.page, pages.PageFocusedMsg{}); cmd != nil {
+		cmds = append(cmds, cmd)
+	}
+
+	return tea.Batch(cmds...)
+}
+
+func pageFromSidebarKey(key string) (pages.Page, bool) {
+	switch key {
+	case "d":
+		return pages.PageDashboard, true
+	case "t":
+		return pages.PageTasks, true
+	case "s":
+		return pages.PageSprint, true
+	case "a":
+		return pages.PageAgent, true
+	case "g":
+		return pages.PageGit, true
+	case "p":
+		return pages.PageProjects, true
+	case "k":
+		return pages.PageSkills, true
+	case "/":
+		return pages.PageSearch, true
+	case "n":
+		return pages.PageNotifications, true
+	case ",":
+		return pages.PageSettings, true
+	case "?":
+		return pages.PageHelp, true
+	default:
+		return pages.PageDashboard, false
+	}
+}
+
+func sidebarKeyForPage(p pages.Page) string {
+	switch p {
+	case pages.PageDashboard:
+		return "d"
+	case pages.PageTasks:
+		return "t"
+	case pages.PageSprint:
+		return "s"
+	case pages.PageAgent:
+		return "a"
+	case pages.PageGit:
+		return "g"
+	case pages.PageProjects:
+		return "p"
+	case pages.PageSkills:
+		return "k"
+	case pages.PageSearch:
+		return "/"
+	case pages.PageNotifications:
+		return "n"
+	case pages.PageSettings:
+		return ","
+	case pages.PageHelp:
+		return "?"
+	default:
+		return ""
 	}
 }
 

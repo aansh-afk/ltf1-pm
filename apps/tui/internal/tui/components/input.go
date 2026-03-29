@@ -3,7 +3,6 @@ package components
 import (
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
 
@@ -19,17 +18,13 @@ func NewInput(placeholder string) InputModel {
 	ti.Placeholder = placeholder
 	ti.Prompt = "> "
 
-	promptStyle := lipgloss.NewStyle().Foreground(theme.Indigo)
-	textStyle := lipgloss.NewStyle().Foreground(theme.TextPrimary)
-	placeholderStyle := lipgloss.NewStyle().Foreground(theme.TextDim)
-
 	styles := textinput.DefaultDarkStyles()
-	styles.Focused.Prompt = promptStyle
-	styles.Focused.Text = textStyle
-	styles.Focused.Placeholder = placeholderStyle
-	styles.Blurred.Prompt = promptStyle.Foreground(theme.TextMuted)
-	styles.Blurred.Text = lipgloss.NewStyle().Foreground(theme.TextSecondary)
-	styles.Blurred.Placeholder = placeholderStyle
+	styles.Focused.Prompt = theme.InputPromptStyle
+	styles.Focused.Text = theme.InputTextStyle
+	styles.Focused.Placeholder = theme.InputPlaceholderStyle
+	styles.Blurred.Prompt = theme.InputBlurredPromptStyle
+	styles.Blurred.Text = theme.InputBlurredTextStyle
+	styles.Blurred.Placeholder = theme.InputPlaceholderStyle
 	ti.SetStyles(styles)
 
 	return InputModel{Input: ti}

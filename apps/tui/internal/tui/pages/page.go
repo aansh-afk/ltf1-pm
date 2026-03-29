@@ -32,3 +32,9 @@ type PageModel interface {
 	// treating them as global navigation shortcuts.
 	KeyBinds() []string
 }
+
+// PageFocusedMsg is sent by the shell when a page enters focused mode.
+type PageFocusedMsg struct{}
+
+// PageBlurredMsg is sent by the shell when focus returns to the sidebar.
+type PageBlurredMsg struct{}

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/api"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/components"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
@@ -100,7 +99,7 @@ func (p *agentPage) View() string {
 		return components.EmptyState("Loading agent...", p.width, p.height)
 	}
 
-	amberStyle := lipgloss.NewStyle().Foreground(theme.Amber)
+	amberStyle := theme.WarningTextStyle
 	var b strings.Builder
 
 	// Stats

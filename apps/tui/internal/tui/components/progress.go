@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/color"
 
-	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
 
@@ -29,9 +28,9 @@ func ProgressBar(percent float64, width int, color color.Color) string {
 	filled := int(float64(barWidth) * percent / 100)
 	empty := barWidth - filled
 
-	filledStyle := lipgloss.NewStyle().Foreground(color)
-	emptyStyle := lipgloss.NewStyle().Foreground(theme.TextDim)
-	pctStyle := lipgloss.NewStyle().Foreground(theme.TextSecondary)
+	filledStyle := theme.ColorTextStyle(color)
+	emptyStyle := theme.TextDimStyle
+	pctStyle := theme.TextSecondaryStyle
 
 	bar := ""
 	for i := 0; i < filled; i++ {

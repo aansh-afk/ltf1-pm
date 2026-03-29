@@ -29,10 +29,18 @@ func NewSearchPage(client *api.ConvexClient) PageModel {
 }
 
 func (p *searchPage) Init() tea.Cmd {
-	return p.input.Focus()
+	return nil
 }
 
 func (p *searchPage) Update(msg tea.Msg) (PageModel, tea.Cmd) {
+	switch msg.(type) {
+	case PageFocusedMsg:
+		return p, p.input.Focus()
+	case PageBlurredMsg:
+		p.input.Blur()
+		return p, nil
+	}
+
 	var cmd tea.Cmd
 	p.input, cmd = p.input.Update(msg)
 
