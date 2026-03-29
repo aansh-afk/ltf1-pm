@@ -57,8 +57,11 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 	if WorldMapArt != "" {
 		mapLines := strings.Split(WorldMapArt, "\n")
 
-		// Vertical: take center ~20 lines
-		maxMapH := 20
+		// Vertical: take center portion if too tall
+		maxMapH := height / 3
+		if maxMapH < 10 {
+			maxMapH = 10
+		}
 		if len(mapLines) > maxMapH {
 			start := (len(mapLines) - maxMapH) / 2
 			mapLines = mapLines[start : start+maxMapH]
@@ -77,7 +80,7 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 			targetW = 40
 		}
 
-		dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#1E1E1E"))
+		dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#333333"))
 
 		if mapWidth > targetW {
 			// Center crop each line
