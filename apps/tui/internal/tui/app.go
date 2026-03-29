@@ -25,11 +25,16 @@ type Model struct {
 	config        *api.AuthConfig
 	connected     bool
 	inputMode     bool
+	// Login flow
+	authenticated bool
+	loginState    LoginState
+	loginError    string
 }
 
 // NewModel creates the root model.
 func NewModel(client *api.ConvexClient, config *api.AuthConfig) Model {
 	connected := client != nil
+	authenticated := config != nil && api.IsAuthenticated(config) && client != nil
 
 	topbar := components.NewTopBar()
 	topbar.Connected = connected
@@ -41,14 +46,16 @@ func NewModel(client *api.ConvexClient, config *api.AuthConfig) Model {
 	statusbar := components.NewStatusBar()
 
 	m := Model{
-		page:       pages.PageDashboard,
-		pageModels: make(map[pages.Page]pages.PageModel),
-		sidebar:    components.NewSidebar(),
-		topbar:     topbar,
-		statusbar:  statusbar,
-		client:     client,
-		config:     config,
-		connected:  connected,
+		page:          pages.PageDashboard,
+		pageModels:    make(map[pages.Page]pages.PageModel),
+		sidebar:       components.NewSidebar(),
+		topbar:        topbar,
+		statusbar:     statusbar,
+		client:        client,
+		config:        config,
+		connected:     connected,
+		authenticated: authenticated,
+		loginState:    LoginIdle,
 	}
 
 	// Get workspace/project IDs from config
@@ -88,8 +95,47 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case pages.LogoutMsg:
-		// User logged out — quit the TUI
-		return m, tea.Quit
+		// User logged out — show login screen again
+		m.authenticated = false
+		m.loginState = LoginIdle
+		m.client = nil
+		m.config = nil
+		return m, nil
+
+	case AuthResult:
+		// OAuth callback received
+		if msg.Err != nil {
+			m.loginState = LoginError
+			m.loginError = msg.Err.Error()
+			return m, nil
+		}
+		// Success — set up the client and transition to dashboard
+		m.config = msg.Config
+		m.loginState = LoginSuccess
+		m.authenticated = true
+
+		// Create Convex client with new token
+		convexURL := api.GetConvexURL(m.config)
+		m.client = api.NewClient(convexURL, m.config.Auth.Token)
+		m.connected = true
+		m.topbar.Connected = true
+		m.topbar.Workspace = m.config.Context.WorkspaceName
+		m.topbar.Project = m.config.Context.ProjectName
+
+		// Reinitialize pages with new client
+		wsID := m.config.Context.WorkspaceID
+		projID := m.config.Context.ProjectID
+		m.pageModels[pages.PageDashboard] = pages.NewDashboardPage(m.client, wsID, projID)
+		m.pageModels[pages.PageTasks] = pages.NewTasksPage(m.client, wsID, projID)
+		m.pageModels[pages.PageSprint] = pages.NewSprintPage(m.client, wsID, projID)
+		m.pageModels[pages.PageAgent] = pages.NewAgentPage(m.client, wsID, projID)
+		m.pageModels[pages.PageProjects] = pages.NewProjectsPage(m.client, wsID, projID)
+		m.pageModels[pages.PageSkills] = pages.NewSkillsPage(m.client, wsID, projID)
+		m.pageModels[pages.PageNotifications] = pages.NewNotificationsPage(m.client, wsID, projID)
+		m.pageModels[pages.PageSettings] = pages.NewSettingsPage(m.config)
+
+		// Init the dashboard
+		return m, m.pageModels[pages.PageDashboard].Init()
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -105,6 +151,25 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
+		// LOGIN SCREEN — handle keys when not authenticated
+		if !m.authenticated {
+			key := msg.String()
+			if key == "q" || key == "ctrl+c" {
+				return m, tea.Quit
+			}
+			if key == "enter" && m.loginState == LoginIdle {
+				m.loginState = LoginWaiting
+				return m, startOAuthFlow()
+			}
+			if key == "enter" && m.loginState == LoginError {
+				// Retry
+				m.loginState = LoginWaiting
+				m.loginError = ""
+				return m, startOAuthFlow()
+			}
+			return m, nil
+		}
+
 		// Let toast dismiss on any key if warning
 		if m.toast != nil && m.toast.Visible {
 			t, cmd := m.toast.Update(msg)
@@ -260,6 +325,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() tea.View {
 	if m.width == 0 || m.height == 0 {
 		return tea.NewView("")
+	}
+
+	// LOGIN SCREEN — full screen when not authenticated
+	if !m.authenticated {
+		return tea.NewView(renderLoginScreen(m.loginState, m.loginError, m.width, m.height))
 	}
 
 	topbar := m.topbar.View()

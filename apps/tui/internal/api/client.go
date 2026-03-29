@@ -12,6 +12,14 @@ import (
 
 const defaultDeploymentURL = "https://tangible-butterfly-366.convex.cloud"
 
+// GetConvexURL returns the Convex deployment URL from config or env.
+func GetConvexURL(config *AuthConfig) string {
+	if u := os.Getenv("CONVEX_URL"); u != "" {
+		return u
+	}
+	return defaultDeploymentURL
+}
+
 // ConvexClient is an HTTP client for the Convex API.
 type ConvexClient struct {
 	baseURL string
