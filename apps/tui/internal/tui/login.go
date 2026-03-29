@@ -39,52 +39,73 @@ type AuthResult struct {
 const authPort = 9876
 const webAppURL = "https://ltf1.dev"
 
-// scaleMap trims the world map to fit terminal width and height
-func scaleMap(raw string, maxWidth, maxHeight int) string {
-	lines := strings.Split(raw, "\n")
-
-	// Trim to maxHeight (take middle portion if taller)
-	if len(lines) > maxHeight {
-		start := (len(lines) - maxHeight) / 2
-		lines = lines[start : start+maxHeight]
+// centerLine pads a string to be centered within the given width
+func centerLine(s string, width int) string {
+	visible := lipgloss.Width(s)
+	if visible >= width {
+		return s
 	}
+	pad := (width - visible) / 2
+	return strings.Repeat(" ", pad) + s
+}
 
-	// Trim each line to maxWidth (center crop)
-	for i, line := range lines {
-		if len(line) > maxWidth {
-			start := (len(line) - maxWidth) / 2
-			end := start + maxWidth
-			if end > len(line) {
-				end = len(line)
+// renderLoginScreen builds the login view with NO lipgloss.Place (avoids white padding)
+func renderLoginScreen(state LoginState, errMsg string, width, height int) string {
+	var lines []string
+
+	// Scale world map to fit — take center portion, downsample if needed
+	if WorldMapArt != "" {
+		mapLines := strings.Split(WorldMapArt, "\n")
+
+		// Vertical: take center ~20 lines
+		maxMapH := 20
+		if len(mapLines) > maxMapH {
+			start := (len(mapLines) - maxMapH) / 2
+			mapLines = mapLines[start : start+maxMapH]
+		}
+
+		// Horizontal: take every Nth char to fit width, center crop
+		mapWidth := 0
+		for _, l := range mapLines {
+			if len(l) > mapWidth {
+				mapWidth = len(l)
 			}
-			lines[i] = line[start:end]
+		}
+
+		targetW := width - 8
+		if targetW < 40 {
+			targetW = 40
+		}
+
+		dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#1E1E1E"))
+
+		if mapWidth > targetW {
+			// Center crop each line
+			for _, l := range mapLines {
+				if len(l) > targetW {
+					start := (len(l) - targetW) / 2
+					l = l[start : start+targetW]
+				}
+				lines = append(lines, centerLine(dimStyle.Render(l), width))
+			}
+		} else {
+			for _, l := range mapLines {
+				lines = append(lines, centerLine(dimStyle.Render(l), width))
+			}
 		}
 	}
 
-	return strings.Join(lines, "\n")
-}
+	lines = append(lines, "")
 
-func renderLoginScreen(state LoginState, errMsg string, width, height int) string {
-	// World map — scale to fit, render very dim
-	mapHeight := height / 2
-	if mapHeight > 40 {
-		mapHeight = 40
-	}
-	scaledMap := scaleMap(WorldMapArt, width-4, mapHeight)
-	dimMap := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#181818")).
-		Render(scaledMap)
-
-	// Clean text logo
-	logo := lipgloss.NewStyle().
-		Foreground(theme.TextPrimary).
-		Bold(true).
-		Render("ltf1")
+	// Logo
+	logo := lipgloss.NewStyle().Foreground(theme.TextPrimary).Bold(true).Render("ltf1")
+	lines = append(lines, centerLine(logo, width))
 
 	// Subtitle
-	subtitle := lipgloss.NewStyle().
-		Foreground(theme.TextMuted).
-		Render("Legion Task Framework")
+	sub := lipgloss.NewStyle().Foreground(theme.TextMuted).Render("Legion Task Framework")
+	lines = append(lines, centerLine(sub, width))
+	lines = append(lines, "")
+	lines = append(lines, "")
 
 	// Status
 	var statusLine string
@@ -97,30 +118,45 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 	case LoginSuccess:
 		statusLine = lipgloss.NewStyle().Foreground(theme.Green).Render(theme.SymCheck + " Authenticated")
 	case LoginError:
-		statusLine = lipgloss.NewStyle().Foreground(theme.Red).Render(theme.SymCross+" "+errMsg) +
-			"\n\n" + lipgloss.NewStyle().Foreground(theme.TextDim).Render("Press Enter to retry")
+		statusLine = lipgloss.NewStyle().Foreground(theme.Red).Render(theme.SymCross + " " + errMsg)
+	}
+	lines = append(lines, centerLine(statusLine, width))
+
+	if state == LoginError {
+		lines = append(lines, "")
+		retry := lipgloss.NewStyle().Foreground(theme.TextDim).Render("Press Enter to retry")
+		lines = append(lines, centerLine(retry, width))
 	}
 
+	lines = append(lines, "")
+	lines = append(lines, "")
+
 	// Bottom
-	bottom := lipgloss.NewStyle().Foreground(theme.TextDim).Render("v0.8.0") +
-		"    " +
-		lipgloss.NewStyle().Foreground(theme.TextDim).Render("[q] quit")
+	bottom := lipgloss.NewStyle().Foreground(theme.TextDim).Render("v0.8.0    [q] quit")
+	lines = append(lines, centerLine(bottom, width))
 
-	// Stack: world map as background texture, then logo + auth below
-	block := strings.Join([]string{
-		dimMap,
-		"",
-		logo,
-		subtitle,
-		"",
-		"",
-		statusLine,
-		"",
-		"",
-		bottom,
-	}, "\n")
+	// Calculate vertical centering
+	contentHeight := len(lines)
+	topPad := (height - contentHeight) / 2
+	if topPad < 0 {
+		topPad = 0
+	}
+	bottomPad := height - contentHeight - topPad
+	if bottomPad < 0 {
+		bottomPad = 0
+	}
 
-	return lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, block)
+	// Build final output — just newlines for padding, no lipgloss.Place
+	var out strings.Builder
+	for i := 0; i < topPad; i++ {
+		out.WriteString("\n")
+	}
+	out.WriteString(strings.Join(lines, "\n"))
+	for i := 0; i < bottomPad; i++ {
+		out.WriteString("\n")
+	}
+
+	return out.String()
 }
 
 // --- OAuth flow ---
