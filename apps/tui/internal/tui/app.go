@@ -102,13 +102,27 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		// If in input mode, only handle Escape globally
+		// If in input mode, Escape exits input mode.
+		// All other keys go to the active page (for text input).
 		if m.inputMode {
-			if msg.String() == "esc" {
+			key := msg.String()
+			if key == "esc" {
 				m.inputMode = false
-				return m, nil
+				// Also delegate esc to the page so it can unfocus input
+				if pm, ok := m.pageModels[m.page]; ok {
+					newPM, cmd := pm.Update(msg)
+					m.pageModels[m.page] = newPM
+					if cmd != nil {
+						cmds = append(cmds, cmd)
+					}
+				}
+				return m, tea.Batch(cmds...)
 			}
-			// Delegate to active page
+			// q still quits even in input mode (Ctrl+C is safer for forms)
+			if key == "ctrl+c" {
+				return m, tea.Quit
+			}
+			// Delegate to active page for text input
 			if pm, ok := m.pageModels[m.page]; ok {
 				newPM, cmd := pm.Update(msg)
 				m.pageModels[m.page] = newPM
@@ -168,7 +182,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.switchPage(pages.PageSkills)
 		case "/":
 			m.switchPage(pages.PageSearch)
-			m.inputMode = true
+			// Search page focuses its input via Init() — no need to set inputMode here
+			// User can press Esc to unfocus and navigate away
 		case "n":
 			m.switchPage(pages.PageNotifications)
 		case ",":
