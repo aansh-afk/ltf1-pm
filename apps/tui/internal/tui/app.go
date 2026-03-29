@@ -15,6 +15,7 @@ import (
 type Model struct {
 	width, height int
 	page          pages.Page
+	prevPage      pages.Page // for back navigation
 	pageModels    map[pages.Page]pages.PageModel
 	sidebar       components.SidebarModel
 	topbar        components.TopBarModel
@@ -86,6 +87,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
+	case pages.LogoutMsg:
+		// User logged out — quit the TUI
+		return m, tea.Quit
+
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -145,6 +150,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// q and ctrl+c always quit regardless of page
 		if key == "q" || key == "ctrl+c" {
 			return m, tea.Quit
+		}
+
+		// Esc = go back to previous page (or dashboard if no history)
+		if key == "esc" {
+			if m.page != pages.PageDashboard {
+				if m.prevPage != m.page {
+					m.switchPage(m.prevPage)
+				} else {
+					m.switchPage(pages.PageDashboard)
+				}
+				return m, nil
+			}
 		}
 
 		// Check if the current page claims this key.
@@ -310,6 +327,7 @@ func (m Model) View() tea.View {
 
 // switchPage changes the active page and updates the sidebar.
 func (m *Model) switchPage(p pages.Page) {
+	m.prevPage = m.page
 	m.page = p
 	m.inputMode = false
 

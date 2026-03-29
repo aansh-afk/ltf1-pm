@@ -56,6 +56,15 @@ func configPath() (string, error) {
 	}
 }
 
+// GetConfigPath returns the config file path (exported for settings page logout).
+func GetConfigPath() string {
+	p, err := configPath()
+	if err != nil {
+		return ""
+	}
+	return p
+}
+
 // LoadAuthConfig reads and parses the CLI config file.
 // Returns nil and an error if the file doesn't exist or can't be parsed.
 func LoadAuthConfig() (*AuthConfig, error) {

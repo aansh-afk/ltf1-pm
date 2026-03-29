@@ -4,6 +4,7 @@
   "description": "LTF1 CLI - Terminal interface for project management by Vivid Verse Global",
   "type": "module",
   "bin": {
+    "ltf1": "./dist/bin/ltf.js",
     "ltf": "./dist/bin/ltf.js"
   },
   "files": [
