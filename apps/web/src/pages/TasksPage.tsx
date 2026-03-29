@@ -13,7 +13,9 @@ import {
   HiOutlineClipboardList,
 } from "react-icons/hi";
 import BulkActionBar from "@/components/features/task/BulkActionBar";
+import TaskDetailModal from "@/components/features/task/TaskDetailModal";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import toast from "react-hot-toast";
 import WorkspaceSelector from "@/components/common/WorkspaceSelector";
 import TaskBoard from "@/components/features/task/TaskBoard";
 import TaskList from "@/components/features/task/TaskList";
@@ -180,6 +182,9 @@ interface TaskContentAreaProps {
   selectedTaskIds: Set<Id<"tasks">>;
   onToggleTask: (id: Id<"tasks">) => void;
   onToggleAll: (allIds: Id<"tasks">[]) => void;
+  onTaskEdit?: (task: any) => void;
+  onTaskDelete?: (task: any) => void;
+  onTaskDuplicate?: (task: any) => void;
 }
 
 function TaskContentArea({
@@ -190,6 +195,9 @@ function TaskContentArea({
   selectedTaskIds,
   onToggleTask,
   onToggleAll,
+  onTaskEdit,
+  onTaskDelete,
+  onTaskDuplicate,
 }: TaskContentAreaProps) {
   if (tasks === undefined) {
     return (
@@ -266,6 +274,9 @@ function TaskContentArea({
             tasks={tasks}
             projectId={selectedProjectId}
             onTaskUpdate={() => {}}
+            onTaskEdit={onTaskEdit}
+            onTaskDelete={onTaskDelete}
+            onTaskDuplicate={onTaskDuplicate}
           />
         ) : viewMode === "list" ? (
           <div className="h-full overflow-y-auto pr-1 custom-scrollbar">
@@ -273,6 +284,9 @@ function TaskContentArea({
               tasks={tasks}
               projectId={selectedProjectId}
               onTaskUpdate={() => {}}
+              onTaskEdit={onTaskEdit}
+              onTaskDelete={onTaskDelete}
+              onTaskDuplicate={onTaskDuplicate}
             />
           </div>
         ) : viewMode === "calendar" ? (
@@ -289,6 +303,9 @@ function TaskContentArea({
               tasks={tasks}
               projectId={selectedProjectId}
               onTaskUpdate={() => {}}
+              onTaskEdit={onTaskEdit}
+              onTaskDelete={onTaskDelete}
+              onTaskDuplicate={onTaskDuplicate}
             />
           </div>
         )}
@@ -397,6 +414,47 @@ export default function TasksPage() {
     await bulkDelete({ taskIds: ids });
     setSelectedTaskIds(new Set());
   }, [selectedTaskIds, bulkDelete]);
+
+  // Task action handlers for edit, delete, duplicate
+  const deleteTask = useMutation(api.tasks.mutations.deleteTask);
+  const createTask = useMutation(api.tasks.mutations.createTask);
+  const [editTaskId, setEditTaskId] = useState<string | null>(null);
+
+  const handleTaskEdit = useCallback((task: any) => {
+    // Open the task detail modal for editing
+    setEditTaskId(task._id);
+  }, []);
+
+  const handleTaskDelete = useCallback(async (task: any) => {
+    if (!confirm("Delete this task? This cannot be undone.")) return;
+    try {
+      await deleteTask({ taskId: task._id as Id<"tasks"> });
+      toast.success("Task deleted");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to delete task";
+      toast.error(message);
+    }
+  }, [deleteTask]);
+
+  const handleTaskDuplicate = useCallback(async (task: any) => {
+    try {
+      await createTask({
+        projectId: task.projectId as Id<"projects">,
+        title: `${task.title} (copy)`,
+        description: task.description || undefined,
+        type: task.type,
+        priority: task.priority || undefined,
+        labels: task.labels || undefined,
+        dueDate: task.dueDate || undefined,
+        startDate: task.startDate || undefined,
+        estimate: task.estimate || undefined,
+      });
+      toast.success("Task duplicated");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to duplicate task";
+      toast.error(message);
+    }
+  }, [createTask]);
 
   const projects = useQuery(
     api.projects.queries.getWorkspaceProjects,
@@ -747,6 +805,9 @@ export default function TasksPage() {
           selectedTaskIds={selectedTaskIds}
           onToggleTask={handleToggleTask}
           onToggleAll={handleToggleAll}
+          onTaskEdit={handleTaskEdit}
+          onTaskDelete={handleTaskDelete}
+          onTaskDuplicate={handleTaskDuplicate}
         />
       </div>
 
@@ -770,6 +831,15 @@ export default function TasksPage() {
           filters={filters}
           onFiltersChange={handleFiltersChange}
           workspaceId={currentWorkspaceId}
+        />
+      )}
+
+      {/* Task Detail Modal (for edit) */}
+      {editTaskId && (
+        <TaskDetailModal
+          isOpen={!!editTaskId}
+          onClose={() => setEditTaskId(null)}
+          taskId={editTaskId}
         />
       )}
     </div>

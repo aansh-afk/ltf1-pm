@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * LTF CLI - Terminal interface for iceberg project management
+ * LTF CLI - Terminal interface for LTF1 project management
  *
  * Main entry point that sets up Commander.js and registers all commands.
  */
@@ -20,7 +20,11 @@ import { registerConfigCommands } from "../commands/config/index.js";
 import { registerCompletionCommands } from "../commands/completions/index.js";
 import { registerReleaseCommands } from "../commands/release/index.js";
 import { registerPRCommands } from "../commands/pr/index.js";
+import { registerAgentCommands } from "../commands/agent/index.js";
+import { registerSkillCommands } from "../commands/skill/index.js";
+import { registerUpdateCommand } from "../commands/update.js";
 import output from "../lib/output.js";
+import { checkForUpdate } from "../lib/updater.js";
 import { startDashboard } from "../tui/index.js";
 
 const program = new Command();
@@ -28,7 +32,7 @@ const program = new Command();
 // CLI metadata
 program
   .name("ltf")
-  .description("LTF CLI - Terminal interface for iceberg project management")
+  .description("LTF CLI - Terminal interface for LTF1 project management")
   .version("0.1.0")
   .configureOutput({
     // Custom error handling
@@ -52,6 +56,9 @@ registerConfigCommands(program);
 registerCompletionCommands(program);
 registerReleaseCommands(program);
 registerPRCommands(program);
+registerAgentCommands(program);
+registerSkillCommands(program);
+registerUpdateCommand(program);
 
 // Global options
 program
@@ -96,6 +103,24 @@ program.action(async () => {
 
 // Parse and execute
 async function main() {
+  // Non-blocking update check — fire and forget, print banner if available
+  checkForUpdate()
+    .then((info) => {
+      if (info.available) {
+        console.log(
+          output.colors.warning(
+            `\n  Update available: ${output.colors.muted(info.current)} → ${output.colors.success(info.latest)}`,
+          ),
+        );
+        console.log(
+          output.colors.muted("  Run `ltf update` to install\n"),
+        );
+      }
+    })
+    .catch(() => {
+      /* swallow — never block the CLI */
+    });
+
   try {
     await program.parseAsync(process.argv);
   } catch (error) {

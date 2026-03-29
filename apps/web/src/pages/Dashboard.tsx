@@ -21,6 +21,8 @@ import {
 import BrutalCard from '@/components/ui/BrutalCard'
 import BrutalButton from '@/components/ui/BrutalButton'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
+import AgentActivityPanel from '@/components/features/agent/AgentActivityPanel'
+import TriageStatsCard from '@/components/features/agent/TriageStatsCard'
 
 const STAT_ICONS = [
   { label: 'WORKSPACES', icon: HiOutlineBriefcase, color: 'var(--theme-info)' },
@@ -263,6 +265,34 @@ export default function Dashboard() {
 
         </div>
       </div>
+
+      {/* AGENT ACTIVITY SECTION */}
+      {currentWorkspaceId && (
+        <m.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="mt-3"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-1.5 h-4 bg-[#F59E0B]" />
+            <h2
+              className="text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)]"
+              style={{ fontFamily: "'IBM Plex Mono', monospace" }}
+            >
+              Agent Activity
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+            <div className="lg:col-span-8">
+              <AgentActivityPanel workspaceId={currentWorkspaceId as any} />
+            </div>
+            <div className="lg:col-span-4">
+              <TriageStatsCard workspaceId={currentWorkspaceId as any} />
+            </div>
+          </div>
+        </m.div>
+      )}
     </div>
     </ErrorBoundary>
   )

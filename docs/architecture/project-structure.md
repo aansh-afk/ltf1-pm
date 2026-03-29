@@ -1,7 +1,7 @@
-# Iceberg PM - Project Structure
+# LTF1 PM - Project Structure
 
 ```
-iceberg-pm/
+ltf1-pm/
 ├── apps/
 │   ├── web/                      # Main React web application
 │   │   ├── src/

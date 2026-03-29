@@ -2,15 +2,19 @@ import { useState } from 'react'
 import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
+import type { Id } from '../../../../convex/_generated/dataModel'
 import { HiOutlinePlus, HiOutlineBriefcase, HiOutlineGlobeAlt } from 'react-icons/hi'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import CreateWorkspaceModal from '@/components/features/workspace/CreateWorkspaceModal'
+import WorkspaceOnboardingWizard from '@/components/features/workspace/WorkspaceOnboardingWizard'
 import WorkspaceCard from '@/components/features/workspace/WorkspaceCard'
 import BrutalButton from '@/components/ui/BrutalButton'
 import { m } from 'framer-motion'
 
 export default function WorkspacesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [newWorkspaceId, setNewWorkspaceId] = useState<Id<"workspaces"> | null>(null)
   const workspaces = useQuery(api.workspaces.queries.getUserWorkspaces)
 
   if (workspaces === undefined) {
@@ -105,7 +109,27 @@ export default function WorkspacesPage() {
       <CreateWorkspaceModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
+        onSuccess={(workspaceId) => {
+          if (workspaceId) {
+            setNewWorkspaceId(workspaceId as Id<"workspaces">)
+            setShowOnboarding(true)
+          }
+        }}
       />
+
+      {showOnboarding && newWorkspaceId && (
+        <WorkspaceOnboardingWizard
+          workspaceId={newWorkspaceId}
+          onComplete={() => {
+            setShowOnboarding(false)
+            setNewWorkspaceId(null)
+          }}
+          onSkip={() => {
+            setShowOnboarding(false)
+            setNewWorkspaceId(null)
+          }}
+        />
+      )}
     </div>
     </ErrorBoundary>
   )

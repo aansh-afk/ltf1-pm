@@ -1,14 +1,12 @@
 #!/usr/bin/env node
 /**
  * LTF1 TUI Dashboard Entry Point
- * Full-screen terminal application with black background
+ * Full-screen terminal application with synchronized output to eliminate flicker.
  */
 
-import React from 'react';
 import { render } from 'ink';
 import { App } from './App.js';
 
-// ANSI escape codes for terminal control
 const ESC = '\x1b';
 const ALTERNATE_SCREEN_ON = `${ESC}[?1049h`;
 const ALTERNATE_SCREEN_OFF = `${ESC}[?1049l`;
@@ -17,72 +15,87 @@ const CURSOR_HOME = `${ESC}[H`;
 const CURSOR_HIDE = `${ESC}[?25l`;
 const CURSOR_SHOW = `${ESC}[?25h`;
 
-// Ink's clearTerminal sequence: erase screen + erase scrollback + cursor home.
-// When output height >= terminal rows, ink writes this before every frame,
-// causing a visible flash of the default background. We replace it with just
-// cursor-home so ink overwrites content in-place without clearing first.
+// Synchronized output (DEC mode 2026) — terminal buffers writes, flushes atomically
+const BSU = `${ESC}[?2026h`;
+const ESU = `${ESC}[?2026l`;
+
+// Mouse tracking
+const MOUSE_ENABLE = `${ESC}[?1003h${ESC}[?1006h`;
+const MOUSE_DISABLE = `${ESC}[?1003l${ESC}[?1006l`;
+
+// Ink's clear terminal sequence
 const INK_CLEAR_TERMINAL = `${ESC}[2J${ESC}[3J${ESC}[H`;
 
 export async function startDashboard() {
-  // Check if we're in a TTY environment
   if (!process.stdin.isTTY) {
     console.error('Dashboard requires an interactive terminal (TTY).');
-    console.error('Run this command in a terminal that supports raw mode.');
     process.exit(1);
   }
 
-  // Switch to alternate screen buffer (like vim/htop)
   process.stdout.write(ALTERNATE_SCREEN_ON);
   process.stdout.write(CLEAR_SCREEN);
   process.stdout.write(CURSOR_HOME);
   process.stdout.write(CURSOR_HIDE);
+  process.stdout.write(MOUSE_ENABLE);
 
-  // Prevent ink's full-screen clear from causing background flicker.
-  // When ink's rendered output fills the terminal, it calls clearTerminal
-  // (erase screen + erase scrollback + cursor home) before writing each frame.
-  // This flashes the default background. We intercept stdout.write and replace
-  // the clearTerminal sequence with cursor-home only, so content is overwritten
-  // in-place without any visible flash.
   const origWrite = process.stdout.write;
+
+  // Intercept Ink's writes: replace destructive clear with cursor-home,
+  // wrap in synchronized output to prevent flicker.
   process.stdout.write = function (
+    this: NodeJS.WriteStream,
     chunk: unknown,
     ...args: unknown[]
   ): boolean {
-    if (typeof chunk === 'string' && chunk.includes(INK_CLEAR_TERMINAL)) {
-      chunk = chunk.replace(INK_CLEAR_TERMINAL, CURSOR_HOME);
+    try {
+      if (typeof chunk === 'string' && chunk.includes(INK_CLEAR_TERMINAL)) {
+        // Replace clear-all with cursor-home (overwrite in place, no flash)
+        const output = chunk.replace(INK_CLEAR_TERMINAL, CURSOR_HOME);
+        // Wrap in synchronized output
+        return (origWrite as Function).call(this, BSU + output + ESU);
+      }
+      return (origWrite as Function).apply(this, [chunk, ...args]);
+    } catch {
+      // If write fails, fall through to original
+      return (origWrite as Function).apply(this, [chunk, ...args]);
     }
-    return (origWrite as Function).apply(this, [chunk, ...args]);
   } as typeof process.stdout.write;
 
-  // Cleanup function to restore terminal
   const cleanup = () => {
-    process.stdout.write = origWrite;
-    process.stdout.write(CURSOR_SHOW);
-    process.stdout.write(ALTERNATE_SCREEN_OFF);
+    try {
+      process.stdout.write = origWrite;
+      origWrite.call(process.stdout, MOUSE_DISABLE);
+      origWrite.call(process.stdout, CURSOR_SHOW);
+      origWrite.call(process.stdout, ALTERNATE_SCREEN_OFF);
+    } catch {
+      // ignore cleanup errors
+    }
   };
 
-  // Handle various exit signals
   process.on('exit', cleanup);
-  process.on('SIGINT', () => {
+  process.on('SIGINT', () => { cleanup(); process.exit(0); });
+  process.on('SIGTERM', () => { cleanup(); process.exit(0); });
+
+  // Catch uncaught errors so they don't kill the TUI silently
+  process.on('uncaughtException', (err) => {
     cleanup();
-    process.exit(0);
-  });
-  process.on('SIGTERM', () => {
-    cleanup();
-    process.exit(0);
+    console.error('LTF1 TUI crashed:', err.message);
+    process.exit(1);
   });
 
   try {
-    const { waitUntilExit } = render(<App />, {
-      patchConsole: false,
-    });
+    const { waitUntilExit } = render(
+      <App />,
+      {
+        patchConsole: false,
+      },
+    );
     await waitUntilExit();
   } finally {
     cleanup();
   }
 }
 
-// If run directly
 if (process.argv[1]?.includes('tui')) {
   startDashboard().catch(console.error);
 }

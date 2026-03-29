@@ -1,68 +1,18 @@
 /**
- * Dashboard Page - Real workspace/project/task hierarchy
- * Shows: Workspace > Project context, workspace stats, my tasks, sprint summary
- * Includes interactive workspace/project selectors when context is missing
+ * Dashboard Page - Ink native rewrite
+ * Shows: Workspace/Project selectors, active sprint, my tasks, workspace stats, agent activity
  */
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
+import { Box, Text } from 'ink';
+import { theme } from '../theme.js';
+import { Panel } from '../components/Panel.js';
+import { ProgressBar } from '../components/ProgressBar.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useConfig } from '../hooks/useConfig.js';
 import { useConvexQuery } from '../hooks/useConvex.js';
-import { useParticleField } from '../hooks/useParticles.js';
 import { api } from '../../lib/convex.js';
-import type { Row, Task, ConnectionStatus, DashboardMode } from '../types.js';
-import { BG, WHITE, LIGHT, GRAY, DIM, DARK, STATUS_ICONS } from '../theme.js';
-import {
-  row, segRow, blank, padSegs, fillTo, rep, pad, center,
-} from '../helpers.js';
-
-// World map ASCII art for auth screen (content lines only, ~80 chars wide)
-const WORLD_MAP: string[] = [
-  `                  ;lx0OooodxKXNNOl,   ..      .       '.`,
-  `            .,;',,cdKl.ckKNNNNNNN0   ,;.       ..     ,ck:.     .`,
-  `    .      ,ldol.c;xOo'   dNNNNNX:     ..    .c  c,lONNNNX0xxk,'lo:..`,
-  `  .ONNNXO0XK0KKKxOKdc'OK' .XNKd,..'  :K0NKl:okkK0NXNNNNNNNNNNNNNNNNNXN0:'`,
-  `   oX0xx0NNNNNNNNX' .:xl'  'o      .kN:dXNNNNNNNNNNNNNNNNNNNNNNNKkkddxdc.`,
-  `    .    .xNNNNNNNKx;oNNNl      .cc.oOdXNNNNNNNNNNNNNNNNNNNNNNNK:  .o`,
-  `           cNNNNNNXk0NNKc..       dNXKNNXxkNKxNNNNNNNNNNNNNNNNNK;.`,
-  `           .XNNNNNNXNX:         .0x,,''lldxKN:NNNNNNNNNNNNNXck..;`,
-  `             oKNN0dok.          :XNNNkoxolKNNkXNNNNNNNNNNNNN' .`,
-  `               cXc.....        xNNNNNNNNNNd0NKx..:NNO:kNNxc..`,
-  `                 .':'.;;'      oNNNNNNNNNNNOk,    ;l   ;oc  ..`,
-  `                     dNNNNO,    .'..oNNNNNN0c          ,o oo.`,
-  `                     ONNNNNNNK;      kNNNNN.            .....  .o;.`,
-  `                      cXNNNNNO       kNNNNd.d.              ,kK0dd`,
-  `                       KNNN0'        .XNNx  ,             .NNNNNNNK.`,
-  `                      .NNNl           ':,                  ;;..;OXd    .`,
-  `                      cNc                                        .    '.`,
-  `                      xk`,
-  `                       .`,
-];
-const MAP_WIDTH = 80;
-
-/**
- * Renders a wave loading animation between heading and label.
- * Each position oscillates independently via sine; the wave propagates across.
- */
-function renderLoadingAnimation(rows: Row[], label: string, W: number): void {
-  // 9 height levels: space at 0, full block at 8
-  const blocks = [' ', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
-  const barW = 44;
-  const t = Date.now() / 120;               // scroll speed
-  let bar = '';
-  for (let j = 0; j < barW; j++) {
-    // Sine wave: each char rises/falls on its own; phase shifts across positions
-    const val = Math.sin(j / 5 - t);        // wavelength ~31 chars
-    const idx = Math.round((val + 1) / 2 * (blocks.length - 1));
-    bar += blocks[idx];
-  }
-  rows.push(segRow(padSegs([
-    { text: center(bar, W), color: LIGHT },
-  ], W)));
-  rows.push(blank(W));
-  rows.push(row(center(label, W), GRAY));
-  rows.push(blank(W));
-}
+import type { Task, ConnectionStatus, DashboardMode } from '../types.js';
 
 export type LoginState = 'idle' | 'authenticating' | 'success' | 'error';
 
@@ -82,29 +32,41 @@ export interface DashboardPageProps {
   loginError?: string;
   pressed?: boolean;
   pressedAction?: string;
+  onNavigate?: (page: string) => void;
+  onSelectWorkspace?: (id: string) => void;
+  onSelectProject?: (id: string) => void;
 }
 
 export interface DashboardResult {
-  rows: Row[];
+  element: React.ReactElement;
   connectionStatus: ConnectionStatus;
   dashboardMode: DashboardMode;
   selectorItemCount: number;
   selectableItems: SelectableItem[];
 }
 
-export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, selectorIndex, loginState = 'idle', loginError = '', pressed = false, pressedAction = '' }: DashboardPageProps): DashboardResult {
+export function useDashboardPage({
+  width: W,
+  height: H,
+  timeStr,
+  selectedIndex,
+  selectorIndex,
+  loginState = 'idle',
+  loginError = '',
+  pressed = false,
+  pressedAction = '',
+}: DashboardPageProps): DashboardResult {
   const auth = useAuth();
   const config = useConfig();
-  const particleRows = useParticleField(W);
 
-  // Fetch user's workspaces (enabled when authenticated but no workspace selected)
+  // Fetch user's workspaces
   const workspacesQuery = useConvexQuery(
     api.workspaces.queries.getUserWorkspaces,
     auth.isAuthenticated && !config.workspaceId ? {} : null,
     30000,
   );
 
-  // Fetch workspace stats (totalProjects, activeProjects, totalTasks, completedTasks, etc.)
+  // Fetch workspace stats
   const workspaceStatsQuery = useConvexQuery(
     api.workspaces.queries.getWorkspaceStats,
     config.workspaceId ? { workspaceId: config.workspaceId as never } : null,
@@ -118,14 +80,14 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
     30000,
   );
 
-  // Fetch tasks for the active project (getProjectTasks - correct backend name)
+  // Fetch tasks for the active project
   const tasksQuery = useConvexQuery(
     api.tasks.queries.getProjectTasks,
     config.projectId ? { projectId: config.projectId as never } : null,
     10000,
   );
 
-  // Fetch active sprint (getCurrentSprint - correct backend name)
+  // Fetch active sprint
   const sprintQuery = useConvexQuery(
     api.sprints.queries.getCurrentSprint,
     config.projectId ? { projectId: config.projectId as never } : null,
@@ -144,7 +106,7 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
     return data || [];
   }, [workspacesQuery.data]);
 
-  // Workspace stats from backend
+  // Workspace stats
   const wsStats = workspaceStatsQuery.data as {
     totalProjects?: number;
     activeProjects?: number;
@@ -183,7 +145,7 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
     return (mine.length > 0 ? mine : active).slice(0, 5);
   }, [tasksQuery.data, auth.userId]);
 
-  // Connection status — pick from whichever query is actually active
+  // Connection status
   const connectionStatus: ConnectionStatus = !auth.isAuthenticated
     ? 'disconnected'
     : !config.workspaceId ? workspacesQuery.connectionStatus
@@ -210,480 +172,299 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
 
   const selectorItemCount = selectableItems.length;
 
-  const rows: Row[] = [];
+  // ── Sprint data ──
+  const sprint = sprintQuery.data as {
+    name?: string;
+    startDate?: number;
+    endDate?: number;
+    percentComplete?: number;
+    daysRemaining?: number;
+  } | null;
 
-  // ══════════════════════════════════════════════════════════════
-  // UNAUTHENTICATED: Full-screen welcome / login prompt
-  // ══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════
+  //  UNAUTHENTICATED SCREEN
+  // ═══════════════════════════════════════════
   if (!auth.isAuthenticated) {
-    const showMap = H >= 38 && W >= 76;
-    const contentH = showMap ? 36 : 18;
-    const top = Math.max(showMap ? 0 : 2, Math.floor((H - contentH) / 2));
-    for (let i = 0; i < top; i++) rows.push(blank(W));
+    const element = (
+      <Box flexDirection="column" width={W} height={H}>
+        <Box flexDirection="column" flexGrow={1} alignItems="center" justifyContent="center">
+          <Text color={theme.text} bold>L   T   F   1</Text>
+          <Text> </Text>
+          <Text color={theme.border}>{'─'.repeat(28)}</Text>
+          <Text> </Text>
+          <Text color={theme.textMuted}>Legacy Task Framework</Text>
+          <Text> </Text>
+          <Text color={theme.textDim}>Collaborative project management</Text>
+          <Text color={theme.textDim}>from your terminal.</Text>
+          <Text> </Text>
+          <Text> </Text>
 
-    // World map backdrop (shown when terminal is large enough)
-    if (showMap) {
-      const mapPad = Math.max(0, Math.floor((W - MAP_WIDTH) / 2));
-      for (const mapLine of WORLD_MAP) {
-        const padded = mapLine.padEnd(MAP_WIDTH);
-        const display = W >= MAP_WIDTH
-          ? rep(' ', mapPad) + padded
-          : padded.slice(0, W);
-        rows.push(row(pad(display, W), DARK));
-      }
-      rows.push(blank(W));
-    }
+          {loginState === 'authenticating' && (
+            <>
+              <Text color={theme.text}>Opening browser...</Text>
+              <Text> </Text>
+              <Text color={theme.textDim}>Complete authentication in your browser</Text>
+              <Text color={theme.textDim}>and return here when finished.</Text>
+            </>
+          )}
+          {loginState === 'success' && (
+            <>
+              <Text color={theme.text}>Authenticated</Text>
+              <Text> </Text>
+              <Text color={theme.textMuted}>Loading workspace...</Text>
+            </>
+          )}
+          {loginState === 'error' && (
+            <>
+              <Text color={theme.text}>Authentication failed</Text>
+              <Text> </Text>
+              {loginError && <Text color={theme.textMuted}>{loginError.slice(0, W - 12)}</Text>}
+              <Text> </Text>
+              <Text color={theme.textSecondary}>Press  Enter  to try again</Text>
+            </>
+          )}
+          {loginState === 'idle' && (
+            <>
+              <Text color={theme.text}>Press  Enter  to authenticate</Text>
+              <Text> </Text>
+              <Text color={theme.textDim}>Opens your browser to sign in.</Text>
+            </>
+          )}
+        </Box>
 
-    // Logo
-    rows.push(row(center('L   T   F   1', W), WHITE));
-    rows.push(blank(W));
+        <Box borderStyle="single" borderTop borderBottom={false} borderLeft={false} borderRight={false} borderColor={theme.border}>
+          <Box paddingX={1}>
+            {loginState === 'authenticating' ? (
+              <Text color={theme.textDim}>Waiting for browser</Text>
+            ) : (
+              <>
+                <Text color={theme.textSecondary}>Enter</Text>
+                <Text color={theme.textDim}> Login   </Text>
+                <Text color={theme.textSecondary}>Q</Text>
+                <Text color={theme.textDim}> Quit</Text>
+              </>
+            )}
+            <Box flexGrow={1} />
+            <Text color={theme.textMuted}>{timeStr}</Text>
+          </Box>
+        </Box>
+      </Box>
+    );
 
-    // Thin separator
-    const uSepW = 28;
-    const uSepL = Math.floor((W - uSepW) / 2);
-    rows.push(row(pad(rep(' ', uSepL) + rep('─', uSepW), W), DARK));
-    rows.push(blank(W));
-
-    // Full name
-    rows.push(row(center('Legacy Task Framework', W), GRAY));
-    rows.push(blank(W));
-
-    // Tagline
-    rows.push(row(center('Collaborative project management', W), DIM));
-    rows.push(row(center('from your terminal.', W), DIM));
-    rows.push(blank(W));
-    rows.push(blank(W));
-
-    // ── Login-state-dependent content ──
-    if (loginState === 'authenticating') {
-      // Dots animation derived from clock seconds
-      const sec = parseInt(timeStr.split(':')[2] || '0', 10);
-      const dots = '.'.repeat((sec % 3) + 1);
-
-      rows.push(row(center(`Opening browser${dots}`, W), WHITE));
-      rows.push(blank(W));
-      rows.push(row(center('Complete authentication in your browser', W), DIM));
-      rows.push(row(center('and return here when finished.', W), DIM));
-      rows.push(blank(W));
-
-      // Subtle waiting indicator
-      const waitBarW = 20;
-      const phase = sec % waitBarW;
-      const waitBar = rep('─', phase) + '●' + rep('─', waitBarW - phase - 1);
-      rows.push(row(center(waitBar, W), DARK));
-
-    } else if (loginState === 'success') {
-      rows.push(row(center('Authenticated', W), WHITE));
-      rows.push(blank(W));
-      rows.push(row(center('Loading workspace...', W), GRAY));
-      rows.push(blank(W));
-      rows.push(blank(W));
-      rows.push(blank(W));
-
-    } else if (loginState === 'error') {
-      rows.push(row(center('Authentication failed', W), WHITE));
-      rows.push(blank(W));
-      if (loginError) {
-        const errMsg = loginError.length > W - 12 ? loginError.slice(0, W - 13) + '…' : loginError;
-        rows.push(row(center(errMsg, W), GRAY));
-      }
-      rows.push(blank(W));
-      rows.push(row(center('Press  Enter  to try again', W), LIGHT));
-      rows.push(blank(W));
-
-    } else {
-      // idle - show login prompt
-      rows.push(row(center('Press  Enter  to authenticate', W), WHITE));
-      rows.push(blank(W));
-      rows.push(row(center('Opens your browser to sign in.', W), DIM));
-      rows.push(blank(W));
-      rows.push(blank(W));
-      rows.push(blank(W));
-    }
-
-    // Fill to footer
-    fillTo(rows, H - 2, W);
-
-    // Minimal footer
-    rows.push(row(rep('─', W), DARK));
-    if (loginState === 'authenticating') {
-      rows.push(segRow(padSegs([
-        { text: '  ', color: GRAY },
-        { text: 'Waiting for browser', color: DIM },
-        { text: rep(' ', Math.max(1, W - 36 - timeStr.length)), color: WHITE },
-        { text: timeStr, color: GRAY },
-        { text: '  ', color: WHITE },
-      ], W)));
-    } else {
-      rows.push(segRow(padSegs([
-        { text: '  ', color: GRAY },
-        { text: 'Enter', color: LIGHT },
-        { text: ' Login   ', color: DIM },
-        { text: 'Q', color: LIGHT },
-        { text: ' Quit', color: DIM },
-      ], W)));
-    }
-
-    return { rows, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
+    return { element, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
   }
 
-  // ══════════════════════════════════════════════════════════════
-  // AUTHENTICATED: Header (shared across all modes)
-  // ══════════════════════════════════════════════════════════════
-
-  // ── Header: Workspace > Project > Status ──
-  const breadcrumb: Array<{ text: string; color: string }> = [
-    { text: '  LTF1', color: WHITE },
-  ];
-  if (config.workspaceName) {
-    breadcrumb.push({ text: '  ›  ', color: DIM });
-    breadcrumb.push({ text: config.workspaceName, color: GRAY });
-  }
-  if (config.projectName) {
-    breadcrumb.push({ text: '  ›  ', color: DIM });
-    breadcrumb.push({ text: config.projectName, color: LIGHT });
-  }
-
-  const statusDot = connectionStatus === 'connected' ? '●' : connectionStatus === 'connecting' ? '○' : '●';
+  // ═══════════════════════════════════════════
+  //  HEADER (shared across authenticated modes)
+  // ═══════════════════════════════════════════
+  const statusDot = connectionStatus === 'connected' ? '\u25CF' : connectionStatus === 'connecting' ? '\u25CB' : '\u25CF';
   const statusLabel = connectionStatus === 'connected' ? 'Ready' :
     connectionStatus === 'connecting' ? 'Connecting' :
     connectionStatus === 'error' ? 'Error' : 'Offline';
-  const statusColor = connectionStatus === 'connected' ? LIGHT :
-    connectionStatus === 'connecting' ? GRAY : DIM;
+  const statusColor = connectionStatus === 'connected' ? theme.textSecondary :
+    connectionStatus === 'connecting' ? theme.textMuted : theme.textDim;
 
-  const breadcrumbLen = breadcrumb.reduce((s, b) => s + b.text.length, 0);
-  const rightLen = 3 + statusLabel.length + 2 + timeStr.length + 2;
-  const gap = Math.max(1, W - breadcrumbLen - rightLen);
+  const Header = (
+    <Box>
+      <Box paddingX={1}>
+        <Text color={theme.text} bold>LTF1</Text>
+        {config.workspaceName && (
+          <>
+            <Text color={theme.textDim}>  {'\u203A'}  </Text>
+            <Text color={theme.textMuted}>{config.workspaceName}</Text>
+          </>
+        )}
+        {config.projectName && (
+          <>
+            <Text color={theme.textDim}>  {'\u203A'}  </Text>
+            <Text color={theme.textSecondary}>{config.projectName}</Text>
+          </>
+        )}
+      </Box>
+      <Box flexGrow={1} />
+      <Box paddingX={1}>
+        <Text color={statusColor}>{statusDot} {statusLabel}</Text>
+        <Text color={theme.textMuted}>  {timeStr}</Text>
+      </Box>
+    </Box>
+  );
 
-  rows.push(segRow(padSegs([
-    ...breadcrumb,
-    { text: rep(' ', gap), color: WHITE },
-    { text: statusDot, color: statusColor },
-    { text: ` ${statusLabel}  `, color: GRAY },
-    { text: timeStr, color: GRAY },
-    { text: '  ', color: WHITE },
-  ], W)));
-  rows.push(row(rep('─', W), DARK));
-
-  // ══════════════════════════════════════════════════════════════
-  // WORKSPACE SELECTOR
-  // ══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════
+  //  WORKSPACE SELECTOR
+  // ═══════════════════════════════════════════
   if (dashboardMode === 'workspace_selector') {
-    const logoTop = Math.max(3, Math.floor((H - 28) / 2));
-    for (let i = 0; i < logoTop; i++) rows.push(blank(W));
+    const element = (
+      <Box flexDirection="column" width={W} height={H}>
+        {Header}
+        <Box borderStyle="single" borderTop borderBottom={false} borderLeft={false} borderRight={false} borderColor={theme.border} />
 
-    // Logo
-    rows.push(row(center('L   T   F   1', W), WHITE));
-    rows.push(blank(W));
-    const sepW = 34;
-    const sepL = Math.floor((W - sepW) / 2);
-    rows.push(row(pad(rep(' ', sepL) + rep('─', sepW), W), DARK));
-    rows.push(blank(W));
+        <Box flexDirection="column" flexGrow={1} alignItems="center" justifyContent="center">
+          <Text color={theme.text} bold>L   T   F   1</Text>
+          <Text> </Text>
+          <Text color={theme.border}>{'─'.repeat(34)}</Text>
+          <Text> </Text>
+          <Text color={theme.textSecondary}>Select a Workspace</Text>
+          <Text> </Text>
 
-    rows.push(row(center('Select a Workspace', W), LIGHT));
-    rows.push(blank(W));
+          {workspacesQuery.loading && workspaces.length === 0 ? (
+            <Text color={theme.textMuted}>Loading workspaces...</Text>
+          ) : workspacesQuery.error && workspaces.length === 0 ? (
+            <Text color={theme.textMuted}>Failed to load workspaces</Text>
+          ) : workspaces.length === 0 ? (
+            <>
+              <Text color={theme.textMuted}>No workspaces found</Text>
+              <Text color={theme.textDim}>Create a workspace at app.ltf1.com</Text>
+            </>
+          ) : (
+            <Box flexDirection="column" width={Math.min(56, W - 4)}>
+              <Box borderStyle="single" borderTop borderBottom={false} borderLeft={false} borderRight={false} borderColor={theme.border} />
+              {workspaces.map((ws, i) => {
+                const isSelected = i === selectorIndex;
+                const isPressed = isSelected && pressed;
+                const pointer = isPressed ? '\u25B8' : isSelected ? '>' : ' ';
+                const role = (ws.role || 'member').padEnd(8);
+                const projCount = ws.projectCount != null ? `${ws.projectCount} proj` : '';
+                const memCount = ws.memberCount != null ? `${ws.memberCount} mem` : '';
+                const meta = [projCount, memCount].filter(Boolean).join('  ');
 
-    if (workspacesQuery.loading && workspaces.length === 0) {
-      renderLoadingAnimation(rows, 'Loading workspaces', W);
-    } else if (workspacesQuery.error && workspaces.length === 0) {
-      rows.push(row(center('Failed to load workspaces', W), GRAY));
-      rows.push(blank(W));
-      rows.push(row(center(workspacesQuery.error.length > 60 ? workspacesQuery.error.slice(0, 57) + '...' : workspacesQuery.error, W), DIM));
-    } else if (workspaces.length === 0) {
-      rows.push(row(center('No workspaces found', W), GRAY));
-      rows.push(blank(W));
-      rows.push(row(center('Create a workspace at app.ltf1.com', W), DIM));
-    } else {
-      // Centered list layout
-      const wlw = 56;
-      const wll = Math.floor((W - wlw) / 2);
+                return (
+                  <Box key={ws._id}
+                    paddingX={1}
+                    {...(isSelected && !isPressed ? { borderStyle: 'single' as const, borderColor: theme.accent, borderLeft: true, borderRight: false, borderTop: false, borderBottom: false } : {})}
+                  >
+                    <Text color={isSelected ? theme.text : theme.textSecondary}>
+                      {pointer} {ws.name}
+                    </Text>
+                    <Box flexGrow={1} />
+                    <Text color={theme.textMuted}> {role}</Text>
+                    <Text color={theme.textDim}>{meta}</Text>
+                  </Box>
+                );
+              })}
+              <Box borderStyle="single" borderTop borderBottom={false} borderLeft={false} borderRight={false} borderColor={theme.border} />
+            </Box>
+          )}
+        </Box>
 
-      rows.push(row(pad(rep(' ', wll) + rep('─', wlw), W), DARK));
+        <Box borderStyle="single" borderTop borderBottom={false} borderLeft={false} borderRight={false} borderColor={theme.border}>
+          <Box paddingX={1}>
+            {pressed && pressedAction ? (
+              <Text color={theme.text}>{'\u2192'} {pressedAction}</Text>
+            ) : (
+              <>
+                <Text color={theme.textSecondary}>{'\u2191\u2193'}</Text>
+                <Text color={theme.textDim}> Navigate   </Text>
+                <Text color={theme.textSecondary}>Enter</Text>
+                <Text color={theme.textDim}> Select   </Text>
+                <Text color={theme.textSecondary}>Q</Text>
+                <Text color={theme.textDim}> Quit</Text>
+              </>
+            )}
+          </Box>
+        </Box>
+      </Box>
+    );
 
-      for (let i = 0; i < workspaces.length; i++) {
-        const ws = workspaces[i];
-        const isSelected = i === selectorIndex;
-        const isPressed = isSelected && pressed;
-        const pointer = isPressed ? '▸' : isSelected ? '>' : ' ';
-        const role = (ws.role || 'member').padEnd(8);
-        const projCount = ws.projectCount != null ? `${ws.projectCount} proj` : '';
-        const memCount = ws.memberCount != null ? `${ws.memberCount} mem` : '';
-        const meta = [projCount, memCount].filter(Boolean).join('  ');
-
-        const nameMax = wlw - 4 - role.length - meta.length - 4;
-        const displayName = ws.name.length > nameMax ? ws.name.slice(0, nameMax - 1) + '…' : ws.name.padEnd(nameMax);
-        const inner = ` ${pointer} ${displayName} ${role}${meta} `;
-
-        if (isPressed) {
-          // Brief inverted flash: dark bg with bright text
-          rows.push({
-            segments: padSegs([
-              { text: rep(' ', wll) + pad(inner, wlw), color: WHITE },
-            ], W),
-            bgColor: DARK,
-          });
-        } else if (isSelected) {
-          rows.push({
-            segments: padSegs([
-              { text: rep(' ', wll) + pad(inner, wlw), color: BG },
-            ], W),
-            bgColor: WHITE,
-          });
-        } else {
-          rows.push(segRow(padSegs([
-            { text: rep(' ', wll) + ` ${pointer} `, color: WHITE },
-            { text: displayName, color: LIGHT },
-            { text: ' ', color: WHITE },
-            { text: role, color: GRAY },
-            { text: meta, color: DIM },
-            { text: ' ', color: WHITE },
-          ], W)));
-        }
-      }
-
-      rows.push(row(pad(rep(' ', wll) + rep('─', wlw), W), DARK));
-    }
-
-    rows.push(blank(W));
-
-    // Fill blank rows, then insert particle band just above footer
-    const wsTarget = H - 2;
-    const wsAvail = wsTarget - rows.length;
-    if (wsAvail > 0) {
-      const wsBand = particleRows.slice(particleRows.length - Math.min(wsAvail, particleRows.length));
-      fillTo(rows, wsTarget - wsBand.length, W);
-      rows.push(...wsBand);
-    }
-    fillTo(rows, wsTarget, W);
-
-    rows.push(row(rep('─', W), DARK));
-    if (pressed && pressedAction) {
-      rows.push(segRow(padSegs([
-        { text: '  ', color: GRAY },
-        { text: '→ ', color: WHITE },
-        { text: pressedAction, color: WHITE },
-      ], W)));
-    } else {
-      rows.push(segRow(padSegs([
-        { text: '  ', color: GRAY },
-        { text: '↑↓', color: LIGHT },
-        { text: ' Navigate   ', color: DIM },
-        { text: 'Enter', color: LIGHT },
-        { text: ' Select   ', color: DIM },
-        { text: 'Q', color: LIGHT },
-        { text: ' Quit', color: DIM },
-      ], W)));
-    }
-
-    return { rows, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
+    return { element, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
   }
 
-  // ══════════════════════════════════════════════════════════════
-  // PROJECT SELECTOR
-  // ══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════
+  //  PROJECT SELECTOR
+  // ═══════════════════════════════════════════
   if (dashboardMode === 'project_selector') {
-    const logoTop = Math.max(2, Math.floor((H - 30) / 2));
-    for (let i = 0; i < logoTop; i++) rows.push(blank(W));
+    const element = (
+      <Box flexDirection="column" width={W} height={H}>
+        {Header}
+        <Box borderStyle="single" borderTop borderBottom={false} borderLeft={false} borderRight={false} borderColor={theme.border} />
 
-    // Logo
-    rows.push(row(center('L T F 1', W), WHITE));
-    rows.push(blank(W));
-    const sepW = 34;
-    const sepL = Math.floor((W - sepW) / 2);
-    rows.push(row(pad(rep(' ', sepL) + rep('─', sepW), W), DARK));
-    rows.push(blank(W));
+        <Box flexDirection="column" flexGrow={1} alignItems="center" justifyContent="center">
+          <Text color={theme.text} bold>L T F 1</Text>
+          <Text> </Text>
+          <Text color={theme.border}>{'─'.repeat(34)}</Text>
+          <Text> </Text>
+          <Text color={theme.textSecondary}>Select a Project</Text>
+          <Text> </Text>
 
-    rows.push(row(center('Select a Project', W), LIGHT));
-    rows.push(blank(W));
+          {wsStats && (
+            <>
+              <Text color={theme.textMuted}>
+                {wsStats.totalProjects || 0} projects  |  {wsStats.totalMembers || 0} members  |  {wsStats.totalTasks || 0} tasks
+              </Text>
+              <Text> </Text>
+            </>
+          )}
 
-    // Workspace stats line
-    if (wsStats) {
-      const wsLine = `${wsStats.totalProjects || 0} projects  |  ${wsStats.totalMembers || 0} members  |  ${wsStats.totalTasks || 0} tasks`;
-      rows.push(row(center(wsLine, W), GRAY));
-      rows.push(blank(W));
-    }
+          {projectsQuery.loading && projects.length === 0 ? (
+            <Text color={theme.textMuted}>Loading projects...</Text>
+          ) : projects.length === 0 ? (
+            <>
+              <Text color={theme.textMuted}>No projects found</Text>
+              <Text color={theme.textDim}>Create a project in your workspace first</Text>
+            </>
+          ) : (
+            <Box flexDirection="column" width={Math.min(56, W - 4)}>
+              <Box borderStyle="single" borderTop borderBottom={false} borderLeft={false} borderRight={false} borderColor={theme.border} />
+              {projects.map((p, i) => {
+                const isSelected = i === selectorIndex;
+                const isPressed = isSelected && pressed;
+                const pointer = isPressed ? '\u25B8' : isSelected ? '>' : ' ';
+                const statusClr = p.status === 'active' ? theme.textSecondary : p.status === 'on_hold' ? theme.textMuted : theme.textDim;
 
-    if (projectsQuery.loading && projects.length === 0) {
-      renderLoadingAnimation(rows, 'Loading projects', W);
-    } else if (projects.length === 0) {
-      rows.push(row(center('No projects found', W), GRAY));
-      rows.push(blank(W));
-      rows.push(row(center('Create a project in your workspace first', W), DIM));
-    } else {
-      // Centered list layout
-      const plw = 56;
-      const pll = Math.floor((W - plw) / 2);
+                return (
+                  <Box key={p._id}
+                    paddingX={1}
+                    {...(isSelected && !isPressed ? { borderStyle: 'single' as const, borderColor: theme.accent, borderLeft: true, borderRight: false, borderTop: false, borderBottom: false } : {})}
+                  >
+                    <Text color={isSelected ? theme.text : theme.textSecondary}>
+                      {pointer} </Text>
+                    <Text color={theme.textMuted}>{p.key.padEnd(6)}</Text>
+                    <Text color={isSelected ? theme.text : theme.textSecondary}>{p.name}</Text>
+                    <Box flexGrow={1} />
+                    <Text color={statusClr}> {p.status}</Text>
+                  </Box>
+                );
+              })}
+              <Box borderStyle="single" borderTop borderBottom={false} borderLeft={false} borderRight={false} borderColor={theme.border} />
+            </Box>
+          )}
+        </Box>
 
-      rows.push(row(pad(rep(' ', pll) + rep('─', plw), W), DARK));
+        <Box borderStyle="single" borderTop borderBottom={false} borderLeft={false} borderRight={false} borderColor={theme.border}>
+          <Box paddingX={1}>
+            {pressed && pressedAction ? (
+              <Text color={theme.text}>{'\u2192'} {pressedAction}</Text>
+            ) : (
+              <>
+                <Text color={theme.textSecondary}>{'\u2191\u2193'}</Text>
+                <Text color={theme.textDim}> Navigate   </Text>
+                <Text color={theme.textSecondary}>Enter</Text>
+                <Text color={theme.textDim}> Select   </Text>
+                <Text color={theme.textSecondary}>B</Text>
+                <Text color={theme.textDim}> Back   </Text>
+                <Text color={theme.textSecondary}>Q</Text>
+                <Text color={theme.textDim}> Quit</Text>
+              </>
+            )}
+          </Box>
+        </Box>
+      </Box>
+    );
 
-      for (let i = 0; i < projects.length; i++) {
-        const p = projects[i];
-        const isSelected = i === selectorIndex;
-        const isPressed = isSelected && pressed;
-        const pointer = isPressed ? '▸' : isSelected ? '>' : ' ';
-        const statusStr = (p.status || '').padEnd(8);
-        const keyStr = p.key.padEnd(6);
-
-        const nameMax = plw - 4 - keyStr.length - statusStr.length - 2;
-        const displayName = p.name.length > nameMax ? p.name.slice(0, nameMax - 1) + '…' : p.name.padEnd(nameMax);
-        const inner = ` ${pointer} ${keyStr}${displayName} ${statusStr}`;
-
-        if (isPressed) {
-          rows.push({
-            segments: padSegs([
-              { text: rep(' ', pll) + pad(inner, plw), color: WHITE },
-            ], W),
-            bgColor: DARK,
-          });
-        } else if (isSelected) {
-          rows.push({
-            segments: padSegs([
-              { text: rep(' ', pll) + pad(inner, plw), color: BG },
-            ], W),
-            bgColor: WHITE,
-          });
-        } else {
-          const statusClr = p.status === 'active' ? LIGHT : p.status === 'on_hold' ? GRAY : DIM;
-          rows.push(segRow(padSegs([
-            { text: rep(' ', pll) + ` ${pointer} `, color: WHITE },
-            { text: keyStr, color: GRAY },
-            { text: displayName, color: LIGHT },
-            { text: ' ', color: WHITE },
-            { text: statusStr, color: statusClr },
-          ], W)));
-        }
-      }
-
-      rows.push(row(pad(rep(' ', pll) + rep('─', plw), W), DARK));
-    }
-
-    rows.push(blank(W));
-
-    // Fill blank rows, then insert particle band just above footer
-    const psTarget = H - 2;
-    const psAvail = psTarget - rows.length;
-    if (psAvail > 0) {
-      const psBand = particleRows.slice(particleRows.length - Math.min(psAvail, particleRows.length));
-      fillTo(rows, psTarget - psBand.length, W);
-      rows.push(...psBand);
-    }
-    fillTo(rows, psTarget, W);
-
-    rows.push(row(rep('─', W), DARK));
-    if (pressed && pressedAction) {
-      rows.push(segRow(padSegs([
-        { text: '  ', color: GRAY },
-        { text: '→ ', color: WHITE },
-        { text: pressedAction, color: WHITE },
-      ], W)));
-    } else {
-      rows.push(segRow(padSegs([
-        { text: '  ', color: GRAY },
-        { text: '↑↓', color: LIGHT },
-        { text: ' Navigate   ', color: DIM },
-        { text: 'Enter', color: LIGHT },
-        { text: ' Select   ', color: DIM },
-        { text: 'B', color: LIGHT },
-        { text: ' Back   ', color: DIM },
-        { text: 'Q', color: LIGHT },
-        { text: ' Quit', color: DIM },
-      ], W)));
-    }
-
-    return { rows, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
+    return { element, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
   }
 
-  // ══════════════════════════════════════════════════════════════
-  // NORMAL DASHBOARD
-  // ══════════════════════════════════════════════════════════════
-
-  const hasWorkspace = !!config.workspaceId;
-  const hasProject = hasWorkspace && !!config.projectId;
+  // ═══════════════════════════════════════════
+  //  NORMAL DASHBOARD
+  // ═══════════════════════════════════════════
+  const hasProject = !!config.projectId;
   const hasData = hasProject && taskStats.total > 0;
 
-  const logoTop = hasData ? 2 : Math.max(3, Math.floor((H - 28) / 2));
-  for (let i = 0; i < logoTop; i++) rows.push(blank(W));
+  // Sprint info
+  const sprintName = sprint?.name || null;
+  const daysLeft = sprint ? (sprint.daysRemaining ?? Math.max(0, Math.ceil(((sprint.endDate || Date.now()) - Date.now()) / 86400000))) : 0;
+  const sprintPct = sprint?.percentComplete ?? (taskStats.total > 0 ? Math.round((taskStats.done / taskStats.total) * 100) : 0);
 
-  // ── Logo ──
-  rows.push(row(center('L T F 1', W), WHITE));
-  rows.push(blank(W));
-  const sepW = 34;
-  const sepL = Math.floor((W - sepW) / 2);
-  rows.push(row(pad(rep(' ', sepL) + rep('─', sepW), W), DARK));
-  rows.push(blank(W));
-
-  if (hasData) {
-    // ── Project stats ──
-    const statsStr = `${taskStats.total} tasks  |  ${taskStats.todo + taskStats.backlog} open  |  ${taskStats.inProgress} active  |  ${taskStats.done} done`;
-    rows.push(row(center(statsStr, W), GRAY));
-    rows.push(blank(W));
-
-    // Sprint summary
-    const sprint = sprintQuery.data as { name?: string; startDate?: number; endDate?: number; percentComplete?: number; daysRemaining?: number } | null;
-    if (sprint?.name) {
-      const daysLeft = sprint.daysRemaining ?? Math.max(0, Math.ceil(((sprint.endDate || Date.now()) - Date.now()) / 86400000));
-      const pct = sprint.percentComplete != null ? `${sprint.percentComplete}%` : '';
-      const sprintStr = `${sprint.name}  ·  ${daysLeft} days remaining${pct ? `  ·  ${pct}` : ''}`;
-      rows.push(row(center(sprintStr, W), DIM));
-      rows.push(blank(W));
-    }
-
-    // Workspace-level context
-    if (wsStats && wsStats.totalProjects && wsStats.totalProjects > 1) {
-      const wsContext = `Workspace: ${wsStats.totalProjects} projects, ${wsStats.totalMembers || 0} members`;
-      rows.push(row(center(wsContext, W), DARK));
-      rows.push(blank(W));
-    }
-
-    // My tasks section
-    if (myTasks.length > 0) {
-      const myLabel = '  My Tasks';
-      rows.push(segRow(padSegs([
-        { text: myLabel, color: LIGHT },
-        { text: '  ' + rep('─', W - myLabel.length - 4), color: DARK },
-      ], W)));
-      rows.push(blank(W));
-
-      for (const t of myTasks) {
-        const icon = STATUS_ICONS[t.status] || '○';
-        const iconColor = t.status === 'in_progress' ? WHITE : GRAY;
-        const key = config.projectKey ? `${config.projectKey}-${t.number}` : `#${t.number}`;
-        rows.push(segRow(padSegs([
-          { text: '    ', color: WHITE },
-          { text: icon + ' ', color: iconColor },
-          { text: key, color: GRAY },
-          { text: '  ', color: WHITE },
-          { text: t.title.length > W - 30 ? t.title.slice(0, W - 31) + '…' : t.title, color: t.status === 'in_progress' ? WHITE : LIGHT },
-        ], W)));
-      }
-      rows.push(blank(W));
-
-      // Status icon legend
-      rows.push(segRow(padSegs([
-        { text: '    ', color: WHITE },
-        { text: '◌', color: GRAY }, { text: ' Backlog  ', color: DIM },
-        { text: '○', color: GRAY }, { text: ' Todo  ', color: DIM },
-        { text: '●', color: WHITE }, { text: ' In Progress  ', color: DIM },
-        { text: '◉', color: GRAY }, { text: ' In Review  ', color: DIM },
-        { text: '✓', color: GRAY }, { text: ' Done  ', color: DIM },
-        { text: '✕', color: GRAY }, { text: ' Cancelled', color: DIM },
-      ], W)));
-      rows.push(blank(W));
-    }
-  } else {
-    // Authenticated with project but no tasks yet
-    rows.push(row(center('L E G A C Y   T A S K   F R A M E W O R K', W), GRAY));
-    rows.push(blank(W));
-    if (tasksQuery.loading) {
-      renderLoadingAnimation(rows, 'Loading project data', W);
-    } else if (taskStats.total === 0) {
-      rows.push(row(center('No tasks yet — press T to create your first task', W), DIM));
-    }
-  }
-
-  rows.push(blank(W));
-
-  // ── Menu ──
+  // Menu items
   const menuItems = [
     { key: 'T', label: 'Tasks', desc: 'View and manage your tasks' },
     { key: 'S', label: 'Sprint', desc: 'Sprint progress and metrics' },
@@ -691,78 +472,164 @@ export function useDashboardPage({ width: W, height: H, timeStr, selectedIndex, 
     { key: 'Q', label: 'Quit', desc: 'Exit to shell' },
   ];
 
-  const mw = 46;
-  const ml = Math.floor((W - mw) / 2);
+  const element = (
+    <Box flexDirection="column" width={W} height={H}>
+      {Header}
+      <Box borderStyle="single" borderTop borderBottom={false} borderLeft={false} borderRight={false} borderColor={theme.border} />
 
-  rows.push(row(pad(rep(' ', ml) + rep('─', mw), W), DARK));
+      <Box flexDirection="column" flexGrow={1} paddingX={1} paddingY={1}>
+        {/* Active Sprint Panel */}
+        {hasData && sprintName && (
+          <Panel title="ACTIVE SPRINT" titleColor={theme.accent}>
+            <Box justifyContent="space-between">
+              <Text color={theme.text} bold>{sprintName}</Text>
+              <Text color={theme.textMuted}>{taskStats.done}/{taskStats.total} tasks</Text>
+            </Box>
+            <Box>
+              <ProgressBar value={taskStats.done} max={taskStats.total} width={Math.max(10, W - 30)} color={theme.green} />
+            </Box>
+            <Text color={theme.textDim}>{daysLeft} days remaining</Text>
+          </Panel>
+        )}
 
-  for (let i = 0; i < menuItems.length; i++) {
-    const item = menuItems[i];
-    const isSelected = i === selectedIndex;
-    const isPressed = isSelected && pressed;
-    const line = ` ${item.key}  ${item.label}` + rep(' ', mw - 3 - item.label.length - item.desc.length) + item.desc + ' ';
+        {hasData ? (
+          <Box marginTop={1}>
+            {/* My Tasks Panel */}
+            <Box flexDirection="column" flexGrow={1} marginRight={1}>
+              <Panel title="MY TASKS" titleColor={theme.accent} flexGrow={1}>
+                {myTasks.length === 0 ? (
+                  <Text color={theme.textDim}>No active tasks</Text>
+                ) : (
+                  myTasks.map((t) => {
+                    const icon = theme.statusIcon[t.status as keyof typeof theme.statusIcon] || '\u25CB';
+                    const iconColor = theme.status[t.status as keyof typeof theme.status] || theme.textMuted;
+                    const priColor = theme.priority[t.priority as keyof typeof theme.priority] || theme.textDim;
+                    const key = config.projectKey ? `${config.projectKey}-${t.number}` : `#${t.number}`;
+                    const maxTitle = Math.max(10, W / 2 - 20);
+                    const title = t.title.length > maxTitle ? t.title.slice(0, maxTitle - 1) + '\u2026' : t.title;
 
-    if (isPressed) {
-      rows.push({
-        segments: padSegs([
-          { text: rep(' ', ml) + line, color: WHITE },
-        ], W),
-        bgColor: DARK,
-      });
-    } else if (isSelected) {
-      rows.push({
-        segments: padSegs([
-          { text: rep(' ', ml) + line, color: BG },
-        ], W),
-        bgColor: WHITE,
-      });
-    } else {
-      rows.push(segRow(padSegs([
-        { text: rep(' ', ml) + ' ', color: WHITE },
-        { text: item.key, color: WHITE },
-        { text: '  ', color: WHITE },
-        { text: item.label, color: GRAY },
-        { text: rep(' ', mw - 4 - item.label.length - item.desc.length), color: WHITE },
-        { text: item.desc, color: DIM },
-        { text: ' ', color: WHITE },
-      ], W)));
-    }
-  }
+                    return (
+                      <Box key={t._id}>
+                        <Text color={iconColor}>{icon} </Text>
+                        <Text color={theme.textMuted}>{key} </Text>
+                        <Text color={t.status === 'in_progress' ? theme.text : theme.textSecondary}>{title}</Text>
+                        <Box flexGrow={1} />
+                        <Text color={priColor}> {t.priority.charAt(0).toUpperCase()}</Text>
+                      </Box>
+                    );
+                  })
+                )}
+              </Panel>
+            </Box>
 
-  rows.push(row(pad(rep(' ', ml) + rep('─', mw), W), DARK));
+            {/* Workspace Stats Panel */}
+            <Box flexDirection="column" width={Math.min(30, Math.floor(W * 0.35))}>
+              <Panel title="WORKSPACE STATS" titleColor={theme.accent} flexGrow={1}>
+                <Box justifyContent="space-between">
+                  <Text color={theme.textMuted}>Projects:</Text>
+                  <Text color={theme.text}>{wsStats?.totalProjects || projects.length}</Text>
+                </Box>
+                <Box justifyContent="space-between">
+                  <Text color={theme.textMuted}>Members:</Text>
+                  <Text color={theme.text}>{wsStats?.totalMembers || 0}</Text>
+                </Box>
+                <Box justifyContent="space-between">
+                  <Text color={theme.textMuted}>Tasks:</Text>
+                  <Text color={theme.text}>{taskStats.total}</Text>
+                </Box>
+                <Box justifyContent="space-between">
+                  <Text color={theme.textMuted}>Done:</Text>
+                  <Text color={theme.green}>{taskStats.done}</Text>
+                </Box>
+                <Box justifyContent="space-between">
+                  <Text color={theme.textMuted}>Active:</Text>
+                  <Text color={theme.accent}>{taskStats.inProgress}</Text>
+                </Box>
+                {sprintName && (
+                  <Box justifyContent="space-between">
+                    <Text color={theme.textMuted}>Sprint:</Text>
+                    <Text color={theme.textSecondary}>{sprintPct}%</Text>
+                  </Box>
+                )}
+              </Panel>
+            </Box>
+          </Box>
+        ) : (
+          <Box flexDirection="column" alignItems="center" justifyContent="center" flexGrow={1}>
+            <Text color={theme.text} bold>L T F 1</Text>
+            <Text> </Text>
+            <Text color={theme.textMuted}>L E G A C Y   T A S K   F R A M E W O R K</Text>
+            <Text> </Text>
+            {tasksQuery.loading ? (
+              <Text color={theme.textMuted}>Loading project data...</Text>
+            ) : taskStats.total === 0 ? (
+              <Text color={theme.textDim}>No tasks yet {'\u2014'} press T to create your first task</Text>
+            ) : null}
+          </Box>
+        )}
 
-  // Fill blank rows, then insert particle band just above footer
-  const ndTarget = H - 2;
-  const ndAvail = ndTarget - rows.length;
-  if (ndAvail > 0) {
-    const ndBand = particleRows.slice(particleRows.length - Math.min(ndAvail, particleRows.length));
-    fillTo(rows, ndTarget - ndBand.length, W);
-    rows.push(...ndBand);
-  }
-  fillTo(rows, ndTarget, W);
+        {/* Navigation Menu */}
+        <Box flexDirection="column" marginTop={1} alignItems="center">
+          <Box flexDirection="column" width={Math.min(46, W - 4)}>
+            <Box borderStyle="single" borderTop borderBottom={false} borderLeft={false} borderRight={false} borderColor={theme.border} />
+            {menuItems.map((item, i) => {
+              const isSelected = i === selectedIndex;
+              const isPressed = isSelected && pressed;
 
-  rows.push(row(rep('─', W), DARK));
-  if (pressed && pressedAction) {
-    rows.push(segRow(padSegs([
-      { text: '  ', color: GRAY },
-      { text: '→ ', color: WHITE },
-      { text: pressedAction, color: WHITE },
-    ], W)));
-  } else {
-    rows.push(segRow(padSegs([
-      { text: '  ', color: GRAY },
-      { text: '↑↓', color: LIGHT },
-      { text: ' Navigate   ', color: DIM },
-      { text: 'Enter', color: LIGHT },
-      { text: ' Select   ', color: DIM },
-      { text: 'W', color: LIGHT },
-      { text: ' Workspace   ', color: DIM },
-      { text: 'P', color: LIGHT },
-      { text: ' Project   ', color: DIM },
-      { text: 'Q', color: LIGHT },
-      { text: ' Quit', color: DIM },
-    ], W)));
-  }
+              return (
+                <Box key={item.key}
+                  paddingX={1}
+                  {...(isSelected ? {
+                    borderStyle: 'single' as const,
+                    borderColor: isPressed ? theme.textDim : theme.accent,
+                    borderLeft: true,
+                    borderRight: false,
+                    borderTop: false,
+                    borderBottom: false,
+                  } : {})}
+                >
+                  <Text color={isSelected ? theme.text : theme.textSecondary} bold={isSelected}>{item.key}</Text>
+                  <Text color={isSelected ? theme.text : theme.textMuted}>  {item.label}</Text>
+                  <Box flexGrow={1} />
+                  <Text color={theme.textDim}>{item.desc}</Text>
+                </Box>
+              );
+            })}
+            <Box borderStyle="single" borderTop borderBottom={false} borderLeft={false} borderRight={false} borderColor={theme.border} />
+          </Box>
+        </Box>
+      </Box>
 
-  return { rows, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
+      {/* Footer */}
+      <Box borderStyle="single" borderTop borderBottom={false} borderLeft={false} borderRight={false} borderColor={theme.border}>
+        <Box paddingX={1}>
+          {pressed && pressedAction ? (
+            <Text color={theme.text}>{'\u2192'} {pressedAction}</Text>
+          ) : (
+            <>
+              <Text color={theme.textSecondary}>{'\u2191\u2193'}</Text>
+              <Text color={theme.textDim}> Navigate   </Text>
+              <Text color={theme.textSecondary}>Enter</Text>
+              <Text color={theme.textDim}> Select   </Text>
+              <Text color={theme.textSecondary}>W</Text>
+              <Text color={theme.textDim}> Workspace   </Text>
+              <Text color={theme.textSecondary}>P</Text>
+              <Text color={theme.textDim}> Project   </Text>
+              <Text color={theme.textSecondary}>Q</Text>
+              <Text color={theme.textDim}> Quit</Text>
+            </>
+          )}
+          <Box flexGrow={1} />
+          <Text color={theme.textMuted}>{timeStr}</Text>
+        </Box>
+      </Box>
+    </Box>
+  );
+
+  return { element, connectionStatus, dashboardMode, selectorItemCount, selectableItems };
+}
+
+export default function DashboardPage(props: DashboardPageProps) {
+  const { element } = useDashboardPage(props);
+  return element;
 }

@@ -26,10 +26,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/vividverseglobal/iceberg",
+    "url": "https://github.com/aansh-afk/ltf1-pm",
     "directory": "apps/cli"
   },
   "dependencies": {
+    "@zenobius/ink-mouse": "^1.0.3",
     "boxen": "^8.0.1",
     "chalk": "^5.3.0",
     "chokidar": "^4.0.1",
@@ -40,6 +41,7 @@
     "date-fns": "^4.1.0",
     "express": "^4.21.0",
     "figures": "^6.1.0",
+    "fullscreen-ink": "^0.1.0",
     "ink": "^5.0.1",
     "inquirer": "^10.2.2",
     "open": "^10.1.0",

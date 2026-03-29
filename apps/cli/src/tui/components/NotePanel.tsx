@@ -2,7 +2,6 @@
  * Note Panel Component
  */
 
-import React from 'react';
 import { Box, Text } from 'ink';
 import { theme } from '../styles/theme.js';
 
@@ -14,7 +13,7 @@ interface NotePanelProps {
 }
 
 export function NotePanel({
-  workspace = 'Iceberg',
+  workspace = 'LTF1',
   project = 'ICE-Web',
   lead = 'Aansh',
   content,

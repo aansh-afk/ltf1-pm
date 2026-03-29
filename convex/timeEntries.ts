@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { getCurrentUserOrThrow } from "./lib/auth";
+import { hasPermission } from "./auth/permissions";
 
 async function requireAuthenticatedUserMatch(
   ctx: any,
@@ -21,6 +22,67 @@ async function requireAuthenticatedUserMatch(
   return { identity, user };
 }
 
+/**
+ * Resolve workspace from a task ID by walking task -> project -> workspace.
+ * Returns the workspaceId or throws if the chain is broken.
+ */
+async function getWorkspaceIdFromTask(
+  ctx: any,
+  taskId: Id<"tasks">,
+): Promise<Id<"workspaces">> {
+  const task = await ctx.db.get(taskId);
+  if (!task) {
+    throw new Error("Task not found");
+  }
+  const project = await ctx.db.get(task.projectId);
+  if (!project) {
+    throw new Error("Project not found");
+  }
+  return project.workspaceId;
+}
+
+/**
+ * Verify that the authenticated user has workspace membership with the
+ * given permission. Returns the user doc.
+ */
+async function requireWorkspaceAccess(
+  ctx: any,
+  workspaceId: Id<"workspaces">,
+  permission: "task.view" | "task.edit",
+) {
+  const user = await getCurrentUserOrThrow(ctx);
+  const hasAccess = await hasPermission(
+    ctx.db,
+    user._id,
+    workspaceId,
+    permission,
+  );
+  if (!hasAccess) {
+    throw new Error("Access denied: you do not have permission in this workspace");
+  }
+  return user;
+}
+
+/**
+ * Check if the user is an admin/owner in the workspace.
+ */
+async function requireWorkspaceAdmin(
+  ctx: any,
+  workspaceId: Id<"workspaces">,
+) {
+  const user = await getCurrentUserOrThrow(ctx);
+  const membership = await ctx.db
+    .query("workspaceMembers")
+    .withIndex("by_workspace_user", (q: any) =>
+      q.eq("workspaceId", workspaceId).eq("userId", user._id),
+    )
+    .first();
+  if (!membership || !["admin", "owner"].includes(membership.role)) {
+    throw new Error("Only workspace admins or owners can perform this action");
+  }
+  return user;
+}
+
 // Queries
 
 export const getTimeEntry = query({
@@ -36,9 +98,21 @@ export const getTimeEntry = query({
       return null;
     }
 
-    // Check if user can access this entry
-    if (entry.userId !== identity.subject) {
-      // TODO: Check if user is a manager/admin
+    // Owner of the entry can always view it
+    if (entry.userId === identity.subject) {
+      return entry;
+    }
+
+    // Otherwise, workspace admin/owner can view entries in their workspace
+    const user = await getCurrentUserOrThrow(ctx);
+    const workspaceId = await getWorkspaceIdFromTask(ctx, entry.taskId);
+    const membership = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_workspace_user", (q) =>
+        q.eq("workspaceId", workspaceId).eq("userId", user._id),
+      )
+      .first();
+    if (!membership || !["admin", "owner"].includes(membership.role)) {
       throw new Error("You can only view your own time entries");
     }
 
@@ -54,6 +128,28 @@ export const getTimeEntriesByTask = query({
       throw new Error("Unauthorized");
     }
 
+    // Verify the caller has workspace membership to view tasks
+    const workspaceId = await getWorkspaceIdFromTask(ctx, args.taskId);
+    const user = await getCurrentUserOrThrow(ctx);
+    const hasAccess = await hasPermission(
+      ctx.db,
+      user._id,
+      workspaceId,
+      "task.view",
+    );
+
+    if (!hasAccess) {
+      // Non-members only see their own entries on this task
+      return await ctx.db
+        .query("timeEntries")
+        .withIndex("by_task_and_user", (q) =>
+          q.eq("taskId", args.taskId).eq("userId", identity.subject),
+        )
+        .order("desc")
+        .collect();
+    }
+
+    // Workspace members with task.view can see all entries for the task
     return await ctx.db
       .query("timeEntries")
       .withIndex("by_task", (q) => q.eq("taskId", args.taskId))
@@ -125,6 +221,13 @@ export const getTimeEntriesByProject = query({
       throw new Error("Unauthorized");
     }
 
+    // Verify workspace membership before returning project-wide time data
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error("Project not found");
+    }
+    await requireWorkspaceAccess(ctx, project.workspaceId, "task.view");
+
     // Get all tasks for the project
     const tasks = await ctx.db
       .query("tasks")
@@ -158,8 +261,7 @@ export const getTimeEntriesByProject = query({
 
 export const getTimeEntriesForApproval = query({
   args: {
-    projectId: v.optional(v.id("projects")),
-    userId: v.optional(v.string()),
+    projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -167,40 +269,30 @@ export const getTimeEntriesForApproval = query({
       throw new Error("Unauthorized");
     }
 
-    // TODO: Check if user is a manager/admin
+    // Require a projectId so we can scope to a workspace and verify admin role.
+    // The old API allowed omitting projectId which leaked all unapproved entries globally.
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error("Project not found");
+    }
 
-    let entries: Doc<"timeEntries">[] = [];
+    // Only workspace admins/owners may view entries pending approval
+    await requireWorkspaceAdmin(ctx, project.workspaceId);
 
-    if (args.projectId) {
-      // Get all tasks for the project
-      const tasks = await ctx.db
-        .query("tasks")
-        .withIndex("by_project", (q) => q.eq("projectId", args.projectId!))
-        .collect();
+    // Get all tasks for the project
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .collect();
 
-      const taskIds = tasks.map((t) => t._id);
-
-      // Get all unapproved time entries for these tasks
-      for (const taskId of taskIds) {
-        const taskEntries = await ctx.db
-          .query("timeEntries")
-          .withIndex("by_task", (q) => q.eq("taskId", taskId))
-          .filter((q) => q.eq(q.field("approved"), false))
-          .collect();
-        entries.push(...taskEntries);
-      }
-    } else if (args.userId) {
-      entries = await ctx.db
+    const entries: Doc<"timeEntries">[] = [];
+    for (const taskId of tasks.map((t) => t._id)) {
+      const taskEntries = await ctx.db
         .query("timeEntries")
-        .withIndex("by_user", (q) => q.eq("userId", args.userId!))
+        .withIndex("by_task", (q) => q.eq("taskId", taskId))
         .filter((q) => q.eq(q.field("approved"), false))
         .collect();
-    } else {
-      // Get all unapproved entries
-      entries = await ctx.db
-        .query("timeEntries")
-        .filter((q) => q.eq(q.field("approved"), false))
-        .collect();
+      entries.push(...taskEntries);
     }
 
     return entries;

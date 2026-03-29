@@ -28,8 +28,8 @@ describe('parseTaskFromBranch', () => {
     });
 
     it('handles multi-letter project keys', () => {
-      expect(parseTaskFromBranch('feature/ICEBERG-42-deep-feature')).toEqual({
-        key: 'ICEBERG',
+      expect(parseTaskFromBranch('feature/LTF1-42-deep-feature')).toEqual({
+        key: 'LTF1',
         number: 42,
       });
     });

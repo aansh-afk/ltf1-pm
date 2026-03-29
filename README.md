@@ -1,4 +1,4 @@
-# iceberg
+# LTF1
 
 **Git-native project management for developers who ship code, not developers who update tickets.**
 
@@ -10,7 +10,7 @@ Your tasks update when you push code. Story points estimated from your diffs. Ve
 
 ## What is this
 
-iceberg is a project management platform built for developers. Instead of manually dragging cards and updating statuses, your git activity drives the board. Push code, merge PRs, close issues — iceberg handles the rest.
+LTF1 is a project management platform built for developers. Instead of manually dragging cards and updating statuses, your git activity drives the board. Push code, merge PRs, close issues — LTF1 handles the rest.
 
 Three surfaces, one backend:
 - **Web app** — Dashboard, kanban boards, sprint planning, team management
@@ -184,4 +184,4 @@ Design system reference is in [`docs_design/`](docs_design/).
 
 ## License
 
-[AGPL-3.0](LICENSE) — You can use, modify, and self-host iceberg. If you modify and deploy it as a service, you must share your source code.
+[AGPL-3.0](LICENSE) — You can use, modify, and self-host LTF1. If you modify and deploy it as a service, you must share your source code.

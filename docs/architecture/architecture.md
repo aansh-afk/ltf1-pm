@@ -1,4 +1,4 @@
-# Iceberg Architecture Guide
+# LTF1 Architecture Guide
 
 ## Core Principles
 
@@ -29,7 +29,7 @@ apps/cli → packages/types
 ```tsx
 // features/tasks/components/task-card.tsx
 import { Card } from '@/shared/components/ui/card'
-import { type Task } from '@iceberg/types'
+import { type Task } from '@ltf1/types'
 import { useTask } from '../hooks/use-task'
 
 export function TaskCard({ taskId }: { taskId: string }) {
@@ -42,7 +42,7 @@ export function TaskCard({ taskId }: { taskId: string }) {
 ```ts
 // features/tasks/hooks/use-tasks.ts
 import { useQuery } from 'convex/react'
-import { api } from '@iceberg/backend'
+import { api } from '@ltf1/backend'
 
 export function useTasks(projectId: string) {
   return useQuery(api.tasks.queries.listByProject, { projectId })
@@ -220,7 +220,7 @@ main
 ```
 
 ### Code Review Checklist
-- [ ] Types added to @iceberg/types
+- [ ] Types added to @ltf1/types
 - [ ] Tests written and passing
 - [ ] Mobile responsive
 - [ ] Dark theme compatible

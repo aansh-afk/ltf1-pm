@@ -2,7 +2,7 @@
  * TUI-specific types for the LTF1 dashboard
  */
 
-export type Page = 'dashboard' | 'tasks' | 'sprint' | 'git' | 'search' | 'notifications' | 'help';
+export type Page = 'dashboard' | 'tasks' | 'sprint' | 'git' | 'search' | 'notifications' | 'help' | 'agent' | 'skills' | 'projects' | 'settings';
 
 export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
 

@@ -1,8 +1,8 @@
-# Iceberg Project Management - Comprehensive Project Index
+# LTF1 Project Management - Comprehensive Project Index
 
 ## 📋 Project Overview
 
-**Iceberg** is a comprehensive project management platform built with modern web technologies, featuring real-time collaboration, AI-powered insights, and extensive integrations.
+**LTF1** is a comprehensive project management platform built with modern web technologies, featuring real-time collaboration, AI-powered insights, and extensive integrations.
 
 ### Tech Stack
 - **Frontend**: React + TypeScript + Vite
@@ -17,7 +17,7 @@
 ## 🏗️ Project Structure
 
 ```
-iceberg-L/
+LTF1-L/
 ├── apps/
 │   └── web/                 # React frontend application
 │       ├── src/

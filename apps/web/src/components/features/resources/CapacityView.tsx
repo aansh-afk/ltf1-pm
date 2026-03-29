@@ -51,6 +51,7 @@ const CapacityView: React.FC<CapacityViewProps> = ({ workspaceId, projectId }) =
     endDate: dateRange.end.getTime()
   })
   const utilizationReport = useQuery(api.resources.getUtilizationReport, {
+    workspaceId,
     startDate: dateRange.start.getTime(),
     endDate: dateRange.end.getTime(),
     groupBy: 'user'

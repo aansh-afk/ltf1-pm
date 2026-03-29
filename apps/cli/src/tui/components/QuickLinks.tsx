@@ -2,7 +2,6 @@
  * Quick Links Component
  */
 
-import React from 'react';
 import { Box, Text } from 'ink';
 import { theme } from '../styles/theme.js';
 
@@ -34,7 +33,7 @@ export function QuickLinks({ section }: QuickLinksProps) {
         </Text>
         <Text color={theme.colors.dim}>───</Text>
         <Box flexWrap="wrap">
-          {PRIMARY_LINKS.map((link, i) => (
+          {PRIMARY_LINKS.map((link, _i) => (
             <Box key={link} marginRight={2}>
               <Text color={theme.colors.text}>{link}</Text>
             </Box>

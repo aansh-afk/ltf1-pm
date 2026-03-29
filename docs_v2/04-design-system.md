@@ -1,4 +1,4 @@
-# Design System v2 — iceberg-pm
+# Design System v2 — ltf1-pm
 
 ## Identity
 

@@ -12,10 +12,12 @@ interface BulkActionBarProps {
 }
 
 const STATUS_OPTIONS = [
+  { value: 'backlog', label: 'BACKLOG' },
   { value: 'todo', label: 'TO DO' },
   { value: 'in_progress', label: 'IN PROGRESS' },
   { value: 'in_review', label: 'IN REVIEW' },
   { value: 'done', label: 'DONE' },
+  { value: 'cancelled', label: 'CANCELLED' },
 ]
 
 const PRIORITY_OPTIONS = [

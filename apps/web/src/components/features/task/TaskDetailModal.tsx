@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useQuery } from 'convex/react'
+import { useState, useRef, useEffect } from 'react'
+import { useQuery, useAction } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
 import {
@@ -8,12 +8,15 @@ import {
   HiOutlineUser,
   HiOutlineCalendar,
   HiOutlineFlag,
-  HiOutlineTag
+  HiOutlineTag,
+  HiOutlineLightningBolt,
 } from 'react-icons/hi'
 import BrutalModal from '@/components/ui/BrutalModal'
+import BrutalButton from '@/components/ui/BrutalButton'
 import TimeTracker from './TimeTracker'
 import TaskTimeDisplay from './TaskTimeDisplay'
 import { formatDistanceToNow, format } from 'date-fns'
+import toast from 'react-hot-toast'
 import clsx from 'clsx'
 
 interface TaskDetailModalProps {
@@ -24,6 +27,9 @@ interface TaskDetailModalProps {
 
 export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailModalProps) {
   const [activeTab, setActiveTab] = useState<'details' | 'time' | 'comments'>('details')
+  const [showSkillDropdown, setShowSkillDropdown] = useState(false)
+  const [runningSkillId, setRunningSkillId] = useState<string | null>(null)
+  const skillDropdownRef = useRef<HTMLDivElement>(null)
 
   const task = useQuery(
     api.tasks.queries.getTask,
@@ -39,6 +45,47 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
     api.tasks.queries.getActiveTimeEntry,
     taskId ? { taskId: taskId as Id<"tasks"> } : 'skip'
   )
+
+  const workspaceId = task?.project?.workspaceId as Id<"workspaces"> | undefined
+
+  const skills = useQuery(
+    api.skills.queries.getWorkspaceSkills,
+    workspaceId ? { workspaceId } : 'skip'
+  )
+
+  const executeSkill = useAction(api.skills.execution.executeSkill)
+
+  const activeSkills = skills?.filter(s => s.isActive && (s.trigger === 'manual' || s.trigger === 'both')) || []
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (skillDropdownRef.current && !skillDropdownRef.current.contains(event.target as Node)) {
+        setShowSkillDropdown(false)
+      }
+    }
+    if (showSkillDropdown) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showSkillDropdown])
+
+  const handleRunSkill = async (skillId: Id<"skills">) => {
+    setShowSkillDropdown(false)
+    setRunningSkillId(skillId)
+    try {
+      const result = await executeSkill({
+        skillId,
+        taskId: taskId as Id<"tasks">,
+      })
+      if (result.success) {
+        toast.success(`Skill executed — ${result.actionsExecuted} action${result.actionsExecuted !== 1 ? 's' : ''} applied`)
+      } else {
+        toast.error(result.error || 'Skill execution failed')
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to execute skill')
+    } finally {
+      setRunningSkillId(null)
+    }
+  }
 
   if (!task) return null
 
@@ -94,12 +141,56 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
                 {task.title}
               </h2>
             </div>
-            <button
-              onClick={onClose}
-              className="p-[4px] hover:bg-[var(--theme-background-secondary)]/20 transition-colors"
-            >
-              <HiOutlineX className="w-20px h-20px" />
-            </button>
+            <div className="flex items-center gap-[6px]">
+              {/* Run Skill Button */}
+              {activeSkills.length > 0 && (
+                <div className="relative" ref={skillDropdownRef}>
+                  <BrutalButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowSkillDropdown(!showSkillDropdown)}
+                    disabled={!!runningSkillId}
+                    loading={!!runningSkillId}
+                    className="!border-[rgba(245,158,11,0.3)] !text-[#F59E0B] hover:!bg-[rgba(245,158,11,0.1)] hover:!border-[#F59E0B]"
+                  >
+                    <span className="flex items-center gap-1">
+                      <HiOutlineLightningBolt className="w-3.5 h-3.5" />
+                      RUN SKILL
+                    </span>
+                  </BrutalButton>
+
+                  {showSkillDropdown && (
+                    <div
+                      className="absolute right-0 top-full mt-1 z-50 min-w-[200px] border-2 border-[var(--theme-border)] bg-[var(--theme-background)]"
+                      style={{ boxShadow: '4px 4px 0px var(--theme-shadow)' }}
+                    >
+                      {activeSkills.map((skill) => (
+                        <button
+                          key={skill._id}
+                          onClick={() => handleRunSkill(skill._id)}
+                          disabled={!!runningSkillId}
+                          className="w-full px-3 py-2 text-left hover:bg-[var(--theme-background-secondary)] transition-colors border-b border-[var(--theme-border)] last:border-b-0"
+                        >
+                          <div className="text-[11px] font-mono font-bold uppercase text-[var(--theme-foreground)]">
+                            {skill.displayName}
+                          </div>
+                          <div className="text-[9px] font-mono text-[var(--theme-foreground-tertiary)] truncate mt-px">
+                            {skill.description}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button
+                onClick={onClose}
+                className="p-[4px] hover:bg-[var(--theme-background-secondary)]/20 transition-colors"
+              >
+                <HiOutlineX className="w-20px h-20px" />
+              </button>
+            </div>
           </div>
         </div>
 

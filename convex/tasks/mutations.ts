@@ -2,7 +2,6 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import {
   canAccessTask,
-  getTaskProject,
   requirePermission,
 } from "../auth/permissions";
 import { internal } from "../_generated/api";
@@ -98,6 +97,13 @@ export const createTask = mutation({
       targetName: args.title,
       description: `created task "${args.title}"`,
       metadata: undefined,
+    });
+
+    // Schedule agent triage
+    await ctx.scheduler.runAfter(0, internal.agent.triage.triageTask, {
+      taskId,
+      workspaceId: project.workspaceId,
+      projectId: args.projectId,
     });
 
     // Send notifications to all assignees

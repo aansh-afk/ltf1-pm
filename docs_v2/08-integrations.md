@@ -1,9 +1,9 @@
-# Integrations Reference — iceberg-pm
+# Integrations Reference — ltf1-pm
 
 ## GitHub Integration
 
 ### Overview
-The most extensive integration in iceberg. 10,000+ lines of code across 15+ files. Provides bi-directional sync between GitHub and iceberg for issues, PRs, commits, teams, and developer stats.
+The most extensive integration in LTF1. 10,000+ lines of code across 15+ files. Provides bi-directional sync between GitHub and LTF1 for issues, PRs, commits, teams, and developer stats.
 
 ### Architecture
 
@@ -33,33 +33,33 @@ GitHub
 ### Features
 
 #### GitHub App Installation
-- Install iceberg GitHub App on organizations or personal accounts
+- Install LTF1 GitHub App on organizations or personal accounts
 - Multi-installation support per workspace (via `workspaceGitHubInstallations` junction table)
 - Configurable permissions and event subscriptions
 - Automatic repository discovery after installation
 
 #### User OAuth Connection
 - GitHub OAuth flow via `githubConnections` table
-- Links GitHub user to iceberg user
+- Links GitHub user to LTF1 user
 - Provides personal access for API calls
 - Token management with scope tracking
 
 #### Bi-Directional Issue Sync
-- **GitHub → iceberg**: New GitHub issues create tasks, updates sync status/labels/assignees
-- **iceberg → GitHub**: New tasks create GitHub issues, status changes sync back
+- **GitHub → LTF1**: New GitHub issues create tasks, updates sync status/labels/assignees
+- **LTF1 → GitHub**: New tasks create GitHub issues, status changes sync back
 - Conflict resolution via `githubIssueSyncQueue` with retry logic
 - Configurable sync direction per project: `github_to_ltf1`, `ltf1_to_github`, `bidirectional`
 - Cron job processes queue every 1 minute
 
 **Sync Fields**:
-| iceberg Field | GitHub Field | Direction |
+| LTF1 Field | GitHub Field | Direction |
 |---------------|-------------|-----------|
 | title | title | Bidirectional |
 | description | body | Bidirectional |
 | status | state (open/closed) | Bidirectional |
 | labels | labels | Bidirectional |
 | assigneeIds | assignees | Bidirectional |
-| priority | label prefix (priority:) | iceberg → GitHub |
+| priority | label prefix (priority:) | LTF1 → GitHub |
 
 #### Commit Parsing
 - Parses commit messages for task key references (e.g., `PROJ-123`)
@@ -74,8 +74,8 @@ GitHub
 - Stores in `githubPullRequests` table
 
 #### Team Sync
-- Syncs GitHub organization teams to iceberg teams
-- Maps GitHub team members to iceberg users via `githubUserMappings`
+- Syncs GitHub organization teams to LTF1 teams
+- Maps GitHub team members to LTF1 users via `githubUserMappings`
 - Configurable sync direction
 - Cron job runs every 1 hour
 
@@ -107,8 +107,8 @@ GitHub
 | `githubActivities` | Activity stream | GitHub activity feed |
 | `githubConnections` | User OAuth tokens | Personal GitHub access |
 | `githubWebhookEvents` | Webhook payloads | Event storage, debugging |
-| `githubUserMappings` | User mapping | GitHub → iceberg user |
-| `githubTeamMappings` | Team mapping | GitHub org → iceberg team |
+| `githubUserMappings` | User mapping | GitHub → LTF1 user |
+| `githubTeamMappings` | Team mapping | GitHub org → LTF1 team |
 | `githubIssueSyncQueue` | Sync queue | Pending sync operations |
 | `workspaceGitHubInstallations` | Junction table | Multi-installation support |
 | `githubOAuthStates` | OAuth state tokens | CSRF protection |
@@ -285,7 +285,7 @@ Pro-only features are gated via workspace `subscription.plan` field:
 
 ### Planned
 - Slash commands for task operations from Slack
-- Threaded task discussions synced to iceberg comments
+- Threaded task discussions synced to LTF1 comments
 - Sprint standup summaries posted to channels
 - PR notifications with task context
 

@@ -1,6 +1,7 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { Doc, Id } from "./_generated/dataModel"
+import { getCurrentUserOrThrow } from "./lib/auth"
 
 // Resource allocation interface
 export interface ResourceAllocation {
@@ -212,6 +213,7 @@ export const getWorkloadBalance = query({
 
 export const getUtilizationReport = query({
   args: {
+    workspaceId: v.id("workspaces"),
     startDate: v.number(),
     endDate: v.number(),
     groupBy: v.optional(v.union(v.literal("user"), v.literal("project"), v.literal("department")))
@@ -222,15 +224,57 @@ export const getUtilizationReport = query({
       throw new Error("Unauthorized")
     }
 
+    // Require workspace membership before returning utilization data
+    const user = await getCurrentUserOrThrow(ctx)
+    const membership = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_workspace_user", (q: any) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", user._id),
+      )
+      .first()
+    if (!membership) {
+      throw new Error("Access denied: you are not a member of this workspace")
+    }
+
     const groupBy = args.groupBy || "user"
 
-    // Get time entries in date range
-    const timeEntries = await ctx.db
-      .query("timeEntries")
-      .withIndex("by_start_time", q => 
-        q.gte("startTime", args.startDate).lte("startTime", args.endDate)
-      )
+    // Scope time entries to projects in this workspace instead of reading globally
+    const projects = await ctx.db
+      .query("projects")
+      .withIndex("by_workspace", (q: any) => q.eq("workspaceId", args.workspaceId))
       .collect()
+
+    // Collect all tasks for workspace projects
+    const allTasks = await Promise.all(
+      projects.map((project) =>
+        ctx.db
+          .query("tasks")
+          .withIndex("by_project", (q: any) => q.eq("projectId", project._id))
+          .collect()
+      )
+    )
+    const tasks = allTasks.flat()
+
+    // Build a taskId -> projectId lookup
+    const taskProjectMap = new Map<string, string>()
+    for (const task of tasks) {
+      taskProjectMap.set(task._id, task.projectId)
+    }
+
+    // Collect time entries scoped to workspace tasks only
+    const timeEntries: Doc<"timeEntries">[] = []
+    for (const task of tasks) {
+      const entries = await ctx.db
+        .query("timeEntries")
+        .withIndex("by_task", (q: any) => q.eq("taskId", task._id))
+        .collect()
+      // Filter by date range
+      for (const entry of entries) {
+        if (entry.startTime >= args.startDate && entry.startTime <= args.endDate) {
+          timeEntries.push(entry)
+        }
+      }
+    }
 
     // Calculate utilization based on grouping
     const utilization = new Map<string, {
@@ -249,11 +293,9 @@ export const getUtilizationReport = query({
           key = entry.userId
           break
         case "project":
-          const task = await ctx.db.get(entry.taskId)
-          key = task?.projectId || "unknown"
+          key = taskProjectMap.get(entry.taskId) || "unknown"
           break
         case "department":
-          // TODO: Get department from user
           key = "Engineering"
           break
       }
@@ -277,7 +319,7 @@ export const getUtilizationReport = query({
       totalHours: data.totalHours,
       billableHours: data.billableHours,
       nonBillableHours: data.totalHours - data.billableHours,
-      utilizationRate: data.billableHours / data.totalHours * 100,
+      utilizationRate: data.totalHours > 0 ? data.billableHours / data.totalHours * 100 : 0,
       taskCount: data.tasks.size
     }))
 

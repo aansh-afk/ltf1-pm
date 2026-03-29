@@ -4,14 +4,14 @@ This document provides the complete integration instructions for adding the comp
 
 ## Files Created
 
-1. **StylePropertiesPanel.tsx** - `/home/aansh/LTF1/iceberg-L/apps/web/src/components/features/whiteboard/StylePropertiesPanel.tsx`
+1. **StylePropertiesPanel.tsx** - `/home/aansh/LTF1/LTF1-L/apps/web/src/components/features/whiteboard/StylePropertiesPanel.tsx`
    - Collapsible properties panel with STROKE, FILL, BACKGROUND sections
    - Range sliders for width and opacity controls
    - Pattern selector with visual previews
    - Color pickers with hex input
    - Dropdown for stroke styles
 
-2. **SVGPatterns.tsx** - `/home/aansh/LTF1/iceberg-L/apps/web/src/components/features/whiteboard/SVGPatterns.tsx`
+2. **SVGPatterns.tsx** - `/home/aansh/LTF1/LTF1-L/apps/web/src/components/features/whiteboard/SVGPatterns.tsx`
    - SVG pattern definitions for fill patterns
    - Helper functions: `getFillValue()` and `getStrokeDashArray()`
    - Patterns: hachure, cross-hatch, dots, zigzag

@@ -2,7 +2,6 @@
  * Search Box Component
  */
 
-import React from 'react';
 import { Box, Text, useInput } from 'ink';
 import { theme } from '../styles/theme.js';
 

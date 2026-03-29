@@ -107,3 +107,28 @@ export function relativeTime(date: Date): string {
   const months = Math.floor(days / 30);
   return `${months}mo`;
 }
+
+// ── New helpers for Ink-native components ──────────────────
+
+/** Format a duration in ms to a human-readable string */
+export function formatDuration(ms: number): string {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  if (h > 0) return `${h}h ${m % 60}m`;
+  if (m > 0) return `${m}m ${s % 60}s`;
+  return `${s}s`;
+}
+
+/** Format a date to a short date string (DD.MM.YY) */
+export function shortDate(date: Date): string {
+  const d = date.getDate().toString().padStart(2, '0');
+  const mo = (date.getMonth() + 1).toString().padStart(2, '0');
+  const y = date.getFullYear().toString().slice(-2);
+  return `${d}.${mo}.${y}`;
+}
+
+/** Clamp a number between min and max */
+export function clamp(val: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, val));
+}
