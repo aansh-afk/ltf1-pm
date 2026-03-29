@@ -230,7 +230,7 @@ func (m *projectsModel) loadProjects() tea.Cmd {
 		}
 
 		// Fetch projects from Convex
-		raw, err := m.client.Query("projects:list", nil)
+		raw, err := m.client.Query("projects/queries:getWorkspaceProjects", nil)
 		if err != nil {
 			return projectsErrMsg{err: err}
 		}

@@ -334,12 +334,12 @@ func (m *DashboardModel) loadData() tea.Cmd {
 		}
 
 		// Fetch active sprint
-		if raw, err := m.client.Query("sprints/queries:getActiveSprint", nil); err == nil {
+		if raw, err := m.client.Query("sprints/queries:getCurrentSprint", nil); err == nil {
 			var sp api.Sprint
 			if json.Unmarshal(raw, &sp) == nil && sp.ID != "" {
 				sprint = &sp
 				// Fetch sprint tasks for progress
-				if raw2, err := m.client.Query("tasks/queries:getSprintTasks", map[string]interface{}{"sprintId": sp.ID}); err == nil {
+				if raw2, err := m.client.Query("tasks/queries:getProjectTasks", map[string]interface{}{"sprintId": sp.ID}); err == nil {
 					var spTasks []api.Task
 					if json.Unmarshal(raw2, &spTasks) == nil {
 						sprintAll = len(spTasks)
@@ -354,12 +354,12 @@ func (m *DashboardModel) loadData() tea.Cmd {
 		}
 
 		// Fetch agent activity
-		if raw, err := m.client.Query("agent/queries:getRecentActivity", nil); err == nil {
+		if raw, err := m.client.Query("agent/queries:getAgentActivityFeed", nil); err == nil {
 			_ = json.Unmarshal(raw, &activities)
 		}
 
 		// Fetch workspace stats
-		if raw, err := m.client.Query("dashboard/queries:getStats", nil); err == nil {
+		if raw, err := m.client.Query("dashboard/queries:getDashboardData", nil); err == nil {
 			var stats struct {
 				Projects int `json:"projects"`
 				Members  int `json:"members"`

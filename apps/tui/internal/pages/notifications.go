@@ -222,7 +222,7 @@ func (m *notificationsModel) loadNotifications() tea.Cmd {
 			return notifsLoadedMsg{items: sampleNotifications()}
 		}
 
-		raw, err := m.client.Query("notifications:list", nil)
+		raw, err := m.client.Query("notifications:getNotifications", nil)
 		if err != nil {
 			return notifsErrMsg{err: err}
 		}

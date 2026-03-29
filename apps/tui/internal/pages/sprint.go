@@ -484,7 +484,7 @@ func (m *SprintModel) loadSprint() tea.Cmd {
 		var totalPts, donePts float64
 
 		// Fetch active sprint
-		if raw, err := m.client.Query("sprints/queries:getActiveSprint", nil); err == nil {
+		if raw, err := m.client.Query("sprints/queries:getCurrentSprint", nil); err == nil {
 			var sp api.Sprint
 			if json.Unmarshal(raw, &sp) == nil && sp.ID != "" {
 				sprint = &sp
@@ -496,7 +496,7 @@ func (m *SprintModel) loadSprint() tea.Cmd {
 		}
 
 		// Fetch sprint tasks
-		if raw, err := m.client.Query("tasks/queries:getSprintTasks", map[string]interface{}{"sprintId": sprint.ID}); err == nil {
+		if raw, err := m.client.Query("tasks/queries:getProjectTasks", map[string]interface{}{"sprintId": sprint.ID}); err == nil {
 			_ = json.Unmarshal(raw, &tasks)
 		}
 
@@ -509,7 +509,7 @@ func (m *SprintModel) loadSprint() tea.Cmd {
 		}
 
 		// Fetch backlog (tasks not in any sprint)
-		if raw, err := m.client.Query("tasks/queries:getBacklogTasks", nil); err == nil {
+		if raw, err := m.client.Query("sprints/queries:getBacklogTasks", nil); err == nil {
 			_ = json.Unmarshal(raw, &backlog)
 		}
 

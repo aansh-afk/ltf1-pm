@@ -293,7 +293,7 @@ func (m *SkillsModel) runSkill(id string) tea.Cmd {
 			return skillRunDoneMsg{id: id}
 		}
 
-		_, err := m.client.Action("skills/actions:runSkill", map[string]interface{}{
+		_, err := m.client.Action("skills/execution:executeSkill", map[string]interface{}{
 			"skillId": id,
 		})
 		if err != nil {
