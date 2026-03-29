@@ -36,8 +36,36 @@ type AuthResult struct {
 const authPort = 9876
 const webAppURL = "https://ltf1.dev"
 
+// Compact world map — fits ~76 chars wide, subtle dot pattern
+var worldMap = `        .  .       .           .       .      .        .
+    . .:::::.   .:::::.     . .:::.       .        .
+  .::::::::: .::::::::::. .::::::::.          .  .
+ :::::::::::::::::::::::::::::::::::::.   .:::.
+ :::::::::::::::::::::::::::::::::::::::::::::::
+ ::::::::::::::::::::::::::::::::::::::::::::::::
+  :::::::::::::::::::::::::::::::::::::::::::::::
+   :::::::::::::::::::::::::::::::::::::::::::::
+    ::::::::: .:::::::::::::::::::::::::::::::.
+      ::::::    :::::::::::::::::::::::::::::
+        ::::      ::::::::::::::::::::::::::
+         :::       ::::::::::::::::::::::::
+          ::         :::::::::::::::::::::
+           :          .:::::::::::::::::.
+                        ::::::::::::::
+                         ::::::::::::
+                          ::::::::::
+                           ::::::::
+                            ::::::
+                             ::::
+                              ::`
+
 func renderLoginScreen(state LoginState, errMsg string, width, height int) string {
-	// Clean text logo — like OpenCode, not massive block chars
+	// World map — very dim, barely visible texture
+	dimMap := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#181818")).
+		Render(worldMap)
+
+	// Clean text logo
 	logo := lipgloss.NewStyle().
 		Foreground(theme.TextPrimary).
 		Bold(true).
@@ -63,13 +91,15 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 			"\n\n" + lipgloss.NewStyle().Foreground(theme.TextDim).Render("Press Enter to retry")
 	}
 
-	// Version + quit at bottom
+	// Bottom
 	bottom := lipgloss.NewStyle().Foreground(theme.TextDim).Render("v0.8.0") +
 		"    " +
 		lipgloss.NewStyle().Foreground(theme.TextDim).Render("[q] quit")
 
-	// Stack vertically with generous spacing
+	// Stack: world map as background texture, then logo + auth below
 	block := strings.Join([]string{
+		dimMap,
+		"",
 		logo,
 		subtitle,
 		"",
@@ -80,10 +110,7 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 		bottom,
 	}, "\n")
 
-	// Center the block in the terminal
-	centered := lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, block)
-
-	return centered
+	return lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, block)
 }
 
 // --- OAuth flow ---
