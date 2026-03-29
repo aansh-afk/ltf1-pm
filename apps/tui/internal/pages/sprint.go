@@ -191,12 +191,8 @@ func (m *SprintModel) View(width, height int) string {
 	b.WriteString("\n")
 
 	if m.sprint == nil {
-		boxStyle := lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(theme.BorderColor).
-			Padding(0, 1).
-			Width(contentWidth)
-		b.WriteString(boxStyle.Render(
+		panel := theme.SubtlePanel.Width(contentWidth)
+		b.WriteString(panel.Render(
 			lipgloss.NewStyle().Foreground(theme.TextMuted).Render("  No active sprint"),
 		))
 		return b.String()
@@ -234,11 +230,7 @@ func (m *SprintModel) FullHelp() string {
 // --- render helpers ---
 
 func (m *SprintModel) renderOverview(width int) string {
-	boxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.BorderColor).
-		Padding(0, 1).
-		Width(width)
+	boxStyle := theme.ActivePanel.Width(width)
 
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(theme.AccentColor)
 	label := lipgloss.NewStyle().Foreground(theme.TextMuted)
@@ -305,11 +297,7 @@ func (m *SprintModel) renderOverview(width int) string {
 }
 
 func (m *SprintModel) renderSprintTasks(width int) string {
-	boxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.BorderColor).
-		Padding(0, 1).
-		Width(width)
+	boxStyle := theme.SubtlePanel.Width(width)
 
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(theme.AccentColor)
 
@@ -361,11 +349,7 @@ func (m *SprintModel) renderSprintTasks(width int) string {
 }
 
 func (m *SprintModel) renderBacklog(width int) string {
-	boxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.PurpleColor).
-		Padding(0, 1).
-		Width(width)
+	boxStyle := theme.LeftBorderPanel(theme.PurpleColor).Width(width)
 
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(theme.PurpleColor)
 

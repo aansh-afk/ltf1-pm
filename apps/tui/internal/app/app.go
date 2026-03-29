@@ -1,6 +1,7 @@
 package app
 
 import (
+	"strings"
 	"time"
 
 	tea "charm.land/bubbletea/v2"
@@ -13,6 +14,15 @@ import (
 // tickMsg is sent on every poll interval.
 type tickMsg time.Time
 
+// authState describes the current authentication state of the TUI.
+type authState int
+
+const (
+	authOK          authState = iota // Fully authenticated with project context
+	authNeedLogin                    // No auth token or token expired
+	authNeedProject                  // Authenticated but no workspace/project selected
+)
+
 // Model is the top-level Bubble Tea model for the TUI shell.
 type Model struct {
 	page   pages.Page
@@ -21,6 +31,7 @@ type Model struct {
 
 	client *api.ConvexClient
 	config *api.AuthConfig
+	auth   authState
 
 	// Page models
 	pageModels map[pages.Page]pages.PageModel
@@ -32,26 +43,37 @@ type Model struct {
 
 // New creates a new App model.
 func New(client *api.ConvexClient, config *api.AuthConfig) Model {
+	// Determine auth state
+	as := authOK
+	if config == nil || !api.IsAuthenticated(config) {
+		as = authNeedLogin
+	} else if !api.HasProjectContext(config) {
+		as = authNeedProject
+	}
+
 	m := Model{
 		page:       pages.PageDashboard,
 		client:     client,
 		config:     config,
-		connected:  client != nil && config != nil && api.IsAuthenticated(config),
+		auth:       as,
+		connected:  as == authOK && client != nil,
 		pageModels: make(map[pages.Page]pages.PageModel),
 	}
 
-	// Initialize all page stubs
-	m.pageModels[pages.PageDashboard] = pages.NewDashboardPage(client, config)
-	m.pageModels[pages.PageTasks] = pages.NewTasksPage(client, config)
-	m.pageModels[pages.PageSprint] = pages.NewSprintPage(client, config)
-	m.pageModels[pages.PageAgent] = pages.NewAgentPage(client, config)
-	m.pageModels[pages.PageSkills] = pages.NewSkillsPage(client, config)
-	m.pageModels[pages.PageGit] = pages.NewGitPage(client, config)
-	m.pageModels[pages.PageProjects] = pages.NewProjectsPage(client, config)
-	m.pageModels[pages.PageSearch] = pages.NewSearchPage(client, config)
-	m.pageModels[pages.PageNotifications] = pages.NewNotificationsPage(client, config)
-	m.pageModels[pages.PageSettings] = pages.NewSettingsPage(client, config)
-	m.pageModels[pages.PageHelp] = pages.NewHelpPage(client, config)
+	// Only initialize pages if fully authenticated
+	if as == authOK {
+		m.pageModels[pages.PageDashboard] = pages.NewDashboardPage(client, config)
+		m.pageModels[pages.PageTasks] = pages.NewTasksPage(client, config)
+		m.pageModels[pages.PageSprint] = pages.NewSprintPage(client, config)
+		m.pageModels[pages.PageAgent] = pages.NewAgentPage(client, config)
+		m.pageModels[pages.PageSkills] = pages.NewSkillsPage(client, config)
+		m.pageModels[pages.PageGit] = pages.NewGitPage(client, config)
+		m.pageModels[pages.PageProjects] = pages.NewProjectsPage(client, config)
+		m.pageModels[pages.PageSearch] = pages.NewSearchPage(client, config)
+		m.pageModels[pages.PageNotifications] = pages.NewNotificationsPage(client, config)
+		m.pageModels[pages.PageSettings] = pages.NewSettingsPage(client, config)
+		m.pageModels[pages.PageHelp] = pages.NewHelpPage(client, config)
+	}
 
 	return m
 }
@@ -93,27 +115,32 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.ready = true
 
 		// Inform all pages of the content area size
-		contentW, contentH := m.contentSize()
-		for _, pm := range m.pageModels {
-			pm.SetSize(contentW, contentH)
+		if m.auth == authOK {
+			contentW, contentH := m.contentSize()
+			for _, pm := range m.pageModels {
+				pm.SetSize(contentW, contentH)
+			}
 		}
 
 		return m, nil
 
 	case tickMsg:
-		// Background polling — pages can use this to refresh data
 		return m, tickEvery()
 
 	case tea.KeyPressMsg:
-		// Global shortcuts (only when not in a focused input)
 		key := tea.Key(msg)
 
-		// Quit
+		// Quit — always available
 		if key.Code == 'q' && key.Mod == 0 {
 			return m, tea.Quit
 		}
 		if key.Code == tea.KeyEscape {
 			return m, tea.Quit
+		}
+
+		// On login/setup screens, only quit works
+		if m.auth != authOK {
+			return m, nil
 		}
 
 		// Navigation shortcuts
@@ -131,9 +158,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	// Forward other messages to active page
-	updated, cmd := m.currentPage().Update(msg)
-	m.pageModels[m.page] = updated
-	return m, cmd
+	if m.auth == authOK {
+		updated, cmd := m.currentPage().Update(msg)
+		m.pageModels[m.page] = updated
+		return m, cmd
+	}
+	return m, nil
 }
 
 // navKeyToPage maps a key rune to a page for global navigation.
@@ -166,7 +196,7 @@ func (m Model) navKeyToPage(code rune) (pages.Page, bool) {
 
 // contentSize returns the width and height available for the page content area.
 func (m Model) contentSize() (int, int) {
-	// Header = 1 line, StatusBar = 1 line, borders ~2
+	// Header = 1 line, StatusBar = 1 line
 	headerHeight := 1
 	statusBarHeight := 1
 
@@ -175,8 +205,8 @@ func (m Model) contentSize() (int, int) {
 		contentHeight = 1
 	}
 
-	// Sidebar takes sidebarWidth + 1 for border
-	contentWidth := m.width - sidebarWidth - 1
+	// Sidebar uses background separation, no border char needed
+	contentWidth := m.width - sidebarWidth
 	if contentWidth < 1 {
 		contentWidth = 1
 	}
@@ -190,6 +220,15 @@ func (m Model) View() tea.View {
 		v.AltScreen = true
 		v.MouseMode = tea.MouseModeCellMotion
 		return v
+	}
+
+	// Show login or setup screen if not fully authenticated
+	if m.auth != authOK {
+		full := m.renderAuthScreen()
+		view := tea.NewView(full)
+		view.AltScreen = true
+		view.MouseMode = tea.MouseModeCellMotion
+		return view
 	}
 
 	header := m.renderHeader()
@@ -217,6 +256,82 @@ func (m Model) View() tea.View {
 	view.AltScreen = true
 	view.MouseMode = tea.MouseModeCellMotion
 	return view
+}
+
+// renderAuthScreen renders the full-screen login or setup screen.
+func (m Model) renderAuthScreen() string {
+	logo := lipgloss.NewStyle().
+		Foreground(theme.AccentColor).
+		Bold(true).
+		Render("LTF1")
+
+	var title, command, subtitle string
+	if m.auth == authNeedLogin {
+		title = "Not authenticated"
+		command = "ltf auth login"
+		subtitle = "Run the command above in another terminal,\nthen restart the TUI."
+	} else {
+		title = "No project selected"
+		command = "ltf project select"
+		subtitle = "Run the command above in another terminal,\nthen restart the TUI."
+	}
+
+	titleStyle := lipgloss.NewStyle().
+		Foreground(theme.TextColor).
+		Bold(true)
+
+	cmdStyle := lipgloss.NewStyle().
+		Foreground(theme.AccentColor).
+		Bold(true).
+		Background(theme.SurfaceColor).
+		Padding(0, 2)
+
+	subtitleStyle := lipgloss.NewStyle().
+		Foreground(theme.TextMuted).
+		Align(lipgloss.Center)
+
+	quitStyle := lipgloss.NewStyle().
+		Foreground(theme.TextDim)
+
+	// Build the card content
+	var lines []string
+	lines = append(lines, "")
+	lines = append(lines, logo)
+	lines = append(lines, "")
+	lines = append(lines, titleStyle.Render(title))
+	lines = append(lines, "")
+	lines = append(lines, cmdStyle.Render(command))
+	lines = append(lines, "")
+	lines = append(lines, subtitleStyle.Render(subtitle))
+	lines = append(lines, "")
+	lines = append(lines, quitStyle.Render("press q to quit"))
+	lines = append(lines, "")
+
+	content := lipgloss.JoinVertical(lipgloss.Center, lines...)
+
+	// Center the card on screen
+	card := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(theme.BorderColor).
+		Padding(1, 4).
+		Align(lipgloss.Center).
+		Render(content)
+
+	// Calculate vertical centering
+	cardHeight := strings.Count(card, "\n") + 1
+	topPad := (m.height - cardHeight) / 2
+	if topPad < 0 {
+		topPad = 0
+	}
+
+	padded := strings.Repeat("\n", topPad) + card
+
+	return lipgloss.NewStyle().
+		Background(theme.BgColor).
+		Width(m.width).
+		Height(m.height).
+		Align(lipgloss.Center).
+		Render(padded)
 }
 
 // SetPage allows external code to switch the active page.

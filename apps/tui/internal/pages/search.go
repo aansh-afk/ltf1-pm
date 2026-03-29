@@ -149,7 +149,7 @@ func (m *searchModel) View(width, height int) string {
 	// search input box
 	searchIcon := lipgloss.NewStyle().Foreground(theme.AccentColor).Render("\u2315 ") // ⌕
 	inputContent := searchIcon + m.input.View()
-	inputBox := theme.PanelStyle.Width(contentWidth).Render(inputContent)
+	inputBox := theme.SubtlePanel.Width(contentWidth).Render(inputContent)
 
 	parts := []string{"", header, "", inputBox}
 
@@ -193,7 +193,7 @@ func (m *searchModel) View(width, height int) string {
 			rows = append(rows, fmt.Sprintf("%s%s %s %s    %s", cursor, kindStyle.Render(icon), ref, title, kindLabel))
 		}
 
-		resultBox := theme.PanelStyle.Width(contentWidth).Render(strings.Join(rows, "\n"))
+		resultBox := theme.ActivePanel.Width(contentWidth).Render(strings.Join(rows, "\n"))
 		parts = append(parts, "", resultsHeader, resultBox)
 	} else if m.input.Value() != "" && !m.loading {
 		parts = append(parts, "", theme.MutedStyle.Render("  No results found."))

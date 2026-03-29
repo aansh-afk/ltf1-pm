@@ -100,7 +100,7 @@ func (m *helpModel) View(width, height int) string {
 		}
 
 		content := sectionTitle.Render(section.Title) + "\n" + strings.Join(rows, "\n")
-		box := theme.PanelStyle.Width(contentWidth).Render(content)
+		box := theme.SubtlePanel.Width(contentWidth).Render(content)
 		sectionBoxes = append(sectionBoxes, box)
 	}
 

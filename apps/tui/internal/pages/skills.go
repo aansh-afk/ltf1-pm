@@ -174,11 +174,7 @@ func (m *SkillsModel) ShortHelp() string {
 // --- view helpers ---
 
 func (m *SkillsModel) viewSkillList(contentWidth int) string {
-	box := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.PurpleColor).
-		Padding(0, 1).
-		Width(contentWidth)
+	box := theme.LeftBorderPanel(theme.PurpleColor).Width(contentWidth)
 
 	header := lipgloss.NewStyle().Foreground(theme.PurpleColor).Bold(true).
 		Render(fmt.Sprintf("YOUR SKILLS (%d)", len(m.skills)))

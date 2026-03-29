@@ -255,11 +255,7 @@ func (m *GitModel) ShortHelp() string {
 // --- view helpers ---
 
 func (m *GitModel) viewBranch(contentWidth int) string {
-	box := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.GreenColor).
-		Padding(0, 1).
-		Width(contentWidth)
+	box := theme.LeftBorderPanel(theme.GreenColor).Width(contentWidth)
 
 	header := lipgloss.NewStyle().Foreground(theme.GreenColor).Bold(true).Render("BRANCH")
 	branchIcon := lipgloss.NewStyle().Foreground(theme.GreenColor).Render("\u2299") // ⊙
@@ -284,16 +280,12 @@ func (m *GitModel) viewBranch(contentWidth int) string {
 }
 
 func (m *GitModel) viewStaged(contentWidth int) string {
-	borderColor := theme.BorderColor
+	var box lipgloss.Style
 	if m.focusPanel == 0 {
-		borderColor = theme.GreenColor
+		box = theme.LeftBorderPanel(theme.GreenColor).Width(contentWidth)
+	} else {
+		box = theme.SubtlePanel.Width(contentWidth)
 	}
-
-	box := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(borderColor).
-		Padding(0, 1).
-		Width(contentWidth)
 
 	header := lipgloss.NewStyle().Foreground(theme.GreenColor).Bold(true).
 		Render(fmt.Sprintf("STAGED (%d)", len(m.info.Staged)))
@@ -326,16 +318,12 @@ func (m *GitModel) viewStaged(contentWidth int) string {
 }
 
 func (m *GitModel) viewUnstaged(contentWidth int) string {
-	borderColor := theme.BorderColor
+	var box lipgloss.Style
 	if m.focusPanel == 1 {
-		borderColor = theme.GreenColor
+		box = theme.LeftBorderPanel(theme.GreenColor).Width(contentWidth)
+	} else {
+		box = theme.SubtlePanel.Width(contentWidth)
 	}
-
-	box := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(borderColor).
-		Padding(0, 1).
-		Width(contentWidth)
 
 	header := lipgloss.NewStyle().Foreground(theme.GreenColor).Bold(true).
 		Render(fmt.Sprintf("UNSTAGED (%d)", len(m.info.Unstaged)))
@@ -369,11 +357,7 @@ func (m *GitModel) viewUnstaged(contentWidth int) string {
 }
 
 func (m *GitModel) viewCommitInput(contentWidth int) string {
-	box := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.GreenColor).
-		Padding(0, 1).
-		Width(contentWidth)
+	box := theme.LeftBorderPanel(theme.GreenColor).Width(contentWidth)
 
 	header := lipgloss.NewStyle().Foreground(theme.GreenColor).Bold(true).Render("COMMIT MESSAGE")
 	prompt := lipgloss.NewStyle().Foreground(theme.TextMuted).Render("> ")

@@ -10,14 +10,17 @@ import (
 )
 
 // AuthConfig holds the CLI auth and project config.
+// Mirrors the CLIConfig interface from apps/cli/src/lib/config.ts.
+// The `conf` npm package stores nested JSON objects.
 type AuthConfig struct {
 	Auth    AuthInfo    `json:"auth"`
-	Project ProjectInfo `json:"project"`
+	Context ProjectInfo `json:"context"`
 }
 
 // AuthInfo holds authentication details.
 type AuthInfo struct {
 	Token     string  `json:"token"`
+	TokenType string  `json:"tokenType"`
 	UserID    string  `json:"userId"`
 	Email     string  `json:"email"`
 	ExpiresAt float64 `json:"expiresAt"`
@@ -33,33 +36,35 @@ type ProjectInfo struct {
 	ProjectName   string `json:"projectName"`
 }
 
-// configDir returns the platform-specific config directory for ltf.
-func configDir() (string, error) {
+// configPath returns the full path to the ltf config file.
+// Priority: LTF_CONFIG_PATH env var > platform default.
+func configPath() (string, error) {
+	if p := os.Getenv("LTF_CONFIG_PATH"); p != "" {
+		return p, nil
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
 	switch runtime.GOOS {
 	case "darwin":
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return "", err
-		}
-		return filepath.Join(home, "Library", "Application Support", "ltf"), nil
+		return filepath.Join(home, "Library", "Application Support", "ltf-nodejs", "config.json"), nil
 	default:
-		// Linux and others: ~/.config/ltf
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return "", err
-		}
-		return filepath.Join(home, ".config", "ltf"), nil
+		return filepath.Join(home, ".config", "ltf-nodejs", "config.json"), nil
 	}
 }
 
 // LoadAuthConfig reads and parses the CLI config file.
+// Returns nil and an error if the file doesn't exist or can't be parsed.
 func LoadAuthConfig() (*AuthConfig, error) {
-	dir, err := configDir()
+	path, err := configPath()
 	if err != nil {
-		return nil, fmt.Errorf("config dir: %w", err)
+		return nil, fmt.Errorf("config path: %w", err)
 	}
 
-	data, err := os.ReadFile(filepath.Join(dir, "config.json"))
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("read config: %w", err)
 	}
@@ -77,8 +82,20 @@ func IsAuthenticated(cfg *AuthConfig) bool {
 	if cfg == nil || cfg.Auth.Token == "" {
 		return false
 	}
-	// ExpiresAt is in seconds since epoch
-	return time.Now().Unix() < int64(cfg.Auth.ExpiresAt)
+	if cfg.Auth.ExpiresAt == 0 {
+		// API tokens don't have expiry — treat as valid.
+		return true
+	}
+	// ExpiresAt is in milliseconds since epoch (JS Date.now()).
+	return time.Now().UnixMilli() < int64(cfg.Auth.ExpiresAt)
+}
+
+// HasProjectContext checks if a workspace and project are selected.
+func HasProjectContext(cfg *AuthConfig) bool {
+	if cfg == nil {
+		return false
+	}
+	return cfg.Context.WorkspaceID != "" && cfg.Context.ProjectID != ""
 }
 
 // GetToken returns the JWT token from the config.

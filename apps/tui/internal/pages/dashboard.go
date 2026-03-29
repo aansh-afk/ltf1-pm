@@ -109,36 +109,33 @@ func (m *DashboardModel) Update(msg tea.Msg) (PageModel, tea.Cmd) {
 }
 
 func (m *DashboardModel) View(width, height int) string {
-	headerStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(theme.AccentColor).
-		PaddingBottom(1)
+	sectionHeader := theme.SectionHeader
 
 	if m.loading && m.sprint == nil {
-		return headerStyle.Render("DASHBOARD") + "\n\n" +
+		return sectionHeader.Render("DASHBOARD") + "\n\n" +
 			lipgloss.NewStyle().Foreground(theme.TextSecondary).Render("  Loading workspace data...")
 	}
 
 	if m.err != nil {
-		return headerStyle.Render("DASHBOARD") + "\n\n" +
+		return sectionHeader.Render("DASHBOARD") + "\n\n" +
 			lipgloss.NewStyle().Foreground(theme.RedColor).Render("  Error: "+m.err.Error()) + "\n" +
 			lipgloss.NewStyle().Foreground(theme.TextMuted).Render("  Press r to retry")
 	}
 
-	contentWidth := m.width - 4
+	contentWidth := m.width - 6
 	if contentWidth < 60 {
 		contentWidth = 60
 	}
 
 	var b strings.Builder
-	b.WriteString(headerStyle.Render("DASHBOARD"))
-	b.WriteString("\n")
+	b.WriteString(sectionHeader.Render("DASHBOARD"))
+	b.WriteString("\n\n")
 
-	// ── ACTIVE SPRINT ──
+	// -- ACTIVE SPRINT --
 	b.WriteString(m.renderSprint(contentWidth))
-	b.WriteString("\n")
+	b.WriteString("\n\n")
 
-	// ── MY TASKS + WORKSPACE STATS (side by side) ──
+	// -- MY TASKS + WORKSPACE STATS (side by side) --
 	leftWidth := (contentWidth - 3) / 2
 	rightWidth := contentWidth - leftWidth - 3
 
@@ -146,18 +143,10 @@ func (m *DashboardModel) View(width, height int) string {
 	statsPanel := m.renderStats(rightWidth)
 
 	b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, tasksPanel, "   ", statsPanel))
-	b.WriteString("\n")
-
-	// ── AGENT ACTIVITY ──
-	b.WriteString(m.renderActivity(contentWidth))
-
-	// footer
 	b.WriteString("\n\n")
-	hintStyle := lipgloss.NewStyle().Foreground(theme.TextMuted)
-	keyStyle := lipgloss.NewStyle().Foreground(theme.AccentColor)
-	b.WriteString("  ")
-	b.WriteString(keyStyle.Render("r"))
-	b.WriteString(hintStyle.Render(" refresh"))
+
+	// -- AGENT ACTIVITY --
+	b.WriteString(m.renderActivity(contentWidth))
 
 	return b.String()
 }
@@ -173,17 +162,13 @@ func (m *DashboardModel) FullHelp() string {
 // --- render helpers ---
 
 func (m *DashboardModel) renderSprint(width int) string {
-	boxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.BorderColor).
-		Padding(0, 1).
-		Width(width)
+	panel := theme.ActivePanel.Width(width)
 
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(theme.AccentColor)
 	label := lipgloss.NewStyle().Foreground(theme.TextMuted)
 
 	if m.sprint == nil {
-		return boxStyle.Render(
+		return panel.Render(
 			titleStyle.Render("ACTIVE SPRINT") + "\n" +
 				label.Render("  No active sprint"),
 		)
@@ -208,15 +193,11 @@ func (m *DashboardModel) renderSprint(width int) string {
 	content.WriteString("\n")
 	content.WriteString(label.Render(fmt.Sprintf("  Ends in %s", daysLeft)))
 
-	return boxStyle.Render(content.String())
+	return panel.Render(content.String())
 }
 
 func (m *DashboardModel) renderMyTasks(width int) string {
-	boxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.BorderColor).
-		Padding(0, 1).
-		Width(width)
+	panel := theme.SubtlePanel.Width(width)
 
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(theme.AccentColor)
 
@@ -245,15 +226,11 @@ func (m *DashboardModel) renderMyTasks(width int) string {
 		content.WriteString(fmt.Sprintf("  %s %s %s\n", icon, lipgloss.NewStyle().Foreground(theme.TextColor).Width(titleW).Render(title), pri))
 	}
 
-	return boxStyle.Render(strings.TrimRight(content.String(), "\n"))
+	return panel.Render(strings.TrimRight(content.String(), "\n"))
 }
 
 func (m *DashboardModel) renderStats(width int) string {
-	boxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.BorderColor).
-		Padding(0, 1).
-		Width(width)
+	panel := theme.SubtlePanel.Width(width)
 
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(theme.AccentColor)
 	label := lipgloss.NewStyle().Foreground(theme.TextMuted).Width(14)
@@ -266,15 +243,11 @@ func (m *DashboardModel) renderStats(width int) string {
 	content.WriteString(fmt.Sprintf("  %s %s\n", label.Render("Members:"), val.Render(fmt.Sprintf("%d", m.members))))
 	content.WriteString(fmt.Sprintf("  %s %s", label.Render("Tasks:"), val.Render(fmt.Sprintf("%d", m.totalTasks))))
 
-	return boxStyle.Render(content.String())
+	return panel.Render(content.String())
 }
 
 func (m *DashboardModel) renderActivity(width int) string {
-	boxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.BorderColor).
-		Padding(0, 1).
-		Width(width)
+	panel := theme.LeftBorderPanel(theme.AmberColor).Width(width)
 
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(theme.AmberColor)
 
@@ -299,7 +272,7 @@ func (m *DashboardModel) renderActivity(width int) string {
 		content.WriteString(fmt.Sprintf("  %s %s  %s\n", icon, desc, ago))
 	}
 
-	return boxStyle.Render(strings.TrimRight(content.String(), "\n"))
+	return panel.Render(strings.TrimRight(content.String(), "\n"))
 }
 
 // --- data fetching ---

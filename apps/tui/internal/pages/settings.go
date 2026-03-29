@@ -130,7 +130,7 @@ func (m *settingsModel) View(width, height int) string {
 	}
 
 	triageContent := sectionTitle.Render("TRIAGE MODE") + "\n" + strings.Join(triageRows, "\n")
-	triageBox := theme.PanelStyle.Width(contentWidth).Render(triageContent)
+	triageBox := theme.SubtlePanel.Width(contentWidth).Render(triageContent)
 
 	// --- Connection Section ---
 	label := lipgloss.NewStyle().Foreground(theme.TextMuted).Width(14)
@@ -148,8 +148,8 @@ func (m *settingsModel) View(width, height int) string {
 		if m.config.Auth.Email != "" {
 			email = m.config.Auth.Email
 		}
-		if m.config.Project.WorkspaceName != "" {
-			workspace = m.config.Project.WorkspaceName
+		if m.config.Context.WorkspaceName != "" {
+			workspace = m.config.Context.WorkspaceName
 		}
 	}
 
@@ -161,7 +161,7 @@ func (m *settingsModel) View(width, height int) string {
 	}
 
 	connContent := sectionTitle.Render("CONNECTION") + "\n" + strings.Join(connLines, "\n")
-	connBox := theme.PanelStyle.Width(contentWidth).Render(connContent)
+	connBox := theme.SubtlePanel.Width(contentWidth).Render(connContent)
 
 	// footer hints
 	hintKey := lipgloss.NewStyle().Foreground(theme.AccentColor)

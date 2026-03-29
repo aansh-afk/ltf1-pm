@@ -51,7 +51,7 @@ func (s *StubPage) View(width, height int) string {
 		"",
 	)
 
-	style := theme.PanelStyle.
+	style := theme.SubtlePanel.
 		Width(width).
 		Height(height)
 

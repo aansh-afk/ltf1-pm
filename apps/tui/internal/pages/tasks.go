@@ -373,11 +373,7 @@ func (m *TasksModel) FullHelp() string {
 // --- render helpers ---
 
 func (m *TasksModel) renderFilters(width int) string {
-	boxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.BorderColor).
-		Padding(0, 1).
-		Width(width)
+	panel := theme.SubtlePanel.Width(width)
 
 	label := lipgloss.NewStyle().Foreground(theme.TextMuted)
 	active := lipgloss.NewStyle().Foreground(theme.AccentColor).Bold(true)
@@ -395,15 +391,11 @@ func (m *TasksModel) renderFilters(width int) string {
 		myDot,
 	)
 
-	return boxStyle.Render(content)
+	return panel.Render(content)
 }
 
 func (m *TasksModel) renderTaskList(width int) string {
-	boxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.BorderColor).
-		Padding(0, 1).
-		Width(width)
+	panel := theme.ActivePanel.Width(width)
 
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(theme.AccentColor)
 
@@ -413,7 +405,7 @@ func (m *TasksModel) renderTaskList(width int) string {
 
 	if len(m.filtered) == 0 {
 		content.WriteString(lipgloss.NewStyle().Foreground(theme.TextMuted).Render("  No tasks match filters"))
-		return boxStyle.Render(content.String())
+		return panel.Render(content.String())
 	}
 
 	// calculate visible window
@@ -459,7 +451,7 @@ func (m *TasksModel) renderTaskList(width int) string {
 		))
 	}
 
-	return boxStyle.Render(strings.TrimRight(content.String(), "\n"))
+	return panel.Render(strings.TrimRight(content.String(), "\n"))
 }
 
 func (m *TasksModel) renderDetail(width int) string {
@@ -468,11 +460,7 @@ func (m *TasksModel) renderDetail(width int) string {
 	}
 	t := m.filtered[m.cursor]
 
-	boxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.AccentColor).
-		Padding(0, 1).
-		Width(width)
+	panel := theme.FocusedPanel.Width(width)
 
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(theme.TextColor)
 	label := lipgloss.NewStyle().Foreground(theme.TextMuted).Width(14)
@@ -497,15 +485,11 @@ func (m *TasksModel) renderDetail(width int) string {
 	content.WriteString(fmt.Sprintf("\n  %s",
 		lipgloss.NewStyle().Foreground(theme.TextMuted).Render("Press esc to go back")))
 
-	return boxStyle.Render(content.String())
+	return panel.Render(content.String())
 }
 
 func (m *TasksModel) renderStatusPicker(width int) string {
-	boxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.AmberColor).
-		Padding(0, 1).
-		Width(40)
+	boxStyle := theme.LeftBorderPanel(theme.AmberColor).Width(40)
 
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(theme.AmberColor)
 
@@ -531,11 +515,7 @@ func (m *TasksModel) renderStatusPicker(width int) string {
 }
 
 func (m *TasksModel) renderDeleteConfirm() string {
-	style := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.RedColor).
-		Padding(0, 1).
-		Width(40)
+	style := theme.LeftBorderPanel(theme.RedColor).Width(40)
 
 	warn := lipgloss.NewStyle().Bold(true).Foreground(theme.RedColor)
 	hint := lipgloss.NewStyle().Foreground(theme.TextMuted)

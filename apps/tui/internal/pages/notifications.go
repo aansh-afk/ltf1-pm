@@ -191,7 +191,7 @@ func (m *notificationsModel) View(width, height int) string {
 		rows = append(rows, fmt.Sprintf("%s%s %s  %s  %s", cursor, dot, text, source, timeRendered))
 	}
 
-	listBox := theme.PanelStyle.Width(contentWidth).Render(strings.Join(rows, "\n"))
+	listBox := theme.SubtlePanel.Width(contentWidth).Render(strings.Join(rows, "\n"))
 
 	// footer hints
 	hintKey := lipgloss.NewStyle().Foreground(theme.AccentColor)

@@ -5,43 +5,40 @@ import (
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/theme"
 )
 
-// renderHeader renders the top header bar.
+// renderHeader renders the top header bar — single line, minimal.
 func (m Model) renderHeader() string {
 	logo := lipgloss.NewStyle().
 		Foreground(theme.AccentColor).
 		Bold(true).
 		Render("LTF1")
 
-	sep := theme.DimStyle.Render(" > ")
-
-	workspace := theme.TextColor
-	workspaceName := "No Workspace"
-	if m.config != nil && m.config.Project.WorkspaceName != "" {
-		workspaceName = m.config.Project.WorkspaceName
+	// Workspace/project in muted
+	ctx := ""
+	if m.config != nil {
+		ws := m.config.Context.WorkspaceName
+		proj := m.config.Context.ProjectName
+		if ws != "" && proj != "" {
+			ctx = lipgloss.NewStyle().Foreground(theme.TextMuted).Render("  " + ws + " / " + proj)
+		} else if ws != "" {
+			ctx = lipgloss.NewStyle().Foreground(theme.TextMuted).Render("  " + ws)
+		}
 	}
-	ws := lipgloss.NewStyle().Foreground(workspace).Render(workspaceName)
 
-	projectName := "No Project"
-	if m.config != nil && m.config.Project.ProjectName != "" {
-		projectName = m.config.Project.ProjectName
-	}
-	proj := lipgloss.NewStyle().Foreground(theme.TextSecondary).Render(projectName)
+	left := logo + ctx
 
-	left := logo + sep + ws + sep + proj
-
-	// Connection status dot
+	// Connection dot
 	var dot string
 	if m.connected {
-		dot = lipgloss.NewStyle().Foreground(theme.GreenColor).Render("●")
+		dot = lipgloss.NewStyle().Foreground(theme.GreenColor).Render("\u25cf") // ●
 	} else {
-		dot = lipgloss.NewStyle().Foreground(theme.RedColor).Render("●")
+		dot = lipgloss.NewStyle().Foreground(theme.RedColor).Render("\u25cf") // ●
 	}
-	right := dot + " "
+	right := dot
 
-	// Calculate padding
+	// Pad between left and right
 	leftWidth := lipgloss.Width(left)
 	rightWidth := lipgloss.Width(right)
-	gap := m.width - leftWidth - rightWidth
+	gap := m.width - leftWidth - rightWidth - 2 // -2 for padding
 	if gap < 0 {
 		gap = 0
 	}

@@ -163,7 +163,7 @@ func (m *projectsModel) View(width, height int) string {
 		rows = append(rows, fmt.Sprintf("%s%s %s %s %s %s", cursor, diamond, name, tasks, sprint, repo))
 	}
 
-	listBox := theme.PanelStyle.Width(contentWidth).Render(strings.Join(rows, "\n"))
+	listBox := theme.SubtlePanel.Width(contentWidth).Render(strings.Join(rows, "\n"))
 
 	parts := []string{"", header, "", listBox}
 
@@ -189,12 +189,7 @@ func (m *projectsModel) View(width, height int) string {
 			label.Render("Linked repo:"), val.Render(repoVal),
 		)
 
-		infoBox := lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(theme.BorderSubtle).
-			Padding(0, 1).
-			Width(contentWidth).
-			Render(info)
+		infoBox := theme.SubtlePanel.Width(contentWidth).Render(info)
 
 		parts = append(parts, "", infoBox)
 	}

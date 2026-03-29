@@ -6,14 +6,16 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
-// Backgrounds
+// Background layering: #000000 (base) → #0A0A0A (sidebar) → #0D0D0D (content) → #1A1A1A (interactive)
 var (
 	BgColor      = lipgloss.Color("#000000")
+	SidebarBg    = lipgloss.Color("#0A0A0A")
 	SurfaceColor = lipgloss.Color("#111111")
+	ContentBg    = lipgloss.Color("#0D0D0D")
 	CardColor    = lipgloss.Color("#1A1A1A")
 )
 
-// Text
+// Text hierarchy
 var (
 	TextColor     = lipgloss.Color("#F9FAFB")
 	TextSecondary = lipgloss.Color("#9CA3AF")
@@ -21,11 +23,12 @@ var (
 	TextDim       = lipgloss.Color("#555555")
 )
 
-// Borders
+// Borders — used sparingly
 var (
 	BorderColor  = lipgloss.Color("#2E2E35")
 	BorderFocus  = lipgloss.Color("#6366F1")
 	BorderSubtle = lipgloss.Color("#1F1F23")
+	PanelBorder  = lipgloss.Color("#333333")
 )
 
 // Accent
@@ -59,44 +62,74 @@ var PriorityColors = map[string]color.Color{
 	"no_priority": lipgloss.Color("#555555"),
 }
 
-// Reusable styles
-var (
-	PanelStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(BorderColor).
-			Padding(0, 1)
+// --- Reusable styles ---
 
-	FocusedPanelStyle = lipgloss.NewStyle().
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(BorderFocus).
-				Padding(0, 1)
+// SectionHeader — bold, accent colored, no border
+var SectionHeader = lipgloss.NewStyle().
+	Bold(true).
+	Foreground(AccentColor).
+	MarginBottom(1)
 
-	HeaderStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(TextColor)
+// SubtlePanel — left border accent instead of full box
+var SubtlePanel = lipgloss.NewStyle().
+	Border(lipgloss.ThickBorder(), false, false, false, true).
+	BorderForeground(PanelBorder).
+	PaddingLeft(1).
+	PaddingRight(1).
+	Background(ContentBg)
 
-	LabelStyle = lipgloss.NewStyle().
-			Foreground(TextMuted)
+// ActivePanel — left border in accent color
+var ActivePanel = lipgloss.NewStyle().
+	Border(lipgloss.ThickBorder(), false, false, false, true).
+	BorderForeground(AccentColor).
+	PaddingLeft(1).
+	PaddingRight(1).
+	Background(ContentBg)
 
-	AccentStyle = lipgloss.NewStyle().
-			Foreground(AccentColor).
-			Bold(true)
+// FocusedPanel — left border in specific accent for focused interactive elements
+var FocusedPanel = lipgloss.NewStyle().
+	Border(lipgloss.ThickBorder(), false, false, false, true).
+	BorderForeground(BorderFocus).
+	PaddingLeft(1).
+	PaddingRight(1).
+	Background(ContentBg)
 
-	MutedStyle = lipgloss.NewStyle().
-			Foreground(TextMuted)
+// StatusBarStyle for the bottom bar
+var StatusBarStyle = lipgloss.NewStyle().
+	Background(SurfaceColor).
+	Foreground(TextMuted).
+	Padding(0, 1)
 
-	DimStyle = lipgloss.NewStyle().
-			Foreground(TextDim)
+// Legacy PanelStyle — kept for compatibility but now uses left-border accent
+var PanelStyle = SubtlePanel
 
-	ErrorStyle = lipgloss.NewStyle().
-			Foreground(RedColor)
+var FocusedPanelStyle = ActivePanel
 
-	SuccessStyle = lipgloss.NewStyle().
-			Foreground(GreenColor)
+var HeaderStyle = lipgloss.NewStyle().
+	Bold(true).
+	Foreground(TextColor)
 
-	WarningStyle = lipgloss.NewStyle().
-			Foreground(AmberColor)
-)
+var LabelStyle = lipgloss.NewStyle().
+	Foreground(TextMuted)
+
+var AccentStyle = lipgloss.NewStyle().
+	Foreground(AccentColor).
+	Bold(true)
+
+var MutedStyle = lipgloss.NewStyle().
+	Foreground(TextMuted)
+
+var DimStyle = lipgloss.NewStyle().
+	Foreground(TextDim)
+
+var ErrorStyle = lipgloss.NewStyle().
+	Foreground(RedColor)
+
+var SuccessStyle = lipgloss.NewStyle().
+	Foreground(GreenColor)
+
+var WarningStyle = lipgloss.NewStyle().
+	Foreground(AmberColor)
 
 // StatusStyle returns a styled string for a given task status.
 func StatusStyle(status string) lipgloss.Style {
@@ -114,4 +147,14 @@ func PriorityStyle(priority string) lipgloss.Style {
 		c = TextDim
 	}
 	return lipgloss.NewStyle().Foreground(c)
+}
+
+// LeftBorderPanel creates a panel with a colored left border.
+func LeftBorderPanel(borderColor color.Color) lipgloss.Style {
+	return lipgloss.NewStyle().
+		Border(lipgloss.ThickBorder(), false, false, false, true).
+		BorderForeground(borderColor).
+		PaddingLeft(1).
+		PaddingRight(1).
+		Background(ContentBg)
 }

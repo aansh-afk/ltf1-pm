@@ -10,25 +10,18 @@ import (
 )
 
 func main() {
-	// Load auth config (non-fatal if missing)
-	config, err := api.LoadAuthConfig()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "warning: could not load auth config: %v\n", err)
-		fmt.Fprintf(os.Stderr, "Run 'ltf auth login' to authenticate.\n")
-	}
+	// Load auth config (non-fatal — TUI shows login screen if missing)
+	config, _ := api.LoadAuthConfig()
 
-	// Create Convex client
+	// Create Convex client only if authenticated
 	var client *api.ConvexClient
 	if config != nil && api.IsAuthenticated(config) {
 		client = api.NewClient("", api.GetToken(config))
-	} else {
-		client = api.NewClient("", "")
 	}
 
-	// Create the app model
+	// Create the app model — handles nil client/config with login screen
 	model := app.New(client, config)
 
-	// Run the program
 	p := tea.NewProgram(model)
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

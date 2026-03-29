@@ -197,11 +197,7 @@ func (m *AgentModel) viewStats(contentWidth int) string {
 	amber := lipgloss.NewStyle().Foreground(theme.AmberColor)
 	amberBold := amber.Bold(true)
 
-	statsBox := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(theme.AmberColor).
-		Padding(0, 1).
-		Width(contentWidth)
+	statsBox := theme.LeftBorderPanel(theme.AmberColor).Width(contentWidth)
 
 	pendingLabel := lipgloss.NewStyle().Foreground(theme.TextMuted).Render("Pending: ")
 	pendingVal := amberBold.Render(fmt.Sprintf("%d", m.stats.pending))
@@ -220,16 +216,12 @@ func (m *AgentModel) viewStats(contentWidth int) string {
 }
 
 func (m *AgentModel) viewQueue(contentWidth int) string {
-	borderColor := theme.BorderColor
+	var box lipgloss.Style
 	if m.focusPanel == 0 {
-		borderColor = theme.AmberColor
+		box = theme.LeftBorderPanel(theme.AmberColor).Width(contentWidth)
+	} else {
+		box = theme.SubtlePanel.Width(contentWidth)
 	}
-
-	box := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(borderColor).
-		Padding(0, 1).
-		Width(contentWidth)
 
 	header := lipgloss.NewStyle().Foreground(theme.AmberColor).Bold(true).
 		Render(fmt.Sprintf("TRIAGE QUEUE (%d)", len(m.queue)))
@@ -300,16 +292,12 @@ func (m *AgentModel) viewQueue(contentWidth int) string {
 }
 
 func (m *AgentModel) viewActivity(contentWidth int) string {
-	borderColor := theme.BorderColor
+	var box lipgloss.Style
 	if m.focusPanel == 1 {
-		borderColor = theme.AmberColor
+		box = theme.LeftBorderPanel(theme.AmberColor).Width(contentWidth)
+	} else {
+		box = theme.SubtlePanel.Width(contentWidth)
 	}
-
-	box := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(borderColor).
-		Padding(0, 1).
-		Width(contentWidth)
 
 	header := lipgloss.NewStyle().Foreground(theme.AmberColor).Bold(true).
 		Render("RECENT ACTIVITY")
