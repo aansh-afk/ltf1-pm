@@ -23,10 +23,10 @@ import (
 type LoginState int
 
 const (
-	LoginIdle       LoginState = iota // Show welcome, waiting for Enter
-	LoginWaiting                      // Browser opened, waiting for callback
-	LoginSuccess                      // Auth received, transitioning
-	LoginError                        // Auth failed
+	LoginIdle    LoginState = iota
+	LoginWaiting
+	LoginSuccess
+	LoginError
 )
 
 // AuthResult is sent when OAuth callback is received
@@ -38,18 +38,49 @@ type AuthResult struct {
 const authPort = 9876
 const webAppURL = "https://ltf1.dev"
 
-// ASCII art logo
-var logo = `
-  ██       ████████ ███████  ██
-  ██          ██    ██       ███
-  ██          ██    █████     ██
-  ██          ██    ██        ██
-  ███████     ██    ██        ██
+// World map ASCII art
+var worldMap = `
+            . _..::__:  ,-"-"._       |7       ,     _,.__
+    _.___ _ _<_>'   _googl.ern  .'    ||  _._'_     _._   _
+>.{     " " ,-::.._/..--"";_   |, _2(17)8-2_|8)1.  _2(googl..ern
+_googl_ern_/..googl  .- .-. (.googl  '\googl  _,googl  _.googl
+/googl.,googl  ,googl  (\googl  \googl  |googl  |googl
 `
 
-// renderLoginScreen renders the full login screen
+// Simplified clean world map
+var worldMapClean = `
+                  ,.   ,,  .       .                           .
+             ,,   '*,  .'*,   ,   ,                          .
+        _,  / '-,,   ''., '*'     '                     .
+    .-'' '-, '-.  '-.    '. *.   ,.       .    .
+  ,'  _,,..  '-.'.   '-.   '. ,:'    *        .
+ / ,-'     '-.  '-.    '-.  ,*'  .        .        .
+| /           '.   '.    .** .        .
+ \|     __      '.   *. .*       .            .
+  \   ,'  '-.     *. .**    .         .
+   | /       '.   .***' .        .              .
+   |/         |  .**       .            .
+    \         / .**   .          .                  .
+     '-.___.-' **         .             .
+              **    .           .                .
+`
+
+// Clean LTF1 logo
+var logo = `
+ ██       ████████ ███████ ██
+ ██          ██    ██      ██
+ ██          ██    █████   ██
+ ██          ██    ██      ██
+ ███████     ██    ██      ██`
+
+// renderLoginScreen renders the full login screen with dark background
 func renderLoginScreen(state LoginState, errMsg string, width, height int) string {
-	// Logo
+	// World map in very dim color as background texture
+	mapStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#1A1A1A"))
+	renderedMap := mapStyle.Render(worldMapClean)
+
+	// Logo in bold white
 	logoStyle := lipgloss.NewStyle().
 		Foreground(theme.TextPrimary).
 		Bold(true)
@@ -60,6 +91,11 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 		Foreground(theme.TextMuted).
 		Render("Legion Task Framework")
 
+	// Version
+	ver := lipgloss.NewStyle().
+		Foreground(theme.TextDim).
+		Render("v0.8.0")
+
 	// Status message based on state
 	var statusMsg string
 	switch state {
@@ -67,11 +103,13 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 		enter := lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true).Render("[Enter]")
 		statusMsg = enter + lipgloss.NewStyle().Foreground(theme.TextSecondary).Render(" to authenticate via browser")
 	case LoginWaiting:
-		statusMsg = lipgloss.NewStyle().Foreground(theme.Amber).Render(theme.SymDot+" Waiting for browser authentication...")
+		statusMsg = lipgloss.NewStyle().Foreground(theme.Amber).Render(theme.SymDot + " Opening browser... waiting for authentication")
 	case LoginSuccess:
-		statusMsg = lipgloss.NewStyle().Foreground(theme.Green).Render(theme.SymCheck+" Authenticated successfully")
+		statusMsg = lipgloss.NewStyle().Foreground(theme.Green).Render(theme.SymCheck + " Authenticated successfully")
 	case LoginError:
-		statusMsg = lipgloss.NewStyle().Foreground(theme.Red).Render(theme.SymCross+" "+errMsg)
+		errText := lipgloss.NewStyle().Foreground(theme.Red).Render(theme.SymCross + " " + errMsg)
+		retry := lipgloss.NewStyle().Foreground(theme.TextMuted).Render("  Press [Enter] to retry")
+		statusMsg = errText + "\n" + retry
 	}
 
 	// Quit hint
@@ -79,37 +117,44 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 		Foreground(theme.TextDim).
 		Render("[q] quit")
 
-	// Compose vertically
+	// Compose content vertically
 	content := strings.Join([]string{
+		"",
+		renderedMap,
+		"",
 		renderedLogo,
 		"",
-		subtitle,
+		subtitle + "  " + ver,
 		"",
 		"",
 		statusMsg,
 		"",
-		"",
 		quitHint,
 	}, "\n")
 
-	// Center everything
-	return lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, content)
+	// Center content in the full terminal
+	centered := lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, content)
+
+	// Fill entire screen with dark background
+	fullScreen := lipgloss.NewStyle().
+		Width(width).
+		Height(height).
+		Background(theme.BgBase)
+
+	return fullScreen.Render(centered)
 }
 
 // startOAuthFlow generates CSRF state, opens browser, starts callback server
 func startOAuthFlow() tea.Cmd {
 	return func() tea.Msg {
-		// Generate CSRF state
 		stateBytes := make([]byte, 32)
 		if _, err := rand.Read(stateBytes); err != nil {
 			return AuthResult{Err: fmt.Errorf("failed to generate state: %w", err)}
 		}
 		csrfState := hex.EncodeToString(stateBytes)
 
-		// Result channel
 		resultCh := make(chan AuthResult, 1)
 
-		// Start callback server
 		mux := http.NewServeMux()
 		server := &http.Server{
 			Addr:    fmt.Sprintf(":%d", authPort),
@@ -119,7 +164,6 @@ func startOAuthFlow() tea.Cmd {
 		mux.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
 			q := r.URL.Query()
 
-			// Verify CSRF
 			if q.Get("state") != csrfState {
 				w.WriteHeader(403)
 				fmt.Fprint(w, "Invalid state")
@@ -141,7 +185,6 @@ func startOAuthFlow() tea.Cmd {
 				return
 			}
 
-			// Build config
 			config := &api.AuthConfig{
 				Auth: api.AuthInfo{
 					Token:     token,
@@ -153,7 +196,6 @@ func startOAuthFlow() tea.Cmd {
 				},
 			}
 
-			// Save to config file
 			if err := saveAuthConfig(config); err != nil {
 				w.WriteHeader(500)
 				fmt.Fprint(w, "Failed to save config")
@@ -161,25 +203,23 @@ func startOAuthFlow() tea.Cmd {
 				return
 			}
 
-			// Success page
+			// Success HTML page
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(200)
 			fmt.Fprint(w, `<!DOCTYPE html><html><head><title>LTF1</title>
-				<style>body{background:#0A0A0A;color:#F9FAFB;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
-				.card{text-align:center;padding:2rem}.check{color:#22C55E;font-size:3rem}h1{margin:1rem 0 .5rem}p{color:#9CA3AF}</style></head>
-				<body><div class="card"><div class="check">`+theme.SymCheck+`</div><h1>Authenticated</h1><p>You can close this window and return to the terminal.</p></div></body></html>`)
+				<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0A0A0A;color:#F9FAFB;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh}
+				.card{text-align:center;padding:3rem}.icon{color:#22C55E;font-size:4rem;margin-bottom:1rem}h1{font-size:1.5rem;margin-bottom:.5rem}p{color:#9CA3AF;font-size:.875rem}</style></head>
+				<body><div class="card"><div class="icon">`+theme.SymCheck+`</div><h1>Authenticated</h1><p>Return to your terminal.</p></div></body></html>`)
 
 			resultCh <- AuthResult{Config: config}
 		})
 
-		// Start server in background
 		go func() {
 			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				resultCh <- AuthResult{Err: fmt.Errorf("callback server: %w", err)}
 			}
 		}()
 
-		// Build auth URL
 		callbackURL := fmt.Sprintf("http://localhost:%d/callback", authPort)
 		authURL := fmt.Sprintf("%s/cli-auth?state=%s&redirectUri=%s",
 			webAppURL,
@@ -187,10 +227,8 @@ func startOAuthFlow() tea.Cmd {
 			url.QueryEscape(callbackURL),
 		)
 
-		// Open browser
 		openBrowser(authURL)
 
-		// Wait for result (with timeout)
 		select {
 		case result := <-resultCh:
 			server.Close()
@@ -202,14 +240,12 @@ func startOAuthFlow() tea.Cmd {
 	}
 }
 
-// saveAuthConfig writes the config to disk
 func saveAuthConfig(config *api.AuthConfig) error {
 	path := api.GetConfigPath()
 	if path == "" {
 		return fmt.Errorf("could not determine config path")
 	}
 
-	// Ensure directory exists
 	dir := path[:strings.LastIndex(path, "/")]
 	os.MkdirAll(dir, 0755)
 
@@ -220,7 +256,6 @@ func saveAuthConfig(config *api.AuthConfig) error {
 	return os.WriteFile(path, data, 0600)
 }
 
-// openBrowser opens a URL in the default browser
 func openBrowser(url string) {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
