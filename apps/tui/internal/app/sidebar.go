@@ -9,30 +9,28 @@ import (
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/theme"
 )
 
-const sidebarWidth = 14
+const sidebarWidth = 16
 
 type navItem struct {
-	icon string
-	key  string
 	name string
 	page pages.Page
 }
 
+// Clean nav items — no icons, just text like OpenCode's sidebar
 var navItems = []navItem{
-	{icon: "\u25cb", key: "d", name: "Dashboard", page: pages.PageDashboard},  // ○
-	{icon: "\u2610", key: "t", name: "Tasks", page: pages.PageTasks},          // ☐
-	{icon: "\u27f3", key: "s", name: "Sprint", page: pages.PageSprint},        // ⟳
-	{icon: "\u26a1", key: "a", name: "Agent", page: pages.PageAgent},          // ⚡
-	{icon: "\u2726", key: "k", name: "Skills", page: pages.PageSkills},        // ✦
-	{icon: "\u2387", key: "g", name: "Git", page: pages.PageGit},              // ⎇
-	{icon: "\u25a0", key: "p", name: "Projects", page: pages.PageProjects},    // ■
-	{icon: "\u2315", key: "/", name: "Search", page: pages.PageSearch},        // ⌕
-	{icon: "\u2022", key: "n", name: "Notifs", page: pages.PageNotifications}, // •
-	{icon: "\u2699", key: ",", name: "Settings", page: pages.PageSettings},    // ⚙
-	{icon: "?", key: "?", name: "Help", page: pages.PageHelp},
+	{name: "Dashboard", page: pages.PageDashboard},
+	{name: "Tasks", page: pages.PageTasks},
+	{name: "Sprint", page: pages.PageSprint},
+	{name: "Agent", page: pages.PageAgent},
+	{name: "Skills", page: pages.PageSkills},
+	{name: "Git", page: pages.PageGit},
+	{name: "Projects", page: pages.PageProjects},
+	{name: "Search", page: pages.PageSearch},
+	{name: "Notifs", page: pages.PageNotifications},
+	{name: "Settings", page: pages.PageSettings},
 }
 
-// renderSidebar renders the left navigation panel.
+// renderSidebar renders the left navigation panel — clean text, no icons.
 func (m Model) renderSidebar(height int) string {
 	var b strings.Builder
 
@@ -42,40 +40,44 @@ func (m Model) renderSidebar(height int) string {
 		active := item.page == m.page
 
 		if active {
-			// Active: left indicator + accent text
-			indicator := lipgloss.NewStyle().
-				Foreground(theme.AccentColor).
-				Render("\u258c") // ▌
+			// Active: bold white text
 			label := lipgloss.NewStyle().
-				Foreground(theme.AccentColor).
+				Foreground(theme.TextColor).
 				Bold(true).
-				Render(fmt.Sprintf("%s %s", item.icon, item.name))
-			b.WriteString(indicator + label)
+				Render(fmt.Sprintf("  %s", item.name))
+			b.WriteString(label)
 		} else {
-			// Inactive: dim text, no indicator
+			// Inactive: dim gray text
 			label := lipgloss.NewStyle().
 				Foreground(theme.TextDim).
-				Render(fmt.Sprintf("  %s %s", item.icon, item.name))
+				Render(fmt.Sprintf("  %s", item.name))
 			b.WriteString(label)
 		}
 
 		b.WriteString("\n")
 	}
 
-	// Help hint at bottom
-	remaining := height - len(navItems) - 2 // 1 for top padding, 1 for hint
+	// Fill remaining space
+	remaining := height - len(navItems) - 3
 	if remaining > 0 {
 		b.WriteString(strings.Repeat("\n", remaining))
 	}
-	hint := lipgloss.NewStyle().
+
+	// Version at bottom like OpenCode
+	version := lipgloss.NewStyle().
 		Foreground(theme.TextDim).
-		Render("  ? help")
-	b.WriteString(hint)
+		Render("  LTF1 v0.8.0")
+	b.WriteString(version + "\n")
 
 	style := lipgloss.NewStyle().
 		Width(sidebarWidth).
 		Height(height).
-		Background(theme.SidebarBg)
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderRight(true).
+		BorderTop(false).
+		BorderBottom(false).
+		BorderLeft(false).
+		BorderForeground(theme.BorderSubtle)
 
 	return style.Render(b.String())
 }

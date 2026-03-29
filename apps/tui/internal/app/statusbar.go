@@ -12,61 +12,44 @@ import (
 
 const version = "v0.8.0"
 
-// renderStatusBar renders the bottom status bar — OpenCode style.
+// renderStatusBar — clean bottom bar like OpenCode: path:branch left, version right.
 func (m Model) renderStatusBar() string {
-	muted := lipgloss.NewStyle().Foreground(theme.TextDim)
+	dim := lipgloss.NewStyle().Foreground(theme.TextDim)
 
 	// Left: path:branch
 	pathStr := shortPath()
 	branch := gitBranch()
-	left := muted.Render(" " + pathStr)
+	left := dim.Render(pathStr)
 	if branch != "" {
-		left += muted.Render(":" + branch)
+		left += dim.Render(":" + branch)
 	}
 
-	// Center: page shortcuts
-	center := muted.Render(m.currentPage().ShortHelp())
+	// Right: bullet + LTF1 version
+	right := lipgloss.NewStyle().Foreground(theme.AccentColor).Render("• ") +
+		dim.Render("LTF1 " + version)
 
-	// Right: version
-	right := muted.Render("LTF1 " + version + " ")
-
-	// Calculate spacing
+	// Spacing
 	leftW := lipgloss.Width(left)
-	centerW := lipgloss.Width(center)
 	rightW := lipgloss.Width(right)
-
-	totalContent := leftW + centerW + rightW
-	totalGap := m.width - totalContent
-	if totalGap < 2 {
-		// Not enough space — just left + right
-		gap := m.width - leftW - rightW
-		if gap < 0 {
-			gap = 0
-		}
-		bar := left + lipgloss.NewStyle().Width(gap).Render("") + right
-		return lipgloss.NewStyle().
-			Background(theme.SurfaceColor).
-			Width(m.width).
-			Render(bar)
+	gap := m.width - leftW - rightW - 2
+	if gap < 0 {
+		gap = 0
 	}
 
-	gapLeft := totalGap / 2
-	gapRight := totalGap - gapLeft
-
-	bar := left +
-		lipgloss.NewStyle().Width(gapLeft).Render("") +
-		center +
-		lipgloss.NewStyle().Width(gapRight).Render("") +
-		right
+	bar := " " + left + lipgloss.NewStyle().Width(gap).Render("") + right + " "
 
 	style := lipgloss.NewStyle().
-		Background(theme.SurfaceColor).
-		Width(m.width)
+		Width(m.width).
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderTop(true).
+		BorderBottom(false).
+		BorderLeft(false).
+		BorderRight(false).
+		BorderForeground(theme.BorderSubtle)
 
 	return style.Render(bar)
 }
 
-// shortPath returns a short working directory path.
 func shortPath() string {
 	dir, err := os.Getwd()
 	if err != nil {
@@ -76,7 +59,6 @@ func shortPath() string {
 	if err == nil && strings.HasPrefix(dir, home) {
 		dir = "~" + dir[len(home):]
 	}
-	// Shorten to last 2 components
 	parts := strings.Split(dir, string(filepath.Separator))
 	if len(parts) > 3 {
 		dir = "~/" + strings.Join(parts[len(parts)-2:], "/")
@@ -84,7 +66,6 @@ func shortPath() string {
 	return dir
 }
 
-// gitBranch returns the current git branch, or empty string.
 func gitBranch() string {
 	cmd := exec.Command("git", "branch", "--show-current")
 	out, err := cmd.Output()

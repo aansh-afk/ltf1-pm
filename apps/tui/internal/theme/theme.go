@@ -6,28 +6,28 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
-// Background layering: #000000 (base) → #0A0A0A (sidebar) → #0D0D0D (content) → #1A1A1A (interactive)
+// ONE background everywhere. No layering. Clean like OpenCode.
 var (
-	BgColor      = lipgloss.Color("#000000")
-	SidebarBg    = lipgloss.Color("#0A0A0A")
+	BgColor      = lipgloss.Color("#111111")
+	SidebarBg    = lipgloss.Color("#111111") // same as bg — no separation
 	SurfaceColor = lipgloss.Color("#111111")
-	ContentBg    = lipgloss.Color("#0D0D0D")
-	CardColor    = lipgloss.Color("#1A1A1A")
+	ContentBg    = lipgloss.Color("#111111")
+	CardColor    = lipgloss.Color("#111111")
 )
 
-// Text hierarchy
+// Text hierarchy — this is how we create structure, not backgrounds
 var (
-	TextColor     = lipgloss.Color("#F9FAFB")
-	TextSecondary = lipgloss.Color("#9CA3AF")
-	TextMuted     = lipgloss.Color("#6B7280")
-	TextDim       = lipgloss.Color("#555555")
+	TextColor     = lipgloss.Color("#F9FAFB") // bold headers, primary content
+	TextSecondary = lipgloss.Color("#9CA3AF") // body text, values
+	TextMuted     = lipgloss.Color("#6B7280") // metadata, timestamps
+	TextDim       = lipgloss.Color("#444444") // very subtle, dividers
 )
 
-// Borders — used sparingly
+// Borders — used very sparingly
 var (
-	BorderColor  = lipgloss.Color("#2E2E35")
+	BorderColor  = lipgloss.Color("#333333")
 	BorderFocus  = lipgloss.Color("#6366F1")
-	BorderSubtle = lipgloss.Color("#1F1F23")
+	BorderSubtle = lipgloss.Color("#222222")
 	PanelBorder  = lipgloss.Color("#333333")
 )
 
@@ -64,45 +64,40 @@ var PriorityColors = map[string]color.Color{
 
 // --- Reusable styles ---
 
-// SectionHeader — bold, accent colored, no border
+// SectionHeader — bold white, clean
 var SectionHeader = lipgloss.NewStyle().
 	Bold(true).
-	Foreground(AccentColor).
+	Foreground(TextColor).
 	MarginBottom(1)
 
-// SubtlePanel — left border accent instead of full box
+// SubtlePanel — left border only, NO background
 var SubtlePanel = lipgloss.NewStyle().
 	Border(lipgloss.ThickBorder(), false, false, false, true).
 	BorderForeground(PanelBorder).
 	PaddingLeft(1).
-	PaddingRight(1).
-	Background(ContentBg)
+	PaddingRight(1)
 
-// ActivePanel — left border in accent color
+// ActivePanel — left border in accent
 var ActivePanel = lipgloss.NewStyle().
 	Border(lipgloss.ThickBorder(), false, false, false, true).
 	BorderForeground(AccentColor).
 	PaddingLeft(1).
-	PaddingRight(1).
-	Background(ContentBg)
+	PaddingRight(1)
 
-// FocusedPanel — left border in specific accent for focused interactive elements
+// FocusedPanel
 var FocusedPanel = lipgloss.NewStyle().
 	Border(lipgloss.ThickBorder(), false, false, false, true).
 	BorderForeground(BorderFocus).
 	PaddingLeft(1).
-	PaddingRight(1).
-	Background(ContentBg)
+	PaddingRight(1)
 
-// StatusBarStyle for the bottom bar
+// StatusBarStyle — subtle bottom bar
 var StatusBarStyle = lipgloss.NewStyle().
-	Background(SurfaceColor).
-	Foreground(TextMuted).
+	Foreground(TextDim).
 	Padding(0, 1)
 
-// Legacy PanelStyle — kept for compatibility but now uses left-border accent
+// Legacy aliases
 var PanelStyle = SubtlePanel
-
 var FocusedPanelStyle = ActivePanel
 
 var HeaderStyle = lipgloss.NewStyle().
@@ -149,12 +144,11 @@ func PriorityStyle(priority string) lipgloss.Style {
 	return lipgloss.NewStyle().Foreground(c)
 }
 
-// LeftBorderPanel creates a panel with a colored left border.
+// LeftBorderPanel creates a panel with a colored left border. No background.
 func LeftBorderPanel(borderColor color.Color) lipgloss.Style {
 	return lipgloss.NewStyle().
 		Border(lipgloss.ThickBorder(), false, false, false, true).
 		BorderForeground(borderColor).
 		PaddingLeft(1).
-		PaddingRight(1).
-		Background(ContentBg)
+		PaddingRight(1)
 }
