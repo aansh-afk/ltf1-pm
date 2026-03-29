@@ -19,13 +19,15 @@ type tasksDataMsg struct {
 type tasksPage struct {
 	width, height int
 	client        *api.ConvexClient
+	workspaceID   string
+	projectID     string
 	tasks         []api.Task
 	cursor        int
 	loading       bool
 }
 
-func NewTasksPage(client *api.ConvexClient) PageModel {
-	return &tasksPage{client: client, loading: true}
+func NewTasksPage(client *api.ConvexClient, workspaceID, projectID string) PageModel {
+	return &tasksPage{client: client, workspaceID: workspaceID, projectID: projectID, loading: true}
 }
 
 func (p *tasksPage) Init() tea.Cmd {
@@ -37,7 +39,7 @@ func (p *tasksPage) Init() tea.Cmd {
 
 func (p *tasksPage) fetchTasks() tea.Cmd {
 	return func() tea.Msg {
-		raw, err := p.client.Query("tasks:list", nil)
+		raw, err := p.client.Query("tasks/queries:getMyTasks", map[string]interface{}{})
 		if err != nil {
 			return tasksDataMsg{Err: err}
 		}

@@ -19,13 +19,15 @@ type skillsDataMsg struct {
 type skillsPage struct {
 	width, height int
 	client        *api.ConvexClient
+	workspaceID   string
+	projectID     string
 	skills        []api.Skill
 	cursor        int
 	loading       bool
 }
 
-func NewSkillsPage(client *api.ConvexClient) PageModel {
-	return &skillsPage{client: client, loading: true}
+func NewSkillsPage(client *api.ConvexClient, workspaceID, projectID string) PageModel {
+	return &skillsPage{client: client, workspaceID: workspaceID, projectID: projectID, loading: true}
 }
 
 func (p *skillsPage) Init() tea.Cmd {
@@ -37,7 +39,7 @@ func (p *skillsPage) Init() tea.Cmd {
 
 func (p *skillsPage) fetchSkills() tea.Cmd {
 	return func() tea.Msg {
-		raw, err := p.client.Query("skills:list", nil)
+		raw, err := p.client.Query("skills/queries:getWorkspaceSkills", map[string]interface{}{"workspaceId": p.workspaceID})
 		if err != nil {
 			return skillsDataMsg{Err: err}
 		}

@@ -50,16 +50,23 @@ func NewModel(client *api.ConvexClient, config *api.AuthConfig) Model {
 		connected:  connected,
 	}
 
-	// Register all pages
-	m.pageModels[pages.PageDashboard] = pages.NewDashboardPage(client)
-	m.pageModels[pages.PageTasks] = pages.NewTasksPage(client)
-	m.pageModels[pages.PageSprint] = pages.NewSprintPage(client)
-	m.pageModels[pages.PageAgent] = pages.NewAgentPage(client)
+	// Get workspace/project IDs from config
+	var wsID, projID string
+	if config != nil {
+		wsID = config.Context.WorkspaceID
+		projID = config.Context.ProjectID
+	}
+
+	// Register all pages with workspace/project context
+	m.pageModels[pages.PageDashboard] = pages.NewDashboardPage(client, wsID, projID)
+	m.pageModels[pages.PageTasks] = pages.NewTasksPage(client, wsID, projID)
+	m.pageModels[pages.PageSprint] = pages.NewSprintPage(client, wsID, projID)
+	m.pageModels[pages.PageAgent] = pages.NewAgentPage(client, wsID, projID)
 	m.pageModels[pages.PageGit] = pages.NewGitPage()
-	m.pageModels[pages.PageProjects] = pages.NewProjectsPage(client)
-	m.pageModels[pages.PageSkills] = pages.NewSkillsPage(client)
+	m.pageModels[pages.PageProjects] = pages.NewProjectsPage(client, wsID, projID)
+	m.pageModels[pages.PageSkills] = pages.NewSkillsPage(client, wsID, projID)
 	m.pageModels[pages.PageSearch] = pages.NewSearchPage(client)
-	m.pageModels[pages.PageNotifications] = pages.NewNotificationsPage(client)
+	m.pageModels[pages.PageNotifications] = pages.NewNotificationsPage(client, wsID, projID)
 	m.pageModels[pages.PageSettings] = pages.NewSettingsPage(config)
 	m.pageModels[pages.PageHelp] = pages.NewHelpPage()
 

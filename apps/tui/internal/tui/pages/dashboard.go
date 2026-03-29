@@ -23,12 +23,14 @@ type dashboardDataMsg dashboardData
 type dashboardPage struct {
 	width, height int
 	client        *api.ConvexClient
+	workspaceID   string
+	projectID     string
 	data          dashboardData
 	loading       bool
 }
 
-func NewDashboardPage(client *api.ConvexClient) PageModel {
-	return &dashboardPage{client: client, loading: true}
+func NewDashboardPage(client *api.ConvexClient, workspaceID, projectID string) PageModel {
+	return &dashboardPage{client: client, workspaceID: workspaceID, projectID: projectID, loading: true}
 }
 
 func (p *dashboardPage) Init() tea.Cmd {
@@ -43,13 +45,13 @@ func (p *dashboardPage) fetchData() tea.Cmd {
 		var data dashboardData
 
 		// Fetch tasks
-		raw, err := p.client.Query("tasks:list", nil)
+		raw, err := p.client.Query("tasks/queries:getMyTasks", map[string]interface{}{})
 		if err == nil {
 			json.Unmarshal(raw, &data.Tasks)
 		}
 
 		// Fetch active sprint
-		raw, err = p.client.Query("sprints:getActive", nil)
+		raw, err = p.client.Query("sprints/queries:getCurrentSprint", map[string]interface{}{"projectId": p.projectID})
 		if err == nil && string(raw) != "null" {
 			var sprint api.Sprint
 			if json.Unmarshal(raw, &sprint) == nil {
@@ -58,7 +60,7 @@ func (p *dashboardPage) fetchData() tea.Cmd {
 		}
 
 		// Fetch agent activity
-		raw, err = p.client.Query("agent:recentActivity", nil)
+		raw, err = p.client.Query("agent/queries:getAgentActivityFeed", map[string]interface{}{"workspaceId": p.workspaceID})
 		if err == nil {
 			json.Unmarshal(raw, &data.Activity)
 		}

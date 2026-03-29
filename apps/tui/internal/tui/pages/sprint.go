@@ -20,13 +20,15 @@ type sprintDataMsg struct {
 type sprintPage struct {
 	width, height int
 	client        *api.ConvexClient
+	workspaceID   string
+	projectID     string
 	sprint        *api.Sprint
 	tasks         []api.Task
 	loading       bool
 }
 
-func NewSprintPage(client *api.ConvexClient) PageModel {
-	return &sprintPage{client: client, loading: true}
+func NewSprintPage(client *api.ConvexClient, workspaceID, projectID string) PageModel {
+	return &sprintPage{client: client, workspaceID: workspaceID, projectID: projectID, loading: true}
 }
 
 func (p *sprintPage) Init() tea.Cmd {
@@ -40,7 +42,7 @@ func (p *sprintPage) fetchData() tea.Cmd {
 	return func() tea.Msg {
 		var data sprintDataMsg
 
-		raw, err := p.client.Query("sprints:getActive", nil)
+		raw, err := p.client.Query("sprints/queries:getCurrentSprint", map[string]interface{}{"projectId": p.projectID})
 		if err == nil && string(raw) != "null" {
 			var sprint api.Sprint
 			if json.Unmarshal(raw, &sprint) == nil {

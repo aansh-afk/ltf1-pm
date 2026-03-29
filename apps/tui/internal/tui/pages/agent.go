@@ -21,14 +21,16 @@ type agentDataMsg struct {
 type agentPage struct {
 	width, height int
 	client        *api.ConvexClient
+	workspaceID   string
+	projectID     string
 	suggestions   []api.TriageSuggestion
 	activity      []api.AgentActivity
 	cursor        int
 	loading       bool
 }
 
-func NewAgentPage(client *api.ConvexClient) PageModel {
-	return &agentPage{client: client, loading: true}
+func NewAgentPage(client *api.ConvexClient, workspaceID, projectID string) PageModel {
+	return &agentPage{client: client, workspaceID: workspaceID, projectID: projectID, loading: true}
 }
 
 func (p *agentPage) Init() tea.Cmd {
@@ -42,7 +44,7 @@ func (p *agentPage) fetchData() tea.Cmd {
 	return func() tea.Msg {
 		var data agentDataMsg
 
-		raw, err := p.client.Query("agent:pendingSuggestions", nil)
+		raw, err := p.client.Query("agent/queries:getTriageQueue", map[string]interface{}{"workspaceId": p.workspaceID})
 		if err == nil {
 			json.Unmarshal(raw, &data.Suggestions)
 		}

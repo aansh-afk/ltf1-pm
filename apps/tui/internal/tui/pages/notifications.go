@@ -19,13 +19,15 @@ type notificationsDataMsg struct {
 type notificationsPage struct {
 	width, height int
 	client        *api.ConvexClient
+	workspaceID   string
+	projectID     string
 	notifications []api.Notification
 	cursor        int
 	loading       bool
 }
 
-func NewNotificationsPage(client *api.ConvexClient) PageModel {
-	return &notificationsPage{client: client, loading: true}
+func NewNotificationsPage(client *api.ConvexClient, workspaceID, projectID string) PageModel {
+	return &notificationsPage{client: client, workspaceID: workspaceID, projectID: projectID, loading: true}
 }
 
 func (p *notificationsPage) Init() tea.Cmd {
@@ -37,7 +39,7 @@ func (p *notificationsPage) Init() tea.Cmd {
 
 func (p *notificationsPage) fetchNotifications() tea.Cmd {
 	return func() tea.Msg {
-		raw, err := p.client.Query("notifications:list", nil)
+		raw, err := p.client.Query("notifications:getNotifications", map[string]interface{}{})
 		if err != nil {
 			return notificationsDataMsg{Err: err}
 		}

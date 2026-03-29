@@ -19,14 +19,16 @@ type projectsDataMsg struct {
 type projectsPage struct {
 	width, height int
 	client        *api.ConvexClient
+	workspaceID   string
+	projectID     string
 	projects      []api.Project
 	cursor        int
 	activeID      string
 	loading       bool
 }
 
-func NewProjectsPage(client *api.ConvexClient) PageModel {
-	return &projectsPage{client: client, loading: true}
+func NewProjectsPage(client *api.ConvexClient, workspaceID, projectID string) PageModel {
+	return &projectsPage{client: client, workspaceID: workspaceID, projectID: projectID, loading: true}
 }
 
 func (p *projectsPage) Init() tea.Cmd {
@@ -38,7 +40,7 @@ func (p *projectsPage) Init() tea.Cmd {
 
 func (p *projectsPage) fetchProjects() tea.Cmd {
 	return func() tea.Msg {
-		raw, err := p.client.Query("projects:list", nil)
+		raw, err := p.client.Query("projects/queries:getWorkspaceProjects", map[string]interface{}{"workspaceId": p.workspaceID})
 		if err != nil {
 			return projectsDataMsg{Err: err}
 		}
