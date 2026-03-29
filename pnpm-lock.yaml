@@ -93,6 +93,9 @@ importers:
       figures:
         specifier: ^6.1.0
         version: 6.1.0
+      fullscreen-ink:
+        specifier: ^0.1.0
+        version: 0.1.0(@types/react@18.3.23)
       ink:
         specifier: ^5.0.1
         version: 5.2.1(@types/react@18.3.23)(react@18.3.1)
@@ -9542,6 +9545,18 @@ packages:
       inherits: 2.0.4
       mkdirp: 0.5.6
       rimraf: 2.7.1
+    dev: false
+
+  /fullscreen-ink@0.1.0(@types/react@18.3.23):
+    resolution: {integrity: sha512-GkyPG5Y8YxRT6i1Q8mZ0BCMSpgQjdBY+C39DnCUMswBpSypTk0G80rAYs6FoEp6Da2gzAwygXbJbju6GahbrFQ==}
+    dependencies:
+      ink: 5.2.1(@types/react@18.3.23)(react@18.3.1)
+      react: 18.3.1
+    transitivePeerDependencies:
+      - '@types/react'
+      - bufferutil
+      - react-devtools-core
+      - utf-8-validate
     dev: false
 
   /function-bind@1.1.2:

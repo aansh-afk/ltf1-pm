@@ -1,14 +1,21 @@
 #!/usr/bin/env node
 /**
  * LTF1 TUI Dashboard Entry Point
- * Full-screen terminal application with mouse support
+ * Full-screen terminal application with synchronized output to eliminate flicker.
+ *
+ * Rendering strategy:
+ * 1. Use alternate screen buffer (like vim/htop)
+ * 2. Wrap every Ink render frame in DEC mode 2026 synchronized output
+ *    (BSU/ESU) so the terminal buffers all writes and flushes atomically
+ * 3. Replace Ink's erase-all-lines + rewrite with cursor-home + overwrite
+ *    + pad remaining lines to prevent ghost text
+ * 4. Enable mouse tracking (SGR extended mode)
  */
 
 import { render } from 'ink';
-import { MouseProvider } from '@zenobius/ink-mouse';
 import { App } from './App.js';
 
-// ANSI escape codes for terminal control
+// ANSI escape codes
 const ESC = '\x1b';
 const ALTERNATE_SCREEN_ON = `${ESC}[?1049h`;
 const ALTERNATE_SCREEN_OFF = `${ESC}[?1049l`;
@@ -17,38 +24,68 @@ const CURSOR_HOME = `${ESC}[H`;
 const CURSOR_HIDE = `${ESC}[?25l`;
 const CURSOR_SHOW = `${ESC}[?25h`;
 
-// Mouse tracking: SGR extended mode (works in most modern terminals)
+// Synchronized output (DEC mode 2026) — eliminates flicker
+const BSU = `${ESC}[?2026h`; // Begin Synchronized Update
+const ESU = `${ESC}[?2026l`; // End Synchronized Update
+
+// Mouse tracking: SGR extended mode
 const MOUSE_ENABLE = `${ESC}[?1003h${ESC}[?1006h`;
 const MOUSE_DISABLE = `${ESC}[?1003l${ESC}[?1006l`;
 
-// Ink's clearTerminal sequence: erase screen + erase scrollback + cursor home.
-// When output height >= terminal rows, ink writes this before every frame,
-// causing a visible flash of the default background. We replace it with just
-// cursor-home so ink overwrites content in-place without clearing first.
+// Ink's clear terminal sequence (erase screen + erase scrollback + home)
 const INK_CLEAR_TERMINAL = `${ESC}[2J${ESC}[3J${ESC}[H`;
 
 export async function startDashboard() {
-  // Check if we're in a TTY environment
   if (!process.stdin.isTTY) {
     console.error('Dashboard requires an interactive terminal (TTY).');
-    console.error('Run this command in a terminal that supports raw mode.');
     process.exit(1);
   }
 
-  // Switch to alternate screen buffer (like vim/htop)
+  // Switch to alternate screen buffer
   process.stdout.write(ALTERNATE_SCREEN_ON);
   process.stdout.write(CLEAR_SCREEN);
   process.stdout.write(CURSOR_HOME);
   process.stdout.write(CURSOR_HIDE);
-
-  // Enable mouse tracking
   process.stdout.write(MOUSE_ENABLE);
 
-  // Let Ink's clear sequence run normally — this fixes the ghost text bug
-  // where old content stays on screen when the rendered height shrinks.
+  // Intercept Ink's writes to:
+  // 1. Wrap render frames in synchronized output (BSU/ESU)
+  // 2. Replace destructive clear with cursor-home (prevents flash)
+  // 3. Pad output to fill terminal height (prevents ghost text from shorter frames)
   const origWrite = process.stdout.write;
+  const stdout = process.stdout;
+  let lastOutputHeight = 0;
 
-  // Cleanup function to restore terminal
+  process.stdout.write = function (
+    this: typeof stdout,
+    chunk: unknown,
+    ...args: unknown[]
+  ): boolean {
+    if (typeof chunk === 'string') {
+      // Detect Ink's render frame (contains the clear sequence)
+      if (chunk.includes(INK_CLEAR_TERMINAL)) {
+        // Replace clear-all with cursor-home (no flash)
+        let output = chunk.replace(INK_CLEAR_TERMINAL, CURSOR_HOME);
+
+        // Count lines in this frame
+        const lines = output.split('\n').length;
+        const termHeight = process.stdout.rows || 40;
+
+        // Pad with blank lines to fill terminal and overwrite any ghost text
+        if (lines < termHeight) {
+          const padding = '\n' + `${ESC}[2K`.repeat(termHeight - lines);
+          output += padding;
+        }
+
+        lastOutputHeight = lines;
+
+        // Wrap entire frame in synchronized output
+        return (origWrite as Function).call(this, BSU + output + ESU);
+      }
+    }
+    return (origWrite as Function).apply(this, [chunk, ...args]);
+  } as typeof process.stdout.write;
+
   const cleanup = () => {
     process.stdout.write = origWrite;
     process.stdout.write(MOUSE_DISABLE);
@@ -56,22 +93,13 @@ export async function startDashboard() {
     process.stdout.write(ALTERNATE_SCREEN_OFF);
   };
 
-  // Handle various exit signals
   process.on('exit', cleanup);
-  process.on('SIGINT', () => {
-    cleanup();
-    process.exit(0);
-  });
-  process.on('SIGTERM', () => {
-    cleanup();
-    process.exit(0);
-  });
+  process.on('SIGINT', () => { cleanup(); process.exit(0); });
+  process.on('SIGTERM', () => { cleanup(); process.exit(0); });
 
   try {
     const { waitUntilExit } = render(
-      <MouseProvider>
-        <App />
-      </MouseProvider>,
+      <App />,
       {
         patchConsole: false,
       },
