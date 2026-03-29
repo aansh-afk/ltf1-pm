@@ -140,8 +140,14 @@ func (m Model) Init() tea.Cmd {
 	if m.appState == StateSelectWorkspace && m.client != nil {
 		return fetchWorkspaces(m.client)
 	}
-	if pm, ok := m.pageModels[m.page]; ok && m.appState == StateReady {
-		return pm.Init()
+	if m.appState == StateReady {
+		var cmds []tea.Cmd
+		for _, pm := range m.pageModels {
+			if cmd := pm.Init(); cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+		}
+		return tea.Batch(cmds...)
 	}
 	return nil
 }
@@ -183,8 +189,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.appState = StateReady
 			m.topbar.Workspace = m.config.Context.WorkspaceName
 			m.topbar.Project = m.config.Context.ProjectName
-			m.reinitPages()
-			return m, m.pageModels[pages.PageDashboard].Init()
+			cmd := m.reinitPages()
+			return m, cmd
 		}
 
 		// No context — go to workspace selection
@@ -454,8 +460,8 @@ func (m Model) handleSelectorKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.appState = StateReady
 			m.topbar.Workspace = m.selectedWS.Name
 			m.topbar.Project = selectedProj.Name
-			m.reinitPages()
-			return m, m.pageModels[pages.PageDashboard].Init()
+			cmd := m.reinitPages()
+			return m, cmd
 		}
 	case "r":
 		// Retry fetch on error
@@ -499,7 +505,7 @@ func (m Model) selectorMaxIndex() int {
 }
 
 // reinitPages recreates all pages with the current workspace/project IDs.
-func (m *Model) reinitPages() {
+func (m *Model) reinitPages() tea.Cmd {
 	wsID := m.config.Context.WorkspaceID
 	projID := m.config.Context.ProjectID
 
@@ -512,11 +518,20 @@ func (m *Model) reinitPages() {
 	m.pageModels[pages.PageNotifications] = pages.NewNotificationsPage(m.client, wsID, projID)
 	m.pageModels[pages.PageSettings] = pages.NewSettingsPage(m.config)
 
-	// Resize all pages to current content dimensions
+	// Resize all pages
 	contentWidth, contentHeight := m.contentSize()
 	for _, pm := range m.pageModels {
 		pm.SetSize(contentWidth, contentHeight)
 	}
+
+	// Init ALL pages so they fetch their data
+	var cmds []tea.Cmd
+	for _, pm := range m.pageModels {
+		if cmd := pm.Init(); cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+	}
+	return tea.Batch(cmds...)
 }
 
 // View renders the full app layout.
