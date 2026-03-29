@@ -211,7 +211,7 @@ func startOAuthFlow() tea.Cmd {
 		go server.ListenAndServe()
 
 		callbackURL := fmt.Sprintf("http://localhost:%d/callback", authPort)
-		authURL := fmt.Sprintf("%s/cli-auth?state=%s&redirectUri=%s",
+		authURL := fmt.Sprintf("%s/cli-auth?state=%s&callback=%s",
 			webAppURL, url.QueryEscape(csrfState), url.QueryEscape(callbackURL))
 		openBrowser(authURL)
 
