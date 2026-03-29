@@ -114,3 +114,34 @@ func GetToken(cfg *AuthConfig) string {
 	}
 	return cfg.Auth.Token
 }
+
+// SaveContext merges workspace/project context into the existing config file and returns the updated config.
+func SaveContext(ctx ProjectInfo) (*AuthConfig, error) {
+	path, err := configPath()
+	if err != nil {
+		return nil, fmt.Errorf("config path: %w", err)
+	}
+
+	cfg, err := LoadAuthConfig()
+	if err != nil {
+		return nil, fmt.Errorf("load config: %w", err)
+	}
+
+	cfg.Context = ctx
+
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("marshal config: %w", err)
+	}
+
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return nil, fmt.Errorf("create config dir: %w", err)
+	}
+
+	if err := os.WriteFile(path, data, 0600); err != nil {
+		return nil, fmt.Errorf("write config: %w", err)
+	}
+
+	return cfg, nil
+}

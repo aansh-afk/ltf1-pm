@@ -233,6 +233,13 @@ func saveAuthConfig(config *api.AuthConfig) error {
 	}
 	dir := path[:strings.LastIndex(path, "/")]
 	os.MkdirAll(dir, 0755)
+
+	// Preserve existing context (workspace/project) if re-authenticating
+	existing, err := api.LoadAuthConfig()
+	if err == nil && existing != nil {
+		config.Context = existing.Context
+	}
+
 	data, _ := json.MarshalIndent(config, "", "  ")
 	return os.WriteFile(path, data, 0600)
 }

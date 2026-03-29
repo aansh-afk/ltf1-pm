@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -10,6 +12,39 @@ import (
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/pages"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
+
+// AppState tracks the post-auth onboarding flow.
+type AppState int
+
+const (
+	StateLogin           AppState = iota // Not authenticated
+	StateSelectWorkspace                 // Authenticated, picking workspace
+	StateSelectProject                   // Workspace picked, picking project
+	StateReady                           // Everything selected, show dashboard
+)
+
+// Workspace/Project list items fetched from Convex
+type workspaceItem struct {
+	ID   string
+	Name string
+}
+
+type projectItem struct {
+	ID   string
+	Key  string
+	Name string
+}
+
+// Messages for async fetches
+type workspacesLoadedMsg struct {
+	Items []workspaceItem
+	Err   error
+}
+
+type projectsLoadedMsg struct {
+	Items []projectItem
+	Err   error
+}
 
 // Model is the root Bubble Tea model.
 type Model struct {
@@ -29,6 +64,13 @@ type Model struct {
 	authenticated bool
 	loginState    LoginState
 	loginError    string
+	// Post-auth selection flow
+	appState       AppState
+	workspaces     []workspaceItem
+	projects       []projectItem
+	selectorCursor int
+	selectorError  string
+	selectedWS     workspaceItem // workspace chosen, used while picking project
 }
 
 // NewModel creates the root model.
@@ -45,6 +87,16 @@ func NewModel(client *api.ConvexClient, config *api.AuthConfig) Model {
 
 	statusbar := components.NewStatusBar()
 
+	// Determine initial app state
+	appState := StateLogin
+	if authenticated {
+		if api.HasProjectContext(config) {
+			appState = StateReady
+		} else {
+			appState = StateSelectWorkspace
+		}
+	}
+
 	m := Model{
 		page:          pages.PageDashboard,
 		pageModels:    make(map[pages.Page]pages.PageModel),
@@ -56,6 +108,7 @@ func NewModel(client *api.ConvexClient, config *api.AuthConfig) Model {
 		connected:     connected,
 		authenticated: authenticated,
 		loginState:    LoginIdle,
+		appState:      appState,
 	}
 
 	// Get workspace/project IDs from config
@@ -83,7 +136,11 @@ func NewModel(client *api.ConvexClient, config *api.AuthConfig) Model {
 
 // Init initializes the current page.
 func (m Model) Init() tea.Cmd {
-	if pm, ok := m.pageModels[m.page]; ok {
+	// If we need workspace selection, fetch workspaces immediately
+	if m.appState == StateSelectWorkspace && m.client != nil {
+		return fetchWorkspaces(m.client)
+	}
+	if pm, ok := m.pageModels[m.page]; ok && m.appState == StateReady {
 		return pm.Init()
 	}
 	return nil
@@ -97,6 +154,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case pages.LogoutMsg:
 		// User logged out — show login screen again
 		m.authenticated = false
+		m.appState = StateLogin
 		m.loginState = LoginIdle
 		m.client = nil
 		m.config = nil
@@ -109,7 +167,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.loginError = msg.Err.Error()
 			return m, nil
 		}
-		// Success — set up the client and transition to dashboard
+		// Success — set up the client
 		m.config = msg.Config
 		m.loginState = LoginSuccess
 		m.authenticated = true
@@ -119,23 +177,41 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.client = api.NewClient(convexURL, m.config.Auth.Token)
 		m.connected = true
 		m.topbar.Connected = true
-		m.topbar.Workspace = m.config.Context.WorkspaceName
-		m.topbar.Project = m.config.Context.ProjectName
 
-		// Reinitialize pages with new client
-		wsID := m.config.Context.WorkspaceID
-		projID := m.config.Context.ProjectID
-		m.pageModels[pages.PageDashboard] = pages.NewDashboardPage(m.client, wsID, projID)
-		m.pageModels[pages.PageTasks] = pages.NewTasksPage(m.client, wsID, projID)
-		m.pageModels[pages.PageSprint] = pages.NewSprintPage(m.client, wsID, projID)
-		m.pageModels[pages.PageAgent] = pages.NewAgentPage(m.client, wsID, projID)
-		m.pageModels[pages.PageProjects] = pages.NewProjectsPage(m.client, wsID, projID)
-		m.pageModels[pages.PageSkills] = pages.NewSkillsPage(m.client, wsID, projID)
-		m.pageModels[pages.PageNotifications] = pages.NewNotificationsPage(m.client, wsID, projID)
-		m.pageModels[pages.PageSettings] = pages.NewSettingsPage(m.config)
+		// Check if config already has workspace+project
+		if api.HasProjectContext(m.config) {
+			m.appState = StateReady
+			m.topbar.Workspace = m.config.Context.WorkspaceName
+			m.topbar.Project = m.config.Context.ProjectName
+			m.reinitPages()
+			return m, m.pageModels[pages.PageDashboard].Init()
+		}
 
-		// Init the dashboard
-		return m, m.pageModels[pages.PageDashboard].Init()
+		// No context — go to workspace selection
+		m.appState = StateSelectWorkspace
+		m.selectorCursor = 0
+		m.selectorError = ""
+		return m, fetchWorkspaces(m.client)
+
+	case workspacesLoadedMsg:
+		if msg.Err != nil {
+			m.selectorError = msg.Err.Error()
+			return m, nil
+		}
+		m.workspaces = msg.Items
+		m.selectorCursor = 0
+		m.selectorError = ""
+		return m, nil
+
+	case projectsLoadedMsg:
+		if msg.Err != nil {
+			m.selectorError = msg.Err.Error()
+			return m, nil
+		}
+		m.projects = msg.Items
+		m.selectorCursor = 0
+		m.selectorError = ""
+		return m, nil
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -151,8 +227,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
-		// LOGIN SCREEN — handle keys when not authenticated
-		if !m.authenticated {
+		// LOGIN SCREEN
+		if m.appState == StateLogin {
 			key := msg.String()
 			if key == "q" || key == "ctrl+c" {
 				return m, tea.Quit
@@ -162,13 +238,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, startOAuthFlow()
 			}
 			if key == "enter" && m.loginState == LoginError {
-				// Retry
 				m.loginState = LoginWaiting
 				m.loginError = ""
 				return m, startOAuthFlow()
 			}
 			return m, nil
 		}
+
+		// WORKSPACE SELECTION
+		if m.appState == StateSelectWorkspace {
+			return m.handleSelectorKeys(msg)
+		}
+
+		// PROJECT SELECTION
+		if m.appState == StateSelectProject {
+			return m.handleSelectorKeys(msg)
+		}
+
+		// --- READY STATE (dashboard) ---
 
 		// Let toast dismiss on any key if warning
 		if m.toast != nil && m.toast.Visible {
@@ -321,20 +408,144 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+// handleSelectorKeys handles j/k/enter/q navigation for workspace and project pickers.
+func (m Model) handleSelectorKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	key := msg.String()
+
+	switch key {
+	case "q", "ctrl+c":
+		return m, tea.Quit
+	case "j", "down":
+		maxIdx := m.selectorMaxIndex()
+		if m.selectorCursor < maxIdx {
+			m.selectorCursor++
+		}
+	case "k", "up":
+		if m.selectorCursor > 0 {
+			m.selectorCursor--
+		}
+	case "enter":
+		if m.appState == StateSelectWorkspace && len(m.workspaces) > 0 {
+			m.selectedWS = m.workspaces[m.selectorCursor]
+			m.appState = StateSelectProject
+			m.selectorCursor = 0
+			m.selectorError = ""
+			m.projects = nil
+			return m, fetchProjects(m.client, m.selectedWS.ID)
+		}
+		if m.appState == StateSelectProject && len(m.projects) > 0 {
+			selectedProj := m.projects[m.selectorCursor]
+
+			// Save context to config
+			ctx := api.ProjectInfo{
+				WorkspaceID:   m.selectedWS.ID,
+				WorkspaceName: m.selectedWS.Name,
+				ProjectID:     selectedProj.ID,
+				ProjectKey:    selectedProj.Key,
+				ProjectName:   selectedProj.Name,
+			}
+			updatedCfg, err := api.SaveContext(ctx)
+			if err != nil {
+				m.selectorError = fmt.Sprintf("Failed to save config: %v", err)
+				return m, nil
+			}
+
+			m.config = updatedCfg
+			m.appState = StateReady
+			m.topbar.Workspace = m.selectedWS.Name
+			m.topbar.Project = selectedProj.Name
+			m.reinitPages()
+			return m, m.pageModels[pages.PageDashboard].Init()
+		}
+	case "r":
+		// Retry fetch on error
+		if m.selectorError != "" {
+			m.selectorError = ""
+			if m.appState == StateSelectWorkspace {
+				return m, fetchWorkspaces(m.client)
+			}
+			if m.appState == StateSelectProject {
+				return m, fetchProjects(m.client, m.selectedWS.ID)
+			}
+		}
+	case "esc":
+		// In project selection, go back to workspace selection
+		if m.appState == StateSelectProject {
+			m.appState = StateSelectWorkspace
+			m.selectorCursor = 0
+			m.selectorError = ""
+			return m, nil
+		}
+	}
+
+	return m, nil
+}
+
+// selectorMaxIndex returns the max cursor index for the current selector state.
+func (m Model) selectorMaxIndex() int {
+	switch m.appState {
+	case StateSelectWorkspace:
+		if len(m.workspaces) == 0 {
+			return 0
+		}
+		return len(m.workspaces) - 1
+	case StateSelectProject:
+		if len(m.projects) == 0 {
+			return 0
+		}
+		return len(m.projects) - 1
+	}
+	return 0
+}
+
+// reinitPages recreates all pages with the current workspace/project IDs.
+func (m *Model) reinitPages() {
+	wsID := m.config.Context.WorkspaceID
+	projID := m.config.Context.ProjectID
+
+	m.pageModels[pages.PageDashboard] = pages.NewDashboardPage(m.client, wsID, projID)
+	m.pageModels[pages.PageTasks] = pages.NewTasksPage(m.client, wsID, projID)
+	m.pageModels[pages.PageSprint] = pages.NewSprintPage(m.client, wsID, projID)
+	m.pageModels[pages.PageAgent] = pages.NewAgentPage(m.client, wsID, projID)
+	m.pageModels[pages.PageProjects] = pages.NewProjectsPage(m.client, wsID, projID)
+	m.pageModels[pages.PageSkills] = pages.NewSkillsPage(m.client, wsID, projID)
+	m.pageModels[pages.PageNotifications] = pages.NewNotificationsPage(m.client, wsID, projID)
+	m.pageModels[pages.PageSettings] = pages.NewSettingsPage(m.config)
+
+	// Resize all pages to current content dimensions
+	contentWidth, contentHeight := m.contentSize()
+	for _, pm := range m.pageModels {
+		pm.SetSize(contentWidth, contentHeight)
+	}
+}
+
 // View renders the full app layout.
 func (m Model) View() tea.View {
 	if m.width == 0 || m.height == 0 {
 		return tea.NewView("")
 	}
 
-	// LOGIN SCREEN — full screen when not authenticated
-	if !m.authenticated {
+	switch m.appState {
+	case StateLogin:
 		v := tea.NewView(renderLoginScreen(m.loginState, m.loginError, m.width, m.height))
+		v.BackgroundColor = theme.BgBase
+		v.AltScreen = true
+		return v
+
+	case StateSelectWorkspace:
+		v := tea.NewView(m.renderWorkspaceSelector())
+		v.BackgroundColor = theme.BgBase
+		v.AltScreen = true
+		return v
+
+	case StateSelectProject:
+		v := tea.NewView(m.renderProjectSelector())
 		v.BackgroundColor = theme.BgBase
 		v.AltScreen = true
 		return v
 	}
 
+	// StateReady — full dashboard
 	topbar := m.topbar.View()
 	statusbar := m.statusbar.View()
 	sidebar := m.sidebar.View()
@@ -394,6 +605,182 @@ func (m Model) View() tea.View {
 	v.AltScreen = true
 	v.MouseMode = tea.MouseModeCellMotion
 	return v
+}
+
+// renderWorkspaceSelector renders the centered workspace picker.
+func (m Model) renderWorkspaceSelector() string {
+	return m.renderSelector("SELECT WORKSPACE", m.workspaceNames(), m.selectorCursor, m.selectorError)
+}
+
+// renderProjectSelector renders the centered project picker.
+func (m Model) renderProjectSelector() string {
+	return m.renderSelector(
+		fmt.Sprintf("SELECT PROJECT  %s", lipgloss.NewStyle().Foreground(theme.TextMuted).Render(m.selectedWS.Name)),
+		m.projectNames(),
+		m.selectorCursor,
+		m.selectorError,
+	)
+}
+
+// renderSelector renders a generic centered selection list.
+func (m Model) renderSelector(title string, items []string, cursor int, errMsg string) string {
+	var lines []string
+
+	// Title
+	titleStyle := lipgloss.NewStyle().Foreground(theme.TextPrimary).Bold(true)
+	lines = append(lines, titleStyle.Render(title))
+	lines = append(lines, "")
+
+	if errMsg != "" {
+		errStyle := lipgloss.NewStyle().Foreground(theme.Red)
+		lines = append(lines, errStyle.Render(theme.SymCross+" "+errMsg))
+		lines = append(lines, "")
+		retryHint := lipgloss.NewStyle().Foreground(theme.TextDim).Render("Press r to retry")
+		lines = append(lines, retryHint)
+	} else if len(items) == 0 {
+		loadingStyle := lipgloss.NewStyle().Foreground(theme.Amber)
+		lines = append(lines, loadingStyle.Render(theme.SymDot+" Loading..."))
+	} else {
+		for i, item := range items {
+			if i == cursor {
+				indicator := lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true).Render(theme.SymArrowRight)
+				name := lipgloss.NewStyle().Foreground(theme.TextPrimary).Bold(true).Render(" " + item)
+				lines = append(lines, indicator+name)
+			} else {
+				name := lipgloss.NewStyle().Foreground(theme.TextMuted).Render("  " + item)
+				lines = append(lines, name)
+			}
+		}
+	}
+
+	lines = append(lines, "")
+
+	// Footer hints
+	hintParts := []string{}
+	hintParts = append(hintParts,
+		lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true).Render("j/k")+
+			lipgloss.NewStyle().Foreground(theme.TextDim).Render(" navigate"))
+	hintParts = append(hintParts,
+		lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true).Render("enter")+
+			lipgloss.NewStyle().Foreground(theme.TextDim).Render(" select"))
+	if m.appState == StateSelectProject {
+		hintParts = append(hintParts,
+			lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true).Render("esc")+
+				lipgloss.NewStyle().Foreground(theme.TextDim).Render(" back"))
+	}
+	hintParts = append(hintParts,
+		lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true).Render("q")+
+			lipgloss.NewStyle().Foreground(theme.TextDim).Render(" quit"))
+
+	lines = append(lines, strings.Join(hintParts, "    "))
+
+	// Center vertically
+	content := strings.Join(lines, "\n")
+	contentHeight := len(lines)
+	topPad := (m.height - contentHeight) / 2
+	if topPad < 0 {
+		topPad = 0
+	}
+
+	// Center horizontally — find widest line
+	maxWidth := 0
+	for _, l := range lines {
+		w := lipgloss.Width(l)
+		if w > maxWidth {
+			maxWidth = w
+		}
+	}
+	leftPad := (m.width - maxWidth) / 2
+	if leftPad < 0 {
+		leftPad = 0
+	}
+
+	var out strings.Builder
+	for i := 0; i < topPad; i++ {
+		out.WriteString("\n")
+	}
+	for _, l := range strings.Split(content, "\n") {
+		out.WriteString(strings.Repeat(" ", leftPad))
+		out.WriteString(l)
+		out.WriteString("\n")
+	}
+
+	return out.String()
+}
+
+func (m Model) workspaceNames() []string {
+	names := make([]string, len(m.workspaces))
+	for i, ws := range m.workspaces {
+		names[i] = ws.Name
+	}
+	return names
+}
+
+func (m Model) projectNames() []string {
+	names := make([]string, len(m.projects))
+	for i, p := range m.projects {
+		names[i] = p.Name
+	}
+	return names
+}
+
+// fetchWorkspaces returns a Cmd that queries Convex for user workspaces.
+func fetchWorkspaces(client *api.ConvexClient) tea.Cmd {
+	return func() tea.Msg {
+		if client == nil {
+			return workspacesLoadedMsg{Err: fmt.Errorf("no API client")}
+		}
+
+		raw, err := client.Query("workspaces/queries:getUserWorkspaces", nil)
+		if err != nil {
+			return workspacesLoadedMsg{Err: err}
+		}
+
+		var items []struct {
+			ID   string `json:"_id"`
+			Name string `json:"name"`
+		}
+		if err := json.Unmarshal(raw, &items); err != nil {
+			return workspacesLoadedMsg{Err: fmt.Errorf("parse workspaces: %w", err)}
+		}
+
+		result := make([]workspaceItem, len(items))
+		for i, item := range items {
+			result[i] = workspaceItem{ID: item.ID, Name: item.Name}
+		}
+		return workspacesLoadedMsg{Items: result}
+	}
+}
+
+// fetchProjects returns a Cmd that queries Convex for projects in a workspace.
+func fetchProjects(client *api.ConvexClient, workspaceID string) tea.Cmd {
+	return func() tea.Msg {
+		if client == nil {
+			return projectsLoadedMsg{Err: fmt.Errorf("no API client")}
+		}
+
+		raw, err := client.Query("projects/queries:getWorkspaceProjects", map[string]interface{}{
+			"workspaceId": workspaceID,
+		})
+		if err != nil {
+			return projectsLoadedMsg{Err: err}
+		}
+
+		var items []struct {
+			ID   string `json:"_id"`
+			Key  string `json:"key"`
+			Name string `json:"name"`
+		}
+		if err := json.Unmarshal(raw, &items); err != nil {
+			return projectsLoadedMsg{Err: fmt.Errorf("parse projects: %w", err)}
+		}
+
+		result := make([]projectItem, len(items))
+		for i, item := range items {
+			result[i] = projectItem{ID: item.ID, Key: item.Key, Name: item.Name}
+		}
+		return projectsLoadedMsg{Items: result}
+	}
 }
 
 // switchPage changes the active page and updates the sidebar.
