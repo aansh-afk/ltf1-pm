@@ -36,99 +36,57 @@ type AuthResult struct {
 const authPort = 9876
 const webAppURL = "https://ltf1.dev"
 
-// Compact world map (~70 chars wide)
-var worldMap = strings.TrimSpace(`
-                    .::.     .::                .
-               .:::::::.   ::::::::.         .:::.
-          .:::::::::::::  ::::::::::::.   .:::::::.
-         ::::::::::::::: :::::::::::::::::::::::::::
-        :::::::::::::::. ::::::::::::::::::::::::::::.
-       :::::::::::::::: ::::::::::::::::::::::::::::::
-       :::::::::::::::  ::::::::::::::::::::::::::::::
-        :::::::::::::   :::::::::::::::::::::::::::::.
-         :::::::::::     ::::::::::::::::::::::::::.
-           ::::::::        ::::::::::::::::::::::
-             :::::           :::::::::::::::::.
-              :::              ::::::::::::::
-               ::                :::::::::::
-                :                  ::::::::
-                                    ::::::.
-                                     :::::::
-                                      :::::::
-                                       ::::::
-                                        :::::
-                                         :::
-                                          ::
-`)
-
-var logo = strings.TrimSpace(`
- ██       ████████ ███████  ██
- ██          ██    ██       ██
- ██          ██    █████    ██
- ██          ██    ██       ██
- ███████     ██    ██       ██
-`)
-
 func renderLoginScreen(state LoginState, errMsg string, width, height int) string {
-	// World map in very dim color — just texture
-	dimMap := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#1A1A1A")).
-		Render(worldMap)
-
-	// Logo in bright white
-	renderedLogo := lipgloss.NewStyle().
+	// Clean text logo — like OpenCode, not massive block chars
+	logo := lipgloss.NewStyle().
 		Foreground(theme.TextPrimary).
 		Bold(true).
-		Render(logo)
+		Render("ltf1")
 
-	// Subtitle + version
+	// Subtitle
 	subtitle := lipgloss.NewStyle().
 		Foreground(theme.TextMuted).
-		Render("Legion Task Framework") +
-		"  " +
-		lipgloss.NewStyle().
-			Foreground(theme.TextDim).
-			Render("v0.8.0")
+		Render("Legion Task Framework")
 
 	// Status
-	var statusMsg string
+	var statusLine string
 	switch state {
 	case LoginIdle:
-		enter := lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true).Render("[Enter]")
-		statusMsg = enter + lipgloss.NewStyle().Foreground(theme.TextSecondary).Render(" to authenticate via browser")
+		key := lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true).Render("Enter")
+		statusLine = lipgloss.NewStyle().Foreground(theme.TextSecondary).Render("Press ") + key + lipgloss.NewStyle().Foreground(theme.TextSecondary).Render(" to authenticate")
 	case LoginWaiting:
-		statusMsg = lipgloss.NewStyle().Foreground(theme.Amber).Render(theme.SymDot + " Opening browser... waiting for authentication")
+		statusLine = lipgloss.NewStyle().Foreground(theme.Amber).Render(theme.SymDot + " Waiting for browser...")
 	case LoginSuccess:
-		statusMsg = lipgloss.NewStyle().Foreground(theme.Green).Render(theme.SymCheck + " Authenticated successfully")
+		statusLine = lipgloss.NewStyle().Foreground(theme.Green).Render(theme.SymCheck + " Authenticated")
 	case LoginError:
-		statusMsg = lipgloss.NewStyle().Foreground(theme.Red).Render(theme.SymCross+" "+errMsg) +
-			"\n" + lipgloss.NewStyle().Foreground(theme.TextMuted).Render("  Press [Enter] to retry")
+		statusLine = lipgloss.NewStyle().Foreground(theme.Red).Render(theme.SymCross+" "+errMsg) +
+			"\n\n" + lipgloss.NewStyle().Foreground(theme.TextDim).Render("Press Enter to retry")
 	}
 
-	// Quit hint
-	quitHint := lipgloss.NewStyle().
-		Foreground(theme.TextDim).
-		Render("[q] quit")
+	// Version + quit at bottom
+	bottom := lipgloss.NewStyle().Foreground(theme.TextDim).Render("v0.8.0") +
+		"    " +
+		lipgloss.NewStyle().Foreground(theme.TextDim).Render("[q] quit")
 
-	// Compose — NO Background() on anything
-	content := strings.Join([]string{
-		dimMap,
-		"",
-		renderedLogo,
-		"",
+	// Stack vertically with generous spacing
+	block := strings.Join([]string{
+		logo,
 		subtitle,
 		"",
 		"",
-		statusMsg,
+		statusLine,
 		"",
-		quitHint,
+		"",
+		bottom,
 	}, "\n")
 
-	// Center in terminal
-	return lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, content)
+	// Center the block in the terminal
+	centered := lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, block)
+
+	return centered
 }
 
-// --- OAuth flow (unchanged) ---
+// --- OAuth flow ---
 
 func startOAuthFlow() tea.Cmd {
 	return func() tea.Msg {
@@ -146,17 +104,14 @@ func startOAuthFlow() tea.Cmd {
 			q := r.URL.Query()
 			if q.Get("state") != csrfState {
 				w.WriteHeader(403)
-				fmt.Fprint(w, "Invalid state")
 				return
 			}
 			if errStr := q.Get("error"); errStr != "" {
-				w.WriteHeader(400)
 				resultCh <- AuthResult{Err: fmt.Errorf("%s", errStr)}
 				return
 			}
 			token := q.Get("token")
 			if token == "" {
-				w.WriteHeader(400)
 				resultCh <- AuthResult{Err: fmt.Errorf("no token received")}
 				return
 			}
@@ -169,22 +124,15 @@ func startOAuthFlow() tea.Cmd {
 					ExpiresAt: float64(time.Now().Add(7 * 24 * time.Hour).UnixMilli()),
 				},
 			}
-			if err := saveAuthConfig(config); err != nil {
-				resultCh <- AuthResult{Err: fmt.Errorf("failed to save: %w", err)}
-				return
-			}
+			saveAuthConfig(config)
 
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(200)
-			fmt.Fprint(w, `<!DOCTYPE html><html><head><title>LTF1</title><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0A0A0A;color:#F9FAFB;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh}.card{text-align:center;padding:3rem}.icon{color:#22C55E;font-size:4rem;margin-bottom:1rem}h1{font-size:1.5rem;margin-bottom:.5rem}p{color:#9CA3AF}</style></head><body><div class="card"><div class="icon">`+theme.SymCheck+`</div><h1>Authenticated</h1><p>Return to your terminal.</p></div></body></html>`)
+			fmt.Fprint(w, `<!DOCTYPE html><html><head><title>LTF1</title><style>*{margin:0;padding:0}body{background:#0A0A0A;color:#F9FAFB;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh}.c{text-align:center}h1{margin:.5rem 0}p{color:#9CA3AF}</style></head><body><div class="c"><h1>Authenticated</h1><p>Return to terminal.</p></div></body></html>`)
 			resultCh <- AuthResult{Config: config}
 		})
 
-		go func() {
-			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				resultCh <- AuthResult{Err: fmt.Errorf("callback server: %w", err)}
-			}
-		}()
+		go server.ListenAndServe()
 
 		callbackURL := fmt.Sprintf("http://localhost:%d/callback", authPort)
 		authURL := fmt.Sprintf("%s/cli-auth?state=%s&redirectUri=%s",
@@ -197,7 +145,7 @@ func startOAuthFlow() tea.Cmd {
 			return result
 		case <-time.After(5 * time.Minute):
 			server.Close()
-			return AuthResult{Err: fmt.Errorf("authentication timed out")}
+			return AuthResult{Err: fmt.Errorf("timed out")}
 		}
 	}
 }
@@ -205,26 +153,23 @@ func startOAuthFlow() tea.Cmd {
 func saveAuthConfig(config *api.AuthConfig) error {
 	path := api.GetConfigPath()
 	if path == "" {
-		return fmt.Errorf("could not determine config path")
+		return fmt.Errorf("no config path")
 	}
 	dir := path[:strings.LastIndex(path, "/")]
 	os.MkdirAll(dir, 0755)
-	data, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return err
-	}
+	data, _ := json.MarshalIndent(config, "", "  ")
 	return os.WriteFile(path, data, 0600)
 }
 
-func openBrowser(url string) {
+func openBrowser(u string) {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "darwin":
-		cmd = exec.Command("open", url)
+		cmd = exec.Command("open", u)
 	case "windows":
-		cmd = exec.Command("cmd", "/c", "start", url)
+		cmd = exec.Command("cmd", "/c", "start", u)
 	default:
-		cmd = exec.Command("xdg-open", url)
+		cmd = exec.Command("xdg-open", u)
 	}
 	cmd.Start()
 }

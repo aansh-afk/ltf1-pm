@@ -329,7 +329,10 @@ func (m Model) View() tea.View {
 
 	// LOGIN SCREEN — full screen when not authenticated
 	if !m.authenticated {
-		return tea.NewView(renderLoginScreen(m.loginState, m.loginError, m.width, m.height))
+		v := tea.NewView(renderLoginScreen(m.loginState, m.loginError, m.width, m.height))
+		v.BackgroundColor = theme.BgBase
+		v.AltScreen = true
+		return v
 	}
 
 	topbar := m.topbar.View()
