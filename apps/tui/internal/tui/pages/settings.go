@@ -33,6 +33,10 @@ func (p *settingsPage) ShortHelp() string {
 	return ""
 }
 
+func (p *settingsPage) KeyBinds() []string {
+	return nil
+}
+
 func (p *settingsPage) View() string {
 	var b strings.Builder
 

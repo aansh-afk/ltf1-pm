@@ -76,6 +76,10 @@ func (p *notificationsPage) ShortHelp() string {
 	return "j/k navigate  enter mark read"
 }
 
+func (p *notificationsPage) KeyBinds() []string {
+	return []string{"j", "k", "up", "down", "enter"}
+}
+
 func (p *notificationsPage) View() string {
 	if p.client == nil {
 		return components.EmptyState("Not connected", p.width, p.height)

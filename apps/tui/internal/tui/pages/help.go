@@ -31,6 +31,10 @@ func (p *helpPage) ShortHelp() string {
 	return "q quit"
 }
 
+func (p *helpPage) KeyBinds() []string {
+	return nil
+}
+
 func (p *helpPage) View() string {
 	header := theme.SectionHeader.Render("KEYBINDINGS")
 
@@ -39,15 +43,15 @@ func (p *helpPage) View() string {
 		keys  [][2]string
 	}{
 		{
-			title: "NAVIGATION",
+			title: "NAVIGATION (global)",
 			keys: [][2]string{
 				{"d", "Dashboard"},
 				{"t", "Tasks"},
 				{"s", "Sprint"},
-				{"a", "Agent"},
+				{"a", "Agent (or accept on Agent page)"},
 				{"g", "Git"},
 				{"p", "Projects"},
-				{"k", "Skills"},
+				{"k", "Skills (or up on list pages)"},
 				{"/", "Search"},
 				{"n", "Notifications"},
 				{",", "Settings"},
@@ -55,25 +59,25 @@ func (p *helpPage) View() string {
 			},
 		},
 		{
-			title: "ACTIONS",
+			title: "ACTIONS (global)",
 			keys: [][2]string{
-				{"r", "Refresh"},
+				{"r", "Refresh (or reject on Agent page)"},
 				{"q", "Quit"},
 				{"esc", "Back / Cancel"},
 				{"enter", "Select / Confirm"},
 			},
 		},
 		{
-			title: "TASKS",
+			title: "LIST PAGES (tasks, agent, git, ...)",
 			keys: [][2]string{
 				{"j/k", "Navigate up/down"},
-				{"c", "Create task"},
+				{"c", "Create (tasks) / Commit (git)"},
 				{"e", "Edit task"},
 				{"x", "Delete task"},
 			},
 		},
 		{
-			title: "AGENT",
+			title: "AGENT PAGE",
 			keys: [][2]string{
 				{"a", "Accept suggestion"},
 				{"r", "Reject suggestion"},
@@ -81,7 +85,7 @@ func (p *helpPage) View() string {
 			},
 		},
 		{
-			title: "GIT",
+			title: "GIT PAGE",
 			keys: [][2]string{
 				{"space", "Stage / Unstage"},
 				{"c", "Commit"},

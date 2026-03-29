@@ -86,6 +86,10 @@ func (p *agentPage) ShortHelp() string {
 	return "j/k navigate  a accept  r reject  m modify"
 }
 
+func (p *agentPage) KeyBinds() []string {
+	return []string{"j", "k", "up", "down", "a", "r", "m"}
+}
+
 func (p *agentPage) View() string {
 	if p.client == nil {
 		return components.EmptyState("Not connected", p.width, p.height)

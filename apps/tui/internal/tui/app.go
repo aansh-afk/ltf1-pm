@@ -119,10 +119,39 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Batch(cmds...)
 		}
 
-		// Global key handling
-		switch msg.String() {
-		case "q", "ctrl+c":
+		key := msg.String()
+
+		// q and ctrl+c always quit regardless of page
+		if key == "q" || key == "ctrl+c" {
 			return m, tea.Quit
+		}
+
+		// Check if the current page claims this key.
+		// If so, delegate to the page instead of global nav.
+		pageClaims := false
+		if pm, ok := m.pageModels[m.page]; ok {
+			for _, bind := range pm.KeyBinds() {
+				if bind == key {
+					pageClaims = true
+					break
+				}
+			}
+		}
+
+		if pageClaims {
+			// Page gets priority for this key
+			if pm, ok := m.pageModels[m.page]; ok {
+				newPM, cmd := pm.Update(msg)
+				m.pageModels[m.page] = newPM
+				if cmd != nil {
+					cmds = append(cmds, cmd)
+				}
+			}
+			return m, tea.Batch(cmds...)
+		}
+
+		// Global key handling — only reached if page doesn't claim the key
+		switch key {
 		case "d":
 			m.switchPage(pages.PageDashboard)
 		case "t":
@@ -155,7 +184,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		default:
-			// Delegate to active page
+			// Delegate unclaimed keys to active page
 			if pm, ok := m.pageModels[m.page]; ok {
 				newPM, cmd := pm.Update(msg)
 				m.pageModels[m.page] = newPM

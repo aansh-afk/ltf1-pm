@@ -76,6 +76,10 @@ func (p *sprintPage) ShortHelp() string {
 	return "r refresh"
 }
 
+func (p *sprintPage) KeyBinds() []string {
+	return nil
+}
+
 func (p *sprintPage) View() string {
 	if p.client == nil {
 		return components.EmptyState("Not connected", p.width, p.height)

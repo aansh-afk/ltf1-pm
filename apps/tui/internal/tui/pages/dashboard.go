@@ -85,6 +85,10 @@ func (p *dashboardPage) ShortHelp() string {
 	return "r refresh  d dashboard"
 }
 
+func (p *dashboardPage) KeyBinds() []string {
+	return nil
+}
+
 func (p *dashboardPage) View() string {
 	if p.client == nil {
 		return components.EmptyState("Not connected. Run ltf auth login first.", p.width, p.height)

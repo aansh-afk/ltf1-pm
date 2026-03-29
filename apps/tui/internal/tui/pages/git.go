@@ -106,6 +106,10 @@ func (p *gitPage) ShortHelp() string {
 	return "j/k navigate  space stage/unstage  c commit"
 }
 
+func (p *gitPage) KeyBinds() []string {
+	return []string{"j", "k", "up", "down", "c", " "}
+}
+
 func (p *gitPage) View() string {
 	if p.loading {
 		return components.EmptyState("Loading git status...", p.width, p.height)

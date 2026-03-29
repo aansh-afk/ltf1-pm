@@ -76,6 +76,10 @@ func (p *skillsPage) ShortHelp() string {
 	return "j/k navigate  space toggle"
 }
 
+func (p *skillsPage) KeyBinds() []string {
+	return []string{"j", "k", "up", "down", " "}
+}
+
 func (p *skillsPage) View() string {
 	if p.client == nil {
 		return components.EmptyState("Not connected", p.width, p.height)

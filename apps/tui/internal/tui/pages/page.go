@@ -26,4 +26,9 @@ type PageModel interface {
 	View() string
 	SetSize(width, height int)
 	ShortHelp() string
+
+	// KeyBinds returns the set of key strings this page handles.
+	// The app shell will delegate these keys to the page instead of
+	// treating them as global navigation shortcuts.
+	KeyBinds() []string
 }

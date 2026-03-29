@@ -81,6 +81,10 @@ func (p *projectsPage) ShortHelp() string {
 	return "j/k navigate  enter select"
 }
 
+func (p *projectsPage) KeyBinds() []string {
+	return []string{"j", "k", "up", "down", "enter"}
+}
+
 func (p *projectsPage) View() string {
 	if p.client == nil {
 		return components.EmptyState("Not connected", p.width, p.height)

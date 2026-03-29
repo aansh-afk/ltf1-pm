@@ -76,6 +76,10 @@ func (p *tasksPage) ShortHelp() string {
 	return "j/k navigate  c create  e edit  x delete"
 }
 
+func (p *tasksPage) KeyBinds() []string {
+	return []string{"j", "k", "up", "down", "c", "e", "x"}
+}
+
 func (p *tasksPage) View() string {
 	if p.client == nil {
 		return components.EmptyState("Not connected", p.width, p.height)

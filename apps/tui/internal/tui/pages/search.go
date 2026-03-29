@@ -62,6 +62,11 @@ func (p *searchPage) ShortHelp() string {
 	return "type to search  esc cancel"
 }
 
+func (p *searchPage) KeyBinds() []string {
+	// Search claims all keys since input is focused
+	return []string{"j", "k", "up", "down", "enter"}
+}
+
 func (p *searchPage) View() string {
 	var b strings.Builder
 
