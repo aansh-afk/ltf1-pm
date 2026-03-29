@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 
@@ -9,8 +10,14 @@ import (
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui"
 )
 
+//go:embed worldmap.txt
+var worldMap string
+
 func main() {
-	// Load auth config (non-fatal — TUI shows empty states if missing)
+	// Set world map for login screen
+	tui.WorldMapArt = worldMap
+
+	// Load auth config (non-fatal)
 	config, _ := api.LoadAuthConfig()
 
 	// Create Convex client only if authenticated

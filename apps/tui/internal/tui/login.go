@@ -19,6 +19,9 @@ import (
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
 
+// WorldMapArt is set by main.go from the embedded file
+var WorldMapArt string
+
 type LoginState int
 
 const (
@@ -36,34 +39,41 @@ type AuthResult struct {
 const authPort = 9876
 const webAppURL = "https://ltf1.dev"
 
-// Compact world map — fits ~76 chars wide, subtle dot pattern
-var worldMap = `        .  .       .           .       .      .        .
-    . .:::::.   .:::::.     . .:::.       .        .
-  .::::::::: .::::::::::. .::::::::.          .  .
- :::::::::::::::::::::::::::::::::::::.   .:::.
- :::::::::::::::::::::::::::::::::::::::::::::::
- ::::::::::::::::::::::::::::::::::::::::::::::::
-  :::::::::::::::::::::::::::::::::::::::::::::::
-   :::::::::::::::::::::::::::::::::::::::::::::
-    ::::::::: .:::::::::::::::::::::::::::::::.
-      ::::::    :::::::::::::::::::::::::::::
-        ::::      ::::::::::::::::::::::::::
-         :::       ::::::::::::::::::::::::
-          ::         :::::::::::::::::::::
-           :          .:::::::::::::::::.
-                        ::::::::::::::
-                         ::::::::::::
-                          ::::::::::
-                           ::::::::
-                            ::::::
-                             ::::
-                              ::`
+// scaleMap trims the world map to fit terminal width and height
+func scaleMap(raw string, maxWidth, maxHeight int) string {
+	lines := strings.Split(raw, "\n")
+
+	// Trim to maxHeight (take middle portion if taller)
+	if len(lines) > maxHeight {
+		start := (len(lines) - maxHeight) / 2
+		lines = lines[start : start+maxHeight]
+	}
+
+	// Trim each line to maxWidth (center crop)
+	for i, line := range lines {
+		if len(line) > maxWidth {
+			start := (len(line) - maxWidth) / 2
+			end := start + maxWidth
+			if end > len(line) {
+				end = len(line)
+			}
+			lines[i] = line[start:end]
+		}
+	}
+
+	return strings.Join(lines, "\n")
+}
 
 func renderLoginScreen(state LoginState, errMsg string, width, height int) string {
-	// World map — very dim, barely visible texture
+	// World map — scale to fit, render very dim
+	mapHeight := height / 2
+	if mapHeight > 40 {
+		mapHeight = 40
+	}
+	scaledMap := scaleMap(WorldMapArt, width-4, mapHeight)
 	dimMap := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#181818")).
-		Render(worldMap)
+		Render(scaledMap)
 
 	// Clean text logo
 	logo := lipgloss.NewStyle().
