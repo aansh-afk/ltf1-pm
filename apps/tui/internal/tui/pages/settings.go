@@ -74,14 +74,17 @@ func (p *settingsPage) KeyBinds() []string {
 func (p *settingsPage) View() string {
 	var b strings.Builder
 
-	b.WriteString(theme.SectionHeader.Render("SETTINGS") + "\n\n")
+	b.WriteString("\n")
+	b.WriteString(theme.SectionHeader.Render("SETTINGS") + "\n")
+	b.WriteString("\n")
 
 	row := func(label, value string) {
-		b.WriteString(theme.FieldLabelStyle.Render(label) + theme.FieldValueStyle.Render(value) + "\n")
+		b.WriteString("  " + theme.FieldLabelStyle.Render(label) + theme.FieldValueStyle.Render(value) + "\n")
 	}
 
 	// Connection info
-	b.WriteString(theme.AccentTextStyle.Render("CONNECTION") + "\n")
+	b.WriteString("  " + theme.AccentTextStyle.Render("CONNECTION") + "\n")
+	b.WriteString("\n")
 
 	if p.config != nil {
 		row("Email", p.config.Auth.Email)
@@ -89,30 +92,32 @@ func (p *settingsPage) View() string {
 		row("Project", p.config.Context.ProjectName)
 
 		if api.IsAuthenticated(p.config) {
-			row("Status", theme.SuccessTextStyle.Render("Authenticated"))
+			row("Status", theme.SuccessTextStyle.Render(theme.SymDot+" Authenticated"))
 		} else if api.CanRefreshSession(p.config) {
-			row("Status", theme.WarningTextStyle.Render("Refreshing on demand"))
+			row("Status", theme.WarningTextStyle.Render(theme.SymDot+" Refreshing on demand"))
 		} else {
-			row("Status", theme.ErrorTextStyle.Render("Token expired"))
+			row("Status", theme.ErrorTextStyle.Render(theme.SymDot+" Token expired"))
 		}
 	} else {
-		row("Status", theme.ErrorTextStyle.Render("Not configured"))
+		row("Status", theme.ErrorTextStyle.Render(theme.SymDot+" Not configured"))
 	}
 
-	b.WriteString("\n")
+	b.WriteString("\n\n")
 
 	// Version info
-	b.WriteString(theme.AccentTextStyle.Render("VERSION") + "\n")
+	b.WriteString("  " + theme.AccentTextStyle.Render("VERSION") + "\n")
+	b.WriteString("\n")
 	row("TUI", "v0.8.0")
 	b.WriteString("\n\n")
 
 	// Actions
-	b.WriteString(theme.AccentTextStyle.Render("ACTIONS") + "\n")
+	b.WriteString("  " + theme.AccentTextStyle.Render("ACTIONS") + "\n")
+	b.WriteString("\n")
 	for i, item := range p.items {
 		if i == p.cursor {
-			b.WriteString(theme.ErrorTextStyle.Bold(true).Render(theme.SymBar+" "+item) + "\n")
+			b.WriteString("  " + theme.ErrorTextStyle.Bold(true).Render(theme.SymBar+" "+item) + "\n")
 		} else {
-			b.WriteString(theme.TextMutedStyle.Render("  "+item) + "\n")
+			b.WriteString("    " + theme.TextMutedStyle.Render(item) + "\n")
 		}
 	}
 

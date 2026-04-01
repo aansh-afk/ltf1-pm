@@ -48,6 +48,12 @@ func centerLine(s string, width int) string {
 	return strings.Repeat(" ", pad) + s
 }
 
+// brailleSpinner contains the braille spinner frames for the waiting state.
+var brailleSpinner = []string{"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"}
+
+// spinnerFrame is a global frame counter incremented by a tick command.
+var spinnerFrame int
+
 // renderLoginScreen builds the login view with NO lipgloss.Place (avoids white padding)
 func renderLoginScreen(state LoginState, errMsg string, width, height int) string {
 	var lines []string
@@ -66,7 +72,7 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 			mapLines = mapLines[start : start+maxMapH]
 		}
 
-		// Horizontal: take every Nth char to fit width, center crop
+		// Horizontal: center crop
 		mapWidth := 0
 		for _, l := range mapLines {
 			if len(l) > mapWidth {
@@ -80,7 +86,6 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 		}
 
 		if mapWidth > targetW {
-			// Center crop each line
 			for _, l := range mapLines {
 				if len(l) > targetW {
 					start := (len(l) - targetW) / 2
@@ -96,25 +101,50 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 	}
 
 	lines = append(lines, "")
+	lines = append(lines, "")
 
-	// Logo
-	logo := theme.BrandTextStyle.Render("ltf1")
-	lines = append(lines, centerLine(logo, width))
+	// Logo — large stylized text
+	logoLine1 := "██   ████████ ██████  ██"
+	logoLine2 := "██     ██    ██       ██"
+	logoLine3 := "██     ██    █████    ██"
+	logoLine4 := "██     ██    ██          "
+	logoLine5 := "██████ ██    ██       ██"
+
+	logoStyle := lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true)
+	lines = append(lines, centerLine(logoStyle.Render(logoLine1), width))
+	lines = append(lines, centerLine(logoStyle.Render(logoLine2), width))
+	lines = append(lines, centerLine(logoStyle.Render(logoLine3), width))
+	lines = append(lines, centerLine(logoStyle.Render(logoLine4), width))
+	lines = append(lines, centerLine(logoStyle.Render(logoLine5), width))
+
+	lines = append(lines, "")
 
 	// Subtitle
-	sub := theme.SubtitleTextStyle.Render("Legion Task Framework")
+	sub := theme.TextMutedStyle.Render("Legion Task Framework")
 	lines = append(lines, centerLine(sub, width))
 	lines = append(lines, "")
+	lines = append(lines, "")
+
+	// Decorative separator
+	sepWidth := 32
+	if sepWidth > width-8 {
+		sepWidth = width - 8
+	}
+	sep := theme.ColorTextStyle(theme.BorderSubtle).Render(strings.Repeat("─", sepWidth))
+	lines = append(lines, centerLine(sep, width))
 	lines = append(lines, "")
 
 	// Status
 	var statusLine string
 	switch state {
 	case LoginIdle:
+		bracket := theme.TextMutedStyle.Render("[")
 		key := theme.AccentTextStyle.Render("Enter")
-		statusLine = theme.TextSecondaryStyle.Render("Press ") + key + theme.TextSecondaryStyle.Render(" to authenticate")
+		bracketClose := theme.TextMutedStyle.Render("]")
+		statusLine = bracket + key + bracketClose + theme.TextSecondaryStyle.Render(" authenticate")
 	case LoginWaiting:
-		statusLine = theme.WarningTextStyle.Render(theme.SymDot + " Waiting for browser...")
+		frame := brailleSpinner[spinnerFrame%len(brailleSpinner)]
+		statusLine = theme.AccentTextStyle.Render(frame) + theme.TextSecondaryStyle.Render(" Waiting for browser...")
 	case LoginSuccess:
 		statusLine = theme.SuccessTextStyle.Render(theme.SymCheck + " Authenticated")
 	case LoginError:
@@ -130,9 +160,12 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 
 	lines = append(lines, "")
 	lines = append(lines, "")
+	lines = append(lines, "")
 
-	// Bottom
-	bottom := theme.TextDimStyle.Render("v0.8.0    [q] quit")
+	// Bottom version + quit
+	version := theme.TextDimStyle.Render("v0.8.0")
+	quit := theme.TextDimStyle.Render("[") + theme.ColorTextStyle(theme.TextMuted).Render("q") + theme.TextDimStyle.Render("] quit")
+	bottom := version + "    " + quit
 	lines = append(lines, centerLine(bottom, width))
 
 	// Calculate vertical centering
@@ -146,7 +179,7 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 		bottomPad = 0
 	}
 
-	// Build final output — just newlines for padding, no lipgloss.Place
+	// Build final output
 	var out strings.Builder
 	for i := 0; i < topPad; i++ {
 		out.WriteString("\n")

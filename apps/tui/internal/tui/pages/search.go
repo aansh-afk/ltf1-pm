@@ -78,14 +78,17 @@ func (p *searchPage) KeyBinds() []string {
 func (p *searchPage) View() string {
 	var b strings.Builder
 
-	b.WriteString(theme.SectionHeader.Render("SEARCH") + "\n\n")
-	b.WriteString(p.input.View() + "\n\n")
+	b.WriteString("\n")
+	b.WriteString(theme.SectionHeader.Render("SEARCH") + "\n")
+	b.WriteString("\n")
+	b.WriteString("  " + p.input.View() + "\n")
+	b.WriteString("\n")
 
 	if len(p.results) == 0 {
 		if p.input.Value() != "" {
-			b.WriteString(theme.TextMutedStyle.Render("No results found") + "\n")
+			b.WriteString("  " + theme.TextMutedStyle.Render(theme.SymDotEmpty+" No results found") + "\n")
 		} else {
-			b.WriteString(theme.TextMutedStyle.Render("Start typing to search...") + "\n")
+			b.WriteString("  " + theme.TextDimStyle.Render("Start typing to search...") + "\n")
 		}
 		return b.String()
 	}

@@ -22,23 +22,26 @@ func NewTopBar() TopBarModel {
 func (t TopBarModel) View() string {
 	left := theme.BrandTextStyle.Render("LTF1")
 	if t.Workspace != "" {
-		ctx := t.Workspace
+		sep := theme.TextDimStyle.Render(" " + theme.SymBullet + " ")
+		left += sep + theme.TopBarContextStyle.Render(t.Workspace)
 		if t.Project != "" {
-			ctx += " / " + t.Project
+			left += theme.TextDimStyle.Render(" / ") + theme.TopBarContextStyle.Render(t.Project)
 		}
-		left += "  " + theme.TopBarContextStyle.Render(ctx)
 	}
 
+	// Connection indicator
 	dotColor := theme.Red
+	connLabel := "disconnected"
 	if t.Connected {
 		dotColor = theme.Green
+		connLabel = "connected"
 	}
-	right := theme.ColorTextStyle(dotColor).Render(theme.SymDot)
+	right := theme.ColorTextStyle(dotColor).Render(theme.SymDot) + " " + theme.TextDimStyle.Render(connLabel)
 
 	// Calculate gap
 	leftWidth := lipgloss.Width(left)
 	rightWidth := lipgloss.Width(right)
-	gap := t.Width - leftWidth - rightWidth - 4 // 4 for padding
+	gap := t.Width - leftWidth - rightWidth - 4
 	if gap < 1 {
 		gap = 1
 	}

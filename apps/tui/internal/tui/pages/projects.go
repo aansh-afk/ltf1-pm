@@ -95,7 +95,10 @@ func (p *projectsPage) View() string {
 	}
 
 	var b strings.Builder
-	b.WriteString(theme.SectionHeader.Render("PROJECTS") + "\n\n")
+
+	b.WriteString("\n")
+	b.WriteString(theme.SectionHeader.Render("PROJECTS") + "\n")
+	b.WriteString("\n")
 
 	if len(p.projects) == 0 {
 		b.WriteString(components.EmptyState("No projects found", p.width, p.height-4))
@@ -103,8 +106,8 @@ func (p *projectsPage) View() string {
 	}
 
 	for i, proj := range p.projects {
-		meta := theme.TextMutedStyle.Render(proj.Key)
-		if proj.ID == p.activeID {
+		meta := theme.TextDimStyle.Render(proj.Key)
+		if proj.ID == p.activeID || proj.ID == p.projectID {
 			meta += "  " + theme.SuccessTextStyle.Render(theme.SymDot+" active")
 		}
 		b.WriteString(components.RenderListItem(proj.Name, meta, i == p.cursor) + "\n")

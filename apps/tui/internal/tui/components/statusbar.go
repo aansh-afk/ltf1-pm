@@ -22,13 +22,14 @@ func NewStatusBar() StatusBarModel {
 func (s StatusBarModel) View() string {
 	left := ""
 	if s.GitBranch != "" {
-		left = theme.StatusBarBranchStyle.Render(s.GitBranch)
-		if s.Path != "" {
-			left += " " + theme.StatusBarPathStyle.Render(s.Path)
-		}
+		left = theme.SuccessTextStyle.Render(" "+s.GitBranch) +
+			theme.TextDimStyle.Render(" "+theme.SymBullet+" ") +
+			theme.StatusBarPathStyle.Render(s.Path)
 	}
 
-	right := theme.StatusBarAccentStyle.Render(theme.SymDot) + " LTF1 v" + s.Version
+	right := theme.StatusBarAccentStyle.Render(theme.SymDot) +
+		theme.TextDimStyle.Render(" LTF1 ") +
+		theme.TextMutedStyle.Render("v"+s.Version) + " "
 
 	leftWidth := lipgloss.Width(left)
 	rightWidth := lipgloss.Width(right)
@@ -37,7 +38,7 @@ func (s StatusBarModel) View() string {
 		gap = 1
 	}
 
-	row := " " + left + theme.WidthStyle(gap).Render("") + right + " "
+	row := left + theme.WidthStyle(gap).Render("") + right
 
 	return theme.StatusBarStyle.Width(s.Width).Render(row)
 }

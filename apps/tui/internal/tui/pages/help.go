@@ -35,41 +35,53 @@ func (p *helpPage) KeyBinds() []string {
 }
 
 func (p *helpPage) View() string {
-	header := theme.SectionHeader.Render("KEYBINDINGS")
+	var b strings.Builder
+
+	b.WriteString("\n")
+	b.WriteString(theme.SectionHeader.Render("KEYBINDINGS") + "\n")
+	b.WriteString("\n")
 
 	groups := []struct {
 		title string
 		keys  [][2]string
 	}{
 		{
-			title: "SIDEBAR",
+			title: "NAVIGATION",
 			keys: [][2]string{
-				{"j/k", "Move between pages"},
-				{"enter", "Open selected page"},
-				{"right/l", "Open selected page"},
-				{"d t s a ...", "Jump sidebar selection by key"},
-				{"q", "Quit"},
-			},
-		},
-		{
-			title: "PAGE FOCUS",
-			keys: [][2]string{
-				{"esc", "Return focus to sidebar"},
+				{"j/k", "Move between items"},
+				{"enter", "Open / select"},
+				{"l", "Open selected page"},
+				{"esc", "Back to sidebar"},
 				{"r", "Refresh current page"},
 				{"q", "Quit"},
 			},
 		},
 		{
-			title: "LIST PAGES (tasks, agent, git, ...)",
+			title: "SIDEBAR",
 			keys: [][2]string{
-				{"j/k", "Navigate up/down"},
-				{"c", "Create (tasks) / Commit (git)"},
+				{"d", "Dashboard"},
+				{"t", "Tasks"},
+				{"s", "Sprint"},
+				{"a", "Agent"},
+				{"g", "Git"},
+				{"p", "Projects"},
+				{"k", "Skills"},
+				{"/", "Search"},
+				{"n", "Notifications"},
+				{",", "Settings"},
+				{"?", "Help"},
+			},
+		},
+		{
+			title: "TASKS",
+			keys: [][2]string{
+				{"c", "Create task"},
 				{"e", "Edit task"},
 				{"x", "Delete task"},
 			},
 		},
 		{
-			title: "AGENT PAGE",
+			title: "AGENT",
 			keys: [][2]string{
 				{"a", "Accept suggestion"},
 				{"r", "Reject suggestion"},
@@ -77,25 +89,22 @@ func (p *helpPage) View() string {
 			},
 		},
 		{
-			title: "GIT PAGE",
+			title: "GIT",
 			keys: [][2]string{
 				{"space", "Stage / Unstage"},
-				{"c", "Commit"},
+				{"c", "Commit staged changes"},
 			},
 		},
 	}
 
-	keyStyle := theme.KeyHintKey
-	descStyle := theme.KeyHintDesc
-	var b strings.Builder
-	b.WriteString(header + "\n\n")
-
+	keyCol := theme.KeyColumnStyle.Width(12)
 	for i, group := range groups {
-		b.WriteString(theme.AccentTextStyle.Render(group.title) + "\n")
+		b.WriteString("  " + theme.AccentTextStyle.Render(group.title) + "\n")
+		b.WriteString("\n")
 		for _, kv := range group.keys {
-			key := keyStyle.Render(theme.KeyColumnStyle.Render(kv[0]))
-			desc := descStyle.Render(kv[1])
-			b.WriteString("  " + key + " " + desc + "\n")
+			key := theme.KeyHintKey.Render(keyCol.Render(kv[0]))
+			desc := theme.KeyHintDesc.Render(kv[1])
+			b.WriteString("    " + key + desc + "\n")
 		}
 		if i < len(groups)-1 {
 			b.WriteString("\n")

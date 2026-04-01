@@ -94,11 +94,15 @@ func (p *sprintPage) View() string {
 
 	var b strings.Builder
 
+	b.WriteString("\n")
+
 	// Sprint header
 	b.WriteString(theme.SectionHeader.Render("SPRINT") + "\n")
-	b.WriteString(theme.BrandTextStyle.Render(p.sprint.Name) + "\n")
-
-	b.WriteString(theme.WarningTextStyle.Render(p.sprint.Status) + "\n\n")
+	b.WriteString("\n")
+	b.WriteString("  " + theme.BrandTextStyle.Render(p.sprint.Name) + "\n")
+	b.WriteString("  " + theme.ColorTextStyle(theme.Cyan).Render(theme.SymDot) + " " +
+		theme.ColorTextStyle(theme.Cyan).Render(p.sprint.Status) + "\n")
+	b.WriteString("\n\n")
 
 	// Filter tasks for this sprint
 	var sprintTasks []api.Task
@@ -130,10 +134,11 @@ func (p *sprintPage) View() string {
 		pointsPct = donePoints / totalPoints * 100
 	}
 
-	b.WriteString(theme.TextSecondaryStyle.Render("Tasks") + "\n")
-	b.WriteString(components.ProgressBar(taskPct, 40, theme.Indigo) + "\n")
-	b.WriteString(theme.TextSecondaryStyle.Render("Points") + "\n")
-	b.WriteString(components.ProgressBar(pointsPct, 40, theme.Green) + "\n\n")
+	b.WriteString("  " + theme.TextSecondaryStyle.Render("Tasks") + "\n")
+	b.WriteString("  " + components.ProgressBar(taskPct, 40, theme.Cyan) + "\n\n")
+	b.WriteString("  " + theme.TextSecondaryStyle.Render("Points") + "\n")
+	b.WriteString("  " + components.ProgressBar(pointsPct, 40, theme.Green) + "\n")
+	b.WriteString("\n\n")
 
 	// Tasks grouped by status
 	groups := []struct {
@@ -163,6 +168,7 @@ func (p *sprintPage) View() string {
 		}
 
 		b.WriteString(theme.AccentTextStyle.Render(g.label) + "\n")
+		b.WriteString("\n")
 		for _, t := range groupTasks {
 			b.WriteString(components.RenderListItem(t.Title, components.PriorityBadge(t.Priority), false) + "\n")
 		}

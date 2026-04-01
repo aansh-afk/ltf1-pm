@@ -99,11 +99,13 @@ func (p *agentPage) View() string {
 		return components.EmptyState("Loading agent...", p.width, p.height)
 	}
 
-	amberStyle := theme.WarningTextStyle
 	var b strings.Builder
 
-	// Stats
+	b.WriteString("\n")
+
+	// Stats header
 	b.WriteString(theme.SectionHeader.Render("AGENT") + "\n")
+	b.WriteString("\n")
 
 	triaged := 0
 	pending := 0
@@ -116,32 +118,44 @@ func (p *agentPage) View() string {
 		}
 	}
 
-	stats := fmt.Sprintf("Triaged: %s  Pending: %s",
-		amberStyle.Render(fmt.Sprintf("%d", triaged)),
-		amberStyle.Render(fmt.Sprintf("%d", pending)))
-	b.WriteString(stats + "\n\n")
+	b.WriteString("  " + theme.WarningTextStyle.Render(theme.SymDot) + " " +
+		theme.TextSecondaryStyle.Render("Triaged ") +
+		theme.WarningBoldStyle.Render(fmt.Sprintf("%d", triaged)) +
+		theme.TextDimStyle.Render("  "+theme.SymBullet+"  ") +
+		theme.TextSecondaryStyle.Render("Pending ") +
+		theme.WarningBoldStyle.Render(fmt.Sprintf("%d", pending)) + "\n")
+	b.WriteString("\n\n")
 
 	// Triage queue
 	b.WriteString(theme.SectionHeader.Render("TRIAGE QUEUE") + "\n")
+	b.WriteString("\n")
 
 	if len(p.suggestions) == 0 {
-		b.WriteString(theme.TextMutedStyle.Render("No pending suggestions") + "\n")
+		b.WriteString("  " + theme.TextMutedStyle.Render(theme.SymDotEmpty+" No pending suggestions") + "\n")
 	} else {
 		for i, s := range p.suggestions {
 			title := s.TaskID
 			if s.SuggestedType != "" {
-				title += " " + theme.SymArrowRight + " " + s.SuggestedType
+				title += " " + theme.ColorTextStyle(theme.Amber).Render(theme.SymArrowRight) + " " + s.SuggestedType
 			}
-			meta := fmt.Sprintf("%.0f%% confidence", s.Confidence*100)
+			conf := s.Confidence * 100
+			confStyle := theme.TextMutedStyle
+			if conf >= 80 {
+				confStyle = theme.SuccessTextStyle
+			} else if conf >= 50 {
+				confStyle = theme.WarningTextStyle
+			}
+			meta := confStyle.Render(fmt.Sprintf("%.0f%%", conf))
 			b.WriteString(components.RenderListItem(title, meta, i == p.cursor) + "\n")
 		}
 	}
-	b.WriteString("\n")
+	b.WriteString("\n\n")
 
 	// Activity feed
 	b.WriteString(theme.SectionHeader.Render("ACTIVITY") + "\n")
+	b.WriteString("\n")
 	if len(p.activity) == 0 {
-		b.WriteString(theme.TextMutedStyle.Render("No recent activity") + "\n")
+		b.WriteString("  " + theme.TextMutedStyle.Render(theme.SymDotEmpty+" No recent activity") + "\n")
 	} else {
 		limit := 5
 		if len(p.activity) < limit {
@@ -149,7 +163,8 @@ func (p *agentPage) View() string {
 		}
 		for i := 0; i < limit; i++ {
 			a := p.activity[i]
-			b.WriteString("  " + amberStyle.Render(a.Type) + " " +
+			b.WriteString("  " + theme.WarningTextStyle.Render(theme.SymDot) + " " +
+				theme.WarningBoldStyle.Render(a.Type) + "  " +
 				theme.TextSecondaryStyle.Render(a.Description) + "\n")
 		}
 	}

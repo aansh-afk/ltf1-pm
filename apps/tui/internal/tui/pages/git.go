@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"fmt"
 	"image/color"
 	"os/exec"
 	"strings"
@@ -116,17 +117,35 @@ func (p *gitPage) View() string {
 
 	var b strings.Builder
 
+	b.WriteString("\n")
+
 	// Branch info
 	b.WriteString(theme.SectionHeader.Render("GIT") + "\n")
-	b.WriteString(theme.SuccessBoldStyle.Render(p.branch) + "\n\n")
+	b.WriteString("\n")
+	b.WriteString("  " + theme.SuccessTextStyle.Render(theme.SymDot) + " " +
+		theme.SuccessBoldStyle.Render(p.branch) + "\n")
+	b.WriteString("\n\n")
 
 	if len(p.files) == 0 {
-		b.WriteString(theme.TextMutedStyle.Render("Working tree clean") + "\n")
+		b.WriteString("  " + theme.TextMutedStyle.Render(theme.SymCheck+" Working tree clean") + "\n")
 		return b.String()
 	}
 
+	// Count files
+	staged := 0
+	unstaged := 0
+	for _, f := range p.files {
+		if f.Staged {
+			staged++
+		} else {
+			unstaged++
+		}
+	}
+
 	// Staged files
-	b.WriteString(theme.SectionHeader.Render("STAGED") + "\n")
+	b.WriteString(theme.SectionHeader.Render("STAGED") +
+		theme.TextMutedStyle.Render(fmt.Sprintf(" (%d)", staged)) + "\n")
+	b.WriteString("\n")
 	hasStagedFiles := false
 	for i, f := range p.files {
 		if !f.Staged {
@@ -138,12 +157,14 @@ func (p *gitPage) View() string {
 		b.WriteString(components.RenderListItem(f.Path, meta, i == p.cursor) + "\n")
 	}
 	if !hasStagedFiles {
-		b.WriteString(theme.TextMutedStyle.Render("  No staged files") + "\n")
+		b.WriteString("  " + theme.TextMutedStyle.Render(theme.SymDotEmpty+" No staged files") + "\n")
 	}
-	b.WriteString("\n")
+	b.WriteString("\n\n")
 
 	// Unstaged files
-	b.WriteString(theme.SectionHeader.Render("UNSTAGED") + "\n")
+	b.WriteString(theme.SectionHeader.Render("UNSTAGED") +
+		theme.TextMutedStyle.Render(fmt.Sprintf(" (%d)", unstaged)) + "\n")
+	b.WriteString("\n")
 	hasUnstagedFiles := false
 	for i, f := range p.files {
 		if f.Staged {
@@ -155,7 +176,7 @@ func (p *gitPage) View() string {
 		b.WriteString(components.RenderListItem(f.Path, meta, i == p.cursor) + "\n")
 	}
 	if !hasUnstagedFiles {
-		b.WriteString(theme.TextMutedStyle.Render("  No unstaged files") + "\n")
+		b.WriteString("  " + theme.TextMutedStyle.Render(theme.SymDotEmpty+" No unstaged files") + "\n")
 	}
 
 	return b.String()

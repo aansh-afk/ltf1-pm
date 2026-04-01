@@ -2,6 +2,7 @@ package pages
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -90,7 +91,23 @@ func (p *notificationsPage) View() string {
 	}
 
 	var b strings.Builder
-	b.WriteString(theme.SectionHeader.Render("NOTIFICATIONS") + "\n\n")
+
+	b.WriteString("\n")
+
+	// Count unread
+	unread := 0
+	for _, n := range p.notifications {
+		if !n.IsRead {
+			unread++
+		}
+	}
+
+	header := theme.SectionHeader.Render("NOTIFICATIONS")
+	if unread > 0 {
+		header += "  " + theme.AccentTextStyle.Render(fmt.Sprintf("%d unread", unread))
+	}
+	b.WriteString(header + "\n")
+	b.WriteString("\n")
 
 	if len(p.notifications) == 0 {
 		b.WriteString(components.EmptyState("No notifications", p.width, p.height-4))
@@ -99,13 +116,13 @@ func (p *notificationsPage) View() string {
 
 	for i, n := range p.notifications {
 		// Read/unread indicator
-		dot := theme.SymDotEmpty
+		dot := theme.TextDimStyle.Render(theme.SymDotEmpty)
 		if !n.IsRead {
 			dot = theme.ColorTextStyle(theme.Indigo).Render(theme.SymDot)
 		}
 
 		title := dot + " " + n.Title
-		meta := theme.TextMutedStyle.Render(n.Type)
+		meta := theme.TextDimStyle.Render(n.Type)
 		b.WriteString(components.RenderListItem(title, meta, i == p.cursor) + "\n")
 	}
 

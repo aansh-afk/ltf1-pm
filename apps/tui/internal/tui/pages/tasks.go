@@ -92,16 +92,18 @@ func (p *tasksPage) View() string {
 
 	var b strings.Builder
 
+	b.WriteString("\n")
+
 	header := theme.SectionHeader.Render("TASKS")
-	count := theme.TextMutedStyle.Render(fmt.Sprintf("(%d)", len(p.tasks)))
-	b.WriteString(header + " " + count + "\n\n")
+	count := theme.TextMutedStyle.Render(fmt.Sprintf(" (%d)", len(p.tasks)))
+	b.WriteString(header + count + "\n\n")
 
 	if len(p.tasks) == 0 {
 		b.WriteString(components.EmptyState("No tasks yet. Press c to create one.", p.width, p.height-4))
 		return b.String()
 	}
 
-	visible := p.height - 4
+	visible := p.height - 6
 	if visible < 1 {
 		visible = 1
 	}
@@ -113,10 +115,16 @@ func (p *tasksPage) View() string {
 
 	for i := start; i < len(p.tasks) && i < start+visible; i++ {
 		t := p.tasks[i]
-		meta := components.StatusBadge(t.Status)
+		status := components.StatusBadge(t.Status)
+		priority := ""
 		if t.Priority != "" {
-			meta += "  " + components.PriorityBadge(t.Priority)
+			priority = "  " + components.PriorityBadge(t.Priority)
 		}
+		taskType := ""
+		if t.Type != "" {
+			taskType = "  " + theme.TextDimStyle.Render("("+t.Type+")")
+		}
+		meta := status + priority + taskType
 		b.WriteString(components.RenderListItem(t.Title, meta, i == p.cursor) + "\n")
 	}
 

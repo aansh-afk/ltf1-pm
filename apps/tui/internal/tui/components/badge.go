@@ -14,7 +14,7 @@ func StatusBadge(status string) string {
 	case "done", "completed":
 		c = theme.Green
 	case "in_progress", "in progress", "active":
-		c = theme.Amber
+		c = theme.Indigo
 	case "todo", "backlog", "pending":
 		c = theme.TextMuted
 	case "blocked":
@@ -39,7 +39,7 @@ func PriorityBadge(priority string) string {
 	case "high":
 		c = theme.Amber
 	case "medium":
-		c = theme.Purple
+		c = theme.Indigo
 	case "low":
 		c = theme.TextMuted
 	default:

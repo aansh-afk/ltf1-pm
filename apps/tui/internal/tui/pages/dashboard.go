@@ -2,6 +2,7 @@ package pages
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -100,19 +101,26 @@ func (p *dashboardPage) View() string {
 
 	var b strings.Builder
 
-	// Active Sprint section
+	b.WriteString("\n")
+
+	// ── ACTIVE SPRINT ──────────────────────────
 	b.WriteString(theme.SectionHeader.Render("ACTIVE SPRINT") + "\n")
+	b.WriteString("\n")
 	if p.data.Sprint != nil {
-		b.WriteString(theme.BrandTextStyle.Render(p.data.Sprint.Name) + "\n")
+		b.WriteString("  " + theme.BrandTextStyle.Render(p.data.Sprint.Name) + "\n")
 
 		// Calculate progress from tasks
 		total := 0
 		done := 0
+		inProgress := 0
 		for _, t := range p.data.Tasks {
 			if t.SprintID == p.data.Sprint.ID {
 				total++
 				if t.Status == "done" || t.Status == "completed" {
 					done++
+				}
+				if t.Status == "in_progress" || t.Status == "active" {
+					inProgress++
 				}
 			}
 		}
@@ -120,16 +128,22 @@ func (p *dashboardPage) View() string {
 		if total > 0 {
 			pct = float64(done) / float64(total) * 100
 		}
-		b.WriteString(components.ProgressBar(pct, 40, theme.Indigo) + "\n")
+		b.WriteString("  " + components.ProgressBar(pct, 40, theme.Indigo) + "\n")
+		b.WriteString("  " + theme.TextDimStyle.Render(
+			fmt.Sprintf("%d done  %s%d in progress  %s%d total",
+				done,
+				theme.SymBullet+" ", inProgress,
+				theme.SymBullet+" ", total)) + "\n")
 	} else {
-		b.WriteString(theme.TextMutedStyle.Render("No active sprint") + "\n")
+		b.WriteString("  " + theme.TextMutedStyle.Render(theme.SymDotEmpty+" No active sprint") + "\n")
 	}
-	b.WriteString("\n")
+	b.WriteString("\n\n")
 
-	// My Tasks section
+	// ── MY TASKS ──────────────────────────
 	b.WriteString(theme.SectionHeader.Render("MY TASKS") + "\n")
+	b.WriteString("\n")
 	if len(p.data.Tasks) == 0 {
-		b.WriteString(theme.TextMutedStyle.Render("No tasks found") + "\n")
+		b.WriteString("  " + theme.TextMutedStyle.Render(theme.SymDotEmpty+" No tasks found") + "\n")
 	} else {
 		limit := 8
 		if len(p.data.Tasks) < limit {
@@ -137,19 +151,22 @@ func (p *dashboardPage) View() string {
 		}
 		for i := 0; i < limit; i++ {
 			t := p.data.Tasks[i]
-			meta := components.StatusBadge(t.Status)
+			status := components.StatusBadge(t.Status)
+			priority := ""
 			if t.Priority != "" {
-				meta += "  " + components.PriorityBadge(t.Priority)
+				priority = "  " + components.PriorityBadge(t.Priority)
 			}
+			meta := status + priority
 			b.WriteString(components.RenderListItem(t.Title, meta, false) + "\n")
 		}
 	}
-	b.WriteString("\n")
+	b.WriteString("\n\n")
 
-	// Agent Activity section
+	// ── AGENT ACTIVITY ──────────────────────────
 	b.WriteString(theme.SectionHeader.Render("AGENT ACTIVITY") + "\n")
+	b.WriteString("\n")
 	if len(p.data.Activity) == 0 {
-		b.WriteString(theme.TextMutedStyle.Render("No recent activity") + "\n")
+		b.WriteString("  " + theme.TextMutedStyle.Render(theme.SymDotEmpty+" No recent activity") + "\n")
 	} else {
 		limit := 5
 		if len(p.data.Activity) < limit {
@@ -157,7 +174,9 @@ func (p *dashboardPage) View() string {
 		}
 		for i := 0; i < limit; i++ {
 			a := p.data.Activity[i]
-			b.WriteString("  " + theme.WarningTextStyle.Render(a.Type) + " " +
+			typeLabel := theme.WarningBoldStyle.Render(a.Type)
+			b.WriteString("  " + theme.WarningTextStyle.Render(theme.SymDot) + " " +
+				typeLabel + "  " +
 				theme.TextSecondaryStyle.Render(a.Description) + "\n")
 		}
 	}

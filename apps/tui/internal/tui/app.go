@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
@@ -12,6 +13,15 @@ import (
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/pages"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
+
+// spinnerTickMsg triggers a spinner frame advance.
+type spinnerTickMsg struct{}
+
+func spinnerTick() tea.Cmd {
+	return tea.Tick(120*time.Millisecond, func(time.Time) tea.Msg {
+		return spinnerTickMsg{}
+	})
+}
 
 // AppState tracks the post-auth onboarding flow.
 type AppState int
@@ -152,6 +162,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
+	case spinnerTickMsg:
+		if m.appState == StateLogin && m.loginState == LoginWaiting {
+			spinnerFrame++
+			return m, spinnerTick()
+		}
+		return m, nil
+
 	case pages.LogoutMsg:
 		// User logged out — show login screen again
 		m.authenticated = false
@@ -236,12 +253,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if key == "enter" && m.loginState == LoginIdle {
 				m.loginState = LoginWaiting
-				return m, startOAuthFlow()
+				spinnerFrame = 0
+				return m, tea.Batch(startOAuthFlow(), spinnerTick())
 			}
 			if key == "enter" && m.loginState == LoginError {
 				m.loginState = LoginWaiting
 				m.loginError = ""
-				return m, startOAuthFlow()
+				spinnerFrame = 0
+				return m, tea.Batch(startOAuthFlow(), spinnerTick())
 			}
 			return m, nil
 		}

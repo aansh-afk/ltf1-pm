@@ -90,7 +90,10 @@ func (p *skillsPage) View() string {
 	}
 
 	var b strings.Builder
-	b.WriteString(theme.SectionHeader.Render("SKILLS") + "\n\n")
+
+	b.WriteString("\n")
+	b.WriteString(theme.SectionHeader.Render("SKILLS") + "\n")
+	b.WriteString("\n")
 
 	if len(p.skills) == 0 {
 		b.WriteString(components.EmptyState("No skills configured", p.width, p.height-4))
@@ -99,7 +102,7 @@ func (p *skillsPage) View() string {
 
 	for i, skill := range p.skills {
 		// Active indicator
-		activeIndicator := theme.SymDotEmpty
+		activeIndicator := theme.TextDimStyle.Render(theme.SymDotEmpty)
 		if skill.IsActive {
 			activeIndicator = theme.SuccessTextStyle.Render(theme.SymDot)
 		}
@@ -110,7 +113,7 @@ func (p *skillsPage) View() string {
 		title := activeIndicator + " " + skill.DisplayName
 		meta := triggerBadge
 		if skill.Description != "" {
-			meta += "  " + theme.TextMutedStyle.Render(skill.Description)
+			meta += "  " + theme.TextDimStyle.Render(skill.Description)
 		}
 
 		b.WriteString(components.RenderListItem(title, meta, i == p.cursor) + "\n")

@@ -105,21 +105,29 @@ func (s *SidebarModel) Move(delta int) {
 func (s SidebarModel) View() string {
 	var b strings.Builder
 
+	b.WriteString("\n") // Top padding
+
 	for gi, group := range NavGroups {
 		for _, item := range group {
-			marker := " "
+			marker := "  "
 			labelStyle := theme.SidebarInactiveStyle
 
 			switch {
 			case s.Focused && item.Key == s.SelectedKey():
-				marker = theme.SidebarSelectedMarkerStyle.Render(theme.SymBar)
+				// Focused + selected: indigo bar + bold indigo text
+				marker = theme.SidebarSelectedMarkerStyle.Render(theme.SymBar) + " "
 				labelStyle = theme.SidebarSelectedStyle
-			case item.Key == s.Active:
-				marker = theme.SidebarActiveMarkerStyle.Render(theme.SymDot)
+			case !s.Focused && item.Key == s.Active:
+				// Unfocused but active page: dim dot + secondary text
+				marker = theme.SidebarActiveMarkerStyle.Render(theme.SymDot) + " "
+				labelStyle = theme.SidebarActiveStyle
+			case s.Focused && item.Key == s.Active:
+				// Focused but not cursor: active marker
+				marker = theme.SidebarActiveMarkerStyle.Render(theme.SymDot) + " "
 				labelStyle = theme.SidebarActiveStyle
 			}
 
-			b.WriteString(marker + " " + labelStyle.Render(item.Label))
+			b.WriteString(marker + labelStyle.Render(item.Label))
 			b.WriteString("\n")
 		}
 		if gi < len(NavGroups)-1 {
@@ -129,11 +137,20 @@ func (s SidebarModel) View() string {
 
 	content := b.String()
 
-	// Pad to fill height
+	// Count lines used by nav items
 	lines := strings.Count(content, "\n")
-	for i := lines; i < s.Height; i++ {
+
+	// Reserve 2 lines at bottom for brand text
+	bottomPad := s.Height - lines - 2
+	if bottomPad < 0 {
+		bottomPad = 0
+	}
+	for i := 0; i < bottomPad; i++ {
 		content += "\n"
 	}
+
+	// Brand at bottom of sidebar
+	content += "\n" + theme.TextDimStyle.Render(" LTF1") + "\n"
 
 	return theme.SidebarStyle.Height(s.Height).Render(content)
 }
