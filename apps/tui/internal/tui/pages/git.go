@@ -120,12 +120,13 @@ type gitPage struct {
 	ghIssues []api.GitHubIssue
 	prCursor int
 	// Modal
-	modalMode   gitModalMode
-	commitInput components.InputModel
+	modalMode    gitModalMode
+	commitInput  components.InputModel
 	prTitleInput components.InputModel
-	confirmMsg  string
-	confirmCmd  tea.Cmd
-	hasGhCLI    bool
+	prBaseBranch string // base branch for PR creation
+	confirmMsg   string
+	confirmCmd   tea.Cmd
+	hasGhCLI     bool
 }
 
 func NewGitPage() PageModel {
@@ -277,103 +278,73 @@ func fetchGitHubData() tea.Cmd {
 
 // --- Git actions ---
 
-func gitStageFile(path string) tea.Cmd {
+func runGitCmd(action string, args ...string) tea.Cmd {
 	return func() tea.Msg {
-		err := exec.Command("git", "add", path).Run()
-		return gitActionMsg{Action: "staged " + path, Err: err}
+		out, err := exec.Command("git", args...).CombinedOutput()
+		if err != nil {
+			msg := strings.TrimSpace(string(out))
+			if msg == "" {
+				msg = err.Error()
+			}
+			return gitActionMsg{Action: action, Err: fmt.Errorf("%s", msg)}
+		}
+		return gitActionMsg{Action: action}
 	}
 }
 
-func gitUnstageFile(path string) tea.Cmd {
-	return func() tea.Msg {
-		err := exec.Command("git", "reset", "HEAD", path).Run()
-		return gitActionMsg{Action: "unstaged " + path, Err: err}
-	}
-}
-
-func gitStageAll() tea.Cmd {
-	return func() tea.Msg {
-		err := exec.Command("git", "add", "-A").Run()
-		return gitActionMsg{Action: "staged all", Err: err}
-	}
-}
-
-func gitUnstageAll() tea.Cmd {
-	return func() tea.Msg {
-		err := exec.Command("git", "reset", "HEAD").Run()
-		return gitActionMsg{Action: "unstaged all", Err: err}
-	}
-}
+func gitStageFile(path string) tea.Cmd  { return runGitCmd("staged "+path, "add", path) }
+func gitUnstageFile(path string) tea.Cmd { return runGitCmd("unstaged "+path, "reset", "HEAD", path) }
+func gitStageAll() tea.Cmd              { return runGitCmd("staged all", "add", "-A") }
+func gitUnstageAll() tea.Cmd            { return runGitCmd("unstaged all", "reset", "HEAD") }
 
 func gitCommitChanges(message string) tea.Cmd {
-	return func() tea.Msg {
-		err := exec.Command("git", "commit", "-m", message).Run()
-		return gitActionMsg{Action: "committed", Err: err}
-	}
+	return runGitCmd("committed", "commit", "-m", message)
 }
 
-func gitPush() tea.Cmd {
-	return func() tea.Msg {
-		err := exec.Command("git", "push").Run()
-		return gitActionMsg{Action: "pushed", Err: err}
-	}
-}
-
-func gitPull() tea.Cmd {
-	return func() tea.Msg {
-		err := exec.Command("git", "pull").Run()
-		return gitActionMsg{Action: "pulled", Err: err}
-	}
-}
-
-func gitFetch() tea.Cmd {
-	return func() tea.Msg {
-		err := exec.Command("git", "fetch", "--all").Run()
-		return gitActionMsg{Action: "fetched", Err: err}
-	}
-}
+func gitPush() tea.Cmd    { return runGitCmd("pushed", "push") }
+func gitPull() tea.Cmd    { return runGitCmd("pulled", "pull") }
+func gitFetch() tea.Cmd   { return runGitCmd("fetched", "fetch", "--all") }
 
 func gitCheckout(branch string) tea.Cmd {
+	localBranch := strings.TrimPrefix(branch, "origin/")
+	return runGitCmd("switched to "+localBranch, "checkout", localBranch)
+}
+
+func runGhCmd(action string, args ...string) tea.Cmd {
 	return func() tea.Msg {
-		localBranch := strings.TrimPrefix(branch, "origin/")
-		err := exec.Command("git", "checkout", localBranch).Run()
-		return gitActionMsg{Action: "switched to " + localBranch, Err: err}
+		out, err := exec.Command("gh", args...).CombinedOutput()
+		if err != nil {
+			msg := strings.TrimSpace(string(out))
+			if msg == "" {
+				msg = err.Error()
+			}
+			return gitActionMsg{Action: action, Err: fmt.Errorf("%s", msg)}
+		}
+		return gitActionMsg{Action: action}
 	}
 }
 
 func ghCreatePR(title string) tea.Cmd {
-	return func() tea.Msg {
-		out, err := exec.Command("gh", "pr", "create", "--title", title, "--fill").CombinedOutput()
-		if err != nil {
-			return gitActionMsg{Action: "PR create failed: " + string(out), Err: err}
-		}
-		return gitActionMsg{Action: "PR created: " + strings.TrimSpace(string(out))}
+	return runGhCmd("PR created", "pr", "create", "--title", title, "--fill")
+}
+
+func ghCreatePRWithBase(title, base string) tea.Cmd {
+	if base != "" {
+		return runGhCmd("PR created", "pr", "create", "--title", title, "--base", base, "--fill")
 	}
+	return runGhCmd("PR created", "pr", "create", "--title", title, "--fill")
 }
 
 func ghCheckoutPR(number int) tea.Cmd {
-	return func() tea.Msg {
-		err := exec.Command("gh", "pr", "checkout", fmt.Sprintf("%d", number)).Run()
-		return gitActionMsg{Action: fmt.Sprintf("checked out PR #%d", number), Err: err}
-	}
+	return runGhCmd(fmt.Sprintf("checked out PR #%d", number), "pr", "checkout", fmt.Sprintf("%d", number))
 }
 
 func ghViewPR(number int) tea.Cmd {
-	return func() tea.Msg {
-		// Open in browser
-		err := exec.Command("gh", "pr", "view", fmt.Sprintf("%d", number), "--web").Run()
-		return gitActionMsg{Action: fmt.Sprintf("opened PR #%d in browser", number), Err: err}
-	}
+	return runGhCmd(fmt.Sprintf("opened PR #%d", number), "pr", "view", fmt.Sprintf("%d", number), "--web")
 }
 
 func ghMergePR(number int) tea.Cmd {
-	return func() tea.Msg {
-		out, err := exec.Command("gh", "pr", "merge", fmt.Sprintf("%d", number), "--merge").CombinedOutput()
-		if err != nil {
-			return gitActionMsg{Action: "merge failed: " + string(out), Err: err}
-		}
-		return gitActionMsg{Action: fmt.Sprintf("merged PR #%d", number)}
-	}
+	return runGhCmd(fmt.Sprintf("merged PR #%d", number), "pr", "merge", fmt.Sprintf("%d", number), "--merge")
 }
 
 // --- Update ---
@@ -513,7 +484,25 @@ func (p *gitPage) handleKey(msg tea.KeyMsg) (PageModel, tea.Cmd) {
 			p.modalMode = gitModalNone
 			p.prTitleInput.Blur()
 			p.prTitleInput.SetValue("")
-			return p, ghCreatePR(title)
+			base := p.prBaseBranch
+			return p, ghCreatePRWithBase(title, base)
+		case "tab":
+			// Cycle through local branches as base
+			localBranches := p.localBranchNames()
+			if len(localBranches) > 0 {
+				idx := 0
+				for i, b := range localBranches {
+					if b == p.prBaseBranch {
+						idx = i + 1
+						break
+					}
+				}
+				if idx >= len(localBranches) {
+					idx = 0
+				}
+				p.prBaseBranch = localBranches[idx]
+			}
+			return p, nil
 		case "esc":
 			p.modalMode = gitModalNone
 			p.prTitleInput.Blur()
@@ -611,7 +600,7 @@ func (p *gitPage) handleKey(msg tea.KeyMsg) (PageModel, tea.Cmd) {
 		}
 		if !hasStaged {
 			return p, func() tea.Msg {
-				return ShowToastMsg{Message: "No staged files to commit", IsError: true}
+				return ShowToastMsg{Message: "Nothing to commit — stage files first with [space] or [a]", IsError: true}
 			}
 		}
 		p.modalMode = gitModalCommit
@@ -628,13 +617,25 @@ func (p *gitPage) handleKey(msg tea.KeyMsg) (PageModel, tea.Cmd) {
 			}
 		}
 	case "P": // Push (uppercase)
+		if p.ahead == 0 && p.remoteBranch != "" {
+			return p, func() tea.Msg {
+				return ShowToastMsg{Message: "Nothing to push — already up to date"}
+			}
+		}
 		p.confirmMsg = fmt.Sprintf("Push %s to %s?", p.branch, p.remoteBranch)
 		if p.remoteBranch == "" {
-			p.confirmMsg = fmt.Sprintf("Push %s to origin?", p.branch)
+			p.confirmMsg = fmt.Sprintf("Push %s to origin? (no upstream set, will use --set-upstream)", p.branch)
+			p.confirmCmd = runGitCmd("pushed", "push", "--set-upstream", "origin", p.branch)
+		} else {
+			p.confirmCmd = gitPush()
 		}
-		p.confirmCmd = gitPush()
 		p.modalMode = gitModalConfirm
 	case "p": // Pull
+		if p.behind == 0 && p.remoteBranch != "" {
+			return p, func() tea.Msg {
+				return ShowToastMsg{Message: "Nothing to pull — already up to date"}
+			}
+		}
 		return p, gitPull()
 	case "f": // Fetch
 		return p, gitFetch()
@@ -644,6 +645,8 @@ func (p *gitPage) handleKey(msg tea.KeyMsg) (PageModel, tea.Cmd) {
 				return ShowToastMsg{Message: "gh CLI not installed. Install from https://cli.github.com", IsError: true}
 			}
 		}
+		// Default base branch: main, then master, then first non-current branch
+		p.prBaseBranch = p.defaultBaseBranch()
 		p.modalMode = gitModalPRCreate
 		p.prTitleInput.SetValue("")
 		return p, p.prTitleInput.Focus()
@@ -1280,6 +1283,16 @@ func (p *gitPage) getDiff(path string) string {
 // --- Modals ---
 
 func (p *gitPage) viewCommitModal(bg string) string {
+	// Set input width to fit inside modal (modal is 2/3 width, minus padding/border)
+	inputW := (p.width * 2 / 3) - 10
+	if inputW < 30 {
+		inputW = 30
+	}
+	if inputW > 70 {
+		inputW = 70
+	}
+	p.commitInput.SetWidth(inputW)
+
 	var lines []string
 	lines = append(lines, theme.BrandTextStyle.Render("COMMIT CHANGES"))
 	lines = append(lines, "")
@@ -1371,13 +1384,21 @@ func (p *gitPage) viewConfirmModal(bg string) string {
 }
 
 func (p *gitPage) viewPRCreateModal(bg string) string {
+	inputW := (p.width * 2 / 3) - 10
+	if inputW < 30 {
+		inputW = 30
+	}
+	if inputW > 70 {
+		inputW = 70
+	}
+	p.prTitleInput.SetWidth(inputW)
+
 	var lines []string
 	lines = append(lines, theme.BrandTextStyle.Render("CREATE PULL REQUEST"))
 	lines = append(lines, "")
-	lines = append(lines, theme.TextMutedStyle.Render("Branch: ")+theme.SuccessTextStyle.Render(p.branch))
-	if p.remoteBranch != "" {
-		lines = append(lines, theme.TextMutedStyle.Render("Base:   ")+theme.TextSecondaryStyle.Render(strings.TrimPrefix(p.remoteBranch, "origin/")))
-	}
+	lines = append(lines, theme.TextMutedStyle.Render("From:  ")+theme.SuccessTextStyle.Render(p.branch))
+	lines = append(lines, theme.TextMutedStyle.Render("Into:  ")+theme.AccentTextStyle.Render(p.prBaseBranch)+
+		theme.TextDimStyle.Render("  [tab] to change"))
 	lines = append(lines, "")
 	lines = append(lines, theme.TextMutedStyle.Render("Title:"))
 	lines = append(lines, p.prTitleInput.View())
@@ -1386,6 +1407,7 @@ func (p *gitPage) viewPRCreateModal(bg string) string {
 	lines = append(lines, "")
 	lines = append(lines, components.KeyHints(
 		components.KeyHint("enter", "create"),
+		components.KeyHint("tab", "change base"),
 		components.KeyHint("esc", "cancel"),
 	))
 	return components.OverlayModal(bg, strings.Join(lines, "\n"), p.width, p.height, theme.Green)
@@ -1430,6 +1452,38 @@ func (p *gitPage) viewPRListModal(bg string) string {
 		components.KeyHint("esc", "close"),
 	))
 	return components.OverlayModal(bg, strings.Join(lines, "\n"), p.width, p.height, theme.Indigo)
+}
+
+// --- Branch helpers ---
+
+func (p *gitPage) localBranchNames() []string {
+	var names []string
+	for _, br := range p.branches {
+		if !br.IsRemote {
+			names = append(names, br.Name)
+		}
+	}
+	return names
+}
+
+func (p *gitPage) defaultBaseBranch() string {
+	locals := p.localBranchNames()
+	for _, name := range locals {
+		if name == "main" {
+			return "main"
+		}
+	}
+	for _, name := range locals {
+		if name == "master" {
+			return "master"
+		}
+	}
+	for _, name := range locals {
+		if name != p.branch {
+			return name
+		}
+	}
+	return "main"
 }
 
 // --- Helpers ---

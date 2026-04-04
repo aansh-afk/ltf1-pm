@@ -373,6 +373,15 @@ func (p *tasksPage) View() string {
 }
 
 func (p *tasksPage) viewCreateModal(bg string) string {
+	inputW := (p.width * 2 / 3) - 10
+	if inputW < 30 {
+		inputW = 30
+	}
+	if inputW > 70 {
+		inputW = 70
+	}
+	p.createInput.SetWidth(inputW)
+
 	var lines []string
 	lines = append(lines, theme.BrandTextStyle.Render("CREATE TASK"))
 	lines = append(lines, "")

@@ -17,6 +17,8 @@ func NewInput(placeholder string) InputModel {
 	ti := textinput.New()
 	ti.Placeholder = placeholder
 	ti.Prompt = "> "
+	ti.CharLimit = 200
+	ti.SetWidth(50)
 
 	styles := textinput.DefaultDarkStyles()
 	styles.Focused.Prompt = theme.InputPromptStyle
@@ -28,6 +30,16 @@ func NewInput(placeholder string) InputModel {
 	ti.SetStyles(styles)
 
 	return InputModel{Input: ti}
+}
+
+// SetWidth sets the input's visible width.
+// Accounts for border + padding (4 chars) so the bordered box fits within w.
+func (i *InputModel) SetWidth(w int) {
+	inner := w - 6 // 2 border + 2 padding + 2 prompt chars
+	if inner < 10 {
+		inner = 10
+	}
+	i.Input.SetWidth(inner)
 }
 
 // Focus focuses the input.
