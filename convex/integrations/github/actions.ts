@@ -1,3 +1,4 @@
+"use node";
 import { v } from "convex/values";
 import { action } from "../../_generated/server";
 import { api, internal } from "../../_generated/api";
@@ -29,7 +30,7 @@ export const handleOAuthCallback = action({
     }
 
     // Exchange code for access token
-    const clientId = process.env.VITE_GITHUB_CLIENT_ID;
+    const clientId = process.env.GITHUB_CLIENT_ID;
     const clientSecret = process.env.GITHUB_CLIENT_SECRET;
     
     if (!clientId || !clientSecret) {

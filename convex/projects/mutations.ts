@@ -14,6 +14,7 @@ export const createProject = mutation({
     leadId: v.optional(v.id("users")),
     workflowType: v.optional(v.union(v.literal("kanban"), v.literal("scrum"), v.literal("hybrid"))),
   },
+  returns: v.id("projects"),
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
@@ -100,6 +101,7 @@ export const updateProject = mutation({
     leadId: v.optional(v.id("users")),
     status: v.optional(projectStatusValidator),
   },
+  returns: v.id("projects"),
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
@@ -145,6 +147,7 @@ export const deleteProject = mutation({
   args: {
     projectId: v.id("projects"),
   },
+  returns: v.id("projects"),
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
@@ -186,6 +189,7 @@ export const connectRepository = mutation({
     repositoryUrl: v.string(),
     provider: v.union(v.literal("github"), v.literal("gitlab"), v.literal("bitbucket")),
   },
+  returns: v.id("projects"),
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
@@ -262,6 +266,7 @@ export const ensureProjectInviteCode = mutation({
   args: {
     projectId: v.id("projects"),
   },
+  returns: v.string(),
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
@@ -299,6 +304,7 @@ export const generateProjectInviteCode = mutation({
   args: {
     projectId: v.id("projects"),
   },
+  returns: v.string(),
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
@@ -319,6 +325,11 @@ export const joinProjectByCode = mutation({
   args: {
     inviteCode: v.string(),
   },
+  returns: v.object({
+    projectId: v.id("projects"),
+    projectName: v.string(),
+    role: v.string(),
+  }),
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
@@ -435,6 +446,7 @@ export const addProjectMember = mutation({
     userId: v.id("users"),
     role: projectRoleValidator,
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUserOrThrow(ctx);
 
@@ -511,6 +523,7 @@ export const removeProjectMember = mutation({
     projectId: v.id("projects"),
     userId: v.id("users"),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUserOrThrow(ctx);
 
@@ -574,6 +587,7 @@ export const updateProjectMemberRole = mutation({
     userId: v.id("users"),
     role: projectRoleValidator,
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUserOrThrow(ctx);
 
@@ -630,6 +644,7 @@ export const updateProjectMemberRole = mutation({
     projectId: v.id("projects"),
     teamId: v.id("teams"),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
