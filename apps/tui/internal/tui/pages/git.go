@@ -24,16 +24,31 @@ type gitDataMsg struct {
 	Err    error
 }
 
+type gitActionMsg struct {
+	Action string
+	Err    error
+}
+
+type gitModalMode int
+
+const (
+	gitModalNone gitModalMode = iota
+	gitModalCommit
+)
+
 type gitPage struct {
 	width, height int
 	branch        string
 	files         []gitFile
 	cursor        int
 	loading       bool
+	modalMode     gitModalMode
+	commitInput   components.InputModel
 }
 
 func NewGitPage() PageModel {
-	return &gitPage{loading: true}
+	input := components.NewInput("Commit message...")
+	return &gitPage{loading: true, commitInput: input}
 }
 
 func (p *gitPage) Init() tea.Cmd {
@@ -75,23 +90,122 @@ func (p *gitPage) fetchGitStatus() tea.Cmd {
 	}
 }
 
+func stageFile(path string) tea.Cmd {
+	return func() tea.Msg {
+		err := exec.Command("git", "add", path).Run()
+		return gitActionMsg{Action: "staged", Err: err}
+	}
+}
+
+func unstageFile(path string) tea.Cmd {
+	return func() tea.Msg {
+		err := exec.Command("git", "reset", "HEAD", path).Run()
+		return gitActionMsg{Action: "unstaged", Err: err}
+	}
+}
+
+func commitChanges(message string) tea.Cmd {
+	return func() tea.Msg {
+		err := exec.Command("git", "commit", "-m", message).Run()
+		return gitActionMsg{Action: "committed", Err: err}
+	}
+}
+
 func (p *gitPage) Update(msg tea.Msg) (PageModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case gitDataMsg:
 		p.branch = msg.Branch
 		p.files = msg.Files
 		p.loading = false
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "j", "down":
-			if p.cursor < len(p.files)-1 {
-				p.cursor++
-			}
-		case "k", "up":
-			if p.cursor > 0 {
-				p.cursor--
+
+	case gitActionMsg:
+		if msg.Err != nil {
+			return p, func() tea.Msg {
+				return ShowToastMsg{Message: "Git " + msg.Action + " failed: " + msg.Err.Error(), IsError: true}
 			}
 		}
+		action := msg.Action
+		return p, tea.Batch(
+			p.fetchGitStatus(),
+			func() tea.Msg { return ShowToastMsg{Message: "Git: " + action} },
+		)
+
+	case tea.KeyMsg:
+		return p.handleKey(msg)
+	}
+
+	// Forward to commit input if in modal
+	if p.modalMode == gitModalCommit {
+		var cmd tea.Cmd
+		p.commitInput, cmd = p.commitInput.Update(msg)
+		return p, cmd
+	}
+
+	return p, nil
+}
+
+func (p *gitPage) handleKey(msg tea.KeyMsg) (PageModel, tea.Cmd) {
+	key := msg.String()
+
+	// Commit modal
+	if p.modalMode == gitModalCommit {
+		switch key {
+		case "enter":
+			message := strings.TrimSpace(p.commitInput.Value())
+			if message == "" {
+				return p, nil
+			}
+			p.modalMode = gitModalNone
+			p.commitInput.Blur()
+			p.commitInput.SetValue("")
+			return p, commitChanges(message)
+		case "esc":
+			p.modalMode = gitModalNone
+			p.commitInput.Blur()
+			p.commitInput.SetValue("")
+			return p, nil
+		default:
+			var cmd tea.Cmd
+			p.commitInput, cmd = p.commitInput.Update(msg)
+			return p, cmd
+		}
+	}
+
+	// Normal mode
+	switch key {
+	case "j", "down":
+		if p.cursor < len(p.files)-1 {
+			p.cursor++
+		}
+	case "k", "up":
+		if p.cursor > 0 {
+			p.cursor--
+		}
+	case " ":
+		if p.cursor >= 0 && p.cursor < len(p.files) {
+			f := p.files[p.cursor]
+			if f.Staged {
+				return p, unstageFile(f.Path)
+			}
+			return p, stageFile(f.Path)
+		}
+	case "c":
+		// Check if there are staged files
+		hasStaged := false
+		for _, f := range p.files {
+			if f.Staged {
+				hasStaged = true
+				break
+			}
+		}
+		if !hasStaged {
+			return p, func() tea.Msg {
+				return ShowToastMsg{Message: "No staged files to commit", IsError: true}
+			}
+		}
+		p.modalMode = gitModalCommit
+		p.commitInput.SetValue("")
+		return p, p.commitInput.Focus()
 	}
 	return p, nil
 }
@@ -118,6 +232,11 @@ func (p *gitPage) View() string {
 		return components.EmptyState("Loading git status...", p.width, p.height)
 	}
 
+	// Commit modal
+	if p.modalMode == gitModalCommit {
+		return p.viewCommitModal()
+	}
+
 	contentW := p.width - 2
 	if contentW < 20 {
 		contentW = 20
@@ -136,25 +255,51 @@ func (p *gitPage) View() string {
 	leftW := int(float64(contentW) * 0.5)
 	rightW := contentW - leftW - 3
 
-	// Build left side: staged + unstaged
 	leftContent := p.renderFileList(leftW)
-
-	// Build right side: diff preview
 	rightContent := p.renderDiffPreview(rightW)
 
 	b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, leftContent, "   ", rightContent))
 
-	// Commit input placeholder
-	b.WriteString("\n\n")
-	inputStyle := lipgloss.NewStyle().
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(theme.Indigo).
-		Width(contentW - 4).
-		Padding(0, 1)
-	prompt := theme.AccentTextStyle.Render("> ") + theme.TextDimStyle.Render("Enter commit message...")
-	b.WriteString("  " + inputStyle.Render(prompt))
-
 	return b.String()
+}
+
+func (p *gitPage) viewCommitModal() string {
+	var lines []string
+	lines = append(lines, theme.BrandTextStyle.Render("COMMIT CHANGES"))
+	lines = append(lines, "")
+
+	// Show staged files
+	for _, f := range p.files {
+		if f.Staged {
+			lines = append(lines, theme.SuccessTextStyle.Render(theme.SymCheck+" "+f.Path))
+		}
+	}
+	lines = append(lines, "")
+	lines = append(lines, p.commitInput.View())
+	lines = append(lines, "")
+	lines = append(lines, components.KeyHints(
+		components.KeyHint("enter", "commit"),
+		components.KeyHint("esc", "cancel"),
+	))
+
+	content := strings.Join(lines, "\n")
+	modalW := p.width / 2
+	if modalW < 45 {
+		modalW = 45
+	}
+	if modalW > 70 {
+		modalW = 70
+	}
+
+	box := lipgloss.NewStyle().
+		Background(theme.BgElevated).
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(theme.Green).
+		Padding(1, 2).
+		Width(modalW).
+		Render(content)
+
+	return lipgloss.Place(p.width, p.height, lipgloss.Center, lipgloss.Center, box)
 }
 
 func (p *gitPage) renderFileList(width int) string {
@@ -170,7 +315,6 @@ func (p *gitPage) renderFileList(width int) string {
 		}
 	}
 
-	// Staged files
 	b.WriteString(theme.SectionHeader.Render(fmt.Sprintf("STAGED CHANGES (%d)", staged)) + "\n\n")
 	hasStagedFiles := false
 	for i, f := range p.files {
@@ -179,8 +323,8 @@ func (p *gitPage) renderFileList(width int) string {
 		}
 		hasStagedFiles = true
 		check := theme.SuccessTextStyle.Render(theme.SymCheck)
-		meta := theme.SuccessTextStyle.Render("Enabled")
 		title := check + " " + f.Path
+		meta := theme.SuccessTextStyle.Render("Staged")
 		b.WriteString(components.RenderListItem(title, meta, i == p.cursor, width) + "\n")
 	}
 	if !hasStagedFiles {
@@ -188,7 +332,6 @@ func (p *gitPage) renderFileList(width int) string {
 	}
 	b.WriteString("\n")
 
-	// Unstaged files
 	b.WriteString(theme.SectionHeader.Render(fmt.Sprintf("UNSTAGED CHANGES (%d)", unstaged)) + "\n\n")
 	hasUnstagedFiles := false
 	for i, f := range p.files {
@@ -196,7 +339,8 @@ func (p *gitPage) renderFileList(width int) string {
 			continue
 		}
 		hasUnstagedFiles = true
-		meta := theme.TextMutedStyle.Render("Disabled ") + theme.TextMutedStyle.Render(theme.SymDotEmpty)
+		statusColor := gitStatusColor(f.Status)
+		meta := theme.ColorBoldStyle(statusColor).Render(f.Status)
 		b.WriteString(components.RenderListItem(f.Path, meta, i == p.cursor, width) + "\n")
 	}
 	if !hasUnstagedFiles {
@@ -207,7 +351,6 @@ func (p *gitPage) renderFileList(width int) string {
 }
 
 func (p *gitPage) renderDiffPreview(width int) string {
-	// Get the currently selected file's path
 	selectedPath := ""
 	if p.cursor >= 0 && p.cursor < len(p.files) {
 		selectedPath = p.files[p.cursor].Path
@@ -217,7 +360,6 @@ func (p *gitPage) renderDiffPreview(width int) string {
 		return components.BorderedSection("DIFF", theme.TextMutedStyle.Render("Select a file to preview"), width)
 	}
 
-	// Try to get diff for the selected file
 	diffContent := p.getDiff(selectedPath)
 	if diffContent == "" {
 		diffContent = theme.TextMutedStyle.Render("No diff available")
@@ -228,7 +370,6 @@ func (p *gitPage) renderDiffPreview(width int) string {
 }
 
 func (p *gitPage) getDiff(path string) string {
-	// Try unstaged diff first, then staged
 	out, err := exec.Command("git", "diff", "--", path).Output()
 	if err != nil || len(out) == 0 {
 		out, err = exec.Command("git", "diff", "--cached", "--", path).Output()
@@ -237,7 +378,6 @@ func (p *gitPage) getDiff(path string) string {
 		}
 	}
 
-	// Syntax color the diff output
 	lines := strings.Split(string(out), "\n")
 	maxLines := 20
 	if len(lines) > maxLines {

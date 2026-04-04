@@ -38,3 +38,12 @@ type PageFocusedMsg struct{}
 
 // PageBlurredMsg is sent by the shell when focus returns to the sidebar.
 type PageBlurredMsg struct{}
+
+// ShowToastMsg is returned by pages to request a toast in the shell.
+type ShowToastMsg struct {
+	Message string
+	IsError bool
+}
+
+// RefreshPageMsg tells the shell to re-init the current page.
+type RefreshPageMsg struct{}

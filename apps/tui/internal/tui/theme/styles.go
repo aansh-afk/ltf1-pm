@@ -10,6 +10,7 @@ import (
 // Shell chrome styles
 
 var TopBarStyle = lipgloss.NewStyle().
+	Background(BgSurface).
 	Padding(1, 2).
 	BorderStyle(lipgloss.NormalBorder()).
 	BorderBottom(true).
@@ -17,11 +18,13 @@ var TopBarStyle = lipgloss.NewStyle().
 
 var SidebarStyle = lipgloss.NewStyle().
 	Width(SidebarWidth).
+	Background(BgBase).
 	BorderStyle(lipgloss.NormalBorder()).
 	BorderRight(true).
 	BorderForeground(BorderSubtle)
 
 var StatusBarStyle = lipgloss.NewStyle().
+	Background(BgSurface).
 	BorderStyle(lipgloss.NormalBorder()).
 	BorderTop(true).
 	BorderForeground(BorderSubtle)

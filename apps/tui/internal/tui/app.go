@@ -339,6 +339,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	// Handle toast requests from pages
+	switch msg := msg.(type) {
+	case pages.ShowToastMsg:
+		level := components.ToastLevelSuccess
+		if msg.IsError {
+			level = components.ToastLevelError
+		}
+		t, cmd := components.NewToast(msg.Message, level)
+		m.toast = &t
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+	case pages.RefreshPageMsg:
+		if cmd := m.initPage(m.page); cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+	}
+
 	// Broadcast non-key messages to all pages so page-scoped async messages are
 	// never dropped by the shell.
 	if m.appState == StateReady {
@@ -524,6 +542,7 @@ func (m Model) View() tea.View {
 	contentStyle := lipgloss.NewStyle().
 		Width(contentWidth).
 		Height(contentHeight).
+		Background(theme.BgBase).
 		MaxWidth(theme.ContentMaxWidth)
 
 	renderedContent := contentStyle.Render(content)
