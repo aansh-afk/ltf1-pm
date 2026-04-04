@@ -108,7 +108,7 @@ func (p *settingsPage) View() string {
 	// Version info
 	b.WriteString("  " + theme.SectionHeader.Render("VERSION") + "\n")
 	b.WriteString("\n")
-	row("TUI", "v0.8.0")
+	row("TUI", "v0.1.8")
 	b.WriteString("\n\n")
 
 	// Actions

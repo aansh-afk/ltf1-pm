@@ -31,7 +31,7 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
-    version: '0.8.0',
+    version: '0.1.8',
     date: 'Apr 4, 2026',
     tag: 'TUI V3',
     tagColor: '#6366F1',
@@ -56,7 +56,7 @@ const RELEASES: Release[] = [
     ],
   },
   {
-    version: '0.7.0',
+    version: '0.1.7',
     date: 'Mar 28, 2026',
     tag: 'TUI V2',
     tagColor: '#22C55E',
@@ -78,7 +78,7 @@ const RELEASES: Release[] = [
     ],
   },
   {
-    version: '0.6.0',
+    version: '0.1.6',
     date: 'Mar 28, 2026',
     tag: 'AGENT + SKILLS',
     tagColor: '#F59E0B',
@@ -106,7 +106,7 @@ const RELEASES: Release[] = [
     ],
   },
   {
-    version: '0.5.0',
+    version: '0.1.5',
     date: 'Mar 15, 2026',
     tag: 'PAGES',
     tagColor: '#6366F1',
@@ -123,7 +123,7 @@ const RELEASES: Release[] = [
     ],
   },
   {
-    version: '0.4.0',
+    version: '0.1.4',
     date: 'Feb 22, 2026',
     tag: 'ADMIN + EMAIL',
     tagColor: '#8B5CF6',
@@ -140,7 +140,7 @@ const RELEASES: Release[] = [
     ],
   },
   {
-    version: '0.3.0',
+    version: '0.1.3',
     date: 'Feb 22, 2026',
     tag: 'SECURITY + POLISH',
     tagColor: '#EF4444',
@@ -163,7 +163,7 @@ const RELEASES: Release[] = [
     ],
   },
   {
-    version: '0.2.0',
+    version: '0.1.2',
     date: 'Feb 15, 2026',
     tag: 'FEATURES',
     tagColor: '#6366F1',
@@ -187,7 +187,7 @@ const RELEASES: Release[] = [
     ],
   },
   {
-    version: '0.1.0',
+    version: '0.1.1',
     date: 'Jan 2026',
     tag: 'INITIAL RELEASE',
     tagColor: '#22C55E',
