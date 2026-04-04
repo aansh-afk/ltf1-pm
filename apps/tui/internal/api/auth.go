@@ -13,8 +13,9 @@ import (
 // Mirrors the CLIConfig interface from apps/cli/src/lib/config.ts.
 // The `conf` npm package stores nested JSON objects.
 type AuthConfig struct {
-	Auth    AuthInfo    `json:"auth"`
-	Context ProjectInfo `json:"context"`
+	Auth      AuthInfo    `json:"auth"`
+	Context   ProjectInfo `json:"context"`
+	ConvexURL string      `json:"convexUrl,omitempty"`
 }
 
 // AuthInfo holds authentication details.

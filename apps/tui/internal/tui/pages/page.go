@@ -31,6 +31,10 @@ type PageModel interface {
 	// The app shell will delegate these keys to the page instead of
 	// treating them as global navigation shortcuts.
 	KeyBinds() []string
+
+	// HasModal returns true if the page currently has a modal open.
+	// When true, the shell sends esc to the page instead of focusing the sidebar.
+	HasModal() bool
 }
 
 // PageFocusedMsg is sent by the shell when a page enters focused mode.

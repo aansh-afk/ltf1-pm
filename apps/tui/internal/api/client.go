@@ -12,14 +12,20 @@ import (
 	"time"
 )
 
-const defaultDeploymentURL = "https://tangible-butterfly-366.convex.cloud"
-
-// GetConvexURL returns the Convex deployment URL from config or env.
+// GetConvexURL returns the Convex deployment URL.
+// Priority: CONVEX_URL env > VITE_CONVEX_URL env > config file > empty.
+// No hardcoded fallback — must be configured.
 func GetConvexURL(config *AuthConfig) string {
 	if u := os.Getenv("CONVEX_URL"); u != "" {
 		return u
 	}
-	return defaultDeploymentURL
+	if u := os.Getenv("VITE_CONVEX_URL"); u != "" {
+		return u
+	}
+	if config != nil && config.ConvexURL != "" {
+		return config.ConvexURL
+	}
+	return ""
 }
 
 // ConvexClient is an HTTP client for the Convex API.
@@ -36,9 +42,6 @@ type ConvexClient struct {
 func NewClient(deploymentURL string, config *AuthConfig) *ConvexClient {
 	if deploymentURL == "" {
 		deploymentURL = os.Getenv("CONVEX_URL")
-	}
-	if deploymentURL == "" {
-		deploymentURL = defaultDeploymentURL
 	}
 	token := ""
 	if config != nil {

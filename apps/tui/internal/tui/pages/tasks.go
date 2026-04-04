@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/api"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/components"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
@@ -72,7 +71,9 @@ func (p *tasksPage) Init() tea.Cmd {
 
 func (p *tasksPage) fetchTasks() tea.Cmd {
 	return func() tea.Msg {
-		raw, err := p.client.Query("tasks/queries:getMyTasks", map[string]interface{}{})
+		raw, err := p.client.Query("tasks/queries:getProjectTasks", map[string]interface{}{
+			"projectId": p.projectID,
+		})
 		if err != nil {
 			return tasksDataMsg{Err: err}
 		}
@@ -314,24 +315,9 @@ func (p *tasksPage) KeyBinds() []string {
 	return []string{"j", "k", "up", "down", "c", "e", "x", "enter", " "}
 }
 
-func (p *tasksPage) View() string {
-	if p.client == nil {
-		return components.EmptyState("Not connected", p.width, p.height)
-	}
-	if p.loading {
-		return components.EmptyState("Loading tasks...", p.width, p.height)
-	}
+func (p *tasksPage) HasModal() bool { return p.modalMode != taskModalNone }
 
-	// Render modals on top
-	switch p.modalMode {
-	case taskModalCreate:
-		return p.viewCreateModal()
-	case taskModalDetail:
-		return p.viewDetailModal()
-	case taskModalDelete:
-		return p.viewDeleteModal()
-	}
-
+func (p *tasksPage) renderList() string {
 	var b strings.Builder
 	b.WriteString("\n")
 
@@ -339,7 +325,6 @@ func (p *tasksPage) View() string {
 	count := theme.TextMutedStyle.Render(fmt.Sprintf(" (%d)", len(p.tasks)))
 	b.WriteString(header + count + "\n\n")
 
-	// Filter bar
 	b.WriteString(renderFilterBar() + "\n\n")
 
 	if len(p.tasks) == 0 {
@@ -365,7 +350,29 @@ func (p *tasksPage) View() string {
 	return b.String()
 }
 
-func (p *tasksPage) viewCreateModal() string {
+func (p *tasksPage) View() string {
+	if p.client == nil {
+		return components.EmptyState("Not connected", p.width, p.height)
+	}
+	if p.loading {
+		return components.EmptyState("Loading tasks...", p.width, p.height)
+	}
+
+	bg := p.renderList()
+
+	switch p.modalMode {
+	case taskModalCreate:
+		return p.viewCreateModal(bg)
+	case taskModalDetail:
+		return p.viewDetailModal(bg)
+	case taskModalDelete:
+		return p.viewDeleteModal(bg)
+	}
+
+	return bg
+}
+
+func (p *tasksPage) viewCreateModal(bg string) string {
 	var lines []string
 	lines = append(lines, theme.BrandTextStyle.Render("CREATE TASK"))
 	lines = append(lines, "")
@@ -376,36 +383,18 @@ func (p *tasksPage) viewCreateModal() string {
 		components.KeyHint("esc", "cancel"),
 	))
 
-	content := strings.Join(lines, "\n")
-	modalW := p.width / 2
-	if modalW < 40 {
-		modalW = 40
-	}
-	if modalW > 70 {
-		modalW = 70
-	}
-
-	box := lipgloss.NewStyle().
-		Background(theme.BgElevated).
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(theme.Indigo).
-		Padding(1, 2).
-		Width(modalW).
-		Render(content)
-
-	return lipgloss.Place(p.width, p.height, lipgloss.Center, lipgloss.Center, box)
+	return components.OverlayModal(bg, strings.Join(lines, "\n"), p.width, p.height, theme.Indigo)
 }
 
-func (p *tasksPage) viewDetailModal() string {
+func (p *tasksPage) viewDetailModal(bg string) string {
 	if p.cursor < 0 || p.cursor >= len(p.tasks) {
-		return ""
+		return bg
 	}
 	t := p.tasks[p.cursor]
 
 	var lines []string
 	lines = append(lines, theme.BrandTextStyle.Render(strings.ToUpper(t.Title)))
 
-	// Status + Priority
 	statusLine := components.StatusBadge(t.Status)
 	if t.Priority != "" {
 		statusLine += theme.TextDimStyle.Render(" "+theme.SymBullet+" ") + components.PriorityBadgePlain(t.Priority)
@@ -413,7 +402,6 @@ func (p *tasksPage) viewDetailModal() string {
 	lines = append(lines, statusLine)
 	lines = append(lines, "")
 
-	// Metadata
 	if t.Type != "" {
 		lines = append(lines, theme.TextMutedStyle.Render("Type: ")+theme.TextPrimaryStyle.Render(t.Type))
 	}
@@ -421,7 +409,6 @@ func (p *tasksPage) viewDetailModal() string {
 		lines = append(lines, theme.TextMutedStyle.Render("Estimate: ")+theme.TextPrimaryStyle.Render(fmt.Sprintf("%.0f pts", t.Estimate)))
 	}
 
-	// Description
 	if t.Description != "" {
 		lines = append(lines, "")
 		lines = append(lines, theme.TextSecondaryStyle.Render(t.Description))
@@ -434,29 +421,12 @@ func (p *tasksPage) viewDetailModal() string {
 		components.KeyHint("esc", "close"),
 	))
 
-	content := strings.Join(lines, "\n")
-	modalW := p.width / 2
-	if modalW < 45 {
-		modalW = 45
-	}
-	if modalW > 70 {
-		modalW = 70
-	}
-
-	box := lipgloss.NewStyle().
-		Background(theme.BgElevated).
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(theme.BorderDefault).
-		Padding(1, 2).
-		Width(modalW).
-		Render(content)
-
-	return lipgloss.Place(p.width, p.height, lipgloss.Center, lipgloss.Center, box)
+	return components.OverlayModal(bg, strings.Join(lines, "\n"), p.width, p.height, theme.BorderDefault)
 }
 
-func (p *tasksPage) viewDeleteModal() string {
+func (p *tasksPage) viewDeleteModal(bg string) string {
 	if p.cursor < 0 || p.cursor >= len(p.tasks) {
-		return ""
+		return bg
 	}
 	t := p.tasks[p.cursor]
 
@@ -470,16 +440,7 @@ func (p *tasksPage) viewDeleteModal() string {
 		components.KeyHint("n", "no"),
 	))
 
-	content := strings.Join(lines, "\n")
-	box := lipgloss.NewStyle().
-		Background(theme.BgElevated).
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(theme.Red).
-		Padding(1, 2).
-		Width(50).
-		Render(content)
-
-	return lipgloss.Place(p.width, p.height, lipgloss.Center, lipgloss.Center, box)
+	return components.OverlayModal(bg, strings.Join(lines, "\n"), p.width, p.height, theme.Red)
 }
 
 func renderFilterBar() string {

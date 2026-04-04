@@ -1,11 +1,15 @@
 package components
 
 import (
+	"regexp"
 	"strings"
 
 	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
+
+// ansiPattern matches ANSI escape sequences for width-safe truncation.
+var ansiPattern = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 
 // BorderedSection renders content inside a rounded box with the header
 // embedded in the top border line:
@@ -15,6 +19,8 @@ import (
 //	│  Content here                         │
 //	│                                       │
 //	╰───────────────────────────────────────╯
+//
+// Content lines that exceed the inner width are truncated with an ellipsis.
 func BorderedSection(header, content string, width int) string {
 	if width < 10 {
 		width = 10
@@ -31,7 +37,7 @@ func BorderedSection(header, content string, width int) string {
 	topLeft := borderStyle.Render(theme.BoxTL + theme.BoxH)
 	topRight := borderStyle.Render(theme.BoxTR)
 
-	fillW := width - 2 - 1 - headerVisualW - 1 // 2 for ╭─, 1 for ╮, headerW already accounted
+	fillW := width - 2 - 1 - headerVisualW - 1
 	if fillW < 1 {
 		fillW = 1
 	}
@@ -39,7 +45,7 @@ func BorderedSection(header, content string, width int) string {
 	topLine := topLeft + headerRendered + topFill + topRight
 
 	// Build bottom border: ╰───────────────╯
-	bottomFillW := width - 2 // for ╰ and ╯
+	bottomFillW := width - 2
 	if bottomFillW < 1 {
 		bottomFillW = 1
 	}
@@ -60,6 +66,11 @@ func BorderedSection(header, content string, width int) string {
 
 	for _, cl := range contentLines {
 		visW := lipgloss.Width(cl)
+		if visW > innerW {
+			// Truncate the line to fit within the box
+			cl = truncateAnsi(cl, innerW-1) + theme.TextDimStyle.Render(theme.SymEllipsis)
+		}
+		visW = lipgloss.Width(cl)
 		pad := innerW - visW
 		if pad < 0 {
 			pad = 0
@@ -70,6 +81,44 @@ func BorderedSection(header, content string, width int) string {
 	lines = append(lines, bottomLine)
 
 	return strings.Join(lines, "\n")
+}
+
+// truncateAnsi truncates a string that may contain ANSI escape sequences
+// to maxWidth visible characters, preserving ANSI codes.
+func truncateAnsi(s string, maxWidth int) string {
+	if maxWidth <= 0 {
+		return ""
+	}
+
+	var result strings.Builder
+	visWidth := 0
+	i := 0
+	runes := []rune(s)
+
+	for i < len(runes) {
+		// Check for ANSI escape sequence
+		remaining := string(runes[i:])
+		if loc := ansiPattern.FindStringIndex(remaining); loc != nil && loc[0] == 0 {
+			// Write the entire ANSI sequence without counting width
+			seq := remaining[loc[0]:loc[1]]
+			result.WriteString(seq)
+			i += len([]rune(seq))
+			continue
+		}
+
+		if visWidth >= maxWidth {
+			break
+		}
+
+		result.WriteRune(runes[i])
+		visWidth++
+		i++
+	}
+
+	// Close any open ANSI sequences with a reset
+	result.WriteString("\x1b[0m")
+
+	return result.String()
 }
 
 // KeyHint formats a single key hint in bracket notation: [key] action

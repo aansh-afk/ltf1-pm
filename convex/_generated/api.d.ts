@@ -56,6 +56,8 @@ import type * as cliRefresh from "../cliRefresh.js";
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as communications_mutations from "../communications/mutations.js";
 import type * as communications_queries from "../communications/queries.js";
+import type * as community_mutations from "../community/mutations.js";
+import type * as community_queries from "../community/queries.js";
 import type * as crons from "../crons.js";
 import type * as customFields from "../customFields.js";
 import type * as dashboard_queries from "../dashboard/queries.js";
@@ -196,6 +198,8 @@ declare const fullApi: ApiFromModules<{
   "comments/mutations": typeof comments_mutations;
   "communications/mutations": typeof communications_mutations;
   "communications/queries": typeof communications_queries;
+  "community/mutations": typeof community_mutations;
+  "community/queries": typeof community_queries;
   crons: typeof crons;
   customFields: typeof customFields;
   "dashboard/queries": typeof dashboard_queries;

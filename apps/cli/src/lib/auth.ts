@@ -395,8 +395,10 @@ export async function refreshToken(): Promise<boolean> {
   }
 
   // Derive the Convex site URL from the cloud URL
-  const convexUrl =
-    process.env.CONVEX_URL || "https://tangible-butterfly-366.convex.cloud";
+  const convexUrl = process.env.CONVEX_URL || "";
+  if (!convexUrl) {
+    throw new Error("CONVEX_URL environment variable is required");
+  }
   const siteUrl = convexUrl.replace(".convex.cloud", ".convex.site");
 
   try {

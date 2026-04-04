@@ -72,6 +72,8 @@ func (p *settingsPage) KeyBinds() []string {
 	return []string{"j", "k", "up", "down", "enter"}
 }
 
+func (p *settingsPage) HasModal() bool { return false }
+
 func (p *settingsPage) View() string {
 	var b strings.Builder
 

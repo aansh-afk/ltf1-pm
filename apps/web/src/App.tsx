@@ -65,6 +65,7 @@ const DesignReferencePage = lazy(() => import("./pages/DesignReferencePage"));
 const TimeReportPage = lazy(() => import("./pages/TimeReportPage"));
 const AdminBugReportsPage = lazy(() => import("./pages/AdminBugReportsPage"));
 const TriagePage = lazy(() => import("./pages/TriagePage"));
+const CommunityPage = lazy(() => import("./pages/CommunityPage"));
 import { useEnsureUser } from "./hooks/useEnsureUser";
 import { DataMigrationBanner } from "./components/admin/DataMigrationBanner";
 import CommandPalette from "./components/shortcuts/CommandPalette";
@@ -262,6 +263,7 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
             <Route path="pages" element={<PagesPage />} />
             <Route path="custom-fields" element={<CustomFieldsPage />} />
             <Route path="triage" element={<TriagePage />} />
+            <Route path="community" element={<CommunityPage />} />
             <Route path="time-report" element={<TimeReportPage />} />
             <Route path="admin/bugs" element={<AdminBugReportsPage />} />
           </Route>

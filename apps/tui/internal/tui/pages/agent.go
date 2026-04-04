@@ -159,6 +159,8 @@ func (p *agentPage) KeyBinds() []string {
 	return []string{"j", "k", "up", "down", "a", "r", "m"}
 }
 
+func (p *agentPage) HasModal() bool { return false }
+
 func (p *agentPage) View() string {
 	if p.client == nil {
 		return components.EmptyState("Not connected", p.width, p.height)

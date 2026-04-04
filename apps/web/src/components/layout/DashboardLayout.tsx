@@ -17,6 +17,7 @@ import {
   HiOutlineRefresh,
   HiOutlineExclamationCircle,
   HiOutlineInbox,
+  HiOutlineGlobe,
 } from 'react-icons/hi'
 import clsx from 'clsx'
 import { useQuery } from 'convex/react'
@@ -141,6 +142,7 @@ const NAV_ITEMS = [
   { path: '/triage', label: 'TRIAGE', icon: HiOutlineInbox },
   { path: '/team', label: 'TEAM', icon: HiOutlineUserGroup },
   { path: '/sprints', label: 'SPRINTS', icon: HiOutlineRefresh },
+  { path: '/community', label: 'COMMUNITY', icon: HiOutlineGlobe },
   { path: '/pages', label: 'PAGES', icon: HiOutlineDocumentText },
   { path: '/settings', label: 'SETTINGS', icon: HiOutlineCog },
 ] as const
