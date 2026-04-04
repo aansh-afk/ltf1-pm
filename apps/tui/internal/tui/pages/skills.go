@@ -74,7 +74,11 @@ func (p *skillsPage) SetSize(w, h int) {
 }
 
 func (p *skillsPage) ShortHelp() string {
-	return "j/k navigate  space toggle"
+	return components.KeyHints(
+		components.KeyHint("space", "toggle"),
+		components.KeyHint("enter", "details"),
+		components.KeyHint("r", "refresh"),
+	)
 }
 
 func (p *skillsPage) KeyBinds() []string {
@@ -93,30 +97,24 @@ func (p *skillsPage) View() string {
 
 	b.WriteString("\n")
 	b.WriteString(theme.SectionHeader.Render("SKILLS") + "\n")
+	b.WriteString(theme.TextMutedStyle.Render("Configure the AI agent's capabilities for this workspace.") + "\n")
 	b.WriteString("\n")
 
 	if len(p.skills) == 0 {
-		b.WriteString(components.EmptyState("No skills configured", p.width, p.height-4))
+		b.WriteString(components.EmptyState("No skills configured", p.width, p.height-6))
 		return b.String()
 	}
 
 	for i, skill := range p.skills {
-		// Active indicator
-		activeIndicator := theme.TextDimStyle.Render(theme.SymDotEmpty)
+		// Status badge: "Enabled ✓" or "Disabled ○"
+		var meta string
 		if skill.IsActive {
-			activeIndicator = theme.SuccessTextStyle.Render(theme.SymDot)
+			meta = theme.SuccessTextStyle.Render("Enabled ") + theme.SuccessTextStyle.Render(theme.SymCheck)
+		} else {
+			meta = theme.TextMutedStyle.Render("Disabled ") + theme.TextMutedStyle.Render(theme.SymDotEmpty)
 		}
 
-		// Trigger type badge
-		triggerBadge := theme.SkillTextStyle.Render(skill.Trigger)
-
-		title := activeIndicator + " " + skill.DisplayName
-		meta := triggerBadge
-		if skill.Description != "" {
-			meta += "  " + theme.TextDimStyle.Render(skill.Description)
-		}
-
-		b.WriteString(components.RenderListItem(title, meta, i == p.cursor) + "\n")
+		b.WriteString(components.RenderListItem(skill.DisplayName, meta, i == p.cursor, p.width-2) + "\n")
 	}
 
 	return b.String()

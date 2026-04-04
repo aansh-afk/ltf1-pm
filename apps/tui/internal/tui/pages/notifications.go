@@ -75,7 +75,7 @@ func (p *notificationsPage) SetSize(w, h int) {
 }
 
 func (p *notificationsPage) ShortHelp() string {
-	return "j/k navigate  enter mark read"
+	return components.KeyHints(components.KeyHint("enter", "mark read"))
 }
 
 func (p *notificationsPage) KeyBinds() []string {

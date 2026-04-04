@@ -7,6 +7,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/api"
+	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/components"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
 
@@ -64,7 +65,7 @@ func (p *settingsPage) SetSize(w, h int) {
 }
 
 func (p *settingsPage) ShortHelp() string {
-	return "j/k navigate  enter select"
+	return components.KeyHints(components.KeyHint("enter", "select"))
 }
 
 func (p *settingsPage) KeyBinds() []string {
@@ -83,7 +84,7 @@ func (p *settingsPage) View() string {
 	}
 
 	// Connection info
-	b.WriteString("  " + theme.AccentTextStyle.Render("CONNECTION") + "\n")
+	b.WriteString("  " + theme.SectionHeader.Render("CONNECTION") + "\n")
 	b.WriteString("\n")
 
 	if p.config != nil {
@@ -105,13 +106,13 @@ func (p *settingsPage) View() string {
 	b.WriteString("\n\n")
 
 	// Version info
-	b.WriteString("  " + theme.AccentTextStyle.Render("VERSION") + "\n")
+	b.WriteString("  " + theme.SectionHeader.Render("VERSION") + "\n")
 	b.WriteString("\n")
 	row("TUI", "v0.8.0")
 	b.WriteString("\n\n")
 
 	// Actions
-	b.WriteString("  " + theme.AccentTextStyle.Render("ACTIONS") + "\n")
+	b.WriteString("  " + theme.SectionHeader.Render("ACTIONS") + "\n")
 	b.WriteString("\n")
 	for i, item := range p.items {
 		if i == p.cursor {

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/components"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
@@ -43,7 +44,6 @@ func (p *gitPage) fetchGitStatus() tea.Cmd {
 	return func() tea.Msg {
 		var data gitDataMsg
 
-		// Get branch
 		out, err := exec.Command("git", "branch", "--show-current").Output()
 		if err != nil {
 			data.Err = err
@@ -51,7 +51,6 @@ func (p *gitPage) fetchGitStatus() tea.Cmd {
 		}
 		data.Branch = strings.TrimSpace(string(out))
 
-		// Get status
 		out, err = exec.Command("git", "status", "--porcelain").Output()
 		if err != nil {
 			data.Err = err
@@ -103,7 +102,11 @@ func (p *gitPage) SetSize(w, h int) {
 }
 
 func (p *gitPage) ShortHelp() string {
-	return "j/k navigate  space stage/unstage  c commit"
+	return components.KeyHints(
+		components.KeyHint("space", "stage/unstage"),
+		components.KeyHint("c", "commit"),
+		components.KeyHint("r", "refresh"),
+	)
 }
 
 func (p *gitPage) KeyBinds() []string {
@@ -115,23 +118,48 @@ func (p *gitPage) View() string {
 		return components.EmptyState("Loading git status...", p.width, p.height)
 	}
 
+	contentW := p.width - 2
+	if contentW < 20 {
+		contentW = 20
+	}
+
 	var b strings.Builder
-
 	b.WriteString("\n")
-
-	// Branch info
-	b.WriteString(theme.SectionHeader.Render("GIT") + "\n")
-	b.WriteString("\n")
-	b.WriteString("  " + theme.SuccessTextStyle.Render(theme.SymDot) + " " +
-		theme.SuccessBoldStyle.Render(p.branch) + "\n")
-	b.WriteString("\n\n")
+	b.WriteString(theme.SectionHeader.Render("GIT STATUS") + "\n\n")
 
 	if len(p.files) == 0 {
 		b.WriteString("  " + theme.TextMutedStyle.Render(theme.SymCheck+" Working tree clean") + "\n")
 		return b.String()
 	}
 
-	// Count files
+	// Split layout: left = file lists, right = diff preview
+	leftW := int(float64(contentW) * 0.5)
+	rightW := contentW - leftW - 3
+
+	// Build left side: staged + unstaged
+	leftContent := p.renderFileList(leftW)
+
+	// Build right side: diff preview
+	rightContent := p.renderDiffPreview(rightW)
+
+	b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, leftContent, "   ", rightContent))
+
+	// Commit input placeholder
+	b.WriteString("\n\n")
+	inputStyle := lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(theme.Indigo).
+		Width(contentW - 4).
+		Padding(0, 1)
+	prompt := theme.AccentTextStyle.Render("> ") + theme.TextDimStyle.Render("Enter commit message...")
+	b.WriteString("  " + inputStyle.Render(prompt))
+
+	return b.String()
+}
+
+func (p *gitPage) renderFileList(width int) string {
+	var b strings.Builder
+
 	staged := 0
 	unstaged := 0
 	for _, f := range p.files {
@@ -143,43 +171,96 @@ func (p *gitPage) View() string {
 	}
 
 	// Staged files
-	b.WriteString(theme.SectionHeader.Render("STAGED") +
-		theme.TextMutedStyle.Render(fmt.Sprintf(" (%d)", staged)) + "\n")
-	b.WriteString("\n")
+	b.WriteString(theme.SectionHeader.Render(fmt.Sprintf("STAGED CHANGES (%d)", staged)) + "\n\n")
 	hasStagedFiles := false
 	for i, f := range p.files {
 		if !f.Staged {
 			continue
 		}
 		hasStagedFiles = true
-		statusColor := gitStatusColor(f.Status)
-		meta := theme.ColorBoldStyle(statusColor).Render(f.Status)
-		b.WriteString(components.RenderListItem(f.Path, meta, i == p.cursor) + "\n")
+		check := theme.SuccessTextStyle.Render(theme.SymCheck)
+		meta := theme.SuccessTextStyle.Render("Enabled")
+		title := check + " " + f.Path
+		b.WriteString(components.RenderListItem(title, meta, i == p.cursor, width) + "\n")
 	}
 	if !hasStagedFiles {
 		b.WriteString("  " + theme.TextMutedStyle.Render(theme.SymDotEmpty+" No staged files") + "\n")
 	}
-	b.WriteString("\n\n")
+	b.WriteString("\n")
 
 	// Unstaged files
-	b.WriteString(theme.SectionHeader.Render("UNSTAGED") +
-		theme.TextMutedStyle.Render(fmt.Sprintf(" (%d)", unstaged)) + "\n")
-	b.WriteString("\n")
+	b.WriteString(theme.SectionHeader.Render(fmt.Sprintf("UNSTAGED CHANGES (%d)", unstaged)) + "\n\n")
 	hasUnstagedFiles := false
 	for i, f := range p.files {
 		if f.Staged {
 			continue
 		}
 		hasUnstagedFiles = true
-		statusColor := gitStatusColor(f.Status)
-		meta := theme.ColorBoldStyle(statusColor).Render(f.Status)
-		b.WriteString(components.RenderListItem(f.Path, meta, i == p.cursor) + "\n")
+		meta := theme.TextMutedStyle.Render("Disabled ") + theme.TextMutedStyle.Render(theme.SymDotEmpty)
+		b.WriteString(components.RenderListItem(f.Path, meta, i == p.cursor, width) + "\n")
 	}
 	if !hasUnstagedFiles {
 		b.WriteString("  " + theme.TextMutedStyle.Render(theme.SymDotEmpty+" No unstaged files") + "\n")
 	}
 
 	return b.String()
+}
+
+func (p *gitPage) renderDiffPreview(width int) string {
+	// Get the currently selected file's path
+	selectedPath := ""
+	if p.cursor >= 0 && p.cursor < len(p.files) {
+		selectedPath = p.files[p.cursor].Path
+	}
+
+	if selectedPath == "" {
+		return components.BorderedSection("DIFF", theme.TextMutedStyle.Render("Select a file to preview"), width)
+	}
+
+	// Try to get diff for the selected file
+	diffContent := p.getDiff(selectedPath)
+	if diffContent == "" {
+		diffContent = theme.TextMutedStyle.Render("No diff available")
+	}
+
+	header := fmt.Sprintf("DIFF: %s", selectedPath)
+	return components.BorderedSection(header, diffContent, width)
+}
+
+func (p *gitPage) getDiff(path string) string {
+	// Try unstaged diff first, then staged
+	out, err := exec.Command("git", "diff", "--", path).Output()
+	if err != nil || len(out) == 0 {
+		out, err = exec.Command("git", "diff", "--cached", "--", path).Output()
+		if err != nil || len(out) == 0 {
+			return ""
+		}
+	}
+
+	// Syntax color the diff output
+	lines := strings.Split(string(out), "\n")
+	maxLines := 20
+	if len(lines) > maxLines {
+		lines = lines[:maxLines]
+	}
+
+	var colored []string
+	for _, line := range lines {
+		switch {
+		case strings.HasPrefix(line, "+++ ") || strings.HasPrefix(line, "--- "):
+			colored = append(colored, theme.TextMutedStyle.Render(line))
+		case strings.HasPrefix(line, "@@"):
+			colored = append(colored, theme.AccentTextStyle.Render(line))
+		case strings.HasPrefix(line, "+"):
+			colored = append(colored, theme.SuccessTextStyle.Render(line))
+		case strings.HasPrefix(line, "-"):
+			colored = append(colored, theme.ErrorTextStyle.Render(line))
+		default:
+			colored = append(colored, theme.TextDimStyle.Render(line))
+		}
+	}
+
+	return strings.Join(colored, "\n")
 }
 
 func gitStatusColor(status string) color.Color {

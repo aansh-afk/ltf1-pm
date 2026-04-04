@@ -79,7 +79,9 @@ func (p *projectsPage) SetSize(w, h int) {
 }
 
 func (p *projectsPage) ShortHelp() string {
-	return "j/k navigate  enter select"
+	return components.KeyHints(
+		components.KeyHint("enter", "select"),
+	)
 }
 
 func (p *projectsPage) KeyBinds() []string {

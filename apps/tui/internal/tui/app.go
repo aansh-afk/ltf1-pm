@@ -540,18 +540,18 @@ func (m Model) View() tea.View {
 	// Help hints at bottom of content
 	helpHint := ""
 	if m.sidebarFocused {
-		helpHint = strings.Join([]string{
-			theme.KeyHintKey.Render("j/k") + theme.KeyHintDesc.Render(" navigate"),
-			theme.KeyHintKey.Render("enter") + theme.KeyHintDesc.Render(" open"),
-			theme.KeyHintKey.Render("r") + theme.KeyHintDesc.Render(" refresh"),
-			theme.KeyHintKey.Render("q") + theme.KeyHintDesc.Render(" quit"),
-		}, "    ")
+		helpHint = components.KeyHints(
+			components.KeyHint("j/k", "navigate"),
+			components.KeyHint("enter", "open"),
+			components.KeyHint("r", "refresh"),
+			components.KeyHint("q", "quit"),
+		)
 	} else if pm, ok := m.pageModels[m.page]; ok {
 		h := pm.ShortHelp()
 		if h != "" {
-			helpHint = theme.TextDimStyle.Render(h + "  esc sidebar")
+			helpHint = h + "  " + components.KeyHint("esc", "sidebar")
 		} else {
-			helpHint = theme.KeyHintKey.Render("esc") + theme.KeyHintDesc.Render(" sidebar")
+			helpHint = components.KeyHint("esc", "sidebar")
 		}
 	}
 
@@ -618,19 +618,16 @@ func (m Model) renderSelector(title string, items []string, cursor int, errMsg s
 	lines = append(lines, "")
 
 	// Footer hints
-	hintParts := []string{}
-	hintParts = append(hintParts,
-		theme.KeyHintKey.Render("j/k")+theme.KeyHintDesc.Render(" navigate"))
-	hintParts = append(hintParts,
-		theme.KeyHintKey.Render("enter")+theme.KeyHintDesc.Render(" select"))
-	if m.appState == StateSelectProject {
-		hintParts = append(hintParts,
-			theme.KeyHintKey.Render("esc")+theme.KeyHintDesc.Render(" back"))
+	hintParts := []string{
+		components.KeyHint("j/k", "navigate"),
+		components.KeyHint("enter", "select"),
 	}
-	hintParts = append(hintParts,
-		theme.KeyHintKey.Render("q")+theme.KeyHintDesc.Render(" quit"))
+	if m.appState == StateSelectProject {
+		hintParts = append(hintParts, components.KeyHint("esc", "back"))
+	}
+	hintParts = append(hintParts, components.KeyHint("q", "quit"))
 
-	lines = append(lines, strings.Join(hintParts, "    "))
+	lines = append(lines, strings.Join(hintParts, "  "))
 
 	// Center vertically
 	content := strings.Join(lines, "\n")

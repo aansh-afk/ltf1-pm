@@ -75,7 +75,12 @@ func (p *tasksPage) SetSize(w, h int) {
 }
 
 func (p *tasksPage) ShortHelp() string {
-	return "j/k navigate  c create  e edit  x delete"
+	return components.KeyHints(
+		components.KeyHint("c", "create"),
+		components.KeyHint("e", "edit"),
+		components.KeyHint("enter", "open"),
+		components.KeyHint("/", "filter"),
+	)
 }
 
 func (p *tasksPage) KeyBinds() []string {
@@ -94,16 +99,22 @@ func (p *tasksPage) View() string {
 
 	b.WriteString("\n")
 
+	// Page header
 	header := theme.SectionHeader.Render("TASKS")
 	count := theme.TextMutedStyle.Render(fmt.Sprintf(" (%d)", len(p.tasks)))
 	b.WriteString(header + count + "\n\n")
 
+	// Filter bar
+	filterBar := renderFilterBar()
+	b.WriteString(filterBar + "\n\n")
+
 	if len(p.tasks) == 0 {
-		b.WriteString(components.EmptyState("No tasks yet. Press c to create one.", p.width, p.height-4))
+		b.WriteString(components.EmptyState("No tasks yet. Press [c] to create one.", p.width, p.height-8))
 		return b.String()
 	}
 
-	visible := p.height - 6
+	// Task list with scrolling
+	visible := p.height - 10
 	if visible < 1 {
 		visible = 1
 	}
@@ -115,18 +126,27 @@ func (p *tasksPage) View() string {
 
 	for i := start; i < len(p.tasks) && i < start+visible; i++ {
 		t := p.tasks[i]
-		status := components.StatusBadge(t.Status)
-		priority := ""
-		if t.Priority != "" {
-			priority = "  " + components.PriorityBadge(t.Priority)
-		}
-		taskType := ""
-		if t.Type != "" {
-			taskType = "  " + theme.TextDimStyle.Render("("+t.Type+")")
-		}
-		meta := status + priority + taskType
-		b.WriteString(components.RenderListItem(t.Title, meta, i == p.cursor) + "\n")
+		b.WriteString(components.RenderTaskRow(t.Title, t.Priority, t.Status, "", i == p.cursor, p.width-2) + "\n")
 	}
 
 	return b.String()
+}
+
+func renderFilterBar() string {
+	filters := []struct {
+		label string
+		value string
+	}{
+		{"Status", "All"},
+		{"Priority", "All"},
+		{"Assignee", "Me"},
+	}
+
+	var parts []string
+	for _, f := range filters {
+		label := theme.FilterLabelStyle.Render(f.label + ": ")
+		value := theme.FilterValueStyle.Render(f.value)
+		parts = append(parts, theme.TextDimStyle.Render("[")+label+value+theme.TextDimStyle.Render("]"))
+	}
+	return "  " + strings.Join(parts, "  ")
 }

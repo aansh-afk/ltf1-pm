@@ -2,9 +2,11 @@ package pages
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/api"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/components"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
@@ -74,7 +76,7 @@ func (p *sprintPage) SetSize(w, h int) {
 }
 
 func (p *sprintPage) ShortHelp() string {
-	return "r refresh"
+	return components.KeyHints(components.KeyHint("r", "refresh"))
 }
 
 func (p *sprintPage) KeyBinds() []string {
@@ -92,17 +94,20 @@ func (p *sprintPage) View() string {
 		return components.EmptyState("No active sprint", p.width, p.height)
 	}
 
-	var b strings.Builder
+	contentW := p.width - 2
+	if contentW < 20 {
+		contentW = 20
+	}
 
+	var b strings.Builder
 	b.WriteString("\n")
 
 	// Sprint header
-	b.WriteString(theme.SectionHeader.Render("SPRINT") + "\n")
-	b.WriteString("\n")
 	b.WriteString("  " + theme.BrandTextStyle.Render(p.sprint.Name) + "\n")
-	b.WriteString("  " + theme.ColorTextStyle(theme.Cyan).Render(theme.SymDot) + " " +
-		theme.ColorTextStyle(theme.Cyan).Render(p.sprint.Status) + "\n")
-	b.WriteString("\n\n")
+	if p.sprint.Status != "" {
+		b.WriteString("  " + theme.TextMutedStyle.Render(p.sprint.Status) + "\n")
+	}
+	b.WriteString("\n")
 
 	// Filter tasks for this sprint
 	var sprintTasks []api.Task
@@ -112,35 +117,27 @@ func (p *sprintPage) View() string {
 		}
 	}
 
-	// Progress bars
+	// Progress bar
 	total := len(sprintTasks)
 	done := 0
-	totalPoints := 0.0
-	donePoints := 0.0
 	for _, t := range sprintTasks {
-		if t.Status == "done" || t.Status == "completed" {
+		if strings.ToLower(t.Status) == "done" || strings.ToLower(t.Status) == "completed" {
 			done++
-			donePoints += t.Estimate
 		}
-		totalPoints += t.Estimate
 	}
-
-	taskPct := 0.0
+	pct := 0.0
 	if total > 0 {
-		taskPct = float64(done) / float64(total) * 100
-	}
-	pointsPct := 0.0
-	if totalPoints > 0 {
-		pointsPct = donePoints / totalPoints * 100
+		pct = float64(done) / float64(total) * 100
 	}
 
-	b.WriteString("  " + theme.TextSecondaryStyle.Render("Tasks") + "\n")
-	b.WriteString("  " + components.ProgressBar(taskPct, 40, theme.Cyan) + "\n\n")
-	b.WriteString("  " + theme.TextSecondaryStyle.Render("Points") + "\n")
-	b.WriteString("  " + components.ProgressBar(pointsPct, 40, theme.Green) + "\n")
+	barW := contentW - 10
+	if barW < 20 {
+		barW = 20
+	}
+	b.WriteString("  " + components.ProgressBar(pct, barW, theme.Cyan) + "\n")
 	b.WriteString("\n\n")
 
-	// Tasks grouped by status
+	// Kanban columns
 	groups := []struct {
 		label  string
 		status []string
@@ -150,6 +147,13 @@ func (p *sprintPage) View() string {
 		{"DONE", []string{"done", "completed"}},
 	}
 
+	// Build column contents
+	colW := (contentW - 6) / 3 // 6 for gaps between 3 columns
+	if colW < 15 {
+		colW = 15
+	}
+
+	var columns []string
 	for _, g := range groups {
 		statusSet := make(map[string]bool)
 		for _, s := range g.status {
@@ -163,17 +167,28 @@ func (p *sprintPage) View() string {
 			}
 		}
 
+		// Build column content
+		var colContent string
 		if len(groupTasks) == 0 {
-			continue
+			colContent = theme.TextMutedStyle.Render(theme.SymDotEmpty + " Empty")
+		} else {
+			var lines []string
+			for _, t := range groupTasks {
+				prefix := "  "
+				if g.label == "DONE" {
+					prefix = theme.SuccessTextStyle.Render(theme.SymCheck) + " "
+				}
+				lines = append(lines, prefix+theme.TextPrimaryStyle.Render(t.Title))
+			}
+			colContent = strings.Join(lines, "\n")
 		}
 
-		b.WriteString(theme.AccentTextStyle.Render(g.label) + "\n")
-		b.WriteString("\n")
-		for _, t := range groupTasks {
-			b.WriteString(components.RenderListItem(t.Title, components.PriorityBadge(t.Priority), false) + "\n")
-		}
-		b.WriteString("\n")
+		header := fmt.Sprintf("%s (%d)", g.label, len(groupTasks))
+		col := components.BorderedSection(header, colContent, colW)
+		columns = append(columns, col)
 	}
+
+	b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, columns[0], "  ", columns[1], "  ", columns[2]))
 
 	return b.String()
 }

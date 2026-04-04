@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"fmt"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -18,9 +19,10 @@ type searchPage struct {
 }
 
 type searchResult struct {
-	Type  string
-	Title string
-	ID    string
+	Type   string // "task", "project", "file"
+	Title  string
+	ID     string
+	Status string // for tasks
 }
 
 func NewSearchPage(client *api.ConvexClient) PageModel {
@@ -67,19 +69,20 @@ func (p *searchPage) SetSize(w, h int) {
 }
 
 func (p *searchPage) ShortHelp() string {
-	return "type to search  esc cancel"
+	return components.KeyHints(
+		components.KeyHint("enter", "select"),
+		components.KeyHint("esc", "clear"),
+		components.KeyHint("up/down", "navigate"),
+	)
 }
 
 func (p *searchPage) KeyBinds() []string {
-	// Search claims all keys since input is focused
 	return []string{"j", "k", "up", "down", "enter"}
 }
 
 func (p *searchPage) View() string {
 	var b strings.Builder
 
-	b.WriteString("\n")
-	b.WriteString(theme.SectionHeader.Render("SEARCH") + "\n")
 	b.WriteString("\n")
 	b.WriteString("  " + p.input.View() + "\n")
 	b.WriteString("\n")
@@ -93,9 +96,55 @@ func (p *searchPage) View() string {
 		return b.String()
 	}
 
-	for i, r := range p.results {
-		meta := theme.TextDimStyle.Render(r.Type)
-		b.WriteString(components.RenderListItem(r.Title, meta, i == p.cursor) + "\n")
+	// Group results by type
+	groups := []struct {
+		typeName string
+		label    string
+	}{
+		{"task", "TASKS"},
+		{"project", "PROJECTS"},
+		{"file", "FILES"},
+	}
+
+	globalIdx := 0
+	for _, g := range groups {
+		var groupResults []searchResult
+		var groupIndices []int
+		for i, r := range p.results {
+			if r.Type == g.typeName {
+				groupResults = append(groupResults, r)
+				groupIndices = append(groupIndices, i)
+			}
+		}
+
+		if len(groupResults) == 0 {
+			continue
+		}
+
+		// Section header with count
+		b.WriteString(theme.SectionHeader.Render(fmt.Sprintf("%s (%d)", g.label, len(groupResults))) + "\n\n")
+
+		for j, r := range groupResults {
+			_ = j
+			isSelected := groupIndices[j] == p.cursor
+
+			// Right-aligned metadata based on type
+			var meta string
+			switch r.Type {
+			case "task":
+				if r.Status != "" {
+					meta = components.StatusBadge(r.Status)
+				}
+			case "project":
+				meta = theme.TextPrimaryStyle.Render(r.Type)
+			default:
+				meta = theme.TextSecondaryStyle.Render(r.Type)
+			}
+
+			b.WriteString(components.RenderListItem(r.Title, meta, isSelected, p.width-4) + "\n")
+			globalIdx++
+		}
+		b.WriteString("\n")
 	}
 
 	return b.String()

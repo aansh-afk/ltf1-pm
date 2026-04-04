@@ -215,11 +215,23 @@ var BadgeStyle = lipgloss.NewStyle().
 // Key hint
 
 var KeyHintKey = lipgloss.NewStyle().
-	Foreground(Indigo).
-	Bold(true)
+	Foreground(TextDim)
 
 var KeyHintDesc = lipgloss.NewStyle().
 	Foreground(TextMuted)
+
+// ActionBarStyle is a subtle background strip for bottom action bars.
+var ActionBarStyle = lipgloss.NewStyle().
+	Background(BgSurface).
+	Padding(0, 1)
+
+// FilterBracketStyle for filter dropdowns [ Status: All ]
+var FilterLabelStyle = lipgloss.NewStyle().
+	Foreground(TextMuted)
+
+var FilterValueStyle = lipgloss.NewStyle().
+	Foreground(TextPrimary).
+	Bold(true)
 
 func ColorTextStyle(c color.Color) lipgloss.Style {
 	return lipgloss.NewStyle().Foreground(c)

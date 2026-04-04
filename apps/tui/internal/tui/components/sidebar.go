@@ -1,8 +1,10 @@
 package components
 
 import (
+	"fmt"
 	"strings"
 
+	"charm.land/lipgloss/v2"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
 
@@ -42,11 +44,13 @@ type SidebarModel struct {
 	Selected string
 	Focused  bool
 	Height   int
+	// Badges maps nav keys to notification counts (e.g. "a" -> 3)
+	Badges map[string]int
 }
 
 // NewSidebar creates a new sidebar with a default active item.
 func NewSidebar() SidebarModel {
-	return SidebarModel{Active: "d", Selected: "d", Focused: true}
+	return SidebarModel{Active: "d", Selected: "d", Focused: true, Badges: make(map[string]int)}
 }
 
 // SetActive changes the active navigation item.
@@ -101,34 +105,65 @@ func (s *SidebarModel) Move(delta int) {
 	s.Selected = keys[next]
 }
 
+// Active item style: left bar + background highlight
+var sidebarActiveItemStyle = lipgloss.NewStyle().
+	Background(theme.BgHighlight).
+	Bold(true).
+	Foreground(theme.TextPrimary)
+
+var sidebarActiveBarStyle = lipgloss.NewStyle().
+	Foreground(theme.Indigo).
+	Background(theme.BgHighlight).
+	Bold(true)
+
 // View renders the sidebar.
 func (s SidebarModel) View() string {
 	var b strings.Builder
 
 	b.WriteString("\n") // Top padding
 
+	itemWidth := theme.SidebarWidth - 3 // -3 for border + padding
+
 	for gi, group := range NavGroups {
 		for _, item := range group {
-			marker := "  "
-			labelStyle := theme.SidebarInactiveStyle
+			isActive := false
 
 			switch {
 			case s.Focused && item.Key == s.SelectedKey():
-				// Focused + selected: indigo bar + bold indigo text
-				marker = theme.SidebarSelectedMarkerStyle.Render(theme.SymBar) + " "
-				labelStyle = theme.SidebarSelectedStyle
+				isActive = true
 			case !s.Focused && item.Key == s.Active:
-				// Unfocused but active page: dim dot + secondary text
-				marker = theme.SidebarActiveMarkerStyle.Render(theme.SymDot) + " "
-				labelStyle = theme.SidebarActiveStyle
-			case s.Focused && item.Key == s.Active:
-				// Focused but not cursor: active marker
-				marker = theme.SidebarActiveMarkerStyle.Render(theme.SymDot) + " "
-				labelStyle = theme.SidebarActiveStyle
+				isActive = true
+			case s.Focused && item.Key == s.Active && item.Key != s.SelectedKey():
+				// Active page but cursor is elsewhere - subtle indicator
+				marker := theme.TextDimStyle.Render(theme.SymDot) + " "
+				label := theme.TextSecondaryStyle.Render(item.Label)
+				badge := s.renderBadge(item.Key)
+				b.WriteString(marker + label + badge + "\n")
+				continue
 			}
 
-			b.WriteString(marker + labelStyle.Render(item.Label))
-			b.WriteString("\n")
+			if isActive {
+				// Render: ▌ Label      [badge]  with BgHighlight background
+				bar := sidebarActiveBarStyle.Render(theme.SymBar)
+				label := " " + item.Label
+				badge := ""
+				if count, ok := s.Badges[item.Key]; ok && count > 0 {
+					badge = fmt.Sprintf(" %d", count)
+				}
+				content := label + badge
+				padW := itemWidth - lipgloss.Width(content)
+				if padW < 0 {
+					padW = 0
+				}
+				content += strings.Repeat(" ", padW)
+				rendered := sidebarActiveItemStyle.Render(content)
+				b.WriteString(bar + rendered + "\n")
+			} else {
+				marker := "  "
+				label := theme.SidebarInactiveStyle.Render(item.Label)
+				badge := s.renderBadge(item.Key)
+				b.WriteString(marker + label + badge + "\n")
+			}
 		}
 		if gi < len(NavGroups)-1 {
 			b.WriteString("\n")
@@ -153,6 +188,14 @@ func (s SidebarModel) View() string {
 	content += "\n" + theme.TextDimStyle.Render(" LTF1") + "\n"
 
 	return theme.SidebarStyle.Height(s.Height).Render(content)
+}
+
+func (s SidebarModel) renderBadge(key string) string {
+	count, ok := s.Badges[key]
+	if !ok || count <= 0 {
+		return ""
+	}
+	return "  " + theme.WarningBoldStyle.Render(fmt.Sprintf("%d", count))
 }
 
 func navKeys() []string {
