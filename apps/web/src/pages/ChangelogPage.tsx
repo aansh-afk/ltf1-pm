@@ -31,6 +31,31 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    version: '0.8.0',
+    date: 'Apr 4, 2026',
+    tag: 'TUI V3',
+    tagColor: '#6366F1',
+    summary: 'Major TUI design system overhaul — bordered sections with rounded corners, redesigned sidebar with highlight backgrounds and badge support, bracket key hints, kanban sprint view, split-pane git with diff preview, grouped search results, and table-based help page.',
+    changes: [
+      { type: 'feat', platform: 'cli', text: 'Bordered section component — all content areas wrapped in rounded box-drawing borders (╭─╮│╰─╯) with header text embedded in top border' },
+      { type: 'feat', platform: 'cli', text: 'Sidebar redesign — active item gets ▌ left bar + BgHighlight background, notification badge count support' },
+      { type: 'feat', platform: 'cli', text: 'Dashboard 60/40 split layout — MY TASKS list + WORKSPACE STATS (Total, Completed, In Progress, Blocked) side by side in bordered sections' },
+      { type: 'feat', platform: 'cli', text: 'Sprint kanban view — 3-column bordered layout (TODO / IN PROGRESS / DONE) with ✓ checkmarks on completed tasks' },
+      { type: 'feat', platform: 'cli', text: 'Git split-pane — left: staged/unstaged file lists, right: bordered diff preview with syntax-colored output, bottom: commit message input' },
+      { type: 'feat', platform: 'cli', text: 'Search grouped results — results organized by type (TASKS / PROJECTS / FILES) with counts and status badges' },
+      { type: 'feat', platform: 'cli', text: 'Help table layout — two-column bordered tables (GLOBAL + NAVIGATION side by side), TASK MANAGEMENT table, version footer' },
+      { type: 'feat', platform: 'cli', text: 'Tasks filter bar — bracket-style dropdowns [Status: All] [Priority: All] [Assignee: Me]' },
+      { type: 'feat', platform: 'cli', text: 'Priority badges in [BRACKETS] — colored [URGENT] [HIGH] [MEDIUM] [LOW] labels' },
+      { type: 'feat', platform: 'cli', text: 'Skills page — subtitle text, Enabled ✓ / Disabled ○ toggle format' },
+      { type: 'feat', platform: 'cli', text: 'Agent bordered sections — AGENT STATS key-value layout, PENDING TRIAGE with expanded selected card, RECENT ACTIVITY feed' },
+      { type: 'feat', platform: 'cli', text: 'Modal redesign — uppercase title, status + priority line, key-value metadata, description, bracket action hints' },
+      { type: 'feat', platform: 'cli', text: 'Bracket key hints throughout — all shortcuts now use [key] action format' },
+      { type: 'fix', platform: 'cli', text: 'Settings/Help sub-headers now use TextPrimary color instead of accent Indigo' },
+      { type: 'fix', platform: 'cli', text: 'Status badge labels properly formatted (In Progress, In Review, etc. instead of raw snake_case)' },
+      { type: 'fix', platform: 'cli', text: 'Still looks like shit' },
+    ],
+  },
+  {
     version: '0.7.0',
     date: 'Mar 28, 2026',
     tag: 'TUI V2',
