@@ -83,7 +83,7 @@ func (p *helpPage) View() string {
 
 	// Version footer
 	b.WriteString("\n\n")
-	b.WriteString(theme.TextMutedStyle.Render("Version v0.1.8") +
+	b.WriteString(theme.TextMutedStyle.Render("Version v0.1.9") +
 		theme.TextDimStyle.Render(" "+theme.SymBullet+" ") +
 		theme.TextMutedStyle.Render("Documentation: ltf1.dev"))
 
