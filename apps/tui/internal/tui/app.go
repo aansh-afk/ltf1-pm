@@ -542,8 +542,7 @@ func (m Model) View() tea.View {
 	contentStyle := lipgloss.NewStyle().
 		Width(contentWidth).
 		Height(contentHeight).
-		Background(theme.BgBase).
-		MaxWidth(theme.ContentMaxWidth)
+		Background(theme.BgBase)
 
 	renderedContent := contentStyle.Render(content)
 

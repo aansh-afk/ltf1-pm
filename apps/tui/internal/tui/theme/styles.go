@@ -218,7 +218,7 @@ var BadgeStyle = lipgloss.NewStyle().
 // Key hint
 
 var KeyHintKey = lipgloss.NewStyle().
-	Foreground(TextDim)
+	Foreground(TextMuted)
 
 var KeyHintDesc = lipgloss.NewStyle().
 	Foreground(TextMuted)
@@ -262,7 +262,8 @@ func OffsetStyle(left, top int) lipgloss.Style {
 }
 
 // FillBackground pads the rendered output to the full terminal size and applies
-// the base background color to every cell.
+// the base background color to every cell. It ensures zero gaps by individually
+// wrapping every line with a width-filling background style.
 func FillBackground(content string, width, height int) string {
 	if width <= 0 || height <= 0 {
 		return content
@@ -276,14 +277,11 @@ func FillBackground(content string, width, height int) string {
 		lines = append(lines, "")
 	}
 
-	lineStyle := lipgloss.NewStyle().Width(width)
+	// Each line gets BgBase background + forced width to fill every cell
+	bgLine := lipgloss.NewStyle().Background(BgBase).Width(width)
 	for i, line := range lines {
-		lines[i] = lineStyle.Render(line)
+		lines[i] = bgLine.Render(line)
 	}
 
-	return lipgloss.NewStyle().
-		Background(BgBase).
-		Width(width).
-		Height(height).
-		Render(strings.Join(lines, "\n"))
+	return strings.Join(lines, "\n")
 }

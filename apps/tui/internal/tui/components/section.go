@@ -20,7 +20,7 @@ func BorderedSection(header, content string, width int) string {
 		width = 10
 	}
 
-	borderStyle := theme.TextDimStyle
+	borderStyle := lipgloss.NewStyle().Foreground(theme.BorderDefault)
 	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(theme.TextPrimary)
 
 	// Build top border: ╭─ HEADER ─────────╮
