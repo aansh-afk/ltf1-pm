@@ -45,7 +45,7 @@ func (p *dashboardPage) fetchData() tea.Cmd {
 	return func() tea.Msg {
 		var data dashboardData
 
-		raw, err := p.client.Query("tasks/queries:getMyTasks", map[string]interface{}{})
+		raw, err := p.client.Query("tasks/queries:getProjectTasks", map[string]interface{}{"projectId": p.projectID})
 		if err == nil {
 			json.Unmarshal(raw, &data.Tasks)
 		}
@@ -88,6 +88,8 @@ func (p *dashboardPage) ShortHelp() string {
 func (p *dashboardPage) KeyBinds() []string {
 	return nil
 }
+
+func (p *dashboardPage) HasModal() bool { return false }
 
 func (p *dashboardPage) View() string {
 	if p.client == nil {

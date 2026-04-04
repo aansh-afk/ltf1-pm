@@ -134,17 +134,23 @@ export const api = {
   },
 };
 
-// Convex deployment URL - should match the web app
+// Convex deployment URL — must be set via CONVEX_URL env var. No hardcoded fallback.
 const CONVEX_URL = (() => {
-  const raw = process.env.CONVEX_URL || 'https://tangible-butterfly-366.convex.cloud';
+  const raw = process.env.CONVEX_URL;
+  if (!raw) {
+    throw new Error('CONVEX_URL environment variable is required. Set it to your Convex deployment URL.');
+  }
   try {
     const parsed = new URL(raw);
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      return 'https://tangible-butterfly-366.convex.cloud';
+      throw new Error(`CONVEX_URL has invalid protocol: ${parsed.protocol}`);
     }
     return parsed.toString().replace(/\/+$/, '');
-  } catch {
-    return 'https://tangible-butterfly-366.convex.cloud';
+  } catch (e) {
+    if (e instanceof TypeError) {
+      throw new Error(`CONVEX_URL is not a valid URL: ${raw}`);
+    }
+    throw e;
   }
 })();
 

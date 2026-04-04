@@ -10,6 +10,7 @@ import (
 // Shell chrome styles
 
 var TopBarStyle = lipgloss.NewStyle().
+	Background(BgSurface).
 	Padding(1, 2).
 	BorderStyle(lipgloss.NormalBorder()).
 	BorderBottom(true).
@@ -17,11 +18,13 @@ var TopBarStyle = lipgloss.NewStyle().
 
 var SidebarStyle = lipgloss.NewStyle().
 	Width(SidebarWidth).
+	Background(BgBase).
 	BorderStyle(lipgloss.NormalBorder()).
 	BorderRight(true).
 	BorderForeground(BorderSubtle)
 
 var StatusBarStyle = lipgloss.NewStyle().
+	Background(BgSurface).
 	BorderStyle(lipgloss.NormalBorder()).
 	BorderTop(true).
 	BorderForeground(BorderSubtle)
@@ -215,7 +218,7 @@ var BadgeStyle = lipgloss.NewStyle().
 // Key hint
 
 var KeyHintKey = lipgloss.NewStyle().
-	Foreground(TextDim)
+	Foreground(TextMuted)
 
 var KeyHintDesc = lipgloss.NewStyle().
 	Foreground(TextMuted)
@@ -258,12 +261,21 @@ func OffsetStyle(left, top int) lipgloss.Style {
 		PaddingTop(top)
 }
 
-// FillBackground pads the rendered output to the full terminal size and applies
-// the base background color to every cell.
+// bgAnsi is the ANSI escape for BgBase (#0A0A0A = RGB 10,10,10).
+// Used by FillBackground to patch reset gaps.
+const bgAnsi = "\x1b[48;2;10;10;10m"
+
+// FillBackground ensures every cell on screen has BgBase as its background.
+// It works by injecting BgBase after every ANSI reset sequence so the terminal
+// default background never shows through between styled text segments.
 func FillBackground(content string, width, height int) string {
 	if width <= 0 || height <= 0 {
 		return content
 	}
+
+	// Inject BgBase after every ANSI reset to prevent terminal default bg gaps
+	content = strings.ReplaceAll(content, "\x1b[0m", "\x1b[0m"+bgAnsi)
+	content = strings.ReplaceAll(content, "\x1b[m", "\x1b[m"+bgAnsi)
 
 	lines := strings.Split(content, "\n")
 	if len(lines) > height {
@@ -273,14 +285,15 @@ func FillBackground(content string, width, height int) string {
 		lines = append(lines, "")
 	}
 
-	lineStyle := lipgloss.NewStyle().Width(width)
+	// Each line: start with BgBase, pad to full width, end with reset
 	for i, line := range lines {
-		lines[i] = lineStyle.Render(line)
+		visW := lipgloss.Width(line)
+		pad := width - visW
+		if pad < 0 {
+			pad = 0
+		}
+		lines[i] = bgAnsi + line + strings.Repeat(" ", pad) + "\x1b[0m"
 	}
 
-	return lipgloss.NewStyle().
-		Background(BgBase).
-		Width(width).
-		Height(height).
-		Render(strings.Join(lines, "\n"))
+	return strings.Join(lines, "\n")
 }

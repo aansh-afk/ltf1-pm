@@ -16,6 +16,8 @@ type notificationsDataMsg struct {
 	Err           error
 }
 
+type notifMarkedMsg struct{ Err error }
+
 type notificationsPage struct {
 	width, height int
 	client        *api.ConvexClient
@@ -49,11 +51,31 @@ func (p *notificationsPage) fetchNotifications() tea.Cmd {
 	}
 }
 
+func (p *notificationsPage) markAsRead(notifID string) tea.Cmd {
+	client := p.client
+	return func() tea.Msg {
+		_, err := client.Mutation("notifications:markAsRead", map[string]interface{}{
+			"notificationId": notifID,
+		})
+		return notifMarkedMsg{Err: err}
+	}
+}
+
 func (p *notificationsPage) Update(msg tea.Msg) (PageModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case notificationsDataMsg:
 		p.notifications = msg.Notifications
 		p.loading = false
+	case notifMarkedMsg:
+		if msg.Err != nil {
+			return p, func() tea.Msg {
+				return ShowToastMsg{Message: "Failed to mark as read", IsError: true}
+			}
+		}
+		return p, tea.Batch(
+			p.fetchNotifications(),
+			func() tea.Msg { return ShowToastMsg{Message: "Marked as read"} },
+		)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down":
@@ -63,6 +85,13 @@ func (p *notificationsPage) Update(msg tea.Msg) (PageModel, tea.Cmd) {
 		case "k", "up":
 			if p.cursor > 0 {
 				p.cursor--
+			}
+		case "enter":
+			if p.cursor >= 0 && p.cursor < len(p.notifications) {
+				n := p.notifications[p.cursor]
+				if !n.IsRead {
+					return p, p.markAsRead(n.ID)
+				}
 			}
 		}
 	}
@@ -81,6 +110,8 @@ func (p *notificationsPage) ShortHelp() string {
 func (p *notificationsPage) KeyBinds() []string {
 	return []string{"j", "k", "up", "down", "enter"}
 }
+
+func (p *notificationsPage) HasModal() bool { return false }
 
 func (p *notificationsPage) View() string {
 	if p.client == nil {

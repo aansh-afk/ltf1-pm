@@ -36,6 +36,8 @@ func (p *helpPage) KeyBinds() []string {
 	return nil
 }
 
+func (p *helpPage) HasModal() bool { return false }
+
 func (p *helpPage) View() string {
 	contentW := p.width - 2
 	if contentW < 40 {

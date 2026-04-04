@@ -56,6 +56,19 @@ type projectsLoadedMsg struct {
 	Err   error
 }
 
+type workspaceCreatedMsg struct {
+	ID   string
+	Name string
+	Err  error
+}
+
+type projectCreatedMsg struct {
+	ID   string
+	Name string
+	Key  string
+	Err  error
+}
+
 // Model is the root Bubble Tea model.
 type Model struct {
 	width, height  int
@@ -80,7 +93,13 @@ type Model struct {
 	projects       []projectItem
 	selectorCursor int
 	selectorError  string
-	selectedWS     workspaceItem // workspace chosen, used while picking project
+	selectedWS      workspaceItem // workspace chosen, used while picking project
+	selectorLoading bool
+	// Create workspace/project modal
+	showCreateModal bool
+	createInput     components.InputModel
+	createKeyInput  components.InputModel // for project key
+	createPhase     int                   // 0=name, 1=key (project only)
 }
 
 // NewModel creates the root model.
@@ -96,6 +115,8 @@ func NewModel(client *api.ConvexClient, config *api.AuthConfig) Model {
 	}
 
 	statusbar := components.NewStatusBar()
+	createInput := components.NewInput("Name...")
+	createKeyInput := components.NewInput("Project key (e.g. PROJ)...")
 
 	// Determine initial app state
 	appState := StateLogin
@@ -120,6 +141,8 @@ func NewModel(client *api.ConvexClient, config *api.AuthConfig) Model {
 		authenticated:  authenticated,
 		loginState:     LoginIdle,
 		appState:       appState,
+		createInput:    createInput,
+		createKeyInput: createKeyInput,
 	}
 
 	// Get workspace/project IDs from config
@@ -192,6 +215,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Create Convex client with new token
 		convexURL := api.GetConvexURL(m.config)
+		if convexURL == "" {
+			m.loginState = LoginError
+			m.loginError = "CONVEX_URL not configured. Set it in your environment or ~/.ltf1.env"
+			return m, nil
+		}
 		m.client = api.NewClient(convexURL, m.config)
 		m.connected = true
 		m.topbar.Connected = true
@@ -209,11 +237,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.appState = StateSelectWorkspace
 		m.selectorCursor = 0
 		m.selectorError = ""
+		m.selectorLoading = true
 		return m, fetchWorkspaces(m.client)
 
 	case workspacesLoadedMsg:
+		m.selectorLoading = false
 		if msg.Err != nil {
 			m.selectorError = msg.Err.Error()
+			return m, nil
+		}
+		if len(msg.Items) == 0 {
+			m.selectorError = "No workspaces found. Create one at ltf1.dev first."
 			return m, nil
 		}
 		m.workspaces = msg.Items
@@ -221,9 +255,55 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.selectorError = ""
 		return m, nil
 
+	case workspaceCreatedMsg:
+		m.selectorLoading = false
+		if msg.Err != nil {
+			m.selectorError = "Create failed: " + msg.Err.Error()
+			return m, nil
+		}
+		// Select the new workspace and move to project selection
+		m.selectedWS = workspaceItem{ID: msg.ID, Name: msg.Name}
+		m.appState = StateSelectProject
+		m.selectorCursor = 0
+		m.selectorError = ""
+		m.projects = nil
+		m.selectorLoading = true
+		return m, fetchProjects(m.client, m.selectedWS.ID)
+
+	case projectCreatedMsg:
+		m.selectorLoading = false
+		if msg.Err != nil {
+			m.selectorError = "Create failed: " + msg.Err.Error()
+			return m, nil
+		}
+		// Save context and go to ready
+		ctx := api.ProjectInfo{
+			WorkspaceID:   m.selectedWS.ID,
+			WorkspaceName: m.selectedWS.Name,
+			ProjectID:     msg.ID,
+			ProjectKey:    msg.Key,
+			ProjectName:   msg.Name,
+		}
+		updatedCfg, err := api.SaveContext(ctx)
+		if err != nil {
+			m.selectorError = fmt.Sprintf("Failed to save config: %v", err)
+			return m, nil
+		}
+		m.config = updatedCfg
+		m.appState = StateReady
+		m.topbar.Workspace = m.selectedWS.Name
+		m.topbar.Project = msg.Name
+		cmd := m.reinitPages()
+		return m, cmd
+
 	case projectsLoadedMsg:
+		m.selectorLoading = false
 		if msg.Err != nil {
 			m.selectorError = msg.Err.Error()
+			return m, nil
+		}
+		if len(msg.Items) == 0 {
+			m.selectorError = "No projects found in this workspace. Create one at ltf1.dev first."
 			return m, nil
 		}
 		m.projects = msg.Items
@@ -288,6 +368,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		key := msg.String()
 
+		// If a page has a modal open, forward ALL keys directly to it —
+		// skip shell-level q/r/esc handling so the modal can use those keys.
+		if !m.sidebarFocused {
+			if pm, ok := m.pageModels[m.page]; ok && pm.HasModal() {
+				if cmd := m.updatePage(m.page, msg); cmd != nil {
+					cmds = append(cmds, cmd)
+				}
+				return m, tea.Batch(cmds...)
+			}
+		}
+
 		if key == "q" || key == "ctrl+c" {
 			return m, tea.Quit
 		}
@@ -339,6 +430,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	// Handle toast requests from pages
+	switch msg := msg.(type) {
+	case pages.ShowToastMsg:
+		level := components.ToastLevelSuccess
+		if msg.IsError {
+			level = components.ToastLevelError
+		}
+		t, cmd := components.NewToast(msg.Message, level)
+		m.toast = &t
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+	case pages.RefreshPageMsg:
+		if cmd := m.initPage(m.page); cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+	}
+
 	// Broadcast non-key messages to all pages so page-scoped async messages are
 	// never dropped by the shell.
 	if m.appState == StateReady {
@@ -353,6 +462,78 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // handleSelectorKeys handles j/k/enter/q navigation for workspace and project pickers.
 func (m Model) handleSelectorKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	key := msg.String()
+
+	// Handle create modal input
+	if m.showCreateModal {
+		switch key {
+		case "esc":
+			m.showCreateModal = false
+			m.createInput.Blur()
+			m.createKeyInput.Blur()
+			return m, nil
+		case "enter":
+			if m.appState == StateSelectWorkspace {
+				name := strings.TrimSpace(m.createInput.Value())
+				if name == "" {
+					return m, nil
+				}
+				m.showCreateModal = false
+				m.createInput.Blur()
+				m.selectorLoading = true
+				return m, createWorkspace(m.client, name)
+			}
+			if m.appState == StateSelectProject {
+				if m.createPhase == 0 {
+					// Move to key input
+					name := strings.TrimSpace(m.createInput.Value())
+					if name == "" {
+						return m, nil
+					}
+					m.createPhase = 1
+					// Auto-generate key from name
+					autoKey := strings.ToUpper(strings.ReplaceAll(name, " ", ""))
+					if len(autoKey) > 5 {
+						autoKey = autoKey[:5]
+					}
+					m.createKeyInput.SetValue(autoKey)
+					m.createInput.Blur()
+					return m, m.createKeyInput.Focus()
+				}
+				// Phase 1: submit
+				name := strings.TrimSpace(m.createInput.Value())
+				pkey := strings.TrimSpace(m.createKeyInput.Value())
+				if name == "" || pkey == "" {
+					return m, nil
+				}
+				m.showCreateModal = false
+				m.createInput.Blur()
+				m.createKeyInput.Blur()
+				m.selectorLoading = true
+				return m, createProject(m.client, m.selectedWS.ID, name, pkey)
+			}
+		case "tab":
+			// Toggle between name and key fields for project create
+			if m.appState == StateSelectProject {
+				if m.createPhase == 0 {
+					m.createPhase = 1
+					m.createInput.Blur()
+					return m, m.createKeyInput.Focus()
+				}
+				m.createPhase = 0
+				m.createKeyInput.Blur()
+				return m, m.createInput.Focus()
+			}
+		default:
+			var cmd tea.Cmd
+			if m.createPhase == 0 {
+				m.createInput, cmd = m.createInput.Update(msg)
+			} else {
+				m.createKeyInput, cmd = m.createKeyInput.Update(msg)
+			}
+			return m, cmd
+		}
+		return m, nil
+	}
 
 	switch key {
 	case "q", "ctrl+c":
@@ -377,6 +558,7 @@ func (m Model) handleSelectorKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.selectorCursor = 0
 			m.selectorError = ""
 			m.projects = nil
+			m.selectorLoading = true
 			return m, fetchProjects(m.client, m.selectedWS.ID)
 		}
 		if m.appState == StateSelectProject && len(m.projects) > 0 {
@@ -407,16 +589,24 @@ func (m Model) handleSelectorKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			cmd := m.reinitPages()
 			return m, cmd
 		}
+	case "c":
+		// Open create modal
+		m.showCreateModal = true
+		m.createPhase = 0
+		m.createInput.SetValue("")
+		m.createKeyInput.SetValue("")
+		return m, m.createInput.Focus()
 	case "r":
-		// Retry fetch on error
-		if m.selectorError != "" {
-			m.selectorError = ""
-			if m.appState == StateSelectWorkspace {
-				return m, fetchWorkspaces(m.client)
-			}
-			if m.appState == StateSelectProject {
-				return m, fetchProjects(m.client, m.selectedWS.ID)
-			}
+		// Retry fetch
+		m.selectorError = ""
+		m.selectorLoading = true
+		if m.appState == StateSelectWorkspace {
+			m.workspaces = nil
+			return m, fetchWorkspaces(m.client)
+		}
+		if m.appState == StateSelectProject {
+			m.projects = nil
+			return m, fetchProjects(m.client, m.selectedWS.ID)
 		}
 	case "esc":
 		// In project selection, go back to workspace selection
@@ -524,7 +714,7 @@ func (m Model) View() tea.View {
 	contentStyle := lipgloss.NewStyle().
 		Width(contentWidth).
 		Height(contentHeight).
-		MaxWidth(theme.ContentMaxWidth)
+		Background(theme.BgBase)
 
 	renderedContent := contentStyle.Render(content)
 
@@ -574,21 +764,44 @@ func (m Model) View() tea.View {
 
 // renderWorkspaceSelector renders the centered workspace picker.
 func (m Model) renderWorkspaceSelector() string {
-	return m.renderSelector("SELECT WORKSPACE", m.workspaceNames(), m.selectorCursor, m.selectorError)
+	bg := m.renderSelector("SELECT WORKSPACE", m.workspaceNames(), m.selectorCursor, m.selectorError, m.selectorLoading)
+	if m.showCreateModal {
+		modalContent := theme.BrandTextStyle.Render("CREATE WORKSPACE") + "\n\n" +
+			m.createInput.View() + "\n\n" +
+			components.KeyHints(components.KeyHint("enter", "create"), components.KeyHint("esc", "cancel"))
+		return components.OverlayModal(bg, modalContent, m.width, m.height, theme.Indigo)
+	}
+	return bg
 }
 
 // renderProjectSelector renders the centered project picker.
 func (m Model) renderProjectSelector() string {
-	return m.renderSelector(
+	bg := m.renderSelector(
 		fmt.Sprintf("SELECT PROJECT  %s", theme.SubtitleTextStyle.Render(m.selectedWS.Name)),
 		m.projectNames(),
 		m.selectorCursor,
 		m.selectorError,
+		m.selectorLoading,
 	)
+	if m.showCreateModal {
+		var fields string
+		if m.createPhase == 0 {
+			fields = theme.TextMutedStyle.Render("Name:") + "\n" + m.createInput.View() + "\n\n" +
+				theme.TextMutedStyle.Render("Key: (press enter to continue)")
+		} else {
+			fields = theme.TextMutedStyle.Render("Name: ") + theme.TextPrimaryStyle.Render(m.createInput.Value()) + "\n\n" +
+				theme.TextMutedStyle.Render("Key:") + "\n" + m.createKeyInput.View()
+		}
+		modalContent := theme.BrandTextStyle.Render("CREATE PROJECT") + "\n\n" +
+			fields + "\n\n" +
+			components.KeyHints(components.KeyHint("enter", "next/create"), components.KeyHint("esc", "cancel"))
+		return components.OverlayModal(bg, modalContent, m.width, m.height, theme.Indigo)
+	}
+	return bg
 }
 
 // renderSelector renders a generic centered selection list.
-func (m Model) renderSelector(title string, items []string, cursor int, errMsg string) string {
+func (m Model) renderSelector(title string, items []string, cursor int, errMsg string, loading bool) string {
 	var lines []string
 
 	// Title
@@ -598,9 +811,8 @@ func (m Model) renderSelector(title string, items []string, cursor int, errMsg s
 	if errMsg != "" {
 		lines = append(lines, theme.ErrorTextStyle.Render(theme.SymCross+" "+errMsg))
 		lines = append(lines, "")
-		retryHint := theme.TextDimStyle.Render("Press r to retry")
-		lines = append(lines, retryHint)
-	} else if len(items) == 0 {
+		lines = append(lines, components.KeyHint("r", "retry"))
+	} else if loading || len(items) == 0 {
 		lines = append(lines, theme.WarningTextStyle.Render(theme.SymDot+" Loading..."))
 	} else {
 		for i, item := range items {
@@ -621,6 +833,7 @@ func (m Model) renderSelector(title string, items []string, cursor int, errMsg s
 	hintParts := []string{
 		components.KeyHint("j/k", "navigate"),
 		components.KeyHint("enter", "select"),
+		components.KeyHint("c", "create new"),
 	}
 	if m.appState == StateSelectProject {
 		hintParts = append(hintParts, components.KeyHint("esc", "back"))
@@ -707,6 +920,44 @@ func fetchWorkspaces(client *api.ConvexClient) tea.Cmd {
 			result[i] = workspaceItem{ID: item.ID, Name: item.Name}
 		}
 		return workspacesLoadedMsg{Items: result}
+	}
+}
+
+// createWorkspace creates a new workspace.
+func createWorkspace(client *api.ConvexClient, name string) tea.Cmd {
+	return func() tea.Msg {
+		if client == nil {
+			return workspaceCreatedMsg{Err: fmt.Errorf("no API client")}
+		}
+		raw, err := client.Mutation("workspaces/mutations:createWorkspace", map[string]interface{}{
+			"name": name,
+		})
+		if err != nil {
+			return workspaceCreatedMsg{Err: err}
+		}
+		var id string
+		json.Unmarshal(raw, &id)
+		return workspaceCreatedMsg{ID: id, Name: name}
+	}
+}
+
+// createProject creates a new project in a workspace.
+func createProject(client *api.ConvexClient, workspaceID, name, key string) tea.Cmd {
+	return func() tea.Msg {
+		if client == nil {
+			return projectCreatedMsg{Err: fmt.Errorf("no API client")}
+		}
+		raw, err := client.Mutation("projects/mutations:createProject", map[string]interface{}{
+			"workspaceId": workspaceID,
+			"name":        name,
+			"key":         key,
+		})
+		if err != nil {
+			return projectCreatedMsg{Err: err}
+		}
+		var id string
+		json.Unmarshal(raw, &id)
+		return projectCreatedMsg{ID: id, Name: name, Key: key}
 	}
 }
 

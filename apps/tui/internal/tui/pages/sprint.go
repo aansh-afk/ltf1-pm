@@ -83,6 +83,8 @@ func (p *sprintPage) KeyBinds() []string {
 	return nil
 }
 
+func (p *sprintPage) HasModal() bool { return false }
+
 func (p *sprintPage) View() string {
 	if p.client == nil {
 		return components.EmptyState("Not connected", p.width, p.height)

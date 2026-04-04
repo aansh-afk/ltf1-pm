@@ -2216,4 +2216,49 @@ export default defineSchema({
     .index("by_workspaceId", ["workspaceId"])
     .index("by_workspaceId_and_name", ["workspaceId", "name"])
     .index("by_isPublished", ["isPublished"]),
+
+  // Community
+  communityPolls: defineTable({
+    workspaceId: v.optional(v.id("workspaces")),
+    title: v.string(),
+    description: v.optional(v.string()),
+    options: v.array(v.object({
+      id: v.string(),
+      text: v.string(),
+    })),
+    category: v.union(v.literal("feature"), v.literal("opinion"), v.literal("feedback"), v.literal("general")),
+    createdBy: v.id("users"),
+    status: v.union(v.literal("active"), v.literal("closed")),
+    endsAt: v.optional(v.number()),
+    totalVotes: v.optional(v.number()),
+  }).index("by_status", ["status"]),
+
+  communityVotes: defineTable({
+    pollId: v.id("communityPolls"),
+    userId: v.id("users"),
+    optionId: v.string(),
+  }).index("by_pollId", ["pollId"])
+    .index("by_userId_and_pollId", ["userId", "pollId"]),
+
+  communityPosts: defineTable({
+    title: v.string(),
+    content: v.string(),
+    category: v.union(v.literal("discussion"), v.literal("idea"), v.literal("bug"), v.literal("showcase")),
+    createdBy: v.id("users"),
+    upvotes: v.optional(v.number()),
+    commentCount: v.optional(v.number()),
+  }).index("by_category", ["category"]),
+
+  communityUpvotes: defineTable({
+    postId: v.id("communityPosts"),
+    userId: v.id("users"),
+  }).index("by_postId", ["postId"])
+    .index("by_userId_and_postId", ["userId", "postId"]),
+
+  communityComments: defineTable({
+    postId: v.id("communityPosts"),
+    userId: v.id("users"),
+    content: v.string(),
+    parentId: v.optional(v.id("communityComments")),
+  }).index("by_postId", ["postId"]),
 });

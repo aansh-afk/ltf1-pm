@@ -15,6 +15,8 @@ type skillsDataMsg struct {
 	Err    error
 }
 
+type skillToggledMsg struct{ Err error }
+
 type skillsPage struct {
 	width, height int
 	client        *api.ConvexClient
@@ -48,11 +50,31 @@ func (p *skillsPage) fetchSkills() tea.Cmd {
 	}
 }
 
+func (p *skillsPage) toggleSkill(skillID string) tea.Cmd {
+	client := p.client
+	return func() tea.Msg {
+		_, err := client.Mutation("skills/mutations:toggleSkill", map[string]interface{}{
+			"skillId": skillID,
+		})
+		return skillToggledMsg{Err: err}
+	}
+}
+
 func (p *skillsPage) Update(msg tea.Msg) (PageModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case skillsDataMsg:
 		p.skills = msg.Skills
 		p.loading = false
+	case skillToggledMsg:
+		if msg.Err != nil {
+			return p, func() tea.Msg {
+				return ShowToastMsg{Message: "Toggle failed: " + msg.Err.Error(), IsError: true}
+			}
+		}
+		return p, tea.Batch(
+			p.fetchSkills(),
+			func() tea.Msg { return ShowToastMsg{Message: "Skill toggled"} },
+		)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down":
@@ -62,6 +84,10 @@ func (p *skillsPage) Update(msg tea.Msg) (PageModel, tea.Cmd) {
 		case "k", "up":
 			if p.cursor > 0 {
 				p.cursor--
+			}
+		case " ":
+			if p.cursor >= 0 && p.cursor < len(p.skills) {
+				return p, p.toggleSkill(p.skills[p.cursor].ID)
 			}
 		}
 	}
@@ -85,6 +111,8 @@ func (p *skillsPage) KeyBinds() []string {
 	return []string{"j", "k", "up", "down", " "}
 }
 
+func (p *skillsPage) HasModal() bool { return false }
+
 func (p *skillsPage) View() string {
 	if p.client == nil {
 		return components.EmptyState("Not connected", p.width, p.height)
@@ -94,11 +122,9 @@ func (p *skillsPage) View() string {
 	}
 
 	var b strings.Builder
-
 	b.WriteString("\n")
 	b.WriteString(theme.SectionHeader.Render("SKILLS") + "\n")
-	b.WriteString(theme.TextMutedStyle.Render("Configure the AI agent's capabilities for this workspace.") + "\n")
-	b.WriteString("\n")
+	b.WriteString(theme.TextMutedStyle.Render("Configure the AI agent's capabilities for this workspace.") + "\n\n")
 
 	if len(p.skills) == 0 {
 		b.WriteString(components.EmptyState("No skills configured", p.width, p.height-6))
@@ -106,14 +132,12 @@ func (p *skillsPage) View() string {
 	}
 
 	for i, skill := range p.skills {
-		// Status badge: "Enabled ✓" or "Disabled ○"
 		var meta string
 		if skill.IsActive {
 			meta = theme.SuccessTextStyle.Render("Enabled ") + theme.SuccessTextStyle.Render(theme.SymCheck)
 		} else {
 			meta = theme.TextMutedStyle.Render("Disabled ") + theme.TextMutedStyle.Render(theme.SymDotEmpty)
 		}
-
 		b.WriteString(components.RenderListItem(skill.DisplayName, meta, i == p.cursor, p.width-2) + "\n")
 	}
 

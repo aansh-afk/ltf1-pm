@@ -142,8 +142,8 @@ const WEB_APP_URL = (() => {
   }
 
   const convexUrl = process.env.CONVEX_URL || "";
-  if (convexUrl.includes("tangible-butterfly-366.convex.cloud")) {
-    return "https://ltf1.dev"; // App developers
+  if (convexUrl.includes("your-deployment.convex.cloud")) {
+    return "https://ltf1.dev"; // Replace with your deployment URL
   }
 
   return "https://ltf1.dev"; // 👈 End users (DEFAULT)

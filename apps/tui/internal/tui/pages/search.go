@@ -80,6 +80,8 @@ func (p *searchPage) KeyBinds() []string {
 	return []string{"j", "k", "up", "down", "enter"}
 }
 
+func (p *searchPage) HasModal() bool { return false }
+
 func (p *searchPage) View() string {
 	var b strings.Builder
 
