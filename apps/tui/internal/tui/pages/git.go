@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
@@ -13,6 +14,8 @@ import (
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/components"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/tui/theme"
 )
+
+type gitRefreshTickMsg struct{}
 
 // --- Data types ---
 
@@ -89,6 +92,7 @@ type gitPanel int
 const (
 	gitPanelFiles gitPanel = iota
 	gitPanelCommits
+	gitPanelPRs
 )
 
 // --- Page model ---
@@ -145,7 +149,13 @@ func NewGitPage() PageModel {
 }
 
 func (p *gitPage) Init() tea.Cmd {
-	return p.fetchGitData()
+	return tea.Batch(p.fetchGitData(), p.scheduleRefresh())
+}
+
+func (p *gitPage) scheduleRefresh() tea.Cmd {
+	return tea.Tick(10*time.Second, func(time.Time) tea.Msg {
+		return gitRefreshTickMsg{}
+	})
 }
 
 // --- Data fetching ---
@@ -351,6 +361,13 @@ func ghMergePR(number int) tea.Cmd {
 
 func (p *gitPage) Update(msg tea.Msg) (PageModel, tea.Cmd) {
 	switch msg := msg.(type) {
+	case gitRefreshTickMsg:
+		// Auto-refresh every 10s, but only if no modal is open
+		if p.modalMode == gitModalNone && !p.noGit {
+			return p, tea.Batch(p.fetchGitData(), p.scheduleRefresh())
+		}
+		return p, p.scheduleRefresh()
+
 	case gitDataMsg:
 		p.loading = false
 		if msg.NoGit {
@@ -553,29 +570,46 @@ func (p *gitPage) handleKey(msg tea.KeyMsg) (PageModel, tea.Cmd) {
 	// --- Normal mode ---
 	switch key {
 	case "tab":
-		if p.activePanel == gitPanelFiles {
+		switch p.activePanel {
+		case gitPanelFiles:
 			p.activePanel = gitPanelCommits
-		} else {
+		case gitPanelCommits:
+			if len(p.ghPRs) > 0 {
+				p.activePanel = gitPanelPRs
+			} else {
+				p.activePanel = gitPanelFiles
+			}
+		case gitPanelPRs:
 			p.activePanel = gitPanelFiles
 		}
 	case "j", "down":
-		if p.activePanel == gitPanelFiles {
+		switch p.activePanel {
+		case gitPanelFiles:
 			if p.cursor < len(p.files)-1 {
 				p.cursor++
 			}
-		} else {
+		case gitPanelCommits:
 			if p.commitCursor < len(p.commits)-1 {
 				p.commitCursor++
 			}
+		case gitPanelPRs:
+			if p.prCursor < len(p.ghPRs)-1 {
+				p.prCursor++
+			}
 		}
 	case "k", "up":
-		if p.activePanel == gitPanelFiles {
+		switch p.activePanel {
+		case gitPanelFiles:
 			if p.cursor > 0 {
 				p.cursor--
 			}
-		} else {
+		case gitPanelCommits:
 			if p.commitCursor > 0 {
 				p.commitCursor--
+			}
+		case gitPanelPRs:
+			if p.prCursor > 0 {
+				p.prCursor--
 			}
 		}
 	case " ": // Stage/unstage
@@ -650,13 +684,18 @@ func (p *gitPage) handleKey(msg tea.KeyMsg) (PageModel, tea.Cmd) {
 		p.modalMode = gitModalPRCreate
 		p.prTitleInput.SetValue("")
 		return p, p.prTitleInput.Focus()
+	case "enter":
+		// Open PR detail modal when PR panel is focused
+		if p.activePanel == gitPanelPRs && p.prCursor >= 0 && p.prCursor < len(p.ghPRs) {
+			p.modalMode = gitModalPRList
+		}
 	case "O": // Open PR list modal
 		if len(p.ghPRs) > 0 {
 			p.modalMode = gitModalPRList
 			p.prCursor = 0
 		}
-	case "o": // Open selected PR in browser (from PR panel)
-		if len(p.ghPRs) > 0 && p.prCursor >= 0 && p.prCursor < len(p.ghPRs) {
+	case "o": // Open selected PR in browser
+		if p.activePanel == gitPanelPRs && p.prCursor >= 0 && p.prCursor < len(p.ghPRs) {
 			return p, ghViewPR(p.ghPRs[p.prCursor].Number)
 		}
 	}
@@ -675,7 +714,7 @@ func (p *gitPage) ShortHelp() string {
 }
 
 func (p *gitPage) KeyBinds() []string {
-	return []string{"j", "k", "up", "down", "c", " ", "tab", "a", "A", "b", "P", "p", "f", "o", "O", "R"}
+	return []string{"j", "k", "up", "down", "c", " ", "tab", "a", "A", "b", "P", "p", "f", "o", "O", "R", "enter"}
 }
 
 func (p *gitPage) HasModal() bool { return p.modalMode != gitModalNone
@@ -805,8 +844,12 @@ func (p *gitPage) renderGitPanels() string {
 	// Row 4: PRs + Issues (GitHub)
 	if p.ghRepo != nil {
 		b.WriteString("\n")
+		prHeader := fmt.Sprintf("PULL REQUESTS (%d)", len(p.ghPRs))
+		if p.activePanel == gitPanelPRs {
+			prHeader += " " + theme.SymArrowRight
+		}
 		prBox := components.BorderedSection(
-			fmt.Sprintf("PULL REQUESTS (%d)", len(p.ghPRs)),
+			prHeader,
 			p.renderPRs(leftW-4),
 			leftW,
 		)
@@ -1174,11 +1217,11 @@ func (p *gitPage) renderPRs(innerW int) string {
 		author := theme.TextMutedStyle.Render(pr.User.Login)
 		branch := theme.TextDimStyle.Render(pr.Head.Ref)
 
-		isSelected := i == p.prCursor
+		isSelected := p.activePanel == gitPanelPRs && i == p.prCursor
 		if isSelected {
+			selBg := lipgloss.NewStyle().Background(theme.BgHighlight).Bold(true)
 			line := stateIcon + " " + number + " " + theme.ListItemTitleSelectedStyle.Render(title)
-			lines = append(lines, theme.ListItemSelected.Width(innerW).Render(line))
-			// Detail line below selected
+			lines = append(lines, selBg.Render(line))
 			lines = append(lines, "    "+branch+" "+theme.TextDimStyle.Render(theme.SymArrowRight)+" "+theme.TextMutedStyle.Render(pr.BaseRef.Ref)+"  "+author)
 		} else {
 			lines = append(lines, "  "+stateIcon+" "+number+" "+theme.TextSecondaryStyle.Render(title)+"  "+author)
@@ -1418,35 +1461,68 @@ func (p *gitPage) viewPRListModal(bg string) string {
 	lines = append(lines, theme.BrandTextStyle.Render("PULL REQUESTS"))
 	lines = append(lines, "")
 
+	if len(p.ghPRs) == 0 {
+		lines = append(lines, theme.TextMutedStyle.Render(theme.SymDotEmpty+" No open pull requests"))
+		lines = append(lines, "")
+		lines = append(lines, components.KeyHint("esc", "close"))
+		return components.OverlayModal(bg, strings.Join(lines, "\n"), p.width, p.height, theme.Indigo)
+	}
+
 	for i, pr := range p.ghPRs {
 		isSelected := i == p.prCursor
 		number := theme.AccentTextStyle.Render(fmt.Sprintf("#%d", pr.Number))
 		title := pr.Title
-		if len(title) > 45 {
-			title = title[:44] + theme.SymEllipsis
+		if len(title) > 50 {
+			title = title[:49] + theme.SymEllipsis
 		}
-		author := theme.TextMutedStyle.Render(pr.User.Login)
 
 		stateIcon := theme.SuccessTextStyle.Render(theme.SymDot)
+		stateLabel := "open"
 		if pr.Draft {
 			stateIcon = theme.TextMutedStyle.Render(theme.SymDotEmpty)
+			stateLabel = "draft"
 		}
 
 		if isSelected {
-			selBg := lipgloss.NewStyle().Background(theme.BgHighlight).Bold(true)
-			line := stateIcon + " " + number + " " + theme.ListItemTitleSelectedStyle.Render(title)
-			lines = append(lines, selBg.Render(line))
-			// Detail line
-			branch := theme.TextDimStyle.Render(pr.Head.Ref+" "+theme.SymArrowRight+" "+pr.BaseRef.Ref)
-			lines = append(lines, "    "+branch+"  "+author)
+			// Selected PR — show full detail card
+			lines = append(lines, "")
+			selBg := lipgloss.NewStyle().Background(theme.BgHighlight)
+			headerLine := stateIcon + " " + number + " " + theme.ListItemTitleSelectedStyle.Render(title)
+			lines = append(lines, selBg.Render(headerLine))
+			lines = append(lines, "")
+
+			// Branch flow
+			lines = append(lines,
+				"    "+theme.SuccessTextStyle.Render(pr.Head.Ref)+
+					theme.TextDimStyle.Render(" "+theme.SymArrowRight+" ")+
+					theme.AccentTextStyle.Render(pr.BaseRef.Ref))
+
+			// Metadata
+			author := pr.User.Login
+			lines = append(lines, "    "+theme.TextMutedStyle.Render("Author:  ")+theme.TextPrimaryStyle.Render(author))
+			lines = append(lines, "    "+theme.TextMutedStyle.Render("Status:  ")+theme.TextSecondaryStyle.Render(stateLabel))
+
+			// Stats
+			if pr.Additions > 0 || pr.Deletions > 0 {
+				stats := theme.SuccessTextStyle.Render(fmt.Sprintf("+%d", pr.Additions)) +
+					theme.TextDimStyle.Render(" / ") +
+					theme.ErrorTextStyle.Render(fmt.Sprintf("-%d", pr.Deletions))
+				lines = append(lines, "    "+theme.TextMutedStyle.Render("Changes: ")+stats)
+			}
+			if pr.Comments > 0 {
+				lines = append(lines, "    "+theme.TextMutedStyle.Render("Comments: ")+theme.TextPrimaryStyle.Render(fmt.Sprintf("%d", pr.Comments)))
+			}
+
+			lines = append(lines, "")
 		} else {
+			author := theme.TextMutedStyle.Render(pr.User.Login)
 			lines = append(lines, "  "+stateIcon+" "+number+" "+theme.TextSecondaryStyle.Render(title)+"  "+author)
 		}
 	}
 
 	lines = append(lines, "")
 	lines = append(lines, components.KeyHints(
-		components.KeyHint("enter", "checkout"),
+		components.KeyHint("enter", "checkout branch"),
 		components.KeyHint("o", "open in browser"),
 		components.KeyHint("m", "merge"),
 		components.KeyHint("esc", "close"),
