@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"encoding/json"
 	"fmt"
 	"image/color"
 	"os"
@@ -267,20 +268,102 @@ func (p *gitPage) fetchGitData() tea.Cmd {
 	}
 }
 
-// --- GitHub fetching ---
+// --- GitHub fetching via gh CLI ---
 
 func fetchGitHubData() tea.Cmd {
 	return func() tea.Msg {
+		// Check if gh CLI exists
+		if _, err := exec.LookPath("gh"); err != nil {
+			return githubDataMsg{Err: fmt.Errorf("gh CLI not installed")}
+		}
+
+		// Parse repo from git remote
 		repo, err := api.ParseGitHubRepo()
 		if err != nil {
 			return githubDataMsg{Err: err}
 		}
 
-		token := api.GetGitHubToken()
-		gh := api.NewGitHubClient(token)
+		var prs []api.GitHubPR
+		var issues []api.GitHubIssue
 
-		prs, _ := gh.ListPRs(repo)
-		issues, _ := gh.ListIssues(repo)
+		// Fetch PRs via gh CLI
+		prOut, err := exec.Command("gh", "pr", "list", "--json",
+			"number,title,state,headRefName,baseRefName,author,isDraft,additions,deletions,comments,url",
+			"--limit", "20").Output()
+		if err == nil {
+			type ghPRItem struct {
+				Number      int    `json:"number"`
+				Title       string `json:"title"`
+				State       string `json:"state"`
+				HeadRefName string `json:"headRefName"`
+				BaseRefName string `json:"baseRefName"`
+				IsDraft     bool   `json:"isDraft"`
+				Additions   int    `json:"additions"`
+				Deletions   int    `json:"deletions"`
+				URL         string `json:"url"`
+				Author      struct {
+					Login string `json:"login"`
+				} `json:"author"`
+				Comments []struct{} `json:"comments"`
+			}
+			var items []ghPRItem
+			if json.Unmarshal(prOut, &items) == nil {
+				for _, item := range items {
+					prs = append(prs, api.GitHubPR{
+						Number:    item.Number,
+						Title:     item.Title,
+						State:     item.State,
+						Draft:     item.IsDraft,
+						Additions: item.Additions,
+						Deletions: item.Deletions,
+						Comments:  len(item.Comments),
+						URL:       item.URL,
+						User:      struct{ Login string `json:"login"` }{Login: item.Author.Login},
+						Head:      struct{ Ref string `json:"ref"` }{Ref: item.HeadRefName},
+						BaseRef:   struct{ Ref string `json:"ref"` }{Ref: item.BaseRefName},
+					})
+				}
+			}
+		}
+
+		// Fetch issues via gh CLI
+		issueOut, err := exec.Command("gh", "issue", "list", "--json",
+			"number,title,state,author,labels,url",
+			"--limit", "20").Output()
+		if err == nil {
+			type ghIssueItem struct {
+				Number int    `json:"number"`
+				Title  string `json:"title"`
+				State  string `json:"state"`
+				URL    string `json:"url"`
+				Author struct {
+					Login string `json:"login"`
+				} `json:"author"`
+				Labels []struct {
+					Name  string `json:"name"`
+					Color string `json:"color"`
+				} `json:"labels"`
+			}
+			var items []ghIssueItem
+			if json.Unmarshal(issueOut, &items) == nil {
+				for _, item := range items {
+					issue := api.GitHubIssue{
+						Number: item.Number,
+						Title:  item.Title,
+						State:  item.State,
+						URL:    item.URL,
+					}
+					issue.User.Login = item.Author.Login
+					for _, l := range item.Labels {
+						issue.Labels = append(issue.Labels, struct {
+							Name  string `json:"name"`
+							Color string `json:"color"`
+						}{Name: l.Name, Color: l.Color})
+					}
+					issues = append(issues, issue)
+				}
+			}
+		}
 
 		return githubDataMsg{PRs: prs, Issues: issues, Repo: repo}
 	}
