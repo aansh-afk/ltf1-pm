@@ -163,7 +163,7 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 	lines = append(lines, "")
 
 	// Bottom version + quit
-	version := theme.TextDimStyle.Render("v0.1.8")
+	version := theme.TextDimStyle.Render("v0.1.9")
 	quit := theme.TextDimStyle.Render("[") + theme.ColorTextStyle(theme.TextMuted).Render("q") + theme.TextDimStyle.Render("] quit")
 	bottom := version + "    " + quit
 	lines = append(lines, centerLine(bottom, width))

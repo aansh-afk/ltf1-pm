@@ -15,7 +15,7 @@ type StatusBarModel struct {
 
 // NewStatusBar creates a new status bar.
 func NewStatusBar() StatusBarModel {
-	return StatusBarModel{Version: "0.1.8"}
+	return StatusBarModel{Version: "0.1.9"}
 }
 
 // View renders the status bar.
