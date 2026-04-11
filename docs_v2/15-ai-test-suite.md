@@ -6,24 +6,36 @@ How to test every AI feature in LTF1 end-to-end by handing a prompt to another C
 
 ## What This Tests
 
+**Backend / CLI tests** (33 bash scripts):
 | Group | Features |
 |-------|---------|
-| **Core generation** | `ai.generate` action — raw text generation via Cerebras/Groq |
-| **Task intelligence** | Generate tasks from description, smart assignment, complexity estimation |
-| **Sprint analysis** | Health score, risks, recommendations, velocity prediction |
-| **Insights CRUD** | Create, list, dismiss AI insights |
-| **Task suggestions** | AI-generated task suggestions from commits/PRs |
-| **Standup summary** | Daily activity → narrative summary |
-| **Documentation gen** | PR, README, API, tech-spec, release notes |
-| **Session tracking** | Every AI call logged to `aiSessions` |
-| **Feedback loop** | Rate AI outputs, aggregate stats |
-| **Usage stats** | Per-workspace token/cost/latency aggregations |
-| **BYOK** | Save/validate/delete user's own Cerebras/Groq keys |
-| **Project AI settings** | Enable/disable, set active key, model overrides |
-| **CLI commands** | `ltf ai suggest`, `ltf ai analyze`, `ltf ai describe` |
+| **Prerequisites** | Auth, project context, token, Convex reachability, key check |
+| **Core generation** | `ai.generate` action — raw text via Cerebras/Groq, system prompts, function category routing |
+| **Task intelligence** | Generate tasks from description, smart assignment, `ltf ai describe`, `ltf ai suggest` |
+| **Sprint analysis** | Health score, risks, recommendations, `ltf ai analyze`, standup summary |
+| **Insights CRUD** | Create, list, dismiss, auto-generated from sprint analysis |
+| **Sessions & feedback** | Session tracking, submit feedback, feedback summary |
+| **Usage stats** | Per-workspace token/cost/latency/cache-rate aggregation |
+| **BYOK keys** | List, save invalid (should fail), save valid, project AI settings |
 | **Agent commands** | `ltf agent triage`, `ltf agent suggest`, `ltf agent status` |
+| **Error handling** | Invalid project ID, empty prompt, rate limiting |
 
-**Total: ~25 tests across 14 feature groups.**
+**Web UI checks** (11 manual checks the user does in their browser):
+| Check | What you click |
+|-------|----------------|
+| Dashboard load | `/dashboard` — verify page renders, no console errors |
+| AI Settings tab | `/settings` → AI tab → key list + add button visible |
+| Add invalid BYOK key | Settings → AI → Add Cerebras key with garbage → expect rejection |
+| AI task creator | `/tasks` → New Task → AI suggest from description |
+| AI assignee suggestions | Open task → click AI Suggest on assignee |
+| AITaskEnhancer | Task detail → sparkles button → enhancer panel |
+| AI Insights Panel | `/sprints` → active sprint → Generate Insights |
+| Standup summary | DailyStandupSummary on dashboard or sprint page |
+| AI Analytics Dashboard | Settings → AI → analytics view |
+| Triage page | `/triage` loads cleanly |
+| SmartTaskGenerator | Multi-task breakdown from feature description |
+
+**Total: 44 checks** (33 automated bash scripts + 11 manual UI checks). Backend tests run via `./run-all.sh`. UI checks live in `MANUAL_UI_CHECKLIST.md` — you walk through them yourself with a browser open and tick the checkboxes. **No Playwright, no browser automation.**
 
 ---
 
@@ -43,9 +55,12 @@ cd ~/ltf1-ai-test
 #    a) AI provider env vars set on your Convex deployment (CEREBRAS_API_KEY or GROQ_API_KEY)
 #    b) Or a BYOK key saved via the web app at /settings → AI tab
 #    Otherwise the AI tests will fail with "no key configured"
+
+# Optional: point to a local web app instead of production for the manual UI checklist
+# export LTF_WEB_URL="http://localhost:3000"
 ```
 
-The test Claude will bootstrap the folder itself: `git init`, create directories, verify ltf is installed, verify auth, then start running tests.
+The test Claude will bootstrap the folder itself: `git init`, create directories, write helper scripts, verify ltf is installed, verify auth, then start running the 33 backend tests. Once backend tests are done it generates `MANUAL_UI_CHECKLIST.md` with 11 step-by-step browser checks for you to walk through yourself.
 
 ---
 
@@ -53,10 +68,11 @@ The test Claude will bootstrap the folder itself: `git init`, create directories
 
 1. Open a **fresh** Claude Code instance in the empty `~/ltf1-ai-test` folder
 2. Copy the entire contents of [`TEST_PROMPT.md`](./TEST_PROMPT.md) as the first message
-3. Hit send and let Claude work through the full suite (~10–15 minutes)
+3. Hit send and let Claude work through the 33 backend/CLI tests (~10–15 minutes)
 4. When it finishes, read `TEST_REPORT.md` in the test folder
+5. **Then open `MANUAL_UI_CHECKLIST.md`** and walk through the 11 UI checks yourself in your browser, ticking checkboxes as you go (~10 minutes)
 
-If any prerequisite is missing that requires your interaction (like browser auth), the test Claude will stop and write `BLOCKED.md` telling you exactly what to do. Resolve it and tell Claude to continue.
+If any prerequisite is missing that requires your interaction (like `ltf auth login`), the test Claude will stop and write `BLOCKED.md` telling you exactly what to do. Resolve it and tell Claude to continue.
 
 ---
 

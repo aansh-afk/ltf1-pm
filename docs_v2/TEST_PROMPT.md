@@ -28,45 +28,129 @@ Do NOT skim these. Read them. Take notes on the AI function names, argument shap
 - **Auth**: you must verify the user is authenticated; if not, STOP and ask them to run `ltf auth login` themselves (it opens a browser and requires user interaction — you cannot run it autonomously)
 - **Project**: you must verify a project is selected; if not, try `ltf project detect --set` first, otherwise STOP and ask the user to run `ltf project select`
 
+## What You Are Building
+
+This is not a one-shot test runner. You are building a **reproducible test suite** that the user (or another agent) can re-run later. The deliverables are:
+
+1. **Real shell scripts** — one per test, executable, idempotent where possible
+2. **Reusable helper library** — token extraction, Convex API call wrapper, assertion helpers
+3. **A master runner** — `run-all.sh` that executes every test in order
+4. **Per-test result files** — markdown documenting what happened on this run
+5. **Raw outputs** — JSON/text dumps of every API response
+6. **A final report** — `TEST_REPORT.md` with pass/fail and overall verdict
+
+The user should be able to: clone the test repo on another machine, run `./run-all.sh`, and get the same coverage you produced — without ever talking to an AI.
+
+## Final Repository Structure
+
+By the time you finish, the test folder should look like this:
+
+```
+ltf1-ai-test/
+├── README.md                          # what this repo is, prerequisites, how to run
+├── SETUP.md                           # state found at bootstrap
+├── TEST_REPORT.md                     # final pass/fail report (backend + CLI)
+├── MANUAL_UI_CHECKLIST.md             # 11 manual checks for the user to walk through in their browser
+├── BLOCKED.md                         # only if you got blocked (otherwise omit)
+├── .gitignore
+├── run-all.sh                         # master runner — runs every backend/CLI test in order
+├── lib/
+│   ├── auth.sh                        # token extraction + auth check helpers
+│   ├── api.sh                         # convex_query / convex_mutation / convex_action wrappers
+│   └── assert.sh                      # assert_eq, assert_contains, assert_json_path helpers
+├── tests/                             # Backend/CLI tests (bash scripts) — 33 tests
+│   ├── 01-prerequisites/
+│   │   ├── 01-auth-status.sh
+│   │   ├── 02-project-info.sh
+│   │   └── ...
+│   ├── 02-core-generation/
+│   ├── 03-task-intelligence/
+│   ├── 04-sprint-analysis/
+│   ├── 05-insights-crud/
+│   ├── 06-sessions-feedback/
+│   ├── 07-usage-stats/
+│   ├── 08-byok/
+│   ├── 09-agent/
+│   └── 10-error-handling/
+├── results/                           # Per-test markdown results (mirror of tests/)
+│   ├── 01-prerequisites/...
+│   ├── ...
+│   └── 10-error-handling/...
+└── outputs/                           # Raw API responses
+    ├── 06-simple-prompt.json
+    ├── 09-task-generation.json
+    └── ...
+```
+
+Note: Web UI testing is **manual**. The user clicks through the browser themselves following `MANUAL_UI_CHECKLIST.md`. No browser automation. No Playwright. No Puppeteer. No Node packages.
+
 ## Bootstrap (do this FIRST, before any tests)
 
-1. **Initialize git** in the current directory:
+1. **Initialize git**:
    ```bash
    git init
+   git checkout -b main
    ```
 
 2. **Create the directory structure**:
    ```bash
-   mkdir -p tests outputs setup-data
+   mkdir -p lib tests outputs results
+   mkdir -p tests/{01-prerequisites,02-core-generation,03-task-intelligence,04-sprint-analysis,05-insights-crud,06-sessions-feedback,07-usage-stats,08-byok,09-agent,10-error-handling}
+   mkdir -p results/{01-prerequisites,02-core-generation,03-task-intelligence,04-sprint-analysis,05-insights-crud,06-sessions-feedback,07-usage-stats,08-byok,09-agent,10-error-handling}
    ```
 
-3. **Create a `.gitignore`** to keep test artifacts manageable:
+3. **Write `.gitignore`**:
    ```
    node_modules/
    .env
    *.log
    ```
 
-4. **Verify ltf is installed**:
+4. **Write `lib/auth.sh`** — token extraction + auth check helpers. Should expose:
+   - `extract_token()` — read CLI config, return JWT
+   - `assert_authenticated()` — fail if `ltf auth status` returns "not authenticated"
+   - `get_project_id()` / `get_workspace_id()` / `get_user_id()`
+
+5. **Write `lib/api.sh`** — Convex HTTP wrappers. Should expose:
+   - `convex_query <path> <args-json>` — POST to /api/query
+   - `convex_mutation <path> <args-json>` — POST to /api/mutation
+   - `convex_action <path> <args-json>` — POST to /api/action
+   - All return JSON to stdout, set non-zero exit on HTTP error
+
+6. **Write `lib/assert.sh`** — assertion helpers:
+   - `assert_eq <expected> <actual> <message>`
+   - `assert_contains <substring> <text> <message>`
+   - `assert_json_path <jq-expr> <json> <expected>` — runs jq and compares
+   - `pass` / `fail <reason>` — print colored result, exit appropriately
+
+7. **Write `run-all.sh`** — master runner. First iterates `tests/*/` and runs each `.sh` file, then runs `npx playwright test` for the UI suite. Captures pass/fail per test, writes a summary at the end. Should be re-runnable.
+
+8. **Verify `ltf` is installed**:
    ```bash
    which ltf || npm install -g @vvg-ltf1/cli
-   ltf --version 2>&1 || ltf auth status
    ```
 
-5. **Verify auth and project context**:
+9. **Verify auth and project context**. If anything is missing that requires user interaction, write `BLOCKED.md` and STOP:
    ```bash
-   ltf auth status   # if "not authenticated", STOP and ask user to run `ltf auth login`
-   ltf project info  # if "no project selected", run `ltf project detect --set` or STOP
+   ltf auth status
+   ltf project info
    ```
 
-6. **Create a SETUP.md** documenting what state you found the environment in:
-   - ltf version (or installed fresh)
-   - User email from `ltf auth status`
-   - Workspace name + ID
-   - Project name + key + ID
-   - Whether you had to install or set anything up
+10. **Write `SETUP.md`** documenting what state you found:
+    - ltf version
+    - User email + ID
+    - Workspace name + ID
+    - Project name + key + ID
+    - Whether keys are configured
 
-Only after bootstrap is complete and SETUP.md is written, proceed to the tests.
+11. **Write `README.md`** for the test repo explaining:
+    - What this is
+    - Prerequisites (ltf installed, authenticated, project selected)
+    - How to run all tests: `./run-all.sh`
+    - How to run a single test: `./tests/02-core-generation/06-simple-prompt.sh`
+    - Where to find results
+
+Only after bootstrap is complete, proceed to writing and running the tests.
 
 ## Your Tools
 
@@ -97,7 +181,29 @@ TOKEN=$(jq -r '.auth.token' < "$(ltf config path)")
 
 ## What You Must Test
 
-You must test every feature listed below. For each one, decide whether to use the CLI or HTTP API (use the API for things the CLI doesn't expose). Save the raw output to `outputs/<test-name>.json` and write the test result to a numbered file in `tests/`.
+For each of the 33 tests below, you create **three things**:
+
+1. **A shell script** at `tests/<group>/<NN>-<name>.sh` that:
+   - Sources `lib/auth.sh`, `lib/api.sh`, `lib/assert.sh`
+   - Sets up any needed state
+   - Calls the CLI or HTTP API (use API for things the CLI doesn't expose)
+   - Saves raw response to `outputs/<NN>-<name>.json`
+   - Runs assertions
+   - Calls `pass` or `fail "reason"` at the end
+   - Is idempotent where possible (safe to re-run)
+
+2. **A result file** at `results/<group>/<NN>-<name>.md` that the script writes when it runs, documenting:
+   - Status (PASS/FAIL/SKIPPED/PARTIAL)
+   - Duration
+   - Function called
+   - Input args
+   - Output preview
+   - Verification checks performed
+   - Notes
+
+3. **A raw output dump** at `outputs/<NN>-<name>.json` (or .txt for non-JSON output)
+
+After creating each test script, **run it immediately** to populate the result file. Don't write all 33 scripts then run them at the end — write, run, write, run.
 
 ### Group 1: Prerequisites (5 tests)
 1. **`ltf auth status`** — verify authenticated, capture user ID and email
@@ -151,6 +257,110 @@ You must test every feature listed below. For each one, decide whether to use th
 31. **Invalid project ID** — Call `ai/projectInsights:generateProjectInsights` with `{"projectId": "invalid_id_xxx"}`. Verify it errors gracefully with a meaningful message.
 32. **Empty prompt** — Call `ai/generate:generate` with `{"prompt": ""}`. Document behavior (should error or return helpful message).
 33. **Rate limiting** — Make 10 rapid calls to `ai/generate:generate`. Verify either all succeed or rate limiting kicks in with a clear error.
+
+### Group 11: Web UI (manual checklist for the user — 11 checks)
+
+The user is going to test the Web UI **themselves** by clicking through the app. Your job for this group is **NOT** to automate anything — it's to generate a clear, step-by-step manual test checklist they can follow with their own browser open.
+
+Do NOT install Playwright. Do NOT install puppeteer. Do NOT use any browser automation. Generate a single file `MANUAL_UI_CHECKLIST.md` with explicit instructions and checkboxes the user fills in.
+
+The web app is at `https://ltf1.dev` (or `http://localhost:3000` if `LTF_WEB_URL` env is set — check it).
+
+Write `MANUAL_UI_CHECKLIST.md` with this structure:
+
+```markdown
+# Web UI Manual Test Checklist
+
+Open https://ltf1.dev in your browser. Sign in if you haven't already.
+Walk through each check below in order. Mark each `[ ]` → `[x]` PASS or `[F]` FAIL as you go.
+For failures, jot a note about what went wrong in the "Notes" line below the check.
+
+---
+
+## Check 34: Dashboard loads cleanly
+Navigate to: https://ltf1.dev/dashboard
+- [ ] Page renders without a blank screen
+- [ ] No red error overlays
+- [ ] User menu (top right) is visible
+- [ ] Sidebar nav is visible
+- [ ] Open browser DevTools (F12) → Console tab → no red errors
+
+**Notes**:
+
+---
+
+## Check 35: AI Settings tab is reachable
+Navigate to: https://ltf1.dev/settings
+Click the "AI" tab in the settings nav.
+- [ ] AI tab exists in the settings menu
+- [ ] Tab content renders
+- [ ] Provider key list is visible (may be empty)
+- [ ] "Add Provider Key" button is visible
+
+**Notes**:
+
+---
+
+## Check 36: Add an invalid BYOK key (should be rejected)
+Still in Settings → AI:
+1. Click "Add Provider Key"
+2. Choose provider: Cerebras
+3. Paste this fake key: `invalid-key-test-do-not-use-12345`
+4. Click Save / Validate
+
+- [ ] An error message appears (validation should reject the bad key)
+- [ ] No key was added to the list
+- [ ] Error message is human-readable (not just "error")
+
+**Notes**:
+
+---
+
+(repeat for all 11 checks)
+```
+
+Generate **all 11 checks** with this structure. Each check is one clear navigation + a few specific things to verify with checkboxes. Be precise: tell the user exactly which page, exactly which button, exactly what to look for.
+
+**The 11 UI checks** (you fill in each with full step-by-step + checkboxes):
+
+34. **Dashboard loads cleanly** — `/dashboard` renders, no console errors
+35. **AI Settings tab reachable** — `/settings` → AI tab → key list + add button visible
+36. **Add invalid BYOK key** — Cerebras key validation rejects bad key
+37. **AI task creator** — `/tasks` → New Task → NaturalLanguageTaskCreator generates tasks from description
+38. **AI assignee suggestions** — Open a task → click AI Suggest on assignee field → list appears (or empty state)
+39. **AITaskEnhancer** — On task detail, click sparkles icon → enhancer panel opens
+40. **AI Insights Panel** — `/sprints` → click into active sprint → click Generate Insights → health score + risks + recommendations appear
+41. **Daily Standup Summary** — Find DailyStandupSummary on dashboard or sprint page → click generate → narrative text appears
+42. **AI Analytics Dashboard** — Find AIAnalyticsDashboard (settings → AI or analytics view) → shows totalSessions / totalTokens / totalCost
+43. **Triage page** — `/triage` loads, shows either queue items or empty state, no errors
+44. **SmartTaskGenerator** — Find on project or task creation flow → enter "Build a notification system with email, push, in-app" → multiple tasks appear for approval
+
+For each check, write:
+- The exact URL to navigate to
+- The exact buttons/links to click in order
+- 3-6 explicit verification checkboxes
+- A "Notes" line for the user to record observations
+- Any setup steps needed (e.g., "you must have an active sprint for this check")
+
+At the bottom of `MANUAL_UI_CHECKLIST.md`, include a summary table:
+```markdown
+## Summary
+| Check | Description | Result |
+|-------|-------------|--------|
+| 34 | Dashboard loads | [ ] |
+| 35 | AI Settings tab | [ ] |
+| ... | ... | [ ] |
+
+**Total**: __ / 11
+**Passed**: __
+**Failed**: __
+```
+
+The user fills in this summary as they complete each check.
+
+**Important**: This file is the ONLY deliverable for Group 11. There are no `.sh` scripts, no `tests-ui/` folder, no Playwright config, no `package.json`. Just the markdown checklist.
+
+**Total tests now: 44** (33 automated backend/CLI + 11 manual UI checks)
 
 ## Output Format
 
