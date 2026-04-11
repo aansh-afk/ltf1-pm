@@ -17,7 +17,7 @@ func newStatusCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := api.LoadAuthConfig()
 			if err != nil || cfg == nil || cfg.Auth.Token == "" {
-				output.Warningf("not authenticated. Run: ltf auth login")
+				output.Warningf("not authenticated. Run: ltf1 auth login")
 				return nil
 			}
 
@@ -39,7 +39,7 @@ func newStatusCmd() *cobra.Command {
 				fmt.Printf("Workspace:    %s\n", cfg.Context.WorkspaceName)
 				fmt.Printf("Project:      %s (%s)\n", cfg.Context.ProjectName, cfg.Context.ProjectKey)
 			} else {
-				output.Warningf("no project selected. Run: ltf project select")
+				output.Warningf("no project selected. Run: ltf1 project select")
 			}
 			return nil
 		},

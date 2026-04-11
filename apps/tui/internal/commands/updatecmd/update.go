@@ -1,4 +1,4 @@
-// Package updatecmd implements the `ltf update` command.
+// Package updatecmd implements the `ltf1 update` command.
 package updatecmd
 
 import (

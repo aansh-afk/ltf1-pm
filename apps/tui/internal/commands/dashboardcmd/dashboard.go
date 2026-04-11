@@ -1,4 +1,4 @@
-// Package dashboardcmd implements the `ltf dashboard` command, which launches the TUI.
+// Package dashboardcmd implements the `ltf1 dashboard` command, which launches the TUI.
 package dashboardcmd
 
 import (

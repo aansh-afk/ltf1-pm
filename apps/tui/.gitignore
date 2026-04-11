@@ -1,12 +1,14 @@
+/ltf1
 /ltf
 /ltf-tui
+/ltf1.exe
 /ltf.exe
 *.test
 
 # Platform binaries built by npm/build.sh — published to npm, not committed
-npm/ltf-darwin-arm64/bin/
-npm/ltf-darwin-x64/bin/
-npm/ltf-linux-arm64/bin/
-npm/ltf-linux-x64/bin/
-npm/ltf-windows-arm64/bin/
-npm/ltf-windows-x64/bin/
+npm/ltf1-darwin-arm64/bin/
+npm/ltf1-darwin-x64/bin/
+npm/ltf1-linux-arm64/bin/
+npm/ltf1-linux-x64/bin/
+npm/ltf1-windows-arm64/bin/
+npm/ltf1-windows-x64/bin/

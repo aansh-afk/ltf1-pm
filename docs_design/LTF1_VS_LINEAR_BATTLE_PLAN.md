@@ -319,12 +319,12 @@ These are features that don't exist yet in Linear (or are "coming soon") where w
 
 Linear announced this as "coming soon" — understand codebases, debug, answer questions.
 
-**Our Advantage**: We have a CLI and TUI that already run in the terminal alongside the codebase. An `ltf agent` command that reads your repo context, suggests tasks from TODOs and FIXMEs, links commits automatically, and answers "what's the status of feature X?" would be incredibly powerful.
+**Our Advantage**: We have a CLI and TUI that already run in the terminal alongside the codebase. An `ltf1 agent` command that reads your repo context, suggests tasks from TODOs and FIXMEs, links commits automatically, and answers "what's the status of feature X?" would be incredibly powerful.
 
 **What to Build**:
-- `ltf agent watch` — daemon that monitors git activity and auto-creates/updates tasks
-- `ltf agent ask "what's blocking the auth refactor?"` — queries tasks + code context
-- `ltf agent plan "implement OAuth"` — generates task breakdown from codebase analysis
+- `ltf1 agent watch` — daemon that monitors git activity and auto-creates/updates tasks
+- `ltf1 agent ask "what's blocking the auth refactor?"` — queries tasks + code context
+- `ltf1 agent plan "implement OAuth"` — generates task breakdown from codebase analysis
 - In-browser: show related code snippets in task detail view
 
 #### Gap 12: Code Diffs / Review Interface
@@ -414,7 +414,7 @@ What Linear has told the world is "coming soon" — and where we can beat them t
 
 | Linear "Coming Soon" | Our Status | Opportunity |
 |----------------------|-----------|-------------|
-| **Code Intelligence** (understand codebases, debug) | CLI already in terminal | Build `ltf agent` with codebase awareness FIRST |
+| **Code Intelligence** (understand codebases, debug) | CLI already in terminal | Build `ltf1 agent` with codebase awareness FIRST |
 | **Code Diffs** (human-agent code iteration UI) | PR linking exists | Embed diff viewer in task detail |
 | **Linear Coding Agent** (writes code, fixes bugs) | AI triage exists | Extend agent to suggest code changes via CLI |
 

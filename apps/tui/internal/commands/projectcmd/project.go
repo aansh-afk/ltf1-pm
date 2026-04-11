@@ -1,4 +1,4 @@
-// Package projectcmd implements the `ltf project` command group.
+// Package projectcmd implements the `ltf1 project` command group.
 package projectcmd
 
 import "github.com/spf13/cobra"

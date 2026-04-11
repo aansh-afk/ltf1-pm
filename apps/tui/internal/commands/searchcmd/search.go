@@ -1,4 +1,4 @@
-// Package searchcmd implements the `ltf search` command.
+// Package searchcmd implements the `ltf1 search` command.
 package searchcmd
 
 import (

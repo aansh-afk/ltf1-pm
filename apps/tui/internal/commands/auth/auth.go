@@ -1,4 +1,4 @@
-// Package auth implements the `ltf auth` command group.
+// Package auth implements the `ltf1 auth` command group.
 package auth
 
 import "github.com/spf13/cobra"

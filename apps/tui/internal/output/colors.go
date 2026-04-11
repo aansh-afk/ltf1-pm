@@ -1,4 +1,4 @@
-// Package output provides terminal output utilities for the ltf CLI.
+// Package output provides terminal output utilities for the ltf1 CLI.
 package output
 
 import (

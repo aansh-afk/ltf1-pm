@@ -25,7 +25,7 @@ Replace the TypeScript CLI entirely with a Go-based CLI that:
 apps/tui/
 ├── go.mod
 ├── go.sum
-├── main.go                         # Thin wrapper → cmd/ltf/main.go
+├── main.go                         # Thin wrapper → cmd/ltf1/main.go
 ├── DESIGN_SYSTEM.md
 ├── worldmap.txt
 ├── cmd/
@@ -98,11 +98,11 @@ apps/tui/
 1. **Cobra over manual**: Use `github.com/spf13/cobra` for CLI parsing — battle-tested, handles flags, subcommands, help text.
 2. **One package per command group**: Each command group (auth, task, sprint) is its own Go package for clean separation.
 3. **Reuse existing code**: The API client (`internal/api/`) and auth (`internal/api/auth.go`) are already excellent. Don't rewrite.
-4. **Default action = TUI**: Bare `ltf` launches TUI (preserves current behavior). `ltf dashboard` is an alias.
+4. **Default action = TUI**: Bare `ltf` launches TUI (preserves current behavior). `ltf1 dashboard` is an alias.
 5. **Output package**: All terminal formatting goes through `internal/output/` to keep commands clean.
 6. **Global flags**: `--json`, `--no-color`, `--debug` defined on root command, inherited by all subcommands.
 7. **Binary name**: `ltf` (not `ltf-tui`, not `ltf1`).
-8. **Replace TUI launch in main.go**: The current `apps/tui/main.go` becomes a thin entry that calls into `cmd/ltf`.
+8. **Replace TUI launch in main.go**: The current `apps/tui/main.go` becomes a thin entry that calls into `cmd/ltf1`.
 
 ---
 
@@ -112,156 +112,156 @@ apps/tui/
 
 | TS Command | Go Package | Convex Calls |
 |-----------|------------|--------------|
-| `ltf auth login` | `internal/commands/auth/login.go` | Reuses `internal/tui/login.go` OAuth flow |
-| `ltf auth logout` | `internal/commands/auth/logout.go` | Clears `AuthConfig` via `api.SaveAuthConfig` |
-| `ltf auth status` | `internal/commands/auth/status.go` | Reads `api.LoadAuthConfig` |
+| `ltf1 auth login` | `internal/commands/auth/login.go` | Reuses `internal/tui/login.go` OAuth flow |
+| `ltf1 auth logout` | `internal/commands/auth/logout.go` | Clears `AuthConfig` via `api.SaveAuthConfig` |
+| `ltf1 auth status` | `internal/commands/auth/status.go` | Reads `api.LoadAuthConfig` |
 
 ### Project (4 commands)
 
 | TS Command | Go Package | Convex Calls |
 |-----------|------------|--------------|
-| `ltf project list` | `internal/commands/project/list.go` | `workspaces/queries:getUserWorkspaces`, `projects/queries:getWorkspaceProjects` |
-| `ltf project select` | `internal/commands/project/select.go` | Same + `api.SaveContext` |
-| `ltf project info` | `internal/commands/project/info.go` | `projects/queries:getProject` |
-| `ltf project detect` | `internal/commands/project/detect.go` | Git remote parsing + project search |
+| `ltf1 project list` | `internal/commands/project/list.go` | `workspaces/queries:getUserWorkspaces`, `projects/queries:getWorkspaceProjects` |
+| `ltf1 project select` | `internal/commands/project/select.go` | Same + `api.SaveContext` |
+| `ltf1 project info` | `internal/commands/project/info.go` | `projects/queries:getProject` |
+| `ltf1 project detect` | `internal/commands/project/detect.go` | Git remote parsing + project search |
 
 ### Task (9 commands)
 
 | TS Command | Go Package | Convex Calls |
 |-----------|------------|--------------|
-| `ltf task list` | `internal/commands/task/list.go` | `tasks/queries:getProjectTasks` |
-| `ltf task create` | `internal/commands/task/create.go` | `tasks/mutations:createTask` |
-| `ltf task view` | `internal/commands/task/view.go` | `tasks/queries:getTask` |
-| `ltf task update` | `internal/commands/task/update.go` | `tasks/mutations:updateTask` |
-| `ltf task done` | `internal/commands/task/done.go` | `tasks/mutations:updateTask` (status=done) |
-| `ltf task assign` | `internal/commands/task/assign.go` | `tasks/mutations:updateTask` |
-| `ltf task delete` | `internal/commands/task/delete.go` | `tasks/mutations:deleteTask` |
-| `ltf task comment` | `internal/commands/task/comment.go` | `comments/mutations:createComment` |
-| `ltf task mine` | `internal/commands/task/mine.go` | `tasks/queries:getMyTasks` |
+| `ltf1 task list` | `internal/commands/task/list.go` | `tasks/queries:getProjectTasks` |
+| `ltf1 task create` | `internal/commands/task/create.go` | `tasks/mutations:createTask` |
+| `ltf1 task view` | `internal/commands/task/view.go` | `tasks/queries:getTask` |
+| `ltf1 task update` | `internal/commands/task/update.go` | `tasks/mutations:updateTask` |
+| `ltf1 task done` | `internal/commands/task/done.go` | `tasks/mutations:updateTask` (status=done) |
+| `ltf1 task assign` | `internal/commands/task/assign.go` | `tasks/mutations:updateTask` |
+| `ltf1 task delete` | `internal/commands/task/delete.go` | `tasks/mutations:deleteTask` |
+| `ltf1 task comment` | `internal/commands/task/comment.go` | `comments/mutations:createComment` |
+| `ltf1 task mine` | `internal/commands/task/mine.go` | `tasks/queries:getMyTasks` |
 
 ### Sprint (7 commands)
 
 | TS Command | Go Package | Convex Calls |
 |-----------|------------|--------------|
-| `ltf sprint list` | `internal/commands/sprint/list.go` | `sprints/queries:getProjectSprints` |
-| `ltf sprint status` | `internal/commands/sprint/status.go` | `sprints/queries:getCurrentSprint` |
-| `ltf sprint create` | `internal/commands/sprint/create.go` | `sprints/mutations:createSprint` |
-| `ltf sprint add` | `internal/commands/sprint/add.go` | `sprints/mutations:addTasksToSprint` |
-| `ltf sprint close` | `internal/commands/sprint/close.go` | `sprints/mutations:updateSprint` |
-| `ltf sprint remove` | `internal/commands/sprint/remove.go` | `sprints/mutations:removeTaskFromSprint` |
-| `ltf sprint backlog` | `internal/commands/sprint/backlog.go` | `sprints/queries:getBacklogTasks` |
+| `ltf1 sprint list` | `internal/commands/sprint/list.go` | `sprints/queries:getProjectSprints` |
+| `ltf1 sprint status` | `internal/commands/sprint/status.go` | `sprints/queries:getCurrentSprint` |
+| `ltf1 sprint create` | `internal/commands/sprint/create.go` | `sprints/mutations:createSprint` |
+| `ltf1 sprint add` | `internal/commands/sprint/add.go` | `sprints/mutations:addTasksToSprint` |
+| `ltf1 sprint close` | `internal/commands/sprint/close.go` | `sprints/mutations:updateSprint` |
+| `ltf1 sprint remove` | `internal/commands/sprint/remove.go` | `sprints/mutations:removeTaskFromSprint` |
+| `ltf1 sprint backlog` | `internal/commands/sprint/backlog.go` | `sprints/queries:getBacklogTasks` |
 
 ### Time (5 commands)
 
 | TS Command | Go Package | Notes |
 |-----------|------------|-------|
-| `ltf time start` | `internal/commands/time/start.go` | Local timer in config |
-| `ltf time stop` | `internal/commands/time/stop.go` | Computes elapsed, optionally submits |
-| `ltf time status` | `internal/commands/time/status.go` | Shows running timer |
-| `ltf time log` | `internal/commands/time/log.go` | `timeEntries/mutations:createManualEntry` |
-| `ltf time report` | `internal/commands/time/report.go` | `timeEntries/queries:getTimeStatsByUser` |
+| `ltf1 time start` | `internal/commands/time/start.go` | Local timer in config |
+| `ltf1 time stop` | `internal/commands/time/stop.go` | Computes elapsed, optionally submits |
+| `ltf1 time status` | `internal/commands/time/status.go` | Shows running timer |
+| `ltf1 time log` | `internal/commands/time/log.go` | `timeEntries/mutations:createManualEntry` |
+| `ltf1 time report` | `internal/commands/time/report.go` | `timeEntries/queries:getTimeStatsByUser` |
 
 ### Git (6 commands)
 
 | TS Command | Go Package | Notes |
 |-----------|------------|-------|
-| `ltf git link` | `internal/commands/git/link.go` | Parse branch, link to task |
-| `ltf git sync` | `internal/commands/git/sync.go` | Sync git activity |
-| `ltf git hooks` | `internal/commands/git/hooks.go` | Install/uninstall hooks |
-| `ltf git status` | `internal/commands/git/status.go` | Show git + task status |
-| `ltf git config` | `internal/commands/git/config.go` | Git integration settings |
-| `ltf git hook-handler` | `internal/commands/git/hookhandler.go` | Internal hook callback |
+| `ltf1 git link` | `internal/commands/git/link.go` | Parse branch, link to task |
+| `ltf1 git sync` | `internal/commands/git/sync.go` | Sync git activity |
+| `ltf1 git hooks` | `internal/commands/git/hooks.go` | Install/uninstall hooks |
+| `ltf1 git status` | `internal/commands/git/status.go` | Show git + task status |
+| `ltf1 git config` | `internal/commands/git/config.go` | Git integration settings |
+| `ltf1 git hook-handler` | `internal/commands/git/hookhandler.go` | Internal hook callback |
 
 ### AI (3 commands)
 
 | TS Command | Go Package | Convex Calls |
 |-----------|------------|--------------|
-| `ltf ai suggest` | `internal/commands/ai/suggest.go` | `ai/actions:suggestTasks` |
-| `ltf ai analyze` | `internal/commands/ai/analyze.go` | `ai/actions:analyzeTask` |
-| `ltf ai describe` | `internal/commands/ai/describe.go` | `ai/actions:generateDescription` |
+| `ltf1 ai suggest` | `internal/commands/ai/suggest.go` | `ai/actions:suggestTasks` |
+| `ltf1 ai analyze` | `internal/commands/ai/analyze.go` | `ai/actions:analyzeTask` |
+| `ltf1 ai describe` | `internal/commands/ai/describe.go` | `ai/actions:generateDescription` |
 
 ### Agent (3 commands) — NEW
 
 | TS Command | Go Package | Convex Calls |
 |-----------|------------|--------------|
-| `ltf agent triage` | `internal/commands/agent/triage.go` | `agent/queries:getTriageQueue` |
-| `ltf agent suggest` | `internal/commands/agent/suggest.go` | `agent/actions:suggestNextActions` |
-| `ltf agent status` | `internal/commands/agent/status.go` | `agent/queries:getAgentActivityFeed` |
+| `ltf1 agent triage` | `internal/commands/agent/triage.go` | `agent/queries:getTriageQueue` |
+| `ltf1 agent suggest` | `internal/commands/agent/suggest.go` | `agent/actions:suggestNextActions` |
+| `ltf1 agent status` | `internal/commands/agent/status.go` | `agent/queries:getAgentActivityFeed` |
 
 ### Skill (3 commands) — NEW
 
 | TS Command | Go Package | Convex Calls |
 |-----------|------------|--------------|
-| `ltf skill list` | `internal/commands/skill/list.go` | `skills/queries:getUserSkills` |
-| `ltf skill run` | `internal/commands/skill/run.go` | `skills/mutations:runSkill` |
-| `ltf skill create` | `internal/commands/skill/create.go` | `skills/mutations:createSkill` |
+| `ltf1 skill list` | `internal/commands/skill/list.go` | `skills/queries:getUserSkills` |
+| `ltf1 skill run` | `internal/commands/skill/run.go` | `skills/mutations:runSkill` |
+| `ltf1 skill create` | `internal/commands/skill/create.go` | `skills/mutations:createSkill` |
 
 ### Daemon (4 commands)
 
 | TS Command | Go Package | Notes |
 |-----------|------------|-------|
-| `ltf daemon start` | `internal/commands/daemon/start.go` | Fork background process |
-| `ltf daemon stop` | `internal/commands/daemon/stop.go` | Kill PID from config |
-| `ltf daemon status` | `internal/commands/daemon/status.go` | Check PID alive |
-| `ltf daemon logs` | `internal/commands/daemon/logs.go` | Tail log file |
+| `ltf1 daemon start` | `internal/commands/daemon/start.go` | Fork background process |
+| `ltf1 daemon stop` | `internal/commands/daemon/stop.go` | Kill PID from config |
+| `ltf1 daemon status` | `internal/commands/daemon/status.go` | Check PID alive |
+| `ltf1 daemon logs` | `internal/commands/daemon/logs.go` | Tail log file |
 
 ### Search (1 command)
 
 | TS Command | Go Package | Convex Calls |
 |-----------|------------|--------------|
-| `ltf search <query>` | `internal/commands/search/search.go` | `search:globalSearch` |
+| `ltf1 search <query>` | `internal/commands/search/search.go` | `search:globalSearch` |
 
 ### Notifications (3 commands)
 
 | TS Command | Go Package | Convex Calls |
 |-----------|------------|--------------|
-| `ltf notifications list` | `internal/commands/notifications/list.go` | `notifications/queries:getNotifications` |
-| `ltf notifications read` | `internal/commands/notifications/read.go` | `notifications/mutations:markAsRead` |
-| `ltf notifications clear` | `internal/commands/notifications/clear.go` | `notifications/mutations:markAllAsRead` |
+| `ltf1 notifications list` | `internal/commands/notifications/list.go` | `notifications/queries:getNotifications` |
+| `ltf1 notifications read` | `internal/commands/notifications/read.go` | `notifications/mutations:markAsRead` |
+| `ltf1 notifications clear` | `internal/commands/notifications/clear.go` | `notifications/mutations:markAllAsRead` |
 
 ### Config (5 commands)
 
 | TS Command | Go Package | Notes |
 |-----------|------------|-------|
-| `ltf config list` | `internal/commands/config/list.go` | Print full config JSON |
-| `ltf config get <key>` | `internal/commands/config/get.go` | Dot notation access |
-| `ltf config set <key> <value>` | `internal/commands/config/set.go` | Dot notation set |
-| `ltf config path` | `internal/commands/config/path.go` | `api.GetConfigPath()` |
-| `ltf config reset` | `internal/commands/config/reset.go` | Delete config file |
+| `ltf1 config list` | `internal/commands/config/list.go` | Print full config JSON |
+| `ltf1 config get <key>` | `internal/commands/config/get.go` | Dot notation access |
+| `ltf1 config set <key> <value>` | `internal/commands/config/set.go` | Dot notation set |
+| `ltf1 config path` | `internal/commands/config/path.go` | `api.GetConfigPath()` |
+| `ltf1 config reset` | `internal/commands/config/reset.go` | Delete config file |
 
 ### Completions (4 commands)
 
 | TS Command | Go Package | Notes |
 |-----------|------------|-------|
-| `ltf completions bash` | Built into Cobra | `cobra.GenBashCompletion` |
-| `ltf completions zsh` | Built into Cobra | `cobra.GenZshCompletion` |
-| `ltf completions fish` | Built into Cobra | `cobra.GenFishCompletion` |
-| `ltf completions install` | Custom helper | Detect shell + install |
+| `ltf1 completions bash` | Built into Cobra | `cobra.GenBashCompletion` |
+| `ltf1 completions zsh` | Built into Cobra | `cobra.GenZshCompletion` |
+| `ltf1 completions fish` | Built into Cobra | `cobra.GenFishCompletion` |
+| `ltf1 completions install` | Custom helper | Detect shell + install |
 
 ### Release (1 command)
 
 | TS Command | Go Package | Notes |
 |-----------|------------|-------|
-| `ltf release notes` | `internal/commands/release/notes.go` | GitHub commit history |
+| `ltf1 release notes` | `internal/commands/release/notes.go` | GitHub commit history |
 
 ### PR (1 command)
 
 | TS Command | Go Package | Notes |
 |-----------|------------|-------|
-| `ltf pr create` | `internal/commands/pr/create.go` | GitHub API + task linking |
+| `ltf1 pr create` | `internal/commands/pr/create.go` | GitHub API + task linking |
 
 ### Update (1 command)
 
 | TS Command | Go Package | Notes |
 |-----------|------------|-------|
-| `ltf update` | `internal/commands/update/update.go` | Check npm version, prompt |
+| `ltf1 update` | `internal/commands/update/update.go` | Check npm version, prompt |
 
 ### Dashboard (1 command)
 
 | TS Command | Go Package | Notes |
 |-----------|------------|-------|
-| `ltf dashboard` | `internal/commands/dashboard/dashboard.go` | Launch existing TUI |
-| `ltf` (no args) | Default action in root | Same as `ltf dashboard` |
+| `ltf1 dashboard` | `internal/commands/dashboard/dashboard.go` | Launch existing TUI |
+| `ltf` (no args) | Default action in root | Same as `ltf1 dashboard` |
 
 **Total: 64 subcommands across 18 groups**
 
@@ -271,11 +271,11 @@ apps/tui/
 
 ### Phase 1: Foundation
 1. Add `github.com/spf13/cobra` to go.mod
-2. Create `cmd/ltf/main.go` with Cobra root
+2. Create `cmd/ltf1/main.go` with Cobra root
 3. Create `internal/commands/root.go` with global flags
 4. Create `internal/commands/helpers.go` with auth helpers
 5. Create `internal/output/` package
-6. Update root `main.go` to call `cmd/ltf` Execute
+6. Update root `main.go` to call `cmd/ltf1` Execute
 
 ### Phase 2: Build All Commands
 7. Implement all 18 command groups in parallel
@@ -298,7 +298,7 @@ apps/tui/
 ### Phase 6: Build & Test
 17. `cd apps/tui && go build -o ltf .`
 18. Test bare `ltf` (launches TUI)
-19. Test `ltf auth status`, `ltf task list --help`, etc.
+19. Test `ltf1 auth status`, `ltf1 task list --help`, etc.
 20. Test help output
 
 ### Phase 7: Commit & Push
@@ -332,7 +332,7 @@ For each command, verify:
 ## Success Criteria
 
 - [ ] All 64 commands compile and execute
-- [ ] `ltf --help` lists all 18 command groups
+- [ ] `ltf1 --help` lists all 18 command groups
 - [ ] Bare `ltf` launches TUI (preserved behavior)
 - [ ] `apps/cli/` is deleted
 - [ ] Root `package.json` no longer references `apps/cli`

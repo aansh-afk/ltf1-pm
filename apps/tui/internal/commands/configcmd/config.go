@@ -1,4 +1,4 @@
-// Package configcmd implements the `ltf config` command group.
+// Package configcmd implements the `ltf1 config` command group.
 package configcmd
 
 import (

@@ -1,4 +1,4 @@
-// Package agent implements the `ltf agent` command group.
+// Package agent implements the `ltf1 agent` command group.
 package agent
 
 import (

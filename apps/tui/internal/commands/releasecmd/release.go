@@ -1,4 +1,4 @@
-// Package releasecmd implements the `ltf release` command group.
+// Package releasecmd implements the `ltf1 release` command group.
 package releasecmd
 
 import (

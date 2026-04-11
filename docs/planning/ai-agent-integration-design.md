@@ -439,13 +439,13 @@ server.tool(
 The CLI at `apps/cli/` already supports:
 
 ```bash
-ltf task create "Fix login bug" --type bug --priority high
-ltf task list --status in_progress
-ltf task update WEB-42 --status in_review
-ltf task done WEB-42
-ltf sprint list
-ltf git link WEB-42
-ltf ai suggest
+ltf1 task create "Fix login bug" --type bug --priority high
+ltf1 task list --status in_progress
+ltf1 task update WEB-42 --status in_review
+ltf1 task done WEB-42
+ltf1 sprint list
+ltf1 git link WEB-42
+ltf1 ai suggest
 ```
 
 ### AI Agent Using CLI Directly
@@ -454,13 +454,13 @@ For AI agents that don't support MCP but can run shell commands (like basic Clau
 
 ```bash
 # AI detects task from branch, updates status
-ltf task update WEB-42 --status in_review --comment "Fixed redirect loop. PR #187."
+ltf1 task update WEB-42 --status in_review --comment "Fixed redirect loop. PR #187."
 
 # AI creates follow-up
-ltf task create "QA: Verify WEB-42 fix on Safari" --type task --parent WEB-42
+ltf1 task create "QA: Verify WEB-42 fix on Safari" --type task --parent WEB-42
 
 # AI logs time
-ltf time log WEB-42 --duration 45m --description "Bug fix + tests"
+ltf1 time log WEB-42 --duration 45m --description "Bug fix + tests"
 ```
 
 ### Claude Code Hooks Integration
@@ -473,7 +473,7 @@ Claude Code supports hooks that run on specific events. LTF1 can register hooks:
   "postToolUse": [
     {
       "matcher": "Bash",
-      "command": "ltf git sync --quiet"
+      "command": "ltf1 git sync --quiet"
     }
   ],
   "sessionEnd": [

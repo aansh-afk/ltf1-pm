@@ -10,10 +10,10 @@ import (
 func LoadConfigOrError() (*api.AuthConfig, error) {
 	cfg, err := api.LoadAuthConfig()
 	if err != nil {
-		return nil, fmt.Errorf("not authenticated. Run: ltf auth login")
+		return nil, fmt.Errorf("not authenticated. Run: ltf1 auth login")
 	}
 	if !api.IsAuthenticated(cfg) && !api.CanRefreshSession(cfg) {
-		return nil, fmt.Errorf("session expired. Run: ltf auth login")
+		return nil, fmt.Errorf("session expired. Run: ltf1 auth login")
 	}
 	return cfg, nil
 }
@@ -21,7 +21,7 @@ func LoadConfigOrError() (*api.AuthConfig, error) {
 // RequireProject returns an error if no project is selected.
 func RequireProject(cfg *api.AuthConfig) error {
 	if !api.HasProjectContext(cfg) {
-		return fmt.Errorf("no project selected. Run: ltf project select")
+		return fmt.Errorf("no project selected. Run: ltf1 project select")
 	}
 	return nil
 }

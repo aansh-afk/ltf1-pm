@@ -11,10 +11,10 @@ import (
 func loadAuthClient() (*api.AuthConfig, *api.ConvexClient, error) {
 	cfg, err := api.LoadAuthConfig()
 	if err != nil {
-		return nil, nil, fmt.Errorf("not authenticated. Run: ltf auth login")
+		return nil, nil, fmt.Errorf("not authenticated. Run: ltf1 auth login")
 	}
 	if !api.IsAuthenticated(cfg) && !api.CanRefreshSession(cfg) {
-		return nil, nil, fmt.Errorf("session expired. Run: ltf auth login")
+		return nil, nil, fmt.Errorf("session expired. Run: ltf1 auth login")
 	}
 	url := api.GetConvexURL(cfg)
 	if url == "" {

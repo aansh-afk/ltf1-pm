@@ -1,4 +1,4 @@
-// Package prcmd implements the `ltf pr` command group.
+// Package prcmd implements the `ltf1 pr` command group.
 package prcmd
 
 import (

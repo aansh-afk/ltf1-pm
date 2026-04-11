@@ -1,4 +1,4 @@
-// Package sprintcmd implements the `ltf sprint` command group.
+// Package sprintcmd implements the `ltf1 sprint` command group.
 package sprintcmd
 
 import (
@@ -29,13 +29,13 @@ func NewCommand() *cobra.Command {
 func loadAuthClientWithProject() (*api.AuthConfig, *api.ConvexClient, error) {
 	cfg, err := api.LoadAuthConfig()
 	if err != nil {
-		return nil, nil, fmt.Errorf("not authenticated. Run: ltf auth login")
+		return nil, nil, fmt.Errorf("not authenticated. Run: ltf1 auth login")
 	}
 	if !api.IsAuthenticated(cfg) && !api.CanRefreshSession(cfg) {
-		return nil, nil, fmt.Errorf("session expired. Run: ltf auth login")
+		return nil, nil, fmt.Errorf("session expired. Run: ltf1 auth login")
 	}
 	if !api.HasProjectContext(cfg) {
-		return nil, nil, fmt.Errorf("no project selected. Run: ltf project select")
+		return nil, nil, fmt.Errorf("no project selected. Run: ltf1 project select")
 	}
 	url := api.GetConvexURL(cfg)
 	if url == "" {

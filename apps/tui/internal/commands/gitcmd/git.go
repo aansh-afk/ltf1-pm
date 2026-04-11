@@ -1,4 +1,4 @@
-// Package gitcmd implements the `ltf git` command group.
+// Package gitcmd implements the `ltf1 git` command group.
 package gitcmd
 
 import (

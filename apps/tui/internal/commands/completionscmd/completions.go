@@ -1,4 +1,4 @@
-// Package completionscmd implements `ltf completions` (shell completion scripts).
+// Package completionscmd implements `ltf1 completions` (shell completion scripts).
 package completionscmd
 
 import (
@@ -41,9 +41,9 @@ func NewCommand(root *cobra.Command) *cobra.Command {
 		Short: "Show installation instructions",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			output.Header("Shell Completion Setup")
-			output.Println("", "Bash:  ltf completions bash > /etc/bash_completion.d/ltf")
-			output.Println("", "Zsh:   ltf completions zsh  > \"${fpath[1]}/_ltf\"")
-			output.Println("", "Fish:  ltf completions fish > ~/.config/fish/completions/ltf.fish")
+			output.Println("", "Bash:  ltf1 completions bash > /etc/bash_completion.d/ltf1")
+			output.Println("", "Zsh:   ltf1 completions zsh  > \"${fpath[1]}/_ltf1\"")
+			output.Println("", "Fish:  ltf1 completions fish > ~/.config/fish/completions/ltf1.fish")
 			return nil
 		},
 	})

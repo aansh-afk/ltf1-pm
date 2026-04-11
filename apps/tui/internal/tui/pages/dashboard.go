@@ -95,7 +95,7 @@ func (p *dashboardPage) HasModal() bool { return false }
 
 func (p *dashboardPage) View() string {
 	if p.client == nil {
-		return components.EmptyState("Not connected. Run ltf auth login first.", p.width, p.height)
+		return components.EmptyState("Not connected. Run ltf1 auth login first.", p.width, p.height)
 	}
 	if p.loading {
 		return components.EmptyState("Loading dashboard...", p.width, p.height)
@@ -153,7 +153,7 @@ func (p *dashboardPage) renderSprintContent(innerW int) string {
 
 	if p.data.Sprint == nil {
 		empty := theme.TextMutedStyle.Render(theme.SymDotEmpty + " No active sprint")
-		hint := theme.TextDimStyle.Render("Create one with ltf sprint create")
+		hint := theme.TextDimStyle.Render("Create one with ltf1 sprint create")
 		return empty + "\n" + hint
 	}
 
@@ -194,7 +194,7 @@ func (p *dashboardPage) renderSprintContent(innerW int) string {
 func (p *dashboardPage) renderTasksContent(innerW int) string {
 	if len(p.data.Tasks) == 0 {
 		empty := theme.TextMutedStyle.Render(theme.SymDotEmpty + " No tasks found")
-		hint := theme.TextDimStyle.Render("Create one with ltf task create")
+		hint := theme.TextDimStyle.Render("Create one with ltf1 task create")
 		return empty + "\n" + hint
 	}
 

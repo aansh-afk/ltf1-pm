@@ -1,4 +1,4 @@
-// Package commands provides the Cobra command tree for the ltf CLI.
+// Package commands provides the Cobra command tree for the ltf1 CLI.
 package commands
 
 import (
@@ -30,7 +30,7 @@ import (
 )
 
 // DefaultConvexURL is the build-time default Convex deployment URL.
-// Set from cmd/ltf/main.go via ldflags.
+// Set from cmd/ltf1/main.go via ldflags.
 var DefaultConvexURL string
 
 // Global flags shared across all commands.
@@ -40,11 +40,11 @@ var (
 	flagDebug   bool
 )
 
-// rootCmd is the top-level ltf command.
+// rootCmd is the top-level ltf1 command.
 var rootCmd = &cobra.Command{
-	Use:   "ltf",
-	Short: "ltf — git-native, agent-ready project management",
-	Long: `ltf is a developer-first project management CLI and TUI.
+	Use:   "ltf1",
+	Short: "ltf1 — git-native, agent-ready project management",
+	Long: `ltf1 is a developer-first project management CLI and TUI.
 Push code, your tasks update themselves. Run skills to codify workflows.
 Triage incoming work with an AI agent. Live in your terminal.`,
 	SilenceUsage:  true,

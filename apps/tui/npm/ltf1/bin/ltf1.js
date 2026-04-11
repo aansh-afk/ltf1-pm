@@ -22,7 +22,7 @@ function detectPlatformAndArch() {
 function findBinary() {
   const { platform, arch } = detectPlatformAndArch()
   const packageName = `@vvg-ltf1/${platform}-${arch}`
-  const binaryName = platform === "windows" ? "ltf.exe" : "ltf"
+  const binaryName = platform === "windows" ? "ltf1.exe" : "ltf1"
 
   try {
     const packageJsonPath = require.resolve(`${packageName}/package.json`)
@@ -43,7 +43,7 @@ const result = spawnSync(binaryPath, process.argv.slice(2), {
 })
 
 if (result.error) {
-  console.error(`Failed to execute ltf: ${result.error.message}`)
+  console.error(`Failed to execute ltf1: ${result.error.message}`)
   process.exit(1)
 }
 

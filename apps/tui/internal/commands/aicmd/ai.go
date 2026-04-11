@@ -1,4 +1,4 @@
-// Package aicmd implements the `ltf ai` command group.
+// Package aicmd implements the `ltf1 ai` command group.
 package aicmd
 
 import (

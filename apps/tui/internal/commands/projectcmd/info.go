@@ -21,7 +21,7 @@ func newInfoCmd() *cobra.Command {
 				return err
 			}
 			if cfg.Context.ProjectID == "" {
-				return fmt.Errorf("no project selected. Run: ltf project select")
+				return fmt.Errorf("no project selected. Run: ltf1 project select")
 			}
 
 			raw, err := client.Query("projects/queries:getProject", map[string]any{"projectId": cfg.Context.ProjectID})

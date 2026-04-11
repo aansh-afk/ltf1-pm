@@ -1,4 +1,4 @@
-// Package main is the entry point for the ltf CLI binary.
+// Package main is the entry point for the ltf1 CLI binary.
 package main
 
 import (

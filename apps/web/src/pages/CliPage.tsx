@@ -30,9 +30,9 @@ const COMMAND_GROUPS: Group[] = [
     description: 'Authentication and session management',
     accent: '#22C55E',
     commands: [
-      { cmd: 'ltf auth login', desc: 'Authenticate via browser OAuth or API token', flags: ['--token <jwt>'] },
-      { cmd: 'ltf auth logout', desc: 'Clear stored credentials' },
-      { cmd: 'ltf auth status', desc: 'Show current auth state and active project' },
+      { cmd: 'ltf1 auth login', desc: 'Authenticate via browser OAuth or API token', flags: ['--token <jwt>'] },
+      { cmd: 'ltf1 auth logout', desc: 'Clear stored credentials' },
+      { cmd: 'ltf1 auth status', desc: 'Show current auth state and active project' },
     ],
   },
   {
@@ -40,10 +40,10 @@ const COMMAND_GROUPS: Group[] = [
     description: 'Workspace and project context',
     accent: '#06B6D4',
     commands: [
-      { cmd: 'ltf project list', desc: 'List projects in current or all workspaces', flags: ['-w <id>', '--all', '--json'] },
-      { cmd: 'ltf project select [KEY]', desc: 'Pick the active project' },
-      { cmd: 'ltf project info', desc: 'Show details of the active project' },
-      { cmd: 'ltf project detect', desc: 'Auto-detect project from git remote', flags: ['--set'] },
+      { cmd: 'ltf1 project list', desc: 'List projects in current or all workspaces', flags: ['-w <id>', '--all', '--json'] },
+      { cmd: 'ltf1 project select [KEY]', desc: 'Pick the active project' },
+      { cmd: 'ltf1 project info', desc: 'Show details of the active project' },
+      { cmd: 'ltf1 project detect', desc: 'Auto-detect project from git remote', flags: ['--set'] },
     ],
   },
   {
@@ -51,15 +51,15 @@ const COMMAND_GROUPS: Group[] = [
     description: 'Create, list, update, and complete tasks',
     accent: '#6366F1',
     commands: [
-      { cmd: 'ltf task list', desc: 'List tasks with filters', flags: ['-s status', '-p priority', '-a assignee', '-t type', '--all', '--json'] },
-      { cmd: 'ltf task create <title>', desc: 'Create a new task', flags: ['-d desc', '-t type', '-p priority', '-l labels', '-e estimate', '--due-date', '--assign'] },
-      { cmd: 'ltf task view <id>', desc: 'Show full task detail' },
-      { cmd: 'ltf task update <id>', desc: 'Update task fields', flags: ['--title', '-d', '-s', '-p', '-t', '-l', '-e'] },
-      { cmd: 'ltf task done <id>', desc: 'Mark a task as done' },
-      { cmd: 'ltf task assign <id>', desc: 'Assign task to user', flags: ['--to me|<userId>', '--clear'] },
-      { cmd: 'ltf task delete <id>', desc: 'Delete a task', flags: ['--force'] },
-      { cmd: 'ltf task comment <id> "msg"', desc: 'Add a comment to a task' },
-      { cmd: 'ltf task mine', desc: 'Show tasks assigned to current user' },
+      { cmd: 'ltf1 task list', desc: 'List tasks with filters', flags: ['-s status', '-p priority', '-a assignee', '-t type', '--all', '--json'] },
+      { cmd: 'ltf1 task create <title>', desc: 'Create a new task', flags: ['-d desc', '-t type', '-p priority', '-l labels', '-e estimate', '--due-date', '--assign'] },
+      { cmd: 'ltf1 task view <id>', desc: 'Show full task detail' },
+      { cmd: 'ltf1 task update <id>', desc: 'Update task fields', flags: ['--title', '-d', '-s', '-p', '-t', '-l', '-e'] },
+      { cmd: 'ltf1 task done <id>', desc: 'Mark a task as done' },
+      { cmd: 'ltf1 task assign <id>', desc: 'Assign task to user', flags: ['--to me|<userId>', '--clear'] },
+      { cmd: 'ltf1 task delete <id>', desc: 'Delete a task', flags: ['--force'] },
+      { cmd: 'ltf1 task comment <id> "msg"', desc: 'Add a comment to a task' },
+      { cmd: 'ltf1 task mine', desc: 'Show tasks assigned to current user' },
     ],
   },
   {
@@ -67,13 +67,13 @@ const COMMAND_GROUPS: Group[] = [
     description: 'Sprint planning and tracking',
     accent: '#06B6D4',
     commands: [
-      { cmd: 'ltf sprint list', desc: 'List sprints in current project', flags: ['--status'] },
-      { cmd: 'ltf sprint status', desc: 'Show active sprint progress' },
-      { cmd: 'ltf sprint create <name>', desc: 'Create a new sprint', flags: ['--start', '--end', '--goal'] },
-      { cmd: 'ltf sprint add <task-id>', desc: 'Add task to sprint', flags: ['--sprint <id>'] },
-      { cmd: 'ltf sprint remove <task-id>', desc: 'Remove task from sprint' },
-      { cmd: 'ltf sprint close', desc: 'Close active sprint', flags: ['--force'] },
-      { cmd: 'ltf sprint backlog', desc: 'Show backlog tasks' },
+      { cmd: 'ltf1 sprint list', desc: 'List sprints in current project', flags: ['--status'] },
+      { cmd: 'ltf1 sprint status', desc: 'Show active sprint progress' },
+      { cmd: 'ltf1 sprint create <name>', desc: 'Create a new sprint', flags: ['--start', '--end', '--goal'] },
+      { cmd: 'ltf1 sprint add <task-id>', desc: 'Add task to sprint', flags: ['--sprint <id>'] },
+      { cmd: 'ltf1 sprint remove <task-id>', desc: 'Remove task from sprint' },
+      { cmd: 'ltf1 sprint close', desc: 'Close active sprint', flags: ['--force'] },
+      { cmd: 'ltf1 sprint backlog', desc: 'Show backlog tasks' },
     ],
   },
   {
@@ -81,9 +81,9 @@ const COMMAND_GROUPS: Group[] = [
     description: 'AI agent triage and suggestions',
     accent: '#F59E0B',
     commands: [
-      { cmd: 'ltf agent triage', desc: 'View AI triage queue with accept/reject' },
-      { cmd: 'ltf agent suggest', desc: 'Agent suggestions for next actions' },
-      { cmd: 'ltf agent status', desc: 'Show agent activity feed' },
+      { cmd: 'ltf1 agent triage', desc: 'View AI triage queue with accept/reject' },
+      { cmd: 'ltf1 agent suggest', desc: 'Agent suggestions for next actions' },
+      { cmd: 'ltf1 agent status', desc: 'Show agent activity feed' },
     ],
   },
   {
@@ -91,9 +91,9 @@ const COMMAND_GROUPS: Group[] = [
     description: 'Codified team workflows',
     accent: '#8B5CF6',
     commands: [
-      { cmd: 'ltf skill list', desc: 'List available skills' },
-      { cmd: 'ltf skill run <id>', desc: 'Execute a skill' },
-      { cmd: 'ltf skill create <name>', desc: 'Create a custom skill', flags: ['-d desc', '--trigger'] },
+      { cmd: 'ltf1 skill list', desc: 'List available skills' },
+      { cmd: 'ltf1 skill run <id>', desc: 'Execute a skill' },
+      { cmd: 'ltf1 skill create <name>', desc: 'Create a custom skill', flags: ['-d desc', '--trigger'] },
     ],
   },
   {
@@ -101,11 +101,11 @@ const COMMAND_GROUPS: Group[] = [
     description: 'Git integration and task linking',
     accent: '#22C55E',
     commands: [
-      { cmd: 'ltf git link', desc: 'Link branch/PR to a task', flags: ['--task', '--pr', '--branch'] },
-      { cmd: 'ltf git status', desc: 'Show git status with task context' },
-      { cmd: 'ltf git sync', desc: 'Sync git activity' },
-      { cmd: 'ltf git hooks <action>', desc: 'Install, uninstall, or check git hooks' },
-      { cmd: 'ltf git config', desc: 'Configure git integration' },
+      { cmd: 'ltf1 git link', desc: 'Link branch/PR to a task', flags: ['--task', '--pr', '--branch'] },
+      { cmd: 'ltf1 git status', desc: 'Show git status with task context' },
+      { cmd: 'ltf1 git sync', desc: 'Sync git activity' },
+      { cmd: 'ltf1 git hooks <action>', desc: 'Install, uninstall, or check git hooks' },
+      { cmd: 'ltf1 git config', desc: 'Configure git integration' },
     ],
   },
   {
@@ -113,11 +113,11 @@ const COMMAND_GROUPS: Group[] = [
     description: 'Time tracking',
     accent: '#EC4899',
     commands: [
-      { cmd: 'ltf time start <task-id>', desc: 'Start timer on a task', flags: ['-d desc'] },
-      { cmd: 'ltf time stop', desc: 'Stop active timer' },
-      { cmd: 'ltf time status', desc: 'Show running timer' },
-      { cmd: 'ltf time log <task-id>', desc: 'Manually log time', flags: ['-H hours', '-M minutes', '-d date'] },
-      { cmd: 'ltf time report', desc: 'Show time tracking report', flags: ['--user', '--period week|month'] },
+      { cmd: 'ltf1 time start <task-id>', desc: 'Start timer on a task', flags: ['-d desc'] },
+      { cmd: 'ltf1 time stop', desc: 'Stop active timer' },
+      { cmd: 'ltf1 time status', desc: 'Show running timer' },
+      { cmd: 'ltf1 time log <task-id>', desc: 'Manually log time', flags: ['-H hours', '-M minutes', '-d date'] },
+      { cmd: 'ltf1 time report', desc: 'Show time tracking report', flags: ['--user', '--period week|month'] },
     ],
   },
   {
@@ -125,9 +125,9 @@ const COMMAND_GROUPS: Group[] = [
     description: 'AI-powered helpers',
     accent: '#F59E0B',
     commands: [
-      { cmd: 'ltf ai suggest', desc: 'AI task suggestions from recent activity', flags: ['-n count'] },
-      { cmd: 'ltf ai analyze', desc: 'AI analysis of sprint or task', flags: ['-s sprint'] },
-      { cmd: 'ltf ai describe <brief>', desc: 'Generate task description', flags: ['--create'] },
+      { cmd: 'ltf1 ai suggest', desc: 'AI task suggestions from recent activity', flags: ['-n count'] },
+      { cmd: 'ltf1 ai analyze', desc: 'AI analysis of sprint or task', flags: ['-s sprint'] },
+      { cmd: 'ltf1 ai describe <brief>', desc: 'Generate task description', flags: ['--create'] },
     ],
   },
   {
@@ -135,10 +135,10 @@ const COMMAND_GROUPS: Group[] = [
     description: 'Background watcher process',
     accent: '#10B981',
     commands: [
-      { cmd: 'ltf daemon start', desc: 'Start the background daemon', flags: ['-f', '-v'] },
-      { cmd: 'ltf daemon stop', desc: 'Stop the daemon', flags: ['-f'] },
-      { cmd: 'ltf daemon status', desc: 'Show daemon status' },
-      { cmd: 'ltf daemon logs', desc: 'View daemon logs', flags: ['-f', '-n lines', '--clear'] },
+      { cmd: 'ltf1 daemon start', desc: 'Start the background daemon', flags: ['-f', '-v'] },
+      { cmd: 'ltf1 daemon stop', desc: 'Stop the daemon', flags: ['-f'] },
+      { cmd: 'ltf1 daemon status', desc: 'Show daemon status' },
+      { cmd: 'ltf1 daemon logs', desc: 'View daemon logs', flags: ['-f', '-n lines', '--clear'] },
     ],
   },
   {
@@ -146,7 +146,7 @@ const COMMAND_GROUPS: Group[] = [
     description: 'Global search',
     accent: '#9CA3AF',
     commands: [
-      { cmd: 'ltf search <query>', desc: 'Search across tasks, projects, and sprints', flags: ['-t type', '-l limit', '--json'] },
+      { cmd: 'ltf1 search <query>', desc: 'Search across tasks, projects, and sprints', flags: ['-t type', '-l limit', '--json'] },
     ],
   },
   {
@@ -154,9 +154,9 @@ const COMMAND_GROUPS: Group[] = [
     description: 'Notification management',
     accent: '#9CA3AF',
     commands: [
-      { cmd: 'ltf notifications list', desc: 'List notifications', flags: ['-u', '--json'] },
-      { cmd: 'ltf notifications read <id>', desc: 'Mark notification as read' },
-      { cmd: 'ltf notifications clear', desc: 'Mark all notifications as read' },
+      { cmd: 'ltf1 notifications list', desc: 'List notifications', flags: ['-u', '--json'] },
+      { cmd: 'ltf1 notifications read <id>', desc: 'Mark notification as read' },
+      { cmd: 'ltf1 notifications clear', desc: 'Mark all notifications as read' },
     ],
   },
   {
@@ -164,11 +164,11 @@ const COMMAND_GROUPS: Group[] = [
     description: 'CLI configuration',
     accent: '#9CA3AF',
     commands: [
-      { cmd: 'ltf config list', desc: 'Show all config' },
-      { cmd: 'ltf config get <key>', desc: 'Get a config value (dot notation)' },
-      { cmd: 'ltf config set <key> <value>', desc: 'Set a config value' },
-      { cmd: 'ltf config path', desc: 'Show config file path' },
-      { cmd: 'ltf config reset', desc: 'Reset config', flags: ['--force'] },
+      { cmd: 'ltf1 config list', desc: 'Show all config' },
+      { cmd: 'ltf1 config get <key>', desc: 'Get a config value (dot notation)' },
+      { cmd: 'ltf1 config set <key> <value>', desc: 'Set a config value' },
+      { cmd: 'ltf1 config path', desc: 'Show config file path' },
+      { cmd: 'ltf1 config reset', desc: 'Reset config', flags: ['--force'] },
     ],
   },
   {
@@ -176,10 +176,10 @@ const COMMAND_GROUPS: Group[] = [
     description: 'Shell completion scripts',
     accent: '#9CA3AF',
     commands: [
-      { cmd: 'ltf completions bash', desc: 'Bash completion script' },
-      { cmd: 'ltf completions zsh', desc: 'Zsh completion script' },
-      { cmd: 'ltf completions fish', desc: 'Fish completion script' },
-      { cmd: 'ltf completions install', desc: 'Show install instructions' },
+      { cmd: 'ltf1 completions bash', desc: 'Bash completion script' },
+      { cmd: 'ltf1 completions zsh', desc: 'Zsh completion script' },
+      { cmd: 'ltf1 completions fish', desc: 'Fish completion script' },
+      { cmd: 'ltf1 completions install', desc: 'Show install instructions' },
     ],
   },
   {
@@ -187,7 +187,7 @@ const COMMAND_GROUPS: Group[] = [
     description: 'Release notes generation',
     accent: '#9CA3AF',
     commands: [
-      { cmd: 'ltf release notes', desc: 'Generate release notes from git commits', flags: ['--version', '--format md|txt'] },
+      { cmd: 'ltf1 release notes', desc: 'Generate release notes from git commits', flags: ['--version', '--format md|txt'] },
     ],
   },
   {
@@ -195,7 +195,7 @@ const COMMAND_GROUPS: Group[] = [
     description: 'Pull request management',
     accent: '#22C55E',
     commands: [
-      { cmd: 'ltf pr create', desc: 'Create a pull request from current branch', flags: ['--title', '--body', '--draft'] },
+      { cmd: 'ltf1 pr create', desc: 'Create a pull request from current branch', flags: ['--title', '--body', '--draft'] },
     ],
   },
   {
@@ -203,7 +203,7 @@ const COMMAND_GROUPS: Group[] = [
     description: 'CLI self-update',
     accent: '#9CA3AF',
     commands: [
-      { cmd: 'ltf update', desc: 'Check for and install CLI updates', flags: ['--check'] },
+      { cmd: 'ltf1 update', desc: 'Check for and install CLI updates', flags: ['--check'] },
     ],
   },
   {
@@ -211,7 +211,7 @@ const COMMAND_GROUPS: Group[] = [
     description: 'Launch the interactive TUI',
     accent: '#6366F1',
     commands: [
-      { cmd: 'ltf dashboard', desc: 'Launch full-screen TUI (also: ltf -d, or bare ltf)' },
+      { cmd: 'ltf1 dashboard', desc: 'Launch full-screen TUI (also: ltf1 -d, or bare ltf)' },
     ],
   },
 ]
@@ -278,16 +278,16 @@ export default function CliPage() {
               <div className="flex items-center justify-between px-4 py-2 border-b border-[#1F1F23]">
                 <span className="font-['IBM_Plex_Mono',monospace] text-[10px] uppercase tracking-wider text-[#6B7280]">first run</span>
                 <button
-                  onClick={() => copy('ltf auth login && ltf project select')}
+                  onClick={() => copy('ltf1 auth login && ltf1 project select')}
                   className="font-['IBM_Plex_Mono',monospace] text-[10px] uppercase tracking-wider text-[#6B7280] hover:text-[#6366F1] transition-colors"
                 >
-                  {copied === 'ltf auth login && ltf project select' ? 'copied' : 'copy'}
+                  {copied === 'ltf1 auth login && ltf1 project select' ? 'copied' : 'copy'}
                 </button>
               </div>
               <pre className="font-['IBM_Plex_Mono',monospace] text-sm text-[#F9FAFB] px-4 py-4 overflow-x-auto whitespace-pre-wrap">
-                <span className="text-[#6B7280]">$ </span>ltf auth login{'\n'}
-                <span className="text-[#6B7280]">$ </span>ltf project select{'\n'}
-                <span className="text-[#6B7280]">$ </span>ltf
+                <span className="text-[#6B7280]">$ </span>ltf1 auth login{'\n'}
+                <span className="text-[#6B7280]">$ </span>ltf1 project select{'\n'}
+                <span className="text-[#6B7280]">$ </span>ltf1
               </pre>
             </div>
           </m.div>
@@ -374,7 +374,7 @@ export default function CliPage() {
                     className="font-['IBM_Plex_Mono',monospace] text-xs uppercase tracking-wider px-2 py-0.5 border"
                     style={{ color: group.accent, borderColor: `${group.accent}40` }}
                   >
-                    ltf {group.name}
+                    ltf1 {group.name}
                   </span>
                   <span className="font-['Inter',sans-serif] text-sm text-[#6B7280]">
                     {group.description}

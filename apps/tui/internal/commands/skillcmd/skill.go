@@ -1,4 +1,4 @@
-// Package skillcmd implements the `ltf skill` command group.
+// Package skillcmd implements the `ltf1 skill` command group.
 package skillcmd
 
 import (

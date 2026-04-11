@@ -40,7 +40,7 @@ func newHookHandlerCmd() *cobra.Command {
 				"taskId":    key,
 				"gitBranch": branch,
 			})
-			fmt.Printf("[ltf] %s linked %s\n", event, key)
+			fmt.Printf("[ltf1] %s linked %s\n", event, key)
 			return nil
 		},
 	}

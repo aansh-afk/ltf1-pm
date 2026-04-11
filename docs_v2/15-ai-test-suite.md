@@ -11,13 +11,13 @@ How to test every AI feature in LTF1 end-to-end by handing a prompt to another C
 |-------|---------|
 | **Prerequisites** | Auth, project context, token, Convex reachability, key check |
 | **Core generation** | `ai.generate` action — raw text via Cerebras/Groq, system prompts, function category routing |
-| **Task intelligence** | Generate tasks from description, smart assignment, `ltf ai describe`, `ltf ai suggest` |
-| **Sprint analysis** | Health score, risks, recommendations, `ltf ai analyze`, standup summary |
+| **Task intelligence** | Generate tasks from description, smart assignment, `ltf1 ai describe`, `ltf1 ai suggest` |
+| **Sprint analysis** | Health score, risks, recommendations, `ltf1 ai analyze`, standup summary |
 | **Insights CRUD** | Create, list, dismiss, auto-generated from sprint analysis |
 | **Sessions & feedback** | Session tracking, submit feedback, feedback summary |
 | **Usage stats** | Per-workspace token/cost/latency/cache-rate aggregation |
 | **BYOK keys** | List, save invalid (should fail), save valid, project AI settings |
-| **Agent commands** | `ltf agent triage`, `ltf agent suggest`, `ltf agent status` |
+| **Agent commands** | `ltf1 agent triage`, `ltf1 agent suggest`, `ltf1 agent status` |
 | **Error handling** | Invalid project ID, empty prompt, rate limiting |
 
 **Web UI checks** (11 manual checks the user does in their browser):
@@ -44,8 +44,8 @@ How to test every AI feature in LTF1 end-to-end by handing a prompt to another C
 ```bash
 # 1. Make sure ltf is installed and you're authenticated
 npm install -g @vvg-ltf1/cli
-ltf auth login                        # opens browser
-ltf project select                    # pick your test project (or create one)
+ltf1 auth login                        # opens browser
+ltf1 project select                    # pick your test project (or create one)
 
 # 2. Create an EMPTY folder somewhere (no git init, no files — leave it empty)
 mkdir ~/ltf1-ai-test
@@ -72,7 +72,7 @@ The test Claude will bootstrap the folder itself: `git init`, create directories
 4. When it finishes, read `TEST_REPORT.md` in the test folder
 5. **Then open `MANUAL_UI_CHECKLIST.md`** and walk through the 11 UI checks yourself in your browser, ticking checkboxes as you go (~10 minutes)
 
-If any prerequisite is missing that requires your interaction (like `ltf auth login`), the test Claude will stop and write `BLOCKED.md` telling you exactly what to do. Resolve it and tell Claude to continue.
+If any prerequisite is missing that requires your interaction (like `ltf1 auth login`), the test Claude will stop and write `BLOCKED.md` telling you exactly what to do. Resolve it and tell Claude to continue.
 
 ---
 
@@ -122,7 +122,7 @@ Output preview: "The capital of France is Paris..."
 ### ✗ Smart Assignee Suggestions (suggestAssignees)
 Status: FAIL | Duration: 0.3s
 Error: No developer profiles in workspace
-Fix: Run `ltf project info` and ensure at least one team member has a developer profile
+Fix: Run `ltf1 project info` and ensure at least one team member has a developer profile
 ```
 
 Each failed test will tell you exactly what's broken and how to fix it.
@@ -133,9 +133,9 @@ Each failed test will tell you exactly what's broken and how to fix it.
 
 | Symptom | Fix |
 |---------|-----|
-| `not authenticated` | `ltf auth login` |
-| `no project selected` | `ltf project select` |
-| `CONVEX_URL not configured` | `ltf config set convexUrl https://upbeat-mouse-967.convex.cloud` |
+| `not authenticated` | `ltf1 auth login` |
+| `no project selected` | `ltf1 project select` |
+| `CONVEX_URL not configured` | `ltf1 config set convexUrl https://upbeat-mouse-967.convex.cloud` |
 | `no key configured for cerebras/groq` | Add CEREBRAS_API_KEY/GROQ_API_KEY to Convex env, or save BYOK in web settings |
 | `developer profile not found` | Web app → Profile → fill in tech stack and skills |
 | `no active sprint` | Web app → Sprints → create one |

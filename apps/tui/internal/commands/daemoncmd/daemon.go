@@ -1,4 +1,4 @@
-// Package daemoncmd implements the `ltf daemon` command group.
+// Package daemoncmd implements the `ltf1 daemon` command group.
 package daemoncmd
 
 import (
@@ -30,9 +30,9 @@ func NewCommand() *cobra.Command {
 func daemonDir() string {
 	home, _ := os.UserHomeDir()
 	if runtime.GOOS == "darwin" {
-		return filepath.Join(home, "Library", "Application Support", "ltf-nodejs")
+		return filepath.Join(home, "Library", "Application Support", "ltf1")
 	}
-	return filepath.Join(home, ".config", "ltf-nodejs")
+	return filepath.Join(home, ".config", "ltf1")
 }
 
 func pidFile() string  { return filepath.Join(daemonDir(), "daemon.pid") }

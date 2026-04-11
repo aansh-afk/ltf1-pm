@@ -1,4 +1,4 @@
-// Package notificationscmd implements the `ltf notifications` command group.
+// Package notificationscmd implements the `ltf1 notifications` command group.
 package notificationscmd
 
 import (

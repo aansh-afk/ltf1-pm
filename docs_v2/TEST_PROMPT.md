@@ -25,8 +25,8 @@ Do NOT skim these. Read them. Take notes on the AI function names, argument shap
 - **Test folder**: the current working directory (empty when you start)
 - **LTF1 deployment**: `https://upbeat-mouse-967.convex.cloud`
 - **CLI binary**: `ltf` — you must verify it's installed; if not, install it via `npm install -g @vvg-ltf1/cli`
-- **Auth**: you must verify the user is authenticated; if not, STOP and ask them to run `ltf auth login` themselves (it opens a browser and requires user interaction — you cannot run it autonomously)
-- **Project**: you must verify a project is selected; if not, try `ltf project detect --set` first, otherwise STOP and ask the user to run `ltf project select`
+- **Auth**: you must verify the user is authenticated; if not, STOP and ask them to run `ltf1 auth login` themselves (it opens a browser and requires user interaction — you cannot run it autonomously)
+- **Project**: you must verify a project is selected; if not, try `ltf1 project detect --set` first, otherwise STOP and ask the user to run `ltf1 project select`
 
 ## What You Are Building
 
@@ -108,7 +108,7 @@ Note: Web UI testing is **manual**. The user clicks through the browser themselv
 
 4. **Write `lib/auth.sh`** — token extraction + auth check helpers. Should expose:
    - `extract_token()` — read CLI config, return JWT
-   - `assert_authenticated()` — fail if `ltf auth status` returns "not authenticated"
+   - `assert_authenticated()` — fail if `ltf1 auth status` returns "not authenticated"
    - `get_project_id()` / `get_workspace_id()` / `get_user_id()`
 
 5. **Write `lib/api.sh`** — Convex HTTP wrappers. Should expose:
@@ -132,8 +132,8 @@ Note: Web UI testing is **manual**. The user clicks through the browser themselv
 
 9. **Verify auth and project context**. If anything is missing that requires user interaction, write `BLOCKED.md` and STOP:
    ```bash
-   ltf auth status
-   ltf project info
+   ltf1 auth status
+   ltf1 project info
    ```
 
 10. **Write `SETUP.md`** documenting what state you found:
@@ -155,10 +155,10 @@ Only after bootstrap is complete, proceed to writing and running the tests.
 ## Your Tools
 
 You have these tools at your disposal:
-- `ltf` CLI commands (`ltf auth status`, `ltf task list`, `ltf ai suggest`, etc.)
+- `ltf` CLI commands (`ltf1 auth status`, `ltf1 task list`, `ltf1 ai suggest`, etc.)
 - `curl` for hitting the Convex HTTP API directly when the CLI doesn't expose a feature
 - File system to write test artifacts and the final report
-- The user's auth token, which is stored in their CLI config (you can read it via `ltf config path` then read that file)
+- The user's auth token, which is stored in their CLI config (you can read it via `ltf1 config path` then read that file)
 - `git` for committing test artifacts as you go (optional, but useful for tracking progress)
 
 ## Convex HTTP API Reference
@@ -176,7 +176,7 @@ Auth header: `Authorization: Bearer <jwt-token-from-config>`
 
 You can extract the token like this:
 ```bash
-TOKEN=$(jq -r '.auth.token' < "$(ltf config path)")
+TOKEN=$(jq -r '.auth.token' < "$(ltf1 config path)")
 ```
 
 ## What You Must Test
@@ -206,8 +206,8 @@ For each of the 33 tests below, you create **three things**:
 After creating each test script, **run it immediately** to populate the result file. Don't write all 33 scripts then run them at the end — write, run, write, run.
 
 ### Group 1: Prerequisites (5 tests)
-1. **`ltf auth status`** — verify authenticated, capture user ID and email
-2. **`ltf project info`** — verify a project is selected, capture workspace ID + project ID
+1. **`ltf1 auth status`** — verify authenticated, capture user ID and email
+2. **`ltf1 project info`** — verify a project is selected, capture workspace ID + project ID
 3. **Token extraction** — read CLI config, extract JWT, verify it parses
 4. **Convex reachability** — `curl https://upbeat-mouse-967.convex.cloud/version` should return 200
 5. **AI provider key check** — call `getProviderKeys` query with the token; document which keys exist (platform CEREBRAS_API_KEY/GROQ_API_KEY presence is server-side and you can't directly check, but you can probe by calling `ai/generate:generate` and seeing if it errors with "no key configured")
@@ -219,13 +219,13 @@ After creating each test script, **run it immediately** to populate the result f
 
 ### Group 3: Task Intelligence (4 tests)
 9. **Task generation from description** — Call `ai/projectInsights:generateTasksFromDescription` action with `{"projectId": "<your-project-id>", "description": "Add OAuth login with GitHub and Google providers"}`. Verify it returns 3-8 tasks each with title, description, type, priority, estimatedPoints. Save to `outputs/task-generation.json`.
-10. **Smart assignee suggestions** — Call `ai/taskAssignment:suggestAssignees` action with a real `taskId` from `ltf task list --json` and the project ID. Verify response is an array (may be empty if no developer profiles exist; that counts as a partial pass — note it).
-11. **Natural language task creation via CLI** — `ltf ai describe "fix the login button alignment on mobile"`. Verify it returns a description. If `--create` flag works, verify a task was actually created in the project.
-12. **AI suggest CLI** — `ltf ai suggest`. Document what it returns.
+10. **Smart assignee suggestions** — Call `ai/taskAssignment:suggestAssignees` action with a real `taskId` from `ltf1 task list --json` and the project ID. Verify response is an array (may be empty if no developer profiles exist; that counts as a partial pass — note it).
+11. **Natural language task creation via CLI** — `ltf1 ai describe "fix the login button alignment on mobile"`. Verify it returns a description. If `--create` flag works, verify a task was actually created in the project.
+12. **AI suggest CLI** — `ltf1 ai suggest`. Document what it returns.
 
 ### Group 4: Sprint Analysis (3 tests)
-13. **Sprint insights generation** — Get the active sprint via `ltf sprint status --json`. If one exists, call `ai/projectInsights:generateProjectInsights` action with `{"projectId": "<id>", "sprintId": "<id>"}`. Verify response has `sprintHealth` (with score 0-100), `metrics`, `risks`, `recommendations`. If no active sprint, create one via `ltf sprint create "AI Test Sprint" --start <today> --end <today+14days>` and add a few tasks first.
-14. **`ltf ai analyze`** — Run with the active sprint. Document output.
+13. **Sprint insights generation** — Get the active sprint via `ltf1 sprint status --json`. If one exists, call `ai/projectInsights:generateProjectInsights` action with `{"projectId": "<id>", "sprintId": "<id>"}`. Verify response has `sprintHealth` (with score 0-100), `metrics`, `risks`, `recommendations`. If no active sprint, create one via `ltf1 sprint create "AI Test Sprint" --start <today> --end <today+14days>` and add a few tasks first.
+14. **`ltf1 ai analyze`** — Run with the active sprint. Document output.
 15. **Standup summary** — Call `ai/projectInsights:generateStandupSummary` action. Verify response has `narrative`, `keyAchievements`, `focusAreas`, `teamMood`.
 
 ### Group 5: Insights CRUD (4 tests)
@@ -249,9 +249,9 @@ After creating each test script, **run it immediately** to populate the result f
 27. **Project AI settings** — Call `ai/keyManagement:getProjectAISettings` query. If a record exists, verify shape. If not, call `ai/keyManagement:updateProjectAISettings` to enable AI for the project, then re-fetch.
 
 ### Group 9: Agent Commands (3 tests)
-28. **`ltf agent triage`** — Run the command. Document output. **Expected**: empty queue OR a list of triage suggestions. Either is OK; document which.
-29. **`ltf agent suggest`** — Run with active project. Document output.
-30. **`ltf agent status`** — Run. Document any agent activity feed entries.
+28. **`ltf1 agent triage`** — Run the command. Document output. **Expected**: empty queue OR a list of triage suggestions. Either is OK; document which.
+29. **`ltf1 agent suggest`** — Run with active project. Document output.
+30. **`ltf1 agent status`** — Run. Document any agent activity feed entries.
 
 ### Group 10: Error Handling (3 tests)
 31. **Invalid project ID** — Call `ai/projectInsights:generateProjectInsights` with `{"projectId": "invalid_id_xxx"}`. Verify it errors gracefully with a meaningful message.
@@ -452,7 +452,7 @@ When you've finished all 33 tests, write `TEST_REPORT.md` in the test repo root:
 3. **Don't bail on first failure.** Run every test. Failures get logged and the suite continues.
 4. **Use `--json` flags on CLI commands** so output is machine-parseable.
 5. **Be precise about pass/fail.** Partial passes are valid (e.g., empty array when no data exists).
-6. **Don't create test data outside the user's selected project.** Use the active project from `ltf project info`.
+6. **Don't create test data outside the user's selected project.** Use the active project from `ltf1 project info`.
 7. **Don't delete anything** the user hasn't asked you to. Test data gets tagged with "AI Test Suite" in titles so it's findable later.
 8. **If a test requires data that doesn't exist**, set it up first (e.g., create a sprint if there isn't one). Document what you created.
 9. **Be explicit about provider/model used** in every test result.

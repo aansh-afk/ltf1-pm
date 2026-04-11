@@ -4,7 +4,7 @@
 
 ### The Complete Flow
 
-When an end user installs your CLI and runs `ltf auth login`, here's exactly what happens:
+When an end user installs your CLI and runs `ltf1 auth login`, here's exactly what happens:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -12,7 +12,7 @@ When an end user installs your CLI and runs `ltf auth login`, here's exactly wha
 └─────────────────────────────────────────────────────────────────┘
 
 $ npm install -g @ltf1/cli
-$ ltf auth login
+$ ltf1 auth login
 
 ┌─────────────────────────────────────────────────────────────────┐
 │ STEP 2: CLI Starts Local HTTP Server                           │
@@ -118,7 +118,7 @@ Terminal shows:
 
 $ ltf projects list
 $ ltf issues create "New issue"
-$ ltf task list --status open
+$ ltf1 task list --status open
 
 All commands now include auth header:
 Authorization: Bearer eyJhbGc...
@@ -208,7 +208,7 @@ async function refreshToken(): Promise<boolean> {
 npm install -g @ltf1/cli
 
 # Just works - no configuration needed
-ltf auth login
+ltf1 auth login
 # ✓ Opens https://ltf1.dev/cli-auth automatically
 ```
 
@@ -224,7 +224,7 @@ npm run dev  # Web app on localhost:3000
 # In another terminal
 cd apps/cli
 export LTF_WEB_URL=http://localhost:3000
-ltf auth login
+ltf1 auth login
 # ✓ Opens http://localhost:3000/cli-auth
 ```
 
@@ -236,11 +236,11 @@ cd apps/cli
 npm run dev
 
 # Test against local web app
-NODE_ENV=development ltf auth login
+NODE_ENV=development ltf1 auth login
 # ✓ Opens http://localhost:3000/cli-auth
 
 # Or test against production
-ltf auth login
+ltf1 auth login
 # ✓ Opens https://ltf1.dev/cli-auth
 ```
 
@@ -253,7 +253,7 @@ export LTF_WEB_URL=https://ltf1.dev
 
 # Run CLI commands non-interactively
 ltf sync --project=my-project
-ltf task create "Automated task"
+ltf1 task create "Automated task"
 ```
 
 ## Configuration Options
@@ -262,23 +262,23 @@ Users can customize the web URL if needed:
 
 ```bash
 # View current web URL
-ltf config get-web-url
+ltf1 config get-web-url
 # https://ltf1.dev (default)
 
 # Set custom domain (persists in ~/.config/ltf/config.json)
-ltf config set-web-url https://custom-domain.com
+ltf1 config set-web-url https://custom-domain.com
 
 # Verify
-ltf auth login
+ltf1 auth login
 # Opens https://custom-domain.com/cli-auth
 
 # Reset to default
-ltf config set-web-url https://ltf1.dev
+ltf1 config set-web-url https://ltf1.dev
 ```
 
 ## Summary
 
-✅ **End users**: Just run `ltf auth login` - it works out of the box with ltf1.dev
+✅ **End users**: Just run `ltf1 auth login` - it works out of the box with ltf1.dev
 ✅ **Security**: Only localhost and ltf1.dev callbacks are allowed
 ✅ **Flexibility**: Can be configured for custom domains if needed
 ✅ **Token refresh**: Silent refresh for up to 7 days without browser

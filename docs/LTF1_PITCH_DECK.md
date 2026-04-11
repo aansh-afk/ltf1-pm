@@ -248,10 +248,10 @@ AI Estimate: 2 story points
 **LTF1 CLI — 16+ command categories, full CRUD, background daemon**
 
 ```
-$ ltf task create "Fix auth timeout" --priority high --assign @sarah
+$ ltf1 task create "Fix auth timeout" --priority high --assign @sarah
   ✓ Created PROJ-142: Fix auth timeout (assigned to sarah)
 
-$ ltf sprint status
+$ ltf1 sprint status
   Sprint 23 — 8/14 tasks done — 4 days remaining
   ┌────────────────────────────────────────────────┐
   │ done     ████████████░░░░░░░░░░░░░░  57%       │
@@ -260,18 +260,18 @@ $ ltf sprint status
   │ backlog  ██░░░░░░░░░░░░░░░░░░░░░░░░   7%       │
   └────────────────────────────────────────────────┘
 
-$ ltf git status
+$ ltf1 git status
   Branch: feature/PROJ-142-fix-auth-timeout
   Linked task: PROJ-142 (in_progress)
   Commits: 3 ahead of main
   Hooks: post-commit ✓  pre-push ✓
 
-$ ltf pr create
+$ ltf1 pr create
   ✓ Generated PR: [PROJ-142] Fix auth timeout
   ✓ Body auto-filled from task + commits
   ✓ Opening GitHub...
 
-$ ltf release notes --sprint 23
+$ ltf1 release notes --sprint 23
   ## Release Notes — Sprint 23
   ### Features
   - Add user dashboard (#142) — @sarah
@@ -279,7 +279,7 @@ $ ltf release notes --sprint 23
   - Fix auth timeout (#143) — @mike
   3 contributors · 5 PRs · 23 commits
 
-$ ltf time start PROJ-142
+$ ltf1 time start PROJ-142
   ⏱ Timer started on PROJ-142: Fix auth timeout
 ```
 
@@ -758,12 +758,12 @@ You are a world-class presentation designer. Create a 19-slide professional pitc
 - Headline: "Never leave your terminal"
 - THIS SLIDE showcases the CLI which neither Jira nor Linear has
 - Full-slide terminal mockup showing sequential CLI commands:
-  - `$ ltf task create "Fix auth timeout" --priority high --assign @sarah` → "Created PROJ-142"
-  - `$ ltf sprint status` → Progress bar showing 57% done, 4 days remaining
-  - `$ ltf git status` → Branch info, linked task, commit count, hooks status
-  - `$ ltf pr create` → "Generated PR with auto-filled body from task + commits"
-  - `$ ltf release notes --sprint 23` → Formatted changelog grouped by type
-  - `$ ltf time start PROJ-142` → Timer started
+  - `$ ltf1 task create "Fix auth timeout" --priority high --assign @sarah` → "Created PROJ-142"
+  - `$ ltf1 sprint status` → Progress bar showing 57% done, 4 days remaining
+  - `$ ltf1 git status` → Branch info, linked task, commit count, hooks status
+  - `$ ltf1 pr create` → "Generated PR with auto-filled body from task + commits"
+  - `$ ltf1 release notes --sprint 23` → Formatted changelog grouped by type
+  - `$ ltf1 time start PROJ-142` → Timer started
 - Bottom: Grid of 16 command categories (task, sprint, git, pr, release, time, ai, daemon, notifications, auth, workspace, project, search, config, completions) with brief descriptions
 - Callout: "Also includes: Full TUI (Terminal User Interface) + Background git daemon"
 - Comparison strip at very bottom: "Jira CLI: None | Linear CLI: Read-only | LTF1: Full CRUD + TUI + Daemon"

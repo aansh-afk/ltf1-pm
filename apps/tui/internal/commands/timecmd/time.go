@@ -1,4 +1,4 @@
-// Package timecmd implements the `ltf time` command group.
+// Package timecmd implements the `ltf1 time` command group.
 package timecmd
 
 import (
@@ -28,7 +28,7 @@ func NewCommand() *cobra.Command {
 	return cmd
 }
 
-// Local timer state stored in ~/.config/ltf-nodejs/timer.json
+// Local timer state stored in ~/.config/ltf1/timer.json
 
 type timerState struct {
 	TaskID      string `json:"taskId"`
@@ -39,9 +39,9 @@ type timerState struct {
 func timerFile() string {
 	home, _ := os.UserHomeDir()
 	if runtime.GOOS == "darwin" {
-		return filepath.Join(home, "Library", "Application Support", "ltf-nodejs", "timer.json")
+		return filepath.Join(home, "Library", "Application Support", "ltf1", "timer.json")
 	}
-	return filepath.Join(home, ".config", "ltf-nodejs", "timer.json")
+	return filepath.Join(home, ".config", "ltf1", "timer.json")
 }
 
 func loadTimer() *timerState {

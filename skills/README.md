@@ -45,14 +45,14 @@ Copy the `ltf-pm/` folder into your agent's skills directory:
 
 2. Authenticate (one-time):
    ```bash
-   ltf auth login
+   ltf1 auth login
    ```
 
 3. Select a project (per repo):
    ```bash
-   ltf project select
+   ltf1 project select
    # or auto-detect from git remote:
-   ltf project detect --set
+   ltf1 project detect --set
    ```
 
 After that, your AI agent will be able to use `ltf` commands during any coding session in that repo.
@@ -62,11 +62,11 @@ After that, your AI agent will be able to use `ltf` commands during any coding s
 When you ask Claude (or another agent with this skill installed) to do work in a project that uses LTF1, the agent will:
 
 1. Detect that the user has LTF1 installed and a project selected
-2. Create a task for the work it's about to do (`ltf task create`)
-3. Move the task into progress (`ltf task update -s in_progress`)
+2. Create a task for the work it's about to do (`ltf1 task create`)
+3. Move the task into progress (`ltf1 task update -s in_progress`)
 4. Implement the code
-5. Comment on the task with what it did (`ltf task comment`)
-6. Mark the task done (`ltf task done`)
+5. Comment on the task with what it did (`ltf1 task comment`)
+6. Mark the task done (`ltf1 task done`)
 
 The result: your team's board reflects everything the AI is building, in real time, without you having to manually file tickets.
 

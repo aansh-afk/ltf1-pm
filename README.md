@@ -65,8 +65,8 @@ cd apps/web && pnpm dev  # Start web app
 ```bash
 npm install -g @vvg-ltf1/cli
 
-ltf auth login        # Authenticate
-ltf project select    # Pick your project
+ltf1 auth login        # Authenticate
+ltf1 project select    # Pick your project
 ltf                   # Launch the TUI
 ```
 
@@ -135,18 +135,18 @@ Dark brutalist terminal aesthetic. #050505 backgrounds, 2px borders, zero border
 
 ```
 ltf                          Launch interactive TUI
-ltf task list                List tasks
-ltf task create <title>      Create task
-ltf task done <id>           Mark task done
-ltf sprint status            Current sprint status
-ltf git status               Git + task linking status
-ltf git hooks                Install git hooks
-ltf ai suggest               AI task suggestions
-ltf search <query>           Global search
-ltf daemon start             Start background watcher
+ltf1 task list                List tasks
+ltf1 task create <title>      Create task
+ltf1 task done <id>           Mark task done
+ltf1 sprint status            Current sprint status
+ltf1 git status               Git + task linking status
+ltf1 git hooks                Install git hooks
+ltf1 ai suggest               AI task suggestions
+ltf1 search <query>           Global search
+ltf1 daemon start             Start background watcher
 ```
 
-Run `ltf --help` for the full command reference.
+Run `ltf1 --help` for the full command reference.
 
 ---
 

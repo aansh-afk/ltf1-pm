@@ -17,7 +17,7 @@ func newStartCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if existing := loadTimer(); existing != nil {
-				return fmt.Errorf("timer already running on %s — run: ltf time stop", existing.TaskID)
+				return fmt.Errorf("timer already running on %s — run: ltf1 time stop", existing.TaskID)
 			}
 			t := &timerState{
 				TaskID:      args[0],
