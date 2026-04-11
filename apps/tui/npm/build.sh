@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-VERSION="0.2.0"
+VERSION="0.2.1"
 CONVEX_URL="${CONVEX_URL:-https://upbeat-mouse-967.convex.cloud}"
 LDFLAGS="-X main.defaultConvexURL=$CONVEX_URL"
 

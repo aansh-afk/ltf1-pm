@@ -1,13 +1,13 @@
 {
   "name": "@vvg-ltf1/cli",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "ltf — git-native, agent-ready project management CLI and TUI",
   "bin": {
-    "ltf": "./bin/ltf"
+    "ltf": "./bin/ltf.js"
   },
-  "scripts": {
-    "postinstall": "node ./postinstall.mjs"
-  },
+  "files": [
+    "bin/"
+  ],
   "license": "AGPL-3.0",
   "repository": {
     "type": "git",
@@ -25,11 +25,11 @@
     "agent"
   ],
   "optionalDependencies": {
-    "@vvg-ltf1/darwin-arm64": "0.2.0",
-    "@vvg-ltf1/darwin-x64": "0.2.0",
-    "@vvg-ltf1/linux-arm64": "0.2.0",
-    "@vvg-ltf1/linux-x64": "0.2.0",
-    "@vvg-ltf1/windows-x64": "0.2.0",
-    "@vvg-ltf1/windows-arm64": "0.2.0"
+    "@vvg-ltf1/darwin-arm64": "0.2.1",
+    "@vvg-ltf1/darwin-x64": "0.2.1",
+    "@vvg-ltf1/linux-arm64": "0.2.1",
+    "@vvg-ltf1/linux-x64": "0.2.1",
+    "@vvg-ltf1/windows-x64": "0.2.1",
+    "@vvg-ltf1/windows-arm64": "0.2.1"
   }
 }
