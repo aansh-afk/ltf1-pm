@@ -1,10 +1,12 @@
 # LTF1 AI Test Prompt
 
-Copy everything below the `---` line and paste it as the first message to a fresh Claude Code instance running in an empty test repo.
+Copy everything below the `---` line and paste it as the first message to a fresh Claude Code instance running in a **completely empty folder** (no git repo, no files, nothing).
 
 ---
 
 You are testing the AI suite of LTF1 — a git-native project management platform. Your job is to verify every AI feature works end-to-end and produce a detailed test report.
+
+You are running in a **completely empty folder**. No git repo. No files. You are responsible for bootstrapping the entire test environment yourself: initializing git, creating directory structure, setting up any prerequisites, and running every test.
 
 ## Context
 
@@ -20,10 +22,51 @@ Do NOT skim these. Read them. Take notes on the AI function names, argument shap
 
 ## Test Environment
 
-- **Test repo**: the current working directory (where you are now)
+- **Test folder**: the current working directory (empty when you start)
 - **LTF1 deployment**: `https://upbeat-mouse-967.convex.cloud`
-- **CLI binary**: `ltf` (installed globally via `npm install -g @vvg-ltf1/cli`)
-- **Auth**: the user has already run `ltf auth login` and `ltf project select` before launching you
+- **CLI binary**: `ltf` — you must verify it's installed; if not, install it via `npm install -g @vvg-ltf1/cli`
+- **Auth**: you must verify the user is authenticated; if not, STOP and ask them to run `ltf auth login` themselves (it opens a browser and requires user interaction — you cannot run it autonomously)
+- **Project**: you must verify a project is selected; if not, try `ltf project detect --set` first, otherwise STOP and ask the user to run `ltf project select`
+
+## Bootstrap (do this FIRST, before any tests)
+
+1. **Initialize git** in the current directory:
+   ```bash
+   git init
+   ```
+
+2. **Create the directory structure**:
+   ```bash
+   mkdir -p tests outputs setup-data
+   ```
+
+3. **Create a `.gitignore`** to keep test artifacts manageable:
+   ```
+   node_modules/
+   .env
+   *.log
+   ```
+
+4. **Verify ltf is installed**:
+   ```bash
+   which ltf || npm install -g @vvg-ltf1/cli
+   ltf --version 2>&1 || ltf auth status
+   ```
+
+5. **Verify auth and project context**:
+   ```bash
+   ltf auth status   # if "not authenticated", STOP and ask user to run `ltf auth login`
+   ltf project info  # if "no project selected", run `ltf project detect --set` or STOP
+   ```
+
+6. **Create a SETUP.md** documenting what state you found the environment in:
+   - ltf version (or installed fresh)
+   - User email from `ltf auth status`
+   - Workspace name + ID
+   - Project name + key + ID
+   - Whether you had to install or set anything up
+
+Only after bootstrap is complete and SETUP.md is written, proceed to the tests.
 
 ## Your Tools
 
@@ -32,6 +75,7 @@ You have these tools at your disposal:
 - `curl` for hitting the Convex HTTP API directly when the CLI doesn't expose a feature
 - File system to write test artifacts and the final report
 - The user's auth token, which is stored in their CLI config (you can read it via `ltf config path` then read that file)
+- `git` for committing test artifacts as you go (optional, but useful for tracking progress)
 
 ## Convex HTTP API Reference
 
@@ -206,11 +250,12 @@ When you've finished all 33 tests, write `TEST_REPORT.md` in the test repo root:
 
 ## Getting Started
 
-Your first three actions should be:
-1. Read the four required docs
-2. Run `ltf auth status && ltf project info` to confirm setup
-3. Create the directory structure: `mkdir -p tests outputs setup-data`
+Your sequence is:
+1. Read the four required docs from `/home/aansh/LTF1/iceberg-L/docs_v2/`
+2. Run the **Bootstrap** section above (git init, mkdir, install/verify ltf, verify auth, write SETUP.md)
+3. Work through the 33 tests in order
+4. Write `TEST_REPORT.md` at the end
 
-Then start working through the 33 tests in order.
+If at any point you cannot proceed because the user needs to do something interactive (auth login, fill in a developer profile, create a project, etc.), STOP, write a clear note in `BLOCKED.md` describing what you need, and wait for the user. Do not make up data or guess.
 
 Begin now.

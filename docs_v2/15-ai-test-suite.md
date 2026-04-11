@@ -35,9 +35,9 @@ npm install -g @vvg-ltf1/cli
 ltf auth login                        # opens browser
 ltf project select                    # pick your test project (or create one)
 
-# 2. Create an empty test repo somewhere
-mkdir ~/ltf1-ai-test && cd ~/ltf1-ai-test
-git init
+# 2. Create an EMPTY folder somewhere (no git init, no files — leave it empty)
+mkdir ~/ltf1-ai-test
+cd ~/ltf1-ai-test
 
 # 3. Make sure you have either:
 #    a) AI provider env vars set on your Convex deployment (CEREBRAS_API_KEY or GROQ_API_KEY)
@@ -45,14 +45,18 @@ git init
 #    Otherwise the AI tests will fail with "no key configured"
 ```
 
+The test Claude will bootstrap the folder itself: `git init`, create directories, verify ltf is installed, verify auth, then start running tests.
+
 ---
 
 ## Run the Test
 
-1. Open a **new** Claude Code instance in `~/ltf1-ai-test`
+1. Open a **fresh** Claude Code instance in the empty `~/ltf1-ai-test` folder
 2. Copy the entire contents of [`TEST_PROMPT.md`](./TEST_PROMPT.md) as the first message
 3. Hit send and let Claude work through the full suite (~10–15 minutes)
-4. When it finishes, read `TEST_REPORT.md` in the test repo
+4. When it finishes, read `TEST_REPORT.md` in the test folder
+
+If any prerequisite is missing that requires your interaction (like browser auth), the test Claude will stop and write `BLOCKED.md` telling you exactly what to do. Resolve it and tell Claude to continue.
 
 ---
 
