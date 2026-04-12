@@ -1,7 +1,69 @@
 import { v } from "convex/values";
-import { internalQuery, internalMutation } from "../_generated/server";
+import { mutation, internalQuery, internalMutation } from "../_generated/server";
+import { getCurrentUserOrThrow } from "../lib/auth";
 
-// Get all push subscriptions for a user (called from Node action)
+// ─── Public mutations for subscription management ────────────────────
+
+export const subscribe = mutation({
+  args: {
+    endpoint: v.string(),
+    keys: v.object({
+      p256dh: v.string(),
+      auth: v.string(),
+    }),
+    userAgent: v.optional(v.string()),
+  },
+  returns: v.id("pushSubscriptions"),
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    // Check if this endpoint is already registered
+    const existing = await ctx.db
+      .query("pushSubscriptions")
+      .withIndex("by_endpoint", (q) => q.eq("endpoint", args.endpoint))
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        keys: args.keys,
+        userAgent: args.userAgent,
+      });
+      return existing._id;
+    }
+
+    return await ctx.db.insert("pushSubscriptions", {
+      userId: user._id,
+      endpoint: args.endpoint,
+      keys: args.keys,
+      userAgent: args.userAgent,
+      createdAt: Date.now(),
+    });
+  },
+});
+
+export const unsubscribe = mutation({
+  args: {
+    endpoint: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    const sub = await ctx.db
+      .query("pushSubscriptions")
+      .withIndex("by_endpoint", (q) => q.eq("endpoint", args.endpoint))
+      .first();
+
+    if (sub && sub.userId === user._id) {
+      await ctx.db.delete(sub._id);
+    }
+
+    return null;
+  },
+});
+
+// ─── Internal queries/mutations for push action ──────────────────────
+
 export const getUserSubscriptions = internalQuery({
   args: {
     userId: v.id("users"),
@@ -28,7 +90,6 @@ export const getUserSubscriptions = internalQuery({
   },
 });
 
-// Remove stale/expired push subscriptions
 export const removeStaleSubscriptions = internalMutation({
   args: {
     endpoints: v.array(v.string()),

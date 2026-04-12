@@ -9,8 +9,8 @@ export function usePushNotifications() {
   const [isSubscribed, setIsSubscribed] = useState(false);
 
   const getVapidKey = useAction(api.notifications.config.getVapidPublicKey);
-  const subscribeMutation = useMutation(api.notifications.push.subscribe);
-  const unsubscribeMutation = useMutation(api.notifications.push.unsubscribe);
+  const subscribeMutation = useMutation(api.notifications.push_helpers.subscribe);
+  const unsubscribeMutation = useMutation(api.notifications.push_helpers.unsubscribe);
 
   useEffect(() => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
