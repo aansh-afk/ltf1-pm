@@ -31,6 +31,40 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    version: '0.2.1',
+    date: 'Apr 12, 2026',
+    tag: 'NOTIFICATIONS + BUG FIXES',
+    tagColor: '#F59E0B',
+    summary: 'Full notification system with email, push, and in-app routing. 7 backend bugs fixed. 9 UI issues resolved. GitHub auto-detection. AI components wired in.',
+    changes: [
+      // Notification system
+      { type: 'feat', platform: 'api', text: 'Centralized notification dispatch — single action routes all notifications through preference checking to in-app, email (Resend), and push (web-push)' },
+      { type: 'feat', platform: 'api', text: '31 notification event types with per-type channel defaults — tasks, sprints, meetings, workspace, GitHub, AI agent' },
+      { type: 'feat', platform: 'api', text: 'Push notification infrastructure — VAPID keys, service worker, subscribe/unsubscribe, auto-cleanup of stale subscriptions' },
+      { type: 'feat', platform: 'web', text: 'Push notification opt-in — Settings → Notifications → "Enable push for this device" with permission prompt' },
+      { type: 'feat', platform: 'api', text: '8 new email templates — priority escalated, sprint ending soon, project added/removed, PR merged/review requested, agent triage ready, AI insight critical' },
+      { type: 'feat', platform: 'api', text: 'Sprint ending soon cron — notifies team members when sprint ends in 2 days' },
+      { type: 'feat', platform: 'api', text: 'All existing crons (due dates, overdue, meetings) rewired through dispatch for push + preference enforcement' },
+      // Backend bug fixes
+      { type: 'fix', platform: 'api', text: 'BUG-004: AI analytics table mismatch — generate now writes to aiSessions so dashboard shows real data' },
+      { type: 'fix', platform: 'api', text: 'BUG-005: Session tracking picked wrong workspace — now resolves via projectId, fallback uses most recent workspace' },
+      { type: 'fix', platform: 'cli', text: 'BUG-002/003/006: 5 CLI AI commands fixed — created missing ai/actions.ts and agent/actions.ts backend functions' },
+      { type: 'fix', platform: 'api', text: 'BUG-007: "Server Error" replaced with human-readable messages for invalid keys, rate limits, empty prompts' },
+      { type: 'fix', platform: 'api', text: 'BUG-001: maxTokens < 32 crash fixed — clamped to minimum 128 tokens' },
+      // UI fixes
+      { type: 'fix', platform: 'web', text: 'Tasks page scroll bug — overflow-hidden replaced with overflow-auto, all tasks now visible' },
+      { type: 'fix', platform: 'web', text: 'GitHub workspace disconnect — auto-detects user-level GitHub installations scoped to your GitHub username' },
+      { type: 'fix', platform: 'web', text: 'BYOK error dialog — inline error display with friendly messages, form stays open on validation failure' },
+      { type: 'fix', platform: 'web', text: 'AI Insights panel — loading indicator during refresh, risks section shows "No risks identified" when empty' },
+      { type: 'fix', platform: 'web', text: 'AI Analytics Dashboard — dynamic model distribution instead of hardcoded Gemini names' },
+      { type: 'fix', platform: 'web', text: 'Triage page empty state — explains what populates the queue and links to GitHub setup' },
+      // AI component wiring
+      { type: 'feat', platform: 'web', text: 'AI assignee suggestions — sparkles icon on task detail assignee field triggers AI-powered suggestions' },
+      { type: 'feat', platform: 'web', text: 'AI Task Enhancer — "AI Enhance" button on task description generates improved descriptions and acceptance criteria' },
+      { type: 'feat', platform: 'web', text: 'Daily Standup Summary — component wired into sprint detail page with narrative, achievements, and focus areas' },
+    ],
+  },
+  {
     version: '0.1.9',
     date: 'Apr 5, 2026',
     tag: 'GIT + MODALS',
