@@ -22,6 +22,14 @@ export const getProjectTasks = internalQuery({
   },
 });
 
+// Single sprint by ID
+export const getSprint = internalQuery({
+  args: { sprintId: v.id("sprints") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.sprintId);
+  },
+});
+
 // Sprints
 export const getProjectSprints = internalQuery({
   args: { projectId: v.id("projects") },

@@ -2,7 +2,6 @@ import { internalAction, internalQuery } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { v } from "convex/values";
 import { Id } from "../_generated/dataModel";
-import { taskDueReminder, taskOverdue, meetingReminder } from "./templates";
 
 const ONE_DAY_MS = 86_400_000;
 
@@ -113,6 +112,7 @@ export const getUpcomingMeetings = internalQuery({
     type: v.string(),
     startTime: v.number(),
     meetingUrl: v.optional(v.string()),
+    workspaceId: v.id("workspaces"),
     attendeeUserIds: v.array(v.id("users")),
   })),
   handler: async (ctx) => {
@@ -130,6 +130,7 @@ export const getUpcomingMeetings = internalQuery({
       type: string;
       startTime: number;
       meetingUrl?: string;
+      workspaceId: Id<"workspaces">;
       attendeeUserIds: Array<Id<"users">>;
     }> = [];
 
@@ -148,6 +149,7 @@ export const getUpcomingMeetings = internalQuery({
         type: meeting.type,
         startTime: meeting.startTime,
         meetingUrl: meeting.meetingUrl,
+        workspaceId: meeting.workspaceId,
         attendeeUserIds,
       });
     }
@@ -162,6 +164,7 @@ export const getProjectById = internalQuery({
   returns: v.union(v.null(), v.object({
     name: v.string(),
     taskPrefix: v.string(),
+    workspaceId: v.id("workspaces"),
   })),
   handler: async (ctx, args) => {
     const project = await ctx.db.get(args.projectId);
@@ -169,6 +172,7 @@ export const getProjectById = internalQuery({
     return {
       name: project.name,
       taskPrefix: project.settings.taskPrefix,
+      workspaceId: project.workspaceId,
     };
   },
 });
@@ -211,21 +215,21 @@ export const processDueDateReminders = internalAction({
       const dueDate = new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
       for (const assigneeId of task.assigneeIds) {
-        const userInfo = await ctx.runQuery(internal.email.cronHelpers.getUserEmailInfo, { userId: assigneeId });
-        if (!userInfo || !userInfo.emailEnabled) continue;
-
-        const emailContent = taskDueReminder({
-          taskTitle: task.taskTitle,
-          taskKey,
-          projectName: project.name,
-          dueDate,
-          daysLeft,
-        });
-
-        await ctx.runAction(internal.email.send.sendEmail, {
-          to: userInfo.email,
-          subject: emailContent.subject,
-          html: emailContent.html,
+        await ctx.runAction(internal.notifications.dispatch.dispatch, {
+          recipientUserId: assigneeId,
+          workspaceId: project.workspaceId as Id<"workspaces">,
+          type: "task_due_reminder",
+          title: `Task due in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`,
+          body: `"${task.taskTitle}" is due ${dueDate}`,
+          entityId: task.taskId,
+          entityType: "task",
+          emailData: {
+            taskTitle: task.taskTitle,
+            taskKey,
+            projectName: project.name,
+            dueDate,
+            daysLeft,
+          },
         });
       }
     }
@@ -253,21 +257,21 @@ export const processOverdueAlerts = internalAction({
       const dueDate = new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
       for (const assigneeId of task.assigneeIds) {
-        const userInfo = await ctx.runQuery(internal.email.cronHelpers.getUserEmailInfo, { userId: assigneeId });
-        if (!userInfo || !userInfo.emailEnabled) continue;
-
-        const emailContent = taskOverdue({
-          taskTitle: task.taskTitle,
-          taskKey,
-          projectName: project.name,
-          dueDate,
-          daysOverdue,
-        });
-
-        await ctx.runAction(internal.email.send.sendEmail, {
-          to: userInfo.email,
-          subject: emailContent.subject,
-          html: emailContent.html,
+        await ctx.runAction(internal.notifications.dispatch.dispatch, {
+          recipientUserId: assigneeId,
+          workspaceId: project.workspaceId as Id<"workspaces">,
+          type: "task_overdue",
+          title: `Task overdue by ${daysOverdue} day${daysOverdue === 1 ? "" : "s"}`,
+          body: `"${task.taskTitle}" was due ${dueDate}`,
+          entityId: task.taskId,
+          entityType: "task",
+          emailData: {
+            taskTitle: task.taskTitle,
+            taskKey,
+            projectName: project.name,
+            dueDate,
+            daysOverdue,
+          },
         });
       }
     }
@@ -296,21 +300,133 @@ export const processMeetingReminders = internalAction({
       const startTime = new Date(meeting.startTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 
       for (const userId of meeting.attendeeUserIds) {
-        const userInfo = await ctx.runQuery(internal.email.cronHelpers.getUserEmailInfo, { userId });
-        if (!userInfo || !userInfo.emailEnabled) continue;
-
-        const emailContent = meetingReminder({
-          meetingTitle: meeting.title,
-          meetingType: meeting.type,
-          startTime,
-          meetingUrl: meeting.meetingUrl,
-          minutesUntil: is60min ? 60 : 15,
+        await ctx.runAction(internal.notifications.dispatch.dispatch, {
+          recipientUserId: userId,
+          workspaceId: meeting.workspaceId as Id<"workspaces">,
+          type: "meeting_reminder",
+          title: `Meeting in ${is60min ? "1 hour" : "15 minutes"}`,
+          body: `"${meeting.title}" starts at ${startTime}`,
+          entityId: meeting.meetingId,
+          entityType: "meeting",
+          emailData: {
+            meetingTitle: meeting.title,
+            meetingType: meeting.type,
+            startTime,
+            meetingUrl: meeting.meetingUrl,
+            minutesUntil: is60min ? 60 : 15,
+          },
         });
+      }
+    }
 
-        await ctx.runAction(internal.email.send.sendEmail, {
-          to: userInfo.email,
-          subject: emailContent.subject,
-          html: emailContent.html,
+    return null;
+  },
+});
+
+// ─── Sprint Ending Soon ───────────────────────────────────────
+
+export const getSprintsEndingSoon = internalQuery({
+  args: {},
+  returns: v.array(v.object({
+    sprintId: v.string(),
+    sprintName: v.string(),
+    projectId: v.id("projects"),
+    workspaceId: v.id("workspaces"),
+    endDate: v.number(),
+    completedTasks: v.number(),
+    totalTasks: v.number(),
+    memberIds: v.array(v.id("users")),
+  })),
+  handler: async (ctx) => {
+    const now = Date.now();
+    const twoDaysFromNow = now + 2 * ONE_DAY_MS;
+
+    const sprints = await ctx.db
+      .query("sprints")
+      .withIndex("by_status")
+      .collect();
+
+    const results: Array<{
+      sprintId: string;
+      sprintName: string;
+      projectId: Id<"projects">;
+      workspaceId: Id<"workspaces">;
+      endDate: number;
+      completedTasks: number;
+      totalTasks: number;
+      memberIds: Array<Id<"users">>;
+    }> = [];
+
+    for (const sprint of sprints) {
+      if (sprint.status !== "active") continue;
+      if (sprint.endDate < now || sprint.endDate > twoDaysFromNow) continue;
+
+      const project = await ctx.db.get(sprint.projectId);
+      if (!project) continue;
+
+      const tasks = await ctx.db
+        .query("tasks")
+        .withIndex("by_sprint", (q) => q.eq("sprintId", sprint._id))
+        .collect();
+
+      const completedTasks = tasks.filter(t => t.status === "done").length;
+
+      const members = await ctx.db
+        .query("projectMembers")
+        .withIndex("by_project", (q) => q.eq("projectId", sprint.projectId))
+        .collect();
+
+      const memberIds = members
+        .filter(m => m.status === "active")
+        .map(m => m.userId);
+
+      results.push({
+        sprintId: sprint._id,
+        sprintName: sprint.name,
+        projectId: sprint.projectId,
+        workspaceId: project.workspaceId,
+        endDate: sprint.endDate,
+        completedTasks,
+        totalTasks: tasks.length,
+        memberIds,
+      });
+    }
+
+    return results;
+  },
+});
+
+export const processSprintEndingReminders = internalAction({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const sprints = await ctx.runQuery(internal.email.cronHelpers.getSprintsEndingSoon);
+    const now = Date.now();
+
+    for (const sprint of sprints) {
+      const daysRemaining = Math.ceil((sprint.endDate - now) / ONE_DAY_MS);
+      const endDate = new Date(sprint.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+      const project = await ctx.runQuery(internal.email.cronHelpers.getProjectById, { projectId: sprint.projectId });
+      if (!project) continue;
+
+      for (const userId of sprint.memberIds) {
+        await ctx.runAction(internal.notifications.dispatch.dispatch, {
+          recipientUserId: userId,
+          workspaceId: sprint.workspaceId as Id<"workspaces">,
+          type: "sprint_ending_soon",
+          title: `Sprint ends in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}`,
+          body: `"${sprint.sprintName}" ends ${endDate} — ${sprint.completedTasks}/${sprint.totalTasks} tasks done`,
+          entityId: sprint.sprintId,
+          entityType: "sprint",
+          emailData: {
+            sprintName: sprint.sprintName,
+            projectName: project.name,
+            endDate,
+            daysRemaining,
+            completedTasks: sprint.completedTasks,
+            totalTasks: sprint.totalTasks,
+          },
         });
       }
     }

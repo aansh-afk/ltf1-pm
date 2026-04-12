@@ -12,6 +12,7 @@ import {
   taskCompleted,
   taskStatusChanged,
 } from "../email/templates";
+// Centralized dispatch handles in-app + email + push routing
 import { getCurrentUserOrThrow } from "../lib/auth";
 import {
   taskStatusValidator,
@@ -106,47 +107,35 @@ export const createTask = mutation({
       projectId: args.projectId,
     });
 
-    // Send notifications to all assignees
+    // Send notifications to all assignees via centralized dispatch
     if (args.assigneeIds && args.assigneeIds.length > 0) {
+      const taskKey = `${(project as any).settings?.taskPrefix || project.key}-${maxNumber + 1}`;
       for (const assigneeId of args.assigneeIds) {
         if (assigneeId !== user._id) {
           await ctx.scheduler.runAfter(
             0,
-            internal.notifications.createNotification,
+            internal.notifications.dispatch.dispatch,
             {
-              userId: assigneeId,
+              recipientUserId: assigneeId,
               workspaceId: project.workspaceId,
               type: "task_assigned",
               title: "New Task Assigned",
               body: `You've been assigned to "${args.title}"`,
+              link: `/projects/${(project as any).key}/tasks/${taskKey}`,
               actorId: user._id,
               entityId: taskId,
               entityType: "task",
+              emailData: {
+                assignerName: user.name || user.email,
+                taskTitle: args.title,
+                projectName: project.name,
+                taskKey,
+                priority: args.priority || "medium",
+                workspaceSlug: "",
+                projectKey: (project as any).key || "",
+              },
             },
           );
-
-          // Send email to assignee
-          const assigneeUser = await ctx.db.get(assigneeId);
-          if (
-            assigneeUser &&
-            (assigneeUser as any).preferences?.notifications?.email !== false
-          ) {
-            const taskKey = `${(project as any).settings?.taskPrefix || project.key}-${maxNumber + 1}`;
-            const emailContent = taskAssigned({
-              assignerName: user.name || user.email,
-              taskTitle: args.title,
-              projectName: project.name,
-              taskKey,
-              priority: args.priority || "medium",
-              workspaceSlug: "",
-              projectKey: (project as any).key || "",
-            });
-            await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
-              to: assigneeUser.email,
-              subject: emailContent.subject,
-              html: emailContent.html,
-            });
-          }
         }
       }
     }
@@ -276,48 +265,56 @@ export const updateTask = mutation({
           metadata: undefined,
         });
 
-        // Email all assignees about completion
+        // Notify all assignees about completion via dispatch
         const completionAssignees = args.assigneeIds || task.assigneeIds || [];
+        const taskKey = `${(project as any).settings?.taskPrefix || (project as any).key}-${task.number}`;
         for (const aid of completionAssignees) {
           if (aid !== user._id) {
-            const au = await ctx.db.get(aid);
-            if (au && (au as any).preferences?.notifications?.email !== false) {
-              const emailContent = taskCompleted({
+            await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
+              recipientUserId: aid,
+              workspaceId: project.workspaceId,
+              type: "task_assigned",
+              title: "Task Completed",
+              body: `"${task.title}" has been completed`,
+              link: `/projects/${(project as any).key}/tasks/${taskKey}`,
+              actorId: user._id,
+              entityId: args.taskId,
+              entityType: "task",
+              emailData: {
                 completedByName: user.name || user.email,
                 taskTitle: task.title,
-                taskKey: `${(project as any).settings?.taskPrefix || (project as any).key}-${task.number}`,
+                taskKey,
                 projectName: project.name,
-              });
-              await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
-                to: au.email,
-                subject: emailContent.subject,
-                html: emailContent.html,
-              });
-            }
+              },
+            });
           }
         }
       }
 
-      // Email assignees about status change (skip if going to "done" — handled above)
+      // Notify assignees about status change (skip if going to "done" — handled above)
       if (args.status !== "done") {
         const statusAssignees = task.assigneeIds || [];
+        const taskKey2 = `${(project as any).settings?.taskPrefix || (project as any).key}-${task.number}`;
         for (const aid of statusAssignees) {
           if (aid !== user._id) {
-            const au = await ctx.db.get(aid);
-            if (au && (au as any).preferences?.notifications?.email !== false) {
-              const emailContent = taskStatusChanged({
+            await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
+              recipientUserId: aid,
+              workspaceId: project.workspaceId,
+              type: "task_assigned",
+              title: "Task Status Changed",
+              body: `"${task.title}" moved from ${task.status} to ${args.status}`,
+              link: `/projects/${(project as any).key}/tasks/${taskKey2}`,
+              actorId: user._id,
+              entityId: args.taskId,
+              entityType: "task",
+              emailData: {
                 changedByName: user.name || user.email,
                 taskTitle: task.title,
-                taskKey: `${(project as any).settings?.taskPrefix || (project as any).key}-${task.number}`,
+                taskKey: taskKey2,
                 oldStatus: task.status,
                 newStatus: args.status!,
-              });
-              await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
-                to: au.email,
-                subject: emailContent.subject,
-                html: emailContent.html,
-              });
-            }
+              },
+            });
           }
         }
       }
@@ -354,90 +351,57 @@ export const updateTask = mutation({
       }
     }
 
-    // Send notifications to newly assigned users
+    // Send notifications via centralized dispatch
     if (args.assigneeIds !== undefined) {
       const previousAssignees = new Set(task.assigneeIds || []);
       const newAssignees = new Set(args.assigneeIds);
+      const tkKey = `${(project as any).settings?.taskPrefix || (project as any).key}-${task.number}`;
 
-      // Find users who are newly assigned
+      // Notify newly assigned users
       for (const assigneeId of newAssignees) {
         if (!previousAssignees.has(assigneeId) && assigneeId !== user._id) {
-          await ctx.scheduler.runAfter(
-            0,
-            internal.notifications.createNotification,
-            {
-              userId: assigneeId,
-              workspaceId: project.workspaceId,
-              type: "task_assigned",
-              title: "Task Assigned",
-              body: `You've been assigned to "${task.title}"`,
-              actorId: user._id,
-              entityId: args.taskId,
-              entityType: "task",
-            },
-          );
-
-          // Send email to newly assigned user
-          const assigneeUser = await ctx.db.get(assigneeId);
-          if (
-            assigneeUser &&
-            (assigneeUser as any).preferences?.notifications?.email !== false
-          ) {
-            const taskKey = `${(project as any).settings?.taskPrefix || (project as any).key}-${task.number}`;
-            const emailContent = taskAssigned({
+          await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
+            recipientUserId: assigneeId,
+            workspaceId: project.workspaceId,
+            type: "task_assigned",
+            title: "Task Assigned",
+            body: `You've been assigned to "${task.title}"`,
+            link: `/projects/${(project as any).key}/tasks/${tkKey}`,
+            actorId: user._id,
+            entityId: args.taskId,
+            entityType: "task",
+            emailData: {
               assignerName: user.name || user.email,
               taskTitle: task.title,
               projectName: project.name,
-              taskKey,
+              taskKey: tkKey,
               priority: task.priority,
               workspaceSlug: "",
               projectKey: (project as any).key || "",
-            });
-            await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
-              to: assigneeUser.email,
-              subject: emailContent.subject,
-              html: emailContent.html,
-            });
-          }
+            },
+          });
         }
       }
 
-      // Optionally notify users who were unassigned
+      // Notify unassigned users
       for (const assigneeId of previousAssignees) {
         if (!newAssignees.has(assigneeId) && assigneeId !== user._id) {
-          await ctx.scheduler.runAfter(
-            0,
-            internal.notifications.createNotification,
-            {
-              userId: assigneeId,
-              workspaceId: project.workspaceId,
-              type: "task_unassigned",
-              title: "Task Unassigned",
-              body: `You've been unassigned from "${task.title}"`,
-              actorId: user._id,
-              entityId: args.taskId,
-              entityType: "task",
-            },
-          );
-
-          // Send email to unassigned user
-          const removedUser = await ctx.db.get(assigneeId);
-          if (
-            removedUser &&
-            (removedUser as any).preferences?.notifications?.email !== false
-          ) {
-            const taskKey = `${(project as any).settings?.taskPrefix || (project as any).key}-${task.number}`;
-            const emailContent = taskUnassigned({
+          await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
+            recipientUserId: assigneeId,
+            workspaceId: project.workspaceId,
+            type: "task_unassigned",
+            title: "Task Unassigned",
+            body: `You've been unassigned from "${task.title}"`,
+            link: `/projects/${(project as any).key}/tasks/${tkKey}`,
+            actorId: user._id,
+            entityId: args.taskId,
+            entityType: "task",
+            emailData: {
               taskTitle: task.title,
-              taskKey,
+              taskKey: tkKey,
               removedByName: user.name || user.email,
-            });
-            await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
-              to: removedUser.email,
-              subject: emailContent.subject,
-              html: emailContent.html,
-            });
-          }
+            },
+          });
         }
       }
     }

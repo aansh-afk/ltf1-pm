@@ -21,6 +21,7 @@ import SprintBoard from "@/components/features/sprint/SprintBoard";
 import SprintPlanning from "@/components/features/sprint/SprintPlanning";
 import BurndownChart from "@/components/features/sprint/BurndownChart";
 import AIInsightsPanel from "@/components/features/project/AIInsightsPanel";
+import DailyStandupSummary from "@/components/features/project/DailyStandupSummary";
 import { useCurrentWorkspace } from "@/hooks/useCurrentWorkspace";
 import BrutalSelect from "@/components/ui/BrutalSelect";
 import clsx from "clsx";
@@ -326,6 +327,19 @@ export default function SprintPage() {
                 compact={false}
               />
             </div>
+          </m.div>
+
+          {/* Daily Standup Summary */}
+          <m.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="border-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)]"
+          >
+            <DailyStandupSummary
+              projectId={selectedProjectId as Id<"projects">}
+              compact
+            />
           </m.div>
         </div>
       )}

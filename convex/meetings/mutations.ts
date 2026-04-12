@@ -2,7 +2,7 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { requirePermission } from "../auth/permissions";
 import { internal } from "../_generated/api";
-import { meetingScheduled, meetingUpdated, meetingCancelled } from "../email/templates";
+// Email templates now handled by centralized dispatch
 import { getCurrentUserOrThrow } from "../lib/auth";
 
 export const createMeeting = mutation({
@@ -90,13 +90,20 @@ export const createMeeting = mutation({
       }
     });
 
-    // Send email notifications to attendees
+    // Notify attendees via centralized dispatch
+    const formatDate = (ts: number) => new Date(ts).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     for (const attendeeObj of attendees) {
       if (attendeeObj.userId !== user._id) {
-        const attendeeUser = await ctx.db.get(attendeeObj.userId);
-        if (attendeeUser && attendeeUser.preferences?.notifications?.email !== false) {
-          const formatDate = (ts: number) => new Date(ts).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-          const emailContent = meetingScheduled({
+        await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
+          recipientUserId: attendeeObj.userId,
+          workspaceId: args.workspaceId,
+          type: "meeting_scheduled",
+          title: "Meeting Scheduled",
+          body: `${user.name || user.email} scheduled "${args.title}"`,
+          actorId: user._id,
+          entityId: meetingId,
+          entityType: "meeting",
+          emailData: {
             organizerName: user.name || user.email,
             meetingTitle: args.title,
             meetingType: args.type,
@@ -104,13 +111,8 @@ export const createMeeting = mutation({
             endTime: formatDate(args.endTime),
             location: args.location,
             meetingUrl: args.meetingUrl,
-          });
-          await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
-            to: attendeeUser.email,
-            subject: emailContent.subject,
-            html: emailContent.html,
-          });
-        }
+          },
+        });
       }
     }
 
@@ -179,19 +181,21 @@ export const updateMeeting = mutation({
     if (changesList.length > 0) {
       for (const attendeeObj of meeting.attendees) {
         if (attendeeObj.userId !== user._id) {
-          const attendeeUser = await ctx.db.get(attendeeObj.userId);
-          if (attendeeUser && attendeeUser.preferences?.notifications?.email !== false) {
-            const emailContent = meetingUpdated({
+          await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
+            recipientUserId: attendeeObj.userId,
+            workspaceId: meeting.workspaceId,
+            type: "meeting_updated",
+            title: "Meeting Updated",
+            body: `"${args.title || meeting.title}" updated: ${changesList.join(", ")}`,
+            actorId: user._id,
+            entityId: args.meetingId,
+            entityType: "meeting",
+            emailData: {
               organizerName: user.name || user.email,
               meetingTitle: args.title || meeting.title,
               changes: changesList.join(", "),
-            });
-            await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
-              to: attendeeUser.email,
-              subject: emailContent.subject,
-              html: emailContent.html,
-            });
-          }
+            },
+          });
         }
       }
     }
@@ -365,23 +369,25 @@ export const deleteMeeting = mutation({
 
     await requirePermission(ctx.db, user._id, meeting.workspaceId, "meeting.delete");
 
-    // Send cancellation emails before deleting
+    // Notify attendees about cancellation via dispatch
     const formatDate = (ts: number) => new Date(ts).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     for (const attendeeObj of meeting.attendees) {
       if (attendeeObj.userId !== user._id) {
-        const attendeeUser = await ctx.db.get(attendeeObj.userId);
-        if (attendeeUser && attendeeUser.preferences?.notifications?.email !== false) {
-          const emailContent = meetingCancelled({
+        await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
+          recipientUserId: attendeeObj.userId,
+          workspaceId: meeting.workspaceId,
+          type: "meeting_cancelled",
+          title: "Meeting Cancelled",
+          body: `"${meeting.title}" has been cancelled`,
+          actorId: user._id,
+          entityId: args.meetingId,
+          entityType: "meeting",
+          emailData: {
             organizerName: user.name || user.email,
             meetingTitle: meeting.title,
             startTime: formatDate(meeting.startTime),
-          });
-          await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
-            to: attendeeUser.email,
-            subject: emailContent.subject,
-            html: emailContent.html,
-          });
-        }
+          },
+        });
       }
     }
 

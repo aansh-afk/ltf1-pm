@@ -2261,4 +2261,18 @@ export default defineSchema({
     content: v.string(),
     parentId: v.optional(v.id("communityComments")),
   }).index("by_postId", ["postId"]),
+
+  // Push notification subscriptions
+  pushSubscriptions: defineTable({
+    userId: v.id("users"),
+    endpoint: v.string(),
+    keys: v.object({
+      p256dh: v.string(),
+      auth: v.string(),
+    }),
+    userAgent: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_endpoint", ["endpoint"]),
 });

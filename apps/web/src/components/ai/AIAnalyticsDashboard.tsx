@@ -27,11 +27,10 @@ interface AIStats {
   totalTokens: number
   totalCost: number
   averageLatency: number
-  modelUsage: {
-    flash: number
-    flashLite: number
-  }
+  cacheHitRate?: number
+  modelUsage: Record<string, number>
   typeBreakdown: Record<string, number>
+  userBreakdown?: Record<string, number>
 }
 
 /** AI feedback summary shape */
@@ -248,18 +247,21 @@ function OverviewTab({ stats, feedback, loading }: OverviewTabProps) {
       <div className="bg-gray-900 border-2 border-gray-700 p-4">
         <h3 className="text-yellow-400 font-bold uppercase mb-3">Model Distribution</h3>
         <div className="space-y-2">
-          <ModelUsageBar
-            model="Gemini 2.5 Flash"
-            count={stats.modelUsage.flash}
-            total={stats.totalSessions}
-            color="yellow"
-          />
-          <ModelUsageBar
-            model="Gemini 2.5 Flash Lite"
-            count={stats.modelUsage.flashLite}
-            total={stats.totalSessions}
-            color="green"
-          />
+          {Object.entries(stats.modelUsage)
+            .filter(([, count]) => count > 0)
+            .sort(([, a], [, b]) => b - a)
+            .map(([model, count], i) => (
+              <ModelUsageBar
+                key={model}
+                model={model}
+                count={count}
+                total={stats.totalSessions}
+                color={['yellow', 'green', 'blue', 'purple'][i % 4]}
+              />
+            ))}
+          {Object.values(stats.modelUsage).every(v => v === 0) && (
+            <p className="text-xs text-gray-500 font-mono">No model usage data yet</p>
+          )}
         </div>
       </div>
 

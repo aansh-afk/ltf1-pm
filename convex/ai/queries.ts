@@ -82,10 +82,10 @@ export const getWorkspaceAIStats = query({
       cacheHitRate: sessions.length > 0
         ? sessions.filter(s => s.cached).length / sessions.length
         : 0,
-      modelUsage: {
-        flash: sessions.filter(s => s.model === "gemini-2.5-flash").length,
-        flashLite: sessions.filter(s => s.model === "gemini-2.5-flash-lite").length,
-      },
+      modelUsage: sessions.reduce((acc, s) => {
+        acc[s.model] = (acc[s.model] || 0) + 1
+        return acc
+      }, {} as Record<string, number>),
       typeBreakdown: sessions.reduce((acc, s) => {
         acc[s.type] = (acc[s.type] || 0) + 1
         return acc

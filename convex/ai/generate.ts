@@ -26,6 +26,11 @@ export const generate = action({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
+    // Validate inputs (BUG-007: structured errors instead of "Server Error")
+    if (!args.prompt || args.prompt.trim().length === 0) {
+      throw new Error("Prompt cannot be empty");
+    }
+
     // Resolve which provider/model/key to use
     // @ts-ignore — deep type instantiation
     const resolveRef = internal.ai.resolveConfig.resolveAIConfig;
@@ -41,6 +46,9 @@ export const generate = action({
       );
     }
 
+    // Clamp maxTokens to >= 128 to prevent provider crashes (BUG-001)
+    const safeMaxTokens = args.maxTokens ? Math.max(args.maxTokens, 128) : undefined;
+
     // Call the resolved provider
     try {
       const result: { text: string; model: string; provider: "cerebras" | "groq" } =
@@ -51,7 +59,7 @@ export const generate = action({
           prompt: args.prompt,
           systemPrompt: args.systemPrompt,
           temperature: args.temperature,
-          maxTokens: args.maxTokens,
+          maxTokens: safeMaxTokens,
           complexity: config.complexity,
         });
 
@@ -66,6 +74,16 @@ export const generate = action({
           promptLength: args.prompt.length,
           responseLength: result.text.length,
           success: true,
+        });
+        // Also write to aiSessions for analytics queries (BUG-004 fix)
+        await ctx.runMutation(internal.ai.usageLog.logAISession, {
+          clerkUserId: identity.subject,
+          provider: result.provider,
+          model: result.model,
+          functionCategory: args.functionCategory || "unknown",
+          prompt: args.prompt,
+          responseText: result.text,
+          projectId: args.projectId,
         });
       } catch {
         // Don't fail the request if logging fails
@@ -90,7 +108,7 @@ export const generate = action({
               prompt: args.prompt,
               systemPrompt: args.systemPrompt,
               temperature: args.temperature,
-              maxTokens: args.maxTokens,
+              maxTokens: safeMaxTokens,
               complexity: config.complexity,
             });
 
@@ -106,6 +124,15 @@ export const generate = action({
               responseLength: fallbackResult.text.length,
               success: true,
             });
+            await ctx.runMutation(internal.ai.usageLog.logAISession, {
+              clerkUserId: identity.subject,
+              provider: "groq",
+              model: groqModel,
+              functionCategory: args.functionCategory || "unknown",
+              prompt: args.prompt,
+              responseText: fallbackResult.text,
+              projectId: args.projectId,
+            });
           } catch {
             // Don't fail the request if logging fails
           }
@@ -114,7 +141,18 @@ export const generate = action({
         }
       }
 
-      throw primaryError;
+      // Re-throw with structured message (BUG-007)
+      const msg = primaryError?.message || "Unknown error";
+      if (msg.includes("API_KEY_INVALID") || msg.includes("Incorrect API key")) {
+        throw new Error("AI provider API key is invalid. Check Settings → AI.");
+      }
+      if (msg.includes("max_tokens") || msg.includes("too small")) {
+        throw new Error("maxTokens value too small. Minimum is 128.");
+      }
+      if (msg.includes("rate") || msg.includes("429")) {
+        throw new Error("AI provider rate limit exceeded. Try again in a moment.");
+      }
+      throw new Error(`AI generation failed: ${msg.substring(0, 200)}`);
     }
   },
 });

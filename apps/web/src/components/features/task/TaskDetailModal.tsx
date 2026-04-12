@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useQuery, useAction } from 'convex/react'
+import { useQuery, useAction, useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
 import {
@@ -10,11 +10,14 @@ import {
   HiOutlineFlag,
   HiOutlineTag,
   HiOutlineLightningBolt,
+  HiOutlineSparkles,
 } from 'react-icons/hi'
 import BrutalModal from '@/components/ui/BrutalModal'
 import BrutalButton from '@/components/ui/BrutalButton'
 import TimeTracker from './TimeTracker'
 import TaskTimeDisplay from './TaskTimeDisplay'
+import TaskAssignmentSuggestions from '../ai/TaskAssignmentSuggestions'
+import AITaskEnhancer from '../ai/AITaskEnhancer'
 import { formatDistanceToNow, format } from 'date-fns'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
@@ -27,6 +30,8 @@ interface TaskDetailModalProps {
 
 export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailModalProps) {
   const [activeTab, setActiveTab] = useState<'details' | 'time' | 'comments'>('details')
+  const [showAssigneeSuggestions, setShowAssigneeSuggestions] = useState(false)
+  const [showAIEnhancer, setShowAIEnhancer] = useState(false)
   const [showSkillDropdown, setShowSkillDropdown] = useState(false)
   const [runningSkillId, setRunningSkillId] = useState<string | null>(null)
   const skillDropdownRef = useRef<HTMLDivElement>(null)
@@ -54,6 +59,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
   )
 
   const executeSkill = useAction(api.skills.execution.executeSkill)
+  const updateTask = useMutation(api.tasks.mutations.updateTask)
 
   const activeSkills = skills?.filter(s => s.isActive && (s.trigger === 'manual' || s.trigger === 'both')) || []
 
@@ -220,11 +226,48 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
               {/* Description */}
               {task.description && (
                 <div>
-                  <h3 className="text-brutal-sm font-mono uppercase mb-[6px]">DESCRIPTION</h3>
+                  <div className="flex items-center justify-between mb-[6px]">
+                    <h3 className="text-brutal-sm font-mono uppercase">DESCRIPTION</h3>
+                    <button
+                      onClick={() => setShowAIEnhancer(!showAIEnhancer)}
+                      className="flex items-center gap-1 px-2 py-1 text-xs font-mono uppercase border border-[#6366F1]/30 hover:bg-[#6366F1]/10 text-[#6366F1] transition-colors"
+                      title="Enhance with AI"
+                    >
+                      <HiOutlineSparkles className="w-3 h-3" />
+                      AI Enhance
+                    </button>
+                  </div>
                   <div className="p-[10px] bg-[var(--theme-background-secondary)]/5 border-2 border-[var(--theme-border)]">
                     <p className="text-brutal-sm whitespace-pre-wrap">{task.description}</p>
                   </div>
                 </div>
+              )}
+
+              {/* AI Task Enhancer Panel */}
+              {showAIEnhancer && task.project && (
+                <AITaskEnhancer
+                  task={{
+                    _id: task._id as Id<"tasks">,
+                    title: task.title,
+                    description: task.description,
+                    type: task.type,
+                    priority: task.priority,
+                    assigneeId: task.assigneeId as Id<"users"> | undefined,
+                    labels: task.labels,
+                    estimate: task.estimate,
+                  }}
+                  onUpdate={async (updates) => {
+                    try {
+                      await updateTask({
+                        taskId: task._id as Id<"tasks">,
+                        ...updates,
+                      })
+                      toast.success('Task updated with AI suggestions')
+                    } catch (e: any) {
+                      toast.error(e.message || 'Failed to update task')
+                    }
+                  }}
+                />
               )}
 
               {/* Quick Stats */}
@@ -233,13 +276,48 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
                   {/* Assignee */}
                   <div className="flex items-center gap-[6px]">
                     <HiOutlineUser className="w-16px h-16px text-neutral-400" />
-                    <div>
-                      <div className="text-brutal-xs text-neutral-400 uppercase">ASSIGNEE</div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1">
+                        <div className="text-brutal-xs text-neutral-400 uppercase">ASSIGNEE</div>
+                        {task.project && (
+                          <button
+                            onClick={() => setShowAssigneeSuggestions(!showAssigneeSuggestions)}
+                            className="p-0.5 hover:bg-[var(--theme-primary)]/10 transition-colors"
+                            title="AI suggest assignee"
+                          >
+                            <HiOutlineSparkles className="w-3 h-3 text-[#6366F1]" />
+                          </button>
+                        )}
+                      </div>
                       <div className="text-brutal-sm">
                         {task.assignee?.name || 'Unassigned'}
                       </div>
                     </div>
                   </div>
+                  {showAssigneeSuggestions && task.project && (
+                    <TaskAssignmentSuggestions
+                      projectId={task.project._id as Id<"projects">}
+                      taskTitle={task.title}
+                      taskDescription={task.description}
+                      taskType={task.type}
+                      priority={task.priority}
+                      labels={task.labels}
+                      currentAssignees={task.assigneeId ? [task.assigneeId] : []}
+                      onAssign={async (userId) => {
+                        try {
+                          await updateTask({
+                            taskId: task._id as Id<"tasks">,
+                            assigneeId: userId as Id<"users">,
+                          })
+                          toast.success('Assignee updated')
+                          setShowAssigneeSuggestions(false)
+                        } catch (e: any) {
+                          toast.error(e.message || 'Failed to assign')
+                        }
+                      }}
+                      compact
+                    />
+                  )}
 
                   {/* Due Date */}
                   {task.dueDate && (

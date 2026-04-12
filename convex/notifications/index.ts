@@ -1,6 +1,6 @@
-import { mutation, query, internalMutation } from "./_generated/server";
+import { mutation, query, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
-import { getCurrentUser, getCurrentUserOrThrow } from "./lib/auth";
+import { getCurrentUser, getCurrentUserOrThrow } from "../lib/auth";
 
 export const getNotifications = query({
   args: {
@@ -94,15 +94,42 @@ export const createNotification = internalMutation({
     userId: v.id("users"),
     workspaceId: v.id("workspaces"),
     type: v.union(
+      // Tasks
       v.literal("task_assigned"),
       v.literal("task_unassigned"),
+      v.literal("task_completed"),
+      v.literal("task_status_changed"),
       v.literal("task_comment"),
       v.literal("task_mention"),
+      v.literal("task_comment_reply"),
+      v.literal("task_due_reminder"),
+      v.literal("task_overdue"),
+      v.literal("task_priority_escalated"),
+      v.literal("task_deleted"),
+      // Sprints
       v.literal("sprint_started"),
       v.literal("sprint_completed"),
+      v.literal("sprint_ending_soon"),
+      // Meetings
+      v.literal("meeting_scheduled"),
+      v.literal("meeting_updated"),
+      v.literal("meeting_cancelled"),
+      v.literal("meeting_reminder"),
+      v.literal("meeting_notes_shared"),
+      // Workspace & Team
       v.literal("member_joined"),
+      v.literal("member_role_changed"),
+      v.literal("member_removed"),
       v.literal("workspace_invitation"),
-      v.literal("pr_merged")
+      v.literal("project_added"),
+      v.literal("project_removed"),
+      // GitHub / PRs
+      v.literal("pr_merged"),
+      v.literal("pr_review_requested"),
+      // AI / Agent
+      v.literal("agent_triage"),
+      v.literal("ai_insight_critical"),
+      v.literal("ai_insight_recommendation"),
     ),
     title: v.string(),
     body: v.string(),

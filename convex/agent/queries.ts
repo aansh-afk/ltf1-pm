@@ -9,7 +9,7 @@ import { hasPermission } from "../auth/permissions";
  */
 export const getTriageQueue = query({
   args: {
-    workspaceId: v.id("workspaces"),
+    workspaceId: v.optional(v.id("workspaces")),
     projectId: v.optional(v.id("projects")),
     limit: v.optional(v.number()),
   },
@@ -55,10 +55,22 @@ export const getTriageQueue = query({
       return [];
     }
 
+    // Resolve workspaceId: use provided value, or derive from projectId
+    let workspaceId = args.workspaceId;
+    if (!workspaceId && args.projectId) {
+      const project = await ctx.db.get(args.projectId);
+      if (project) {
+        workspaceId = project.workspaceId;
+      }
+    }
+    if (!workspaceId) {
+      return [];
+    }
+
     const hasAccess = await hasPermission(
       ctx.db,
       user._id,
-      args.workspaceId,
+      workspaceId,
       "task.view",
     );
     if (!hasAccess) {
@@ -71,7 +83,7 @@ export const getTriageQueue = query({
     const suggestions = await ctx.db
       .query("triageSuggestions")
       .withIndex("by_workspaceId_and_status", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("status", "pending"),
+        q.eq("workspaceId", workspaceId!).eq("status", "pending"),
       )
       .order("desc")
       .take(maxResults);

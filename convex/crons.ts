@@ -60,6 +60,14 @@ crons.interval(
   {}
 );
 
+// Sprint ending soon reminders - check every 12 hours
+crons.interval(
+  "process-sprint-ending-reminders",
+  { hours: 12 },
+  internal.email.cronHelpers.processSprintEndingReminders,
+  {}
+);
+
 // Daily sprint snapshot at midnight UTC for burndown charts
 crons.cron(
   "daily sprint snapshot",
