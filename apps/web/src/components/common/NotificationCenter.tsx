@@ -57,12 +57,12 @@ export default function NotificationCenter({
   onClose,
 }: NotificationCenterProps) {
   const navigate = useNavigate();
-  const notifications = useQuery(api.notifications.getNotifications, {
+  const notifications = useQuery(api.notificationQueries.getNotifications, {
     workspaceId,
     limit: 30,
   });
-  const markAsRead = useMutation(api.notifications.markAsRead);
-  const markAllAsRead = useMutation(api.notifications.markAllAsRead);
+  const markAsRead = useMutation(api.notificationQueries.markAsRead);
+  const markAllAsRead = useMutation(api.notificationQueries.markAllAsRead);
   const [isMarkingAll, setIsMarkingAll] = useState(false);
 
   const handleMarkAllRead = async () => {
