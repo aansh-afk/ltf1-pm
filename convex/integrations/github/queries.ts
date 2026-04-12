@@ -78,6 +78,51 @@ export const getWorkspaceInstallations = query({
       }
     }
 
+    // 3. Auto-detect: if no installations found via junction or legacy,
+    // find installations matching the current user's GitHub username.
+    // This fixes the "profile-installed but workspace-not-linked" gap.
+    if (installationsResult.length === 0) {
+      // Use the current user's GitHub identity
+      const githubUsername = user.githubUsername;
+
+      // Also check githubConnections table for linked GitHub accounts
+      const connections = await ctx.db
+        .query("githubConnections")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .collect();
+      const connectedUsernames = connections.map((c) => c.githubUsername);
+
+      // Collect all usernames this user owns
+      const userGithubNames = new Set<string>();
+      if (githubUsername) userGithubNames.add(githubUsername.toLowerCase());
+      for (const name of connectedUsernames) {
+        userGithubNames.add(name.toLowerCase());
+      }
+
+      if (userGithubNames.size > 0) {
+        // Find installations matching the user's GitHub accounts
+        const allInstallations = await ctx.db
+          .query("githubInstallations")
+          .collect();
+
+        for (const installation of allInstallations) {
+          const accountNameLower = installation.accountName.toLowerCase();
+          if (
+            userGithubNames.has(accountNameLower) &&
+            !seenInstallationIds.has(installation.installationId)
+          ) {
+            seenInstallationIds.add(installation.installationId);
+            installationsResult.push({
+              ...installation,
+              linkedAt: installation.installedAt,
+              isPrimary: installationsResult.length === 0,
+              autoDetected: true,
+            });
+          }
+        }
+      }
+    }
+
     return installationsResult;
   },
 });

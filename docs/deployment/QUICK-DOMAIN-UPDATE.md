@@ -79,7 +79,7 @@ Testing:
 □ DNS propagated (dig ltf1.dev)
 □ SSL active (https://ltf1.dev)
 □ Auth works (sign in)
-□ CLI works (ltf auth login)
+□ CLI works (ltf1 auth login)
 □ GitHub integration works
 □ All other integrations work
 ```
@@ -122,7 +122,7 @@ dig ltf1.dev
 curl -I https://ltf1.dev
 
 # Test CLI
-ltf auth login
+ltf1 auth login
 
 # Check auth
 open https://ltf1.dev/sign-in

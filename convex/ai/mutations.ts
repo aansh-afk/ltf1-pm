@@ -8,6 +8,7 @@ import { mutation } from "../_generated/server";
 import { api } from "../_generated/api";
 
 // Track AI session (store AI interaction for analytics)
+// BUG-005 fix: accept optional workspaceId to avoid picking the wrong workspace
 export const trackAISession = mutation({
   args: {
     type: v.string(),
@@ -27,25 +28,32 @@ export const trackAISession = mutation({
     cost: v.number(),
     latency: v.number(),
     cached: v.boolean(),
+    workspaceId: v.optional(v.id("workspaces")),
   },
   handler: async (ctx, args) => {
     // @ts-ignore — deep type instantiation
     const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {});
     if (!user) throw new Error("Not authenticated");
 
-    // Get user's active workspace
-    const workspaceMember: any = await ctx.db
-      .query("workspaceMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .first();
+    let resolvedWorkspaceId = args.workspaceId;
 
-    if (!workspaceMember) {
-      throw new Error("No workspace found");
+    if (!resolvedWorkspaceId) {
+      // Fallback: use most recently joined workspace (desc order)
+      const workspaceMember: any = await ctx.db
+        .query("workspaceMembers")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .order("desc")
+        .first();
+
+      if (!workspaceMember) {
+        throw new Error("No workspace found");
+      }
+      resolvedWorkspaceId = workspaceMember.workspaceId;
     }
 
     return await ctx.db.insert("aiSessions", {
       userId: user._id,
-      workspaceId: workspaceMember.workspaceId,
+      workspaceId: resolvedWorkspaceId!,
       type: args.type,
       input: args.input,
       output: args.output,
@@ -123,10 +131,11 @@ export const createAIInsight = mutation({
     const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {});
     if (!user) throw new Error("Not authenticated");
 
-    // Get user's active workspace
+    // Get user's most recent workspace (desc order fixes BUG-005 pattern)
     const workspaceMember: any = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .order("desc")
       .first();
 
     if (!workspaceMember) {
@@ -255,10 +264,11 @@ export const createAITaskSuggestion = mutation({
     const user: any = await ctx.runQuery(api.auth.users.getCurrentUser, {});
     if (!user) throw new Error("Not authenticated");
 
-    // Get user's active workspace
+    // Get user's most recent workspace (desc order fixes BUG-005 pattern)
     const workspaceMember: any = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .order("desc")
       .first();
 
     if (!workspaceMember) {

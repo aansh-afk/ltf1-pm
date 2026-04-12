@@ -45,6 +45,7 @@ type AISettingsState = {
   showApiKey: boolean
   isValidating: boolean
   removeKeyId: string | null
+  validationError: string | null
 }
 
 const aiSettingsInitialState: AISettingsState = {
@@ -53,6 +54,7 @@ const aiSettingsInitialState: AISettingsState = {
   showApiKey: false,
   isValidating: false,
   removeKeyId: null,
+  validationError: null,
 }
 
 type AISettingsAction =
@@ -188,13 +190,14 @@ interface AddApiKeyFormProps {
   apiKey: string;
   showApiKey: boolean;
   isValidating: boolean;
+  validationError: string | null;
   onProviderChange: (provider: AIProvider) => void;
   onApiKeyChange: (value: string) => void;
   onToggleShowKey: () => void;
   onValidateAndSave: () => void;
 }
 
-function AddApiKeyForm({ selectedProvider, apiKey, showApiKey, isValidating, onProviderChange, onApiKeyChange, onToggleShowKey, onValidateAndSave }: AddApiKeyFormProps) {
+function AddApiKeyForm({ selectedProvider, apiKey, showApiKey, isValidating, validationError, onProviderChange, onApiKeyChange, onToggleShowKey, onValidateAndSave }: AddApiKeyFormProps) {
   return (
     <BrutalCard className="p-6">
       <h3 className="text-sm font-bold uppercase mb-4">ADD API KEY (BYOK)</h3>
@@ -253,6 +256,11 @@ function AddApiKeyForm({ selectedProvider, apiKey, showApiKey, isValidating, onP
           {isValidating ? 'VALIDATING...' : 'VALIDATE & SAVE'}
         </BrutalButton>
       </div>
+      {validationError && (
+        <div className="mt-3 p-3 border-2 border-red-500/50 bg-red-500/10 text-red-400 text-xs font-mono">
+          {validationError}
+        </div>
+      )}
       <div className="mt-3 text-xs font-mono text-[var(--theme-foreground)]/60">
         Get key from{' '}
         <a
@@ -325,7 +333,7 @@ function UsageStatsSection({ monthlyStats, formatNumber }: UsageStatsSectionProp
 export default function AISettingsTab() {
   const { user } = useUser()
   const [state, dispatch] = useReducer(aiSettingsReducer, aiSettingsInitialState)
-  const { selectedProvider, apiKey, showApiKey, isValidating, removeKeyId } = state
+  const { selectedProvider, apiKey, showApiKey, isValidating, removeKeyId, validationError } = state
 
   // Legacy queries (keep for backward compat display)
   const userCredits = useQuery(api.aiCredits.queries.getUserAICredits)
@@ -355,6 +363,7 @@ export default function AISettingsTab() {
     }
 
     dispatch({ type: 'UPDATE', field: 'isValidating', value: true })
+    dispatch({ type: 'UPDATE', field: 'validationError', value: null })
     try {
       const result = await saveProviderKey({
         scope: 'user',
@@ -365,14 +374,25 @@ export default function AISettingsTab() {
       })
 
       if (!result.success) {
-        toast.error(result.error || 'Invalid API key')
+        // Format error for readability
+        const rawError = result.error || 'Invalid API key'
+        const friendlyError = rawError.includes('401')
+          ? `Invalid API key. The ${PROVIDER_INFO[selectedProvider].label} API rejected this key. Double-check the key and try again.`
+          : rawError.includes('403')
+            ? `API key does not have sufficient permissions. Check your ${PROVIDER_INFO[selectedProvider].label} dashboard.`
+            : rawError.includes('rate')
+              ? 'Rate limited by provider. Wait a moment and try again.'
+              : `Key validation failed: ${rawError}`
+        dispatch({ type: 'UPDATE', field: 'validationError', value: friendlyError })
         return
       }
 
       toast.success(`${PROVIDER_INFO[selectedProvider].label} key saved`)
       dispatch({ type: 'UPDATE', field: 'apiKey', value: '' })
+      dispatch({ type: 'UPDATE', field: 'validationError', value: null })
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save key')
+      const msg = error.message || 'Failed to save key'
+      dispatch({ type: 'UPDATE', field: 'validationError', value: msg })
       console.error(error)
     } finally {
       dispatch({ type: 'UPDATE', field: 'isValidating', value: false })
@@ -473,7 +493,8 @@ export default function AISettingsTab() {
             apiKey={apiKey}
             showApiKey={showApiKey}
             isValidating={isValidating}
-            onProviderChange={(provider) => dispatch({ type: 'UPDATE', field: 'selectedProvider', value: provider })}
+            validationError={validationError}
+            onProviderChange={(provider) => { dispatch({ type: 'UPDATE', field: 'selectedProvider', value: provider }); dispatch({ type: 'UPDATE', field: 'validationError', value: null }) }}
             onApiKeyChange={(value) => dispatch({ type: 'UPDATE', field: 'apiKey', value })}
             onToggleShowKey={() => dispatch({ type: 'UPDATE', field: 'showApiKey', value: !showApiKey })}
             onValidateAndSave={handleValidateAndSave}

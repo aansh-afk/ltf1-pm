@@ -30,6 +30,7 @@ import FeaturesPage from "./pages/FeaturesPage";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import ChangelogPage from "./pages/ChangelogPage";
+import CliPage from "./pages/CliPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import CookiesPage from "./pages/CookiesPage";
@@ -203,6 +204,7 @@ function AppRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/changelog" element={<ChangelogPage />} />
+          <Route path="/cli" element={<CliPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/cookies" element={<CookiesPage />} />

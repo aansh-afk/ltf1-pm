@@ -146,8 +146,8 @@ export const updateSprint = mutation({
 
       for (const pm of projectMembers) {
         if (pm.userId !== user._id && pm.status === "active") {
-          await ctx.scheduler.runAfter(0, internal.notifications.createNotification, {
-            userId: pm.userId,
+          await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
+            recipientUserId: pm.userId,
             workspaceId: project.workspaceId,
             type: "sprint_started",
             title: "Sprint Started",
@@ -155,29 +155,20 @@ export const updateSprint = mutation({
             actorId: user._id,
             entityId: args.sprintId,
             entityType: "sprint",
-          });
-
-          const memberUser = await ctx.db.get(pm.userId);
-          if (memberUser && memberUser.preferences?.notifications?.email !== false) {
-            const emailContent = sprintStarted({
+            emailData: {
               sprintName: args.name || sprint.name,
               projectName: project.name,
               startDate: formatDate(updates.startDate || sprint.startDate),
               endDate: formatDate(updates.endDate || sprint.endDate),
               goal: args.goal || sprint.goal,
               startedByName: user.name || user.email,
-            });
-            await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
-              to: memberUser.email,
-              subject: emailContent.subject,
-              html: emailContent.html,
-            });
-          }
+            },
+          });
         }
       }
     }
 
-    // Send sprint completed emails to project members
+    // Send sprint completed notifications to project members
     if (args.status === "completed" && sprint.status !== "completed") {
       const projectMembers = await ctx.db
         .query("projectMembers")
@@ -186,8 +177,8 @@ export const updateSprint = mutation({
 
       for (const pm of projectMembers) {
         if (pm.userId !== user._id && pm.status === "active") {
-          await ctx.scheduler.runAfter(0, internal.notifications.createNotification, {
-            userId: pm.userId,
+          await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
+            recipientUserId: pm.userId,
             workspaceId: project.workspaceId,
             type: "sprint_completed",
             title: "Sprint Completed",
@@ -195,21 +186,12 @@ export const updateSprint = mutation({
             actorId: user._id,
             entityId: args.sprintId,
             entityType: "sprint",
-          });
-
-          const memberUser = await ctx.db.get(pm.userId);
-          if (memberUser && memberUser.preferences?.notifications?.email !== false) {
-            const emailContent = sprintCompleted({
+            emailData: {
               sprintName: sprint.name,
               projectName: project.name,
               completedByName: user.name || user.email,
-            });
-            await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
-              to: memberUser.email,
-              subject: emailContent.subject,
-              html: emailContent.html,
-            });
-          }
+            },
+          });
         }
       }
     }

@@ -465,3 +465,189 @@ export function meetingReminder(params: {
     ),
   };
 }
+
+// ─── Priority Escalation ──────────────────────────────────────
+
+export function priorityEscalated(params: {
+  taskTitle: string;
+  taskKey: string;
+  projectName: string;
+  oldPriority: string;
+  newPriority: string;
+  changedByName: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `[${params.taskKey}] Priority escalated to ${params.newPriority.toUpperCase()}: ${params.taskTitle}`,
+    html: layout(
+      heading('<span style="color:#EF4444;">Priority Escalated</span>') +
+        paragraph(
+          `<strong style="color:#F9FAFB;">${params.changedByName}</strong> escalated the priority of a task assigned to you.`
+        ) +
+        metaTable([
+          { label: "Task", value: `${params.taskKey} — ${params.taskTitle}` },
+          { label: "Project", value: params.projectName },
+          { label: "Was", value: params.oldPriority },
+          { label: "Now", value: `<span style="color:#EF4444;font-weight:700;">${params.newPriority.toUpperCase()}</span>` },
+        ]) +
+        button("View Task", `${BASE_URL}/dashboard`)
+    ),
+  };
+}
+
+// ─── Sprint Ending Soon ───────────────────────────────────────
+
+export function sprintEndingSoon(params: {
+  sprintName: string;
+  projectName: string;
+  endDate: string;
+  daysRemaining: number;
+  completedTasks: number;
+  totalTasks: number;
+}): { subject: string; html: string } {
+  const pct = params.totalTasks > 0
+    ? Math.round((params.completedTasks / params.totalTasks) * 100)
+    : 0;
+  return {
+    subject: `Sprint "${params.sprintName}" ends in ${params.daysRemaining} day${params.daysRemaining === 1 ? "" : "s"}`,
+    html: layout(
+      heading("Sprint Ending Soon") +
+        paragraph(
+          `Sprint <strong style="color:#F9FAFB;">${params.sprintName}</strong> in <strong style="color:#F9FAFB;">${params.projectName}</strong> ends on ${params.endDate}.`
+        ) +
+        metaTable([
+          { label: "Sprint", value: params.sprintName },
+          { label: "Ends", value: `${params.endDate} (${params.daysRemaining}d remaining)` },
+          { label: "Progress", value: `${params.completedTasks}/${params.totalTasks} tasks (${pct}%)` },
+        ]) +
+        button("View Sprint", `${BASE_URL}/dashboard`)
+    ),
+  };
+}
+
+// ─── Project Membership ───────────────────────────────────────
+
+export function projectAdded(params: {
+  projectName: string;
+  addedByName: string;
+  role?: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `You've been added to ${params.projectName}`,
+    html: layout(
+      heading("Added to Project") +
+        paragraph(
+          `<strong style="color:#F9FAFB;">${params.addedByName}</strong> added you to <strong style="color:#F9FAFB;">${params.projectName}</strong>${params.role ? ` as ${params.role}` : ""}.`
+        ) +
+        button("View Project", `${BASE_URL}/dashboard`)
+    ),
+  };
+}
+
+export function projectRemoved(params: {
+  projectName: string;
+  removedByName: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `You've been removed from ${params.projectName}`,
+    html: layout(
+      heading("Removed from Project") +
+        paragraph(
+          `<strong style="color:#F9FAFB;">${params.removedByName}</strong> removed you from <strong style="color:#F9FAFB;">${params.projectName}</strong>.`
+        ) +
+        paragraph("You will no longer receive notifications for this project.")
+    ),
+  };
+}
+
+// ─── GitHub / PR Notifications ────────────────────────────────
+
+export function prMerged(params: {
+  prTitle: string;
+  prNumber: number;
+  repoName: string;
+  mergedByName: string;
+  taskTitle?: string;
+  taskKey?: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `PR #${params.prNumber} merged: ${params.prTitle}`,
+    html: layout(
+      heading("Pull Request Merged") +
+        paragraph(
+          `<strong style="color:#F9FAFB;">${params.mergedByName}</strong> merged a pull request in <strong style="color:#F9FAFB;">${params.repoName}</strong>.`
+        ) +
+        metaTable([
+          { label: "PR", value: `#${params.prNumber} — ${params.prTitle}` },
+          { label: "Repo", value: params.repoName },
+          ...(params.taskTitle
+            ? [{ label: "Linked task", value: `${params.taskKey || ""} ${params.taskTitle}` }]
+            : []),
+        ]) +
+        button("View Details", `${BASE_URL}/dashboard`)
+    ),
+  };
+}
+
+export function prReviewRequested(params: {
+  prTitle: string;
+  prNumber: number;
+  repoName: string;
+  requestedByName: string;
+  prUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Review requested: PR #${params.prNumber} — ${params.prTitle}`,
+    html: layout(
+      heading("Review Requested") +
+        paragraph(
+          `<strong style="color:#F9FAFB;">${params.requestedByName}</strong> requested your review on a pull request.`
+        ) +
+        metaTable([
+          { label: "PR", value: `#${params.prNumber} — ${params.prTitle}` },
+          { label: "Repo", value: params.repoName },
+        ]) +
+        button("Review PR", params.prUrl)
+    ),
+  };
+}
+
+// ─── AI / Agent Notifications ─────────────────────────────────
+
+export function agentTriageReady(params: {
+  projectName: string;
+  suggestionCount: number;
+}): { subject: string; html: string } {
+  return {
+    subject: `${params.suggestionCount} triage suggestion${params.suggestionCount === 1 ? "" : "s"} ready for ${params.projectName}`,
+    html: layout(
+      heading("Triage Suggestions Ready") +
+        paragraph(
+          `The AI agent has analyzed new tasks in <strong style="color:#F9FAFB;">${params.projectName}</strong> and generated <strong style="color:#F9FAFB;">${params.suggestionCount}</strong> suggestion${params.suggestionCount === 1 ? "" : "s"} for review.`
+        ) +
+        button("Review Triage Queue", `${BASE_URL}/triage`)
+    ),
+  };
+}
+
+export function aiInsightCritical(params: {
+  projectName: string;
+  insightTitle: string;
+  severity: string;
+  description: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `[${params.severity.toUpperCase()}] AI Insight: ${params.insightTitle}`,
+    html: layout(
+      heading(`<span style="color:#EF4444;">AI Insight — ${params.severity.toUpperCase()}</span>`) +
+        paragraph(
+          `An AI-generated insight requires attention in <strong style="color:#F9FAFB;">${params.projectName}</strong>.`
+        ) +
+        metaTable([
+          { label: "Insight", value: params.insightTitle },
+          { label: "Severity", value: `<span style="color:#EF4444;">${params.severity}</span>` },
+          { label: "Details", value: params.description },
+        ]) +
+        button("View Insights", `${BASE_URL}/dashboard`)
+    ),
+  };
+}

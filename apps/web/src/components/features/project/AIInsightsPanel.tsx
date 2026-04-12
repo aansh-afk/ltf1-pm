@@ -297,13 +297,17 @@ function TeamInsightsSection({ teamInsights }: TeamInsightsSectionProps) {
 }
 
 function RisksSection({ risks, getSeverityColor }: RisksSectionProps) {
-  if (risks.length === 0) return null;
   return (
     <div>
       <h3 className="text-sm font-bold uppercase mb-[6px] flex items-center gap-[4px] font-['IBM_Plex_Mono',monospace] text-[#F9FAFB]">
         <HiOutlineExclamation className="w-16px h-16px text-[#F59E0B]" />
         Identified Risks
       </h3>
+      {risks.length === 0 && (
+        <div className="text-xs text-[#22C55E] font-['IBM_Plex_Mono',monospace] p-2 border border-[#22C55E]/20 bg-[#22C55E]/5">
+          No risks identified
+        </div>
+      )}
       <div className="space-y-[4px]">
         {risks.map((risk) => (
           <div
@@ -608,6 +612,16 @@ export default function AIInsightsPanel({
           />
         </button>
       </div>
+
+      {/* Loading overlay during refresh */}
+      {loading && insights && (
+        <div className="flex items-center gap-2 p-2 bg-[#6366F1]/10 border border-[#6366F1]/30">
+          <HiOutlineRefresh className="w-4 h-4 animate-spin text-[#6366F1]" />
+          <span className="text-xs text-[#9CA3AF] font-['IBM_Plex_Mono',monospace]">
+            Refreshing insights...
+          </span>
+        </div>
+      )}
 
       {/* Sprint Health Score */}
       <SprintHealthCard

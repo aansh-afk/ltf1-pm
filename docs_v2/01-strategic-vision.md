@@ -45,7 +45,7 @@ Linear is building for teams where PMs drive the process through a browser. LTF1
 |---------------|----------------|
 | PM creates issues in browser | Dev pushes code, issues update themselves |
 | Agent works through Linear UI | Agent works through terminal + git hooks |
-| Skills triggered via slash commands in app | Skills triggered via `ltf skill run` in terminal |
+| Skills triggered via slash commands in app | Skills triggered via `ltf1 skill run` in terminal |
 | Code review in Linear's diff viewer | Code review in terminal with agent context |
 | Browser-first, no CLI | Terminal-first, browser as dashboard |
 
@@ -166,7 +166,7 @@ Open source. Self-hostable. Transparent. The community builds trust. The enterpr
 ### Q2 2026 (Now): Foundation
 - Agent architecture in Convex (context assembly, triage pipeline)
 - Skills system (define, store, trigger)
-- TUI agent commands (`ltf agent triage`, `ltf skill run`)
+- TUI agent commands (`ltf1 agent triage`, `ltf1 skill run`)
 - Triage automation on task creation
 
 ### Q3 2026: Intelligence

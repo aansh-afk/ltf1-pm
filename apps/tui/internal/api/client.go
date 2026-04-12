@@ -167,7 +167,7 @@ func (c *ConvexClient) refreshToken() error {
 	defer c.mu.Unlock()
 
 	if !c.canRefreshToken() {
-		return fmt.Errorf("session expired; run ltf auth login")
+		return fmt.Errorf("session expired; run ltf1 auth login")
 	}
 
 	if time.Since(c.lastJWTRefresh) < 5*time.Second {

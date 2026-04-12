@@ -331,6 +331,41 @@ interface NotificationsTabProps {
   onReset: () => void
 }
 
+function PushSubscriptionButton() {
+  const { usePushNotifications } = require('@/hooks/usePushNotifications');
+  const { state, isSubscribed, isSupported, isDenied, subscribe, unsubscribe } = usePushNotifications();
+
+  if (!isSupported) {
+    return (
+      <p className="text-[11px] text-[var(--theme-foreground)]/40 font-mono mt-1">
+        Push notifications are not supported in this browser.
+      </p>
+    );
+  }
+
+  if (isDenied) {
+    return (
+      <p className="text-[11px] text-red-400 font-mono mt-1">
+        Push notifications are blocked. Enable them in your browser settings.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-2">
+      {isSubscribed ? (
+        <BrutalButton variant="ghost" size="sm" onClick={unsubscribe} className="text-xs">
+          Disable push for this device
+        </BrutalButton>
+      ) : (
+        <BrutalButton variant="primary" size="sm" onClick={subscribe} className="text-xs">
+          Enable push for this device
+        </BrutalButton>
+      )}
+    </div>
+  );
+}
+
 function NotificationsTab({ preferences, setPreferences, onReset }: NotificationsTabProps) {
   return (
     <div className="space-y-4">
@@ -359,6 +394,7 @@ function NotificationsTab({ preferences, setPreferences, onReset }: Notification
             notifications: { ...prev.notifications!, push: checked }
           }))}
         />
+        <PushSubscriptionButton />
 
         <div className="pt-4 border-t border-[var(--theme-border)]">
           <p className="text-xs text-[var(--theme-foreground)]/60 uppercase">

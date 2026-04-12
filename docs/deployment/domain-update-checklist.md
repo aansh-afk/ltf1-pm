@@ -338,7 +338,7 @@ Use this to track your progress:
 - [ ] **PostHog**: Authorized URLs updated (if restricted)
 - [ ] **README/Docs**: All documentation updated
 - [ ] **Test Login**: Auth flow works at ltf1.dev
-- [ ] **Test CLI Auth**: `ltf auth login` works
+- [ ] **Test CLI Auth**: `ltf1 auth login` works
 - [ ] **Test GitHub Integration**: OAuth and webhooks work
 - [ ] **Test Slack Integration**: OAuth works
 - [ ] **Test GitLab Integration**: OAuth works
@@ -393,8 +393,8 @@ curl -I https://ltf1.dev
 curl https://ltf1.dev/api/health
 
 # Test CLI
-ltf auth login
-ltf auth status
+ltf1 auth login
+ltf1 auth status
 
 # Check all redirects work
 curl -I https://ltf1.dev/sign-in
@@ -454,7 +454,7 @@ curl -I https://ltf1.dev/cli-auth
 ### CLI not working
 
 - Verify `LTF_WEB_URL` is set correctly in Vercel
-- Test CLI with: `LTF_WEB_URL=https://ltf1.dev ltf auth login`
+- Test CLI with: `LTF_WEB_URL=https://ltf1.dev ltf1 auth login`
 - Check CLIAuthPage callback validation
 
 ---

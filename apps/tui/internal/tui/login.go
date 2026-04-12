@@ -103,12 +103,14 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 	lines = append(lines, "")
 	lines = append(lines, "")
 
-	// Logo — large stylized text
-	logoLine1 := "██   ████████ ██████  ██"
-	logoLine2 := "██     ██    ██       ██"
-	logoLine3 := "██     ██    █████    ██"
-	logoLine4 := "██     ██    ██          "
-	logoLine5 := "██████ ██    ██       ██"
+	// Logo — fancy block ASCII art
+	logoLine1 := "░▒▓█▓▒░   ░▒▓████████▓▒░▒▓████████▓▒░▒▓█▓▒░"
+	logoLine2 := "░▒▓█▓▒░      ░▒▓█▓▒░   ░▒▓█▓▒░   ░▒▓████▓▒░"
+	logoLine3 := "░▒▓█▓▒░      ░▒▓█▓▒░   ░▒▓█▓▒░      ░▒▓█▓▒░"
+	logoLine4 := "░▒▓█▓▒░      ░▒▓█▓▒░   ░▒▓██████▓▒░ ░▒▓█▓▒░"
+	logoLine5 := "░▒▓█▓▒░      ░▒▓█▓▒░   ░▒▓█▓▒░      ░▒▓█▓▒░"
+	logoLine6 := "░▒▓█▓▒░      ░▒▓█▓▒░   ░▒▓█▓▒░      ░▒▓█▓▒░"
+	logoLine7 := "░▒▓████████▓▒░▒▓█▓▒░   ░▒▓█▓▒░      ░▒▓█▓▒░"
 
 	logoStyle := lipgloss.NewStyle().Foreground(theme.Indigo).Bold(true)
 	lines = append(lines, centerLine(logoStyle.Render(logoLine1), width))
@@ -116,6 +118,8 @@ func renderLoginScreen(state LoginState, errMsg string, width, height int) strin
 	lines = append(lines, centerLine(logoStyle.Render(logoLine3), width))
 	lines = append(lines, centerLine(logoStyle.Render(logoLine4), width))
 	lines = append(lines, centerLine(logoStyle.Render(logoLine5), width))
+	lines = append(lines, centerLine(logoStyle.Render(logoLine6), width))
+	lines = append(lines, centerLine(logoStyle.Render(logoLine7), width))
 
 	lines = append(lines, "")
 

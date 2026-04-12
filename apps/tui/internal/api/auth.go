@@ -37,7 +37,7 @@ type ProjectInfo struct {
 	ProjectName   string `json:"projectName"`
 }
 
-// configPath returns the full path to the ltf config file.
+// configPath returns the full path to the ltf1 config file.
 // Priority: LTF_CONFIG_PATH env var > platform default.
 func configPath() (string, error) {
 	if p := os.Getenv("LTF_CONFIG_PATH"); p != "" {
@@ -51,9 +51,9 @@ func configPath() (string, error) {
 
 	switch runtime.GOOS {
 	case "darwin":
-		return filepath.Join(home, "Library", "Application Support", "ltf-nodejs", "config.json"), nil
+		return filepath.Join(home, "Library", "Application Support", "ltf1", "config.json"), nil
 	default:
-		return filepath.Join(home, ".config", "ltf-nodejs", "config.json"), nil
+		return filepath.Join(home, ".config", "ltf1", "config.json"), nil
 	}
 }
 

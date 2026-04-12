@@ -48,7 +48,7 @@ The LTF CLI uses a **browser-based OAuth flow** for authentication:
 npm install -g @ltf1/cli
 
 # Authenticate
-ltf auth login
+ltf1 auth login
 ```
 
 This will:
@@ -62,7 +62,7 @@ This will:
 
 ```bash
 # See if you're logged in
-ltf auth status
+ltf1 auth status
 
 # Example output:
 # ✓ Authenticated
@@ -74,7 +74,7 @@ ltf auth status
 
 ```bash
 # Clear your stored credentials
-ltf auth logout
+ltf1 auth logout
 ```
 
 ### Re-authentication
@@ -84,7 +84,7 @@ If your token expires, the CLI will automatically prompt you to re-authenticate:
 ```bash
 ltf projects list
 # ✗ Token expired. Please login again.
-# Run: ltf auth login
+# Run: ltf1 auth login
 ```
 
 ## Web App URL Configuration
@@ -95,7 +95,7 @@ The CLI needs to know where your web app is hosted. By default, it uses `https:/
 
 The CLI determines the web app URL in this order:
 
-1. **User's saved config** (set via `ltf config set-web-url`)
+1. **User's saved config** (set via `ltf1 config set-web-url`)
 2. **Environment variable** (`LTF_WEB_URL` or `WEB_APP_URL`)
 3. **Development mode** (`NODE_ENV=development` → `http://localhost:3000`)
 4. **Auto-detect** (based on `CONVEX_URL`)
@@ -107,7 +107,7 @@ If you're a regular user installing the CLI from npm, **no configuration needed*
 
 ```bash
 npm install -g @ltf1/cli
-ltf auth login  # Opens https://ltf1.dev/cli-auth
+ltf1 auth login  # Opens https://ltf1.dev/cli-auth
 ```
 
 ### For Developers (Custom Setup)
@@ -116,10 +116,10 @@ ltf auth login  # Opens https://ltf1.dev/cli-auth
 
 ```bash
 # Set a custom web URL (persisted in ~/.config/ltf/config.json)
-ltf config set-web-url https://my-custom-domain.com
+ltf1 config set-web-url https://my-custom-domain.com
 
 # Verify
-ltf config get-web-url
+ltf1 config get-web-url
 # https://my-custom-domain.com
 ```
 
@@ -128,17 +128,17 @@ ltf config get-web-url
 ```bash
 # Set for current session
 export LTF_WEB_URL=https://my-custom-domain.com
-ltf auth login
+ltf1 auth login
 
 # Or inline
-LTF_WEB_URL=http://localhost:3000 ltf auth login
+LTF_WEB_URL=http://localhost:3000 ltf1 auth login
 ```
 
 #### Option 3: Development Mode
 
 ```bash
 # For CLI developers working on the CLI itself
-NODE_ENV=development ltf auth login
+NODE_ENV=development ltf1 auth login
 # Opens http://localhost:3000/cli-auth
 ```
 
@@ -182,7 +182,7 @@ For CI/CD or automation, you can use API tokens:
 
 ```bash
 # Login with an API token
-ltf auth login --token your-api-token-here
+ltf1 auth login --token your-api-token-here
 
 # Or via environment variable
 export LTF_AUTH_TOKEN=your-api-token-here
@@ -214,7 +214,7 @@ This means:
 The CLI uses CSRF tokens to prevent cross-site request forgery:
 
 ```bash
-# When you run ltf auth login:
+# When you run ltf1 auth login:
 # 1. CLI generates a random CSRF state parameter
 # 2. Passes it to the web app: ?state=abc123xyz
 # 3. Web app returns it: ?state=abc123xyz&token=...
@@ -246,7 +246,7 @@ The CLI uses CSRF tokens to prevent cross-site request forgery:
 **Solution**:
 
 1. The CLI waits 5 minutes for authentication
-2. If you see this error, just run `ltf auth login` again
+2. If you see this error, just run `ltf1 auth login` again
 3. Complete the flow within 5 minutes
 
 ### Issue: "Invalid callback URL"
@@ -257,7 +257,7 @@ The CLI uses CSRF tokens to prevent cross-site request forgery:
 
 1. Ensure you're using an official LTF CLI build
 2. Check that ltf1.dev is accessible (not blocked by firewall)
-3. Try `ltf auth login --verbose` for more details
+3. Try `ltf1 auth login --verbose` for more details
 
 ### Issue: "Port 9876 already in use"
 
@@ -287,10 +287,10 @@ The CLI uses CSRF tokens to prevent cross-site request forgery:
 
 ```bash
 # Check current web URL
-ltf config get-web-url
+ltf1 config get-web-url
 
 # Set your custom URL
-ltf config set-web-url https://your-domain.com
+ltf1 config set-web-url https://your-domain.com
 
 # Or use environment variable
 export LTF_WEB_URL=https://your-domain.com
@@ -301,28 +301,28 @@ export LTF_WEB_URL=https://your-domain.com
 ### View all config
 
 ```bash
-ltf config list
+ltf1 config list
 # Shows all your CLI configuration
 ```
 
 ### Get web URL
 
 ```bash
-ltf config get-web-url
+ltf1 config get-web-url
 # https://ltf1.dev
 ```
 
 ### Set web URL
 
 ```bash
-ltf config set-web-url https://custom-domain.com
+ltf1 config set-web-url https://custom-domain.com
 # ✓ Web URL updated
 ```
 
 ### Reset config
 
 ```bash
-ltf config reset
+ltf1 config reset
 # ⚠️  This will clear all settings, including authentication
 # Continue? (y/n)
 ```
@@ -330,7 +330,7 @@ ltf config reset
 ### Get config file location
 
 ```bash
-ltf config path
+ltf1 config path
 # /Users/yourname/.config/ltf/config.json
 ```
 
@@ -343,7 +343,7 @@ ltf config path
 npm install -g @ltf1/cli
 
 # Authenticate (defaults to ltf1.dev)
-ltf auth login
+ltf1 auth login
 # → Opens https://ltf1.dev/cli-auth
 # → Sign in via Clerk
 # → Returns to CLI with token
@@ -352,7 +352,7 @@ ltf auth login
 # Use the CLI
 ltf projects list
 ltf issues list
-ltf task create "New task"
+ltf1 task create "New task"
 ```
 
 ### Developer Flow (Local Development)
@@ -372,7 +372,7 @@ npm run build
 npm link
 
 # Authenticate against local instance
-ltf auth login
+ltf1 auth login
 # → Opens http://localhost:3000/cli-auth
 ```
 
@@ -385,7 +385,7 @@ export LTF_WEB_URL=https://ltf1.dev
 
 # Run CLI commands
 ltf sync --project=my-project
-ltf task create "Automated task"
+ltf1 task create "Automated task"
 ```
 
 ## Related Documentation

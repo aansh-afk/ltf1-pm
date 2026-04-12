@@ -61,7 +61,7 @@ Linear is building for **PM-driven teams in browsers**. LTF1 can own **developer
 Build the context → rules → agent pipeline into Convex. Triage incoming work. Auto-categorize, prioritize, assign. Skills system for codified team workflows.
 
 ### P1: TUI as Agent Interface
-`ltf agent triage`, `ltf agent suggest`, `ltf skill run`. Make the terminal THE place where developers interact with AI agents for project management.
+`ltf1 agent triage`, `ltf1 agent suggest`, `ltf1 skill run`. Make the terminal THE place where developers interact with AI agents for project management.
 
 ### P2: Code Intelligence
 Connect to repositories beyond tracking. Index code, understand functions, link code entities to tasks. Enable agents to answer "what does X do?" from within LTF1.

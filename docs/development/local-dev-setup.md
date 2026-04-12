@@ -12,7 +12,7 @@ The CLI automatically detects if you're working in a development environment usi
 
 ```bash
 # Set once, persists forever
-ltf config set-web-url http://localhost:3000
+ltf1 config set-web-url http://localhost:3000
 ```
 
 ### 2. **Environment Variable**
@@ -20,17 +20,17 @@ ltf config set-web-url http://localhost:3000
 ```bash
 # Set per-session
 export LTF_WEB_URL=http://localhost:3000
-ltf auth login
+ltf1 auth login
 
 # Or inline
-LTF_WEB_URL=http://localhost:3000 ltf auth login
+LTF_WEB_URL=http://localhost:3000 ltf1 auth login
 ```
 
 ### 3. **NODE_ENV**
 
 ```bash
 # Automatically uses localhost:3000
-NODE_ENV=development ltf auth login
+NODE_ENV=development ltf1 auth login
 ```
 
 ### 4. **Monorepo Detection** (NEW! ✨)
@@ -61,7 +61,7 @@ npm run dev
 
 # Terminal 2: Use CLI
 cd /path/to/ltf1
-ltf auth login
+ltf1 auth login
 # ✓ Automatically detects monorepo (pnpm-workspace.yaml)
 # ✓ Opens http://localhost:3000/cli-auth
 ```
@@ -79,13 +79,13 @@ npm link
 
 # Now from anywhere
 cd ~/some-other-project
-ltf auth login
+ltf1 auth login
 # ✗ Not in monorepo anymore
 # → Opens https://ltf1.dev/cli-auth (production)
 
 # Solution: Set environment variable
 export LTF_WEB_URL=http://localhost:3000
-ltf auth login
+ltf1 auth login
 # ✓ Opens http://localhost:3000/cli-auth
 ```
 
@@ -100,7 +100,7 @@ NODE_ENV=development npm run dev
 echo 'export NODE_ENV=development' >> ~/.zshrc
 source ~/.zshrc
 
-ltf auth login
+ltf1 auth login
 # ✓ Opens http://localhost:3000/cli-auth
 ```
 
@@ -108,26 +108,26 @@ ltf auth login
 
 ```bash
 # Explicitly override to use production
-LTF_WEB_URL=https://ltf1.dev ltf auth login
+LTF_WEB_URL=https://ltf1.dev ltf1 auth login
 # ✓ Opens https://ltf1.dev/cli-auth
 
 # Or set config temporarily
-ltf config set-web-url https://ltf1.dev
-ltf auth login
+ltf1 config set-web-url https://ltf1.dev
+ltf1 auth login
 
 # Reset back to auto-detection
-ltf config set-web-url http://localhost:3000
+ltf1 config set-web-url http://localhost:3000
 ```
 
 ## Quick Reference
 
 | Scenario               | Command                                            | URL Used                   |
 | ---------------------- | -------------------------------------------------- | -------------------------- |
-| Working in monorepo    | `ltf auth login`                                   | `http://localhost:3000` ✅ |
-| CLI installed globally | `ltf auth login`                                   | `https://ltf1.dev`         |
-| With env variable      | `LTF_WEB_URL=http://localhost:3000 ltf auth login` | `http://localhost:3000` ✅ |
-| With config set        | `ltf config set-web-url http://localhost:3000`     | `http://localhost:3000` ✅ |
-| End user (npm install) | `ltf auth login`                                   | `https://ltf1.dev`         |
+| Working in monorepo    | `ltf1 auth login`                                   | `http://localhost:3000` ✅ |
+| CLI installed globally | `ltf1 auth login`                                   | `https://ltf1.dev`         |
+| With env variable      | `LTF_WEB_URL=http://localhost:3000 ltf1 auth login` | `http://localhost:3000` ✅ |
+| With config set        | `ltf1 config set-web-url http://localhost:3000`     | `http://localhost:3000` ✅ |
+| End user (npm install) | `ltf1 auth login`                                   | `https://ltf1.dev`         |
 
 ## Recommended Setup for Developers
 
@@ -149,21 +149,21 @@ ltf-dev projects list
 Set once and forget:
 
 ```bash
-ltf config set-web-url http://localhost:3000
-ltf config get-web-url  # Verify
+ltf1 config set-web-url http://localhost:3000
+ltf1 config get-web-url  # Verify
 # http://localhost:3000
 
 # Now all commands use localhost
-ltf auth login
+ltf1 auth login
 ltf projects list
 ```
 
 When you want to test production:
 
 ```bash
-ltf config set-web-url https://ltf1.dev
+ltf1 config set-web-url https://ltf1.dev
 # ... test ...
-ltf config set-web-url http://localhost:3000  # Switch back
+ltf1 config set-web-url http://localhost:3000  # Switch back
 ```
 
 ### Option C: Use Monorepo Detection (Easiest!)
@@ -172,7 +172,7 @@ Just work in the monorepo - no configuration needed!
 
 ```bash
 cd /path/to/ltf1
-ltf auth login
+ltf1 auth login
 # ✓ Automatically uses localhost:3000
 ```
 
@@ -186,7 +186,7 @@ ltf auth login
 
 ```bash
 # See what URL the CLI is using
-ltf config get-web-url
+ltf1 config get-web-url
 
 # Check if you're in the monorepo
 pwd
@@ -197,7 +197,7 @@ ls -la | grep -E '(pnpm-workspace|turbo)'
 
 ```bash
 # Option 1: Set config
-ltf config set-web-url http://localhost:3000
+ltf1 config set-web-url http://localhost:3000
 
 # Option 2: Use environment variable
 export LTF_WEB_URL=http://localhost:3000
@@ -217,7 +217,7 @@ cd /path/to/ltf1
 npm run dev
 
 # In another terminal
-ltf auth login
+ltf1 auth login
 ```
 
 ### "I'm in the monorepo but it's still using ltf1.dev"
@@ -233,7 +233,7 @@ ls -la pnpm-workspace.yaml turbo.json
 
 ```bash
 # Manually set to localhost
-ltf config set-web-url http://localhost:3000
+ltf1 config set-web-url http://localhost:3000
 ```
 
 ## Summary

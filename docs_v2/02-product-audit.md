@@ -28,7 +28,7 @@ Every feature is rated on:
 
 **TUI**: Full CRUD with 4-step creation wizard (title → type → priority → description). List view with status filtering. Move, edit, delete, assign, comment operations. Keyboard-driven (j/k navigation, c/e/d/m/a/x shortcuts).
 
-**CLI**: `ltf task create|list|view|update|done|assign|delete|comment|mine` — full command suite with flags for all fields, JSON output support.
+**CLI**: `ltf1 task create|list|view|update|done|assign|delete|comment|mine` — full command suite with flags for all fields, JSON output support.
 
 **Backend**: `tasks` table with 30+ fields. Indexes: by_projectId, by_projectId_and_status, by_assigneeId, by_workspaceId. Full-text search on title. getProjectTasks, getFilteredTasks, getMyTasks, getTasksByWorkspace queries. createTask, updateTask, deleteTask, moveTask, bulkUpdateTasks, bulkDeleteTasks mutations.
 
@@ -70,7 +70,7 @@ Every feature is rated on:
 
 **TUI**: Sprint page with overview (list sprints), tasks in sprint, create sprint (4-step wizard), close sprint, add tasks from backlog, view backlog. Stats: total/done/in-progress/todo, velocity bar.
 
-**CLI**: `ltf sprint list|create|status|add|remove|backlog|close` — full sprint management.
+**CLI**: `ltf1 sprint list|create|status|add|remove|backlog|close` — full sprint management.
 
 **Backend**: `sprints` table with projectId, name, goal, startDate, endDate, status (planning/active/completed). Daily snapshot cron job for burndown. getProjectSprints, getCurrentSprint, getBacklogTasks queries.
 

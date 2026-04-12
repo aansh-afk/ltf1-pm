@@ -53,61 +53,39 @@ export const createComment = mutation({
       }
     });
 
-    // Notify all assignees about the comment
+    // Notify all assignees and reporter about the comment via dispatch
     const assigneeIds = task.assigneeIds || (task.assigneeId ? [task.assigneeId] : []);
+    const taskKey = `${project.settings?.taskPrefix || project.key}-${task.number}`;
+    const notifySet = new Set<string>();
+
     for (const assigneeId of assigneeIds) {
       if (assigneeId !== user._id) {
-        await ctx.scheduler.runAfter(0, internal.notifications.createNotification, {
-          userId: assigneeId,
-          workspaceId: project.workspaceId,
-          type: "task_comment",
-          title: "New Comment",
-          body: `${user.name} commented on "${task.title}"`,
-          actorId: user._id,
-          entityId: args.taskId,
-          entityType: "task",
-        });
+        notifySet.add(assigneeId);
       }
     }
-
-    // Send email notifications for new comment to assignees
-    for (const assigneeId of assigneeIds) {
-      if (assigneeId !== user._id) {
-        const assigneeUser = await ctx.db.get(assigneeId);
-        if (assigneeUser && assigneeUser.preferences?.notifications?.email !== false) {
-          const taskKey = `${project.settings?.taskPrefix || project.key}-${task.number}`;
-          const emailContent = commentAdded({
-            commenterName: user.name || user.email,
-            taskTitle: task.title,
-            taskKey,
-            commentPreview: args.content,
-          });
-          await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
-            to: assigneeUser.email,
-            subject: emailContent.subject,
-            html: emailContent.html,
-          });
-        }
-      }
+    // Also notify reporter if different from commenter
+    if (task.reporterId !== user._id) {
+      notifySet.add(task.reporterId);
     }
 
-    // Also email the reporter if not the commenter and not an assignee
-    if (task.reporterId !== user._id && !assigneeIds.includes(task.reporterId)) {
-      const reporter = await ctx.db.get(task.reporterId);
-      if (reporter && reporter.preferences?.notifications?.email !== false) {
-        const taskKey = `${project.settings?.taskPrefix || project.key}-${task.number}`;
-        const emailContent = commentAdded({
+    for (const recipientId of notifySet) {
+      await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
+        recipientUserId: recipientId as any,
+        workspaceId: project.workspaceId,
+        type: "task_comment",
+        title: "New Comment",
+        body: `${user.name} commented on "${task.title}"`,
+        link: `/projects/${project.key}/tasks/${taskKey}`,
+        actorId: user._id,
+        entityId: args.taskId,
+        entityType: "task",
+        emailData: {
           commenterName: user.name || user.email,
           taskTitle: task.title,
           taskKey,
           commentPreview: args.content,
-        });
-        await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
-          to: reporter.email,
-          subject: emailContent.subject,
-          html: emailContent.html,
-        });
-      }
+        },
+      });
     }
 
     return commentId;

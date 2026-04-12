@@ -356,9 +356,31 @@ function EmptyState() {
       <h2 className="text-sm font-bold uppercase text-[var(--theme-foreground)] mb-1">
         All Caught Up
       </h2>
-      <p className="font-mono text-[11px] text-[var(--theme-foreground)]/50 max-w-xs">
-        No pending triage suggestions. New suggestions will appear here when the AI agent processes incoming tasks.
+      <p className="font-mono text-[11px] text-[var(--theme-foreground)]/50 max-w-xs mb-4">
+        No pending triage suggestions.
       </p>
+      <div className="border-2 border-[var(--theme-border)] p-4 max-w-sm text-left">
+        <p className="font-mono text-[10px] text-[var(--theme-foreground)]/40 uppercase font-bold mb-2">
+          How triage items appear:
+        </p>
+        <ul className="space-y-1 font-mono text-[11px] text-[var(--theme-foreground)]/50">
+          <li className="flex items-start gap-2">
+            <span className="text-[var(--theme-primary)]">+</span>
+            New tasks are created without type or priority
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-[var(--theme-primary)]">+</span>
+            GitHub commits, PRs, or comments trigger task suggestions
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-[var(--theme-primary)]">+</span>
+            The AI agent auto-classifies and suggests assignments
+          </li>
+        </ul>
+        <p className="font-mono text-[10px] text-[var(--theme-foreground)]/30 mt-3">
+          Connect a GitHub repo in Settings to enable commit-driven triage.
+        </p>
+      </div>
     </div>
   )
 }

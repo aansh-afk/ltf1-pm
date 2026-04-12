@@ -1,0 +1,35 @@
+{
+  "name": "@vvg-ltf1/cli",
+  "version": "0.2.2",
+  "description": "ltf1 — git-native, agent-ready project management CLI and TUI",
+  "bin": {
+    "ltf1": "./bin/ltf1.js"
+  },
+  "files": [
+    "bin/"
+  ],
+  "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aansh-afk/ltf1-pm"
+  },
+  "homepage": "https://ltf1.dev",
+  "keywords": [
+    "cli",
+    "tui",
+    "task-management",
+    "project-management",
+    "terminal",
+    "git",
+    "ai",
+    "agent"
+  ],
+  "optionalDependencies": {
+    "@vvg-ltf1/darwin-arm64": "0.2.2",
+    "@vvg-ltf1/darwin-x64": "0.2.2",
+    "@vvg-ltf1/linux-arm64": "0.2.2",
+    "@vvg-ltf1/linux-x64": "0.2.2",
+    "@vvg-ltf1/windows-x64": "0.2.2",
+    "@vvg-ltf1/windows-arm64": "0.2.2"
+  }
+}

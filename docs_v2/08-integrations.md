@@ -88,7 +88,7 @@ GitHub
 #### Release Notes Generation
 - Auto-generates release notes from merged PRs and commits
 - Groups by category (features, fixes, improvements)
-- Accessible via `ltf release notes` CLI command
+- Accessible via `ltf1 release notes` CLI command
 
 #### Repository Documentation
 - Fetches and caches README and documentation from connected repos
@@ -346,7 +346,7 @@ Pro-only features are gated via workspace `subscription.plan` field:
 4. Backend: `ctx.auth.getUserIdentity()` → users table
 
 ### CLI Flow
-1. `ltf auth login` → opens browser
+1. `ltf1 auth login` → opens browser
 2. Clerk auth in browser → callback to localhost:9876
 3. JWT + sessionId stored locally
 4. Silent refresh via sessionId (up to 7 days)

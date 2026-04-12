@@ -277,32 +277,23 @@ export const inviteToWorkspace = mutation({
         }
       });
 
-      await ctx.scheduler.runAfter(0, internal.notifications.createNotification, {
-        userId: invitedUser._id,
+      const workspace = await ctx.db.get(args.workspaceId);
+      await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
+        recipientUserId: invitedUser._id,
         workspaceId: args.workspaceId,
         type: "workspace_invitation",
         title: "Workspace Invitation",
-        body: `You've been invited to join a workspace`,
+        body: `You've been invited to join ${workspace?.name || "a workspace"}`,
         actorId: user._id,
         entityId: args.workspaceId,
         entityType: "workspace",
-      });
-
-      // Send email notification
-      if (invitedUser.preferences?.notifications?.email !== false) {
-        const workspace = await ctx.db.get(args.workspaceId);
-        const emailContent = workspaceInvitation({
+        emailData: {
           inviterName: user.name || user.email,
           workspaceName: workspace?.name || "workspace",
           role: args.role,
           inviteeEmail: args.email,
-        });
-        await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
-          to: invitedUser.email,
-          subject: emailContent.subject,
-          html: emailContent.html,
-        });
-      }
+        },
+      });
 
       return { status: "added" as const, email: args.email };
     } else {

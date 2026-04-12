@@ -93,8 +93,8 @@ skills: defineTable({
 
 **Trigger Methods**:
 - Web: slash command in task description (`/skill bug-triage`)
-- TUI: `ltf skill run bug-triage`
-- CLI: `ltf skill run bug-triage --task PROJ-123`
+- TUI: `ltf1 skill run bug-triage`
+- CLI: `ltf1 skill run bug-triage --task PROJ-123`
 - Auto: skill conditions match on task creation
 
 ### 1.4 TUI Agent Commands
@@ -124,12 +124,12 @@ New TUI page: **Agent** (press `a` from dashboard)
 ```
 
 New CLI commands:
-- `ltf agent triage` — Show triage queue, accept/reject suggestions
-- `ltf agent suggest` — Agent analyzes current state and suggests actions
-- `ltf agent status` — Show agent activity summary
-- `ltf skill list` — List available skills
-- `ltf skill run <name>` — Execute a skill
-- `ltf skill create` — Interactive skill creation
+- `ltf1 agent triage` — Show triage queue, accept/reject suggestions
+- `ltf1 agent suggest` — Agent analyzes current state and suggests actions
+- `ltf1 agent status` — Show agent activity summary
+- `ltf1 skill list` — List available skills
+- `ltf1 skill run <name>` — Execute a skill
+- `ltf1 skill create` — Interactive skill creation
 
 ### 1.5 Web Triage Page
 **Priority**: P1 | **Effort**: Medium | **Impact**: High
@@ -197,7 +197,7 @@ AI-powered sprint planning.
 
 **Trigger**:
 - Manual: "Plan Sprint 4" button on sprint page
-- CLI: `ltf agent plan-sprint --goal "Ship auth feature"`
+- CLI: `ltf1 agent plan-sprint --goal "Ship auth feature"`
 - Auto: when sprint status changes to "planning"
 
 ### 2.3 Code Diff Viewer
@@ -319,7 +319,7 @@ These features exist today but should be cut or simplified to align with the vis
 ### Phase 1 (Agent Foundation)
 - [ ] Triage pipeline processes 100% of new tasks within 30 seconds
 - [ ] At least 3 built-in skills shipping
-- [ ] `ltf agent triage` command working end-to-end
+- [ ] `ltf1 agent triage` command working end-to-end
 - [ ] Triage acceptance rate >70% (agent suggestions are useful)
 - [ ] Web triage page with inbox-zero flow
 
