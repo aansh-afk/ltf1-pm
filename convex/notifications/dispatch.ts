@@ -143,7 +143,7 @@ export const dispatch = internalAction({
     // All types supported by createNotification
     const validTypes = Object.keys(CHANNEL_DEFAULTS);
     if (validTypes.includes(notificationType)) {
-      await ctx.runMutation(internal.notifications.createNotification, {
+      await ctx.runMutation(internal.notifications.index.createNotification, {
         userId: args.recipientUserId,
         workspaceId: args.workspaceId,
         type: notificationType as any,
