@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import ErrorBoundary from '@/components/common/ErrorBoundary'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { useQuery, useMutation, useAction } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Doc, Id } from '../../../../convex/_generated/dataModel'
@@ -332,8 +333,7 @@ interface NotificationsTabProps {
 }
 
 function PushSubscriptionButton() {
-  const { usePushNotifications } = require('@/hooks/usePushNotifications');
-  const { state, isSubscribed, isSupported, isDenied, subscribe, unsubscribe } = usePushNotifications();
+  const { isSubscribed, isSupported, isDenied, subscribe, unsubscribe } = usePushNotifications();
 
   if (!isSupported) {
     return (
