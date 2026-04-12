@@ -1,6 +1,6 @@
-import { mutation, query, internalMutation } from "../_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getCurrentUser, getCurrentUserOrThrow } from "../lib/auth";
+import { getCurrentUser, getCurrentUserOrThrow } from "./lib/auth";
 
 export const getNotifications = query({
   args: {

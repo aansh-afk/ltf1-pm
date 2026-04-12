@@ -14,7 +14,7 @@ export default function NotificationBell({ workspaceId }: NotificationBellProps)
   const panelRef = useRef<HTMLDivElement>(null)
 
   const unreadCount = useQuery(
-    api.notifications.getUnreadCount,
+    api.notificationQueries.getUnreadCount,
     workspaceId ? { workspaceId } : 'skip'
   )
 
