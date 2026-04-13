@@ -2888,54 +2888,32 @@ function ProjectSidebar({
             )}
           </button>
         ))}
-        {/* Invite button — prominent, right after nav */}
-        <button
-          onClick={() => dispatch({ type: "OPEN_PROJECT_INVITE" })}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 mt-2 font-mono text-[11px] font-bold uppercase tracking-wider border-2 border-dashed border-[var(--theme-primary)]/30 text-[var(--theme-primary)]/70 hover:border-[var(--theme-primary)] hover:text-[var(--theme-primary)] hover:bg-[var(--theme-primary)]/5 transition-all"
-        >
-          <HiOutlinePlus className="w-3.5 h-3.5" />
-          INVITE MEMBER
-        </button>
       </nav>
 
-      {/* Bottom stats + actions */}
-      <div className="px-4 py-3 border-t-2 border-[var(--theme-border)] space-y-3">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-[var(--theme-background)] border border-[var(--theme-border)] p-2">
-            <div className="font-mono text-[9px] uppercase text-[var(--theme-foreground)]/40 mb-0.5">
-              BLOCKERS
-            </div>
-            <div
-              className={clsx(
-                "font-mono text-sm font-bold",
-                blockerCount > 0
-                  ? "text-[var(--theme-error)]"
-                  : "text-[var(--theme-success)]",
-              )}
-            >
+      {/* Bottom actions — compact */}
+      <div className="px-3 py-3 border-t-2 border-[var(--theme-border)] space-y-2">
+        {/* Stats row */}
+        <div className="flex gap-2">
+          <div className="flex-1 bg-[var(--theme-background)] border border-[var(--theme-border)] px-2 py-1.5">
+            <div className="font-mono text-[8px] uppercase text-[var(--theme-foreground)]/40">BLOCKERS</div>
+            <div className={clsx("font-mono text-xs font-bold", blockerCount > 0 ? "text-[var(--theme-error)]" : "text-[var(--theme-success)]")}>
               {blockerCount}
             </div>
           </div>
-          <div className="bg-[var(--theme-background)] border border-[var(--theme-border)] p-2">
-            <div className="font-mono text-[9px] uppercase text-[var(--theme-foreground)]/40 mb-0.5">
-              MEMBERS
-            </div>
-            <div className="font-mono text-sm font-bold text-[var(--theme-foreground)]">
-              {memberCount}
-            </div>
+          <div className="flex-1 bg-[var(--theme-background)] border border-[var(--theme-border)] px-2 py-1.5">
+            <div className="font-mono text-[8px] uppercase text-[var(--theme-foreground)]/40">MEMBERS</div>
+            <div className="font-mono text-xs font-bold text-[var(--theme-foreground)]">{memberCount}</div>
           </div>
         </div>
-        <BrutalButton
-          size="sm"
-          variant="primary"
-          fullWidth
-          onClick={onCreateTask}
-        >
-          <HiOutlinePlus className="w-3.5 h-3.5 mr-1.5" /> NEW TASK
-        </BrutalButton>
-        <BrutalButton size="sm" variant="ghost" fullWidth onClick={onInvite}>
-          <HiOutlineUserGroup className="w-3.5 h-3.5 mr-1.5" /> INVITE
-        </BrutalButton>
+        {/* Action buttons — side by side */}
+        <div className="flex gap-2">
+          <BrutalButton size="sm" variant="primary" fullWidth onClick={onCreateTask}>
+            <HiOutlinePlus className="w-3 h-3 mr-1" /> TASK
+          </BrutalButton>
+          <BrutalButton size="sm" variant="ghost" fullWidth onClick={onInvite}>
+            <HiOutlineUserGroup className="w-3 h-3 mr-1" /> INVITE
+          </BrutalButton>
+        </div>
       </div>
     </aside>
   );
@@ -3019,6 +2997,7 @@ function ProjectModals({
           onClose={() => dispatch({ type: "CLOSE_MODALS" })}
           projectId={projectId}
           projectName={project.name}
+          workspaceId={workspaceId}
         />
       )}
       <ExpertiseSearchModal

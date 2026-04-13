@@ -3,14 +3,15 @@ import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../../../convex/_generated/api'
 import {
   HiOutlineClipboard,
-  HiOutlineExternalLink,
-  HiOutlineRefresh,
-  HiOutlineShare,
-  HiOutlineCog,
-  HiOutlineLockClosed
+  HiOutlineLink,
+  HiOutlineMail,
+  HiOutlineUserGroup,
+  HiOutlineCheck,
+  HiOutlinePlus,
 } from 'react-icons/hi'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
 import BrutalModal from '@/components/ui/BrutalModal'
+import BrutalButton from '@/components/ui/BrutalButton'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
 
@@ -19,275 +20,273 @@ interface ProjectInviteModalProps {
   onClose: () => void
   projectId: string
   projectName: string
+  workspaceId?: string
 }
+
+type InviteTab = 'link' | 'team' | 'email'
 
 export default function ProjectInviteModal({
   isOpen,
   onClose,
   projectId,
-  projectName
+  projectName,
+  workspaceId,
 }: ProjectInviteModalProps) {
-  const [copiedText, setCopiedText] = useState<string | null>(null)
-  const [isEnsuring, setIsEnsuring] = useState(false)
+  const [activeTab, setActiveTab] = useState<InviteTab>('link')
+  const [copiedLink, setCopiedLink] = useState(false)
+  const [emailInput, setEmailInput] = useState('')
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
+  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set())
+  const [isAddingMembers, setIsAddingMembers] = useState(false)
 
   const inviteLinkData = useQuery(
     api.projects.queries.getProjectInviteLink,
     isOpen ? { projectId: projectId as Id<"projects"> } : 'skip'
   )
 
-  const generateNewCode = useMutation(api.projects.mutations.generateProjectInviteCode)
+  const workspaceMembers = useQuery(
+    api.workspaces.queries.getWorkspaceMembers,
+    isOpen && workspaceId ? { workspaceId: workspaceId as Id<"workspaces"> } : 'skip'
+  )
+
+  const projectMembers = useQuery(
+    api.projects.members.getProjectMembers,
+    isOpen ? { projectId: projectId as Id<"projects"> } : 'skip'
+  )
+
   const ensureInviteCode = useMutation(api.projects.mutations.ensureProjectInviteCode)
+  const inviteByEmail = useMutation(api.projects.mutations.inviteByEmail)
+  const inviteWorkspaceMembers = useMutation(api.projects.mutations.inviteWorkspaceMembers)
 
   const inviteCode = inviteLinkData?.inviteCode
   const inviteUrl = inviteCode ? `${window.location.origin}/join-project/${inviteCode}` : ''
 
+  // Auto-generate invite code if missing
   useEffect(() => {
-    if (isOpen && inviteLinkData && !inviteLinkData.inviteCode && !isEnsuring) {
-      setIsEnsuring(true)
-      ensureInviteCode({ projectId: projectId as Id<"projects"> })
-        .then(() => toast.success('Invite code generated!'))
-        .catch((error: unknown) => toast.error(error instanceof Error ? error.message : 'Failed to generate invite code'))
-        .finally(() => setIsEnsuring(false))
+    if (isOpen && inviteLinkData && !inviteLinkData.inviteCode) {
+      ensureInviteCode({ projectId: projectId as Id<"projects"> }).catch(() => {})
     }
-  }, [isOpen, inviteLinkData?.inviteCode, isEnsuring, projectId, ensureInviteCode])
+  }, [isOpen, inviteLinkData?.inviteCode])
 
-  const handleEnsureInviteCode = async () => {
-    try {
-      setIsEnsuring(true)
-      await ensureInviteCode({ projectId: projectId as Id<"projects"> })
-      toast.success('Invite code generated!')
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to generate invite code')
-    } finally {
-      setIsEnsuring(false)
-    }
+  // Get project member IDs for filtering
+  const projectMemberIds = new Set(
+    (projectMembers || []).map((m: any) => m.userId || m._id)
+  )
+
+  // Workspace members NOT already in the project
+  const availableMembers = (workspaceMembers || []).filter(
+    (m: any) => !projectMemberIds.has(m.userId || m._id)
+  )
+
+  const handleCopyLink = async () => {
+    if (!inviteUrl) return
+    await navigator.clipboard.writeText(inviteUrl)
+    setCopiedLink(true)
+    toast.success('Link copied')
+    setTimeout(() => setCopiedLink(false), 2000)
   }
 
-  const handleCopyToClipboard = async (text: string, label: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopiedText(label)
-      toast.success(`${label} copied to clipboard!`)
-      setTimeout(() => setCopiedText(null), 2000)
-    } catch (error) {
-      toast.error('Failed to copy to clipboard')
+  const handleEmailInvite = async () => {
+    const email = emailInput.trim()
+    if (!email || !email.includes('@')) {
+      toast.error('Enter a valid email')
+      return
     }
-  }
-
-  const handleGenerateNewCode = async () => {
+    setIsSendingEmail(true)
     try {
-      setIsEnsuring(true)
-      await generateNewCode({ projectId: projectId as Id<"projects"> })
-      toast.success('New single-use invite code generated!')
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to generate invite code')
-    } finally {
-      setIsEnsuring(false)
-    }
-  }
-
-  const handleShareLink = async () => {
-    if (navigator.share && inviteUrl) {
-      try {
-        await navigator.share({
-          title: `Join ${projectName}`,
-          text: `You've been invited to join the project "${projectName}"`,
-          url: inviteUrl,
-        })
-      } catch (error) {
-        handleCopyToClipboard(inviteUrl, 'Invite Link')
+      const result = await inviteByEmail({
+        projectId: projectId as Id<"projects">,
+        email,
+      })
+      if (result.status === 'added') {
+        toast.success(`${email} added to project`)
+      } else {
+        toast.success(`Invite sent to ${email}`)
       }
-    } else {
-      handleCopyToClipboard(inviteUrl, 'Invite Link')
+      setEmailInput('')
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to send invite')
+    } finally {
+      setIsSendingEmail(false)
     }
   }
+
+  const handleAddSelectedMembers = async () => {
+    if (selectedMembers.size === 0) return
+    setIsAddingMembers(true)
+    try {
+      const result = await inviteWorkspaceMembers({
+        projectId: projectId as Id<"projects">,
+        userIds: Array.from(selectedMembers) as Id<"users">[],
+      })
+      toast.success(`${result.added} member${result.added === 1 ? '' : 's'} added`)
+      if (result.alreadyMembers > 0) {
+        toast(`${result.alreadyMembers} already in project`, { icon: 'ℹ️' })
+      }
+      setSelectedMembers(new Set())
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to add members')
+    } finally {
+      setIsAddingMembers(false)
+    }
+  }
+
+  const toggleMember = (id: string) => {
+    const next = new Set(selectedMembers)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setSelectedMembers(next)
+  }
+
+  const tabs: { id: InviteTab; label: string; icon: React.ReactNode }[] = [
+    { id: 'link', label: 'LINK', icon: <HiOutlineLink className="w-3.5 h-3.5" /> },
+    { id: 'team', label: 'TEAM', icon: <HiOutlineUserGroup className="w-3.5 h-3.5" /> },
+    { id: 'email', label: 'EMAIL', icon: <HiOutlineMail className="w-3.5 h-3.5" /> },
+  ]
 
   return (
-    <BrutalModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="PROJECT INVITE"
-      size="lg"
-    >
-      <div className="space-y-3">
-        {/* Project Info Header */}
-        <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-3">
-          <h3 className="font-mono text-sm font-bold text-[var(--theme-foreground)] mb-1">INVITING TO: {projectName}</h3>
-          <p className="font-mono text-xs text-[var(--theme-foreground-tertiary)]">
-            Share the link or code below to invite people to join this project.
-          </p>
+    <BrutalModal isOpen={isOpen} onClose={onClose} title={`INVITE TO ${projectName.toUpperCase()}`} size="md">
+      <div className="space-y-4">
+        {/* Tab bar */}
+        <div className="flex border-b-2 border-[var(--theme-border)]">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={clsx(
+                "flex-1 flex items-center justify-center gap-1.5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-wider border-b-2 -mb-[2px] transition-colors",
+                activeTab === tab.id
+                  ? "text-[var(--theme-primary)] border-[var(--theme-primary)]"
+                  : "text-[var(--theme-foreground)]/40 border-transparent hover:text-[var(--theme-foreground)]/60"
+              )}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {inviteLinkData ? (
-          <>
-            {/* Loading state */}
-            {isEnsuring && (
-              <div className="bg-[var(--theme-warning)]/10 border-2 border-[var(--theme-warning)] p-3">
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin w-4 h-4 border-2 border-[var(--theme-warning)] border-t-transparent" />
-                  <p className="font-mono text-xs text-[var(--theme-warning)]">
-                    Generating new single-use invite code...
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* No code yet */}
-            {!inviteCode && !isEnsuring && (
-              <div className="bg-[var(--theme-warning)]/10 border-2 border-[var(--theme-warning)] p-3">
-                <p className="font-mono text-xs text-[var(--theme-warning)] mb-2">
-                  This project doesn't have an invite code yet.
-                </p>
-                <button
-                  onClick={handleEnsureInviteCode}
-                  className="px-3 py-1.5 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] transition-colors"
-                >
-                  GENERATE INVITE CODE
-                </button>
-              </div>
-            )}
-
-            {/* Single-use warning */}
-            {inviteCode && (
-              <div className="bg-[var(--theme-error)]/10 border-2 border-[var(--theme-error)] p-3">
-                <p className="font-mono text-xs text-[var(--theme-error)]">
-                  <HiOutlineLockClosed className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
-                  <strong>SINGLE-USE INVITE:</strong> This code can only be used once. A new code will be generated after someone joins.
-                </p>
-              </div>
-            )}
-
-            {/* Shareable Link */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h4 className="font-mono text-xs font-bold text-[var(--theme-foreground)]">SHAREABLE LINK</h4>
-                <button
-                  onClick={handleShareLink}
-                  disabled={!inviteUrl || isEnsuring}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] transition-colors disabled:opacity-50"
-                >
-                  <HiOutlineShare className="w-3.5 h-3.5" />
-                  SHARE
-                </button>
-              </div>
-
-              <div className="flex gap-1">
-                <input
-                  type="text"
-                  value={inviteUrl || (isEnsuring ? 'Generating...' : 'No invite code available')}
-                  readOnly
-                  aria-label="Shareable invite link"
-                  className="flex-1 px-3 py-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-xs text-[var(--theme-foreground-secondary)] focus:border-[var(--theme-primary)] focus:outline-none"
-                />
-                <button
-                  onClick={() => handleCopyToClipboard(inviteUrl, 'Invite Link')}
-                  disabled={!inviteUrl || isEnsuring}
-                  className={clsx(
-                    "px-3 py-2 border-2 transition-colors disabled:opacity-50",
-                    copiedText === 'Invite Link'
-                      ? 'bg-[var(--theme-success)]/20 border-[var(--theme-success)] text-[var(--theme-success)]'
-                      : 'bg-[var(--theme-background)] border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)]'
-                  )}
-                >
-                  <HiOutlineClipboard className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Invite Code */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h4 className="font-mono text-xs font-bold text-[var(--theme-foreground)]">INVITE CODE</h4>
-                <button
-                  onClick={handleGenerateNewCode}
-                  disabled={isEnsuring}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] transition-colors disabled:opacity-50"
-                >
-                  <HiOutlineRefresh className="w-3.5 h-3.5" />
-                  {inviteCode ? 'REGENERATE' : 'GENERATE'}
-                </button>
-              </div>
-
-              <div className="flex gap-1">
-                <input
-                  type="text"
-                  value={inviteCode || (isEnsuring ? 'Generating...' : 'No invite code available')}
-                  readOnly
-                  aria-label="Invite code"
-                  className="flex-1 px-3 py-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-sm text-[var(--theme-primary)] font-bold focus:border-[var(--theme-primary)] focus:outline-none"
-                />
-                <button
-                  onClick={() => handleCopyToClipboard(inviteCode || '', 'Invite Code')}
-                  disabled={!inviteCode || isEnsuring}
-                  className={clsx(
-                    "px-3 py-2 border-2 transition-colors disabled:opacity-50",
-                    copiedText === 'Invite Code'
-                      ? 'bg-[var(--theme-success)]/20 border-[var(--theme-success)] text-[var(--theme-success)]'
-                      : 'bg-[var(--theme-background)] border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)]'
-                  )}
-                >
-                  <HiOutlineClipboard className="w-4 h-4" />
-                </button>
-              </div>
-
-              <p className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)] uppercase tracking-wider">
-                Users can enter this code at <strong className="text-[var(--theme-foreground-secondary)]">/join-project</strong> to join the project.
-              </p>
-            </div>
-
-            {/* Team Settings */}
-            {inviteLinkData.teamSettings && (
-              <div className="bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] p-3">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <HiOutlineCog className="w-4 h-4 text-[var(--theme-primary)]" />
-                  <h4 className="font-mono text-xs font-bold text-[var(--theme-foreground)]">TEAM SETTINGS</h4>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 font-mono text-[10px] uppercase tracking-wider">
-                  <div>
-                    <span className="text-[var(--theme-foreground-tertiary)]">Max Members:</span>{' '}
-                    <span className="text-[var(--theme-foreground)]">
-                      {inviteLinkData.teamSettings.maxMembers || 'Unlimited'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[var(--theme-foreground-tertiary)]">Self Join:</span>{' '}
-                    <span className={inviteLinkData.teamSettings.allowSelfJoin ? 'text-[var(--theme-success)]' : 'text-[var(--theme-error)]'}>
-                      {inviteLinkData.teamSettings.allowSelfJoin ? 'ENABLED' : 'DISABLED'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[var(--theme-foreground-tertiary)]">Requires Approval:</span>{' '}
-                    <span className={inviteLinkData.teamSettings.requireApproval ? 'text-[var(--theme-warning)]' : 'text-[var(--theme-success)]'}>
-                      {inviteLinkData.teamSettings.requireApproval ? 'YES' : 'NO'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Footer Actions */}
-            <div className="flex gap-2 pt-3 border-t-2 border-[var(--theme-border)]">
-              <button
-                onClick={() => window.open(inviteUrl, '_blank')}
-                disabled={!inviteUrl || isEnsuring}
-                className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] font-mono text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] hover:border-[var(--theme-primary)] hover:text-[var(--theme-foreground)] transition-colors disabled:opacity-50"
+        {/* ─── Share Link Tab ─── */}
+        {activeTab === 'link' && (
+          <div className="space-y-3">
+            <p className="font-mono text-[11px] text-[var(--theme-foreground)]/50">
+              Share this link with anyone to invite them to the project.
+            </p>
+            <div className="flex gap-1.5">
+              <input
+                type="text"
+                value={inviteUrl || 'Generating...'}
+                readOnly
+                className="flex-1 px-3 py-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-xs text-[var(--theme-foreground)]/70 focus:outline-none"
+              />
+              <BrutalButton
+                size="sm"
+                variant={copiedLink ? "primary" : "ghost"}
+                onClick={handleCopyLink}
+                disabled={!inviteUrl}
               >
-                <HiOutlineExternalLink className="w-4 h-4" />
-                TEST LINK
-              </button>
-              <button
-                onClick={onClose}
-                className="flex-1 px-3 py-2.5 bg-[var(--theme-background-tertiary)] border-2 border-[var(--theme-border)] font-mono text-xs font-bold uppercase tracking-wider text-[var(--theme-foreground)] hover:border-[var(--theme-primary)] transition-colors"
-              >
-                DONE
-              </button>
+                {copiedLink ? <HiOutlineCheck className="w-4 h-4" /> : <HiOutlineClipboard className="w-4 h-4" />}
+              </BrutalButton>
             </div>
-          </>
-        ) : (
-          <div className="text-center py-6">
-            <div className="animate-spin w-4 h-4 border-2 border-[var(--theme-primary)] border-t-transparent mx-auto mb-2" />
-            <p className="font-mono text-xs text-[var(--theme-foreground-tertiary)]">Loading invite information...</p>
+            <p className="font-mono text-[9px] text-[var(--theme-foreground)]/30 uppercase">
+              Anyone with this link can join. They'll be auto-added to the workspace too.
+            </p>
+          </div>
+        )}
+
+        {/* ─── Workspace Team Tab ─── */}
+        {activeTab === 'team' && (
+          <div className="space-y-3">
+            <p className="font-mono text-[11px] text-[var(--theme-foreground)]/50">
+              Add workspace members who aren't in this project yet.
+            </p>
+            {availableMembers.length === 0 ? (
+              <div className="py-6 text-center">
+                <p className="font-mono text-xs text-[var(--theme-foreground)]/40">
+                  All workspace members are already in this project.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="max-h-[240px] overflow-y-auto border-2 border-[var(--theme-border)]">
+                  {availableMembers.map((member: any) => {
+                    const userId = member.userId || member._id
+                    const isSelected = selectedMembers.has(userId)
+                    return (
+                      <button
+                        key={userId}
+                        onClick={() => toggleMember(userId)}
+                        className={clsx(
+                          "w-full flex items-center gap-3 px-3 py-2.5 border-b border-[var(--theme-border)] last:border-b-0 transition-colors",
+                          isSelected
+                            ? "bg-[var(--theme-primary)]/10"
+                            : "hover:bg-[var(--theme-background)]/50"
+                        )}
+                      >
+                        <div className={clsx(
+                          "w-4 h-4 border-2 flex items-center justify-center transition-colors",
+                          isSelected
+                            ? "border-[var(--theme-primary)] bg-[var(--theme-primary)]"
+                            : "border-[var(--theme-border)]"
+                        )}>
+                          {isSelected && <HiOutlineCheck className="w-3 h-3 text-[var(--theme-background)]" />}
+                        </div>
+                        <div className="flex-1 text-left">
+                          <div className="font-mono text-xs font-bold text-[var(--theme-foreground)]">
+                            {member.user?.name || member.name || 'Unknown'}
+                          </div>
+                          <div className="font-mono text-[10px] text-[var(--theme-foreground)]/40">
+                            {member.user?.email || member.email || ''} · {member.role}
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+                <BrutalButton
+                  size="sm"
+                  variant="primary"
+                  fullWidth
+                  onClick={handleAddSelectedMembers}
+                  disabled={selectedMembers.size === 0}
+                  loading={isAddingMembers}
+                >
+                  <HiOutlinePlus className="w-3.5 h-3.5 mr-1.5" />
+                  ADD {selectedMembers.size > 0 ? `${selectedMembers.size} MEMBER${selectedMembers.size > 1 ? 'S' : ''}` : 'SELECTED'}
+                </BrutalButton>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ─── Email Invite Tab ─── */}
+        {activeTab === 'email' && (
+          <div className="space-y-3">
+            <p className="font-mono text-[11px] text-[var(--theme-foreground)]/50">
+              Invite by email. If they have an LTF1 account, they're added instantly. If not, they'll get an email with a join link.
+            </p>
+            <div className="flex gap-1.5">
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleEmailInvite()}
+                placeholder="developer@company.com"
+                className="flex-1 px-3 py-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-xs text-[var(--theme-foreground)] placeholder:text-[var(--theme-foreground)]/20 focus:border-[var(--theme-primary)] focus:outline-none"
+              />
+              <BrutalButton
+                size="sm"
+                variant="primary"
+                onClick={handleEmailInvite}
+                disabled={!emailInput.trim() || isSendingEmail}
+                loading={isSendingEmail}
+              >
+                SEND
+              </BrutalButton>
+            </div>
+            <p className="font-mono text-[9px] text-[var(--theme-foreground)]/30 uppercase">
+              New users will be added to the workspace automatically when they join.
+            </p>
           </div>
         )}
       </div>
