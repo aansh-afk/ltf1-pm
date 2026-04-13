@@ -2888,6 +2888,14 @@ function ProjectSidebar({
             )}
           </button>
         ))}
+        {/* Invite button — prominent, right after nav */}
+        <button
+          onClick={() => dispatch({ type: "OPEN_PROJECT_INVITE" })}
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 mt-2 font-mono text-[11px] font-bold uppercase tracking-wider border-2 border-dashed border-[var(--theme-primary)]/30 text-[var(--theme-primary)]/70 hover:border-[var(--theme-primary)] hover:text-[var(--theme-primary)] hover:bg-[var(--theme-primary)]/5 transition-all"
+        >
+          <HiOutlinePlus className="w-3.5 h-3.5" />
+          INVITE MEMBER
+        </button>
       </nav>
 
       {/* Bottom stats + actions */}

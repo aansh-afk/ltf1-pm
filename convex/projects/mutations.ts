@@ -369,9 +369,25 @@ export const joinProjectByCode = mutation({
       throw new Error("You are already a member of this project");
     }
 
-    // Check if project allows self-join
-    if (!project.teamSettings?.allowSelfJoin) {
-      throw new Error("This project requires approval to join");
+    // Invite codes bypass the self-join check — having a valid code IS the authorization.
+    // The allowSelfJoin setting only applies to joining without a code (e.g. public discovery).
+
+    // Ensure user is also a workspace member (auto-add if not)
+    const workspaceMember = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_workspace_user", (q) =>
+        q.eq("workspaceId", project.workspaceId).eq("userId", user._id)
+      )
+      .first();
+
+    if (!workspaceMember) {
+      await ctx.db.insert("workspaceMembers", {
+        workspaceId: project.workspaceId,
+        userId: user._id,
+        role: "member",
+        permissions: [],
+        joinedAt: Date.now(),
+      });
     }
 
     // Check max members limit
@@ -429,7 +445,7 @@ export const joinProjectByCode = mutation({
       targetId: user._id,
       targetName: user.name || user.email,
       description: `${user.name || user.email} joined the project`,
-      metadata: undefined
+      metadata: { extra: { joinedVia: "invite_code" } }
     });
 
     return {
@@ -692,5 +708,166 @@ export const updateProjectMemberRole = mutation({
     });
 
     return { success: true };
+  },
+});
+
+// ─── Invite by email ─────────────────────────────────────────────────
+export const inviteByEmail = mutation({
+  args: {
+    projectId: v.id("projects"),
+    email: v.string(),
+    role: v.optional(projectRoleValidator),
+  },
+  returns: v.object({
+    status: v.union(v.literal("added"), v.literal("invited")),
+    email: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    const project = await ctx.db.get(args.projectId);
+    if (!project) throw new Error("Project not found");
+
+    await requireProjectPermission(ctx.db, user._id, args.projectId, "project.team.manage");
+
+    const role = args.role || "member";
+    const now = Date.now();
+
+    // Check if email belongs to existing LTF1 user
+    const existingUser = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
+
+    if (existingUser) {
+      const existingMember = await ctx.db
+        .query("projectMembers")
+        .withIndex("by_project_user", (q) =>
+          q.eq("projectId", args.projectId).eq("userId", existingUser._id)
+        )
+        .first();
+
+      if (existingMember && existingMember.status === "active") {
+        throw new Error("This user is already a project member");
+      }
+
+      if (existingMember) {
+        await ctx.db.patch(existingMember._id, { role, status: "active", joinedAt: now, invitedBy: user._id });
+      } else {
+        await ctx.db.insert("projectMembers", {
+          projectId: args.projectId, userId: existingUser._id,
+          role, joinedAt: now, invitedBy: user._id, status: "active",
+        });
+      }
+
+      // Ensure workspace membership
+      const wsMember = await ctx.db
+        .query("workspaceMembers")
+        .withIndex("by_workspace_user", (q) =>
+          q.eq("workspaceId", project.workspaceId).eq("userId", existingUser._id)
+        )
+        .first();
+      if (!wsMember) {
+        await ctx.db.insert("workspaceMembers", {
+          workspaceId: project.workspaceId, userId: existingUser._id,
+          role: "member", permissions: [], joinedAt: now,
+        });
+      }
+
+      // Notify
+      await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
+        recipientUserId: existingUser._id,
+        workspaceId: project.workspaceId,
+        type: "project_added",
+        title: "Added to Project",
+        body: `${user.name || user.email} added you to "${project.name}"`,
+        actorId: user._id, entityId: args.projectId, entityType: "project",
+        emailData: { projectName: project.name, addedByName: user.name || user.email, role },
+      });
+
+      return { status: "added" as const, email: args.email };
+    }
+
+    // User doesn't exist — create pending invitation + send email
+    const inviteCode = project.inviteCode || crypto.randomUUID();
+    if (!project.inviteCode) {
+      await ctx.db.patch(args.projectId, { inviteCode, updatedAt: now });
+    }
+
+    const existingInvite = await ctx.db
+      .query("projectInvitations")
+      .withIndex("by_email", (q) => q.eq("invitedEmail", args.email))
+      .first();
+    if (existingInvite && existingInvite.projectId === args.projectId && existingInvite.status === "pending") {
+      throw new Error("An invitation has already been sent to this email");
+    }
+
+    await ctx.db.insert("projectInvitations", {
+      projectId: args.projectId, invitedEmail: args.email, invitedBy: user._id,
+      role, status: "pending", inviteCode,
+      expiresAt: now + 30 * 24 * 60 * 60 * 1000, createdAt: now,
+    });
+
+    await ctx.scheduler.runAfter(0, internal.email.send.sendEmail, {
+      to: args.email,
+      subject: `Join ${project.name} on LTF1`,
+      html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#050505;font-family:Inter,Arial,sans-serif;"><table width="100%" style="background:#050505;padding:40px 0;"><tr><td align="center"><table width="600" style="background:#0A0A0A;border:2px solid #2E2E35;max-width:600px;width:100%;"><tr><td style="padding:32px 40px 24px;border-bottom:1px solid #1F1F23;"><span style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:#6366F1;">LTF1</span></td></tr><tr><td style="padding:32px 40px;"><h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#F9FAFB;">Join ${project.name}</h1><p style="margin:0 0 16px;font-size:14px;color:#9CA3AF;line-height:1.6;"><strong style="color:#F9FAFB;">${user.name || user.email}</strong> invited you to join <strong style="color:#F9FAFB;">${project.name}</strong> as a ${role}.</p><table style="margin:24px 0;"><tr><td style="background:#6366F1;border-radius:8px;padding:12px 24px;"><a href="https://ltf1.dev/join-project/${inviteCode}" style="color:#F9FAFB;text-decoration:none;font-size:14px;font-weight:600;">Join Project</a></td></tr></table><p style="margin:0;font-size:12px;color:#6B7280;">Don't have an account? <a href="https://ltf1.dev/sign-up" style="color:#6366F1;">Sign up</a> first.</p></td></tr></table></td></tr></table></body></html>`,
+    });
+
+    return { status: "invited" as const, email: args.email };
+  },
+});
+
+// ─── Invite workspace members to project ─────────────────────────────
+export const inviteWorkspaceMembers = mutation({
+  args: {
+    projectId: v.id("projects"),
+    userIds: v.array(v.id("users")),
+    role: v.optional(projectRoleValidator),
+  },
+  returns: v.object({ added: v.number(), alreadyMembers: v.number() }),
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    const project = await ctx.db.get(args.projectId);
+    if (!project) throw new Error("Project not found");
+
+    await requireProjectPermission(ctx.db, user._id, args.projectId, "project.team.manage");
+
+    const role = args.role || "member";
+    const now = Date.now();
+    let added = 0;
+    let alreadyMembers = 0;
+
+    for (const userId of args.userIds) {
+      const existing = await ctx.db
+        .query("projectMembers")
+        .withIndex("by_project_user", (q) =>
+          q.eq("projectId", args.projectId).eq("userId", userId)
+        )
+        .first();
+
+      if (existing && existing.status === "active") { alreadyMembers++; continue; }
+
+      if (existing) {
+        await ctx.db.patch(existing._id, { role, status: "active", joinedAt: now, invitedBy: user._id });
+      } else {
+        await ctx.db.insert("projectMembers", {
+          projectId: args.projectId, userId, role, joinedAt: now, invitedBy: user._id, status: "active",
+        });
+      }
+
+      await ctx.scheduler.runAfter(0, internal.notifications.dispatch.dispatch, {
+        recipientUserId: userId,
+        workspaceId: project.workspaceId,
+        type: "project_added",
+        title: "Added to Project",
+        body: `${user.name || user.email} added you to "${project.name}"`,
+        actorId: user._id, entityId: args.projectId, entityType: "project",
+        emailData: { projectName: project.name, addedByName: user.name || user.email, role },
+      });
+
+      added++;
+    }
+
+    return { added, alreadyMembers };
   },
 });
