@@ -2825,7 +2825,7 @@ function ProjectSidebar({
           : "info";
 
   return (
-    <aside className="w-[220px] min-w-[220px] flex flex-col border-r-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] h-screen sticky top-0 overflow-y-auto">
+    <aside className="w-[220px] min-w-[220px] flex flex-col border-r-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] h-full overflow-y-auto">
       {/* Back nav */}
       <div className="px-4 py-3 border-b-2 border-[var(--theme-border)]">
         <button
@@ -3561,7 +3561,7 @@ export default function ProjectManagementPage() {
 
   return (
     <ErrorBoundary>
-    <div className="h-screen bg-[var(--theme-background)] flex overflow-hidden">
+    <div className="h-dvh bg-[var(--theme-background)] flex overflow-hidden">
       <ProjectSidebar
         project={project}
         workspaceId={workspaceId}
