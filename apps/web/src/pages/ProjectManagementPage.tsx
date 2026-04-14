@@ -2799,7 +2799,7 @@ interface ProjectSidebarProps {
   memberCount: number;
   tabs: { id: string; label: string; icon: React.ReactNode }[];
   onNavigateBack: () => void;
-  onInvite: () => void;
+  onInvite?: () => void;
   onCreateTask: () => void;
   onTabChange: (tab: TabType) => void;
 }
@@ -2812,7 +2812,6 @@ function ProjectSidebar({
   memberCount,
   tabs,
   onNavigateBack,
-  onInvite,
   onCreateTask,
   onTabChange,
 }: ProjectSidebarProps) {
@@ -2905,15 +2904,10 @@ function ProjectSidebar({
             <div className="font-mono text-xs font-bold text-[var(--theme-foreground)]">{memberCount}</div>
           </div>
         </div>
-        {/* Action buttons — side by side */}
-        <div className="flex gap-2">
-          <BrutalButton size="sm" variant="primary" fullWidth onClick={onCreateTask}>
-            <HiOutlinePlus className="w-3 h-3 mr-1" /> TASK
-          </BrutalButton>
-          <BrutalButton size="sm" variant="ghost" fullWidth onClick={onInvite}>
-            <HiOutlineUserGroup className="w-3 h-3 mr-1" /> INVITE
-          </BrutalButton>
-        </div>
+        {/* Action button */}
+        <BrutalButton size="sm" variant="primary" fullWidth onClick={onCreateTask}>
+          <HiOutlinePlus className="w-3 h-3 mr-1" /> NEW TASK
+        </BrutalButton>
       </div>
     </aside>
   );

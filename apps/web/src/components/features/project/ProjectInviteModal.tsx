@@ -8,6 +8,7 @@ import {
   HiOutlineUserGroup,
   HiOutlineCheck,
   HiOutlinePlus,
+  HiOutlineShare,
 } from 'react-icons/hi'
 import type { Id } from '../../../../../../convex/_generated/dataModel'
 import BrutalModal from '@/components/ui/BrutalModal'
@@ -34,6 +35,7 @@ export default function ProjectInviteModal({
 }: ProjectInviteModalProps) {
   const [activeTab, setActiveTab] = useState<InviteTab>('link')
   const [copiedLink, setCopiedLink] = useState(false)
+  const [copiedCode, setCopiedCode] = useState(false)
   const [emailInput, setEmailInput] = useState('')
   const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set())
@@ -68,6 +70,16 @@ export default function ProjectInviteModal({
     }
   }, [isOpen, inviteLinkData?.inviteCode])
 
+  // Reset state on close
+  useEffect(() => {
+    if (!isOpen) {
+      setCopiedLink(false)
+      setCopiedCode(false)
+      setEmailInput('')
+      setSelectedMembers(new Set())
+    }
+  }, [isOpen])
+
   // Get project member IDs for filtering
   const projectMemberIds = new Set(
     (projectMembers || []).map((m: any) => m.userId || m._id)
@@ -82,14 +94,35 @@ export default function ProjectInviteModal({
     if (!inviteUrl) return
     await navigator.clipboard.writeText(inviteUrl)
     setCopiedLink(true)
-    toast.success('Link copied')
+    toast.success('Link copied to clipboard')
     setTimeout(() => setCopiedLink(false), 2000)
+  }
+
+  const handleCopyCode = async () => {
+    if (!inviteCode) return
+    await navigator.clipboard.writeText(inviteCode)
+    setCopiedCode(true)
+    toast.success('Code copied to clipboard')
+    setTimeout(() => setCopiedCode(false), 2000)
+  }
+
+  const handleShareLink = async () => {
+    if (!inviteUrl) return
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `Join ${projectName}`, url: inviteUrl })
+      } catch {
+        // User cancelled share
+      }
+    } else {
+      handleCopyLink()
+    }
   }
 
   const handleEmailInvite = async () => {
     const email = emailInput.trim()
     if (!email || !email.includes('@')) {
-      toast.error('Enter a valid email')
+      toast.error('Enter a valid email address')
       return
     }
     setIsSendingEmail(true)
@@ -138,6 +171,14 @@ export default function ProjectInviteModal({
     setSelectedMembers(next)
   }
 
+  const selectAll = () => {
+    if (selectedMembers.size === availableMembers.length) {
+      setSelectedMembers(new Set())
+    } else {
+      setSelectedMembers(new Set(availableMembers.map((m: any) => m.userId || m._id)))
+    }
+  }
+
   const tabs: { id: InviteTab; label: string; icon: React.ReactNode }[] = [
     { id: 'link', label: 'LINK', icon: <HiOutlineLink className="w-3.5 h-3.5" /> },
     { id: 'team', label: 'TEAM', icon: <HiOutlineUserGroup className="w-3.5 h-3.5" /> },
@@ -146,7 +187,7 @@ export default function ProjectInviteModal({
 
   return (
     <BrutalModal isOpen={isOpen} onClose={onClose} title={`INVITE TO ${projectName.toUpperCase()}`} size="md">
-      <div className="space-y-4">
+      <div className="space-y-5">
         {/* Tab bar */}
         <div className="flex border-b-2 border-[var(--theme-border)]">
           {tabs.map((tab) => (
@@ -154,10 +195,10 @@ export default function ProjectInviteModal({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={clsx(
-                "flex-1 flex items-center justify-center gap-1.5 py-2.5 font-mono text-[10px] font-bold uppercase tracking-wider border-b-2 -mb-[2px] transition-colors",
+                "flex-1 flex items-center justify-center gap-2 py-3 font-mono text-[11px] font-bold uppercase tracking-wider border-b-2 -mb-[2px] transition-colors",
                 activeTab === tab.id
                   ? "text-[var(--theme-primary)] border-[var(--theme-primary)]"
-                  : "text-[var(--theme-foreground)]/40 border-transparent hover:text-[var(--theme-foreground)]/60"
+                  : "text-[var(--theme-foreground)]/30 border-transparent hover:text-[var(--theme-foreground)]/50"
               )}
             >
               {tab.icon}
@@ -168,47 +209,95 @@ export default function ProjectInviteModal({
 
         {/* ─── Share Link Tab ─── */}
         {activeTab === 'link' && (
-          <div className="space-y-3">
-            <p className="font-mono text-[11px] text-[var(--theme-foreground)]/50">
-              Share this link with anyone to invite them to the project.
+          <div className="space-y-5">
+            {/* Description */}
+            <p className="font-mono text-xs text-[var(--theme-foreground)]/50 leading-relaxed">
+              Share a link or code to invite people to this project. Anyone with the link will be auto-added to the workspace.
             </p>
-            <div className="flex gap-1.5">
-              <input
-                type="text"
-                value={inviteUrl || 'Generating...'}
-                readOnly
-                className="flex-1 px-3 py-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-xs text-[var(--theme-foreground)]/70 focus:outline-none"
-              />
-              <BrutalButton
-                size="sm"
-                variant={copiedLink ? "primary" : "ghost"}
-                onClick={handleCopyLink}
-                disabled={!inviteUrl}
-              >
-                {copiedLink ? <HiOutlineCheck className="w-4 h-4" /> : <HiOutlineClipboard className="w-4 h-4" />}
-              </BrutalButton>
+
+            {/* Invite Link */}
+            <div className="space-y-2">
+              <label className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground)]/40">
+                Shareable Link
+              </label>
+              <div className="flex gap-2">
+                <div className="flex-1 px-3 py-2.5 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-xs text-[var(--theme-foreground)]/60 truncate select-all">
+                  {inviteUrl || 'Generating...'}
+                </div>
+                <BrutalButton
+                  size="sm"
+                  variant={copiedLink ? "primary" : "ghost"}
+                  onClick={handleCopyLink}
+                  disabled={!inviteUrl}
+                >
+                  {copiedLink ? <HiOutlineCheck className="w-4 h-4" /> : <HiOutlineClipboard className="w-4 h-4" />}
+                </BrutalButton>
+                <BrutalButton
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleShareLink}
+                  disabled={!inviteUrl}
+                >
+                  <HiOutlineShare className="w-4 h-4" />
+                </BrutalButton>
+              </div>
             </div>
-            <p className="font-mono text-[9px] text-[var(--theme-foreground)]/30 uppercase">
-              Anyone with this link can join. They'll be auto-added to the workspace too.
-            </p>
+
+            {/* Invite Code */}
+            <div className="space-y-2">
+              <label className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground)]/40">
+                Invite Code
+              </label>
+              <div className="flex gap-2">
+                <div className="flex-1 px-3 py-2.5 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-xs text-[var(--theme-primary)] tracking-wider select-all">
+                  {inviteCode || '...'}
+                </div>
+                <BrutalButton
+                  size="sm"
+                  variant={copiedCode ? "primary" : "ghost"}
+                  onClick={handleCopyCode}
+                  disabled={!inviteCode}
+                >
+                  {copiedCode ? <HiOutlineCheck className="w-4 h-4" /> : <HiOutlineClipboard className="w-4 h-4" />}
+                </BrutalButton>
+              </div>
+              <p className="font-mono text-[10px] text-[var(--theme-foreground)]/30 leading-relaxed">
+                Users can enter this code at /join-project to join.
+              </p>
+            </div>
           </div>
         )}
 
         {/* ─── Workspace Team Tab ─── */}
         {activeTab === 'team' && (
-          <div className="space-y-3">
-            <p className="font-mono text-[11px] text-[var(--theme-foreground)]/50">
+          <div className="space-y-4">
+            <p className="font-mono text-xs text-[var(--theme-foreground)]/50 leading-relaxed">
               Add workspace members who aren't in this project yet.
             </p>
             {availableMembers.length === 0 ? (
-              <div className="py-6 text-center">
+              <div className="py-10 text-center border-2 border-dashed border-[var(--theme-border)]">
+                <HiOutlineUserGroup className="w-6 h-6 mx-auto mb-2 text-[var(--theme-foreground)]/20" />
                 <p className="font-mono text-xs text-[var(--theme-foreground)]/40">
                   All workspace members are already in this project.
                 </p>
               </div>
             ) : (
               <>
-                <div className="max-h-[240px] overflow-y-auto border-2 border-[var(--theme-border)]">
+                {/* Select all header */}
+                <div className="flex items-center justify-between px-1">
+                  <button
+                    onClick={selectAll}
+                    className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground)]/40 hover:text-[var(--theme-primary)] transition-colors"
+                  >
+                    {selectedMembers.size === availableMembers.length ? 'DESELECT ALL' : 'SELECT ALL'}
+                  </button>
+                  <span className="font-mono text-[10px] text-[var(--theme-foreground)]/30">
+                    {availableMembers.length} available
+                  </span>
+                </div>
+
+                {/* Member list */}
+                <div className="max-h-[260px] overflow-y-auto border-2 border-[var(--theme-border)]">
                   {availableMembers.map((member: any) => {
                     const userId = member.userId || member._id
                     const isSelected = selectedMembers.has(userId)
@@ -217,25 +306,25 @@ export default function ProjectInviteModal({
                         key={userId}
                         onClick={() => toggleMember(userId)}
                         className={clsx(
-                          "w-full flex items-center gap-3 px-3 py-2.5 border-b border-[var(--theme-border)] last:border-b-0 transition-colors",
+                          "w-full flex items-center gap-3 px-4 py-3 border-b border-[var(--theme-border)]/50 last:border-b-0 transition-colors",
                           isSelected
                             ? "bg-[var(--theme-primary)]/10"
                             : "hover:bg-[var(--theme-background)]/50"
                         )}
                       >
                         <div className={clsx(
-                          "w-4 h-4 border-2 flex items-center justify-center transition-colors",
+                          "w-4 h-4 border-2 flex items-center justify-center shrink-0 transition-colors",
                           isSelected
                             ? "border-[var(--theme-primary)] bg-[var(--theme-primary)]"
                             : "border-[var(--theme-border)]"
                         )}>
                           {isSelected && <HiOutlineCheck className="w-3 h-3 text-[var(--theme-background)]" />}
                         </div>
-                        <div className="flex-1 text-left">
-                          <div className="font-mono text-xs font-bold text-[var(--theme-foreground)]">
+                        <div className="flex-1 text-left min-w-0">
+                          <div className="font-mono text-xs font-bold text-[var(--theme-foreground)] truncate">
                             {member.user?.name || member.name || 'Unknown'}
                           </div>
-                          <div className="font-mono text-[10px] text-[var(--theme-foreground)]/40">
+                          <div className="font-mono text-[10px] text-[var(--theme-foreground)]/40 truncate">
                             {member.user?.email || member.email || ''} · {member.role}
                           </div>
                         </div>
@@ -243,6 +332,8 @@ export default function ProjectInviteModal({
                     )
                   })}
                 </div>
+
+                {/* Add button */}
                 <BrutalButton
                   size="sm"
                   variant="primary"
@@ -261,31 +352,38 @@ export default function ProjectInviteModal({
 
         {/* ─── Email Invite Tab ─── */}
         {activeTab === 'email' && (
-          <div className="space-y-3">
-            <p className="font-mono text-[11px] text-[var(--theme-foreground)]/50">
-              Invite by email. If they have an LTF1 account, they're added instantly. If not, they'll get an email with a join link.
+          <div className="space-y-5">
+            <p className="font-mono text-xs text-[var(--theme-foreground)]/50 leading-relaxed">
+              Invite by email. Existing LTF1 users are added instantly. New users receive a join link.
             </p>
-            <div className="flex gap-1.5">
-              <input
-                type="email"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleEmailInvite()}
-                placeholder="developer@company.com"
-                className="flex-1 px-3 py-2 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-xs text-[var(--theme-foreground)] placeholder:text-[var(--theme-foreground)]/20 focus:border-[var(--theme-primary)] focus:outline-none"
-              />
-              <BrutalButton
-                size="sm"
-                variant="primary"
-                onClick={handleEmailInvite}
-                disabled={!emailInput.trim() || isSendingEmail}
-                loading={isSendingEmail}
-              >
-                SEND
-              </BrutalButton>
+
+            <div className="space-y-2">
+              <label className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-foreground)]/40">
+                Email Address
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleEmailInvite()}
+                  placeholder="developer@company.com"
+                  className="flex-1 px-3 py-2.5 bg-[var(--theme-background)] border-2 border-[var(--theme-border)] font-mono text-xs text-[var(--theme-foreground)] placeholder:text-[var(--theme-foreground)]/20 focus:border-[var(--theme-primary)] focus:outline-none transition-colors"
+                />
+                <BrutalButton
+                  size="sm"
+                  variant="primary"
+                  onClick={handleEmailInvite}
+                  disabled={!emailInput.trim() || isSendingEmail}
+                  loading={isSendingEmail}
+                >
+                  SEND
+                </BrutalButton>
+              </div>
             </div>
-            <p className="font-mono text-[9px] text-[var(--theme-foreground)]/30 uppercase">
-              New users will be added to the workspace automatically when they join.
+
+            <p className="font-mono text-[10px] text-[var(--theme-foreground)]/30 leading-relaxed">
+              New users will be added to the workspace automatically when they accept the invite.
             </p>
           </div>
         )}
