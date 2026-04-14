@@ -86,7 +86,7 @@ function ExpertiseCell({ level }: { level: ExpertiseLevelInfo | null }) {
   if (!level) return <div className="w-full h-full" />
   return (
     <div className={clsx(
-      'inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-mono font-bold border',
+      'inline-flex items-center justify-center px-2 py-1 text-[10px] font-mono font-bold border',
       level.bg, level.text, level.border
     )}>
       {level.abbr}
@@ -107,7 +107,8 @@ function MatrixTableView({
 }) {
   if (members.length === 0) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-12 text-center">
+        <HiOutlineUser className="w-6 h-6 mx-auto mb-3 text-[var(--theme-foreground-tertiary)]/30" />
         <p className="text-sm text-[var(--theme-foreground-tertiary)]">No team members found.</p>
       </div>
     )
@@ -118,17 +119,17 @@ function MatrixTableView({
       <table className="w-full border-collapse">
         <thead>
           <tr className="border-b-2 border-[var(--theme-border)]">
-            <th className="sticky left-0 z-10 bg-[var(--theme-background-secondary)] p-3 text-left text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] border-r border-[var(--theme-border)] min-w-[200px]">
+            <th className="sticky left-0 z-10 bg-[var(--theme-background-secondary)] px-5 py-4 text-left text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] border-r-2 border-[var(--theme-border)] min-w-[220px]">
               Team Member
             </th>
-            <th className="bg-[var(--theme-background-secondary)] p-3 text-center text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] border-r border-[var(--theme-border)] min-w-[80px]">
+            <th className="bg-[var(--theme-background-secondary)] px-4 py-4 text-center text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] border-r-2 border-[var(--theme-border)] min-w-[90px]">
               Status
             </th>
             {technologies.map((tech) => (
               <th
                 key={tech}
                 className={clsx(
-                  'bg-[var(--theme-background-secondary)] p-2 text-center text-[11px] font-mono font-bold uppercase tracking-wider border-r border-[var(--theme-border)]/50 cursor-pointer hover:bg-[var(--theme-hover)] transition-colors min-w-[60px]',
+                  'bg-[var(--theme-background-secondary)] px-3 py-4 text-center text-[11px] font-mono font-bold uppercase tracking-wider border-r border-[var(--theme-border)]/30 cursor-pointer hover:bg-[var(--theme-hover)] transition-colors min-w-[70px]',
                   selectedTech === tech ? 'text-[#6366F1] bg-[#6366F1]/10' : 'text-[var(--theme-foreground-secondary)]'
                 )}
                 onClick={() => onSelectTech(selectedTech === tech ? null : tech)}
@@ -151,19 +152,19 @@ function MatrixTableView({
               )}
             >
               <td className={clsx(
-                'sticky left-0 z-[5] p-3 border-r border-[var(--theme-border)]',
+                'sticky left-0 z-[5] px-5 py-4 border-r-2 border-[var(--theme-border)]',
                 idx % 2 === 0 ? 'bg-[var(--theme-background)]' : 'bg-[var(--theme-background-secondary)]'
               )}>
                 <button
                   type="button"
-                  className="flex items-center gap-2 text-sm font-medium text-[var(--theme-foreground)] hover:text-[#6366F1] transition-colors w-full text-left"
+                  className="flex items-center gap-2.5 text-sm font-medium text-[var(--theme-foreground)] hover:text-[#6366F1] transition-colors w-full text-left"
                   onClick={() => onMemberClick(member.userId)}
                 >
-                  <HiOutlineUser className="w-3.5 h-3.5 text-[var(--theme-foreground-tertiary)] shrink-0" />
+                  <HiOutlineUser className="w-4 h-4 text-[var(--theme-foreground-tertiary)] shrink-0" />
                   {member.name || 'Unknown'}
                 </button>
               </td>
-              <td className="p-3 text-center border-r border-[var(--theme-border)]">
+              <td className="px-4 py-4 text-center border-r-2 border-[var(--theme-border)]">
                 <DeveloperStatusIndicator
                   userId={member.userId as Id<"users">}
                   size="sm"
@@ -174,7 +175,7 @@ function MatrixTableView({
                 <td
                   key={tech}
                   className={clsx(
-                    'p-2 text-center border-r border-[var(--theme-border)]/30',
+                    'px-3 py-4 text-center border-r border-[var(--theme-border)]/20',
                     selectedTech === tech && 'bg-[#6366F1]/5'
                   )}
                 >
@@ -199,7 +200,7 @@ function GroupedView({
   onMemberClick: (userId: string) => void
 }) {
   return (
-    <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {technologies.map((tech) => {
         const experts = members
           .filter(m => m.expertise.some(e => e.name === tech && e.level >= minLevel))
@@ -212,16 +213,16 @@ function GroupedView({
         if (!showEmptySkills && experts.length === 0) return null
 
         return (
-          <div key={tech} className="border border-[var(--theme-border)] bg-[var(--theme-card)] p-3">
-            <h3 className="text-xs font-mono font-bold text-[var(--theme-foreground)] mb-2 flex items-center gap-1.5">
-              <HiOutlineCode className="w-3.5 h-3.5 text-[#6366F1]" />
+          <div key={tech} className="border-2 border-[var(--theme-border)] bg-[var(--theme-card)] p-4">
+            <h3 className="text-xs font-mono font-bold text-[var(--theme-foreground)] mb-3 flex items-center gap-2">
+              <HiOutlineCode className="w-4 h-4 text-[#6366F1]" />
               {tech}
               <span className="text-[var(--theme-foreground-tertiary)] font-normal">({experts.length})</span>
             </h3>
             {experts.length === 0 ? (
-              <p className="text-xs text-[var(--theme-foreground-tertiary)]">No experts yet</p>
+              <p className="text-xs text-[var(--theme-foreground-tertiary)] py-2">No experts yet</p>
             ) : (
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {experts.map((member) => {
                   const exp = member.expertise.find(e => e.name === tech)!
                   const level = getExpertiseLevel(exp.level)!
@@ -229,10 +230,10 @@ function GroupedView({
                     <button
                       type="button"
                       key={member.userId}
-                      className="flex items-center justify-between p-2 bg-[var(--theme-background)] border border-[var(--theme-border)] hover:border-[#6366F1]/50 transition-colors w-full text-left"
+                      className="flex items-center justify-between p-2.5 bg-[var(--theme-background)] border border-[var(--theme-border)] hover:border-[#6366F1]/50 transition-colors w-full text-left"
                       onClick={() => onMemberClick(member.userId)}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2.5">
                         <DeveloperStatusIndicator
                           userId={member.userId as Id<"users">}
                           size="sm"
@@ -352,7 +353,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
 
   if (!processedData) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-12 text-center">
         <div className="text-sm text-[var(--theme-foreground-tertiary)] animate-pulse">Loading expertise matrix...</div>
       </div>
     )
@@ -364,23 +365,23 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
   const content = (
     <div className={clsx(
       'bg-[var(--theme-background)] border-2 border-[var(--theme-border)] flex flex-col',
-      isModal ? 'w-full max-w-6xl max-h-[90vh] shadow-[4px_4px_0px_rgba(0,0,0,0.8)]' : ''
+      isModal ? 'w-full max-w-6xl max-h-[85vh] shadow-[4px_4px_0px_rgba(0,0,0,0.8)]' : ''
     )}>
       {/* Header */}
-      <div className="px-5 py-4 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] flex items-start justify-between shrink-0">
+      <div className="px-6 py-5 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] flex items-start justify-between shrink-0">
         <div>
-          <h2 className="text-sm font-bold text-[var(--theme-foreground)] flex items-center gap-2">
-            <HiOutlineChartBar className="w-4 h-4 text-[#6366F1]" />
+          <h2 className="text-sm font-bold text-[var(--theme-foreground)] flex items-center gap-2.5">
+            <HiOutlineChartBar className="w-4.5 h-4.5 text-[#6366F1]" />
             TEAM EXPERTISE MATRIX
           </h2>
-          <p className="text-xs font-mono text-[var(--theme-foreground-tertiary)] mt-1">
-            {processedData.members.length} members · {processedData.technologies.length} technologies
+          <p className="text-xs font-mono text-[var(--theme-foreground-tertiary)] mt-1.5">
+            {processedData.members.length} member{processedData.members.length !== 1 ? 's' : ''} · {processedData.technologies.length} technolog{processedData.technologies.length !== 1 ? 'ies' : 'y'}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={exportMatrix}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono font-bold uppercase border border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] hover:border-[#6366F1] hover:text-[#6366F1] transition-colors"
+            className="flex items-center gap-2 px-3.5 py-2 text-[11px] font-mono font-bold uppercase border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] hover:border-[#6366F1] hover:text-[#6366F1] transition-colors"
           >
             <HiOutlineDownload className="w-3.5 h-3.5" />
             Export
@@ -388,7 +389,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
           {isModal && onClose && (
             <button
               onClick={onClose}
-              className="p-1.5 border border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] hover:border-[#EF4444] hover:text-[#EF4444] transition-colors"
+              className="p-2 border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] hover:border-[#EF4444] hover:text-[#EF4444] transition-colors"
             >
               <HiOutlineX className="w-4 h-4" />
             </button>
@@ -397,28 +398,28 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
       </div>
 
       {/* Controls */}
-      <div className="px-5 py-3 border-b border-[var(--theme-border)] bg-[var(--theme-background)]/50 shrink-0">
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="px-6 py-4 border-b-2 border-[var(--theme-border)] bg-[var(--theme-background)]/50 shrink-0">
+        <div className="flex flex-wrap items-center gap-4">
           {/* Search */}
-          <div className="relative flex-1 min-w-[180px] max-w-[300px]">
-            <HiOutlineSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--theme-foreground-tertiary)]" />
+          <div className="relative flex-1 min-w-[200px] max-w-[320px]">
+            <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--theme-foreground-tertiary)]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => update('searchQuery', e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] text-[var(--theme-foreground)] placeholder:text-[var(--theme-foreground-tertiary)] focus:outline-none focus:border-[#6366F1]/50"
+              className="w-full pl-9 pr-3 py-2 text-xs bg-[var(--theme-background-secondary)] border-2 border-[var(--theme-border)] text-[var(--theme-foreground)] placeholder:text-[var(--theme-foreground-tertiary)] focus:outline-none focus:border-[#6366F1]/50 transition-colors"
               placeholder="Search technologies..."
             />
           </div>
 
           {/* View mode */}
-          <div className="flex items-center border border-[var(--theme-border)]">
+          <div className="flex items-center border-2 border-[var(--theme-border)]">
             {(['matrix', 'grouped'] as const).map((mode) => (
               <button
                 key={mode}
                 onClick={() => update('viewMode', mode)}
                 className={clsx(
-                  'px-3 py-1.5 text-[11px] font-mono font-bold uppercase transition-colors',
+                  'px-4 py-2 text-[11px] font-mono font-bold uppercase transition-colors',
                   viewMode === mode
                     ? 'bg-[#6366F1] text-white'
                     : 'text-[var(--theme-foreground-secondary)] hover:bg-[var(--theme-hover)]'
@@ -430,7 +431,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
           </div>
 
           {/* Sort */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <BrutalSelect
               value={sortBy}
               onChange={(v) => update('sortBy', v)}
@@ -443,7 +444,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
             />
             <button
               onClick={() => update('sortAsc', !sortAsc)}
-              className="p-1.5 border border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] hover:border-[#6366F1]/50 transition-colors"
+              className="p-2 border-2 border-[var(--theme-border)] text-[var(--theme-foreground-secondary)] hover:border-[#6366F1]/50 transition-colors"
             >
               {sortAsc
                 ? <HiOutlineSortAscending className="w-3.5 h-3.5" />
@@ -452,9 +453,12 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
             </button>
           </div>
 
+          {/* Divider */}
+          <div className="w-px h-6 bg-[var(--theme-border)]" />
+
           {/* Show all + min level */}
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-1.5 cursor-pointer">
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={showEmptySkills}
@@ -463,7 +467,7 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
               />
               <span className="text-[11px] font-mono text-[var(--theme-foreground-secondary)]">Show all</span>
             </label>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono text-[var(--theme-foreground-tertiary)]">Min:</span>
               <input
                 type="range"
@@ -471,16 +475,16 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
                 max="10"
                 value={minLevel}
                 onChange={(e) => update('minLevel', parseInt(e.target.value))}
-                className="w-16 accent-[#6366F1]"
+                className="w-20 accent-[#6366F1]"
               />
-              <span className="text-[11px] font-mono font-bold text-[var(--theme-foreground)] w-4 text-center">{minLevel}</span>
+              <span className="text-[11px] font-mono font-bold text-[var(--theme-foreground)] w-5 text-center">{minLevel}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto min-h-0" style={{ maxHeight: isModal ? '55vh' : 'calc(100vh - 320px)' }}>
+      <div className="flex-1 overflow-auto min-h-0" style={{ maxHeight: isModal ? '50vh' : 'calc(100vh - 340px)' }}>
         {viewMode === 'matrix' ? (
           <MatrixTableView
             technologies={processedData.technologies}
@@ -503,9 +507,9 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
       </div>
 
       {/* Legend */}
-      <div className="px-5 py-3 border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] shrink-0">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-4">
+      <div className="px-6 py-4 border-t-2 border-[var(--theme-border)] bg-[var(--theme-background-secondary)] shrink-0">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-5">
             <span className="text-[11px] font-mono font-bold text-[var(--theme-foreground-secondary)] uppercase">Levels:</span>
             {[
               { abbr: 'BEG', label: '2-3', bg: 'bg-[var(--theme-foreground-tertiary)]/10', text: 'text-[var(--theme-foreground-tertiary)]', border: 'border-[var(--theme-foreground-tertiary)]/20' },
@@ -513,8 +517,8 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
               { abbr: 'ADV', label: '6-7', bg: 'bg-[#6366F1]/15', text: 'text-[#6366F1]', border: 'border-[#6366F1]/30' },
               { abbr: 'EXP', label: '8-10', bg: 'bg-[#22C55E]/15', text: 'text-[#22C55E]', border: 'border-[#22C55E]/30' },
             ].map(({ abbr, label, bg, text, border }) => (
-              <div key={abbr} className="flex items-center gap-1.5">
-                <div className={clsx('inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-mono font-bold border', bg, text, border)}>
+              <div key={abbr} className="flex items-center gap-2">
+                <div className={clsx('inline-flex items-center justify-center px-2 py-1 text-[10px] font-mono font-bold border', bg, text, border)}>
                   {abbr}
                 </div>
                 <span className="text-[11px] font-mono text-[var(--theme-foreground-tertiary)]">{label}</span>
@@ -533,11 +537,11 @@ export function TeamExpertiseMatrix({ workspaceId, onClose, isModal = false }: T
 
   if (isModal) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background)]/80 backdrop-blur-sm p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-background)]/80 backdrop-blur-sm p-6">
         {content}
       </div>
     )
   }
 
-  return <div className="p-4">{content}</div>
+  return <div className="p-5">{content}</div>
 }
