@@ -10,7 +10,11 @@ import BrutalButton from "@/components/ui/BrutalButton";
 import SkillCard from "@/components/features/skills/SkillCard";
 import CreateSkillModal from "@/components/features/skills/CreateSkillModal";
 import EditSkillModal from "@/components/features/skills/EditSkillModal";
-import { HiOutlineLightningBolt, HiOutlineSearch } from "react-icons/hi";
+import {
+  HiOutlineLightningBolt,
+  HiOutlineSearch,
+  HiOutlineInformationCircle,
+} from "react-icons/hi";
 
 export default function SkillsPage() {
   const {
@@ -80,13 +84,27 @@ export default function SkillsPage() {
     );
   }
 
-  // Filter workspace skills by search
-  const filteredWorkspaceSkills = workspaceSkills?.filter(
-    (s) =>
-      !searchQuery ||
-      s.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.description.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  // Filter workspace skills by search, then sort by usage DESC (most-used first).
+  // Ties broken by display name alpha so ordering stays stable across renders.
+  const filteredWorkspaceSkills = workspaceSkills
+    ?.filter(
+      (s) =>
+        !searchQuery ||
+        s.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.description.toLowerCase().includes(searchQuery.toLowerCase()),
+    )
+    .slice()
+    .sort((a, b) => {
+      const diff = (b.usageCount ?? 0) - (a.usageCount ?? 0);
+      if (diff !== 0) return diff;
+      return a.displayName.localeCompare(b.displayName);
+    });
+
+  // The "MOST USED" badge goes on the top skill if anyone has actually used it.
+  const mostUsedSkillId =
+    filteredWorkspaceSkills && (filteredWorkspaceSkills[0]?.usageCount ?? 0) > 0
+      ? filteredWorkspaceSkills[0]._id
+      : null;
 
   // Filter built-in templates not yet installed
   const installedNames = new Set(workspaceSkills?.map((s) => s.name) ?? []);
@@ -143,6 +161,29 @@ export default function SkillsPage() {
 
         {/* Content */}
         <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-6">
+          {/* Inline how-to-use hint — sits above the skill sections so new
+              users immediately see the three ways to run a skill. */}
+          <div className="flex items-start gap-2 p-3 border-2 border-[var(--theme-info)]/30 bg-[var(--theme-info)]/5">
+            <HiOutlineInformationCircle className="w-4 h-4 text-[var(--theme-info)] shrink-0 mt-0.5" />
+            <div className="font-mono text-[10px] text-[var(--theme-foreground-secondary)] space-y-1">
+              <div>
+                <kbd className="inline-flex items-center justify-center h-4 px-1 text-[9px] font-mono bg-[var(--theme-background)] border border-[var(--theme-border)] mr-1">
+                  ⌘K
+                </kbd>
+                in any task — type a skill name, hit enter to run it.
+              </div>
+              <div>
+                <kbd className="inline-flex items-center justify-center h-4 px-1 text-[9px] font-mono bg-[var(--theme-background)] border border-[var(--theme-border)] mr-1">
+                  S
+                </kbd>
+                on an open task opens the skill dropdown.
+              </div>
+              <div>
+                <span className="text-[var(--theme-foreground-tertiary)]">Auto-trigger</span> skills run by themselves when new tasks match their keywords.
+              </div>
+            </div>
+          </div>
+
           {/* YOUR SKILLS section */}
           <section>
             <h2 className="font-mono text-[11px] font-bold uppercase tracking-wider text-[var(--theme-foreground-secondary)] mb-3 flex items-center gap-2">
@@ -166,6 +207,7 @@ export default function SkillsPage() {
                     variant="workspace"
                     workspaceId={currentWorkspaceId}
                     onEdit={setEditingSkillId}
+                    isMostUsed={skill._id === mostUsedSkillId}
                   />
                 ))}
               </div>

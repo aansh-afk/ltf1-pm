@@ -26,6 +26,7 @@ interface SkillCardProps {
   variant: "workspace" | "library";
   workspaceId?: string;
   onEdit?: (skillId: Id<"skills">) => void;
+  isMostUsed?: boolean;
 }
 
 const TRIGGER_CONFIG: Record<TriggerType, { label: string; color: string; bg: string; border: string }> = {
@@ -48,7 +49,7 @@ function getSkillIcon(name: string): string {
   return map[name] || "⚡";
 }
 
-export default function SkillCard({ skill, variant, workspaceId, onEdit }: SkillCardProps) {
+export default function SkillCard({ skill, variant, workspaceId, onEdit, isMostUsed }: SkillCardProps) {
   const toggleSkill = useMutation(api.skills.mutations.toggleSkill);
   const deleteSkill = useMutation(api.skills.mutations.deleteSkill);
   const installSkill = useMutation(api.skills.mutations.installSkill);
@@ -120,6 +121,11 @@ export default function SkillCard({ skill, variant, workspaceId, onEdit }: Skill
               {skill.isBuiltIn && (
                 <span className="px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider border border-[#8B5CF6]/30 bg-[#8B5CF6]/10 text-[#8B5CF6]">
                   BUILT-IN
+                </span>
+              )}
+              {isMostUsed && (
+                <span className="px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider border border-[#F59E0B]/40 bg-[#F59E0B]/10 text-[#F59E0B]">
+                  MOST USED
                 </span>
               )}
             </div>

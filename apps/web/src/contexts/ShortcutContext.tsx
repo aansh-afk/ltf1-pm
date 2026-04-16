@@ -46,6 +46,10 @@ interface ShortcutContextValue {
   setCommandPaletteOpen: (open: boolean) => void;
   commands: Command[];
   executeCommand: (command: Command) => void;
+  // Runtime commands — register transient entries into the palette
+  // (e.g. "Run skill: X" when a task detail modal is open). Returns a
+  // disposer that removes them. Useful for scoped, context-dependent actions.
+  registerRuntimeCommands: (commands: Command[]) => () => void;
 
   // Context
   currentContext: string;
@@ -76,6 +80,7 @@ type ShortcutProviderState = {
   isCommandPaletteOpen: boolean;
   isHelpOpen: boolean;
   currentContext: string;
+  runtimeCommands: Command[];
 };
 
 const shortcutProviderInitialState: ShortcutProviderState = {
@@ -84,6 +89,7 @@ const shortcutProviderInitialState: ShortcutProviderState = {
   isCommandPaletteOpen: false,
   isHelpOpen: false,
   currentContext: "global",
+  runtimeCommands: [],
 };
 
 type ShortcutProviderAction = {
@@ -110,6 +116,9 @@ export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const managerRef = useRef<ShortcutManager>();
+  // Ref mirror of runtime commands so register/dispose always see the
+  // latest list (avoids stale closures when multiple callers register).
+  const runtimeCommandsRef = useRef<Command[]>([]);
 
   const [providerState, dispatch] = useReducer(
     shortcutProviderReducer,
@@ -121,6 +130,7 @@ export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({
     isCommandPaletteOpen,
     isHelpOpen,
     currentContext,
+    runtimeCommands,
   } = providerState;
 
   // Initialize shortcut manager
@@ -198,21 +208,50 @@ export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({
     [navigate],
   );
 
-  // Generate commands for command palette
-  const commands: Command[] = shortcuts.map((shortcut) => ({
-    id: shortcut.id,
-    name: shortcut.name,
-    description: shortcut.description,
-    shortcut: shortcut.customKeys || shortcut.defaultKeys,
-    category: shortcut.category,
-    action: () => {
-      if (shortcut.command) {
-        handleShortcutCommand(shortcut.command);
-      } else if (shortcut.action) {
-        shortcut.action();
-      }
-    },
-  }));
+  // Generate commands for command palette — static shortcut entries plus
+  // any transient entries registered via registerRuntimeCommands(). Runtime
+  // commands render first so context-relevant actions ("Run skill…", etc.)
+  // sit above global shortcuts.
+  const commands: Command[] = [
+    ...runtimeCommands,
+    ...shortcuts.map((shortcut) => ({
+      id: shortcut.id,
+      name: shortcut.name,
+      description: shortcut.description,
+      shortcut: shortcut.customKeys || shortcut.defaultKeys,
+      category: shortcut.category,
+      action: () => {
+        if (shortcut.command) {
+          handleShortcutCommand(shortcut.command);
+        } else if (shortcut.action) {
+          shortcut.action();
+        }
+      },
+    })),
+  ];
+
+  const registerRuntimeCommands = useCallback((newCommands: Command[]) => {
+    const ids = newCommands.map((c) => c.id);
+    runtimeCommandsRef.current = [
+      ...runtimeCommandsRef.current.filter((c) => !ids.includes(c.id)),
+      ...newCommands,
+    ];
+    dispatch({
+      type: "UPDATE",
+      field: "runtimeCommands",
+      value: runtimeCommandsRef.current,
+    });
+    return () => {
+      runtimeCommandsRef.current = runtimeCommandsRef.current.filter(
+        (c) => !ids.includes(c.id),
+      );
+      dispatch({
+        type: "UPDATE",
+        field: "runtimeCommands",
+        value: runtimeCommandsRef.current,
+      });
+    };
+  }, []);
 
   // Shortcut management methods
   const getShortcut = (id: string) => managerRef.current?.getShortcut(id);
@@ -368,6 +407,7 @@ export const ShortcutProvider: React.FC<ShortcutProviderProps> = ({
       dispatch({ type: "UPDATE", field: "isCommandPaletteOpen", value: open }),
     commands,
     executeCommand,
+    registerRuntimeCommands,
     currentContext,
     setContext,
     isHelpOpen,

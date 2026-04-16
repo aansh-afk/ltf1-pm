@@ -2205,7 +2205,8 @@ export default defineSchema({
     description: v.string(),
     metadata: v.optional(v.any()),
   })
-    .index("by_workspaceId", ["workspaceId"]),
+    .index("by_workspaceId", ["workspaceId"])
+    .index("by_task", ["taskId"]),
 
   // Skills
   skills: defineTable({
