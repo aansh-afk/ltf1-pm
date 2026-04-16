@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "ltf-pm": {
+      "source": "aansh-afk/ltf1-pm",
+      "sourceType": "github",
+      "computedHash": "1507b74f10a2ca75bf6f549627022e895c084d6cef0ef2268adf4af2a156b67d"
+    }
+  }
+}

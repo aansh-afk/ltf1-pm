@@ -1,4 +1,5 @@
 import { useReducer, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { m, AnimatePresence } from 'framer-motion'
 import BrutalModal from '@/components/ui/BrutalModal'
 import ThemeSwitcher from '@/components/theme/ThemeSwitcher'
@@ -16,7 +17,8 @@ import {
   HiOutlineX,
   HiOutlineKey,
   HiOutlineCreditCard,
-  HiOutlineInformationCircle
+  HiOutlineInformationCircle,
+  HiOutlineDownload,
 } from 'react-icons/hi'
 
 interface OnboardingFlowProps {
@@ -24,7 +26,8 @@ interface OnboardingFlowProps {
   onComplete: () => void
 }
 
-type OnboardingStep = 'theme' | 'ai' | 'complete'
+type OnboardingStep = 'theme' | 'ai' | 'import' | 'complete'
+type ImportChoice = 'linear' | 'jira' | 'skip' | ''
 
 const slideVariants = {
   enter: (direction: number) => ({
@@ -523,6 +526,7 @@ type OnboardingState = {
   aiSetupChoice: 'free' | 'byok' | 'skip' | ''
   apiKey: string
   isValidating: boolean
+  importChoice: ImportChoice
   bootComplete: Array<number>
   allSystemsGo: boolean
 }
@@ -534,6 +538,7 @@ const initialOnboardingState: OnboardingState = {
   aiSetupChoice: '',
   apiKey: '',
   isValidating: false,
+  importChoice: '',
   bootComplete: [],
   allSystemsGo: false,
 }
@@ -544,10 +549,12 @@ type OnboardingAction =
   | { type: 'SET_AI_SETUP_CHOICE'; value: 'free' | 'byok' | 'skip' | '' }
   | { type: 'SET_API_KEY'; value: string }
   | { type: 'SET_IS_VALIDATING'; value: boolean }
+  | { type: 'SET_IMPORT_CHOICE'; value: ImportChoice }
   | { type: 'ADD_BOOT_COMPLETE'; index: number }
   | { type: 'SET_ALL_SYSTEMS_GO'; value: boolean }
   | { type: 'RESET_BOOT' }
   | { type: 'GO_BACK_TO_THEME' }
+  | { type: 'GO_BACK_TO_AI' }
 
 function onboardingReducer(state: OnboardingState, action: OnboardingAction): OnboardingState {
   switch (action.type) {
@@ -561,6 +568,8 @@ function onboardingReducer(state: OnboardingState, action: OnboardingAction): On
       return { ...state, apiKey: action.value }
     case 'SET_IS_VALIDATING':
       return { ...state, isValidating: action.value }
+    case 'SET_IMPORT_CHOICE':
+      return { ...state, importChoice: action.value }
     case 'ADD_BOOT_COMPLETE':
       return { ...state, bootComplete: [...state.bootComplete, action.index] }
     case 'SET_ALL_SYSTEMS_GO':
@@ -569,9 +578,131 @@ function onboardingReducer(state: OnboardingState, action: OnboardingAction): On
       return { ...state, bootComplete: [], allSystemsGo: false }
     case 'GO_BACK_TO_THEME':
       return { ...state, currentStep: 'theme' as OnboardingStep, direction: -1, aiSetupChoice: '' as const }
+    case 'GO_BACK_TO_AI':
+      return { ...state, currentStep: 'ai' as OnboardingStep, direction: -1, importChoice: '' as const }
     default:
       return state
   }
+}
+
+interface ImportStepProps {
+  direction: number
+  importChoice: ImportChoice
+  dispatch: React.Dispatch<OnboardingAction>
+  onBack: () => void
+  onImportComplete: () => void
+}
+
+function ImportStep({ direction, importChoice, dispatch, onBack, onImportComplete }: ImportStepProps) {
+  const continueLabel =
+    importChoice === 'linear' ? 'GO TO LINEAR IMPORTER' :
+    importChoice === 'jira' ? 'GO TO JIRA IMPORTER' :
+    importChoice === 'skip' ? 'FINALIZE --fresh-start' :
+    'SELECT_OPTION'
+
+  return (
+    <m.div
+      key="import-step"
+      custom={direction}
+      variants={slideVariants}
+      initial="enter"
+      animate="center"
+      exit="exit"
+      transition={{ duration: 0.35, ease: 'easeInOut' }}
+      className="space-y-[12px]"
+    >
+      <div
+        className="p-[10px] border-2"
+        style={{ backgroundColor: 'var(--theme-background-secondary)', borderColor: 'var(--theme-info)' }}
+      >
+        <div className="flex items-start gap-[6px]">
+          <HiOutlineDownload className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--theme-info)' }} />
+          <div>
+            <h3 className="text-[13px] font-mono uppercase mb-[4px] tracking-wider" style={{ color: 'var(--theme-foreground)' }}>
+              {'>'} MIGRATE FROM EXTERNAL PM
+            </h3>
+            <p className="text-[11px] font-mono" style={{ color: 'var(--theme-foreground-secondary)' }}>
+              Coming from Linear or Jira? Pull issues, sprints, and labels in one shot. Or skip and start fresh.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <m.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-[10px]">
+        <AIOptionCard
+          selected={importChoice === 'linear'}
+          icon={<HiOutlineDownload className="w-4 h-4 flex-shrink-0 mt-[2px]" style={{ color: importChoice === 'linear' ? 'var(--theme-primary)' : 'var(--theme-foreground-secondary)' }} />}
+          title="LINEAR_IMPORT"
+          description="Pull teams, issues, cycles, and labels from a Linear team."
+          details={[
+            'Requires a Linear personal API key',
+            '~1–5 min for 1000 issues',
+            'Idempotent — safe to re-run'
+          ]}
+          onSelect={() => dispatch({ type: 'SET_IMPORT_CHOICE', value: 'linear' })}
+        />
+
+        <AIOptionCard
+          selected={importChoice === 'jira'}
+          icon={<HiOutlineDownload className="w-4 h-4 flex-shrink-0 mt-[2px]" style={{ color: importChoice === 'jira' ? 'var(--theme-primary)' : 'var(--theme-foreground-secondary)' }} />}
+          title="JIRA_IMPORT"
+          description="Pull issues, sprints, and labels from a Jira Cloud project."
+          details={[
+            'Requires Jira host + email + API token',
+            '~5–10 min for 1000 issues',
+            'Idempotent — safe to re-run'
+          ]}
+          onSelect={() => dispatch({ type: 'SET_IMPORT_CHOICE', value: 'jira' })}
+        />
+
+        <m.button
+          variants={staggerItem}
+          whileHover={{ y: -1 }}
+          whileTap={{ y: 0 }}
+          onClick={() => dispatch({ type: 'SET_IMPORT_CHOICE', value: 'skip' })}
+          className="w-full p-[10px] border-2 text-center transition-colors"
+          style={{
+            borderRadius: '0px',
+            backgroundColor: 'var(--theme-background)',
+            borderColor: importChoice === 'skip' ? 'var(--theme-foreground-tertiary)' : 'var(--theme-border)',
+            color: 'var(--theme-foreground-tertiary)',
+            boxShadow: importChoice === 'skip' ? '4px 4px 0 var(--theme-shadow)' : 'none'
+          }}
+        >
+          <p className="text-[11px] font-mono uppercase tracking-wider">SKIP --fresh-start</p>
+        </m.button>
+      </m.div>
+
+      <div className="flex justify-between pt-[8px]">
+        <m.button
+          whileHover={{ y: -1 }}
+          whileTap={{ y: 1 }}
+          onClick={onBack}
+          className="px-[12px] py-[8px] border-2 font-mono text-[11px] uppercase tracking-wider flex items-center gap-[6px]"
+          style={{ borderRadius: '8px', backgroundColor: 'var(--theme-background)', borderColor: 'var(--theme-border)', color: 'var(--theme-foreground)' }}
+        >
+          <HiOutlineArrowLeft className="w-4 h-4" />
+          BACK
+        </m.button>
+        <m.button
+          whileHover={importChoice ? { y: -2, boxShadow: '6px 6px 0 var(--theme-shadow)' } : {}}
+          whileTap={importChoice ? { y: 0, boxShadow: '2px 2px 0 var(--theme-shadow)' } : {}}
+          onClick={onImportComplete}
+          disabled={!importChoice}
+          className="px-[16px] py-[8px] border-2 font-mono text-[12px] uppercase tracking-wider disabled:opacity-50"
+          style={{
+            borderRadius: '8px',
+            backgroundColor: importChoice ? 'var(--theme-success)' : 'var(--theme-background-secondary)',
+            borderColor: 'var(--theme-border)',
+            color: importChoice ? 'var(--theme-background)' : 'var(--theme-foreground-tertiary)',
+            boxShadow: importChoice ? '4px 4px 0 var(--theme-shadow)' : 'none'
+          }}
+        >
+          {continueLabel}
+        </m.button>
+      </div>
+    </m.div>
+  )
 }
 
 interface CompletionScreenProps {
@@ -689,8 +820,9 @@ function CompletionScreen({ isOpen, onComplete, bootComplete, allSystemsGo }: Co
 
 export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowProps) {
   const [state, dispatch] = useReducer(onboardingReducer, initialOnboardingState)
-  const { currentStep, showSkipConfirm, direction, aiSetupChoice, apiKey, isValidating, bootComplete, allSystemsGo } = state
+  const { currentStep, showSkipConfirm, direction, aiSetupChoice, apiKey, isValidating, importChoice, bootComplete, allSystemsGo } = state
   const { themeName, themeDescription } = useTheme()
+  const navigate = useNavigate()
 
   const setupAICredits = useMutation(api.aiCredits.mutations.setupUserAI)
   const validateApiKey = useAction(api.aiCredits.actions.validateApiKey)
@@ -703,13 +835,36 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
   const handleBack = () => {
     if (currentStep === 'ai') {
       dispatch({ type: 'GO_BACK_TO_THEME' })
+    } else if (currentStep === 'import') {
+      dispatch({ type: 'GO_BACK_TO_AI' })
     }
+  }
+
+  const handleImportComplete = () => {
+    if (!importChoice) return
+
+    // Fire the final onboarding event carrying every choice.
+    posthog.capture('onboarding_completed', {
+      theme: themeName,
+      ai_setup: aiSetupChoice || 'skipped',
+      import_choice: importChoice,
+    })
+
+    if (importChoice === 'linear' || importChoice === 'jira') {
+      // Hand off to the full importer. Navigate first so the route is set
+      // before the modal unmounts, then close the modal.
+      navigate(`/import?source=${importChoice}`)
+      onComplete()
+      return
+    }
+
+    // SKIP — run the completion boot animation, which will call onComplete().
+    dispatch({ type: 'SET_STEP', step: 'complete', direction: 1 })
   }
 
   const handleAIComplete = async () => {
     if (aiSetupChoice === 'skip') {
-      posthog.capture('onboarding_completed', { ai_setup: 'skipped', theme: themeName })
-      dispatch({ type: 'SET_STEP', step: 'complete', direction: 1 })
+      dispatch({ type: 'SET_STEP', step: 'import', direction: 1 })
       return
     }
 
@@ -738,8 +893,7 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
         toast.success('Free AI credits activated! You have 100 credits to start.')
       }
 
-      posthog.capture('onboarding_completed', { ai_setup: aiSetupChoice, theme: themeName })
-      dispatch({ type: 'SET_STEP', step: 'complete', direction: 1 })
+      dispatch({ type: 'SET_STEP', step: 'import', direction: 1 })
     } catch (error) {
       toast.error('Setup failed. Please try again.')
       console.error(error)
@@ -770,9 +924,17 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
     return () => timers.forEach(clearTimeout)
   }, [currentStep, onComplete])
 
-  const stepIndex = currentStep === 'theme' ? 0 : currentStep === 'ai' ? 1 : 2
-  const stepLabel = currentStep === 'theme' ? 'THEME_CONFIG' : currentStep === 'ai' ? 'AI_MODULE' : 'COMPLETE'
-  const totalSteps = 2
+  const stepIndex =
+    currentStep === 'theme' ? 0 :
+    currentStep === 'ai' ? 1 :
+    currentStep === 'import' ? 2 :
+    3
+  const stepLabel =
+    currentStep === 'theme' ? 'THEME_CONFIG' :
+    currentStep === 'ai' ? 'AI_MODULE' :
+    currentStep === 'import' ? 'IMPORT_MIGRATION' :
+    'COMPLETE'
+  const totalSteps = 3
   const filledBlocks = Math.round((Math.min(stepIndex + 1, totalSteps) / totalSteps) * 20)
 
   // Completion screen
@@ -791,7 +953,11 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
     <BrutalModal
       isOpen={isOpen}
       onClose={handleSkipOnboarding}
-      title={currentStep === 'theme' ? '> INITIALIZING THEME ENGINE...' : '$ CONFIGURE AI_MODULE'}
+      title={
+        currentStep === 'theme' ? '> INITIALIZING THEME ENGINE...' :
+        currentStep === 'ai' ? '$ CONFIGURE AI_MODULE' :
+        '> IMPORT_LEGACY --optional'
+      }
       size="lg"
       showCloseButton={true}
     >
@@ -820,6 +986,16 @@ export default function OnboardingFlow({ isOpen, onComplete }: OnboardingFlowPro
               dispatch={dispatch}
               onBack={handleBack}
               onAIComplete={handleAIComplete}
+            />
+          )}
+
+          {currentStep === 'import' && (
+            <ImportStep
+              direction={direction}
+              importChoice={importChoice}
+              dispatch={dispatch}
+              onBack={handleBack}
+              onImportComplete={handleImportComplete}
             />
           )}
         </AnimatePresence>
