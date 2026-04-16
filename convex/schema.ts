@@ -263,6 +263,13 @@ export default defineSchema({
         tags: v.array(v.string()),
       }),
     ),
+    // Set when the project was imported from Linear/Jira. Used for idempotent re-imports.
+    importSource: v.optional(
+      v.union(v.literal("linear"), v.literal("jira")),
+    ),
+    externalId: v.optional(v.string()),
+    externalKey: v.optional(v.string()),
+    externalUrl: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -272,6 +279,7 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_invite_code", ["inviteCode"])
     .index("by_workspace_and_status", ["workspaceId", "status"])
+    .index("by_external", ["importSource", "externalId"])
     .searchIndex("search_name", {
       searchField: "name",
       filterFields: ["workspaceId", "status"],
@@ -344,6 +352,13 @@ export default defineSchema({
     ),
     gitlabIssueId: v.optional(v.number()), // GitLab issue ID if synced
     gitlabIssueUrl: v.optional(v.string()), // GitLab issue URL
+    // Set when the task was imported from Linear/Jira. Used for idempotent re-imports.
+    importSource: v.optional(
+      v.union(v.literal("linear"), v.literal("jira")),
+    ),
+    externalId: v.optional(v.string()),
+    externalKey: v.optional(v.string()),
+    externalUrl: v.optional(v.string()),
     sprintId: v.optional(v.id("sprints")),
     position: v.number(),
     createdAt: v.number(),
@@ -356,6 +371,7 @@ export default defineSchema({
     .index("by_sprint", ["sprintId"])
     .index("by_parent", ["parentTaskId"])
     .index("by_project_number", ["projectId", "number"])
+    .index("by_project_external", ["projectId", "importSource", "externalId"])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["projectId", "status"],
@@ -2261,6 +2277,44 @@ export default defineSchema({
     content: v.string(),
     parentId: v.optional(v.id("communityComments")),
   }).index("by_postId", ["postId"]),
+
+  // ─── Import jobs (Linear / Jira one-way import) ────────────────
+  imports: defineTable({
+    workspaceId: v.id("workspaces"),
+    source: v.union(v.literal("linear"), v.literal("jira")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    triggeredBy: v.id("users"),
+    // Parameters used to run the import (not credentials — tokens are never persisted)
+    params: v.object({
+      // Linear: teamId. Jira: projectKey.
+      externalScopeId: v.string(),
+      externalScopeName: v.string(),
+      // Jira only: the atlassian host (e.g. "acme.atlassian.net")
+      jiraHost: v.optional(v.string()),
+      // Target project in LTF1. Null = create a new one.
+      targetProjectId: v.optional(v.id("projects")),
+    }),
+    progress: v.object({
+      projectsCreated: v.number(),
+      tasksCreated: v.number(),
+      tasksUpdated: v.number(),
+      tasksSkipped: v.number(),
+      sprintsCreated: v.number(),
+      total: v.number(),
+      currentStep: v.string(),
+    }),
+    error: v.optional(v.string()),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_workspace_and_status", ["workspaceId", "status"])
+    .index("by_triggered_by", ["triggeredBy"]),
 
   // Push notification subscriptions
   pushSubscriptions: defineTable({
