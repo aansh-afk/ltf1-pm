@@ -9,6 +9,7 @@ import WorkspaceSelector from "@/components/common/WorkspaceSelector";
 import BrutalButton from "@/components/ui/BrutalButton";
 import SkillCard from "@/components/features/skills/SkillCard";
 import CreateSkillModal from "@/components/features/skills/CreateSkillModal";
+import EditSkillModal from "@/components/features/skills/EditSkillModal";
 import { HiOutlineLightningBolt, HiOutlineSearch } from "react-icons/hi";
 
 export default function SkillsPage() {
@@ -19,6 +20,7 @@ export default function SkillsPage() {
   } = useCurrentWorkspace();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingSkillId, setEditingSkillId] = useState<Id<"skills"> | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const workspaceSkills = useQuery(
@@ -163,6 +165,7 @@ export default function SkillsPage() {
                     skill={skill}
                     variant="workspace"
                     workspaceId={currentWorkspaceId}
+                    onEdit={setEditingSkillId}
                   />
                 ))}
               </div>
@@ -247,6 +250,13 @@ export default function SkillsPage() {
           isOpen={isCreateOpen}
           onClose={() => setIsCreateOpen(false)}
           workspaceId={currentWorkspaceId}
+        />
+
+        {/* Edit Skill Modal */}
+        <EditSkillModal
+          skillId={editingSkillId}
+          isOpen={!!editingSkillId}
+          onClose={() => setEditingSkillId(null)}
         />
       </div>
     </ErrorBoundary>

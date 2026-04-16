@@ -1,5 +1,5 @@
-import { useReducer } from "react";
-import { useMutation } from "convex/react";
+import { useEffect, useReducer } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 import BrutalModal from "@/components/ui/BrutalModal";
@@ -11,14 +11,15 @@ import {
   HiOutlineX,
   HiOutlineChevronRight,
   HiOutlineChevronLeft,
+  HiOutlineExclamationCircle,
 } from "react-icons/hi";
-
 import {
   ACTION_META,
   PRIORITY_OPTIONS,
   TASK_TYPE_CONDITION_OPTIONS,
   TASK_TYPE_OPTIONS,
   actionIsValid,
+  deserializeActions,
   makeActionRow,
   serializeActions,
   type ActionKind,
@@ -30,8 +31,9 @@ import {
 
 type TriggerType = "manual" | "auto" | "both";
 
-type CreateSkillState = {
+type EditSkillState = {
   step: number;
+  loaded: boolean;
   name: string;
   displayName: string;
   description: string;
@@ -40,11 +42,12 @@ type CreateSkillState = {
   keywords: string[];
   keywordInput: string;
   actions: Array<ActionRow>;
-  isCreating: boolean;
+  isSaving: boolean;
 };
 
-const initialState: CreateSkillState = {
+const emptyState: EditSkillState = {
   step: 1,
+  loaded: false,
   name: "",
   displayName: "",
   description: "",
@@ -52,15 +55,25 @@ const initialState: CreateSkillState = {
   taskTypes: [],
   keywords: [],
   keywordInput: "",
-  actions: [makeActionRow("set_priority")],
-  isCreating: false,
+  actions: [],
+  isSaving: false,
 };
 
 type Action =
   | {
+      type: "LOAD";
+      name: string;
+      displayName: string;
+      description: string;
+      trigger: TriggerType;
+      taskTypes: string[];
+      keywords: string[];
+      actions: Array<ActionRow>;
+    }
+  | {
       type: "SET_FIELD";
-      field: keyof CreateSkillState;
-      value: CreateSkillState[keyof CreateSkillState];
+      field: keyof EditSkillState;
+      value: EditSkillState[keyof EditSkillState];
     }
   | { type: "NEXT_STEP" }
   | { type: "PREV_STEP" }
@@ -87,17 +100,30 @@ type Action =
   | { type: "RESET" };
 
 function updateActionAt(
-  state: CreateSkillState,
+  state: EditSkillState,
   index: number,
   fn: (a: ActionRow) => ActionRow,
-): CreateSkillState {
+): EditSkillState {
   const actions = [...state.actions];
   actions[index] = fn(actions[index]);
   return { ...state, actions };
 }
 
-function reducer(state: CreateSkillState, action: Action): CreateSkillState {
+function reducer(state: EditSkillState, action: Action): EditSkillState {
   switch (action.type) {
+    case "LOAD":
+      return {
+        ...state,
+        loaded: true,
+        step: 1,
+        name: action.name,
+        displayName: action.displayName,
+        description: action.description,
+        trigger: action.trigger,
+        taskTypes: action.taskTypes,
+        keywords: action.keywords,
+        actions: action.actions,
+      };
     case "SET_FIELD":
       return { ...state, [action.field]: action.value };
     case "NEXT_STEP":
@@ -137,7 +163,6 @@ function reducer(state: CreateSkillState, action: Action): CreateSkillState {
       };
     case "CHANGE_ACTION_KIND": {
       const fresh = makeActionRow(action.kind);
-      // Preserve row id so keys stay stable across kind changes.
       fresh.id = state.actions[action.index].id;
       const actions = [...state.actions];
       actions[action.index] = fresh;
@@ -198,16 +223,16 @@ function reducer(state: CreateSkillState, action: Action): CreateSkillState {
         return { ...a, tasks };
       });
     case "RESET":
-      return initialState;
+      return emptyState;
     default:
       return state;
   }
 }
 
-interface CreateSkillModalProps {
+interface EditSkillModalProps {
+  skillId: Id<"skills"> | null;
   isOpen: boolean;
   onClose: () => void;
-  workspaceId: string;
 }
 
 const labelClass =
@@ -217,13 +242,39 @@ const inputClass =
 const smallInputClass =
   "px-2 py-1.5 bg-[var(--theme-background-secondary)] border border-[var(--theme-border)] font-mono text-[10px] text-[var(--theme-foreground)] placeholder:text-[var(--theme-foreground-tertiary)] focus:border-[var(--theme-primary)] focus:outline-none";
 
-export default function CreateSkillModal({
+export default function EditSkillModal({
+  skillId,
   isOpen,
   onClose,
-  workspaceId,
-}: CreateSkillModalProps) {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const createSkill = useMutation(api.skills.mutations.createSkill);
+}: EditSkillModalProps) {
+  const [state, dispatch] = useReducer(reducer, emptyState);
+  const updateSkill = useMutation(api.skills.mutations.updateSkill);
+
+  const skill = useQuery(
+    api.skills.queries.getSkillById,
+    skillId ? { skillId } : "skip",
+  );
+
+  // Load state once the query resolves. We key on skillId so reopening the
+  // modal for a different skill reloads fresh state.
+  useEffect(() => {
+    if (!skillId) {
+      dispatch({ type: "RESET" });
+      return;
+    }
+    if (!skill) return;
+    dispatch({
+      type: "LOAD",
+      name: skill.name,
+      displayName: skill.displayName,
+      description: skill.description,
+      trigger: skill.trigger,
+      taskTypes: skill.conditions?.taskTypes ?? [],
+      keywords: skill.conditions?.keywords ?? [],
+      actions: deserializeActions(skill.actions),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skillId, skill?._id]);
 
   const handleClose = () => {
     dispatch({ type: "RESET" });
@@ -231,8 +282,9 @@ export default function CreateSkillModal({
   };
 
   const handleSubmit = async () => {
-    if (!state.name.trim() || !state.displayName.trim()) {
-      toast.error("Name and display name are required");
+    if (!skillId) return;
+    if (!state.displayName.trim()) {
+      toast.error("Display name is required");
       return;
     }
     const serialized = serializeActions(state.actions);
@@ -241,7 +293,7 @@ export default function CreateSkillModal({
       return;
     }
 
-    dispatch({ type: "SET_FIELD", field: "isCreating", value: true });
+    dispatch({ type: "SET_FIELD", field: "isSaving", value: true });
 
     try {
       const conditions =
@@ -249,13 +301,13 @@ export default function CreateSkillModal({
           ? {
               taskTypes:
                 state.taskTypes.length > 0 ? state.taskTypes : undefined,
-              keywords: state.keywords.length > 0 ? state.keywords : undefined,
+              keywords:
+                state.keywords.length > 0 ? state.keywords : undefined,
             }
           : undefined;
 
-      await createSkill({
-        workspaceId: workspaceId as Id<"workspaces">,
-        name: state.name.trim(),
+      await updateSkill({
+        skillId,
         displayName: state.displayName.trim(),
         description:
           state.description.trim() || `Custom skill: ${state.displayName.trim()}`,
@@ -264,36 +316,54 @@ export default function CreateSkillModal({
         actions: serialized,
       });
 
-      toast.success("Skill created");
+      toast.success("Skill updated");
       handleClose();
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : "Failed to create skill";
+        error instanceof Error ? error.message : "Failed to update skill";
       toast.error(message);
     } finally {
-      dispatch({ type: "SET_FIELD", field: "isCreating", value: false });
+      dispatch({ type: "SET_FIELD", field: "isSaving", value: false });
     }
   };
 
   const canProceed = () => {
     switch (state.step) {
       case 1:
-        return !!state.name.trim() && !!state.displayName.trim();
+        return !!state.displayName.trim();
       case 2:
-        return true;
       case 3:
         return true;
       case 4:
-        return (
-          state.actions.length > 0 && state.actions.every(actionIsValid)
-        );
+        return state.actions.length > 0 && state.actions.every(actionIsValid);
       default:
         return false;
     }
   };
 
+  if (skillId && skill === null) {
+    // Query resolved to null — either not found or no access.
+    return (
+      <BrutalModal isOpen={isOpen} onClose={handleClose} title="EDIT SKILL" size="md">
+        <div className="p-4 text-center font-mono text-xs text-[var(--theme-foreground-tertiary)]">
+          Skill not found.
+        </div>
+      </BrutalModal>
+    );
+  }
+
+  if (!state.loaded) {
+    return (
+      <BrutalModal isOpen={isOpen} onClose={handleClose} title="EDIT SKILL" size="md">
+        <div className="p-4 text-center font-mono text-xs text-[var(--theme-foreground-tertiary)]">
+          Loading skill…
+        </div>
+      </BrutalModal>
+    );
+  }
+
   return (
-    <BrutalModal isOpen={isOpen} onClose={handleClose} title="CREATE SKILL" size="md">
+    <BrutalModal isOpen={isOpen} onClose={handleClose} title="EDIT SKILL" size="md">
       {/* Step indicator */}
       <div className="flex items-center gap-1 mb-4">
         {[1, 2, 3, 4].map((s) => (
@@ -324,39 +394,33 @@ export default function CreateSkillModal({
         ))}
       </div>
 
-      {/* Step 1: Basic Info */}
+      {/* Step 1 — Basic info (name read-only) */}
       {state.step === 1 && (
         <div className="space-y-3">
           <div className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-primary)] mb-2">
             STEP 1: BASIC INFO
           </div>
           <div>
-            <label htmlFor="skill-name" className={labelClass}>
-              NAME (SLUG)
+            <label htmlFor="edit-skill-name" className={labelClass}>
+              NAME (SLUG) — READ ONLY
             </label>
             <input
-              id="skill-name"
+              id="edit-skill-name"
               type="text"
               value={state.name}
-              onChange={(e) =>
-                dispatch({
-                  type: "SET_FIELD",
-                  field: "name",
-                  value: e.target.value
-                    .toLowerCase()
-                    .replace(/[^a-z0-9-]/g, "-"),
-                })
-              }
-              placeholder="my-custom-skill"
-              className={inputClass}
+              readOnly
+              className={clsx(
+                inputClass,
+                "opacity-60 cursor-not-allowed",
+              )}
             />
           </div>
           <div>
-            <label htmlFor="skill-display-name" className={labelClass}>
+            <label htmlFor="edit-skill-display-name" className={labelClass}>
               DISPLAY NAME
             </label>
             <input
-              id="skill-display-name"
+              id="edit-skill-display-name"
               type="text"
               value={state.displayName}
               onChange={(e) =>
@@ -366,16 +430,15 @@ export default function CreateSkillModal({
                   value: e.target.value,
                 })
               }
-              placeholder="My Custom Skill"
               className={inputClass}
             />
           </div>
           <div>
-            <label htmlFor="skill-description" className={labelClass}>
+            <label htmlFor="edit-skill-description" className={labelClass}>
               DESCRIPTION
             </label>
             <textarea
-              id="skill-description"
+              id="edit-skill-description"
               value={state.description}
               onChange={(e) =>
                 dispatch({
@@ -384,7 +447,6 @@ export default function CreateSkillModal({
                   value: e.target.value,
                 })
               }
-              placeholder="What does this skill do..."
               rows={3}
               className={clsx(inputClass, "resize-none")}
             />
@@ -392,7 +454,7 @@ export default function CreateSkillModal({
         </div>
       )}
 
-      {/* Step 2: Trigger Type */}
+      {/* Step 2 — Trigger */}
       {state.step === 2 && (
         <div className="space-y-3">
           <div className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-primary)] mb-2">
@@ -444,7 +506,7 @@ export default function CreateSkillModal({
         </div>
       )}
 
-      {/* Step 3: Conditions */}
+      {/* Step 3 — Conditions */}
       {state.step === 3 && (
         <div className="space-y-3">
           <div className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-primary)] mb-2">
@@ -473,12 +535,12 @@ export default function CreateSkillModal({
             </div>
           </div>
           <div>
-            <label htmlFor="skill-keyword-input" className={labelClass}>
+            <label htmlFor="edit-keyword-input" className={labelClass}>
               KEYWORDS
             </label>
             <div className="flex gap-1.5">
               <input
-                id="skill-keyword-input"
+                id="edit-keyword-input"
                 type="text"
                 value={state.keywordInput}
                 onChange={(e) =>
@@ -531,7 +593,7 @@ export default function CreateSkillModal({
         </div>
       )}
 
-      {/* Step 4: Actions */}
+      {/* Step 4 — Actions */}
       {state.step === 4 && (
         <div className="space-y-3">
           <div className="font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--theme-primary)] mb-2">
@@ -544,23 +606,30 @@ export default function CreateSkillModal({
                 className="p-2.5 border border-[var(--theme-border)] bg-[var(--theme-background)] space-y-2"
               >
                 <div className="flex items-center gap-2">
-                  <select
-                    value={row.kind}
-                    onChange={(e) =>
-                      dispatch({
-                        type: "CHANGE_ACTION_KIND",
-                        index: i,
-                        kind: e.target.value as ActionKind,
-                      })
-                    }
-                    className={clsx(smallInputClass, "flex-1 uppercase")}
-                  >
-                    {(Object.keys(ACTION_META) as Array<ActionKind>).map((k) => (
-                      <option key={k} value={k}>
-                        {ACTION_META[k].label}
-                      </option>
-                    ))}
-                  </select>
+                  {row.kind === "unsupported" ? (
+                    <div className="flex-1 flex items-center gap-1.5 px-2 py-1.5 bg-[#F59E0B]/10 border border-[#F59E0B]/30 font-mono text-[10px] text-[#F59E0B]">
+                      <HiOutlineExclamationCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span className="uppercase">UNSUPPORTED: {row.rawType}</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={row.kind}
+                      onChange={(e) =>
+                        dispatch({
+                          type: "CHANGE_ACTION_KIND",
+                          index: i,
+                          kind: e.target.value as ActionKind,
+                        })
+                      }
+                      className={clsx(smallInputClass, "flex-1 uppercase")}
+                    >
+                      {(Object.keys(ACTION_META) as Array<ActionKind>).map((k) => (
+                        <option key={k} value={k}>
+                          {ACTION_META[k].label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <button
                     type="button"
                     onClick={() =>
@@ -573,7 +642,6 @@ export default function CreateSkillModal({
                   </button>
                 </div>
 
-                {/* Per-kind config editor */}
                 {row.kind === "set_type" && (
                   <select
                     value={row.type}
@@ -772,8 +840,14 @@ export default function CreateSkillModal({
 
                 {row.kind === "add_to_sprint" && (
                   <p className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)]">
-                    Moves the task into the project&apos;s active sprint. No
-                    config needed.
+                    Moves the task into the project&apos;s active sprint.
+                  </p>
+                )}
+
+                {row.kind === "unsupported" && (
+                  <p className="font-mono text-[10px] text-[var(--theme-foreground-tertiary)]">
+                    This action type isn&apos;t editable here. It will be
+                    preserved on save. Remove the row to drop it.
                   </p>
                 )}
               </div>
@@ -814,7 +888,7 @@ export default function CreateSkillModal({
             variant="secondary"
             size="sm"
             onClick={handleClose}
-            disabled={state.isCreating}
+            disabled={state.isSaving}
           >
             CANCEL
           </BrutalButton>
@@ -836,10 +910,10 @@ export default function CreateSkillModal({
               variant="primary"
               size="sm"
               onClick={handleSubmit}
-              disabled={!canProceed() || state.isCreating}
-              loading={state.isCreating}
+              disabled={!canProceed() || state.isSaving}
+              loading={state.isSaving}
             >
-              CREATE SKILL
+              SAVE SKILL
             </BrutalButton>
           )}
         </div>
