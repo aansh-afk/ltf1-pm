@@ -1,12 +1,10 @@
 import { useState } from 'react'
-import { useQuery, useAction } from 'convex/react'
+import { useSearchParams } from 'react-router-dom'
+import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import type { Id } from '../../../../convex/_generated/dataModel'
-import { HiOutlineDownload, HiOutlineCheckCircle, HiOutlineXCircle } from 'react-icons/hi'
-import toast from 'react-hot-toast'
+import { HiOutlineDownload } from 'react-icons/hi'
 import BrutalCard from '@/components/ui/BrutalCard'
-import BrutalButton from '@/components/ui/BrutalButton'
-import BrutalInput from '@/components/ui/BrutalInput'
 import BrutalBadge from '@/components/ui/BrutalBadge'
 import { useCurrentWorkspace } from '@/hooks/useCurrentWorkspace'
 import { LinearImportPanel } from '@/components/features/imports/LinearImportPanel'
@@ -15,9 +13,16 @@ import { ImportProgressView } from '@/components/features/imports/ImportProgress
 
 type Tab = 'linear' | 'jira' | 'history'
 
+function initialTabFromParams(source: string | null): Tab {
+  if (source === 'jira') return 'jira'
+  if (source === 'history') return 'history'
+  return 'linear'
+}
+
 export default function ImportPage() {
   const { currentWorkspaceId } = useCurrentWorkspace()
-  const [tab, setTab] = useState<Tab>('linear')
+  const [searchParams] = useSearchParams()
+  const [tab, setTab] = useState<Tab>(() => initialTabFromParams(searchParams.get('source')))
   const [activeImportId, setActiveImportId] = useState<Id<'imports'> | null>(null)
 
   if (!currentWorkspaceId) {
