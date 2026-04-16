@@ -31,6 +31,18 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    version: '0.2.2',
+    date: 'Apr 17, 2026',
+    tag: 'AGENT SKILL RESTORED',
+    tagColor: '#F59E0B',
+    summary: 'Fixes the ltf-pm agent skill, which silently stopped installing after the mobile push. Refreshes SKILL.md against the current ltf1 CLI surface so agents stop calling the old `ltf` binary.',
+    changes: [
+      { type: 'fix', platform: 'cli', text: 'ltf-pm agent skill restored — the mobile push had replaced skills/ltf-pm/ with a broken symlink, which was silently breaking every `npx skills add` and Claude Code marketplace install' },
+      { type: 'feat', platform: 'cli', text: 'ltf-pm SKILL.md refreshed against the current CLI — ltf→ltf1 rename, new daemon/dashboard/update/completions/pr/release/config groups, `auth login --token`, `task assign --clear`, `ai describe --create`, `in_review` status, `epic` task type, git-hook auto-linking rules' },
+      { type: 'fix', platform: 'web', text: 'skills/README.md install guide — the prose still told users to install the `ltf` binary after the ltf1 rename' },
+    ],
+  },
+  {
     version: '0.2.1',
     date: 'Apr 12, 2026',
     tag: 'NOTIFICATIONS + BUG FIXES',

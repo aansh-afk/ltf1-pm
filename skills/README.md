@@ -6,7 +6,7 @@ AI agent skills for the LTF1 project management platform. These let Claude (and 
 
 | Skill | Description |
 |-------|-------------|
-| [`ltf-pm`](./ltf-pm/) | Use the `ltf` CLI to manage tasks, sprints, and projects from inside a coding session |
+| [`ltf-pm`](./ltf-pm/) | Use the `ltf1` CLI to manage tasks, sprints, and projects from inside a coding session |
 
 ## Installation
 
@@ -38,7 +38,7 @@ Copy the `ltf-pm/` folder into your agent's skills directory:
 
 ## Prerequisites
 
-1. Install the `ltf` CLI globally:
+1. Install the `ltf1` CLI globally:
    ```bash
    npm install -g @vvg-ltf1/cli
    ```
@@ -55,7 +55,7 @@ Copy the `ltf-pm/` folder into your agent's skills directory:
    ltf1 project detect --set
    ```
 
-After that, your AI agent will be able to use `ltf` commands during any coding session in that repo.
+After that, your AI agent will be able to use `ltf1` commands during any coding session in that repo.
 
 ## How It Works
 
