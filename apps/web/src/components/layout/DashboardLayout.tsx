@@ -18,6 +18,7 @@ import {
   HiOutlineExclamationCircle,
   HiOutlineInbox,
   HiOutlineDownload,
+  HiOutlineLightningBolt,
   HiOutlineGlobe,
 } from 'react-icons/hi'
 import clsx from 'clsx'
@@ -141,6 +142,7 @@ const NAV_ITEMS = [
   { path: '/projects', label: 'PROJECTS', icon: HiOutlineFolder },
   { path: '/tasks', label: 'TASKS', icon: HiOutlineClipboardList },
   { path: '/triage', label: 'TRIAGE', icon: HiOutlineInbox },
+  { path: '/skills', label: 'SKILLS', icon: HiOutlineLightningBolt },
   { path: '/import', label: 'IMPORT', icon: HiOutlineDownload },
   { path: '/team', label: 'TEAM', icon: HiOutlineUserGroup },
   { path: '/sprints', label: 'SPRINTS', icon: HiOutlineRefresh },

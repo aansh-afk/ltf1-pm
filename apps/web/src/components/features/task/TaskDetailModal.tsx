@@ -16,8 +16,10 @@ import BrutalModal from '@/components/ui/BrutalModal'
 import BrutalButton from '@/components/ui/BrutalButton'
 import TimeTracker from './TimeTracker'
 import TaskTimeDisplay from './TaskTimeDisplay'
+import TaskAgentActivity from './TaskAgentActivity'
 import TaskAssignmentSuggestions from '../ai/TaskAssignmentSuggestions'
 import AITaskEnhancer from '../ai/AITaskEnhancer'
+import { useShortcuts } from '@/contexts/ShortcutContext'
 import { formatDistanceToNow, format } from 'date-fns'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
@@ -60,6 +62,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
 
   const executeSkill = useAction(api.skills.execution.executeSkill)
   const updateTask = useMutation(api.tasks.mutations.updateTask)
+  const { registerRuntimeCommands } = useShortcuts()
 
   const activeSkills = skills?.filter(s => s.isActive && (s.trigger === 'manual' || s.trigger === 'both')) || []
 
@@ -72,6 +75,28 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
     if (showSkillDropdown) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showSkillDropdown])
+
+  // Press "S" while the task modal is open to open the skill dropdown.
+  // Ignored when focus is in an input/textarea so it doesn't hijack typing.
+  useEffect(() => {
+    if (!isOpen) return
+    const isTypingTarget = (target: EventTarget | null): boolean => {
+      if (!(target instanceof HTMLElement)) return false
+      if (target.isContentEditable) return true
+      return Boolean(target.closest('input, textarea, select, [contenteditable="true"]'))
+    }
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.isComposing) return
+      if (event.ctrlKey || event.metaKey || event.altKey) return
+      if (isTypingTarget(event.target)) return
+      if (event.key.toLowerCase() !== 's') return
+      if (activeSkills.length === 0) return
+      event.preventDefault()
+      setShowSkillDropdown((v) => !v)
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [isOpen, activeSkills.length])
 
   const handleRunSkill = async (skillId: Id<"skills">) => {
     setShowSkillDropdown(false)
@@ -92,6 +117,26 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
       setRunningSkillId(null)
     }
   }
+
+  // Register each active skill as a command palette entry while this modal
+  // is open. ⌘K → type the skill name → enter runs it on this task.
+  useEffect(() => {
+    if (!isOpen || !taskId || activeSkills.length === 0) return
+    const dispose = registerRuntimeCommands(
+      activeSkills.map((skill) => ({
+        id: `runtime:skill:${taskId}:${skill._id}`,
+        name: `Run skill: ${skill.displayName}`,
+        description: skill.description,
+        category: 'skills',
+        keywords: ['run', 'skill', skill.name, skill.displayName],
+        action: () => {
+          handleRunSkill(skill._id as Id<"skills">)
+        },
+      })),
+    )
+    return dispose
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, taskId, activeSkills.map((s) => s._id).join(',')])
 
   if (!task) return null
 
@@ -379,6 +424,9 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
                   </div>
                 </div>
               )}
+
+              {/* Agent activity timeline — hidden if empty */}
+              <TaskAgentActivity taskId={task._id as Id<"tasks">} />
             </div>
           )}
 

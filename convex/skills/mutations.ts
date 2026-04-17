@@ -258,6 +258,65 @@ export const unpublishSkill = mutation({
 });
 
 /**
+ * Install a built-in template by name. Lets users opt-in to a built-in
+ * from the library if their workspace wasn't seeded (e.g. pre-seeding).
+ */
+export const installBuiltInSkill = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    name: v.string(),
+  },
+  returns: v.id("skills"),
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    await requirePermission(
+      ctx.db,
+      user._id,
+      args.workspaceId,
+      "workspace.edit",
+    );
+
+    const template = BUILT_IN_SKILLS.find((s) => s.name === args.name);
+    if (!template) {
+      throw new Error(`Unknown built-in skill: ${args.name}`);
+    }
+
+    const existing = await ctx.db
+      .query("skills")
+      .withIndex("by_workspaceId_and_name", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("name", template.name),
+      )
+      .first();
+    if (existing) return existing._id;
+
+    return await ctx.db.insert("skills", {
+      workspaceId: args.workspaceId,
+      name: template.name,
+      displayName: template.displayName,
+      description: template.description,
+      trigger: template.trigger,
+      conditions: template.conditions as
+        | {
+            taskTypes?: string[];
+            keywords?: string[];
+            sources?: string[];
+          }
+        | undefined,
+      actions: template.actions.map((a) => ({
+        type: a.type,
+        config: a.config,
+      })),
+      createdBy: user._id,
+      isActive: template.isActive,
+      isBuiltIn: template.isBuiltIn,
+      isPublished: false,
+      usageCount: 0,
+    });
+  },
+});
+
+/**
  * Install a published skill into a workspace (copy it).
  */
 export const installSkill = mutation({

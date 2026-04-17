@@ -76,6 +76,14 @@ export const createWorkspace = mutation({
       joinedAt: now,
     });
 
+    // Seed the built-in skill library for the new workspace. The seeder
+    // dedupes via by_workspaceId_and_name, so re-running is safe.
+    await ctx.scheduler.runAfter(
+      0,
+      internal.skills.mutations.seedBuiltInSkills,
+      { workspaceId, createdBy: user._id },
+    );
+
     // Log workspace creation activity (using project_created as closest match)
     await ctx.runMutation(internal.activities.mutations.logActivity, {
       type: "project_created",

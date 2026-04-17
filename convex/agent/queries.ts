@@ -381,6 +381,74 @@ export const getAgentActivityFeed = query({
 });
 
 /**
+ * Per-task agent activity feed. Shows triage runs, skill runs (manual and
+ * auto), and auto-assignments for a single task in reverse-chronological
+ * order. Used by the TaskDetailModal timeline.
+ */
+export const getTaskAgentActivity = query({
+  args: {
+    taskId: v.id("tasks"),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("agentActivities"),
+      _creationTime: v.number(),
+      workspaceId: v.id("workspaces"),
+      type: v.union(
+        v.literal("triage"),
+        v.literal("skill_run"),
+        v.literal("auto_assign"),
+        v.literal("insight"),
+        v.literal("skill_auto_apply"),
+      ),
+      taskId: v.optional(v.id("tasks")),
+      skillId: v.optional(v.id("skills")),
+      description: v.string(),
+      metadata: v.optional(v.any()),
+      skillName: v.optional(v.string()),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) return [];
+
+    const task = await ctx.db.get(args.taskId);
+    if (!task) return [];
+
+    const project = await ctx.db.get(task.projectId);
+    if (!project) return [];
+
+    const hasAccess = await hasPermission(
+      ctx.db,
+      user._id,
+      project.workspaceId,
+      "task.view",
+    );
+    if (!hasAccess) return [];
+
+    const maxResults = args.limit ?? 20;
+
+    const activities = await ctx.db
+      .query("agentActivities")
+      .withIndex("by_task", (q) => q.eq("taskId", args.taskId))
+      .order("desc")
+      .take(maxResults);
+
+    return await Promise.all(
+      activities.map(async (activity) => {
+        let skillName: string | undefined;
+        if (activity.skillId) {
+          const skill = await ctx.db.get(activity.skillId);
+          skillName = skill?.displayName ?? skill?.name;
+        }
+        return { ...activity, skillName };
+      }),
+    );
+  },
+});
+
+/**
  * Get the workspace's triage mode setting.
  */
 export const getTriageSettings = query({

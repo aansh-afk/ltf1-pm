@@ -107,6 +107,13 @@ export const createTask = mutation({
       projectId: args.projectId,
     });
 
+    // Schedule auto-trigger skills matching (bug-triage etc.)
+    await ctx.scheduler.runAfter(
+      0,
+      internal.skills.execution.checkAutoSkills,
+      { taskId, workspaceId: project.workspaceId },
+    );
+
     // Send notifications to all assignees via centralized dispatch
     if (args.assigneeIds && args.assigneeIds.length > 0) {
       const taskKey = `${(project as any).settings?.taskPrefix || project.key}-${maxNumber + 1}`;
