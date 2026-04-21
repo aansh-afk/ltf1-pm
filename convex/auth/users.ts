@@ -1,6 +1,7 @@
 import { mutation, query, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
+import { seedDemoWorkspace } from "../onboarding/seedDemo";
 
 export const createOrUpdateUser = internalMutation({
   args: {
@@ -111,6 +112,9 @@ export const ensureUserExists = internalMutation({
     preferences: v.optional(v.object({
       theme: v.optional(v.string()),
       hasCompletedOnboarding: v.optional(v.boolean()),
+      onboardingIntents: v.optional(v.array(v.string())),
+      teamSize: v.optional(v.string()),
+      dismissedFounderNote: v.optional(v.boolean()),
       notifications: v.optional(v.object({
         email: v.boolean(),
         push: v.boolean(),
@@ -199,6 +203,19 @@ export const ensureUserExists = internalMutation({
             await ctx.db.patch(invite._id, { status: "accepted" });
           }
         }
+
+        // Seed the demo workspace so the dashboard is never empty on first
+        // load. Helper short-circuits if the user already has a membership
+        // (e.g. from the invite auto-accept above), so this is safe.
+        try {
+          await seedDemoWorkspace(ctx, {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+          });
+        } catch (err) {
+          console.error("seedDemoWorkspace failed (non-fatal)", err);
+        }
       }
     }
 
@@ -225,6 +242,9 @@ export const createCurrentUser = mutation({
     preferences: v.optional(v.object({
       theme: v.optional(v.string()),
       hasCompletedOnboarding: v.optional(v.boolean()),
+      onboardingIntents: v.optional(v.array(v.string())),
+      teamSize: v.optional(v.string()),
+      dismissedFounderNote: v.optional(v.boolean()),
       notifications: v.optional(v.object({
         email: v.boolean(),
         push: v.boolean(),
@@ -320,6 +340,9 @@ export const updateUserPreferences = mutation({
     preferences: v.object({
       theme: v.optional(v.string()),
       hasCompletedOnboarding: v.optional(v.boolean()),
+      onboardingIntents: v.optional(v.array(v.string())),
+      teamSize: v.optional(v.string()),
+      dismissedFounderNote: v.optional(v.boolean()),
       notifications: v.optional(v.object({
         email: v.optional(v.boolean()),
         push: v.optional(v.boolean()),
@@ -382,6 +405,15 @@ export const updateUserPreferences = mutation({
       hasCompletedOnboarding: args.preferences.hasCompletedOnboarding !== undefined
         ? args.preferences.hasCompletedOnboarding
         : user.preferences?.hasCompletedOnboarding,
+      onboardingIntents: args.preferences.onboardingIntents !== undefined
+        ? args.preferences.onboardingIntents
+        : user.preferences?.onboardingIntents,
+      teamSize: args.preferences.teamSize !== undefined
+        ? args.preferences.teamSize
+        : user.preferences?.teamSize,
+      dismissedFounderNote: args.preferences.dismissedFounderNote !== undefined
+        ? args.preferences.dismissedFounderNote
+        : user.preferences?.dismissedFounderNote,
       notifications: notifications || {
         email: true,
         push: true,

@@ -82,6 +82,7 @@ import type * as integrations_github_auth from "../integrations/github/auth.js";
 import type * as integrations_github_backfill from "../integrations/github/backfill.js";
 import type * as integrations_github_commentSync from "../integrations/github/commentSync.js";
 import type * as integrations_github_commitParsing from "../integrations/github/commitParsing.js";
+import type * as integrations_github_diffActions from "../integrations/github/diffActions.js";
 import type * as integrations_github_docs from "../integrations/github/docs.js";
 import type * as integrations_github_errors from "../integrations/github/errors.js";
 import type * as integrations_github_installationManagement from "../integrations/github/installationManagement.js";
@@ -139,6 +140,7 @@ import type * as notifications_dispatch_helpers from "../notifications/dispatch_
 import type * as notifications_push from "../notifications/push.js";
 import type * as notifications_push_helpers from "../notifications/push_helpers.js";
 import type * as nps from "../nps.js";
+import type * as onboarding_seedDemo from "../onboarding/seedDemo.js";
 import type * as projects_members from "../projects/members.js";
 import type * as projects_mutations from "../projects/mutations.js";
 import type * as projects_queries from "../projects/queries.js";
@@ -240,6 +242,7 @@ declare const fullApi: ApiFromModules<{
   "integrations/github/backfill": typeof integrations_github_backfill;
   "integrations/github/commentSync": typeof integrations_github_commentSync;
   "integrations/github/commitParsing": typeof integrations_github_commitParsing;
+  "integrations/github/diffActions": typeof integrations_github_diffActions;
   "integrations/github/docs": typeof integrations_github_docs;
   "integrations/github/errors": typeof integrations_github_errors;
   "integrations/github/installationManagement": typeof integrations_github_installationManagement;
@@ -297,6 +300,7 @@ declare const fullApi: ApiFromModules<{
   "notifications/push": typeof notifications_push;
   "notifications/push_helpers": typeof notifications_push_helpers;
   nps: typeof nps;
+  "onboarding/seedDemo": typeof onboarding_seedDemo;
   "projects/members": typeof projects_members;
   "projects/mutations": typeof projects_mutations;
   "projects/queries": typeof projects_queries;

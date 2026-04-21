@@ -14,6 +14,9 @@ export default defineSchema({
       v.object({
         theme: v.optional(v.string()),
         hasCompletedOnboarding: v.optional(v.boolean()),
+        onboardingIntents: v.optional(v.array(v.string())),
+        teamSize: v.optional(v.string()),
+        dismissedFounderNote: v.optional(v.boolean()),
         notifications: v.optional(
           v.object({
             email: v.boolean(),
@@ -97,6 +100,7 @@ export default defineSchema({
       validUntil: v.optional(v.number()),
       seats: v.number(),
     }),
+    isDemo: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -270,6 +274,7 @@ export default defineSchema({
     externalId: v.optional(v.string()),
     externalKey: v.optional(v.string()),
     externalUrl: v.optional(v.string()),
+    isDemo: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -359,6 +364,7 @@ export default defineSchema({
     externalId: v.optional(v.string()),
     externalKey: v.optional(v.string()),
     externalUrl: v.optional(v.string()),
+    isDemo: v.optional(v.boolean()),
     sprintId: v.optional(v.id("sprints")),
     position: v.number(),
     createdAt: v.number(),
