@@ -31,6 +31,33 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    version: '0.2.3',
+    date: 'Apr 21, 2026',
+    tag: 'ONBOARDING REBUILT',
+    tagColor: '#6366F1',
+    summary: 'Full post-signup rewrite informed by analysis of 1,460 onboarding flows. Outcome-preview demo replaces config-first setup, personalization quiz drives AI tier + import recommendations, seeded demo workspace delivers the aha moment on first load, and a persistent Getting Started checklist replaces the empty dashboard.',
+    changes: [
+      // Flow rewrite
+      { type: 'feat', platform: 'web', text: 'New 7-step OnboardingFlow — aha demo → intent quiz → team size → projection → AI → import → theme → complete. Theme step demoted from first to optional last with KEEP DEFAULT shortcut.' },
+      { type: 'feat', platform: 'web', text: 'AhaStep — auto-playing two-panel terminal showing `git push origin feature/LTF-142` → LTF1 engine ticks through DETECT → LINK → STATUS: TODO → IN-REVIEW → DONE → VELOCITY. Replay button. Respects prefers-reduced-motion.' },
+      { type: 'feat', platform: 'web', text: 'IntentStep — multi-select quiz ("what brings you here?") with 8 intents: migrate Linear/Jira, automate triage, sprint plan, AI code review, git auto-link, agent-to-PM, explore.' },
+      { type: 'feat', platform: 'web', text: 'TeamStep — single-select team size (solo / 2–5 / 6–20 / 20+) drives downstream recommendations.' },
+      { type: 'feat', platform: 'web', text: 'ProjectionStep — BitePal-style personalized card: "~X hrs/week recovered" plus 3 prioritized capabilities tailored to intents picked. Honest ranges, not fake stats.' },
+      { type: 'feat', platform: 'web', text: 'AI tier step carries RECOMMENDED badge — free for solo/small teams, BYOK for medium/large. Import step promotes Linear or Jira when user picked that migration intent.' },
+      { type: 'feat', platform: 'api', text: 'posthog `onboarding_completed` event extended with intents[] and team_size so conversion impact of personalization is measurable.' },
+      // Demo seeding (#1 aha lever)
+      { type: 'feat', platform: 'api', text: 'Seeded demo workspace on first user creation — "LTF1 Tour (Demo)" workspace, demo-app project, active Sprint 1, three tasks (LTF-1 done / LTF-2 in-review / LTF-3 todo), and a 6-entry activity timeline where a PR merge auto-closes LTF-1. Idempotent — bails if user already has a workspace membership.' },
+      { type: 'feat', platform: 'api', text: 'isDemo flag on workspaces/projects/tasks — surfaces a visible DEMO badge on the workspace card and powers one-shot cleanup.' },
+      { type: 'feat', platform: 'web', text: 'Two-click DELETE DEMO action on workspace cards — nukes the seeded tour workspace (and its projects, sprints, tasks, activities, memberships) when the user is ready to move on.' },
+      // Dashboard surfaces
+      { type: 'feat', platform: 'web', text: 'FounderNoteCard — README-style welcome note on dashboard for freshly-onboarded users, signed "aansh@ltf1", with JOIN DISCORD + SEE CHANGELOG actions. Dismiss persists across devices via user preferences.' },
+      { type: 'feat', platform: 'web', text: 'Persistent Getting Started checklist on dashboard — 5 items (Connect GitHub, Create Workspace, Add Project, Link Repo, Invite Teammate), progress bar in header, collapses to single-line "NEXT:" hint via localStorage, auto-hides when all done.' },
+      { type: 'feat', platform: 'api', text: 'New getChecklistStatus query powers the dashboard checklist — ignores isDemo rows so the seeded tour never satisfies progress; nudges users into real usage.' },
+      // Schema
+      { type: 'feat', platform: 'api', text: 'users.preferences extended with onboardingIntents, teamSize, dismissedFounderNote — personalization answers persist across sessions so downstream features can adapt.' },
+    ],
+  },
+  {
     version: '0.2.2',
     date: 'Apr 17, 2026',
     tag: 'AGENT SKILL RESTORED',
