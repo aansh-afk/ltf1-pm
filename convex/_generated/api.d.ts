@@ -140,6 +140,7 @@ import type * as notifications_dispatch_helpers from "../notifications/dispatch_
 import type * as notifications_push from "../notifications/push.js";
 import type * as notifications_push_helpers from "../notifications/push_helpers.js";
 import type * as nps from "../nps.js";
+import type * as onboarding_checklist from "../onboarding/checklist.js";
 import type * as onboarding_seedDemo from "../onboarding/seedDemo.js";
 import type * as projects_members from "../projects/members.js";
 import type * as projects_mutations from "../projects/mutations.js";
@@ -300,6 +301,7 @@ declare const fullApi: ApiFromModules<{
   "notifications/push": typeof notifications_push;
   "notifications/push_helpers": typeof notifications_push_helpers;
   nps: typeof nps;
+  "onboarding/checklist": typeof onboarding_checklist;
   "onboarding/seedDemo": typeof onboarding_seedDemo;
   "projects/members": typeof projects_members;
   "projects/mutations": typeof projects_mutations;

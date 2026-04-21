@@ -24,6 +24,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner'
 import AgentActivityPanel from '@/components/features/agent/AgentActivityPanel'
 import TriageStatsCard from '@/components/features/agent/TriageStatsCard'
 import FounderNoteCard from '@/components/onboarding/FounderNoteCard'
+import GettingStartedChecklist from '@/components/onboarding/GettingStartedChecklist'
 
 const STAT_ICONS = [
   { label: 'WORKSPACES', icon: HiOutlineBriefcase, color: 'var(--theme-info)' },
@@ -70,6 +71,7 @@ export default function Dashboard() {
     <ErrorBoundary>
     <div className="p-4 min-h-screen bg-[var(--theme-background)]">
       <FounderNoteCard />
+      <GettingStartedChecklist />
       {/* HEADER SECTION */}
       <div className="mb-4 flex items-start justify-between">
         <m.div
