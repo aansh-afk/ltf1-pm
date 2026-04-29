@@ -23,7 +23,8 @@ func newStopCmd() *cobra.Command {
 
 			_, client, err := loadAuthClient()
 			if err == nil {
-				_, _ = client.Mutation("timeEntries/mutations:createManualEntry", map[string]any{
+				// Backend map: timeEntries:createManualEntry (single-file module).
+				_, _ = client.Mutation("timeEntries:createManualEntry", map[string]any{
 					"taskId":      t.TaskID,
 					"duration":    elapsed,
 					"description": t.Description,

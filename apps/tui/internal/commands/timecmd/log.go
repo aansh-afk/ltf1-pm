@@ -21,7 +21,7 @@ func newLogCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			durationMs := int64((hours*60+minutes)*60*1000)
+			durationMs := int64((hours*60 + minutes) * 60 * 1000)
 			if durationMs == 0 {
 				return cmd.Help()
 			}
@@ -32,7 +32,8 @@ func newLogCmd() *cobra.Command {
 			if date != "" {
 				callArgs["date"] = date
 			}
-			if _, err := client.Mutation("timeEntries/mutations:createManualEntry", callArgs); err != nil {
+			// Backend map: timeEntries:createManualEntry (single-file module).
+			if _, err := client.Mutation("timeEntries:createManualEntry", callArgs); err != nil {
 				return err
 			}
 			output.Successf("logged %.1fh", hours+minutes/60)
