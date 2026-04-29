@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { Text, ScrollView, Pressable } from "react-native";
 import * as Haptics from "expo-haptics";
 
 interface StatusChipProps {
