@@ -1,6 +1,6 @@
 {
   "name": "@vvg-ltf1/cli",
-  "version": "0.2.2",
+  "version": "0.2.5",
   "description": "ltf1 — git-native, agent-ready project management CLI and TUI",
   "bin": {
     "ltf1": "./bin/ltf1.js"
@@ -25,11 +25,11 @@
     "agent"
   ],
   "optionalDependencies": {
-    "@vvg-ltf1/darwin-arm64": "0.2.2",
-    "@vvg-ltf1/darwin-x64": "0.2.2",
-    "@vvg-ltf1/linux-arm64": "0.2.2",
-    "@vvg-ltf1/linux-x64": "0.2.2",
-    "@vvg-ltf1/windows-x64": "0.2.2",
-    "@vvg-ltf1/windows-arm64": "0.2.2"
+    "@vvg-ltf1/darwin-arm64": "0.2.5",
+    "@vvg-ltf1/darwin-x64": "0.2.5",
+    "@vvg-ltf1/linux-arm64": "0.2.5",
+    "@vvg-ltf1/linux-x64": "0.2.5",
+    "@vvg-ltf1/windows-x64": "0.2.5",
+    "@vvg-ltf1/windows-arm64": "0.2.5"
   }
 }

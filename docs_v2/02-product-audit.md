@@ -122,7 +122,7 @@ Every feature is rated on:
 | Completeness | 5/5 | Most comprehensive integration in the product |
 | Polish | 4/5 | 10,000+ lines of integration code |
 | Strategic Fit | 5/5 | Core differentiator — git-native |
-| **Verdict** | **Ship** | This is the moat. Enhance with code intelligence. |
+| **Verdict** | **Ship** | This is the moat. Code intelligence enhancement is deferred — see `09-feature-roadmap.md` "Deferred — Not Stubbing". |
 
 **Features**:
 - OAuth flow with token management
@@ -184,9 +184,10 @@ Every feature is rated on:
 | **Context Assembly** | P0 | Unified context from tasks + code + team for agent decisions |
 | **Agent Memory** | P1 | What the agent has learned about this workspace |
 | **Planning Agent** | P1 | Sprint suggestions from backlog + velocity + team capacity |
-| **Code Intelligence** | P1 | Understand repository code, not just track commits |
-| **Code Review Agent** | P2 | Review PRs against task requirements |
-| **Coding Agent** | P2 | Write code from task specs |
+| **Triage Quality Loop** | P1 | Per-workspace calibration of triage from accept/reject signal |
+| **Review Agent** | P2 | Review PRs against task requirements (diff + task context) |
+| **Code Intelligence** | Deferred | Repository indexing — see `09-feature-roadmap.md` Deferred section |
+| **Coding Agent** | Deferred | Integration with external coding agents — see `09-feature-roadmap.md` Deferred section |
 
 ---
 

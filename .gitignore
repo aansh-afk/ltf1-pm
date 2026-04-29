@@ -152,3 +152,5 @@ docs/COST_ANALYSIS.md
 
 # Remotion dev project
 my-video/
+# Local scratch (pitch decks, slide builds, throwaway scripts)
+tmp/

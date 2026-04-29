@@ -517,3 +517,16 @@ export const debugGitHubState = query({
     };
   },
 });
+
+// Internal: resolve a repository by its fullName ("owner/name"). Used by diff actions
+// to look up installationId without exposing repo internals to the web client.
+export const getRepositoryByFullName = internalQuery({
+  args: { fullName: v.string() },
+  returns: v.any(),
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("githubRepositories")
+      .withIndex("by_full_name", (q) => q.eq("fullName", args.fullName))
+      .first();
+  },
+});

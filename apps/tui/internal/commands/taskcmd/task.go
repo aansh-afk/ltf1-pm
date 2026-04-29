@@ -54,3 +54,20 @@ func parseTasks(raw json.RawMessage) ([]api.Task, error) {
 	}
 	return tasks, nil
 }
+
+func resolveCurrentUserID(client *api.ConvexClient) (string, error) {
+	raw, err := client.Query("auth/users:getCurrentUser", nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve user: %w", err)
+	}
+	var user struct {
+		ID string `json:"_id"`
+	}
+	if err := json.Unmarshal(raw, &user); err != nil {
+		return "", fmt.Errorf("failed to parse user: %w", err)
+	}
+	if user.ID == "" {
+		return "", fmt.Errorf("user not found in workspace")
+	}
+	return user.ID, nil
+}

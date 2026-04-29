@@ -31,8 +31,8 @@ func newCreateCmd() *cobra.Command {
 			callArgs := map[string]any{
 				"projectId": cfg.Context.ProjectID,
 				"name":      name,
-				"startDate": start.UnixMilli(),
-				"endDate":   end.UnixMilli(),
+				"startDate": start.Format("2006-01-02"),
+				"endDate":   end.Format("2006-01-02"),
 			}
 			if goal != "" {
 				callArgs["goal"] = goal

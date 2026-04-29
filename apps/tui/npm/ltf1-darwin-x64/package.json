@@ -1,6 +1,6 @@
 {
   "name": "@vvg-ltf1/darwin-x64",
-  "version": "0.2.2",
+  "version": "0.2.5",
   "description": "ltf1 binary for darwin-x64",
   "os": ["darwin"],
   "cpu": ["x64"],

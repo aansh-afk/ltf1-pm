@@ -70,10 +70,10 @@ Everything that matters about a project lives in one unified system that both hu
 
 Teams codify their workflows as reusable patterns that agents follow:
 
-- **Skills**: Named workflow templates triggered by slash command or auto-applied
-  - `/skill bug-triage` → categorize, prioritize, assign to on-call, notify Slack
-  - `/skill deploy-checklist` → create 5 linked verification tasks
-  - `/skill sprint-plan` → AI suggests sprint from backlog priorities
+- **Skills**: Named workflow templates triggered via TUI (`ltf1 skill run <name>`), CLI, or a task-detail command palette, or auto-applied when conditions match. (Inline slash-menu invocation inside task descriptions is deferred pending a rich text surface.)
+  - `ltf1 skill run bug-triage` → categorize, prioritize, assign to on-call, notify Slack
+  - `ltf1 skill run deploy-checklist` → create 5 linked verification tasks
+  - `ltf1 skill run sprint-plan` → AI suggests sprint from backlog priorities
 - **Automations**: Event-driven rules that fire on triggers
   - Task created → auto-triage (categorize, prioritize, assign)
   - PR merged → move task to done, update sprint progress
@@ -92,7 +92,7 @@ AI agents that operate within the context and rules to do work autonomously:
 - **Triage Agent**: Every new issue gets categorized, prioritized, and routed automatically
 - **Planning Agent**: Suggests sprint plans, identifies blockers, flags risks
 - **Assignment Agent**: Matches tasks to developers based on skills, availability, workload
-- **Code Agent**: Reviews PRs against task requirements, suggests fixes
+- **Review Agent**: Reviews PRs against task requirements using diff + task context (no code index dependency)
 - **Insight Agent**: Surfaces risks, anomalies, and opportunities from project data
 
 **Current state**: LTF1 has basic AI (task suggestions, insights, developer matching). These are utility functions, not agents. They need to become autonomous workers with context awareness.
@@ -133,7 +133,7 @@ Open source. Self-hostable. Transparent. The community builds trust. The enterpr
 - Unlimited members and AI credits
 - Agent features (triage, planning, assignment, code review)
 - Skills system, advanced automations
-- Code intelligence, diff viewer
+- Diff viewer
 - Priority support
 
 ### Enterprise Tier (Custom)
@@ -170,14 +170,14 @@ Open source. Self-hostable. Transparent. The community builds trust. The enterpr
 - Triage automation on task creation
 
 ### Q3 2026: Intelligence
-- Code intelligence (repository indexing, semantic search)
+- Triage quality loop (per-workspace calibration, acceptance-rate learning, auto-apply tuning)
 - Planning agent (sprint suggestions from backlog + velocity)
-- Assignment agent (match tasks to devs from skills + availability)
 - Code diff viewer (web + TUI)
+- Assignment agent (match tasks to devs from skills, workload, timezone, sprint commitment)
 
 ### Q4 2026: Autonomy
-- Coding agent integration (PR creation from task specs)
-- Agent-to-agent collaboration (triage → assign → plan → code)
+- Agent-to-agent collaboration (triage → assign → plan → review)
+- Review agent checks PRs against task requirements (diff + task context)
 - Skills marketplace (share team workflows)
 - Enterprise features (SSO, audit, on-prem)
 
