@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/commands/agent"
-	authcmd "github.com/aansh-afk/ltf1-pm/apps/tui/internal/commands/auth"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/commands/aicmd"
+	authcmd "github.com/aansh-afk/ltf1-pm/apps/tui/internal/commands/auth"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/commands/completionscmd"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/commands/configcmd"
 	"github.com/aansh-afk/ltf1-pm/apps/tui/internal/commands/daemoncmd"
@@ -138,4 +138,3 @@ func loadEnvFile(path string) {
 		}
 	}
 }
-

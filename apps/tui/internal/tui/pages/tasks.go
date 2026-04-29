@@ -41,7 +41,7 @@ type tasksPage struct {
 	loading       bool
 
 	// Modal state
-	modalMode  taskModalMode
+	modalMode   taskModalMode
 	createInput components.InputModel
 
 	// For status cycling

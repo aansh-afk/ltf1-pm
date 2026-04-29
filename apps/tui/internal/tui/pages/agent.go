@@ -198,7 +198,7 @@ func (p *agentPage) View() string {
 	b.WriteString("\n\n")
 
 	// PENDING TRIAGE
-	triageContent := p.renderTriageContent(contentW - 4, pending)
+	triageContent := p.renderTriageContent(contentW-4, pending)
 	b.WriteString(components.BorderedSection(
 		fmt.Sprintf("PENDING TRIAGE (%d)", len(pending)),
 		triageContent,
