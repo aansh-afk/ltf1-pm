@@ -2,7 +2,7 @@
 
 import { action } from "../_generated/server";
 import { v } from "convex/values";
-import { api } from "../_generated/api";
+import { internal } from "../_generated/api";
 
 export const createCheckoutSession = action({
   args: {
@@ -20,15 +20,14 @@ export const createCheckoutSession = action({
       throw new Error("Unauthorized");
     }
 
-    // Get subscription status to verify permissions
-    const subStatus = await ctx.runQuery(
-      api.billing.queries.getSubscriptionStatus,
+    // Billing management is restricted to workspace owner/admin.
+    const canManage: boolean = await ctx.runQuery(
+      internal.billing.queries.callerCanManageBilling,
       { workspaceId: args.workspaceId },
     );
-
-    if (!subStatus) {
+    if (!canManage) {
       throw new Error(
-        "You must be a member of this workspace to manage billing.",
+        "Only workspace owners and admins can manage billing.",
       );
     }
 
