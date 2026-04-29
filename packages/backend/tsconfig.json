@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
     "declaration": true,
@@ -11,10 +11,7 @@
     "lib": ["ESNext"],
     "types": ["node"]
   },
-  "include": [
-    "./**/*.ts",
-    "../../convex/**/*.ts"
-  ],
+  "include": ["index.ts", "convex.ts"],
   "exclude": [
     "node_modules",
     "dist"
