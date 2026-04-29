@@ -104,6 +104,30 @@ CLAUDE.local.md
 .claude/
 .agents/
 
+# Editor/agent skills directories — symlinks to .agents/skills/
+.codebuddy/
+.commandcode/
+.continue/
+.crush/
+.factory/
+.goose/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.mcpjam/
+.mux/
+.neovate/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.qwen/
+.roo/
+.trae/
+.windsurf/
+.zencoder/
+
 # Internal PRD and competitive analysis
 docs/planning/LTF1-PRD*.md
 docs/planning/competitive-analysis.md
