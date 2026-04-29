@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalQuery } from "../_generated/server";
 import { Id } from "../_generated/dataModel";
+import { decryptSecret } from "../lib/secrets";
 
 // Types shared with other AI files
 export type AIProvider = "cerebras" | "groq";
@@ -80,7 +81,7 @@ export const resolveAIConfig = internalQuery({
             return {
               provider: functionOverride.provider,
               model: functionOverride.model,
-              apiKey: atob(projectKey.encryptedApiKey),
+              apiKey: await decryptSecret(projectKey.encryptedApiKey),
               keySource: "project" as const,
               complexity,
             };
@@ -98,7 +99,7 @@ export const resolveAIConfig = internalQuery({
           return {
             provider,
             model,
-            apiKey: atob(projectKey.encryptedApiKey),
+            apiKey: await decryptSecret(projectKey.encryptedApiKey),
             keySource: "project" as const,
             complexity,
           };
@@ -128,7 +129,7 @@ export const resolveAIConfig = internalQuery({
         return {
           provider,
           model,
-          apiKey: atob(activeKey.encryptedApiKey),
+          apiKey: await decryptSecret(activeKey.encryptedApiKey),
           keySource: "user" as const,
           complexity,
         };
