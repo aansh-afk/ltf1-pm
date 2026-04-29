@@ -31,6 +31,45 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    version: '0.2.5',
+    date: 'Apr 29, 2026',
+    tag: "i audited my own code",
+    tagColor: '#22C55E',
+    summary:
+      "spent the day reading every line of my own backend. turns out when you build alone you ship things and forget to check if they're actually safe. found 8 ways any logged-in person could read other tenants' data. fixed all 8. also discovered i had been storing api keys with base64 and calling it encryption. embarrassing. anyway here's what shipped.",
+    changes: [
+      // Backend security holes — the funny ones first
+      { type: 'security', platform: 'api', text: "anyone with a workspace id could list every task in that workspace. the function checked you were logged in. it did not check you were logged in to that workspace. now it does. [B-002]" },
+      { type: 'security', platform: 'api', text: "you could ask the backend for any clerk user's tasks if you knew their id. it would just hand them over. now you only get your own. revolutionary. [B-003]" },
+      { type: 'security', platform: 'api', text: "pending workspace invitations were readable by any signed-in person who could guess a workspace id. that means you could harvest invitee emails from a workspace you've never been invited to. now requires actual invite permission. [B-004]" },
+      { type: 'security', platform: 'api', text: "getUserById returned the entire user document. preferences. clerk id. role. github token validation flag. lastSeenAt. waitlist position. i don't know why all of that was on a public query. now it's a name + email + avatar projection. [B-005]" },
+      { type: 'security', platform: 'api', text: "byok api key management trusted whatever scope id the client sent. so you could read, overwrite, deactivate, or delete other users' provider keys by guessing their clerk id. now the scope comes from the server. [B-006]" },
+      { type: 'security', platform: 'api', text: "stored api keys were base64. i wrote a comment in the code saying \"in production use proper encryption\" and then shipped it to production. now they're aes-256-gcm with a versioned payload. old base64 rows still decode so nothing breaks; rotate at your leisure. [B-007]" },
+      { type: 'security', platform: 'api', text: "any workspace member could create a billing checkout session. so anyone you invite could go pay you for stuff. now only owners and admins. [B-008]" },
+      { type: 'security', platform: 'api', text: "the test email function logged the first 8 characters of the resend api key and the recipient email. great for debugging at 3am. terrible for everyone else. now it logs the sender and nothing else. [B-012]" },
+      { type: 'security', platform: 'api', text: "checkMigrationStatus was a public query. anyone could check whether i had finished migrating activities. now requires admin role; non-admins see the no-op shape. [B-013]" },
+      // The dumb performance one
+      { type: 'perf', platform: 'api', text: "getMyTasks was loading every task in the database and filtering in memory. with one user this is fine. with two it is also fine. it would not be fine. now it walks the user's workspace memberships and uses indexed reads. [B-011]" },
+      { type: 'perf', platform: 'api', text: "getWorkspaceStats was pulling the entire activity history of a workspace to count the last 30 days. the index already had timestamp on it. i just wasn't using it. fixed. [B-011]" },
+      { type: 'perf', platform: 'api', text: "hasProjectPermission was running a dynamic OR over every team membership of a user instead of a single keyed lookup per team. embarrassing for a permissions function. fixed. [B-011]" },
+      // Cascade
+      { type: 'fix', platform: 'api', text: "deleting a workspace used to delete five tables out of about thirty. the rest sat there as orphan rows. now the cascade walks projects → tasks → comments/attachments/time entries, then sweeps every workspace-scoped table by index. if you have an integration table i missed, it will warn and continue. [B-010]" },
+      // TUI runtime drift
+      { type: 'fix', platform: 'cli', text: "the sprint page was calling tasks:list, which is not a function that exists. it has never been a function that exists. it was failing silently on every sprint view because the error path swallowed errors. now it calls tasks/queries:getProjectTasks. [A-004]" },
+      { type: 'fix', platform: 'cli', text: "notifications page and `ltf1 notifications` command were calling notifications:* paths. backend module is notificationQueries. they have never agreed. fixed both call sites. [A-005]" },
+      { type: 'fix', platform: 'cli', text: "`ltf1 skill list` was calling getUserSkills (does not exist). `ltf1 skill run` was calling runSkill (does not exist) and was missing taskId. `ltf1 skill create` was missing displayName and actions. all three corrected against the actual backend skill module. [A-006]" },
+      { type: 'fix', platform: 'cli', text: "`ltf1 time log/report/stop` were calling timeEntries/queries:* and timeEntries/mutations:*. the backend file is timeEntries.ts. there is no /queries or /mutations subdir. fixed. [A-010]" },
+      // The boring ones I should mention
+      { type: 'fix', platform: 'api', text: "@ltf1/backend typecheck was extending a tsconfig.json that doesn't exist and including convex/ files outside its rootDir. so the monorepo typecheck has been red since forever and i kept saying \"i'll fix it tomorrow.\" today was tomorrow. [R-002]" },
+      { type: 'fix', platform: 'cli', text: "@ltf1/mobile lint had a script but no eslint config. it just errored. added a config. [R-003]" },
+      { type: 'fix', platform: 'cli', text: "mobile build was wired to `eas build` so root pnpm build needed an eas binary i don't have locally. split: `build` runs a local expo export, `build:eas` runs the remote one when i actually want a release. [R-004]" },
+      { type: 'fix', platform: 'cli', text: "ran gofmt on the nine tui files that gofmt -l kept yelling about. i had been ignoring it. it stopped yelling. [R-008]" },
+      // Docs / hardening
+      { type: 'security', platform: 'web', text: "added a pre-commit hook script that blocks .env, .pem, .p8, .key, and ssh private keys from being staged. exists at scripts/check-no-secrets.sh. wire it up with `ln -sf ../../scripts/check-no-secrets.sh .git/hooks/pre-commit`. [D-013]" },
+      { type: 'feat', platform: 'web', text: "wrote docs/security/local-secrets.md explaining where local env files live, why they should not, and how to rotate the github app key if you suspect it leaked through an editor or screen-share. [D-013]" },
+    ],
+  },
+  {
     version: '0.2.4',
     date: 'Apr 29, 2026',
     tag: 'PR DIFF + CLI SELF-UPDATE',
