@@ -31,6 +31,24 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    version: '0.2.4',
+    date: 'Apr 29, 2026',
+    tag: 'PR DIFF + CLI SELF-UPDATE',
+    tagColor: '#6366F1',
+    summary: 'Linked PRs now render their full diff inside the task detail modal — a new PR DIFF tab appears whenever a task has GitHub PRs attached, so reviewers stop tab-hopping. CLI self-update is real now (used to just print an npm hint), and two long-standing CLI bugs around `assign --to me` and `sprint create` dates are fixed.',
+    changes: [
+      // PR diff view
+      { type: 'feat', platform: 'web', text: 'PR DIFF tab on task detail modal — auto-shows when the task has linked pull requests, renders unified diff per PR with file headers and add/remove highlighting. Hidden when no PRs are linked, so the modal stays clean for non-code tasks.' },
+      { type: 'feat', platform: 'api', text: 'getTaskPullRequests query + GitHub diff action — fetches PR diffs server-side via the GitHub API using the workspace installation token, no client-side GitHub creds needed.' },
+      // CLI self-update
+      { type: 'feat', platform: 'cli', text: '`ltf1 update` now actually updates — checks the npm registry for the latest version and runs `npm install -g` itself. Previously it just printed the install command and exited. `--check` flag stays read-only.' },
+      // CLI fixes
+      { type: 'fix', platform: 'cli', text: '`ltf1 task assign --to me` now resolves your Convex user ID via the auth/users:getCurrentUser query — was incorrectly passing the local Clerk auth ID, so self-assignment silently failed on most workspaces.' },
+      { type: 'fix', platform: 'cli', text: '`ltf1 sprint create` sends start/end dates as ISO date strings (YYYY-MM-DD) instead of UnixMilli timestamps — matches the Convex sprint mutation schema, fixes "invalid argument" rejections.' },
+      { type: 'feat', platform: 'cli', text: 'CLI bumped to 0.2.5 across all 7 platform packages (darwin/linux/windows × arm64/x64 + universal).' },
+    ],
+  },
+  {
     version: '0.2.3',
     date: 'Apr 21, 2026',
     tag: 'ONBOARDING REBUILT',

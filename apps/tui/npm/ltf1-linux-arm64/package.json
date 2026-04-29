@@ -1,6 +1,6 @@
 {
   "name": "@vvg-ltf1/linux-arm64",
-  "version": "0.2.2",
+  "version": "0.2.5",
   "description": "ltf1 binary for linux-arm64",
   "os": ["linux"],
   "cpu": ["arm64"],

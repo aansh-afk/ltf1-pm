@@ -16,7 +16,7 @@ func newAssignCmd() *cobra.Command {
 		Short: "Assign task to user",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, client, err := loadAuthClientWithProject()
+			_, client, err := loadAuthClientWithProject()
 			if err != nil {
 				return err
 			}
@@ -24,7 +24,11 @@ func newAssignCmd() *cobra.Command {
 			if clear {
 				callArgs["assigneeIds"] = []string{}
 			} else if to == "me" {
-				callArgs["assigneeIds"] = []string{cfg.Auth.UserID}
+				convexID, err := resolveCurrentUserID(client)
+				if err != nil {
+					return err
+				}
+				callArgs["assigneeIds"] = []string{convexID}
 			} else if to != "" {
 				callArgs["assigneeIds"] = []string{to}
 			}

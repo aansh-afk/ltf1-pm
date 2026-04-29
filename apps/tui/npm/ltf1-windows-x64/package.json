@@ -1,6 +1,6 @@
 {
   "name": "@vvg-ltf1/windows-x64",
-  "version": "0.2.2",
+  "version": "0.2.5",
   "description": "ltf1 binary for windows-x64",
   "os": ["win32"],
   "cpu": ["x64"],

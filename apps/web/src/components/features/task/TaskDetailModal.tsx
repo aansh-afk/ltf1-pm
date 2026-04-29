@@ -19,6 +19,7 @@ import TaskTimeDisplay from './TaskTimeDisplay'
 import TaskAgentActivity from './TaskAgentActivity'
 import TaskAssignmentSuggestions from '../ai/TaskAssignmentSuggestions'
 import AITaskEnhancer from '../ai/AITaskEnhancer'
+import { PullRequestDiffSection } from '../github/PullRequestDiffView'
 import { useShortcuts } from '@/contexts/ShortcutContext'
 import { formatDistanceToNow, format } from 'date-fns'
 import toast from 'react-hot-toast'
@@ -31,7 +32,7 @@ interface TaskDetailModalProps {
 }
 
 export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailModalProps) {
-  const [activeTab, setActiveTab] = useState<'details' | 'time' | 'comments'>('details')
+  const [activeTab, setActiveTab] = useState<'details' | 'time' | 'diff' | 'comments'>('details')
   const [showAssigneeSuggestions, setShowAssigneeSuggestions] = useState(false)
   const [showAIEnhancer, setShowAIEnhancer] = useState(false)
   const [showSkillDropdown, setShowSkillDropdown] = useState(false)
@@ -50,6 +51,11 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
 
   const activeTimeEntry = useQuery(
     api.tasks.queries.getActiveTimeEntry,
+    taskId ? { taskId: taskId as Id<"tasks"> } : 'skip'
+  )
+
+  const linkedPRs = useQuery(
+    api.integrations.github.queries.getTaskPullRequests,
     taskId ? { taskId: taskId as Id<"tasks"> } : 'skip'
   )
 
@@ -156,9 +162,11 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
     cancelled: 'text-[var(--theme-error)]',
   }
 
+  const hasLinkedPRs = !!linkedPRs && linkedPRs.length > 0
   const tabs = [
     { id: 'details', label: 'DETAILS' },
     { id: 'time', label: 'TIME TRACKING' },
+    ...(hasLinkedPRs ? [{ id: 'diff', label: 'PR DIFF' }] : []),
     { id: 'comments', label: 'COMMENTS' },
   ]
 
@@ -250,7 +258,7 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as 'details' | 'time' | 'comments')}
+              onClick={() => setActiveTab(tab.id as 'details' | 'time' | 'diff' | 'comments')}
               className={clsx(
                 'px-[12px] py-[8px] text-brutal-sm font-mono uppercase transition-colors',
                 'border-b-4 -mb-2px',
@@ -474,6 +482,19 @@ export default function TaskDetailModal({ isOpen, onClose, taskId }: TaskDetailM
                 </div>
               )}
             </div>
+          )}
+
+          {activeTab === 'diff' && hasLinkedPRs && linkedPRs && (
+            <PullRequestDiffSection
+              prs={linkedPRs.map((pr: any) => ({
+                _id: String(pr._id),
+                number: pr.number,
+                title: pr.title,
+                url: pr.url,
+                state: pr.state,
+                repositoryFullName: pr.repositoryFullName,
+              }))}
+            />
           )}
 
           {activeTab === 'comments' && (

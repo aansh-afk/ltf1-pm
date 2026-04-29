@@ -92,10 +92,12 @@ skills: defineTable({
 - `pr-review`: Generate review checklist from task requirements
 
 **Trigger Methods**:
-- Web: slash command in task description (`/skill bug-triage`)
+- Web: button + command-palette entry on the task detail page ("Run skill → bug-triage")
 - TUI: `ltf1 skill run bug-triage`
 - CLI: `ltf1 skill run bug-triage --task PROJ-123`
 - Auto: skill conditions match on task creation
+
+> Slash-command-in-description (`/skill bug-triage` inline) is deferred pending a rich task description surface — see the "Deferred — Not Stubbing" section below.
 
 ### 1.4 TUI Agent Commands
 **Priority**: P0 | **Effort**: Medium | **Impact**: High
@@ -147,37 +149,22 @@ New page: `/triage` (in authenticated navigation)
 
 ## Phase 2: Intelligence (Q3 2026 — 8 weeks)
 
-### 2.1 Code Intelligence
-**Priority**: P1 | **Effort**: Extra Large | **Impact**: High
+### 2.1 Triage Quality Loop
+**Priority**: P1 | **Effort**: Medium | **Impact**: High
 
-Connect to repositories beyond tracking. Enable agents to understand code.
+Close the feedback loop the Phase 1 triage pipeline leaves open. Phase 1 ships suggestions and records accept/reject/modify outcomes in `convex/agent/triage.ts` and `convex/agent/triageMutations.ts`; Phase 2 turns that signal into measurable improvement.
 
 **Approach**:
-- Fetch repository file tree via GitHub API
-- Index key files (functions, classes, exports) with summaries
-- Store in `codeIndex` table with embeddings for semantic search
-- Agent can answer: "What does this function do?", "Where is authentication handled?", "What files would I need to change for X?"
+- Per-workspace calibration of triage prompts from historical acceptance data
+- Per-field learning (category, priority, assignee, labels) — a workspace that always overrides priority should see that field suggested differently than one that accepts every call
+- Confidence-threshold tuning: raise the auto-apply bar where the agent is wrong, lower it where it's consistently right
+- Rejection-reason taxonomy so the modify/reject signal is analyzable, not just a boolean
+- Dashboard surfacing acceptance rate over time per workspace, per field, per source
 
-**Schema**:
-```typescript
-codeIndex: defineTable({
-  repositoryId: v.id("githubRepositories"),
-  filePath: v.string(),
-  entityType: v.string(),     // "function", "class", "export", "file"
-  entityName: v.string(),
-  summary: v.string(),        // AI-generated summary
-  lineStart: v.number(),
-  lineEnd: v.number(),
-  lastSyncedAt: v.number(),
-  embedding: v.optional(v.array(v.number())),
-})
-```
-
-**Integration Points**:
-- Task creation: "What code is relevant to this task?"
-- PR review: "Does this PR satisfy the task requirements?"
-- Bug triage: "What module is likely affected?"
-- Assignment: "Who last touched this code?"
+**Outputs**:
+- Triage acceptance rate trending up over weeks without human intervention
+- Auto-apply coverage growing (more triages land without human approval) while acceptance stays high
+- Workspace-level diagnostics explaining *why* acceptance changed
 
 ### 2.2 Planning Agent
 **Priority**: P1 | **Effort**: Large | **Impact**: High
@@ -214,12 +201,11 @@ Render PR diffs inside LTF1 (web + TUI).
 ### 2.4 Assignment Agent
 **Priority**: P1 | **Effort**: Medium | **Impact**: High
 
-Evolve existing `taskAssignment.ts` into a full assignment agent.
+Evolve existing `convex/ai/taskAssignment.ts` (which already does skills matching) into a full assignment agent.
 
 **Enhancements**:
 - Consider current workload (tasks in progress, PRs open)
 - Consider timezone overlap with collaborators
-- Consider code ownership (who last touched relevant files)
 - Consider sprint commitment (don't overload)
 - Confidence scoring with explanation
 - Learning from past assignment accuracy
@@ -228,32 +214,19 @@ Evolve existing `taskAssignment.ts` into a full assignment agent.
 
 ## Phase 3: Autonomy (Q4 2026 — 8 weeks)
 
-### 3.1 Coding Agent Integration
-**Priority**: P2 | **Effort**: Extra Large | **Impact**: High
-
-Integrate with external coding agents (GitHub Copilot Workspace, Cursor, etc.) to:
-- Create branches from task specs
-- Generate initial implementation from task description
-- Run tests and report results
-- Create PRs linked to tasks
-- Auto-update task status through the lifecycle
-
-**Not building**: A coding agent from scratch. Integration with existing agents.
-
-### 3.2 Agent-to-Agent Collaboration
+### 3.1 Agent-to-Agent Collaboration
 **Priority**: P2 | **Effort**: Large | **Impact**: Medium
 
 Chain agents together:
 1. Triage agent categorizes issue
 2. Assignment agent assigns developer
 3. Planning agent adds to sprint
-4. Code agent creates branch and initial implementation
-5. Review agent checks PR against requirements
-6. Triage agent closes task on merge
+4. Review agent checks PR against task requirements (diff + task context, no code index dependency)
+5. Triage agent closes task on merge
 
 **Implementation**: Agent workflow definitions (similar to skills but for agent chains). Each step can be auto or human-approved.
 
-### 3.3 Skills Marketplace
+### 3.2 Skills Marketplace
 **Priority**: P2 | **Effort**: Medium | **Impact**: Medium
 
 Share skills between workspaces:
@@ -262,7 +235,7 @@ Share skills between workspaces:
 - Version management
 - Usage analytics
 
-### 3.4 Enterprise Features
+### 3.3 Enterprise Features
 **Priority**: P2 | **Effort**: Large | **Impact**: Medium
 
 - SSO via SAML/OIDC
@@ -286,7 +259,7 @@ Custom agent plugins with defined API:
 ### 4.2 Third-Party Marketplace
 - Integration marketplace (Slack, Discord, Notion, Figma, etc.)
 - Agent marketplace (community-built agents)
-- Skill marketplace (expanded from 3.3)
+- Skill marketplace (expanded from 3.2)
 
 ### 4.3 Self-Hosted Agent Infrastructure
 - Docker-based deployment for agents
@@ -314,6 +287,38 @@ These features exist today but should be cut or simplified to align with the vis
 
 ---
 
+## Deferred — Not Stubbing
+
+These are strategic bets we believe in but won't ship half-built. Each has an observable unblock trigger; they stay out of the roadmap until that trigger fires.
+
+### Asks / Intake Pipeline
+- **Scope**: Inbound Slack messages, email, and web forms routed into the triage queue with dedupe, source mapping, and reply threads back to the original channel.
+- **Effort**: Weeks. Today's Slack integration (`convex/integrations/slack/events.ts`, `convex/integrations/slack/commands.ts`) is outbound-only — slash commands exist but there is no message-to-task intake.
+- **Why deferred**: A surface on top of the Phase 1 triage pipeline. Shipping intake before triage is trusted means routing garbage through a pipeline that can't filter it.
+- **Unblocks when**: Phase 1 triage hits its >70% acceptance target on manually-created tasks. Only then is the routing + dedupe + mapping investment worth it.
+
+### Linear-Style Conversational Agent
+- **Scope**: A chat surface where users describe feedback or ideas and the agent authors well-structured issues (title, description, acceptance criteria, labels, assignee) in the triage queue.
+- **Effort**: Weeks. No skeleton exists today. The chat layer is the easy part; authoring issues that don't need human cleanup is what takes real work.
+- **Why deferred**: Also a surface on top of triage. And the output lands in a task description, so authoring quality is capped by what the description field can express.
+- **Unblocks when**: (a) a rich task description surface exists (see below) and (b) triage is trusted (>70% acceptance).
+
+### Code Intelligence + Coding Agent
+- **Scope**: Repository indexing (`codeIndex` table, file/function/class summaries, embeddings, semantic search), plus integration with external coding agents (Copilot Workspace, Cursor) to create branches and PRs from task specs.
+- **Effort**: Months. Dedicated indexer, embeddings pipeline, sync strategy, agent integration surface — none of this is a weekend hack.
+- **Why deferred**: Self-contained multi-month build with no natural stub. A "partial index" produces worse results than no index, and a half-working coding agent erodes trust faster than no agent at all.
+- **Unblocks when**: Phase 2 Planning Agent + Assignment Agent are in active use across real workspaces. That proves the agent infrastructure can carry the weight before we pour months into indexing.
+
+### Slash Menu in Task Descriptions
+- **Scope**: A BlockNote-style slash command menu inside task descriptions (`/skill bug-triage`, `/mention @sarah`, `/task PROJ-45`, block formatting).
+- **Effort**: Medium — but blocked on rich-text tasks. Tasks store plain `description: v.string()` today (`convex/schema.ts:293`). BlockNote is only wired for Pages in `apps/web/src/components/features/documents/BlockNoteEditor.tsx` via `apps/web/src/pages/PagesPage.tsx`.
+- **Why deferred**: A trigger surface for the Phase 1 skills system with no host. Skills already trigger via button, command palette, TUI, and CLI — the inline slash menu is a nicety, not a blocker.
+- **Unblocks when**: A rich task description surface lands. Reuse the existing BlockNote editor stack — do not pick a second editor.
+
+> A rich task description surface is a prerequisite for the slash menu, for mention-autocomplete inside tasks, and for any BlockNote-based task editor. That migration is a separate future plan and is not scoped in this document.
+
+---
+
 ## Success Criteria by Phase
 
 ### Phase 1 (Agent Foundation)
@@ -324,14 +329,14 @@ These features exist today but should be cut or simplified to align with the vis
 - [ ] Web triage page with inbox-zero flow
 
 ### Phase 2 (Intelligence)
-- [ ] Code index covering >80% of connected repositories
+- [ ] Triage acceptance rate improves from Phase 1 baseline by ≥10 percentage points after 4 weeks of learning
 - [ ] Planning agent generates sprint plans accepted >50% of the time
 - [ ] Diff viewer shows PR changes inline with task context
 - [ ] Assignment agent confidence >75% (matches human choices)
 
 ### Phase 3 (Autonomy)
-- [ ] At least one coding agent integration working end-to-end
-- [ ] Agent chains completing full triage → assign → code → review lifecycle
+- [ ] Review agent catches ≥50% of spec-mismatch issues a human reviewer would flag on PRs linked to tasks
+- [ ] Agent chains completing full triage → assign → plan → review lifecycle
 - [ ] Skills marketplace with at least 10 community skills
 - [ ] First enterprise customer on premium features
 

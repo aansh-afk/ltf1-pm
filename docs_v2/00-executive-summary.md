@@ -63,11 +63,11 @@ Build the context → rules → agent pipeline into Convex. Triage incoming work
 ### P1: TUI as Agent Interface
 `ltf1 agent triage`, `ltf1 agent suggest`, `ltf1 skill run`. Make the terminal THE place where developers interact with AI agents for project management.
 
-### P2: Code Intelligence
-Connect to repositories beyond tracking. Index code, understand functions, link code entities to tasks. Enable agents to answer "what does X do?" from within LTF1.
-
-### P3: Sharpen the Product
+### P2: Sharpen the Product
 Cut features that add overhead (meetings scheduler, time tracking reports). Lean into automation over process. The promise is "zero manual updates" — every feature should reduce friction, not add it.
+
+### Deferred Strategic Bets
+Code Intelligence + Coding Agent integration, Asks/Intake pipeline, Linear-style conversational Agent, and slash-command menus inside task descriptions are strategic bets we are not stubbing. See `09-feature-roadmap.md` → "Deferred — Not Stubbing" for scope, effort, and unblock triggers.
 
 ---
 

@@ -128,7 +128,7 @@ Each feature has its own detail page at `/features/:slug` with:
 | On-Premise | No | No | Yes |
 | Dedicated Support | No | No | Yes |
 
-**Assessment**: 3.5/5 — Needs updating for agent-first vision. Agent features (triage, skills, code intelligence) should be prominent differentiators between tiers.
+**Assessment**: 3.5/5 — Needs updating for agent-first vision. Agent features (triage, skills, planning, diff viewer) should be prominent differentiators between tiers.
 
 ---
 
@@ -179,7 +179,7 @@ Current pricing highlights meetings, whiteboard, time tracking — features bein
 |---|---|---|---|
 | **Agent features** | Basic triage | Full agent suite | Custom agents |
 | **Skills** | 3 built-in | Unlimited custom | + marketplace |
-| **Code Intelligence** | No | Yes | Yes + custom |
+| **Diff Viewer** | No | Yes | Yes + custom |
 | **Git Integration** | Full | Full + advanced | Full + enterprise |
 | **CLI/TUI** | Full | Full | Full |
 | **Meetings** | No | Basic | Full |
