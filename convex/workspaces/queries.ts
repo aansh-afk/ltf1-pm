@@ -177,15 +177,16 @@ export const getWorkspaceStats = query({
     const now = Date.now();
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
 
-    const allActivities = await ctx.db
+    // The activities by_workspace index is keyed on (workspaceId, timestamp),
+    // so we can filter by the cutoff at the index instead of pulling every
+    // activity into memory. The activity record's timestamp is optional in
+    // schema, so we still defensively skip records without one.
+    const recentActivities = await ctx.db
       .query("activities")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+      .withIndex("by_workspace", (q) =>
+        q.eq("workspaceId", args.workspaceId).gte("timestamp", thirtyDaysAgo),
+      )
       .collect();
-      
-    const recentActivities = allActivities.filter(a => {
-      const timestamp = (a as any).timestamp;
-      return timestamp && timestamp >= thirtyDaysAgo;
-    });
 
     return {
       totalProjects: projects.length,
@@ -213,8 +214,20 @@ export const getPendingInvitations = query({
     invitedByName: v.string(),
   })),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const user = await getCurrentUser(ctx);
+    if (!user) {
+      return [];
+    }
+
+    // Pending invitations expose invitee email + inviter metadata, so they
+    // must only be visible to workspace members with invitation permission.
+    const hasAccess = await hasPermission(
+      ctx.db,
+      user._id,
+      args.workspaceId,
+      "workspace.invite"
+    );
+    if (!hasAccess) {
       return [];
     }
 

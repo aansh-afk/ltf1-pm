@@ -209,25 +209,24 @@ export async function hasProjectPermission(
     }
   }
 
-  // Finally, check team-based permissions
+  // Finally, check team-based permissions. Use the (teamId, userId) index
+  // so each lookup is a single key probe instead of a dynamic OR over the
+  // user's full team membership.
   if (project.teamIds && project.teamIds.length > 0) {
-    // Find if user is in any of the assigned teams
-    const teamMember = await db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter((q) =>
-        q.or(
-          ...project.teamIds!.map(teamId => q.eq(q.field("teamId"), teamId))
+    for (const teamId of project.teamIds) {
+      const teamMember = await db
+        .query("teamMembers")
+        .withIndex("by_team_user", (q) =>
+          q.eq("teamId", teamId).eq("userId", userId),
         )
-      )
-      .first();
+        .first();
+      if (!teamMember) continue;
 
-    if (teamMember) {
-      // Team members inherit "member" role permissions for the project
-      // Team leads inherit "lead" role permissions (optional, keeping simple for now)
       const teamRole = teamMember.role === "lead" ? "lead" : "member";
       const teamPerms = projectRolePermissions[teamRole] || [];
-      return teamPerms.includes(permission);
+      if (teamPerms.includes(permission)) {
+        return true;
+      }
     }
   }
 

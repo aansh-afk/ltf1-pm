@@ -47,17 +47,17 @@ type gitBranch struct {
 // --- Messages ---
 
 type gitDataMsg struct {
-	Branch       string
-	RemoteBranch string
+	Branch        string
+	RemoteBranch  string
 	Ahead, Behind int
-	Files        []gitFile
-	Commits      []gitCommit
-	Stashes      []gitStash
-	Remotes      []string
-	Branches     []gitBranch
-	GitRoot      string
-	NoGit        bool
-	Err          error
+	Files         []gitFile
+	Commits       []gitCommit
+	Stashes       []gitStash
+	Remotes       []string
+	Branches      []gitBranch
+	GitRoot       string
+	NoGit         bool
+	Err           error
 }
 
 // Separate message for GitHub data (loaded async after git data)
@@ -101,24 +101,24 @@ const (
 type gitPage struct {
 	width, height int
 	// Git data
-	branch       string
-	remoteBranch string
+	branch        string
+	remoteBranch  string
 	ahead, behind int
-	files        []gitFile
-	commits      []gitCommit
-	stashes      []gitStash
-	remotes      []string
-	branches     []gitBranch
+	files         []gitFile
+	commits       []gitCommit
+	stashes       []gitStash
+	remotes       []string
+	branches      []gitBranch
 	// Navigation
 	cursor       int
 	commitCursor int
 	branchCursor int
 	activePanel  gitPanel
 	// State
-	loading  bool
-	noGit    bool
-	cwd      string
-	gitRoot  string
+	loading bool
+	noGit   bool
+	cwd     string
+	gitRoot string
 	// GitHub
 	ghRepo   *api.GitHubRepo
 	ghPRs    []api.GitHubPR
@@ -318,9 +318,15 @@ func fetchGitHubData() tea.Cmd {
 						Deletions: item.Deletions,
 						Comments:  len(item.Comments),
 						URL:       item.URL,
-						User:      struct{ Login string `json:"login"` }{Login: item.Author.Login},
-						Head:      struct{ Ref string `json:"ref"` }{Ref: item.HeadRefName},
-						BaseRef:   struct{ Ref string `json:"ref"` }{Ref: item.BaseRefName},
+						User: struct {
+							Login string `json:"login"`
+						}{Login: item.Author.Login},
+						Head: struct {
+							Ref string `json:"ref"`
+						}{Ref: item.HeadRefName},
+						BaseRef: struct {
+							Ref string `json:"ref"`
+						}{Ref: item.BaseRefName},
 					})
 				}
 			}
@@ -385,18 +391,18 @@ func runGitCmd(action string, args ...string) tea.Cmd {
 	}
 }
 
-func gitStageFile(path string) tea.Cmd  { return runGitCmd("staged "+path, "add", path) }
+func gitStageFile(path string) tea.Cmd   { return runGitCmd("staged "+path, "add", path) }
 func gitUnstageFile(path string) tea.Cmd { return runGitCmd("unstaged "+path, "reset", "HEAD", path) }
-func gitStageAll() tea.Cmd              { return runGitCmd("staged all", "add", "-A") }
-func gitUnstageAll() tea.Cmd            { return runGitCmd("unstaged all", "reset", "HEAD") }
+func gitStageAll() tea.Cmd               { return runGitCmd("staged all", "add", "-A") }
+func gitUnstageAll() tea.Cmd             { return runGitCmd("unstaged all", "reset", "HEAD") }
 
 func gitCommitChanges(message string) tea.Cmd {
 	return runGitCmd("committed", "commit", "-m", message)
 }
 
-func gitPush() tea.Cmd    { return runGitCmd("pushed", "push") }
-func gitPull() tea.Cmd    { return runGitCmd("pulled", "pull") }
-func gitFetch() tea.Cmd   { return runGitCmd("fetched", "fetch", "--all") }
+func gitPush() tea.Cmd  { return runGitCmd("pushed", "push") }
+func gitPull() tea.Cmd  { return runGitCmd("pulled", "pull") }
+func gitFetch() tea.Cmd { return runGitCmd("fetched", "fetch", "--all") }
 
 func gitCheckout(branch string) tea.Cmd {
 	localBranch := strings.TrimPrefix(branch, "origin/")
@@ -800,7 +806,8 @@ func (p *gitPage) KeyBinds() []string {
 	return []string{"j", "k", "up", "down", "c", " ", "tab", "a", "A", "b", "P", "p", "f", "o", "O", "R", "enter"}
 }
 
-func (p *gitPage) HasModal() bool { return p.modalMode != gitModalNone
+func (p *gitPage) HasModal() bool {
+	return p.modalMode != gitModalNone
 }
 
 // --- btop-style key hint helper ---
@@ -1086,7 +1093,7 @@ func (p *gitPage) renderFileList(innerW int) string {
 			label := gitStatusLabel(f.Status)
 			line := "  " + icon + " " + f.Path + "  " + theme.TextMutedStyle.Render(label)
 			if isSelected {
-				line = selBg.Render(icon+" "+theme.ListItemTitleSelectedStyle.Render(f.Path)+"  "+theme.SuccessTextStyle.Render(label))
+				line = selBg.Render(icon + " " + theme.ListItemTitleSelectedStyle.Render(f.Path) + "  " + theme.SuccessTextStyle.Render(label))
 			}
 			contentLines = append(contentLines, line)
 		} else {
@@ -1095,7 +1102,7 @@ func (p *gitPage) renderFileList(innerW int) string {
 			label := gitStatusLabel(f.Status)
 			line := "  " + icon + " " + f.Path + "  " + theme.TextMutedStyle.Render(label)
 			if isSelected {
-				line = selBg.Render(icon+" "+theme.ListItemTitleSelectedStyle.Render(f.Path)+"  "+theme.ColorTextStyle(sc).Render(label))
+				line = selBg.Render(icon + " " + theme.ListItemTitleSelectedStyle.Render(f.Path) + "  " + theme.ColorTextStyle(sc).Render(label))
 			}
 			contentLines = append(contentLines, line)
 		}

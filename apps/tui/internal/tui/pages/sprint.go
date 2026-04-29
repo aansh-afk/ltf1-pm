@@ -51,9 +51,18 @@ func (p *sprintPage) fetchData() tea.Cmd {
 			}
 		}
 
-		raw, err = p.client.Query("tasks:list", nil)
-		if err == nil {
-			json.Unmarshal(raw, &data.Tasks)
+		// Backend map: tasks/queries:getProjectTasks scoped by the
+		// currently selected project. There is no `tasks:list` function
+		// in the backend contract.
+		if p.projectID != "" {
+			raw, err = p.client.Query("tasks/queries:getProjectTasks", map[string]interface{}{"projectId": p.projectID})
+			if err == nil {
+				if jsonErr := json.Unmarshal(raw, &data.Tasks); jsonErr != nil {
+					data.Err = jsonErr
+				}
+			} else {
+				data.Err = err
+			}
 		}
 
 		return data

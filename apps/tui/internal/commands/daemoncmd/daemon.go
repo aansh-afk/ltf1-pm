@@ -35,8 +35,8 @@ func daemonDir() string {
 	return filepath.Join(home, ".config", "ltf1")
 }
 
-func pidFile() string  { return filepath.Join(daemonDir(), "daemon.pid") }
-func logFile() string  { return filepath.Join(daemonDir(), "daemon.log") }
+func pidFile() string { return filepath.Join(daemonDir(), "daemon.pid") }
+func logFile() string { return filepath.Join(daemonDir(), "daemon.log") }
 
 func loadPID() int {
 	data, err := os.ReadFile(pidFile())

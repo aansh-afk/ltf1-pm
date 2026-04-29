@@ -17,7 +17,8 @@ export const sendEmail = internalAction({
   handler: async (ctx, args) => {
     const from = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
-    console.log(`[EMAIL] Sending to: ${args.to}, from: ${from}, subject: ${args.subject}`);
+    // Avoid logging recipient PII; record sender and subject only.
+    console.log(`[EMAIL] Sending from=${from} subject=${args.subject}`);
 
     const { data, error } = await resend.emails.send({
       from: `LTF1 <${from}>`,
@@ -61,7 +62,9 @@ export const sendTestEmail = action({
       return { success: false, message: "RESEND_API_KEY is not set in Convex environment variables" };
     }
 
-    console.log(`[TEST EMAIL] API key: ${apiKey.substring(0, 8)}..., From: ${from}, To: ${userEmail}`);
+    // Do not log secret material or recipient email addresses; record only
+    // sender and dispatch intent.
+    console.log(`[TEST EMAIL] dispatch from=${from}`);
 
     try {
       const r = new Resend(apiKey);

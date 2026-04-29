@@ -53,7 +53,8 @@ func newListCmd() *cobra.Command {
 			if unread {
 				callArgs["unreadOnly"] = true
 			}
-			raw, err := client.Query("notifications/queries:getNotifications", callArgs)
+			// Backend map: notificationQueries:getNotifications.
+			raw, err := client.Query("notificationQueries:getNotifications", callArgs)
 			if err != nil {
 				return err
 			}
@@ -93,7 +94,7 @@ func newReadCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if _, err := client.Mutation("notifications/mutations:markAsRead", map[string]any{
+			if _, err := client.Mutation("notificationQueries:markAsRead", map[string]any{
 				"notificationId": args[0],
 			}); err != nil {
 				return err
@@ -113,7 +114,7 @@ func newClearCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if _, err := client.Mutation("notifications/mutations:markAllAsRead", map[string]any{
+			if _, err := client.Mutation("notificationQueries:markAllAsRead", map[string]any{
 				"workspaceId": cfg.Context.WorkspaceID,
 			}); err != nil {
 				return err

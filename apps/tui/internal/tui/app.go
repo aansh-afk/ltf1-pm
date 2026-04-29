@@ -88,11 +88,11 @@ type Model struct {
 	loginState    LoginState
 	loginError    string
 	// Post-auth selection flow
-	appState       AppState
-	workspaces     []workspaceItem
-	projects       []projectItem
-	selectorCursor int
-	selectorError  string
+	appState        AppState
+	workspaces      []workspaceItem
+	projects        []projectItem
+	selectorCursor  int
+	selectorError   string
 	selectedWS      workspaceItem // workspace chosen, used while picking project
 	selectorLoading bool
 	// Create workspace/project modal

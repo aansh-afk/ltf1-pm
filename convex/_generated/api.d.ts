@@ -126,6 +126,7 @@ import type * as integrations_slack_mutations from "../integrations/slack/mutati
 import type * as integrations_slack_queries from "../integrations/slack/queries.js";
 import type * as internalQueries from "../internalQueries.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_secrets from "../lib/secrets.js";
 import type * as lib_validators from "../lib/validators.js";
 import type * as meetings_mutations from "../meetings/mutations.js";
 import type * as meetings_queries from "../meetings/queries.js";
@@ -287,6 +288,7 @@ declare const fullApi: ApiFromModules<{
   "integrations/slack/queries": typeof integrations_slack_queries;
   internalQueries: typeof internalQueries;
   "lib/auth": typeof lib_auth;
+  "lib/secrets": typeof lib_secrets;
   "lib/validators": typeof lib_validators;
   "meetings/mutations": typeof meetings_mutations;
   "meetings/queries": typeof meetings_queries;

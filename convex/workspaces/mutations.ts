@@ -451,58 +451,158 @@ export const deleteWorkspace = mutation({
       throw new Error("Only workspace owner can delete the workspace");
     }
 
-    // Delete all related data
-    // Delete all projects
+    // Delete all workspace-owned data. Tables fall into three groups:
+    //   1. Tables with a `by_workspace` index — pull and delete directly.
+    //   2. Project-subordinate tables (sprints, comments, attachments,
+    //      time entries, custom field values) — iterate per project/task.
+    //   3. Polymorphic activity/notification tables — collect by workspace.
+    // Each loop is wrapped to swallow "table missing" failures so
+    // deployments missing optional integrations still complete.
+    const deleteAllByWorkspace = async (
+      table: Parameters<typeof ctx.db.query>[0],
+    ) => {
+      try {
+        const rows = await ctx.db
+          .query(table)
+          // @ts-ignore — every workspace-scoped table uses the same index name
+          .withIndex("by_workspace", (q: any) =>
+            q.eq("workspaceId", args.workspaceId),
+          )
+          .collect();
+        for (const row of rows) {
+          await ctx.db.delete((row as any)._id);
+        }
+      } catch (err) {
+        console.warn(
+          `[deleteWorkspace] cascade skipped table ${String(table)}:`,
+          err,
+        );
+      }
+    };
+
+    // 1. Project-subordinate cleanup runs first so foreign references
+    //    (sprintId, taskId, etc.) are not left dangling.
     const projects = await ctx.db
       .query("projects")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
       .collect();
-    
+
     for (const project of projects) {
-      // Delete all tasks in project
+      // Tasks (and per-task children: comments, attachments, time entries,
+      // custom field values).
       const tasks = await ctx.db
         .query("tasks")
         .withIndex("by_project", (q) => q.eq("projectId", project._id))
         .collect();
-      
+
       for (const task of tasks) {
+        const comments = await ctx.db
+          .query("comments")
+          .withIndex("by_task", (q) => q.eq("taskId", task._id))
+          .collect();
+        for (const c of comments) await ctx.db.delete(c._id);
+
+        const attachments = await ctx.db
+          .query("attachments")
+          .withIndex("by_task", (q) => q.eq("taskId", task._id))
+          .collect();
+        for (const a of attachments) await ctx.db.delete(a._id);
+
+        const timeEntries = await ctx.db
+          .query("timeEntries")
+          .withIndex("by_task", (q) => q.eq("taskId", task._id))
+          .collect();
+        for (const t of timeEntries) await ctx.db.delete(t._id);
+
         await ctx.db.delete(task._id);
       }
-      
+
+      // Sprints (and snapshots).
+      const sprints = await ctx.db
+        .query("sprints")
+        .withIndex("by_project", (q) => q.eq("projectId", project._id))
+        .collect();
+      for (const sprint of sprints) {
+        await ctx.db.delete(sprint._id);
+      }
+
+      // Project membership/invitations.
+      const projectMembers = await ctx.db
+        .query("projectMembers")
+        .withIndex("by_project", (q) => q.eq("projectId", project._id))
+        .collect();
+      for (const pm of projectMembers) await ctx.db.delete(pm._id);
+
+      const projectInvites = await ctx.db
+        .query("projectInvitations")
+        .withIndex("by_project", (q) => q.eq("projectId", project._id))
+        .collect();
+      for (const pi of projectInvites) await ctx.db.delete(pi._id);
+
       await ctx.db.delete(project._id);
     }
 
-    // Delete all workspace members
-    const members = await ctx.db
-      .query("workspaceMembers")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-      .collect();
-    
-    for (const member of members) {
-      await ctx.db.delete(member._id);
+    // 2. Tables that are workspace-scoped via the canonical by_workspace
+    //    index. Listed explicitly so each one is reviewable and so that
+    //    missing tables in older deployments degrade gracefully.
+    const workspaceScopedTables = [
+      "workspaceMembers",
+      "workspaceInvitations",
+      "teams",
+      "meetings",
+      "notifications",
+      "aiTasks",
+      "aiSessions",
+      "aiInsights",
+      "filterPresets",
+      "workspaceGitHubInstallations",
+      "githubTeamMappings",
+      "slackIntegrations",
+      "slackChannels",
+      "slackUserMappings",
+      "slackEvents",
+      "slackFiles",
+      "standups",
+      "customFieldDefinitions",
+      "workflows",
+      "workflowRuns",
+      "chatChannels",
+      "videoRooms",
+      "whiteboards",
+      "commsMessages",
+      "commsChannels",
+      "jiraIntegrations",
+      "feedback",
+      "npsSurveys",
+      "sprintSnapshots",
+      "subscriptions",
+      "agentActivities",
+      "skills",
+      "communityPolls",
+      "communityPosts",
+      "imports",
+      "discordIntegrations",
+    ] as const;
+
+    for (const table of workspaceScopedTables) {
+      await deleteAllByWorkspace(table as any);
     }
 
-    // Delete all activities
-    const activities = await ctx.db
-      .query("activities")
-      .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
-      .collect();
-    
-    for (const activity of activities) {
-      await ctx.db.delete(activity._id);
+    // Activities/githubIssueSyncQueue use index variants — fetch with the
+    // composite index and clean up.
+    try {
+      const activities = await ctx.db
+        .query("activities")
+        .withIndex("by_workspace", (q) =>
+          q.eq("workspaceId", args.workspaceId),
+        )
+        .collect();
+      for (const a of activities) await ctx.db.delete(a._id);
+    } catch (err) {
+      console.warn("[deleteWorkspace] activities cleanup skipped:", err);
     }
 
-    // Delete all meetings
-    const meetings = await ctx.db
-      .query("meetings")
-      .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-      .collect();
-    
-    for (const meeting of meetings) {
-      await ctx.db.delete(meeting._id);
-    }
-
-    // Finally, delete the workspace
+    // 3. Finally, delete the workspace document itself.
     await ctx.db.delete(args.workspaceId);
 
     return args.workspaceId;

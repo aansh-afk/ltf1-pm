@@ -2,7 +2,6 @@ import React from "react";
 import { View, Text } from "react-native";
 import * as Haptics from "expo-haptics";
 import { BrutalCard, BrutalBadge } from "../ui";
-import { colors } from "../../lib/theme";
 
 const STATUS_BADGE_COLORS = {
   active: "green",

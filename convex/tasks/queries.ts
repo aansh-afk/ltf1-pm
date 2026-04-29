@@ -205,18 +205,61 @@ export const getMyTasks = query({
       return [];
     }
 
-    // Get all tasks - we'll need to filter manually since assigneeIds is an array
-    let allTasks = await ctx.db
-      .query("tasks")
+    // Bound the search to projects the user can actually see. Without a
+    // companion index on the multi-assignee `assigneeIds` array we cannot
+    // index-scan directly, but scoping by membership keeps the worst-case
+    // read set proportional to the user's own workspace footprint instead
+    // of every task across every tenant.
+    const memberships = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
-    
-    // Filter tasks where user is an assignee
-    let tasks = allTasks.filter(task => {
-      // Check new assigneeIds array
+
+    const allowedWorkspaceIds = new Set(memberships.map((m) => m.workspaceId));
+    if (args.workspaceId) {
+      // Restrict to the requested workspace, but only if the caller actually
+      // belongs to it.
+      if (!allowedWorkspaceIds.has(args.workspaceId)) {
+        return [];
+      }
+      allowedWorkspaceIds.clear();
+      allowedWorkspaceIds.add(args.workspaceId);
+    }
+
+    if (allowedWorkspaceIds.size === 0) {
+      return [];
+    }
+
+    // Pull projects per workspace via the by_workspace index, then collect
+    // their tasks via the by_project index. Both paths are indexed reads.
+    const projectsPerWs = await Promise.all(
+      Array.from(allowedWorkspaceIds).map((wsId) =>
+        ctx.db
+          .query("projects")
+          .withIndex("by_workspace", (q) => q.eq("workspaceId", wsId))
+          .collect(),
+      ),
+    );
+    const projects = projectsPerWs.flat();
+    if (projects.length === 0) {
+      return [];
+    }
+
+    const tasksPerProject = await Promise.all(
+      projects.map((p) =>
+        ctx.db
+          .query("tasks")
+          .withIndex("by_project", (q) => q.eq("projectId", p._id))
+          .collect(),
+      ),
+    );
+    const candidateTasks = tasksPerProject.flat();
+
+    let tasks = candidateTasks.filter((task) => {
       if (task.assigneeIds && task.assigneeIds.includes(user._id)) {
         return true;
       }
-      // Fallback to old assigneeId for backward compatibility
+      // Backward compatibility with the deprecated single-assignee field.
       if (task.assigneeId === user._id) {
         return true;
       }
@@ -224,40 +267,25 @@ export const getMyTasks = query({
     });
 
     if (args.status && args.status.length > 0) {
-      tasks = tasks.filter(task => args.status!.includes(task.status));
+      tasks = tasks.filter((task) => args.status!.includes(task.status));
     }
 
-    const tasksWithDetails = await Promise.all(
-      tasks.map(async (task) => {
-        const project = await ctx.db.get(task.projectId);
-        if (!project) return null;
-
-        if (args.workspaceId && project.workspaceId !== args.workspaceId) {
-          return null;
-        }
-
-        const hasAccess = await hasPermission(
-          ctx.db,
-          user._id,
-          project.workspaceId,
-          "task.view"
-        );
-
-        if (!hasAccess) return null;
-
-        const reporter = await ctx.db.get(task.reporterId);
-
-        return {
-          ...task,
-          project,
-          reporter,
-        };
-      })
+    const projectsById = new Map(projects.map((p) => [p._id, p]));
+    const reporterIds = new Set(tasks.map((t) => t.reporterId));
+    const reporters = await Promise.all(
+      Array.from(reporterIds).map((id) => ctx.db.get(id)),
+    );
+    const reportersById = new Map(
+      reporters.filter(Boolean).map((r) => [r!._id, r!]),
     );
 
-    return tasksWithDetails
-      .filter(Boolean)
-      .sort((a, b) => b!.updatedAt - a!.updatedAt);
+    return tasks
+      .map((task) => ({
+        ...task,
+        project: projectsById.get(task.projectId) ?? null,
+        reporter: reportersById.get(task.reporterId) ?? null,
+      }))
+      .sort((a, b) => b.updatedAt - a.updatedAt);
   },
 });
 
@@ -566,12 +594,18 @@ export const getWorkspaceLabels = query({
 })
 
 export const getTasksByUser = query({
-  args: { 
-    userId: v.string() 
+  args: {
+    userId: v.string()
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
+      return [];
+    }
+
+    // Restrict to self-only. Cross-user task enumeration must go through a
+    // workspace/project-scoped API with proper permission checks.
+    if (args.userId !== identity.subject) {
       return [];
     }
 
@@ -585,39 +619,74 @@ export const getTasksByUser = query({
       return [];
     }
 
-    // Get all tasks and filter by user
-    const allTasks = await ctx.db
-      .query("tasks")
+    // Scope to the caller's workspaces and use indexed task queries instead
+    // of a full table scan.
+    const memberships = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
-    
-    // Filter tasks where user is an assignee
-    const userTasks = allTasks.filter(task => {
-      // Check new assigneeIds array
+    if (memberships.length === 0) {
+      return [];
+    }
+
+    const projectsPerWs = await Promise.all(
+      memberships.map((m) =>
+        ctx.db
+          .query("projects")
+          .withIndex("by_workspace", (q) => q.eq("workspaceId", m.workspaceId))
+          .collect(),
+      ),
+    );
+    const projects = projectsPerWs.flat();
+    if (projects.length === 0) {
+      return [];
+    }
+
+    const tasksPerProject = await Promise.all(
+      projects.map((p) =>
+        ctx.db
+          .query("tasks")
+          .withIndex("by_project", (q) => q.eq("projectId", p._id))
+          .collect(),
+      ),
+    );
+    const candidateTasks = tasksPerProject.flat();
+
+    return candidateTasks.filter((task) => {
       if (task.assigneeIds && task.assigneeIds.includes(user._id)) {
         return true;
       }
-      // Fallback to old assigneeId for backward compatibility
       if (task.assigneeId === user._id) {
         return true;
       }
-      // Check if user is the reporter
       if (task.reporterId === user._id) {
         return true;
       }
       return false;
     });
-
-    return userTasks;
   },
 })
 
 export const getTasksByWorkspace = query({
-  args: { 
-    workspaceId: v.id("workspaces") 
+  args: {
+    workspaceId: v.id("workspaces")
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const user = await getCurrentUser(ctx);
+    if (!user) {
+      return [];
+    }
+
+    // Require workspace membership with task view permission. Without this
+    // check, any authenticated user could enumerate task data for any
+    // workspace ID they obtain or guess.
+    const hasAccess = await hasPermission(
+      ctx.db,
+      user._id,
+      args.workspaceId,
+      "task.view"
+    );
+    if (!hasAccess) {
       return [];
     }
 

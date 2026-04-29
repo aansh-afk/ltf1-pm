@@ -1,6 +1,6 @@
-import { query } from "../_generated/server";
+import { query, internalQuery } from "../_generated/server";
 import { v } from "convex/values";
-import { getCurrentUserOrThrow } from "../lib/auth";
+import { getCurrentUser, getCurrentUserOrThrow } from "../lib/auth";
 import { getWorkspacePlan, getWorkspaceSeatInfo } from "./featureGates";
 
 export const getSubscriptionStatus = query({
@@ -113,5 +113,26 @@ export const canAddMembers = query({
       seatsAvailable: seatInfo.seatsAvailable,
       plan: seatInfo.plan,
     };
+  },
+});
+
+// Internal helper: returns whether the caller can manage billing for the
+// given workspace. Only owners and admins are allowed.
+export const callerCanManageBilling = internalQuery({
+  args: { workspaceId: v.id("workspaces") },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) return false;
+
+    const member = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_workspace_user", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", user._id),
+      )
+      .first();
+
+    if (!member) return false;
+    return member.role === "owner" || member.role === "admin";
   },
 });

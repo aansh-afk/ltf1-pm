@@ -1,18 +1,6 @@
 import { v } from "convex/values"
 import { mutation } from "../_generated/server"
-
-// Simple encryption for API keys (in production, use proper encryption)
-const encryptApiKey = (key: string): string => {
-  // In production, use proper encryption like AES
-  // For now, using btoa alternative that works in Convex
-  // The key is already protected by Convex's database encryption
-  return btoa(key)
-}
-
-const decryptApiKey = (encrypted: string): string => {
-  // Using atob alternative that works in Convex
-  return atob(encrypted)
-}
+import { encryptSecret } from "../lib/secrets"
 
 // Setup initial AI credits for a user
 export const setupUserAI = mutation({
@@ -78,8 +66,9 @@ export const saveApiKey = mutation({
     
     const userId = identity.subject
     
-    // Encrypt and save the API key
-    const encryptedKey = encryptApiKey(args.apiKey)
+    // Encrypt with AES-GCM via the shared secrets helper. Old base64
+    // payloads remain decodable through decryptSecret() until rotated.
+    const encryptedKey = await encryptSecret(args.apiKey)
     
     // Get or create user credits record
     const existing = await ctx.db

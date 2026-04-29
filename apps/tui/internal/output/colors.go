@@ -8,10 +8,10 @@ import (
 
 // ANSI color codes (no external dependencies).
 const (
-	Reset   = "\033[0m"
-	Bold    = "\033[1m"
-	Dim     = "\033[2m"
-	Italic  = "\033[3m"
+	Reset  = "\033[0m"
+	Bold   = "\033[1m"
+	Dim    = "\033[2m"
+	Italic = "\033[3m"
 
 	Black   = "\033[30m"
 	Red     = "\033[31m"

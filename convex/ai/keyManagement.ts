@@ -1,6 +1,42 @@
 import { v } from "convex/values";
 import { action, mutation, query } from "../_generated/server";
+import type { Id } from "../_generated/dataModel";
 import { internal } from "../_generated/api";
+import { getCurrentUser } from "../lib/auth";
+import { hasProjectPermission } from "../auth/permissions";
+import { encryptSecret, maskSecret } from "../lib/secrets";
+
+// Authorize that the calling identity owns the requested scope.
+// - "user" scope must match the caller's Clerk subject.
+// - "project" scope requires at least project.edit permission.
+// Returns null when unauthorized so callers can return safe empty results.
+async function authorizeScope(
+  ctx: any,
+  scope: "user" | "project",
+  scopeId: string,
+): Promise<{ identitySubject: string } | null> {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) return null;
+
+  if (scope === "user") {
+    if (scopeId !== identity.subject) return null;
+    return { identitySubject: identity.subject };
+  }
+
+  // scope === "project": verify caller has project.edit permission
+  const user = await getCurrentUser(ctx);
+  if (!user) return null;
+
+  const allowed = await hasProjectPermission(
+    ctx.db,
+    user._id,
+    scopeId as Id<"projects">,
+    "project.edit",
+  );
+  if (!allowed) return null;
+
+  return { identitySubject: identity.subject };
+}
 
 // ─── Queries ────────────────────────────────────────────────────────────
 
@@ -28,8 +64,8 @@ export const getProviderKeys = query({
     })
   ),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
+    const auth = await authorizeScope(ctx, args.scope, args.scopeId);
+    if (!auth) return [];
 
     const keys = await ctx.db
       .query("aiProviderKeys")
@@ -38,17 +74,8 @@ export const getProviderKeys = query({
       )
       .collect();
 
-    return keys.map((k) => {
-      // Decrypt just to get last 4 chars for display
-      let maskedKey = "****";
-      try {
-        const decrypted = atob(k.encryptedApiKey);
-        maskedKey = "****" + decrypted.slice(-4);
-      } catch {
-        maskedKey = "****";
-      }
-
-      return {
+    return await Promise.all(
+      keys.map(async (k) => ({
         _id: k._id,
         scope: k.scope,
         scopeId: k.scopeId,
@@ -59,11 +86,11 @@ export const getProviderKeys = query({
         isActive: k.isActive,
         lastValidatedAt: k.lastValidatedAt,
         lastUsedAt: k.lastUsedAt,
-        maskedKey,
+        maskedKey: await maskSecret(k.encryptedApiKey),
         createdAt: k.createdAt,
         updatedAt: k.updatedAt,
-      };
-    });
+      })),
+    );
   },
 });
 
@@ -98,16 +125,8 @@ export const getMyProviderKeys = query({
       )
       .collect();
 
-    return keys.map((k) => {
-      let maskedKey = "****";
-      try {
-        const decrypted = atob(k.encryptedApiKey);
-        maskedKey = "****" + decrypted.slice(-4);
-      } catch {
-        maskedKey = "****";
-      }
-
-      return {
+    return await Promise.all(
+      keys.map(async (k) => ({
         _id: k._id,
         scope: k.scope,
         scopeId: k.scopeId,
@@ -118,11 +137,11 @@ export const getMyProviderKeys = query({
         isActive: k.isActive,
         lastValidatedAt: k.lastValidatedAt,
         lastUsedAt: k.lastUsedAt,
-        maskedKey,
+        maskedKey: await maskSecret(k.encryptedApiKey),
         createdAt: k.createdAt,
         updatedAt: k.updatedAt,
-      };
-    });
+      })),
+    );
   },
 });
 
@@ -193,6 +212,17 @@ export const saveProviderKey = action({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
+    // Authorize scope before any provider validation or storage. Actions
+    // cannot run hasProjectPermission directly, so we delegate to an
+    // internal query that performs the same scope check.
+    const authorized: boolean = await ctx.runQuery(
+      internal.ai.keyManagement.canManageScope,
+      { scope: args.scope, scopeId: args.scopeId },
+    );
+    if (!authorized) {
+      return { success: false, error: "Not authorized for this scope" };
+    }
+
     // Validate the key first
     const validation: { isValid: boolean; error?: string } = await ctx.runAction(
       internal.ai.providers.validateProviderKey,
@@ -206,12 +236,14 @@ export const saveProviderKey = action({
       return { success: false, error: validation.error || "Invalid API key" };
     }
 
-    // Encrypt and store
+    // Encrypt with AES-GCM and store. Old rows persist as legacy `btoa`
+    // payloads and are decoded transparently by decryptSecret().
+    const encryptedApiKey = await encryptSecret(args.apiKey);
     const keyId: any = await ctx.runMutation(internal.ai.keyManagement.insertProviderKey, {
       scope: args.scope,
       scopeId: args.scopeId,
       provider: args.provider,
-      encryptedApiKey: btoa(args.apiKey),
+      encryptedApiKey,
       displayName: args.displayName,
       defaultModel: args.defaultModel,
     });
@@ -220,7 +252,20 @@ export const saveProviderKey = action({
   },
 });
 
-import { internalMutation } from "../_generated/server";
+import { internalMutation, internalQuery } from "../_generated/server";
+
+// Internal scope-authorization query usable from actions.
+export const canManageScope = internalQuery({
+  args: {
+    scope: v.union(v.literal("user"), v.literal("project")),
+    scopeId: v.string(),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const auth = await authorizeScope(ctx, args.scope, args.scopeId);
+    return auth !== null;
+  },
+});
 
 // Internal mutation to insert a provider key
 export const insertProviderKey = internalMutation({
@@ -271,11 +316,13 @@ export const removeProviderKey = mutation({
   args: { keyId: v.id("aiProviderKeys") },
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
     const key = await ctx.db.get(args.keyId);
     if (!key) throw new Error("Key not found");
+
+    // Verify ownership: caller must own the user/project scope this key
+    // belongs to.
+    const auth = await authorizeScope(ctx, key.scope, key.scopeId);
+    if (!auth) throw new Error("Not authorized");
 
     await ctx.db.delete(args.keyId);
 
@@ -308,11 +355,13 @@ export const updateProviderKey = mutation({
   },
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
     const key = await ctx.db.get(args.keyId);
     if (!key) throw new Error("Key not found");
+
+    // Verify ownership: caller must own the user/project scope this key
+    // belongs to.
+    const auth = await authorizeScope(ctx, key.scope, key.scopeId);
+    if (!auth) throw new Error("Not authorized");
 
     const updates: Record<string, any> = { updatedAt: Date.now() };
     if (args.displayName !== undefined) updates.displayName = args.displayName;
@@ -344,8 +393,10 @@ export const updateProjectAISettings = mutation({
   },
   returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    // Project AI settings require project.edit permission, just like other
+    // project-scoped key operations.
+    const auth = await authorizeScope(ctx, "project", args.projectId);
+    if (!auth) throw new Error("Not authorized");
 
     const now = Date.now();
 

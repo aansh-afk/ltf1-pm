@@ -246,7 +246,7 @@ func (m ModalModel) View(width, height int) string {
 		}
 		if m.Priority != "" {
 			if statusLine != "" {
-				statusLine += theme.TextDimStyle.Render(" "+theme.SymBullet+" ")
+				statusLine += theme.TextDimStyle.Render(" " + theme.SymBullet + " ")
 			}
 			statusLine += PriorityBadgePlain(m.Priority)
 		}

@@ -41,12 +41,21 @@ func (p *notificationsPage) Init() tea.Cmd {
 
 func (p *notificationsPage) fetchNotifications() tea.Cmd {
 	return func() tea.Msg {
-		raw, err := p.client.Query("notifications:getNotifications", map[string]interface{}{})
+		// Backend map: notificationQueries:getNotifications requires
+		// workspaceId. The legacy `notifications:*` paths do not exist.
+		if p.workspaceID == "" {
+			return notificationsDataMsg{Err: fmt.Errorf("no workspace selected")}
+		}
+		raw, err := p.client.Query("notificationQueries:getNotifications", map[string]interface{}{
+			"workspaceId": p.workspaceID,
+		})
 		if err != nil {
 			return notificationsDataMsg{Err: err}
 		}
 		var notifs []api.Notification
-		json.Unmarshal(raw, &notifs)
+		if jsonErr := json.Unmarshal(raw, &notifs); jsonErr != nil {
+			return notificationsDataMsg{Err: jsonErr}
+		}
 		return notificationsDataMsg{Notifications: notifs}
 	}
 }
@@ -54,7 +63,7 @@ func (p *notificationsPage) fetchNotifications() tea.Cmd {
 func (p *notificationsPage) markAsRead(notifID string) tea.Cmd {
 	client := p.client
 	return func() tea.Msg {
-		_, err := client.Mutation("notifications:markAsRead", map[string]interface{}{
+		_, err := client.Mutation("notificationQueries:markAsRead", map[string]interface{}{
 			"notificationId": notifID,
 		})
 		return notifMarkedMsg{Err: err}

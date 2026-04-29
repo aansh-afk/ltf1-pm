@@ -160,7 +160,6 @@ export default function ProjectDetailScreen() {
   const projectKey = (project as any).key as string;
   const projectStatus = (project as any).status as string;
   const projectDescription = (project as any).description as string | undefined;
-  const projectLead = (project as any).lead as any;
   const projectMembers = ((project as any).members as any[]) || [];
   const projectWorkflow = (project as any).methodology as string | undefined;
   const projectVisibility = (project as any).visibility as string | undefined;

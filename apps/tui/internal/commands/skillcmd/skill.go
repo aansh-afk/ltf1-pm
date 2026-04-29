@@ -46,7 +46,8 @@ func newListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			raw, err := client.Query("skills/queries:getUserSkills", map[string]any{
+			// Backend map: skills/queries:getWorkspaceSkills.
+			raw, err := client.Query("skills/queries:getWorkspaceSkills", map[string]any{
 				"workspaceId": cfg.Context.WorkspaceID,
 			})
 			if err != nil {
@@ -77,22 +78,20 @@ func newListCmd() *cobra.Command {
 
 func newRunCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "run <skill-id> [args...]",
-		Short: "Run a skill",
-		Args:  cobra.MinimumNArgs(1),
+		Use:   "run <skill-id> <task-id>",
+		Short: "Run a skill against a task",
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, client, err := loadAuthClient()
+			_, client, err := loadAuthClient()
 			if err != nil {
 				return err
 			}
-			callArgs := map[string]any{
-				"skillId":     args[0],
-				"workspaceId": cfg.Context.WorkspaceID,
-			}
-			if len(args) > 1 {
-				callArgs["args"] = strings.Join(args[1:], " ")
-			}
-			raw, err := client.Mutation("skills/mutations:runSkill", callArgs)
+			// Backend map: skills/execution:executeSkill (action) requires
+			// skillId and taskId.
+			raw, err := client.Action("skills/execution:executeSkill", map[string]any{
+				"skillId": args[0],
+				"taskId":  args[1],
+			})
 			if err != nil {
 				return err
 			}
@@ -119,11 +118,17 @@ func newCreateCmd() *cobra.Command {
 				return err
 			}
 			name := strings.Join(args, " ")
+			// Backend validator (convex/skills/mutations.ts createSkill)
+			// requires displayName + actions in addition to name and
+			// trigger. We seed an empty action list; users can edit the
+			// skill afterwards in the web UI to populate actions.
 			if _, err := client.Mutation("skills/mutations:createSkill", map[string]any{
 				"workspaceId": cfg.Context.WorkspaceID,
 				"name":        name,
+				"displayName": name,
 				"description": description,
 				"trigger":     defaultIfEmpty(trigger, "manual"),
+				"actions":     []any{},
 			}); err != nil {
 				return err
 			}

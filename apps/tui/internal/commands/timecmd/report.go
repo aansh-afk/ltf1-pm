@@ -28,7 +28,8 @@ func newReportCmd() *cobra.Command {
 			if period != "" {
 				callArgs["period"] = period
 			}
-			raw, err := client.Query("timeEntries/queries:getTimeStatsByUser", callArgs)
+			// Backend map: timeEntries:getTimeStatsByUser (single-file module).
+			raw, err := client.Query("timeEntries:getTimeStatsByUser", callArgs)
 			if err != nil {
 				return err
 			}

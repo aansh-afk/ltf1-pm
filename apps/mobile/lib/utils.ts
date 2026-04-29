@@ -1,4 +1,4 @@
-import { formatDistanceToNow, format, formatDuration as fmtDuration, intervalToDuration } from "date-fns";
+import { formatDistanceToNow, format, intervalToDuration } from "date-fns";
 
 /**
  * Format a timestamp as a relative time string (e.g., "2 minutes ago", "3 hours ago").

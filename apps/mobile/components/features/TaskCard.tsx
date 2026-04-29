@@ -16,15 +16,6 @@ import { formatDistanceToNow, isPast } from "date-fns";
 import { BrutalBadge, Avatar } from "../ui";
 import { colors } from "../../lib/theme";
 
-const STATUS_COLORS = {
-  backlog: "default",
-  todo: "cyan",
-  in_progress: "accent",
-  in_review: "purple",
-  done: "green",
-  cancelled: "red",
-} as const;
-
 const PRIORITY_COLORS = {
   urgent: "red",
   high: "amber",

@@ -330,8 +330,43 @@ export const updateLastSeen = mutation({
 
 export const getUserById = query({
   args: { userId: v.id("users") },
+  returns: v.union(
+    v.object({
+      _id: v.id("users"),
+      _creationTime: v.number(),
+      name: v.string(),
+      email: v.string(),
+      avatarUrl: v.optional(v.string()),
+      bio: v.optional(v.string()),
+      githubUsername: v.optional(v.string()),
+      lastSeenAt: v.number(),
+    }),
+    v.null()
+  ),
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.userId);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
+    }
+
+    const target = await ctx.db.get(args.userId);
+    if (!target) {
+      return null;
+    }
+
+    // Public-safe projection. Email/preferences/role/status/GitHub token
+    // metadata stay private; full user docs must go through internal queries
+    // or scoped relationship-aware APIs.
+    return {
+      _id: target._id,
+      _creationTime: target._creationTime,
+      name: target.name,
+      email: target.email,
+      avatarUrl: target.avatarUrl,
+      bio: target.bio,
+      githubUsername: target.githubUsername,
+      lastSeenAt: target.lastSeenAt,
+    };
   },
 });
 

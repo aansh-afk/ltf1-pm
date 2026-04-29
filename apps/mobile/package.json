@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "expo start",
     "android": "expo run:android",
-    "build": "eas build",
+    "build": "expo export --platform android --output-dir dist",
+    "build:eas": "eas build",
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf node_modules .expo dist",
